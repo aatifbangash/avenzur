@@ -57,6 +57,9 @@ class Purchases_model extends CI_Model
 
     public function addPurchase($data, $items, $attachments = [])
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
+
         $this->db->trans_start();
         if ($this->db->insert('purchases', $data)) {
             $purchase_id = $this->db->insert_id();
@@ -392,6 +395,8 @@ class Purchases_model extends CI_Model
 
     public function getProductNames($term, $limit = 20)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $this->db->where("type = 'standard' AND (name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR supplier1_part_no LIKE '%" . $term . "%' OR supplier2_part_no LIKE '%" . $term . "%' OR supplier3_part_no LIKE '%" . $term . "%' OR supplier4_part_no LIKE '%" . $term . "%' OR supplier5_part_no LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
         $this->db->limit($limit);
         $q = $this->db->get('products');

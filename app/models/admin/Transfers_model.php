@@ -149,6 +149,7 @@ class Transfers_model extends CI_Model
 
     public function getProductNamesWithBatches($term, $warehouse_id, $limit = 10)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $this->db->select('products.id, code, name, warehouses_products.quantity, cost, tax_rate, type, unit, purchase_unit, tax_method, purchase_items.batchno, purchase_items.expiry')
             ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
             ->join('purchase_items', 'purchase_items.product_id=products.id', 'left')
@@ -160,7 +161,9 @@ class Transfers_model extends CI_Model
                 . "(name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
         }
         $this->db->limit($limit);
+        $this->db->where('products.business_id', $business_id);
         $q = $this->db->get('products');
+        
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;

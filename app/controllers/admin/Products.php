@@ -1566,10 +1566,12 @@ class Products extends MY_Controller
             </ul>
         </div></div>';
         $this->load->library('datatables');
+        //TIP:- added
+        $business_id = $this->ion_auth->user()->row()->business_id;
         if ($warehouse_id) {
             $this->datatables
             ->select($this->db->dbprefix('products') . ".id as productid, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname, cost as cost, price as price, COALESCE(wp.quantity, 0) as quantity, {$this->db->dbprefix('units')}.code as unit, wp.rack as rack, alert_quantity", false)
-            ->from('products');
+            ->from('products')->where('products.business_id', $business_id);
             if ($this->Settings->display_all_products) {
                 $this->datatables->join('warehouses_products wp', "wp.product_id=products.id AND wp.warehouse_id={$warehouse_id}", 'left');
             // $this->datatables->join("( SELECT product_id, quantity, rack from {$this->db->dbprefix('warehouses_products')} WHERE warehouse_id = {$warehouse_id}) wp", 'products.id=wp.product_id', 'left');
@@ -1586,6 +1588,7 @@ class Products extends MY_Controller
             $this->datatables
                 ->select($this->db->dbprefix('products') . ".id as productid, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname, cost as cost, price as price, COALESCE(quantity, 0) as quantity, {$this->db->dbprefix('units')}.code as unit, '' as rack, alert_quantity", false)
                 ->from('products')
+                ->where('products.business_id', $business_id)
                 ->join('categories', 'products.category_id=categories.id', 'left')
                 ->join('units', 'products.unit=units.id', 'left')
                 ->join('brands', 'products.brand=brands.id', 'left')
@@ -1733,6 +1736,7 @@ class Products extends MY_Controller
                         'supplier5_part_no' => isset($value[39]) ? trim($value[39]) : '',
                         'supplier5price'    => isset($value[40]) ? trim($value[40]) : '',
                         'slug'              => $this->Settings->use_code_for_slug ? $this->sma->slug($value[1]) : $this->sma->slug($value[0]),
+                        'business_id'    => $this->ion_auth->user()->row()->business_id,
                     ];
 
                     if ($catd = $this->products_model->getCategoryByCode($item['category_code'])) {

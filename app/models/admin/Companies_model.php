@@ -269,6 +269,11 @@ class Companies_model extends CI_Model
     {
         $this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name, ')') END) as text", false);
         $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+
+        //TIP:- added
+        $business_id = $_SESSION['business_id'];
+        $this->db->where('business_id', $business_id);
+
         $q = $this->db->get_where('companies', ['group_name' => 'supplier'], $limit);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {

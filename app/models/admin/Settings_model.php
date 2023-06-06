@@ -507,8 +507,8 @@ class Settings_model extends CI_Model
         $pg = "(SELECT {$this->db->dbprefix('product_prices')}.price as price, {$this->db->dbprefix('product_prices')}.product_id as product_id FROM {$this->db->dbprefix('product_prices')} WHERE {$this->db->dbprefix('product_prices')}.product_id = {$product_id} AND {$this->db->dbprefix('product_prices')}.price_group_id = {$group_id}) GP";
 
         $this->db->select("{$this->db->dbprefix('products')}.id as id, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.name as name, GP.price", false)
-        // ->join('products', 'products.id=product_prices.product_id', 'left')
-        ->join($pg, 'GP.product_id=products.id', 'left');
+            // ->join('products', 'products.id=product_prices.product_id', 'left')
+            ->join($pg, 'GP.product_id=products.id', 'left');
         $q = $this->db->get_where('products', ['products.id' => $product_id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -541,7 +541,7 @@ class Settings_model extends CI_Model
         }
         return false;
     }
-     public function getaramex()
+    public function getaramex()
     {
         $q = $this->db->get('aramex');
         if ($q->num_rows() > 0) {
@@ -752,7 +752,7 @@ class Settings_model extends CI_Model
         }
         return false;
     }
-     public function updatedirectPay($data)
+    public function updatedirectPay($data)
     {
         $this->db->where('id', '1');
         if ($this->db->update('directpay', $data)) {
@@ -761,7 +761,7 @@ class Settings_model extends CI_Model
         return false;
     }
 
-   public function updatearamex($data)
+    public function updatearamex($data)
     {
         $this->db->where('id', '1');
         if ($this->db->update('aramex', $data)) {
@@ -804,29 +804,32 @@ class Settings_model extends CI_Model
         }
         return false;
     }
-    public function insertCountry($data){
-        
+    public function insertCountry($data)
+    {
+
         if ($this->db->insert('countries', $data)) {
             return true;
         }
         return false;
-    
-	}
-public function getallCountry(){
-        
+    }
+    public function getallCountry()
+    {
+
+        //TIP:- added
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $query = $this->db->get('countries');
         return $query->result();
-    
-	}	
-	
-   public function deleteCountry($id)
+    }
+
+    public function deleteCountry($id)
     {
         if ($this->db->delete('countries', ['id' => $id])) {
             return true;
         }
         return false;
     }
-    
+
     public function updateCountry($id, $data)
     {
         if ($this->db->update('countries', $data, ['id' => $id])) {
@@ -834,7 +837,7 @@ public function getallCountry(){
         }
         return false;
     }
-        public function getCountryByID($id)
+    public function getCountryByID($id)
     {
         $q = $this->db->get_where('countries', ['id' => $id]);
         if ($q->num_rows() > 0) {
@@ -842,59 +845,53 @@ public function getallCountry(){
         }
         return false;
     }
-        public function insertWareCountry($data){
-        
+    public function insertWareCountry($data)
+    {
+
         $this->db->empty_table('warehouses_country');
-        if ($this->db->insert_batch('warehouses_country', $data))
-        {
+        if ($this->db->insert_batch('warehouses_country', $data)) {
             return true;
         }
         return false;
-    
-	}
-	 public function get_countryId($country){
-        
-       
-		$this->db->where('warehouses_country', $country);
-		$this->db->limit(1);
-		$query = $this->db->get($this->country_id);
+    }
+    public function get_countryId($country)
+    {
 
-		if ($query->num_rows() == 1) {
-			return TRUE;
-		}
-		
-		return FALSE;
-	}
-	
-	public function checkCountryDeletion($id)
-	{
-	    $this->db->Like('cf1', $id);
-	    $query = $this->db->get('products');
 
-		if ($query->num_rows() > 0) {
-			return false;
-		}
-		
-		$this->db->where('country_id', $id);
-	    $query = $this->db->get('warehouses_country');
+        $this->db->where('warehouses_country', $country);
+        $this->db->limit(1);
+        $query = $this->db->get($this->country_id);
 
-		if ($query->num_rows() > 0) {
-			return false;
-		}
-		
-		$this->db->where('country', $id);
-	    $query = $this->db->get('warehouses');
+        if ($query->num_rows() == 1) {
+            return TRUE;
+        }
 
-		if ($query->num_rows() > 0) {
-			return false;
-		}
-		
-		return true;
-		
-	}
-	
-    
-	
-	
+        return FALSE;
+    }
 
+    public function checkCountryDeletion($id)
+    {
+        $this->db->Like('cf1', $id);
+        $query = $this->db->get('products');
+
+        if ($query->num_rows() > 0) {
+            return false;
+        }
+
+        $this->db->where('country_id', $id);
+        $query = $this->db->get('warehouses_country');
+
+        if ($query->num_rows() > 0) {
+            return false;
+        }
+
+        $this->db->where('country', $id);
+        $query = $this->db->get('warehouses');
+
+        if ($query->num_rows() > 0) {
+            return false;
+        }
+
+        return true;
+    }
 }

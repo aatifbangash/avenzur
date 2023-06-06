@@ -757,7 +757,7 @@ class Transfers extends MY_Controller
        </div></div>';
 
         $this->load->library('datatables');
-
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $this->datatables
             ->select('id, date, transfer_no, from_warehouse_name as fname, from_warehouse_code as fcode, to_warehouse_name as tname,to_warehouse_code as tcode, total, total_tax, grand_total, status, attachment')
             ->from('transfers')
@@ -770,6 +770,7 @@ class Transfers extends MY_Controller
         }
         
         $this->datatables->where('type', 'transfer');
+        $this->datatables->where('business_id', $business_id);
 
             $this->datatables->add_column('Actions', $action, 'id')
             ->unset_column('fcode')

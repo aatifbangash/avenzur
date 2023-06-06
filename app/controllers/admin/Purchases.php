@@ -1428,15 +1428,16 @@ class Purchases extends MY_Controller
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
         $this->load->library('datatables');
+        $business_id = $this->ion_auth->user()->row()->business_id;
         if ($warehouse_id) {
             $this->datatables
                 ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
-                ->from('purchases')
+                ->from('purchases')->where('business_id', $business_id)
                 ->where('warehouse_id', $warehouse_id);
         } else {
             $this->datatables
                 ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
-                ->from('purchases');
+                ->from('purchases')->where('business_id', $business_id);
         }
 
        // if($this->sma->checkPermissionsForRequest('p_status_pending'))
@@ -2522,7 +2523,7 @@ class Purchases extends MY_Controller
                 } else {
                     $row->qty = ($bprice ? $bprice / $row->cost : 1);
                 }
-
+// dd($row);
                 $units    = $this->site->getUnitsByBUID($row->base_unit);
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
 

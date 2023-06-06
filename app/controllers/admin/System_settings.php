@@ -418,6 +418,8 @@ class system_settings extends MY_Controller
                 'price_group_id' => $this->input->post('price_group'),
                 'warehouse_type' => $this->input->post('type'),
                 'country'            => $this->input->post('country'),
+                //TIP:- addd
+                'business_id'    => $this->ion_auth->user()->row()->business_id,
             ];
         } elseif ($this->input->post('add_warehouse')) {
             $this->session->set_flashdata('error', validation_errors());
@@ -1762,9 +1764,11 @@ class system_settings extends MY_Controller
     public function getWarehouses()
     {
         $this->load->library('datatables');
+        //TIP:-
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $this->datatables
             ->select("{$this->db->dbprefix('warehouses')}.id as id, map, code, {$this->db->dbprefix('warehouses')}.name as name, {$this->db->dbprefix('price_groups')}.name as price_group, phone, email, address")
-            ->from('warehouses')
+            ->from('warehouses')->where("business_id", $business_id)
             ->join('price_groups', 'price_groups.id=warehouses.price_group_id', 'left')
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('system_settings/add_shelf/$1') . "' class='tip' title='" . lang('Add Shelf') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-plus\"></i></a>&nbsp;<a href='" . admin_url('system_settings/view_shelf/$1') . "' class='tip' title='" . lang('View Shelf') . "'><i class=\"fa fa-file-text-o\"></i></a>&nbsp;<a href='" . admin_url('system_settings/edit_warehouse/$1') . "' class='tip' title='" . lang('edit_warehouse') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_warehouse') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_warehouse/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
 

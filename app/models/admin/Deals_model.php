@@ -7,12 +7,16 @@ class Deals_model extends CI_Model
 
 	public function addDeal($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id; 
         return $this->db->insert('sma_deals', $data);
     }
 
     public function getAllSuppliers()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
     	$sups = $this->db->select('supplier_id')
+        ->where('business_id' , $business_id)
     	         ->get('deals')->result_array();
 
     	$data1 = array();
@@ -23,10 +27,10 @@ class Deals_model extends CI_Model
 		    	      $data1[] = $sup['supplier_id'];   
 		    	 }         
 		        $q = $this->db->where_not_in('id', $data1)
-		        			->get_where('companies', ['group_name' => 'supplier']);
+		        			->get_where('companies', ['group_name' => 'supplier', 'business_id' => $business_id]);
 		}else{
 
-			$q = $this->db->get_where('companies', ['group_name' => 'supplier']);
+			$q = $this->db->get_where('companies', ['group_name' => 'supplier', 'business_id' => $business_id]);
 
 		}
     	
