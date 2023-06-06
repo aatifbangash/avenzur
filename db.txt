@@ -1,0 +1,13 @@
+
+
+CREATE TABLE IF NOT EXISTS `sma_deals` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `deal_no` varchar(300) DEFAULT NULL,
+  `supplier_id` varchar(300) DEFAULT NULL,
+  `supplier_name` varchar(300) DEFAULT NULL,
+  `date` date DEFAULT NULL,
+  `discount_sale_val` varchar(300) DEFAULT NULL,
+  `sales_val` varchar(300) NOT NULL,
+  `discount_purchase_order` varchar(300) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT ;

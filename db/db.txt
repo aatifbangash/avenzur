@@ -1,0 +1,102 @@
+
+
+CREATE TABLE IF NOT EXISTS `sma_deals` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `deal_no` varchar(300) DEFAULT NULL,
+  `supplier_id` varchar(300) DEFAULT NULL,
+  `supplier_name` varchar(300) DEFAULT NULL,
+  `date` date DEFAULT NULL,
+  `discount_sale_val` varchar(300) DEFAULT NULL,
+  `sales_val` varchar(300) NOT NULL,
+  `discount_purchase_order` varchar(300) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT ;
+
+CREATE TABLE IF NOT EXISTS `sma_warehouse_shelf` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `warehouse_id` int(11) NOT NULL,
+  `shelf_name` varchar(300) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT ;
+
+CREATE TABLE IF NOT EXISTS `sma_rsd` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `OperationType` varchar(300) DEFAULT NULL,
+  `TransactionNumber` varchar(300) DEFAULT NULL,
+  `FromID` varchar(300) DEFAULT NULL,
+  `ToID` varchar(300) DEFAULT NULL,
+  `GTIN` varchar(300) DEFAULT NULL,
+  `BatchNumber` varchar(300) DEFAULT NULL,
+  `ExpiryDate` varchar(300) DEFAULT NULL,
+  `SerialNo` varchar(300) DEFAULT NULL,
+  `Error` varchar(300) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT ;
+
+ALTER TABLE `sma_purchase_items` ADD `subtotal2` DECIMAL(24,4) NOT NULL DEFAULT '0' AFTER `base_unit_cost`, ADD `batchno` VARCHAR(50) NOT NULL DEFAULT '0' AFTER `subtotal2`, ADD `bonus` DECIMAL(24,4) NOT NULL DEFAULT '0' AFTER `batchno`, ADD `discount1` DECIMAL(24,4) NOT NULL DEFAULT '0' AFTER `bonus`, ADD `discount2` DECIMAL(24,4) NOT NULL DEFAULT '0' AFTER `discount1`, ADD `totalbeforevat` DECIMAL(24,4) NOT NULL DEFAULT '0' AFTER `discount2`, ADD `main_net` DECIMAL(24,4) NOT NULL DEFAULT '0' AFTER `totalbeforevat`;
+
+ALTER TABLE `sma_sale_items` ADD `subtotal2` DECIMAL(24,4) NOT NULL DEFAULT '0' AFTER `igst`, ADD `bonus` DECIMAL(24,4) NOT NULL DEFAULT '0' AFTER `subtotal2`, ADD `discount1` DECIMAL(24,4) NOT NULL DEFAULT '0' AFTER `bonus`, ADD `discount2` DECIMAL(24,4) NOT NULL DEFAULT '0' AFTER `discount1`, ADD `totalbeforevat` DECIMAL(24,4) NOT NULL DEFAULT '0' AFTER `discount2`, ADD `main_net` DECIMAL(24,4) NOT NULL DEFAULT '0' AFTER `totalbeforevat`;
+
+ALTER TABLE `sma_directpay` ADD `test_Merchant_id` VARCHAR(150) NULL DEFAULT NULL AFTER `refund_link`, ADD `test_auth_token` VARCHAR(150) NULL DEFAULT NULL AFTER `test_Merchant_id`;
+
+ALTER TABLE `sma_aramex` ADD `activation` INT(10) NOT NULL DEFAULT '0' AFTER `version`;
+
+
+//purchases 
+
+ALTER TABLE `sma_purchases` ADD `tempstatus` VARCHAR(150) NULL DEFAULT NULL AFTER `igst`, ADD `lotnumber` VARCHAR(150) NULL DEFAULT NULL AFTER `tempstatus`;
+
+ALTER TABLE `sma_purchases` ADD `shelf_status` VARCHAR(50) NULL AFTER `payment_status`;
+
+ALTER TABLE `sma_purchases` ADD `validate` VARCHAR(50) NULL DEFAULT NULL AFTER `lotnumber`;
+
+ALTER TABLE `sma_purchases` ADD `purchase_invoice` TINYINT(1) NOT NULL DEFAULT '0' AFTER `validate`;
+
+
+//purchase_items
+
+ALTER TABLE `sma_purchase_items` ADD `warehouse_shelf` VARCHAR(50) NULL DEFAULT NULL AFTER `main_net`;
+
+//permissions 
+
+ALTER TABLE `sma_permissions` ADD `truck_registration_view` TINYINT(1) NOT NULL DEFAULT '0' AFTER `stock_request_approval`;
+
+ALTER TABLE `sma_permissions` ADD `purchase_manager` TINYINT(1) NOT NULL DEFAULT '0' AFTER `truck_registration_view`;
+
+ALTER TABLE `sma_permissions` ADD `purchase_receiving_supervisor` TINYINT(1) NOT NULL DEFAULT '0' AFTER `purchase_manager`;
+
+ALTER TABLE `sma_permissions` ADD `purchase_warehouse_supervisor` TINYINT(1) NOT NULL DEFAULT '0' AFTER `purchase_receiving_supervisor`;
+
+ALTER TABLE `sma_permissions` ADD `purchase_supervisor` TINYINT(1) NOT NULL DEFAULT '0' AFTER `purchase_warehouse_supervisor`;
+
+ALTER TABLE `sma_permissions` ADD `accountant` TINYINT(1) NOT NULL DEFAULT '0' AFTER `purchase_supervisor`;
+
+ALTER TABLE `sma_permissions` ADD `sales-coordinator` TINYINT(1) NULL  DEFAULT '0' AFTER `sales-delete_gift_card`;
+ALTER TABLE `sma_permissions` ADD `sales-warehouse_supervisor` TINYINT(1) NULL  DEFAULT '0' AFTER `sales-coordinator`;
+ALTER TABLE `sma_permissions` ADD `sales-warehouse_supervisor_shipping` TINYINT(1) NULL  DEFAULT '0' AFTER `sales-warehouse_supervisor`;
+ALTER TABLE `sma_permissions` ADD `sales-accountant` TINYINT(1) NULL  DEFAULT '0' AFTER `sales-warehouse_supervisor_shipping`;
+ALTER TABLE `sma_permissions` ADD `sales-quality_supervisor` TINYINT(50) NULL DEFAULT NULL AFTER `sales-accountant`;
+
+
+
+
+// Enteries
+
+ALTER TABLE `sma_accounts_entries` ADD `pid` INT(11) NULL AFTER `notes`, ADD `sid` INT(11) NULL AFTER `pid`;
+
+
+//Products
+
+ALTER TABLE `sma_products` ADD `purchase_account` BIGINT(18) NOT NULL DEFAULT '0' AFTER `main_agent`, ADD `sale_account` BIGINT(18) NOT NULL DEFAULT '0' AFTER `purchase_account`, ADD `inventory_account` BIGINT(18) NOT NULL DEFAULT '0' AFTER `sale_account`;
+
+
+//companies
+
+ALTER TABLE `sma_companies` ADD `ledger_account` BIGINT(18) NOT NULL DEFAULT '0' AFTER `gst_no`;
+
+
+//Sales Items
+
+ALTER TABLE `sma_sale_items` ADD `expiry` DATE NULL DEFAULT NULL AFTER `serial_no`;
+ALTER TABLE `sma_sale_items`  ADD `batch_no` VARCHAR(50) NULL DEFAULT NULL  AFTER `expiry`;
+ALTER TABLE `sma_sale_items` ADD `lot_no` VARCHAR(50) NULL DEFAULT NULL AFTER `batch_no`;

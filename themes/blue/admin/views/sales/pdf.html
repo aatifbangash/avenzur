@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+	  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.1/dist/jquery.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+tbody {
+    border: 1px solid black;
+}
+td {
+    border: 1px solid;
+}
+th {
+    border: 1px solid;
+}
+.tab-head{
+font-weight:bold;
+
+}
+.txt-col{
+text-align:center;
+
+}
+td.tab-head {
+    background: #efefef;
+}
+th.tab-head {
+    background: #efefef;
+}
+table.table {
+    margin: 0px !important;
+}
+
+    </style>
+</head>
+<body>
+
+
+    <div class="container" style="padding:30px 30px;">
+     
+            <div class="row">
+                <div class="col-md-6">
+				<img src="log.png" style="height:50px; width:200px;    margin-bottom: 30px;margin-top: 30px;">
+                    
+					<table  class="table">
+
+							  <tr>
+								<td class="tab-head">Invoice Number رقم الفاتورة</td>
+								<td>PDS-22-1274</td>
+							
+							  </tr>
+							  <tr>
+								<td class="tab-head">Invoice Date تاريخ الفاتورة</td>
+								<td>19-Dec-2022</td>
+								
+							  </tr>
+							  <tr>
+								<td class="tab-head">DeliveryDate تاريخ التسليم او الوصول</td>
+								<td>19-Dec-2022</td>
+								
+							  </tr>
+							  <tr>
+								<td class="tab-head">Due Date تاريخ الاستحقاق</td>
+								<td>19-Mar-2023</td>
+								
+							  </tr>
+							  <tr>
+								<td class="tab-head">Sales Rep مندول المبيعات</td>
+								<td>AE</td>
+								
+							  </tr>
+							  <tr>
+								<td class="tab-head"> P.O. No. رقم أمر الشراء</td>
+								<td>1168115</td>
+								
+							  </tr>
+							  <tr>
+								<td class="tab-head">PO Date رقم أمر الشراء</td>
+								<td> 18-DEC-2022</td>
+								
+							  </tr>
+							 
+					</table>
+                </div>
+                <div class="col-md-3">
+                   
+                       
+						<img src="log2.png" height="100px" width="200px" style="padding:10px 10px;">
+						 <!--<h3 style="padding:50px 10px; ">Tax Invoice</h3>-->
+						<img src="qrcodee.png" height="200px" width="200px" style="padding:10px 10px;">
+                       
+                    
+                </div>
+				  <div class="col-md-3">
+
+                    <img src="logo.png" height="200px" width="200px" style="margin-top:60px;">
+                       
+                  
+                </div>
+            </div>
+    
+
+
+
+			<div class="row">
+				<div class="col-md-12">
+
+					<table class="table">
+						<tbody>
+								<tr>
+									<td colspan="2" class="txt-col" style="font-weight:bold;">Seller الباعة</td>
+									<td colspan="2" class="txt-col" style="font-weight:bold;">Customer Name اسم العميل</td>
+								</tr>
+								<tr>
+									<td colspan="2" class="txt-col">Pharma Drug Store Co شركة مخزن الأدوية فارما</td>
+									<td colspan="2" class="txt-col"> Al Nahdi medical Company شركة النهدي الطبية</td>
+								</tr>
+							  <tr>
+								<td class="tab-head">VAT NO </td>
+								<td>310134982500003</td>
+								<td class="tab-head">VAT NO</td>
+								<td>310134982500003</td>
+							
+							  </tr>
+							  <tr>
+								<td class="tab-head">Country-City البلد المدينة </td>
+								<td>KSA, Riyadh المملكة العربية السعودية الرياض</td> 
+								<td class="tab-head">Country-City  البلد المدينة</td>
+								<td>KSA, Riyadh المملكة العربية السعودية الرياض</td>
+								
+							  </tr>
+							  <tr>
+								<td class="tab-head">Address العنوان</td>
+								<td>6468 <br> 7435 <br> 3857-12211</td>
+								<td class="tab-head">Address العنوان</td>
+								<td>6468 <br> 7435 <br> 3857-12211</td>
+								
+							  </tr>
+							  <tr>
+								<td class="tab-head">Building & Street البناء والشارع</td>
+								<td>6468</td>
+								<td class="tab-head">Building # Street name البناء والشارع</td>
+								<td>6468</td>
+								
+							  </tr>
+							  <tr>
+								<td class="tab-head">Postal code الرمز البريدي</td>
+								<td>11351</td>
+								<td class="tab-head">Postal Code الرمز البريدي</td>
+								<td>11351</td>
+								
+							  </tr>
+							  <tr>
+								<td class="tab-head"> C.R.</td>
+								<td>1010160412</td>
+								<td class="tab-head">C.R</td>
+								<td>1010160412</td>
+								
+							  </tr>
+							  <tr>
+								<td class="tab-head">Phone الهاتف</td>
+								<td> +966 11 213 3551</td>
+								<td class="tab-head">Phone الهاتف</td>
+								<td>+966 11 213 3551</td>
+								
+							  </tr>
+								<tr>
+								<td class="tab-head">E-mail البريد الإلكتروني</td>
+								<td> sak@pharma.co</td>
+								<td class="tab-head">E-mail البريد الإلكتروني</td>
+								<td>test@gmail.com</td> 
+								
+							  </tr>
+							 
+								
+						</tbody>
+							 
+					</table>
+				
+					<table class="table">
+						<thead>
+						  <tr>
+							<th  class="tab-head">Description الوصف</th>
+							<th  class="tab-head" >Qty الكمية</th>
+							<th  class="tab-head">UP</th>
+							<th  class="tab-head">Batch الدفعة</th>
+							<th  class="tab-head"> VAT% ضريبة القيمة المضافة</th>
+							<th  class="tab-head">Total المجموع</th>
+						  </tr>
+						</thead>
+						<tbody>
+						  <tr>
+							<td>Plerus Plus<br>
+		
+							06-2022<br>
+							06-2022<br>
+							<span class="dis">Discount</span>
+						
+						
+							</td>
+							<td>315 <br>
+							<br>
+							<br>
+							<span class="dis"></span>
+							
+							</td>
+							<td>39<br>
+							<br><br>
+							<br>
+							<span class="dis"></span>
+							
+							
+							</td>
+							<td>vt276 <br>
+							<br><br>
+							<br>
+							<span class="dis"></span>
+							</td>
+							<td>0% <br>
+							<br><br>
+							
+							<span class="dis">0%</span></td>
+							<td>3111119<br>
+							<br><br>
+							
+							<span class="dis">-98098</span></td>
+						  </tr>
+						<tr>
+						<td colspan="2">
+						
+						
+						</td>
+						
+						<td colspan="3"  class="tab-head">Total without VAT   المجموع بدون ضريبة القيمة المضافة</td>
+							<td>SR 36542</td>
+							
+						</tr>
+								<tr>
+						<td colspan="2">
+						
+						
+						</td>
+						
+						<td colspan="3"  class="tab-head"> VAT ضريبة القيمة المضافة</td>
+							<td>SR 0</td>
+							
+						</tr>
+							<tr>
+						<td colspan="2">
+						
+						
+						</td>
+						
+						<td colspan="3" class="tab-head">Total with VAT المجموع مع ضريبة القيمة المضافة</td>
+							<td>SR 36542</td>
+							
+						</tr>
+						
+						</tbody>
+					</table>
+					
+					
+                </div>
+
+
+			</div>
+
+	</div>     
+
+</body>
+</html>
