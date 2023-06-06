@@ -513,6 +513,8 @@ class Site extends CI_Model
 
     public function getCompanyByID($id)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('companies', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -531,6 +533,8 @@ class Site extends CI_Model
 
     public function getCustomerGroupByID($id)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('customer_groups', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -590,6 +594,8 @@ class Site extends CI_Model
 
     public function getPriceGroupByID($id)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('price_groups', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();

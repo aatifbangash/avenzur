@@ -136,6 +136,8 @@ class Companies_model extends CI_Model
 
     public function getAllCustomerGroups()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('customer_groups');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -148,6 +150,8 @@ class Companies_model extends CI_Model
 
     public function getAllPriceGroups()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('price_groups');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -243,8 +247,11 @@ class Companies_model extends CI_Model
 
     public function getCustomerSuggestions($term, $limit = 10)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+
         $this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name, ')') END) as text, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name, ')') END) as value, phone", false);
         $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('companies', ['group_name' => 'customer'], $limit);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {

@@ -1567,10 +1567,12 @@ class Sales extends MY_Controller
 </div></div>';
 
         $this->load->library('datatables');
+        $business_id = $this->ion_auth->user()->row()->business_id;
         //GROUP_CONCAT(CONCAT('Name: ', sale_items.product_name, ' Qty: ', sale_items.quantity ) SEPARATOR '<br>')
         $this->datatables
             ->select('deliveries.id as id, date, do_reference_no, sale_reference_no, customer, address, status, attachment')
             ->from('deliveries')
+            ->where('deliveries.business_id', $business_id)
             ->join('sale_items', 'sale_items.sale_id=deliveries.sale_id', 'left')
             ->group_by('deliveries.id');
         $this->datatables->add_column('Actions', $action, 'id');
@@ -1792,16 +1794,18 @@ class Sales extends MY_Controller
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
         $this->load->library('datatables');
+        $business_id = $this->ion_auth->user()->row()->business_id;
         if ($warehouse_id) {
             $this->datatables
                 ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id")
                 ->from('sales')
+                ->where("{$this->db->dbprefix('sales')}.business_id", $business_id)
                 ->where('warehouse_id', $warehouse_id);
                 //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
         } else {
             $this->datatables
                 ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id,")
-                ->from('sales');
+                ->from('sales')->where("{$this->db->dbprefix('sales')}.business_id", $business_id);
                 
                 
         }

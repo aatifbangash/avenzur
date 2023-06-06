@@ -1672,9 +1672,11 @@ class system_settings extends MY_Controller
     public function getCustomerGroups()
     {
         $this->load->library('datatables');
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $this->datatables
             ->select('id, name, percent')
             ->from('customer_groups')
+            ->where('business_id', $business_id)
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('system_settings/edit_customer_group/$1') . "' class='tip' title='" . lang('edit_customer_group') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_customer_group') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_customer_group/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
         //->unset_column('id');
 
@@ -1695,9 +1697,11 @@ class system_settings extends MY_Controller
     public function getPriceGroups()
     {
         $this->load->library('datatables');
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $this->datatables
             ->select('id, name')
             ->from('price_groups')
+            ->where('business_id', $business_id)
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('system_settings/group_product_prices/$1') . "' class='tip' title='" . lang('group_product_prices') . "'><i class=\"fa fa-eye\"></i></a>  <a href='" . admin_url('system_settings/edit_price_group/$1') . "' class='tip' title='" . lang('edit_price_group') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_price_group') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_price_group/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
         //->unset_column('id');
 
