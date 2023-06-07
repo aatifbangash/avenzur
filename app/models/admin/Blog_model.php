@@ -29,8 +29,9 @@ class blog_model extends CI_Model
         return false;
     }
         public function getBlogByID($id)
-    {
-        $q = $this->db->get_where('blog', ['id' => $id]);
+    {   
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $q = $this->db->get_where('blog', ['id' => $id, 'business_id' => $business_id]);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -38,7 +39,8 @@ class blog_model extends CI_Model
     }
       public function deleteBlog($id)
     {
-        if ($this->db->delete('blog', ['id' => $id])) {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        if ($this->db->delete('blog', ['id' => $id,  'business_id' => $business_id])) {
             return true;
         }
         return false;
