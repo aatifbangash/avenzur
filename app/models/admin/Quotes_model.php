@@ -162,7 +162,8 @@ class Quotes_model extends CI_Model
 
     public function getQuoteByID($id)
     {
-        $q = $this->db->get_where('quotes', ['id' => $id], 1);
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $q = $this->db->get_where('quotes', ['id' => $id, 'business_id'=>$business_id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }

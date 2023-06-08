@@ -536,6 +536,7 @@ class Site extends CI_Model
         $business_id = $this->ion_auth->user()->row()->business_id;
         $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('customer_groups', ['id' => $id], 1);
+        echo $this->db->last_query();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
