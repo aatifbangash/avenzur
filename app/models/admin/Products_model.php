@@ -344,6 +344,8 @@ class Products_model extends CI_Model
 
     public function getAllProducts()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get('products');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -356,6 +358,8 @@ class Products_model extends CI_Model
 
     public function getAllVariants()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get('variants');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {

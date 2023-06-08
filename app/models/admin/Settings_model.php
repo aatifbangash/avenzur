@@ -11,6 +11,8 @@ class Settings_model extends CI_Model
 
     public function addBrand($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('brands', $data)) {
             return true;
         }
@@ -55,6 +57,8 @@ class Settings_model extends CI_Model
 
     public function addCategory($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('categories', $data)) {
             return true;
         }
@@ -63,6 +67,8 @@ class Settings_model extends CI_Model
 
     public function addCurrency($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('currencies', $data)) {
             return true;
         }
@@ -117,6 +123,8 @@ class Settings_model extends CI_Model
 
     public function addTaxRate($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('tax_rates', $data)) {
             return true;
         }
@@ -125,6 +133,8 @@ class Settings_model extends CI_Model
 
     public function addUnit($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('units', $data)) {
             return true;
         }
@@ -133,6 +143,8 @@ class Settings_model extends CI_Model
 
     public function addVariant($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('variants', $data)) {
             return true;
         }
@@ -141,6 +153,8 @@ class Settings_model extends CI_Model
 
     public function addWarehouse($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('warehouses', $data)) {
             return true;
         }
@@ -477,7 +491,8 @@ class Settings_model extends CI_Model
 
     public function getParentCategories()
     {
-        $this->db->where('parent_id', null)->or_where('parent_id', 0);
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('parent_id', null)->or_where('parent_id', 0)->where("business_id", $business_id);
         $q = $this->db->get('categories');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -810,7 +825,8 @@ class Settings_model extends CI_Model
     }
     public function insertCountry($data)
     {
-
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('countries', $data)) {
             return true;
         }
