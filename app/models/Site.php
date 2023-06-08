@@ -1078,8 +1078,9 @@ class Site extends CI_Model
 
     public function log(string $name, array $model)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $detail = $name . ' is being deleted by ' . $this->session->userdata('username') . ' (User Id: ' . $this->session->userdata('user_id') . ')';
-        $this->db->insert('logs', ['detail' => $detail, 'model' => json_encode($model)]);
+        $this->db->insert('logs', ['business_id' => $business_id, 'detail' => $detail, 'model' => json_encode($model)]);
     }
 
     public function modal_js()

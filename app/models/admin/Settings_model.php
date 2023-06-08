@@ -78,7 +78,7 @@ class Settings_model extends CI_Model
     public function addCustomerGroup($data)
     {
         $business_id = $this->ion_auth->user()->row()->business_id;
-        $data['business_id'] = $business_id; 
+        $data['business_id'] = $business_id;
         if ($this->db->insert('customer_groups', $data)) {
             return true;
         }
@@ -105,6 +105,8 @@ class Settings_model extends CI_Model
 
     public function addGroup($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('groups', $data)) {
             $gid = $this->db->insert_id();
             $this->db->insert('permissions', ['group_id' => $gid]);
@@ -480,7 +482,12 @@ class Settings_model extends CI_Model
 
     public function getGroups()
     {
-        $this->db->where('id >', 4);
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
+        // $this->db->where('id >', 4);
+        $ignore = array('owner', 'admin', 'customer', 'supplier');
+
+        $this->db->where_not_in('name', $ignore);
         $q = $this->db->get('groups');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {

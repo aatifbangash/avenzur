@@ -11,6 +11,8 @@ class Promos_model extends CI_Model
 
     public function addPromo($data = [])
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('promos', $data)) {
             $cid = $this->db->insert_id();
             return $cid;
@@ -36,6 +38,8 @@ class Promos_model extends CI_Model
 
     public function getAllPromos()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get('promos');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -48,6 +52,8 @@ class Promos_model extends CI_Model
 
     public function getPromoByID($id)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('promos', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -57,10 +63,13 @@ class Promos_model extends CI_Model
 
     public function getPromosByProduct($pId)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        
         $today = date('Y-m-d');
         $this->db
         ->group_start()->where('start_date <=', $today)->or_where('start_date IS NULL')->group_end()
         ->group_start()->where('end_date >=', $today)->or_where('end_date IS NULL')->group_end();
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('promos', ['product2buy' => $pId]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {

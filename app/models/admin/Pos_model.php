@@ -105,6 +105,8 @@ class Pos_model extends CI_Model
 
     public function addPrinter($data = [])
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('printers', $data)) {
             return $this->db->insert_id();
         }
