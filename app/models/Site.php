@@ -623,7 +623,9 @@ class Site extends CI_Model
 
     public function getProductComboItems($pid, $warehouse_id = null)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $this->db->select('products.id as id, combo_items.item_code as code, combo_items.quantity as qty, products.name as name, products.type as type, combo_items.unit_price as unit_price, warehouses_products.quantity as quantity')
+            ->where("products.business_id", $business_id)
             ->join('products', 'products.code=combo_items.item_code', 'left')
             ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
             ->group_by('combo_items.id');

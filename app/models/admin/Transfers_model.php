@@ -11,6 +11,9 @@ class Transfers_model extends CI_Model
 
     public function addTransfer($data = [], $items = [], $attachments = [])
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
+        
         $this->db->trans_start();
         $status = $data['status'];
         if ($this->db->insert('transfers', $data)) {

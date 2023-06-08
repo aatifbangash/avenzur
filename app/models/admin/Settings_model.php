@@ -95,6 +95,8 @@ class Settings_model extends CI_Model
 
     public function addExpenseCategory($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('expense_categories', $data)) {
             return true;
         }

@@ -1266,10 +1266,11 @@ class Purchases extends MY_Controller
         </div></div>';
 
         $this->load->library('datatables');
-
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $this->datatables
             ->select($this->db->dbprefix('expenses') . ".id as id, date, reference, {$this->db->dbprefix('expense_categories')}.name as category, amount, note, CONCAT({$this->db->dbprefix('users')}.first_name, ' ', {$this->db->dbprefix('users')}.last_name) as user, attachment", false)
             ->from('expenses')
+            ->where("expenses.business_id", $business_id)
             ->join('users', 'users.id=expenses.created_by', 'left')
             ->join('expense_categories', 'expense_categories.id=expenses.category_id', 'left')
             ->group_by('expenses.id');
@@ -1532,15 +1533,17 @@ class Purchases extends MY_Controller
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
         $this->load->library('datatables');
+        $business_id = $this->ion_auth->user()->row()->business_id;
         if ($warehouse_id) {
             $this->datatables
                 ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
                 ->from('purchases')
+                ->where("business_id", $business_id)
                 ->where('warehouse_id', $warehouse_id);
         } else {
             $this->datatables
                 ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
-                ->from('purchases');
+                ->from('purchases')->where("business_id", $business_id);
         }
 
        // if($this->sma->checkPermissionsForRequest('p_status_pending'))

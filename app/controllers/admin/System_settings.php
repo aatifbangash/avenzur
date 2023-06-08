@@ -1689,9 +1689,11 @@ class system_settings extends MY_Controller
     public function getExpenseCategories()
     {
         $this->load->library('datatables');
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $this->datatables
             ->select('id, code, name')
             ->from('expense_categories')
+            ->where("expense_categories.business_id", $business_id)
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('system_settings/edit_expense_category/$1') . "' data-toggle='modal' data-target='#myModal' class='tip' title='" . lang('edit_expense_category') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_expense_category') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_expense_category/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
 
         echo $this->datatables->generate();

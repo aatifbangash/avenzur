@@ -11,6 +11,9 @@ class Returns_model extends CI_Model
 
     public function addReturn($data = [], $items = [])
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
+
         $this->db->trans_start();
         if ($this->db->insert('returns', $data)) {
             $return_id = $this->db->insert_id();
@@ -63,7 +66,8 @@ class Returns_model extends CI_Model
 
     public function getProductNames($term, $limit = 5)
     {
-        $this->db->where("(name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id)->where("(name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
         $this->db->limit($limit);
         $q = $this->db->get('products');
         if ($q->num_rows() > 0) {
@@ -77,6 +81,8 @@ class Returns_model extends CI_Model
 
     public function getProductOptionByID($id)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('product_variants', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -86,6 +92,8 @@ class Returns_model extends CI_Model
 
     public function getProductOptions($product_id)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('product_variants', ['product_id' => $product_id]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
