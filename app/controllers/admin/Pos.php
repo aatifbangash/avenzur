@@ -738,10 +738,12 @@ class Pos extends MY_Controller
         </div></div>';
 
         $this->load->library('datatables');
+        $business_id = $this->ion_auth->user()->row()->business_id;
         if ($warehouse_id) {
             $this->datatables
                 ->select($this->db->dbprefix('sales') . ".id as id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, biller, customer, (grand_total+COALESCE(rounding, 0)), paid, CONCAT(grand_total, '__', rounding, '__', paid) as balance, sale_status, payment_status, companies.email as cemail")
                 ->from('sales')
+                ->where("sales.business_id", $business_id)
                 ->join('companies', 'companies.id=sales.customer_id', 'left')
                 ->where('warehouse_id', $warehouse_id)
                 ->group_by('sales.id');
@@ -749,6 +751,7 @@ class Pos extends MY_Controller
             $this->datatables
                 ->select($this->db->dbprefix('sales') . ".id as id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, biller, customer, (grand_total+COALESCE(rounding, 0)), paid, CONCAT(grand_total, '__', rounding, '__', paid) as balance, sale_status, payment_status, companies.email as cemail")
                 ->from('sales')
+                ->where("sales.business_id", $business_id)
                 ->join('companies', 'companies.id=sales.customer_id', 'left')
                 ->group_by('sales.id');
         }

@@ -245,6 +245,8 @@ class Products_model extends CI_Model
 
     public function addStockCount($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('stock_counts', $data)) {
             return true;
         }

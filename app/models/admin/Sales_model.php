@@ -11,6 +11,8 @@ class Sales_model extends CI_Model
 
     public function addDelivery($data = [])
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('deliveries', $data)) {
             if ($this->site->getReference('do') == $data['do_reference_no']) {
                 $this->site->updateReference('do');
@@ -24,6 +26,8 @@ class Sales_model extends CI_Model
 
     public function addGiftCard($data = [], $ca_data = [], $sa_data = [])
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('gift_cards', $data)) {
             if (!empty($ca_data)) {
                 $this->db->update('companies', ['award_points' => $ca_data['points']], ['id' => $ca_data['customer']]);
@@ -48,6 +52,8 @@ class Sales_model extends CI_Model
 
     public function addPayment($data = [], $customer_id = null)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('payments', $data)) {
             if ($this->site->getReference('pay') == $data['reference_no']) {
                 $this->site->updateReference('pay');
@@ -654,6 +660,8 @@ class Sales_model extends CI_Model
         if (!$this->Owner) {
             $this->db->where('group_id !=', 1);
         }
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $this->db->where('group_id !=', 3)->where('group_id !=', 4);
         $q = $this->db->get('users');
         if ($q->num_rows() > 0) {

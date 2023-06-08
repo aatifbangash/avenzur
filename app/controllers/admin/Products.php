@@ -1520,9 +1520,11 @@ class Products extends MY_Controller
         $detail_link = anchor('admin/products/view_count/$1', '<label class="label label-primary pointer">' . lang('details') . '</label>', 'class="tip" title="' . lang('details') . '" data-toggle="modal" data-target="#myModal"');
 
         $this->load->library('datatables');
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $this->datatables
             ->select("{$this->db->dbprefix('stock_counts')}.id as id, date, reference_no, {$this->db->dbprefix('warehouses')}.name as wh_name, type, brand_names, category_names, initial_file, final_file")
             ->from('stock_counts')
+            ->where("{$this->db->dbprefix('stock_counts')}.business_id", $business_id)
             ->join('warehouses', 'warehouses.id=stock_counts.warehouse_id', 'left');
         if ($warehouse_id) {
             $this->datatables->where('warehouse_id', $warehouse_id);
