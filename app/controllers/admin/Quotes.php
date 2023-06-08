@@ -223,6 +223,10 @@ class Quotes extends MY_Controller
         foreach ($quotes_id as $quote_id) {
             $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
             $inv                 = $this->quotes_model->getQuoteByID($quote_id);
+            if(empty($inv)){
+                $this->session->set_flashdata('error', $this->lang->line('Quotation not found'));
+                admin_redirect('quotes');
+            }
             if (!$this->session->userdata('view_right')) {
                 $this->sma->view_rights($inv->created_by);
             }
@@ -272,7 +276,7 @@ class Quotes extends MY_Controller
         }
         $inv = $this->quotes_model->getQuoteByID($id);
         if(empty($inv)){
-            $this->session->set_flashdata('error', $this->lang->line('not_found'));
+            $this->session->set_flashdata('error', $this->lang->line('Quotation not found'));
             admin_redirect('quotes');
         }
 
@@ -543,6 +547,10 @@ class Quotes extends MY_Controller
             $quote_id = $this->input->get('id');
         }
         $inv = $this->quotes_model->getQuoteByID($quote_id);
+        if(empty($inv)){
+            $this->session->set_flashdata('error', $this->lang->line('Quotation not found'));
+            admin_redirect('quotes');
+        }
         $this->form_validation->set_rules('to', $this->lang->line('to') . ' ' . $this->lang->line('email'), 'trim|required|valid_email');
         $this->form_validation->set_rules('subject', $this->lang->line('subject'), 'trim|required');
         $this->form_validation->set_rules('cc', $this->lang->line('cc'), 'trim|valid_emails');
@@ -707,6 +715,10 @@ class Quotes extends MY_Controller
         }
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv                 = $this->quotes_model->getQuoteByID($quote_id);
+        if(empty($inv)){
+            $this->session->set_flashdata('error', $this->lang->line('Quotation not found'));
+            admin_redirect('quotes');
+        }
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by, true);
         }
@@ -730,6 +742,10 @@ class Quotes extends MY_Controller
         }
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv                 = $this->quotes_model->getQuoteByID($quote_id);
+        if(empty($inv)){
+            $this->session->set_flashdata('error', $this->lang->line('Quotation not found'));
+            admin_redirect('quotes');
+        }
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by);
         }
@@ -952,7 +968,7 @@ class Quotes extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv                 = $this->quotes_model->getQuoteByID($quote_id);
         if(empty($inv)){
-            $this->session->set_flashdata('error', $this->lang->line('not_found'));
+            $this->session->set_flashdata('error', $this->lang->line('Quotation not found'));
             admin_redirect('quotes');
         }
         if (!$this->session->userdata('view_right')) {
