@@ -1494,9 +1494,10 @@ class Products extends MY_Controller
             . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a>";
 
         $this->load->library('datatables');
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $this->datatables
             ->select("{$this->db->dbprefix('adjustments')}.id as id, date, reference_no, warehouses.name as wh_name, CONCAT({$this->db->dbprefix('users')}.first_name, ' ', {$this->db->dbprefix('users')}.last_name) as created_by, note, attachment")
-            ->from('adjustments')
+            ->from('adjustments')->where("adjustments.business_id", $business_id)
             ->join('warehouses', 'warehouses.id=adjustments.warehouse_id', 'left')
             ->join('users', 'users.id=adjustments.created_by', 'left')
             ->group_by('adjustments.id');

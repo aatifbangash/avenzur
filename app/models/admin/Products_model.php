@@ -36,6 +36,8 @@ class Products_model extends CI_Model
 
     public function addAdjustment($data, $products)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data['business_id'] = $business_id;
         if ($this->db->insert('adjustments', $data)) {
             $adjustment_id = $this->db->insert_id();
             foreach ($products as $product) {
@@ -519,6 +521,8 @@ class Products_model extends CI_Model
 
     public function getProductOptions($pid)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('product_variants', ['product_id' => $pid]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -679,7 +683,10 @@ class Products_model extends CI_Model
 
     public function getQASuggestions($term, $limit = 5)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name')
+        ->where("{$this->db->dbprefix('products')}.business_id", $business_id)
             ->where("type != 'combo' AND "
                 . '(' . $this->db->dbprefix('products') . ".name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR
                 concat(" . $this->db->dbprefix('products') . ".name, ' (', code, ')') LIKE '%" . $term . "%')")
