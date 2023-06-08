@@ -88,7 +88,7 @@ class stock_request extends MY_Controller
         
 
         $this->load->library('datatables');
-
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $this->datatables
             ->select('id, date, transfer_no, from_warehouse_name as fname, from_warehouse_code as fcode, to_warehouse_name as tname,to_warehouse_code as tcode, total, total_tax, grand_total, status, attachment')
             ->from('transfers')
@@ -97,7 +97,7 @@ class stock_request extends MY_Controller
         
           //$this->datatables->or_where('from_warehouse_id', $this->session->userdata('warehouse_id'));
          //$this->datatables->or_where('to_warehouse_id', $this->session->userdata('warehouse_id'));
-         
+         $this->datatables->where("business_id", $business_id);
          $this->datatables->where('type', 'stock');
         if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $this->datatables->or_where('created_by', $this->session->userdata('user_id')); 
@@ -140,10 +140,10 @@ class stock_request extends MY_Controller
         
 
         $this->load->library('datatables');
-
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $this->datatables
             ->select('id, date, transfer_no, from_warehouse_name as fname, from_warehouse_code as fcode, to_warehouse_name as tname,to_warehouse_code as tcode, total, total_tax, grand_total, status, attachment')
-            ->from('transfers')
+            ->from('transfers')->where("business_id", $business_id)
             ->edit_column('fname', '$1 ($2)', 'fname, fcode')
             ->edit_column('tname', '$1 ($2)', 'tname, tcode');
         
