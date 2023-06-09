@@ -570,6 +570,8 @@ class Settings_model extends CI_Model
 
     public function getSettings()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('settings');
         if ($q->num_rows() > 0) {
             return $q->row();

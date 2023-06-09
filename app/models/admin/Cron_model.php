@@ -12,6 +12,7 @@ class Cron_model extends CI_Model
 
     public function getSettings()
     {
+        return false;
         $q = $this->db->get_where('settings', ['setting_id' => 1], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
