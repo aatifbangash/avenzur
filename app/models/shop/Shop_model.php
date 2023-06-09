@@ -353,7 +353,8 @@ class Shop_model extends CI_Model
     }
     public function getPaypalSettings()
     {
-        return $this->db->get_where('paypal', ['id' => 1])->row();
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        return $this->db->get_where('paypal', ['business_id' => $business_id])->row();
     }
 
     public function getPriceGroup($id)
@@ -749,7 +750,8 @@ class Shop_model extends CI_Model
 
     public function getSkrillSettings()
     {
-        return $this->db->get_where('skrill', ['id' => 1])->row();
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        return $this->db->get_where('skrill', ['business_id' => $business_id])->row();
     }
 
     public function getSpecialPrice()

@@ -405,7 +405,8 @@ class Sales_model extends CI_Model
 
     public function getPaypalSettings()
     {
-        $q = $this->db->get_where('paypal', ['id' => 1]);
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $q = $this->db->get_where('paypal', ['business_id' => $business_id]);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -648,7 +649,8 @@ class Sales_model extends CI_Model
 
     public function getSkrillSettings()
     {
-        $q = $this->db->get_where('skrill', ['id' => 1]);
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $q = $this->db->get_where('skrill', ['business_id' => $business_id]);
         if ($q->num_rows() > 0) {
             return $q->row();
         }

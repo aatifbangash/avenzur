@@ -145,6 +145,7 @@ class Cron_model extends CI_Model
 
     private function checkUpdate()
     {
+        return false;
         $fields = ['version' => $this->Settings->version, 'code' => $this->Settings->purchase_code, 'username' => $this->Settings->envato_username, 'site' => base_url()];
         $this->load->helper('update');
         $protocol = is_https() ? 'https://' : 'http://';

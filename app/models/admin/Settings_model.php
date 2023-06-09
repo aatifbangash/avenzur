@@ -308,6 +308,8 @@ class Settings_model extends CI_Model
 
     public function getAllCurrencies()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('currencies');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -320,6 +322,8 @@ class Settings_model extends CI_Model
 
     public function getAllCustomerGroups()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('customer_groups');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -332,6 +336,8 @@ class Settings_model extends CI_Model
 
     public function getAllPriceGroups()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('price_groups');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -356,6 +362,8 @@ class Settings_model extends CI_Model
 
     public function getAllVariants()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('variants');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -368,6 +376,8 @@ class Settings_model extends CI_Model
 
     public function getAllWarehouses()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('warehouses');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -380,6 +390,8 @@ class Settings_model extends CI_Model
 
     public function getBrandByName($name)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('brands', ['name' => $name], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -389,6 +401,8 @@ class Settings_model extends CI_Model
 
     public function getCategoryByCode($code)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('categories', ['code' => $code], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -398,6 +412,8 @@ class Settings_model extends CI_Model
 
     public function getCategoryByID($id)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('categories', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -407,6 +423,8 @@ class Settings_model extends CI_Model
 
     public function getCurrencyByID($id)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('currencies', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -416,6 +434,8 @@ class Settings_model extends CI_Model
 
     public function getCustomerGroupByID($id)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('customer_groups', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -425,6 +445,8 @@ class Settings_model extends CI_Model
 
     public function getDateFormats()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('date_format');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -514,6 +536,8 @@ class Settings_model extends CI_Model
 
     public function getPaypalSettings()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('paypal');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -555,6 +579,8 @@ class Settings_model extends CI_Model
 
     public function getSkrillSettings()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('skrill');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -563,6 +589,8 @@ class Settings_model extends CI_Model
     }
     public function getdirectPay()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('directpay');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -571,6 +599,8 @@ class Settings_model extends CI_Model
     }
     public function getaramex()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('aramex');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -721,8 +751,9 @@ class Settings_model extends CI_Model
 
     public function updateLoginLogo($photo)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $logo = ['logo2' => $photo];
-        if ($this->db->update('settings', $logo)) {
+        if ($this->db->update('settings', $logo, ['business_id' => $business_id])) {
             return true;
         }
         return false;
@@ -730,8 +761,9 @@ class Settings_model extends CI_Model
 
     public function updateLogo($photo)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
         $logo = ['logo' => $photo];
-        if ($this->db->update('settings', $logo)) {
+        if ($this->db->update('settings', $logo, ['business_id' => $business_id])) {
             return true;
         }
         return false;
@@ -739,7 +771,8 @@ class Settings_model extends CI_Model
 
     public function updatePaypal($data)
     {
-        $this->db->where('id', '1');
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         if ($this->db->update('paypal', $data)) {
             return true;
         }
@@ -765,7 +798,8 @@ class Settings_model extends CI_Model
 
     public function updateSetting($data)
     {
-        $this->db->where('setting_id', '1');
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         if ($this->db->update('settings', $data)) {
             return true;
         }
@@ -774,7 +808,8 @@ class Settings_model extends CI_Model
 
     public function updateSkrill($data)
     {
-        $this->db->where('id', '1');
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         if ($this->db->update('skrill', $data)) {
             return true;
         }
@@ -782,7 +817,8 @@ class Settings_model extends CI_Model
     }
     public function updatedirectPay($data)
     {
-        $this->db->where('id', '1');
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         if ($this->db->update('directpay', $data)) {
             return true;
         }
@@ -791,7 +827,8 @@ class Settings_model extends CI_Model
 
     public function updatearamex($data)
     {
-        $this->db->where('id', '1');
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         if ($this->db->update('aramex', $data)) {
             return true;
         }

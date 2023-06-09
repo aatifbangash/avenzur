@@ -301,6 +301,8 @@ class Site extends CI_Model
 
     public function get_setting()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('settings');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -1360,7 +1362,8 @@ class Site extends CI_Model
                     $this->db->update('invoices', ['status' => 'due'], ['id' => $row->id]);
                 }
             }
-            $this->db->update('settings', ['update' => $date], ['setting_id' => '1']);
+            $business_id = $this->ion_auth->user()->row()->business_id;
+            $this->db->update('settings', ['update' => $date], ['business_id' => $business_id]);
             return true;
         }
     }
