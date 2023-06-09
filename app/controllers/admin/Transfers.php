@@ -1292,6 +1292,7 @@ class Transfers extends MY_Controller
                             'expiry'            => $item_expiry,
                             'real_unit_cost'    => $unit_cost,
                             'date'              => date('Y-m-d', strtotime($date)),
+                            'business_id'    => $this->ion_auth->user()->row()->business_id,
                         ];
 
                         $products[] = ($product + $gst_data);

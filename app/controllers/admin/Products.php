@@ -504,6 +504,7 @@ class Products extends MY_Controller
                 'note'         => $note,
                 'created_by'   => $this->session->userdata('user_id'),
                 'count_id'     => null,
+                'business_id'    => $this->ion_auth->user()->row()->business_id,
             ];
 
             if ($_FILES['csv_file']['size'] > 0) {

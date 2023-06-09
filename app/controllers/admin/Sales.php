@@ -2552,6 +2552,7 @@ class Sales extends MY_Controller
                                     'serial_no'         => $item_serial,
                                     'unit_price'        => $this->sma->formatDecimal($unit_price, 4),
                                     'real_unit_price'   => $this->sma->formatDecimal(($unit_price + $pr_discount), 4),
+                                    'business_id'    => $this->ion_auth->user()->row()->business_id,
                                 ];
 
                                 $products[] = ($product + $gst_data);

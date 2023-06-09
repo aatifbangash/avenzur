@@ -1933,6 +1933,7 @@ class Purchases extends MY_Controller
                                 'unit_cost'         => $unit_cost, // $this->sma->formatDecimal(($item_net_cost + $item_tax), 4),
                                 'real_unit_cost'    => $real_unit_cost,
                                 'base_unit_cost'    => $real_unit_cost,
+                                'business_id'    => $this->ion_auth->user()->row()->business_id,
                             ];
 
                             $products[] = ($product + $gst_data);
