@@ -301,8 +301,10 @@ class Site extends CI_Model
 
     public function get_setting()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
-        $this->db->where('business_id', $business_id);
+        if ($this->ion_auth->logged_in()) {
+            $business_id = $this->ion_auth->user()->row()->business_id;
+            $this->db->where('business_id', $business_id);
+        }
         $q = $this->db->get('settings');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -865,8 +867,10 @@ class Site extends CI_Model
 
     public function getTaxRateByID($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
-        $this->db->where('business_id', $business_id);
+        if ($this->ion_auth->logged_in()) {
+            $business_id = $this->ion_auth->user()->row()->business_id;
+            $this->db->where('business_id', $business_id);
+        }
         $q = $this->db->get_where('tax_rates', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
