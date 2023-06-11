@@ -14,6 +14,8 @@ class blog_categories_model  extends CI_Model
 
 
       public function addBcategory($data){
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data["business_id"] = $business_id;
      if ($this->db->insert('blog_categories', $data)) {
             return true;
         }

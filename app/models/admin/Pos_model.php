@@ -136,6 +136,8 @@ class Pos_model extends CI_Model
         // $this->sma->print_arrays($cost);
         $this->db->trans_start();
         $data['reference_no'] = $this->site->getReference('pos');
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data["business_id"] = $business_id;
         if ($this->db->insert('sales', $data)) {
             $sale_id = $this->db->insert_id();
             foreach ($items as $item) {

@@ -11,6 +11,8 @@ class Companies_model extends CI_Model
 
     public function addAddress($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data["business_id"] = $business_id;
         if ($this->db->insert('addresses', $data)) {
             return true;
         }
@@ -38,6 +40,8 @@ class Companies_model extends CI_Model
 
     public function addDeposit($data, $cdata)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data["business_id"] = $business_id;
         if ($this->db->insert('deposits', $data) && $this->db->update('companies', $cdata, ['id' => $data['company_id']])) {
             return true;
         }

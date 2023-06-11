@@ -11,6 +11,8 @@ class Pay_model extends CI_Model
 
     public function addPayment($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data["business_id"] = $business_id;
         if ($this->db->insert('payments', $data)) {
             $this->site->updateReference('pay');
             return true;
@@ -20,6 +22,8 @@ class Pay_model extends CI_Model
 
     public function getCompanyByID($id)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         return $this->db->get_where('companies', ['id' => $id])->row();
     }
     

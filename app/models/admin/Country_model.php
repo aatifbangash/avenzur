@@ -14,7 +14,8 @@ class Country_model extends CI_Model
 
 
         public function insertCountry($data){
-        
+            $business_id = $this->ion_auth->user()->row()->business_id;
+            $data["business_id"] = $business_id;
         if ($this->db->insert('countries', $data)) {
             return true;
         }

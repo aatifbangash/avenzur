@@ -11,6 +11,9 @@ class Quotes_model extends CI_Model
 
     public function addQuote($data = [], $items = [])
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data["business_id"] = $business_id;
+
         if ($this->db->insert('quotes', $data)) {
             $quote_id = $this->db->insert_id();
             if ($this->site->getReference('qu') == $data['reference_no']) {

@@ -33,6 +33,8 @@ class Purchases_model extends CI_Model
 
     public function addPayment($data = [])
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data["business_id"] = $business_id;
         if ($this->db->insert('payments', $data)) {
             if ($this->site->getReference('ppay') == $data['reference_no']) {
                 $this->site->updateReference('ppay');
@@ -550,6 +552,9 @@ class Purchases_model extends CI_Model
     public function returnPurchase($data = [], $items = [])
     {
         $purchase_items = $this->site->getAllPurchaseItems($data['purchase_id']);
+
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data["business_id"] = $business_id;
 
         if ($this->db->insert('return_purchases', $data)) {
             $return_id = $this->db->insert_id();

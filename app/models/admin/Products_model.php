@@ -55,6 +55,8 @@ class Products_model extends CI_Model
 
     public function addAjaxProduct($data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $data["business_id"] = $business_id;
         if ($this->db->insert('products', $data)) {
             $product_id = $this->db->insert_id();
             return $this->getProductByID($product_id);
