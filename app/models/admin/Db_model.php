@@ -18,6 +18,8 @@ class Db_model extends CI_Model
             $end_date = date('Y-m-d', strtotime('last day of this month')) . ' 23:59:59';
         }
 
+        $business_id = $this->ion_auth->user()->row()->business_id;
+
         $this->db
             ->select('product_name, product_code')
             ->select_sum('quantity')
@@ -25,6 +27,7 @@ class Db_model extends CI_Model
             ->join('sales', 'sales.id = sale_items.sale_id', 'left')
             ->where('date >=', $start_date)
             ->where('date <', $end_date)
+            ->where('sales.business_id', $business_id)
             ->group_by('product_name, product_code')
             ->order_by('sum(quantity)', 'desc')
             ->limit(10);
@@ -40,6 +43,8 @@ class Db_model extends CI_Model
 
     public function getChartData()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+
         $myQuery = "SELECT S.month,
         COALESCE(S.sales, 0) as sales,
         COALESCE( P.purchases, 0 ) as purchases,
@@ -52,6 +57,7 @@ class Db_model extends CI_Model
                 SUM(order_tax) tax2
                 FROM " . $this->db->dbprefix('sales') . "
                 WHERE date >= date_sub( now( ) , INTERVAL 12 MONTH )
+                AND business_id = $business_id
                 GROUP BY date_format(date, '%Y-%m')) S
             LEFT JOIN ( SELECT  date_format(date, '%Y-%m') Month,
                         SUM(product_tax) ptax,
@@ -76,6 +82,8 @@ class Db_model extends CI_Model
         if ($this->Settings->restrict_user && !$this->Owner && !$this->Admin) {
             $this->db->where('created_by', $this->session->userdata('user_id'));
         }
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $this->db->order_by('id', 'desc');
         $q = $this->db->get('quotes', 5);
         if ($q->num_rows() > 0) {
@@ -89,6 +97,9 @@ class Db_model extends CI_Model
     public function getLatestCustomers()
     {
         $this->db->order_by('id', 'desc');
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
+
         $q = $this->db->get_where('companies', ['group_name' => 'customer'], 5);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -103,6 +114,8 @@ class Db_model extends CI_Model
         if ($this->Settings->restrict_user && !$this->Owner && !$this->Admin) {
             $this->db->where('created_by', $this->session->userdata('user_id'));
         }
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $this->db->order_by('id', 'desc');
         $q = $this->db->get('purchases', 5);
         if ($q->num_rows() > 0) {
@@ -118,6 +131,8 @@ class Db_model extends CI_Model
         if ($this->Settings->restrict_user && !$this->Owner && !$this->Admin) {
             $this->db->where('created_by', $this->session->userdata('user_id'));
         }
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $this->db->order_by('id', 'desc');
         $q = $this->db->get('sales', 5);
         if ($q->num_rows() > 0) {
@@ -131,6 +146,8 @@ class Db_model extends CI_Model
     public function getLatestSuppliers()
     {
         $this->db->order_by('id', 'desc');
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('companies', ['group_name' => 'supplier'], 5);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -145,6 +162,8 @@ class Db_model extends CI_Model
         if ($this->Settings->restrict_user && !$this->Owner && !$this->Admin) {
             $this->db->where('created_by', $this->session->userdata('user_id'));
         }
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $this->db->order_by('id', 'desc');
         $q = $this->db->get('transfers', 5);
         if ($q->num_rows() > 0) {
@@ -157,11 +176,14 @@ class Db_model extends CI_Model
 
     public function getStockValue()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+
         $q = $this->db->query('SELECT SUM(qty*price) as stock_by_price, SUM(qty*cost) as stock_by_cost
         FROM (
             Select sum(COALESCE(' . $this->db->dbprefix('warehouses_products') . '.quantity, 0)) as qty, price, cost
             FROM ' . $this->db->dbprefix('products') . '
             JOIN ' . $this->db->dbprefix('warehouses_products') . ' ON ' . $this->db->dbprefix('warehouses_products') . '.product_id=' . $this->db->dbprefix('products') . '.id
+            WHERE ' . $this->db->dbprefix('products') . '.business_id = ' . $business_id . '
             GROUP BY ' . $this->db->dbprefix('warehouses_products') . '.id ) a');
         if ($q->num_rows() > 0) {
             return $q->row();

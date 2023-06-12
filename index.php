@@ -41,7 +41,7 @@
  */
 	// define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : 'development');
 	if(!empty($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] == 'localhost') {
-		define('ENVIRONMENT', 'development');
+		define('ENVIRONMENT', 'production');
 	} else {
 		define('ENVIRONMENT', 'production');
 	}
