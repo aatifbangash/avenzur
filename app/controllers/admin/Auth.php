@@ -119,6 +119,42 @@ class Auth extends MY_Controller
         }
     }
 
+    public function unique_username($username)
+    {
+
+
+        $this->load->library('datatables');
+        $business_id = $this->ion_auth->user()->row()->business_id;
+
+        $this->db->select('COUNT(*) AS count')
+            ->from('users')
+            ->where('business_id', $business_id)
+            ->where('username', $username);
+        $total = $this->db->get()->row()->count;
+        if ($total > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function unique_email($email)
+    {
+        $this->load->library('datatables');
+        $business_id = $this->ion_auth->user()->row()->business_id;
+
+        $this->db->select('COUNT(*) AS count')
+            ->from('users')
+            ->where('business_id', $business_id)
+            ->where('email', $email);
+        $total = $this->db->get()->row()->count;
+        if ($total > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function create_user()
     {
         if (!$this->Owner) {
@@ -127,8 +163,8 @@ class Auth extends MY_Controller
         }
 
         $this->data['title'] = 'Create User';
-        $this->form_validation->set_rules('username', lang('username'), 'trim|is_unique[users.username]');
-        $this->form_validation->set_rules('email', lang('email'), 'trim|is_unique[users.email]');
+        $this->form_validation->set_rules('username', lang('username'), 'trim|callback_unique_username');
+        $this->form_validation->set_rules('email', lang('email'), 'trim|callback_unique_email');
         $this->form_validation->set_rules('status', lang('status'), 'trim|required');
         $this->form_validation->set_rules('group', lang('group'), 'trim|required');
 

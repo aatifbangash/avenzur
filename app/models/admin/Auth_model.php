@@ -1437,6 +1437,9 @@ class Auth_model extends CI_Model
 
         $this->trigger_events('extra_where');
 
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
+
         return $this->db->where('username', $username)
             ->count_all_results($this->tables['users']) > 0;
     }
