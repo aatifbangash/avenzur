@@ -642,6 +642,7 @@ class Customers extends MY_Controller
                         'customer_group_name' => (!empty($customer_group)) ? $customer_group->name : null,
                         'price_group_id'      => (!empty($price_group)) ? $price_group->id : null,
                         'price_group_name'    => (!empty($price_group)) ? $price_group->name : null,
+                        "business_id" => $this->ion_auth->user()->row()->business_id
                     ];
                     if (empty($customer['company']) || empty($customer['name']) || empty($customer['email'])) {
                         $this->session->set_flashdata('error', lang('company') . ', ' . lang('name') . ', ' . lang('email') . ' ' . lang('are_required') . ' (' . lang('line_no') . ' ' . $rw . ')');

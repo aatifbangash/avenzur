@@ -483,6 +483,8 @@ class Site extends CI_Model
 
     public function getallWCountry()
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get('warehouses_country');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {

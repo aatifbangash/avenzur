@@ -84,6 +84,8 @@ class Cmt_model extends CI_Model
 
     public function updateNotification($id, $data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $this->db->where('id', $id);
         if ($this->db->update('notifications', $data)) {
             return true;

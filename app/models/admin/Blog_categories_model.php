@@ -39,6 +39,8 @@ class blog_categories_model  extends CI_Model
     }
      public function updateBlogCategory($id, $data)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         if ($this->db->update('blog_categories', $data, ['id' => $id])) {
             return true;
         }
@@ -46,6 +48,8 @@ class blog_categories_model  extends CI_Model
     }
         public function getBlogCategoryByID($id)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('blog_categories', ['id' => $id]);
         if ($q->num_rows() > 0) {
             return $q->row();

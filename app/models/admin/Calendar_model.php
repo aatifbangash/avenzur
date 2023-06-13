@@ -21,6 +21,8 @@ class Calendar_model extends CI_Model
 
     public function deleteEvent($id)
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         if ($this->db->delete('calendar', ['id' => $id])) {
             return true;
         }
@@ -61,6 +63,8 @@ class Calendar_model extends CI_Model
 
     public function updateEvent($id, $data = [])
     {
+        $business_id = $this->ion_auth->user()->row()->business_id;
+        $this->db->where("business_id", $business_id);
         if ($this->db->update('calendar', $data, ['id' => $id])) {
             return true;
         }

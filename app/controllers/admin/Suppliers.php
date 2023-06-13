@@ -269,6 +269,7 @@ class Suppliers extends MY_Controller
                         'cf6'         => isset($value[16]) ? trim($value[16]) : '',
                         'group_id'    => 4,
                         'group_name'  => 'supplier',
+                        "business_id" => $this->ion_auth->user()->row()->business_id
                     ];
                     if (empty($supplier['company']) || empty($supplier['name']) || empty($supplier['email'])) {
                         $this->session->set_flashdata('error', lang('company') . ', ' . lang('name') . ', ' . lang('email') . ' ' . lang('are_required') . ' (' . lang('line_no') . ' ' . $rw . ')');
