@@ -11,7 +11,7 @@ class Settings_model extends CI_Model
 
     public function addBrand($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('brands', $data)) {
             return true;
@@ -57,7 +57,7 @@ class Settings_model extends CI_Model
 
     public function addCategory($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('categories', $data)) {
             return true;
@@ -67,7 +67,7 @@ class Settings_model extends CI_Model
 
     public function addCurrency($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('currencies', $data)) {
             return true;
@@ -77,7 +77,7 @@ class Settings_model extends CI_Model
 
     public function addCustomerGroup($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('customer_groups', $data)) {
             return true;
@@ -95,7 +95,7 @@ class Settings_model extends CI_Model
 
     public function addExpenseCategory($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('expense_categories', $data)) {
             return true;
@@ -105,7 +105,7 @@ class Settings_model extends CI_Model
 
     public function addGroup($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('groups', $data)) {
             $gid = $this->db->insert_id();
@@ -117,7 +117,7 @@ class Settings_model extends CI_Model
 
     public function addPriceGroup($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('price_groups', $data)) {
             return true;
@@ -127,7 +127,7 @@ class Settings_model extends CI_Model
 
     public function addTaxRate($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('tax_rates', $data)) {
             return true;
@@ -137,7 +137,7 @@ class Settings_model extends CI_Model
 
     public function addUnit($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('units', $data)) {
             return true;
@@ -147,7 +147,7 @@ class Settings_model extends CI_Model
 
     public function addVariant($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('variants', $data)) {
             return true;
@@ -157,7 +157,7 @@ class Settings_model extends CI_Model
 
     public function addWarehouse($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('warehouses', $data)) {
             return true;
@@ -308,7 +308,7 @@ class Settings_model extends CI_Model
 
     public function getAllCurrencies()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get('currencies');
         if ($q->num_rows() > 0) {
@@ -322,7 +322,7 @@ class Settings_model extends CI_Model
 
     public function getAllCustomerGroups()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get('customer_groups');
         if ($q->num_rows() > 0) {
@@ -336,7 +336,7 @@ class Settings_model extends CI_Model
 
     public function getAllPriceGroups()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get('price_groups');
         if ($q->num_rows() > 0) {
@@ -362,7 +362,7 @@ class Settings_model extends CI_Model
 
     public function getAllVariants()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get('variants');
         if ($q->num_rows() > 0) {
@@ -376,7 +376,7 @@ class Settings_model extends CI_Model
 
     public function getAllWarehouses()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get('warehouses');
         if ($q->num_rows() > 0) {
@@ -390,7 +390,7 @@ class Settings_model extends CI_Model
 
     public function getBrandByName($name)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('brands', ['name' => $name], 1);
         if ($q->num_rows() > 0) {
@@ -401,7 +401,7 @@ class Settings_model extends CI_Model
 
     public function getCategoryByCode($code)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('categories', ['code' => $code], 1);
         if ($q->num_rows() > 0) {
@@ -412,7 +412,7 @@ class Settings_model extends CI_Model
 
     public function getCategoryByID($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('categories', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
@@ -423,7 +423,7 @@ class Settings_model extends CI_Model
 
     public function getCurrencyByID($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('currencies', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
@@ -434,7 +434,7 @@ class Settings_model extends CI_Model
 
     public function getCustomerGroupByID($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('customer_groups', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
@@ -445,7 +445,7 @@ class Settings_model extends CI_Model
 
     public function getDateFormats()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get('date_format');
         if ($q->num_rows() > 0) {
@@ -504,7 +504,7 @@ class Settings_model extends CI_Model
 
     public function getGroups()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         // $this->db->where('id >', 4);
         $ignore = array('owner', 'admin', 'customer', 'supplier');
@@ -522,7 +522,7 @@ class Settings_model extends CI_Model
 
     public function getParentCategories()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('parent_id', null)->or_where('parent_id', 0)->where("business_id", $business_id);
         $q = $this->db->get('categories');
         if ($q->num_rows() > 0) {
@@ -536,7 +536,7 @@ class Settings_model extends CI_Model
 
     public function getPaypalSettings()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get('paypal');
         if ($q->num_rows() > 0) {
@@ -570,7 +570,7 @@ class Settings_model extends CI_Model
 
     public function getSettings()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get('settings');
         if ($q->num_rows() > 0) {
@@ -581,7 +581,7 @@ class Settings_model extends CI_Model
 
     public function getSkrillSettings()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get('skrill');
         if ($q->num_rows() > 0) {
@@ -591,7 +591,7 @@ class Settings_model extends CI_Model
     }
     public function getdirectPay()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get('directpay');
         if ($q->num_rows() > 0) {
@@ -601,7 +601,7 @@ class Settings_model extends CI_Model
     }
     public function getaramex()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get('aramex');
         if ($q->num_rows() > 0) {
@@ -753,7 +753,7 @@ class Settings_model extends CI_Model
 
     public function updateLoginLogo($photo)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $logo = ['logo2' => $photo];
         if ($this->db->update('settings', $logo, ['business_id' => $business_id])) {
             return true;
@@ -763,7 +763,7 @@ class Settings_model extends CI_Model
 
     public function updateLogo($photo)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $logo = ['logo' => $photo];
         if ($this->db->update('settings', $logo, ['business_id' => $business_id])) {
             return true;
@@ -773,7 +773,7 @@ class Settings_model extends CI_Model
 
     public function updatePaypal($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         if ($this->db->update('paypal', $data)) {
             return true;
@@ -800,7 +800,7 @@ class Settings_model extends CI_Model
 
     public function updateSetting($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         if ($this->db->update('settings', $data)) {
             return true;
@@ -810,7 +810,7 @@ class Settings_model extends CI_Model
 
     public function updateSkrill($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         if ($this->db->update('skrill', $data)) {
             return true;
@@ -819,7 +819,7 @@ class Settings_model extends CI_Model
     }
     public function updatedirectPay($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         if ($this->db->update('directpay', $data)) {
             return true;
@@ -829,7 +829,7 @@ class Settings_model extends CI_Model
 
     public function updatearamex($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         if ($this->db->update('aramex', $data)) {
             return true;
@@ -873,7 +873,7 @@ class Settings_model extends CI_Model
     }
     public function insertCountry($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('countries', $data)) {
             return true;
@@ -884,7 +884,7 @@ class Settings_model extends CI_Model
     {
 
         //TIP:- added
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $query = $this->db->get('countries');
         return $query->result();

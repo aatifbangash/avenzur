@@ -121,7 +121,7 @@ class Notifications extends MY_Controller
     public function getNotifications()
     {
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, comment, date, from_date, till_date')
             ->from('notifications')

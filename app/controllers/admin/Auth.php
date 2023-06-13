@@ -124,7 +124,7 @@ class Auth extends MY_Controller
 
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $this->db->select('COUNT(*) AS count')
             ->from('users')
@@ -141,7 +141,7 @@ class Auth extends MY_Controller
     public function unique_email($email)
     {
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $this->db->select('COUNT(*) AS count')
             ->from('users')
@@ -200,7 +200,7 @@ class Auth extends MY_Controller
             $this->data['error']      = (validation_errors() ? validation_errors() : ($this->ion_auth->errors() ? $this->ion_auth->errors() : $this->session->flashdata('error')));
 
             //TIP:- apply condition on groups.
-            $business_id = $this->ion_auth->user()->row()->business_id;
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
             $this->ion_auth->where('business_id', $business_id);
             $this->data['groups']     = $this->ion_auth->groups()->result_array();
 
@@ -440,7 +440,7 @@ class Auth extends MY_Controller
         }
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select($this->db->dbprefix('users') . '.id as id, first_name, last_name, email, country, award_points, ' . $this->db->dbprefix('groups') . '.name, active')
             ->from('users')

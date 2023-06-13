@@ -11,7 +11,7 @@ class Shop_admin_model extends CI_Model
 
     public function addPage($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data["business_id"] = $business_id;
         if ($this->db->insert('pages', $data)) {
             return true;

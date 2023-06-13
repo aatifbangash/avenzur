@@ -302,7 +302,7 @@ class Site extends CI_Model
     public function get_setting()
     {
         if ($this->ion_auth->logged_in()) {
-            $business_id = $this->ion_auth->user()->row()->business_id;
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
             $this->db->where('business_id', $business_id);
         }
         $q = $this->db->get('settings');
@@ -340,7 +340,7 @@ class Site extends CI_Model
     public function getAllBaseUnits()
     {
         //TIP:-
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('units', ['base_unit' => null]);
         if ($q->num_rows() > 0) {
@@ -355,7 +355,7 @@ class Site extends CI_Model
     public function getAllBrands()
     {
         //TIP:-
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get('brands');
         if ($q->num_rows() > 0) {
@@ -370,7 +370,7 @@ class Site extends CI_Model
     public function getAllCategories()
     {
         //TIP:-
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $this->db->where('parent_id', null)->or_where('parent_id', 0)->where("business_id", $business_id)->order_by('name');
         $q = $this->db->get('categories');
@@ -389,7 +389,7 @@ class Site extends CI_Model
         //TIP:- add business id check
         $where = ['group_name' => $group_name];
         if ($this->ion_auth->logged_in()) {
-            $business_id = $this->ion_auth->user()->row()->business_id;
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
             $where = ['group_name' => $group_name, 'business_id' => $business_id];
         }
         $q = $this->db->get_where('companies', $where);
@@ -405,7 +405,7 @@ class Site extends CI_Model
     public function getAllCurrencies()
     {
         //TIP:- added
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get('currencies');
         if ($q->num_rows() > 0) {
@@ -444,7 +444,7 @@ class Site extends CI_Model
     public function getAllTaxRates()
     {
         //TIP:- add business id check
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get('tax_rates');
         if ($q->num_rows() > 0) {
@@ -460,7 +460,7 @@ class Site extends CI_Model
     public function getAllWarehouses()
     {
         //TIP:- add business id check
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get('warehouses');
         if ($q->num_rows() > 0) {
@@ -483,7 +483,7 @@ class Site extends CI_Model
 
     public function getallWCountry()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get('warehouses_country');
         if ($q->num_rows() > 0) {
@@ -519,7 +519,7 @@ class Site extends CI_Model
 
     public function getCompanyByID($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('companies', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
@@ -539,7 +539,7 @@ class Site extends CI_Model
 
     public function getCustomerGroupByID($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('customer_groups', ['id' => $id], 1);
         echo $this->db->last_query();
@@ -601,7 +601,7 @@ class Site extends CI_Model
 
     public function getPriceGroupByID($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('price_groups', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
@@ -630,7 +630,7 @@ class Site extends CI_Model
 
     public function getProductComboItems($pid, $warehouse_id = null)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('products.id as id, combo_items.item_code as code, combo_items.quantity as qty, products.name as name, products.type as type, combo_items.unit_price as unit_price, warehouses_products.quantity as quantity')
             ->where("products.business_id", $business_id)
             ->join('products', 'products.code=combo_items.item_code', 'left')
@@ -854,7 +854,7 @@ class Site extends CI_Model
 
     public function getSubCategories($parent_id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $this->db->where('parent_id', $parent_id)->order_by('name');
         $q = $this->db->get('categories');
@@ -870,7 +870,7 @@ class Site extends CI_Model
     public function getTaxRateByID($id)
     {
         if ($this->ion_auth->logged_in()) {
-            $business_id = $this->ion_auth->user()->row()->business_id;
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
             $this->db->where('business_id', $business_id);
         }
         $q = $this->db->get_where('tax_rates', ['id' => $id], 1);
@@ -882,7 +882,7 @@ class Site extends CI_Model
 
     public function getUnitByID($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('units', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
@@ -894,7 +894,7 @@ class Site extends CI_Model
     public function getUnitsByBUID($base_unit)
     {
         //TIP:- added
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id)->where('id', $base_unit)->or_where('base_unit', $base_unit)
             ->group_by('id')->order_by('id asc');
         $q = $this->db->get('units');
@@ -1087,7 +1087,7 @@ class Site extends CI_Model
 
     public function log(string $name, array $model)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $detail = $name . ' is being deleted by ' . $this->session->userdata('username') . ' (User Id: ' . $this->session->userdata('user_id') . ')';
         $this->db->insert('logs', ['business_id' => $business_id, 'detail' => $detail, 'model' => json_encode($model)]);
     }
@@ -1368,7 +1368,7 @@ class Site extends CI_Model
                     $this->db->update('invoices', ['status' => 'due'], ['id' => $row->id]);
                 }
             }
-            $business_id = $this->ion_auth->user()->row()->business_id;
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
             $this->db->update('settings', ['update' => $date], ['business_id' => $business_id]);
             return true;
         }

@@ -11,7 +11,7 @@ class Promos_model extends CI_Model
 
     public function addPromo($data = [])
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('promos', $data)) {
             $cid = $this->db->insert_id();
@@ -38,7 +38,7 @@ class Promos_model extends CI_Model
 
     public function getAllPromos()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get('promos');
         if ($q->num_rows() > 0) {
@@ -52,7 +52,7 @@ class Promos_model extends CI_Model
 
     public function getPromoByID($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('promos', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
@@ -63,7 +63,7 @@ class Promos_model extends CI_Model
 
     public function getPromosByProduct($pId)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         
         $today = date('Y-m-d');
         $this->db

@@ -18,7 +18,7 @@ class Db_model extends CI_Model
             $end_date = date('Y-m-d', strtotime('last day of this month')) . ' 23:59:59';
         }
 
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $this->db
             ->select('product_name, product_code')
@@ -43,7 +43,7 @@ class Db_model extends CI_Model
 
     public function getChartData()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $myQuery = "SELECT S.month,
         COALESCE(S.sales, 0) as sales,
@@ -82,7 +82,7 @@ class Db_model extends CI_Model
         if ($this->Settings->restrict_user && !$this->Owner && !$this->Admin) {
             $this->db->where('created_by', $this->session->userdata('user_id'));
         }
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $this->db->order_by('id', 'desc');
         $q = $this->db->get('quotes', 5);
@@ -97,7 +97,7 @@ class Db_model extends CI_Model
     public function getLatestCustomers()
     {
         $this->db->order_by('id', 'desc');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
 
         $q = $this->db->get_where('companies', ['group_name' => 'customer'], 5);
@@ -114,7 +114,7 @@ class Db_model extends CI_Model
         if ($this->Settings->restrict_user && !$this->Owner && !$this->Admin) {
             $this->db->where('created_by', $this->session->userdata('user_id'));
         }
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $this->db->order_by('id', 'desc');
         $q = $this->db->get('purchases', 5);
@@ -131,7 +131,7 @@ class Db_model extends CI_Model
         if ($this->Settings->restrict_user && !$this->Owner && !$this->Admin) {
             $this->db->where('created_by', $this->session->userdata('user_id'));
         }
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $this->db->order_by('id', 'desc');
         $q = $this->db->get('sales', 5);
@@ -146,7 +146,7 @@ class Db_model extends CI_Model
     public function getLatestSuppliers()
     {
         $this->db->order_by('id', 'desc');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('companies', ['group_name' => 'supplier'], 5);
         if ($q->num_rows() > 0) {
@@ -162,7 +162,7 @@ class Db_model extends CI_Model
         if ($this->Settings->restrict_user && !$this->Owner && !$this->Admin) {
             $this->db->where('created_by', $this->session->userdata('user_id'));
         }
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $this->db->order_by('id', 'desc');
         $q = $this->db->get('transfers', 5);
@@ -176,7 +176,7 @@ class Db_model extends CI_Model
 
     public function getStockValue()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $q = $this->db->query('SELECT SUM(qty*price) as stock_by_price, SUM(qty*cost) as stock_by_cost
         FROM (

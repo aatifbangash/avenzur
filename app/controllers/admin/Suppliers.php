@@ -85,7 +85,7 @@ class Suppliers extends MY_Controller
             list($username, $domain) = explode('@', $this->input->post('email'));
             $email                   = strtolower($this->input->post('email'));
             $password                = $this->input->post('password');
-            $business_id = $this->ion_auth->user()->row()->business_id;
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
             $additional_data         = [
                 'first_name' => $this->input->post('first_name'),
                 'last_name'  => $this->input->post('last_name'),
@@ -195,7 +195,7 @@ class Suppliers extends MY_Controller
         $this->sma->checkPermissions('index');
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, company, name, email, phone, city, country, vat_no, gst_no')
             ->from('companies')

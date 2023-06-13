@@ -105,7 +105,7 @@ class Pos_model extends CI_Model
 
     public function addPrinter($data = [])
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('printers', $data)) {
             return $this->db->insert_id();
@@ -136,7 +136,7 @@ class Pos_model extends CI_Model
         // $this->sma->print_arrays($cost);
         $this->db->trans_start();
         $data['reference_no'] = $this->site->getReference('pos');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data["business_id"] = $business_id;
         if ($this->db->insert('sales', $data)) {
             $sale_id = $this->db->insert_id();
@@ -1249,7 +1249,7 @@ class Pos_model extends CI_Model
 
     public function openRegister($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         if ($this->db->insert('pos_register', $data)) {
             return true;

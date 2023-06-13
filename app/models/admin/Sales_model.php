@@ -11,7 +11,7 @@ class Sales_model extends CI_Model
 
     public function addDelivery($data = [])
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('deliveries', $data)) {
             if ($this->site->getReference('do') == $data['do_reference_no']) {
@@ -26,7 +26,7 @@ class Sales_model extends CI_Model
 
     public function addGiftCard($data = [], $ca_data = [], $sa_data = [])
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('gift_cards', $data)) {
             if (!empty($ca_data)) {
@@ -52,7 +52,7 @@ class Sales_model extends CI_Model
 
     public function addPayment($data = [], $customer_id = null)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('payments', $data)) {
             if ($this->site->getReference('pay') == $data['reference_no']) {
@@ -74,7 +74,7 @@ class Sales_model extends CI_Model
     public function addSale($data = [], $items = [], $payment = [], $si_return = [], $attachments = [])
     {
 
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
 
         if (empty($si_return)) {
@@ -405,7 +405,7 @@ class Sales_model extends CI_Model
 
     public function getPaypalSettings()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $q = $this->db->get_where('paypal', ['business_id' => $business_id]);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -415,7 +415,7 @@ class Sales_model extends CI_Model
 
     public function getProductByCode($code)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('products', ['code' => $code], 1);
         if ($q->num_rows() > 0) {
@@ -426,7 +426,7 @@ class Sales_model extends CI_Model
 
     public function getProductByName($name)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('products', ['name' => $name], 1);
         if ($q->num_rows() > 0) {
@@ -649,7 +649,7 @@ class Sales_model extends CI_Model
 
     public function getSkrillSettings()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $q = $this->db->get_where('skrill', ['business_id' => $business_id]);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -662,7 +662,7 @@ class Sales_model extends CI_Model
         if (!$this->Owner) {
             $this->db->where('group_id !=', 1);
         }
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $this->db->where('group_id !=', 3)->where('group_id !=', 4);
         $q = $this->db->get('users');

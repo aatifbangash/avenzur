@@ -11,7 +11,7 @@ class Calendar_model extends CI_Model
 
     public function addEvent($data = [])
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('calendar', $data)) {
             return true;
@@ -21,7 +21,7 @@ class Calendar_model extends CI_Model
 
     public function deleteEvent($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         if ($this->db->delete('calendar', ['id' => $id])) {
             return true;
@@ -31,7 +31,7 @@ class Calendar_model extends CI_Model
 
     public function getEventByID($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('calendar', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
@@ -42,7 +42,7 @@ class Calendar_model extends CI_Model
 
     public function getEvents($start, $end)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('id, title, start, end, description, color');
         $this->db->where("business_id", $business_id);
         $this->db->where('start >=', $start)->where('start <=', $end);
@@ -63,7 +63,7 @@ class Calendar_model extends CI_Model
 
     public function updateEvent($id, $data = [])
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         if ($this->db->update('calendar', $data, ['id' => $id])) {
             return true;

@@ -34,7 +34,7 @@ class system_settings extends MY_Controller
 
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $this->db->select('COUNT(*) AS count')
             ->from('brands')
@@ -113,7 +113,7 @@ class system_settings extends MY_Controller
     {
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $this->db->select('COUNT(*) AS count')
             ->from('sma_categories')
@@ -215,7 +215,7 @@ class system_settings extends MY_Controller
 
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $this->db->select('COUNT(*) AS count')
             ->from('currencies')
@@ -264,7 +264,7 @@ class system_settings extends MY_Controller
 
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $this->db->select('COUNT(*) AS count')
             ->from('customer_groups')
@@ -335,7 +335,7 @@ class system_settings extends MY_Controller
 
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $this->db->select('COUNT(*) AS count')
             ->from('price_groups')
@@ -375,7 +375,7 @@ class system_settings extends MY_Controller
     {
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $this->db->select('COUNT(*) AS count')
             ->from('tax_rates')
@@ -422,7 +422,7 @@ class system_settings extends MY_Controller
     {
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $this->db->select('COUNT(*) AS count')
             ->from('units')
@@ -474,7 +474,7 @@ class system_settings extends MY_Controller
 
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $this->db->select('COUNT(*) AS count')
             ->from('variants')
@@ -514,7 +514,7 @@ class system_settings extends MY_Controller
 
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $this->db->select('COUNT(*) AS count')
             ->from('warehouses')
@@ -815,7 +815,7 @@ class system_settings extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
                 $site_logo = $this->upload->file_name;
-                $business_id = $this->ion_auth->user()->row()->business_id;
+                $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
                 $this->db->update('settings', ['logo' => $site_logo], ['business_id' => $business_id]);
             }
 
@@ -836,7 +836,7 @@ class system_settings extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
                 $login_logo = $this->upload->file_name;
-                $business_id = $this->ion_auth->user()->row()->business_id;
+                $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
                 $this->db->update('settings', ['logo2' => $login_logo], ['business_id' => $business_id]);
             }
 
@@ -1807,7 +1807,7 @@ class system_settings extends MY_Controller
     public function getBrands()
     {
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, image, code, name, slug')
             ->from('brands')->where("business_id", $business_id)
@@ -1821,7 +1821,7 @@ class system_settings extends MY_Controller
         $print_barcode = anchor('admin/products/print_barcodes/?category=$1', '<i class="fa fa-print"></i>', 'title="' . lang('print_barcodes') . '" class="tip"');
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select("{$this->db->dbprefix('categories')}.id as id, {$this->db->dbprefix('categories')}.image, {$this->db->dbprefix('categories')}.code, {$this->db->dbprefix('categories')}.name, {$this->db->dbprefix('categories')}.slug, c.name as parent", false)
             ->from('categories')
@@ -1836,7 +1836,7 @@ class system_settings extends MY_Controller
     public function getCurrencies()
     {
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, code, name, rate, symbol')
             ->from('currencies')
@@ -1850,7 +1850,7 @@ class system_settings extends MY_Controller
     public function getCustomerGroups()
     {
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, name, percent')
             ->from('customer_groups')
@@ -1864,7 +1864,7 @@ class system_settings extends MY_Controller
     public function getExpenseCategories()
     {
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, code, name')
             ->from('expense_categories')
@@ -1877,7 +1877,7 @@ class system_settings extends MY_Controller
     public function getPriceGroups()
     {
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, name')
             ->from('price_groups')
@@ -1911,7 +1911,7 @@ class system_settings extends MY_Controller
     public function getTaxRates()
     {
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, name, code, rate, type')
             ->from('tax_rates')->where("tax_rates.business_id", $business_id)
@@ -1924,7 +1924,7 @@ class system_settings extends MY_Controller
     public function getUnits()
     {
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select("{$this->db->dbprefix('units')}.id as id, {$this->db->dbprefix('units')}.code, {$this->db->dbprefix('units')}.name, b.name as base_unit, {$this->db->dbprefix('units')}.operator, {$this->db->dbprefix('units')}.operation_value", false)
             ->from('units')
@@ -1939,7 +1939,7 @@ class system_settings extends MY_Controller
     public function getVariants()
     {
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, name')
             ->from('variants')
@@ -1954,7 +1954,7 @@ class system_settings extends MY_Controller
     {
         $this->load->library('datatables');
         //TIP:-
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select("{$this->db->dbprefix('warehouses')}.id as id, map, code, {$this->db->dbprefix('warehouses')}.name as name, {$this->db->dbprefix('price_groups')}.name as price_group, phone, email, address")
             ->from('warehouses')->where("warehouses.business_id", $business_id)
@@ -2533,7 +2533,7 @@ class system_settings extends MY_Controller
                 admin_redirect('system_settings/updates');
             }
         }
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->update('settings', ['version' => $version, 'update' => 0], ['business_id' => $business_id]);
         unlink('./files/updates/' . $file . '.zip');
         $this->session->set_flashdata('success', lang('update_done'));
@@ -3193,7 +3193,7 @@ class system_settings extends MY_Controller
         $this->form_validation->set_rules('purchase_code', lang('purchase_code'), 'required');
         $this->form_validation->set_rules('envato_username', lang('envato_username'), 'required');
         if ($this->form_validation->run() == true) {
-            $business_id = $this->ion_auth->user()->row()->business_id;
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
             $this->db->update('settings', ['purchase_code' => $this->input->post('purchase_code', true), 'envato_username' => $this->input->post('envato_username', true)], ['business_id' => $business_id]);
             admin_redirect('system_settings/updates');
         } else {
@@ -3434,7 +3434,7 @@ class system_settings extends MY_Controller
             $warehousese = $this->input->post('warehouses_id');
 
             $data = array();
-            $business_id = $this->ion_auth->user()->row()->business_id;
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
             for ($i = 0; $i < count($countries); $i++) {
                 $cwdata = array(

@@ -21,7 +21,7 @@ class Site_logs extends MY_Controller
     public function getLogs()
     {
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables->select('date, detail, model')->from('logs')->where("business_id", $business_id);
         echo $this->datatables->generate();
     }

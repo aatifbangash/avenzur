@@ -11,7 +11,7 @@ class Transfers_model extends CI_Model
 
     public function addTransfer($data = [], $items = [], $attachments = [])
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         
         $this->db->trans_start();
@@ -152,7 +152,7 @@ class Transfers_model extends CI_Model
 
     public function getProductNamesWithBatches($term, $warehouse_id, $limit = 10)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('products.id, code, name, warehouses_products.quantity, cost, tax_rate, type, unit, purchase_unit, tax_method, purchase_items.batchno, purchase_items.expiry')
             ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
             ->join('purchase_items', 'purchase_items.product_id=products.id', 'left')

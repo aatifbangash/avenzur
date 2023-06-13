@@ -15,7 +15,7 @@ class Api_model extends CI_Model
 
     protected function getSettings()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get('settings');
         if ($q->num_rows() > 0) {
@@ -26,14 +26,14 @@ class Api_model extends CI_Model
 
     public function addApiKey($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $$data["business_id"] = $business_id;
         return $this->db->insert('api_keys', $data);
     }
 
     public function deleteApiKey($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         return $this->db->delete('api_keys', ['id' => $id]);
     }
@@ -45,21 +45,21 @@ class Api_model extends CI_Model
 
     public function getApiKey($value, $field = 'key')
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         return  $this->db->get_where('api_keys', [$field => $value])->row();
     }
 
     public function getApiKeys()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         return $this->db->get('api_keys')->result();
     }
 
     public function getUser($value, $field = 'id')
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('users', [$field => $value]);
         if ($q->num_rows() > 0) {
@@ -70,14 +70,14 @@ class Api_model extends CI_Model
 
     public function updateUserApiKey($user_id, $data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         return $this->db->update('api_keys', $data, ['user_id' => $user_id]);
     }
 
     private function _delete_key($key)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         return $this->db
             ->where($this->config->item('rest_key_column'), $key)
@@ -101,7 +101,7 @@ class Api_model extends CI_Model
 
     private function _get_key($key)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         return $this->db
             ->where($this->config->item('rest_key_column'), $key)
@@ -121,7 +121,7 @@ class Api_model extends CI_Model
 
     private function _key_exists($key)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         return $this->db
             ->where($this->config->item('rest_key_column'), $key)
@@ -130,7 +130,7 @@ class Api_model extends CI_Model
 
     private function _update_key($key, $data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         return $this->db
             ->where($this->config->item('rest_key_column'), $key)

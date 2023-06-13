@@ -1567,7 +1567,7 @@ class Sales extends MY_Controller
 </div></div>';
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         //GROUP_CONCAT(CONCAT('Name: ', sale_items.product_name, ' Qty: ', sale_items.quantity ) SEPARATOR '<br>')
         $this->datatables
             ->select('deliveries.id as id, date, do_reference_no, sale_reference_no, customer, address, status, attachment')
@@ -1583,7 +1583,7 @@ class Sales extends MY_Controller
     public function getGiftCards()
     {
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select($this->db->dbprefix('gift_cards') . '.id as id, card_no, value, balance, CONCAT(' . $this->db->dbprefix('users') . ".first_name, ' ', " . $this->db->dbprefix('users') . '.last_name) as created_by, customer, expiry', false)
             ->join('users', 'users.id=gift_cards.created_by', 'left')
@@ -1796,7 +1796,7 @@ class Sales extends MY_Controller
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($warehouse_id) {
             $this->datatables
                 ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id")

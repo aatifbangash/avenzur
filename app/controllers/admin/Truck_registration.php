@@ -36,7 +36,7 @@ class Truck_registration extends MY_Controller
         $data['reference_no'] = $purchase[0];
         $data['purchase_id']  = $purchase[1];
 
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id']  = $business_id;
        
          $this->truck_model->addTruck($data,$purchase[1]);
@@ -48,7 +48,7 @@ class Truck_registration extends MY_Controller
     {
        
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id,truck_no,reference_no,truck_date,truck_time')
             ->from('truck_registration')

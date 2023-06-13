@@ -7,14 +7,14 @@ class Deals_model extends CI_Model
 
 	public function addDeal($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id; 
         return $this->db->insert('sma_deals', $data);
     }
 
     public function getAllSuppliers()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
     	$sups = $this->db->select('supplier_id')
         ->where('business_id' , $business_id)
     	         ->get('deals')->result_array();

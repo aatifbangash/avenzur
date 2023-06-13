@@ -527,7 +527,7 @@ class Pos extends MY_Controller
         }
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
         ->select('id, title, type, profile, path, ip_address, port')
         ->from('printers')->where("business_id", $business_id)
@@ -739,7 +739,7 @@ class Pos extends MY_Controller
         </div></div>';
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($warehouse_id) {
             $this->datatables
                 ->select($this->db->dbprefix('sales') . ".id as id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, biller, customer, (grand_total+COALESCE(rounding, 0)), paid, CONCAT(grand_total, '__', rounding, '__', paid) as balance, sale_status, payment_status, companies.email as cemail")

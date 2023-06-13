@@ -278,7 +278,7 @@ class Reports_model extends CI_Model
     public function getProductNames($term, $limit = 5)
     {
      
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('id, code, name')->where("business_id", $business_id)
             ->like('name', $term, 'both')->or_like('code', $term, 'both');
         

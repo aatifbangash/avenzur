@@ -119,7 +119,7 @@ class Promos extends MY_Controller
         $this->sma->checkPermissions('index');
 
         $this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select("promos.id as id, promos.name, CONCAT(p2b.name, ' (', p2b.code, ')') as product2buy, CONCAT(p2g.name, ' (', p2g.code, ')') as product2get, promos.start_date, promos.end_date")
             ->from('promos')

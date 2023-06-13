@@ -296,7 +296,7 @@ class Auth_model extends CI_Model
         $this->trigger_events('extra_group_set');
 
         // insert the new group
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data["business_id"] = $business_id;
         $this->db->insert($this->tables['groups'], $data);
         $group_id = $this->db->insert_id();
@@ -727,7 +727,7 @@ class Auth_model extends CI_Model
     {
         if ($this->config->item('track_login_attempts', 'ion_auth')) {
             $ip_address = $this->_prepare_ip($this->input->ip_address());
-            $business_id = $this->ion_auth->user()->row()->business_id;
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
             return $this->db->insert($this->tables['login_attempts'], ['business_id' => $business_id, 'ip_address' => $ip_address, 'login' => $identity, 'time' => time()]);
         }
@@ -819,7 +819,7 @@ class Auth_model extends CI_Model
                 $this->update_last_login($user->id);
                 $this->update_last_login_ip($user->id);
                 $ldata = ['user_id' => $user->id, 'ip_address' => $this->input->ip_address(), 'login' => $identity, 'time' => date('Y-m-d H:i:s')];
-                $business_id = $this->ion_auth->user()->row()->business_id;
+                $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
                 $data["business_id"] = $business_id;
                 $this->db->insert('user_logins', $ldata);
                 $this->clear_login_attempts($identity);
@@ -1437,7 +1437,7 @@ class Auth_model extends CI_Model
 
         $this->trigger_events('extra_where');
 
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
 
         return $this->db->where('username', $username)

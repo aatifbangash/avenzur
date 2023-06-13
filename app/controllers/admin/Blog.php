@@ -36,7 +36,7 @@ class Blog extends MY_Controller {
  
     public function getBlogs()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->load->library('datatables');
         $this->datatables
             ->select('id, name, slug, category,description, title')
@@ -57,7 +57,7 @@ class Blog extends MY_Controller {
         $this->form_validation->set_rules('category', lang('category'), 'required');
         $this->form_validation->set_rules('userfile', lang('featured_image','xss_clean'));
         $this->form_validation->set_rules('slug', lang('slug'), 'trim|required|is_unique[pages.slug]');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($this->form_validation->run() == true) {
             $data = [
                 'name'        => $this->input->post('name'),
@@ -253,7 +253,7 @@ class Blog extends MY_Controller {
         $this->form_validation->set_rules('slug', lang('slug'), 'required|is_unique[categories.slug]|alpha_dash');
         $this->form_validation->set_rules('userfile', lang('category_image'), 'xss_clean');
         $this->form_validation->set_rules('description', lang('description'), 'trim|required');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($this->form_validation->run() == true) {
             $data = [
                 'name'        => $this->input->post('name'),
@@ -338,7 +338,7 @@ class Blog extends MY_Controller {
                 public function getBlogCategory()
                 {
                     $print_barcode = anchor('admin/products/print_barcodes/?category=$1', '<i class="fa fa-print"></i>', 'title="' . lang('print_barcodes') . '" class="tip"');
-                    $business_id = $this->ion_auth->user()->row()->business_id;
+                    $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
                     $this->load->library('datatables');
                     $this->datatables
                         ->select("{$this->db->dbprefix('blog_categories')}.id as id, {$this->db->dbprefix('blog_categories')}.image, {$this->db->dbprefix('blog_categories')}.code, {$this->db->dbprefix('blog_categories')}.name, {$this->db->dbprefix('blog_categories')}.slug, c.name as parent", false)
@@ -375,7 +375,7 @@ class Blog extends MY_Controller {
                     $this->form_validation->set_rules('name', lang('category_name'), 'required|min_length[3]');
                     $this->form_validation->set_rules('userfile', lang('category_image'), 'xss_clean');
                     $this->form_validation->set_rules('description', lang('description'), 'trim|required');
-                    $business_id = $this->ion_auth->user()->row()->business_id;
+                    $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
                     if ($this->form_validation->run() == true) {
                         $data = [
                             'name'        => $this->input->post('name'),

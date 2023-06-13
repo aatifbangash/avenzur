@@ -11,7 +11,7 @@ class Quotes_model extends CI_Model
 
     public function addQuote($data = [], $items = [])
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data["business_id"] = $business_id;
 
         if ($this->db->insert('quotes', $data)) {
@@ -165,7 +165,7 @@ class Quotes_model extends CI_Model
 
     public function getQuoteByID($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $q = $this->db->get_where('quotes', ['id' => $id, 'business_id'=>$business_id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();

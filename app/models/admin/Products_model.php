@@ -36,7 +36,7 @@ class Products_model extends CI_Model
 
     public function addAdjustment($data, $products)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('adjustments', $data)) {
             $adjustment_id = $this->db->insert_id();
@@ -55,7 +55,7 @@ class Products_model extends CI_Model
 
     public function addAjaxProduct($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data["business_id"] = $business_id;
         if ($this->db->insert('products', $data)) {
             $product_id = $this->db->insert_id();
@@ -67,7 +67,7 @@ class Products_model extends CI_Model
     public function addProduct($data, $items, $warehouse_qty, $product_attributes, $photos)
     {
         //TIP:- added
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('products', $data)) {
             $product_id = $this->db->insert_id();
@@ -247,7 +247,7 @@ class Products_model extends CI_Model
 
     public function addStockCount($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('stock_counts', $data)) {
             return true;
@@ -350,7 +350,7 @@ class Products_model extends CI_Model
 
     public function getAllProducts()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get('products');
         if ($q->num_rows() > 0) {
@@ -364,7 +364,7 @@ class Products_model extends CI_Model
 
     public function getAllVariants()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get('variants');
         if ($q->num_rows() > 0) {
@@ -394,7 +394,7 @@ class Products_model extends CI_Model
 
     public function getBrandByName($name)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('brands', ['name' => $name], 1);
         if ($q->num_rows() > 0) {
@@ -405,7 +405,7 @@ class Products_model extends CI_Model
 
     public function getCategoryByCode($code)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('categories', ['code' => $code], 1);
         if ($q->num_rows() > 0) {
@@ -446,7 +446,7 @@ class Products_model extends CI_Model
 
     public function getProductByCode($code)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('products', ['code' => $code], 1);
         if ($q->num_rows() > 0) {
@@ -525,7 +525,7 @@ class Products_model extends CI_Model
 
     public function getProductOptions($pid)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('product_variants', ['product_id' => $pid]);
         if ($q->num_rows() > 0) {
@@ -577,7 +577,7 @@ class Products_model extends CI_Model
     {
 
         //TIP:- added
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name, ' . $this->db->dbprefix('products') . '.price as price')
             ->where('(' . $this->db->dbprefix('products') . ".name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR
                 concat(" . $this->db->dbprefix('products') . ".name, ' (', code, ')') LIKE '%" . $term . "%')")
@@ -687,7 +687,7 @@ class Products_model extends CI_Model
 
     public function getQASuggestions($term, $limit = 5)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name')
         ->where("{$this->db->dbprefix('products')}.business_id", $business_id)
@@ -832,7 +832,7 @@ class Products_model extends CI_Model
     public function getSupplierByName($name)
     {
 
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('companies', ['name' => $name, 'group_name' => 'supplier'], 1);
         if ($q->num_rows() > 0) {
@@ -844,7 +844,7 @@ class Products_model extends CI_Model
     public function getTaxRateByName($name)
     {
 
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('tax_rates', ['name' => $name], 1);
         if ($q->num_rows() > 0) {
@@ -867,7 +867,7 @@ class Products_model extends CI_Model
 
     public function getUnitByCode($code)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('units', ['code' => $code], 1);
         if ($q->num_rows() > 0) {

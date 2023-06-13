@@ -78,7 +78,7 @@ class Deals extends MY_Controller
         </ul>
         </div></div>';
     	$this->load->library('datatables');
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
             $this->datatables
             	->select("{$this->db->dbprefix('deals')}.id as dealid,{$this->db->dbprefix('deals')}.deal_no as deal_no,{$this->db->dbprefix('deals')}.supplier_name as supplier_name,{$this->db->dbprefix('deals')}.date as date,{$this->db->dbprefix('deals')}.discount_sale_val as discount_sale_val, {$this->db->dbprefix('deals')}.sales_val as sales_val, {$this->db->dbprefix('deals')}.discount_purchase_order as discount_purchase_order " )
                 ->from('sma_deals')->where('business_id' , $business_id);

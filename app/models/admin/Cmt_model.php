@@ -11,7 +11,7 @@ class Cmt_model extends CI_Model
 
     public function addNotification($data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('notifications', $data)) {
             return true;
@@ -22,7 +22,7 @@ class Cmt_model extends CI_Model
 
     public function deleteComment($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         if ($this->db->delete('notifications', ['id' => $id])) {
             return true;
@@ -32,7 +32,7 @@ class Cmt_model extends CI_Model
 
     public function getAllComments()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get('notifications');
         if ($q->num_rows() > 0) {
@@ -46,7 +46,7 @@ class Cmt_model extends CI_Model
 
     public function getCommentByID($id)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('notifications', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
@@ -58,7 +58,7 @@ class Cmt_model extends CI_Model
 
     public function getNotifications()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $date = date('Y-m-d H:i:s', time());
         $this->db->where('from_date <=', $date);
@@ -84,7 +84,7 @@ class Cmt_model extends CI_Model
 
     public function updateNotification($id, $data)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $this->db->where('id', $id);
         if ($this->db->update('notifications', $data)) {

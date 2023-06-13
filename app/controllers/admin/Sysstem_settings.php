@@ -636,7 +636,7 @@ class system_settings extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
                 $site_logo = $this->upload->file_name;
-                $business_id = $this->ion_auth->user()->row()->business_id;
+                $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
                 $this->db->update('settings', ['logo' => $site_logo], ['business_id' => $business_id]);
             }
 
@@ -657,7 +657,7 @@ class system_settings extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
                 $login_logo = $this->upload->file_name;
-                $business_id = $this->ion_auth->user()->row()->business_id;
+                $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
                 $this->db->update('settings', ['logo2' => $login_logo], ['business_id' => $business_id]);
             }
 
@@ -2276,7 +2276,7 @@ class system_settings extends MY_Controller
                 admin_redirect('system_settings/updates');
             }
         }
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->update('settings', ['version' => $version, 'update' => 0], ['business_id' => $business_id]);
         unlink('./files/updates/' . $file . '.zip');
         $this->session->set_flashdata('success', lang('update_done'));
@@ -2908,7 +2908,7 @@ public function aramex()
         $this->form_validation->set_rules('purchase_code', lang('purchase_code'), 'required');
         $this->form_validation->set_rules('envato_username', lang('envato_username'), 'required');
         if ($this->form_validation->run() == true) {
-            $business_id = $this->ion_auth->user()->row()->business_id;
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
             $this->db->update('settings', ['purchase_code' => $this->input->post('purchase_code', true), 'envato_username' => $this->input->post('envato_username', true)], ['business_id' => $business_id]);
             admin_redirect('system_settings/updates');
         } else {

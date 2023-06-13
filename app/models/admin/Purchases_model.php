@@ -12,7 +12,7 @@ class Purchases_model extends CI_Model
     public function addExpense($data = [], $attachments = [])
     {
 
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
         if ($this->db->insert('expenses', $data)) {
             $expense_id = $this->db->insert_id();
@@ -33,7 +33,7 @@ class Purchases_model extends CI_Model
 
     public function addPayment($data = [])
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data["business_id"] = $business_id;
         if ($this->db->insert('payments', $data)) {
             if ($this->site->getReference('ppay') == $data['reference_no']) {
@@ -62,7 +62,7 @@ class Purchases_model extends CI_Model
 
     public function addPurchase($data, $items, $attachments = [])
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data['business_id'] = $business_id;
 
         $this->db->trans_start();
@@ -307,7 +307,7 @@ class Purchases_model extends CI_Model
 
     public function getExpenseCategories()
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get('expense_categories');
         if ($q->num_rows() > 0) {
@@ -402,7 +402,7 @@ class Purchases_model extends CI_Model
 
     public function getProductNames($term, $limit = 20)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('business_id', $business_id);
         $this->db->where("type = 'standard' AND (name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR supplier1_part_no LIKE '%" . $term . "%' OR supplier2_part_no LIKE '%" . $term . "%' OR supplier3_part_no LIKE '%" . $term . "%' OR supplier4_part_no LIKE '%" . $term . "%' OR supplier5_part_no LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
         $this->db->limit($limit);
@@ -553,7 +553,7 @@ class Purchases_model extends CI_Model
     {
         $purchase_items = $this->site->getAllPurchaseItems($data['purchase_id']);
 
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $data["business_id"] = $business_id;
 
         if ($this->db->insert('return_purchases', $data)) {
@@ -758,7 +758,7 @@ class Purchases_model extends CI_Model
 
     public function searchByReference($referenceNo)
     {
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('purchases', ['reference_no' => $referenceNo]);
         if ($q->num_rows() > 0) {

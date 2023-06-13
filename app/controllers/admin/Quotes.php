@@ -144,7 +144,7 @@ class Quotes extends MY_Controller
             $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
             $total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
             $grand_total    = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $order_discount), 4);
-            $business_id = $this->ion_auth->user()->row()->business_id;
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
             $data           = ['date' => $date,
                 'reference_no'        => $reference,
                 'customer_id'         => $customer_id,
@@ -663,7 +663,7 @@ class Quotes extends MY_Controller
                 </div></div>';
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
-        $business_id = $this->ion_auth->user()->row()->business_id;
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
