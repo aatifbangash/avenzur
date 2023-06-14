@@ -466,7 +466,10 @@ class Products_model extends CI_Model
 
     public function getProductComboItems($pid)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
         $this->db->select($this->db->dbprefix('products') . '.id as id, ' . $this->db->dbprefix('products') . '.code as code, ' . $this->db->dbprefix('combo_items') . '.quantity as qty, ' . $this->db->dbprefix('products') . '.name as name, ' . $this->db->dbprefix('combo_items') . '.unit_price as price')->join('products', 'products.code=combo_items.item_code', 'left')->group_by('combo_items.id');
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('combo_items', ['product_id' => $pid]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {

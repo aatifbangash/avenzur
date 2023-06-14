@@ -128,7 +128,7 @@ class Auth extends MY_Controller
 
         $this->db->select('COUNT(*) AS count')
             ->from('users')
-            ->where('business_id', $business_id)
+            // ->where('business_id', $business_id)
             ->where('username', $username);
         $total = $this->db->get()->row()->count;
         if ($total > 0) {
@@ -145,7 +145,7 @@ class Auth extends MY_Controller
 
         $this->db->select('COUNT(*) AS count')
             ->from('users')
-            ->where('business_id', $business_id)
+            // ->where('business_id', $business_id)
             ->where('email', $email);
         $total = $this->db->get()->row()->count;
         if ($total > 0) {
