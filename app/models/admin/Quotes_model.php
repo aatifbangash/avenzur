@@ -21,6 +21,7 @@ class Quotes_model extends CI_Model
             }
             foreach ($items as $item) {
                 $item['quote_id'] = $quote_id;
+                $item['business_id'] = $business_id;
                 $this->db->insert('quote_items', $item);
             }
             return true;
@@ -196,9 +197,11 @@ class Quotes_model extends CI_Model
 
     public function updateQuote($id, $data, $items = [])
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($this->db->update('quotes', $data, ['id' => $id]) && $this->db->delete('quote_items', ['quote_id' => $id])) {
             foreach ($items as $item) {
                 $item['quote_id'] = $id;
+                $item['business_id'] = $business_id;
                 $this->db->insert('quote_items', $item);
             }
             return true;
