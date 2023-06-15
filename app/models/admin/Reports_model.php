@@ -324,8 +324,10 @@ class Reports_model extends CI_Model
 
     public function getPurchasesTotals($supplier_id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('SUM(COALESCE(grand_total, 0)) as total_amount, SUM(COALESCE(paid, 0)) as paid', false)
-            ->where('supplier_id', $supplier_id);
+            ->where('supplier_id', $supplier_id)
+            ->where('business_id', $business_id);
         $q = $this->db->get('purchases');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -515,7 +517,8 @@ class Reports_model extends CI_Model
 
     public function getSupplierPurchases($supplier_id)
     {
-        $this->db->from('purchases')->where('supplier_id', $supplier_id);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->from('purchases')->where('supplier_id', $supplier_id)->where('business_id', $business_id);
         return $this->db->count_all_results();
     }
 

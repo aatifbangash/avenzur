@@ -1683,6 +1683,8 @@ class Reports extends MY_Controller
     {
         $this->sma->checkPermissions('purchases', true);
 
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
         $product      = $this->input->get('product') ? $this->input->get('product') : null;
         $user         = $this->input->get('user') ? $this->input->get('user') : null;
         $supplier     = $this->input->get('supplier') ? $this->input->get('supplier') : null;
@@ -1706,7 +1708,8 @@ class Reports extends MY_Controller
                 ->join('purchase_items', 'purchase_items.purchase_id=purchases.id', 'left')
                 ->join('warehouses', 'warehouses.id=purchases.warehouse_id', 'left')
                 ->group_by('purchases.id')
-                ->order_by('purchases.date desc');
+                ->order_by('purchases.date desc')
+                ->where('purchases.business_id',$business_id);
 
             if ($user) {
                 $this->db->where('purchases.created_by', $user);
@@ -1804,7 +1807,8 @@ class Reports extends MY_Controller
                 ->select("DATE_FORMAT({$this->db->dbprefix('purchases')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('warehouses')}.name as wname, supplier, (FPI.item_nane) as iname, grand_total, paid, (grand_total-paid) as balance, {$this->db->dbprefix('purchases')}.status, {$this->db->dbprefix('purchases')}.id as id", false)
                 ->from('purchases')
                 ->join($pi, 'FPI.purchase_id=purchases.id', 'left')
-                ->join('warehouses', 'warehouses.id=purchases.warehouse_id', 'left');
+                ->join('warehouses', 'warehouses.id=purchases.warehouse_id', 'left')
+                ->where('purchases.business_id',$business_id);
             // ->group_by('purchases.id');
 
             if ($user) {
@@ -2385,12 +2389,15 @@ class Reports extends MY_Controller
     {
         $this->sma->checkPermissions('suppliers', true);
 
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($pdf || $xls) {
             $this->db
                 ->select($this->db->dbprefix('companies') . ".id as id, company, name, phone, email, count({$this->db->dbprefix('purchases')}.id) as total, COALESCE(sum(grand_total), 0) as total_amount, COALESCE(sum(paid), 0) as paid, ( COALESCE(sum(grand_total), 0) - COALESCE(sum(paid), 0)) as balance", false)
                 ->from('companies')
                 ->join('purchases', 'purchases.supplier_id=companies.id')
                 ->where('companies.group_name', 'supplier')
+                ->where('companies.business_id', $business_id)
+                ->where('purchases.business_id', $business_id)
                 ->order_by('companies.company asc')
                 ->group_by('companies.id');
 
@@ -2444,7 +2451,7 @@ class Reports extends MY_Controller
             $this->session->set_flashdata('error', lang('nothing_found'));
             redirect($_SERVER['HTTP_REFERER']);
         } else {
-            $p = '( SELECT supplier_id, count(' . $this->db->dbprefix('purchases') . ".id) as total, COALESCE(sum(grand_total), 0) as total_amount, COALESCE(sum(paid), 0) as paid, ( COALESCE(sum(grand_total), 0) - COALESCE(sum(paid), 0)) as balance from {$this->db->dbprefix('purchases')} GROUP BY {$this->db->dbprefix('purchases')}.supplier_id ) FP";
+            $p = '( SELECT supplier_id, count(' . $this->db->dbprefix('purchases') . ".id) as total, COALESCE(sum(grand_total), 0) as total_amount, COALESCE(sum(paid), 0) as paid, ( COALESCE(sum(grand_total), 0) - COALESCE(sum(paid), 0)) as balance from {$this->db->dbprefix('purchases')} WHERE {$this->db->dbprefix('purchases')}.business_id={$business_id} GROUP BY {$this->db->dbprefix('purchases')}.supplier_id ) FP";
 
             $this->load->library('datatables');
             $this->datatables
@@ -2452,6 +2459,7 @@ class Reports extends MY_Controller
                 ->from('companies')
                 ->join($p, 'FP.supplier_id=companies.id')
                 ->where('companies.group_name', 'supplier')
+                ->where('companies.business_id', $business_id)
                 ->group_by('companies.id')
                 ->add_column('Actions', "<div class='text-center'><a class=\"tip\" title='" . lang('view_report') . "' href='" . admin_url('reports/supplier_report/$1') . "'><span class='label label-primary'>" . lang('view_report') . '</span></a></div>', 'id')
                 ->unset_column('id');
