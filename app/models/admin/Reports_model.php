@@ -11,6 +11,8 @@ class Reports_model extends CI_Model
 
     public function getBestSeller($start_date, $end_date, $warehouse_id = null)
     {
+        $business_id = $this->session->userdata['business_id'];
+        
         $this->db
             ->select('product_name, product_code')->select_sum('quantity')
             ->join('sales', 'sales.id = sale_items.sale_id', 'left')
@@ -19,6 +21,7 @@ class Reports_model extends CI_Model
         if ($warehouse_id) {
             $this->db->where('sale_items.warehouse_id', $warehouse_id);
         }
+        $this->db->where("sales.business_id", $business_id);
         $q = $this->db->get('sale_items');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -44,6 +47,9 @@ class Reports_model extends CI_Model
 
     public function getChartData()
     {
+        $business_id = $this->session->userdata['business_id'];
+        // $this->db->where("business_id", $business_id);
+
         $myQuery = "SELECT S.month,
         COALESCE(S.sales, 0) as sales,
         COALESCE( P.purchases, 0 ) as purchases,
@@ -55,16 +61,19 @@ class Reports_model extends CI_Model
                 SUM(product_tax) tax1,
                 SUM(order_tax) tax2
                 FROM " . $this->db->dbprefix('sales') . "
-                WHERE date >= date_sub( now( ) , INTERVAL 12 MONTH )
+                WHERE  business_id = $business_id
+                AND date >= date_sub( now( ) , INTERVAL 12 MONTH )
                 GROUP BY date_format(date, '%Y-%m')) S
             LEFT JOIN ( SELECT  date_format(date, '%Y-%m') Month,
                         SUM(product_tax) ptax,
                         SUM(order_tax) otax,
                         SUM(total) purchases
                         FROM " . $this->db->dbprefix('purchases') . "
+                        WHERE  business_id = $business_id
                         GROUP BY date_format(date, '%Y-%m')) P
             ON S.Month = P.Month
             ORDER BY S.Month";
+            // echo $myQuery;exit;
         $q = $this->db->query($myQuery);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -495,7 +504,9 @@ class Reports_model extends CI_Model
 
     public function getStockValue()
     {
-        $q = $this->db->query('SELECT SUM(by_price) as stock_by_price, SUM(by_cost) as stock_by_cost FROM ( Select COALESCE(sum(' . $this->db->dbprefix('warehouses_products') . '.quantity), 0)*price as by_price, COALESCE(sum(' . $this->db->dbprefix('warehouses_products') . '.quantity), 0)*cost as by_cost FROM ' . $this->db->dbprefix('products') . ' JOIN ' . $this->db->dbprefix('warehouses_products') . ' ON ' . $this->db->dbprefix('warehouses_products') . '.product_id=' . $this->db->dbprefix('products') . '.id GROUP BY ' . $this->db->dbprefix('products') . '.id ) a');
+        $business_id = $this->session->userdata['business_id'];
+
+        $q = $this->db->query('SELECT SUM(by_price) as stock_by_price, SUM(by_cost) as stock_by_cost FROM ( Select COALESCE(sum(' . $this->db->dbprefix('warehouses_products') . '.quantity), 0)*price as by_price, COALESCE(sum(' . $this->db->dbprefix('warehouses_products') . '.quantity), 0)*cost as by_cost FROM ' . $this->db->dbprefix('products') . ' JOIN ' . $this->db->dbprefix('warehouses_products') . ' ON ' . $this->db->dbprefix('warehouses_products') . '.product_id=' . $this->db->dbprefix('products') . '.id where ' . $this->db->dbprefix('products') . '.business_id = ' . $business_id . ' GROUP BY ' . $this->db->dbprefix('products') . '.id ) a');
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -664,7 +675,9 @@ class Reports_model extends CI_Model
 
     public function getWarehouseStockValue($id)
     {
-        $q = $this->db->query('SELECT SUM(by_price) as stock_by_price, SUM(by_cost) as stock_by_cost FROM ( Select sum(COALESCE(' . $this->db->dbprefix('warehouses_products') . '.quantity, 0))*price as by_price, sum(COALESCE(' . $this->db->dbprefix('warehouses_products') . '.quantity, 0))*cost as by_cost FROM ' . $this->db->dbprefix('products') . ' JOIN ' . $this->db->dbprefix('warehouses_products') . ' ON ' . $this->db->dbprefix('warehouses_products') . '.product_id=' . $this->db->dbprefix('products') . '.id WHERE ' . $this->db->dbprefix('warehouses_products') . '.warehouse_id = ? GROUP BY ' . $this->db->dbprefix('products') . '.id ) a', [$id]);
+        $business_id = $this->session->userdata['business_id'];
+
+        $q = $this->db->query('SELECT SUM(by_price) as stock_by_price, SUM(by_cost) as stock_by_cost FROM ( Select sum(COALESCE(' . $this->db->dbprefix('warehouses_products') . '.quantity, 0))*price as by_price, sum(COALESCE(' . $this->db->dbprefix('warehouses_products') . '.quantity, 0))*cost as by_cost FROM ' . $this->db->dbprefix('products') . ' JOIN ' . $this->db->dbprefix('warehouses_products') . ' ON ' . $this->db->dbprefix('warehouses_products') . '.product_id=' . $this->db->dbprefix('products') . '.id WHERE ' . $this->db->dbprefix('warehouses_products') . '.warehouse_id = ? AND ' . $this->db->dbprefix('products') . '.business_id = '.$business_id.' GROUP BY ' . $this->db->dbprefix('products') . '.id ) a', [$id]);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
