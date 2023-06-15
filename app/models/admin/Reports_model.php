@@ -177,7 +177,9 @@ class Reports_model extends CI_Model
 
     public function getExpenseCategories()
     {
-        $q = $this->db->get('expense_categories');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $q = $this->db->get_where('expense_categories', ['business_id' => $business_id]);
+        //$q = $this->db->get('expense_categories');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;

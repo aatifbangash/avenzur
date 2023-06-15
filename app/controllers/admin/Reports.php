@@ -1111,6 +1111,8 @@ class Reports extends MY_Controller
     {
         $this->sma->checkPermissions('expenses');
 
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
         $reference_no = $this->input->get('reference_no') ? $this->input->get('reference_no') : null;
         $category     = $this->input->get('category') ? $this->input->get('category') : null;
         $warehouse    = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
@@ -1130,7 +1132,8 @@ class Reports extends MY_Controller
             ->from('expenses')
             ->join('users', 'users.id=expenses.created_by', 'left')
             ->join('expense_categories', 'expense_categories.id=expenses.category_id', 'left')
-            ->group_by('expenses.id');
+            ->group_by('expenses.id')
+            ->where('expenses.business_id',$business_id);
 
             if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
                 $this->db->where('created_by', $this->session->userdata('user_id'));
@@ -1211,7 +1214,8 @@ class Reports extends MY_Controller
             ->from('expenses')
             ->join('users', 'users.id=expenses.created_by', 'left')
             ->join('expense_categories', 'expense_categories.id=expenses.category_id', 'left')
-            ->group_by('expenses.id');
+            ->group_by('expenses.id')
+            ->where('expenses.business_id',$business_id);
 
             if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
                 $this->datatables->where('created_by', $this->session->userdata('user_id'));
