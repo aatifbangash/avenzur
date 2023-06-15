@@ -105,6 +105,8 @@ class Pos_model extends CI_Model
 
     public function addPrinter($data = [])
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data['business_id'] = $business_id;
         if ($this->db->insert('printers', $data)) {
             return $this->db->insert_id();
         }
@@ -128,12 +130,14 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function addSale($data = [], $items = [], $payments = [],$sid = null)
+    public function addSale($data = [], $items = [], $payments = [], $sid = null)
     {
         $cost = $this->site->costing($items);
         // $this->sma->print_arrays($cost);
         $this->db->trans_start();
         $data['reference_no'] = $this->site->getReference('pos');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
         if ($this->db->insert('sales', $data)) {
             $sale_id = $this->db->insert_id();
             foreach ($items as $item) {
@@ -152,7 +156,7 @@ class Pos_model extends CI_Model
                 $rsd['SerialNo'] = $item['serial_no'];
                 $item_unit_quantity = $item['unit_quantity'];
                 for ($k = 0; $k < $item_unit_quantity; $k++) {
-                   $this->db->insert('sma_rsd' ,$rsd);
+                    $this->db->insert('sma_rsd', $rsd);
                 }
 
                 $sale_item_id = $this->db->insert_id();
@@ -401,6 +405,8 @@ class Pos_model extends CI_Model
 
     public function getAllBillerCompanies()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('companies', ['group_name' => 'biller']);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -413,6 +419,8 @@ class Pos_model extends CI_Model
 
     public function getAllCustomerCompanies()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('companies', ['group_name' => 'customer']);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -427,19 +435,19 @@ class Pos_model extends CI_Model
     {
         if ($this->pos_settings->item_order == 0) {
             $this->db->select('sale_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, product_variants.name as variant, products.details as details, products.hsn_code as hsn_code, products.second_name as second_name')
-            ->join('products', 'products.id=sale_items.product_id', 'left')
-            ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
-            ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
-            ->group_by('sale_items.id')
-            ->order_by('id', 'asc');
+                ->join('products', 'products.id=sale_items.product_id', 'left')
+                ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
+                ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
+                ->group_by('sale_items.id')
+                ->order_by('id', 'asc');
         } elseif ($this->pos_settings->item_order == 1) {
             $this->db->select('sale_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, product_variants.name as variant, categories.id as category_id, categories.name as category_name, products.details as details, products.hsn_code as hsn_code, products.second_name as second_name')
-            ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
-            ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
-            ->join('products', 'products.id=sale_items.product_id', 'left')
-            ->join('categories', 'categories.id=products.category_id', 'left')
-            ->group_by('sale_items.id')
-            ->order_by('categories.id', 'asc');
+                ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
+                ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
+                ->join('products', 'products.id=sale_items.product_id', 'left')
+                ->join('categories', 'categories.id=products.category_id', 'left')
+                ->group_by('sale_items.id')
+                ->order_by('categories.id', 'asc');
         }
 
         $q = $this->db->get_where('sale_items', ['sale_id' => $sale_id]);
@@ -454,6 +462,8 @@ class Pos_model extends CI_Model
 
     public function getAllPrinters()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get('printers');
         if ($q->num_rows() > 0) {
             foreach ($q->result() as $row) {
@@ -582,6 +592,8 @@ class Pos_model extends CI_Model
 
     public function getPrinterByID($id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('printers', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -591,6 +603,8 @@ class Pos_model extends CI_Model
 
     public function getProductByCode($code)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('products', ['code' => $code], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -915,8 +929,8 @@ class Pos_model extends CI_Model
             $user_id = $this->session->userdata('user_id');
         }
         $this->db->select('SUM( COALESCE( grand_total, 0 ) ) AS total', false)
-        ->where('date >', $date)
-        ->where('returns.created_by', $user_id);
+            ->where('date >', $date)
+            ->where('returns.created_by', $user_id);
 
         $q = $this->db->get('returns');
         if ($q->num_rows() > 0) {
@@ -980,6 +994,8 @@ class Pos_model extends CI_Model
 
     public function getSetting()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get('pos_settings');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -1029,7 +1045,7 @@ class Pos_model extends CI_Model
         $this->db->select('COALESCE( grand_total, 0 ) AS total, SUM( COALESCE( amount, 0 ) ) AS paid', false)
             ->join('sales', 'sales.id=payments.sale_id', 'left')
             ->where('type', 'received')->where('payments.date >', $date)->where('paid_by', 'authorize')
-             ->group_by('payments.sale_id');
+            ->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
         $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
@@ -1245,6 +1261,8 @@ class Pos_model extends CI_Model
 
     public function openRegister($data)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         if ($this->db->insert('pos_register', $data)) {
             return true;
         }
@@ -1259,7 +1277,8 @@ class Pos_model extends CI_Model
         if ($amount && !empty($card_info)) {
             $data = $this->paypal_payments->Do_direct_payment($amount, $this->default_currency->code, $card_info, $desc, $sale_id);
             if (!isset($data['error'])) {
-                $result = ['transaction_id' => $data['TRANSACTIONID'],
+                $result = [
+                    'transaction_id' => $data['TRANSACTIONID'],
                     'created_at'            => date($this->dateFormats['php_ldate'], strtotime($data['TIMESTAMP'])),
                     'amount'                => $data['AMT'],
                     'currency'              => strtoupper($data['CURRENCYCODE']),
@@ -1317,7 +1336,8 @@ class Pos_model extends CI_Model
                 $token = $token_info->id;
                 $data  = $this->stripe_payments->insert($token, $desc, $amount, $this->default_currency->code);
                 if (!isset($data['error'])) {
-                    $result = ['transaction_id' => $data->id,
+                    $result = [
+                        'transaction_id' => $data->id,
                         'created_at'            => date($this->dateFormats['php_ldate'], $data->created),
                         'amount'                => ($data->amount / 100),
                         'currency'              => strtoupper($data->currency),
@@ -1430,7 +1450,8 @@ class Pos_model extends CI_Model
 
     public function updateSetting($data)
     {
-        $this->db->where('pos_id', '1');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         if ($this->db->update('pos_settings', $data)) {
             return true;
         }
@@ -1445,7 +1466,7 @@ class Pos_model extends CI_Model
     //     }
     //     return false;
     // }
-    
+
 
 
 

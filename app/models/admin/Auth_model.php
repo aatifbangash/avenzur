@@ -296,6 +296,8 @@ class Auth_model extends CI_Model
         $this->trigger_events('extra_group_set');
 
         // insert the new group
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
         $this->db->insert($this->tables['groups'], $data);
         $group_id = $this->db->insert_id();
 
@@ -725,7 +727,9 @@ class Auth_model extends CI_Model
     {
         if ($this->config->item('track_login_attempts', 'ion_auth')) {
             $ip_address = $this->_prepare_ip($this->input->ip_address());
-            return $this->db->insert($this->tables['login_attempts'], ['ip_address' => $ip_address, 'login' => $identity, 'time' => time()]);
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+            return $this->db->insert($this->tables['login_attempts'], ['business_id' => $business_id, 'ip_address' => $ip_address, 'login' => $identity, 'time' => time()]);
         }
         return false;
     }
@@ -783,7 +787,7 @@ class Auth_model extends CI_Model
         $this->trigger_events('extra_where');
         $this->load->helper('email');
         $this->identity_column = valid_email($identity) ? 'email' : 'username';
-        $query                 = $this->db->select($this->identity_column . ', username, email, id, password, active, last_login, last_ip_address, avatar, gender, group_id, warehouse_id, biller_id, company_id, view_right, edit_right, allow_discount, show_cost, show_price,allow_discount_value')
+        $query                 = $this->db->select($this->identity_column . ', username, email, id, password, active, last_login, last_ip_address, avatar, gender, group_id, warehouse_id, biller_id, company_id, view_right, edit_right, allow_discount, show_cost, show_price,allow_discount_value, business_id')
             ->where($this->identity_column, $this->db->escape_str($identity))
             ->limit(1)
             ->get($this->tables['users']);
@@ -800,7 +804,7 @@ class Auth_model extends CI_Model
 
         if ($query->num_rows() === 1) {
             $user = $query->row();
-             $allow_discount_value      = $user->allow_discount_value;
+            $allow_discount_value      = $user->allow_discount_value;
             $password = $this->hash_password_db($user->id, $password);
 
             if ($password === true) {
@@ -815,6 +819,8 @@ class Auth_model extends CI_Model
                 $this->update_last_login($user->id);
                 $this->update_last_login_ip($user->id);
                 $ldata = ['user_id' => $user->id, 'ip_address' => $this->input->ip_address(), 'login' => $identity, 'time' => date('Y-m-d H:i:s')];
+                $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+                $data["business_id"] = $business_id;
                 $this->db->insert('user_logins', $ldata);
                 $this->clear_login_attempts($identity);
 
@@ -852,7 +858,7 @@ class Auth_model extends CI_Model
 
         //get the user
         $this->trigger_events('extra_where');
-        $query = $this->db->select($this->identity_column . ', id, username, email, last_login, last_ip_address, avatar, gender, group_id, warehouse_id, biller_id, company_id, view_right, allow_discount, edit_right, show_cost, show_price')
+        $query = $this->db->select($this->identity_column . ', id, username, email, last_login, last_ip_address, avatar, gender, group_id, warehouse_id, biller_id, company_id, view_right, allow_discount, edit_right, show_cost, show_price, business_id')
             ->where($this->identity_column, get_cookie('identity'))
             ->where('remember_code', get_cookie('remember_code'))
             ->limit(1)
@@ -1237,6 +1243,7 @@ class Auth_model extends CI_Model
             'email'          => $user->email,
             'user_id'        => $user->id, //everyone likes to overwrite id so we'll use user_id
             'old_last_login' => $user->last_login,
+            'business_id'    => $user->business_id,
             'last_ip'        => $user->last_ip_address,
             'avatar'         => $user->avatar,
             'gender'         => $user->gender,
@@ -1429,6 +1436,9 @@ class Auth_model extends CI_Model
         }
 
         $this->trigger_events('extra_where');
+
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
 
         return $this->db->where('username', $username)
             ->count_all_results($this->tables['users']) > 0;

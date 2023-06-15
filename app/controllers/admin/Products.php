@@ -7,6 +7,8 @@ class Products extends MY_Controller
     public function __construct()
     {
         parent::__construct();
+
+        
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
             $this->sma->md('login');
@@ -504,6 +506,7 @@ class Products extends MY_Controller
                 'note'         => $note,
                 'created_by'   => $this->session->userdata('user_id'),
                 'count_id'     => null,
+                'business_id'    => $this->ion_auth->user()->row()->business_id,
             ];
 
             if ($_FILES['csv_file']['size'] > 0) {
@@ -1494,9 +1497,10 @@ class Products extends MY_Controller
             . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a>";
 
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select("{$this->db->dbprefix('adjustments')}.id as id, date, reference_no, warehouses.name as wh_name, CONCAT({$this->db->dbprefix('users')}.first_name, ' ', {$this->db->dbprefix('users')}.last_name) as created_by, note, attachment")
-            ->from('adjustments')
+            ->from('adjustments')->where("adjustments.business_id", $business_id)
             ->join('warehouses', 'warehouses.id=adjustments.warehouse_id', 'left')
             ->join('users', 'users.id=adjustments.created_by', 'left')
             ->group_by('adjustments.id');
@@ -1519,9 +1523,11 @@ class Products extends MY_Controller
         $detail_link = anchor('admin/products/view_count/$1', '<label class="label label-primary pointer">' . lang('details') . '</label>', 'class="tip" title="' . lang('details') . '" data-toggle="modal" data-target="#myModal"');
 
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select("{$this->db->dbprefix('stock_counts')}.id as id, date, reference_no, {$this->db->dbprefix('warehouses')}.name as wh_name, type, brand_names, category_names, initial_file, final_file")
             ->from('stock_counts')
+            ->where("{$this->db->dbprefix('stock_counts')}.business_id", $business_id)
             ->join('warehouses', 'warehouses.id=stock_counts.warehouse_id', 'left');
         if ($warehouse_id) {
             $this->datatables->where('warehouse_id', $warehouse_id);
@@ -1566,10 +1572,12 @@ class Products extends MY_Controller
             </ul>
         </div></div>';
         $this->load->library('datatables');
+        //TIP:- added
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($warehouse_id) {
             $this->datatables
             ->select($this->db->dbprefix('products') . ".id as productid, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname, cost as cost, price as price, COALESCE(wp.quantity, 0) as quantity, {$this->db->dbprefix('units')}.code as unit, wp.rack as rack, alert_quantity", false)
-            ->from('products');
+            ->from('products')->where('products.business_id', $business_id);
             if ($this->Settings->display_all_products) {
                 $this->datatables->join('warehouses_products wp', "wp.product_id=products.id AND wp.warehouse_id={$warehouse_id}", 'left');
             // $this->datatables->join("( SELECT product_id, quantity, rack from {$this->db->dbprefix('warehouses_products')} WHERE warehouse_id = {$warehouse_id}) wp", 'products.id=wp.product_id', 'left');
@@ -1586,6 +1594,7 @@ class Products extends MY_Controller
             $this->datatables
                 ->select($this->db->dbprefix('products') . ".id as productid, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname, cost as cost, price as price, COALESCE(quantity, 0) as quantity, {$this->db->dbprefix('units')}.code as unit, '' as rack, alert_quantity", false)
                 ->from('products')
+                ->where('products.business_id', $business_id)
                 ->join('categories', 'products.category_id=categories.id', 'left')
                 ->join('units', 'products.unit=units.id', 'left')
                 ->join('brands', 'products.brand=brands.id', 'left')
@@ -1733,6 +1742,7 @@ class Products extends MY_Controller
                         'supplier5_part_no' => isset($value[39]) ? trim($value[39]) : '',
                         'supplier5price'    => isset($value[40]) ? trim($value[40]) : '',
                         'slug'              => $this->Settings->use_code_for_slug ? $this->sma->slug($value[1]) : $this->sma->slug($value[0]),
+                        'business_id'    => $this->ion_auth->user()->row()->business_id,
                     ];
 
                     if ($catd = $this->products_model->getCategoryByCode($item['category_code'])) {

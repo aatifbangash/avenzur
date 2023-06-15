@@ -144,6 +144,7 @@ class Quotes extends MY_Controller
             $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
             $total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
             $grand_total    = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $order_discount), 4);
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
             $data           = ['date' => $date,
                 'reference_no'        => $reference,
                 'customer_id'         => $customer_id,
@@ -168,6 +169,7 @@ class Quotes extends MY_Controller
                 'status'              => $status,
                 'created_by'          => $this->session->userdata('user_id'),
                 'hash'                => hash('sha256', microtime() . mt_rand()),
+                'business_id'         => $business_id,
             ];
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;
@@ -221,6 +223,10 @@ class Quotes extends MY_Controller
         foreach ($quotes_id as $quote_id) {
             $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
             $inv                 = $this->quotes_model->getQuoteByID($quote_id);
+            if(empty($inv)){
+                $this->session->set_flashdata('error', $this->lang->line('Quotation not found'));
+                admin_redirect('quotes');
+            }
             if (!$this->session->userdata('view_right')) {
                 $this->sma->view_rights($inv->created_by);
             }
@@ -269,6 +275,12 @@ class Quotes extends MY_Controller
             $id = $this->input->get('id');
         }
         $inv = $this->quotes_model->getQuoteByID($id);
+        if(empty($inv)){
+            $this->session->set_flashdata('error', $this->lang->line('Quotation not found'));
+            admin_redirect('quotes');
+        }
+
+
         if (!$this->session->userdata('edit_right')) {
             $this->sma->view_rights($inv->created_by);
         }
@@ -535,6 +547,10 @@ class Quotes extends MY_Controller
             $quote_id = $this->input->get('id');
         }
         $inv = $this->quotes_model->getQuoteByID($quote_id);
+        if(empty($inv)){
+            $this->session->set_flashdata('error', $this->lang->line('Quotation not found'));
+            admin_redirect('quotes');
+        }
         $this->form_validation->set_rules('to', $this->lang->line('to') . ' ' . $this->lang->line('email'), 'trim|required|valid_email');
         $this->form_validation->set_rules('subject', $this->lang->line('subject'), 'trim|required');
         $this->form_validation->set_rules('cc', $this->lang->line('cc'), 'trim|valid_emails');
@@ -647,16 +663,19 @@ class Quotes extends MY_Controller
                 </div></div>';
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
                 ->select('id, date, reference_no, biller, customer, supplier, grand_total, status, attachment')
                 ->from('quotes')
+                ->where('business_id', $business_id)
                 ->where('warehouse_id', $warehouse_id);
         } else {
             $this->datatables
                 ->select('id, date, reference_no, biller, customer, supplier, grand_total, status, attachment')
-                ->from('quotes');
+                ->from('quotes')
+                ->where('business_id', $business_id);
         }
         if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
@@ -696,6 +715,10 @@ class Quotes extends MY_Controller
         }
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv                 = $this->quotes_model->getQuoteByID($quote_id);
+        if(empty($inv)){
+            $this->session->set_flashdata('error', $this->lang->line('Quotation not found'));
+            admin_redirect('quotes');
+        }
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by, true);
         }
@@ -719,6 +742,10 @@ class Quotes extends MY_Controller
         }
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv                 = $this->quotes_model->getQuoteByID($quote_id);
+        if(empty($inv)){
+            $this->session->set_flashdata('error', $this->lang->line('Quotation not found'));
+            admin_redirect('quotes');
+        }
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by);
         }
@@ -940,6 +967,10 @@ class Quotes extends MY_Controller
         }
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv                 = $this->quotes_model->getQuoteByID($quote_id);
+        if(empty($inv)){
+            $this->session->set_flashdata('error', $this->lang->line('Quotation not found'));
+            admin_redirect('quotes');
+        }
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by);
         }

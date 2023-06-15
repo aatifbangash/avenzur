@@ -29,9 +29,28 @@ class system_settings extends MY_Controller
         $this->allowed_file_size  = '1024';
     }
 
+    public function unique_brand($name)
+    {
+
+
+        $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+        $this->db->select('COUNT(*) AS count')
+            ->from('brands')
+            ->where('business_id', $business_id)
+            ->where('name', $name);
+        $total = $this->db->get()->row()->count;
+        if ($total > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function add_brand()
     {
-        $this->form_validation->set_rules('name', lang('brand_name'), 'trim|required|is_unique[brands.name]|alpha_numeric_spaces');
+        $this->form_validation->set_rules('name', lang('brand_name'), 'trim|required|callback_unique_brand|alpha_numeric_spaces');
         $this->form_validation->set_rules('slug', lang('slug'), 'trim|required|is_unique[brands.slug]|alpha_dash');
         $this->form_validation->set_rules('description', lang('description'), 'trim|required');
 
@@ -43,42 +62,38 @@ class system_settings extends MY_Controller
                 'description' => $this->input->post('description'),
             ];
 
-    if ($_FILES['userfile']['size'] > 0) {
-        $this->load->library('upload');
-        $config['upload_path']   = $this->upload_path;
-        $config['allowed_types'] = $this->image_types;
-        $config['max_size']      = $this->allowed_file_size;
-        $config['max_width']     = $this->Settings->iwidth;
-        $config['max_height']    = $this->Settings->iheight;
-        $config['overwrite']     = false;
-        $config['encrypt_name']  = true;
-        $config['max_filename']  = 25;
-        $this->upload->initialize($config);
-        if (!$this->upload->do_upload()) {
-        $error = $this->upload->display_errors();
-        $this->session->set_flashdata('error', $error);
-        redirect($_SERVER['HTTP_REFERER']);
-        }
-        $photo         = $this->upload->file_name;
-        $data['image'] = $photo;
-        $this->load->library('image_lib');
-        $config['image_library']  = 'gd2';
-        $config['source_image']   = $this->upload_path . $photo;
-        $config['new_image']      = $this->thumbs_path . $photo;
-        $config['maintain_ratio'] = true;
-        $config['width']          = $this->Settings->twidth;
-        $config['height']         = $this->Settings->theight;
-        $this->image_lib->clear();
-        $this->image_lib->initialize($config);
-        if (!$this->image_lib->resize()) {
-        echo $this->image_lib->display_errors();
-        }
-        $this->image_lib->clear();
-
-        }
-
-
-
+            if ($_FILES['userfile']['size'] > 0) {
+                $this->load->library('upload');
+                $config['upload_path']   = $this->upload_path;
+                $config['allowed_types'] = $this->image_types;
+                $config['max_size']      = $this->allowed_file_size;
+                $config['max_width']     = $this->Settings->iwidth;
+                $config['max_height']    = $this->Settings->iheight;
+                $config['overwrite']     = false;
+                $config['encrypt_name']  = true;
+                $config['max_filename']  = 25;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload()) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                $photo         = $this->upload->file_name;
+                $data['image'] = $photo;
+                $this->load->library('image_lib');
+                $config['image_library']  = 'gd2';
+                $config['source_image']   = $this->upload_path . $photo;
+                $config['new_image']      = $this->thumbs_path . $photo;
+                $config['maintain_ratio'] = true;
+                $config['width']          = $this->Settings->twidth;
+                $config['height']         = $this->Settings->theight;
+                $this->image_lib->clear();
+                $this->image_lib->initialize($config);
+                if (!$this->image_lib->resize()) {
+                    echo $this->image_lib->display_errors();
+                }
+                $this->image_lib->clear();
+            }
         } elseif ($this->input->post('add_brand')) {
             $this->session->set_flashdata('error', validation_errors());
             admin_redirect('system_settings/brands');
@@ -92,13 +107,30 @@ class system_settings extends MY_Controller
             $this->data['modal_js'] = $this->site->modal_js();
             $this->load->view($this->theme . 'settings/add_brand', $this->data);
         }
+    }
 
+    public function unique_category($code)
+    {
+
+        $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+        $this->db->select('COUNT(*) AS count')
+            ->from('sma_categories')
+            ->where('business_id', $business_id)
+            ->where('code', $code);
+        $total = $this->db->get()->row()->count;
+        if ($total > 0) {
+            return false;
+        }
+
+        return true;
     }
 
     public function add_category()
     {
         $this->load->helper('security');
-        $this->form_validation->set_rules('code', lang('category_code'), 'trim|is_unique[categories.code]|required');
+        $this->form_validation->set_rules('code', lang('category_code'), 'trim|callback_unique_category|required');
         $this->form_validation->set_rules('name', lang('name'), 'required|min_length[3]');
         $this->form_validation->set_rules('slug', lang('slug'), 'required|is_unique[categories.slug]|alpha_dash');
         $this->form_validation->set_rules('userfile', lang('category_image'), 'xss_clean');
@@ -178,14 +210,34 @@ class system_settings extends MY_Controller
         }
     }
 
+    public function unique_currency($code)
+    {
+
+
+        $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+        $this->db->select('COUNT(*) AS count')
+            ->from('currencies')
+            ->where('business_id', $business_id)
+            ->where('code', $code);
+        $total = $this->db->get()->row()->count;
+        if ($total > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function add_currency()
     {
-        $this->form_validation->set_rules('code', lang('currency_code'), 'trim|is_unique[currencies.code]|required');
+        $this->form_validation->set_rules('code', lang('currency_code'), 'trim|callback_unique_currency|required');
         $this->form_validation->set_rules('name', lang('name'), 'required');
         $this->form_validation->set_rules('rate', lang('exchange_rate'), 'required|numeric');
 
         if ($this->form_validation->run() == true) {
-            $data = ['code'   => $this->input->post('code'),
+            $data = [
+                'code'   => $this->input->post('code'),
                 'name'        => $this->input->post('name'),
                 'rate'        => $this->input->post('rate'),
                 'symbol'      => $this->input->post('symbol'),
@@ -207,13 +259,33 @@ class system_settings extends MY_Controller
         }
     }
 
+    public function unique_groupname($groupname)
+    {
+
+
+        $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+        $this->db->select('COUNT(*) AS count')
+            ->from('customer_groups')
+            ->where('business_id', $business_id)
+            ->where('name', $groupname);
+        $total = $this->db->get()->row()->count;
+        if ($total > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function add_customer_group()
     {
-        $this->form_validation->set_rules('name', lang('group_name'), 'trim|is_unique[customer_groups.name]|required');
+        $this->form_validation->set_rules('name', lang('group_name'), 'trim|callback_unique_groupname|required');
         $this->form_validation->set_rules('percent', lang('group_percentage'), 'required|numeric');
 
         if ($this->form_validation->run() == true) {
-            $data = ['name' => $this->input->post('name'),
+            $data = [
+                'name' => $this->input->post('name'),
                 'percent'   => $this->input->post('percent'),
                 'discount'  => $this->input->post('discount'),
             ];
@@ -258,9 +330,28 @@ class system_settings extends MY_Controller
         }
     }
 
+    public function unique_price_group($priceGroupName)
+    {
+
+
+        $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+        $this->db->select('COUNT(*) AS count')
+            ->from('price_groups')
+            ->where('business_id', $business_id)
+            ->where('name', $priceGroupName);
+        $total = $this->db->get()->row()->count;
+        if ($total > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function add_price_group()
     {
-        $this->form_validation->set_rules('name', lang('group_name'), 'trim|is_unique[price_groups.name]|required|alpha_numeric_spaces');
+        $this->form_validation->set_rules('name', lang('group_name'), 'trim|callback_unique_price_group|required|alpha_numeric_spaces');
 
         if ($this->form_validation->run() == true) {
             $data = ['name' => $this->input->post('name')];
@@ -280,14 +371,33 @@ class system_settings extends MY_Controller
         }
     }
 
+    public function tax_rate($name)
+    {
+
+        $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+        $this->db->select('COUNT(*) AS count')
+            ->from('tax_rates')
+            ->where('business_id', $business_id)
+            ->where('name', $name);
+        $total = $this->db->get()->row()->count;
+        if ($total > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function add_tax_rate()
     {
-        $this->form_validation->set_rules('name', lang('name'), 'trim|is_unique[tax_rates.name]|required');
+        $this->form_validation->set_rules('name', lang('name'), 'trim|callback_tax_rate|required');
         $this->form_validation->set_rules('type', lang('type'), 'required');
         $this->form_validation->set_rules('rate', lang('tax_rate'), 'required|numeric');
 
         if ($this->form_validation->run() == true) {
-            $data = ['name' => $this->input->post('name'),
+            $data = [
+                'name' => $this->input->post('name'),
                 'code'      => $this->input->post('code'),
                 'type'      => $this->input->post('type'),
                 'rate'      => $this->input->post('rate'),
@@ -308,9 +418,27 @@ class system_settings extends MY_Controller
         }
     }
 
+    public function unique_unit($code)
+    {
+
+        $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+        $this->db->select('COUNT(*) AS count')
+            ->from('units')
+            ->where('business_id', $business_id)
+            ->where('code', $code);
+        $total = $this->db->get()->row()->count;
+        if ($total > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function add_unit()
     {
-        $this->form_validation->set_rules('code', lang('unit_code'), 'trim|is_unique[units.code]|required');
+        $this->form_validation->set_rules('code', lang('unit_code'), 'trim|callback_unique_unit|required');
         $this->form_validation->set_rules('name', lang('unit_name'), 'trim|required');
         if ($this->input->post('base_unit')) {
             $this->form_validation->set_rules('operator', lang('operator'), 'required');
@@ -341,9 +469,28 @@ class system_settings extends MY_Controller
         }
     }
 
+    public function unique_variant($name)
+    {
+
+
+        $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+        $this->db->select('COUNT(*) AS count')
+            ->from('variants')
+            ->where('business_id', $business_id)
+            ->where('name', $name);
+        $total = $this->db->get()->row()->count;
+        if ($total > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function add_variant()
     {
-        $this->form_validation->set_rules('name', lang('name'), 'trim|is_unique[variants.name]|required');
+        $this->form_validation->set_rules('name', lang('name'), 'trim|callback_unique_variant|required');
 
         if ($this->form_validation->run() == true) {
             $data = ['name' => $this->input->post('name')];
@@ -362,10 +509,29 @@ class system_settings extends MY_Controller
         }
     }
 
+    public function unique_warehouse($code)
+    {
+
+
+        $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+        $this->db->select('COUNT(*) AS count')
+            ->from('warehouses')
+            ->where('business_id', $business_id)
+            ->where('code', $code);
+        $total = $this->db->get()->row()->count;
+        if ($total > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function add_warehouse()
     {
         $this->load->helper('security');
-        $this->form_validation->set_rules('code', lang('code'), 'trim|is_unique[warehouses.code]|required');
+        $this->form_validation->set_rules('code', lang('code'), 'trim|callback_unique_warehouse|required');
         $this->form_validation->set_rules('name', lang('name'), 'required');
         $this->form_validation->set_rules('address', lang('address'), 'required');
         $this->form_validation->set_rules('userfile', lang('map_image'), 'xss_clean');
@@ -410,7 +576,8 @@ class system_settings extends MY_Controller
             } else {
                 $map = null;
             }
-            $data = ['code'      => $this->input->post('code'),
+            $data = [
+                'code'      => $this->input->post('code'),
                 'name'           => $this->input->post('name'),
                 'phone'          => $this->input->post('phone'),
                 'email'          => $this->input->post('email'),
@@ -418,6 +585,8 @@ class system_settings extends MY_Controller
                 'price_group_id' => $this->input->post('price_group'),
                 'warehouse_type' => $this->input->post('type'),
                 'country'            => $this->input->post('country'),
+                //TIP:- addd
+                'business_id'    => $this->ion_auth->user()->row()->business_id,
             ];
         } elseif ($this->input->post('add_warehouse')) {
             $this->session->set_flashdata('error', validation_errors());
@@ -430,7 +599,7 @@ class system_settings extends MY_Controller
         } else {
             $this->data['error']        = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['price_groups'] = $this->settings_model->getAllPriceGroups();
-            
+
             $this->data['modal_js']     = $this->site->modal_js();
             $this->data['country'] = $this->settings_model->getallCountry();
             $this->load->view($this->theme . 'settings/add_warehouse', $this->data);
@@ -646,7 +815,8 @@ class system_settings extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
                 $site_logo = $this->upload->file_name;
-                $this->db->update('settings', ['logo' => $site_logo], ['setting_id' => 1]);
+                $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+                $this->db->update('settings', ['logo' => $site_logo], ['business_id' => $business_id]);
             }
 
             if ($_FILES['login_logo']['size'] > 0) {
@@ -666,7 +836,8 @@ class system_settings extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
                 $login_logo = $this->upload->file_name;
-                $this->db->update('settings', ['logo2' => $login_logo], ['setting_id' => 1]);
+                $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+                $this->db->update('settings', ['logo2' => $login_logo], ['business_id' => $business_id]);
             }
 
             if ($_FILES['biller_logo']['size'] > 0) {
@@ -1210,7 +1381,8 @@ class system_settings extends MY_Controller
         $this->form_validation->set_rules('rate', lang('exchange_rate'), 'required|numeric');
 
         if ($this->form_validation->run() == true) {
-            $data = ['code'   => $this->input->post('code'),
+            $data = [
+                'code'   => $this->input->post('code'),
                 'name'        => $this->input->post('name'),
                 'rate'        => $this->input->post('rate'),
                 'symbol'      => $this->input->post('symbol'),
@@ -1243,7 +1415,8 @@ class system_settings extends MY_Controller
         $this->form_validation->set_rules('percent', lang('group_percentage'), 'required|numeric');
 
         if ($this->form_validation->run() == true) {
-            $data = ['name' => $this->input->post('name'),
+            $data = [
+                'name' => $this->input->post('name'),
                 'percent'   => $this->input->post('percent'),
                 'discount'  => $this->input->post('discount'),
             ];
@@ -1379,7 +1552,8 @@ class system_settings extends MY_Controller
         $this->form_validation->set_rules('rate', lang('tax_rate'), 'required|numeric');
 
         if ($this->form_validation->run() == true) {
-            $data = ['name' => $this->input->post('name'),
+            $data = [
+                'name' => $this->input->post('name'),
                 'code'      => $this->input->post('code'),
                 'type'      => $this->input->post('type'),
                 'rate'      => $this->input->post('rate'),
@@ -1479,7 +1653,8 @@ class system_settings extends MY_Controller
         $this->form_validation->set_rules('map', lang('map_image'), 'xss_clean');
 
         if ($this->form_validation->run() == true) {
-            $data = ['code'      => $this->input->post('code'),
+            $data = [
+                'code'      => $this->input->post('code'),
                 'name'           => $this->input->post('name'),
                 'phone'          => $this->input->post('phone'),
                 'email'          => $this->input->post('email'),
@@ -1632,9 +1807,10 @@ class system_settings extends MY_Controller
     public function getBrands()
     {
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, image, code, name, slug')
-            ->from('brands')
+            ->from('brands')->where("business_id", $business_id)
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('system_settings/edit_brand/$1') . "' data-toggle='modal' data-target='#myModal' class='tip' title='" . lang('edit_brand') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_brand') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_brand/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
 
         echo $this->datatables->generate();
@@ -1645,9 +1821,11 @@ class system_settings extends MY_Controller
         $print_barcode = anchor('admin/products/print_barcodes/?category=$1', '<i class="fa fa-print"></i>', 'title="' . lang('print_barcodes') . '" class="tip"');
 
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select("{$this->db->dbprefix('categories')}.id as id, {$this->db->dbprefix('categories')}.image, {$this->db->dbprefix('categories')}.code, {$this->db->dbprefix('categories')}.name, {$this->db->dbprefix('categories')}.slug, c.name as parent", false)
             ->from('categories')
+            ->where("categories.business_id", $business_id)
             ->join('categories c', 'c.id=categories.parent_id', 'left')
             ->group_by('categories.id')
             ->add_column('Actions', '<div class="text-center">' . $print_barcode . " <a href='" . admin_url('system_settings/edit_category/$1') . "' data-toggle='modal' data-target='#myModal' class='tip' title='" . lang('edit_category') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_category') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_category/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
@@ -1658,9 +1836,11 @@ class system_settings extends MY_Controller
     public function getCurrencies()
     {
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, code, name, rate, symbol')
             ->from('currencies')
+            ->where("business_id", $business_id)
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('system_settings/edit_currency/$1') . "' class='tip' title='" . lang('edit_currency') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_currency') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_currency/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
         //->unset_column('id');
 
@@ -1670,9 +1850,11 @@ class system_settings extends MY_Controller
     public function getCustomerGroups()
     {
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, name, percent')
             ->from('customer_groups')
+            ->where('business_id', $business_id)
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('system_settings/edit_customer_group/$1') . "' class='tip' title='" . lang('edit_customer_group') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_customer_group') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_customer_group/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
         //->unset_column('id');
 
@@ -1682,9 +1864,11 @@ class system_settings extends MY_Controller
     public function getExpenseCategories()
     {
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, code, name')
             ->from('expense_categories')
+            ->where("expense_categories.business_id", $business_id)
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('system_settings/edit_expense_category/$1') . "' data-toggle='modal' data-target='#myModal' class='tip' title='" . lang('edit_expense_category') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_expense_category') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_expense_category/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
 
         echo $this->datatables->generate();
@@ -1693,9 +1877,11 @@ class system_settings extends MY_Controller
     public function getPriceGroups()
     {
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, name')
             ->from('price_groups')
+            ->where('business_id', $business_id)
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('system_settings/group_product_prices/$1') . "' class='tip' title='" . lang('group_product_prices') . "'><i class=\"fa fa-eye\"></i></a>  <a href='" . admin_url('system_settings/edit_price_group/$1') . "' class='tip' title='" . lang('edit_price_group') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_price_group') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_price_group/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
         //->unset_column('id');
 
@@ -1725,9 +1911,10 @@ class system_settings extends MY_Controller
     public function getTaxRates()
     {
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, name, code, rate, type')
-            ->from('tax_rates')
+            ->from('tax_rates')->where("tax_rates.business_id", $business_id)
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('system_settings/edit_tax_rate/$1') . "' class='tip' title='" . lang('edit_tax_rate') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_tax_rate') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_tax_rate/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
         //->unset_column('id');
 
@@ -1737,9 +1924,11 @@ class system_settings extends MY_Controller
     public function getUnits()
     {
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select("{$this->db->dbprefix('units')}.id as id, {$this->db->dbprefix('units')}.code, {$this->db->dbprefix('units')}.name, b.name as base_unit, {$this->db->dbprefix('units')}.operator, {$this->db->dbprefix('units')}.operation_value", false)
             ->from('units')
+            ->where("units.business_id", $business_id)
             ->join('units b', 'b.id=units.base_unit', 'left')
             ->group_by('units.id')
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('system_settings/edit_unit/$1') . "' data-toggle='modal' data-target='#myModal' class='tip' title='" . lang('edit_unit') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_unit') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_unit/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
@@ -1750,9 +1939,11 @@ class system_settings extends MY_Controller
     public function getVariants()
     {
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select('id, name')
             ->from('variants')
+            ->where("variants.business_id", $business_id)
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('system_settings/edit_variant/$1') . "' class='tip' title='" . lang('edit_variant') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_variant') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_variant/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
         //->unset_column('id');
 
@@ -1762,9 +1953,11 @@ class system_settings extends MY_Controller
     public function getWarehouses()
     {
         $this->load->library('datatables');
+        //TIP:-
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select("{$this->db->dbprefix('warehouses')}.id as id, map, code, {$this->db->dbprefix('warehouses')}.name as name, {$this->db->dbprefix('price_groups')}.name as price_group, phone, email, address")
-            ->from('warehouses')
+            ->from('warehouses')->where("warehouses.business_id", $business_id)
             ->join('price_groups', 'price_groups.id=warehouses.price_group_id', 'left')
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('system_settings/add_shelf/$1') . "' class='tip' title='" . lang('Add Shelf') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-plus\"></i></a>&nbsp;<a href='" . admin_url('system_settings/view_shelf/$1') . "' class='tip' title='" . lang('View Shelf') . "'><i class=\"fa fa-file-text-o\"></i></a>&nbsp;<a href='" . admin_url('system_settings/edit_warehouse/$1') . "' class='tip' title='" . lang('edit_warehouse') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_warehouse') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_warehouse/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
 
@@ -1773,32 +1966,28 @@ class system_settings extends MY_Controller
 
     public function add_shelf($warehouse = null)
     {
-        $this->form_validation->set_rules('warehouse_id','Warehouse', 'required');
+        $this->form_validation->set_rules('warehouse_id', 'Warehouse', 'required');
 
         if ($this->form_validation->run() == true) {
-        $warehouse_id = $this->input->post('warehouse_id');
-        $i = sizeof($_POST['shelf_name']);
-        for ($r = 0; $r < $i; $r++) 
-        {
-            $shelf_name = $_POST['shelf_name'][$r];
-            $shelf = [
-                'warehouse_id' => $warehouse_id,
-                'shelf_name'   => $shelf_name
-            ];
-            $shelves[] = $shelf;
-        }
-        if ($this->settings_model->addShelf($shelves)) {
-            $this->session->set_flashdata('message', $this->lang->line('Shelf Added into Warehouse'));
-            admin_redirect('system_settings/warehouses');
-        }
-
-        }else{
+            $warehouse_id = $this->input->post('warehouse_id');
+            $i = sizeof($_POST['shelf_name']);
+            for ($r = 0; $r < $i; $r++) {
+                $shelf_name = $_POST['shelf_name'][$r];
+                $shelf = [
+                    'warehouse_id' => $warehouse_id,
+                    'shelf_name'   => $shelf_name
+                ];
+                $shelves[] = $shelf;
+            }
+            if ($this->settings_model->addShelf($shelves)) {
+                $this->session->set_flashdata('message', $this->lang->line('Shelf Added into Warehouse'));
+                admin_redirect('system_settings/warehouses');
+            }
+        } else {
 
             $this->data['warehouse_id'] = $warehouse;
             $this->load->view($this->theme . 'settings/add_shelf', $this->data);
         }
-
-           
     }
 
     public function view_shelf($warehouse = null)
@@ -1809,16 +1998,15 @@ class system_settings extends MY_Controller
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('system_settings'), 'page' => lang('system_settings')], ['link' => '#', 'page' => lang('Warehouse Shelves')]];
         $meta = ['page_title' => lang('Warehouse Shelves'), 'bc' => $bc];
         $this->page_construct('settings/warehouse_shelf', $meta, $this->data);
-
     }
 
-    public function delete_warehouse_shelf($id = null,$warehouse = null)
+    public function delete_warehouse_shelf($id = null, $warehouse = null)
     {
-        
+
         if ($this->settings_model->deletewarehouseShelf($id)) {
-            
+
             $this->session->set_flashdata('message', lang('Country_deleted'));
-                 admin_redirect('system_settings/view_shelf/'.$warehouse);
+            admin_redirect('system_settings/view_shelf/' . $warehouse);
         }
     }
 
@@ -1894,7 +2082,8 @@ class system_settings extends MY_Controller
             admin_redirect('system_settings/brands');
         } else {
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
-            $this->data['userfile'] = ['name' => 'userfile',
+            $this->data['userfile'] = [
+                'name' => 'userfile',
                 'id'                          => 'userfile',
                 'type'                        => 'text',
                 'value'                       => $this->form_validation->set_value('userfile'),
@@ -1981,7 +2170,8 @@ class system_settings extends MY_Controller
             }
 
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
-            $this->data['userfile'] = ['name' => 'userfile',
+            $this->data['userfile'] = [
+                'name' => 'userfile',
                 'id'                          => 'userfile',
                 'type'                        => 'text',
                 'value'                       => $this->form_validation->set_value('userfile'),
@@ -2046,7 +2236,8 @@ class system_settings extends MY_Controller
             admin_redirect('system_settings/expense_categories');
         } else {
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
-            $this->data['userfile'] = ['name' => 'userfile',
+            $this->data['userfile'] = [
+                'name' => 'userfile',
                 'id'                          => 'userfile',
                 'type'                        => 'text',
                 'value'                       => $this->form_validation->set_value('userfile'),
@@ -2120,7 +2311,8 @@ class system_settings extends MY_Controller
             admin_redirect('system_settings/categories');
         } else {
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
-            $this->data['userfile'] = ['name' => 'userfile',
+            $this->data['userfile'] = [
+                'name' => 'userfile',
                 'id'                          => 'userfile',
                 'type'                        => 'text',
                 'value'                       => $this->form_validation->set_value('userfile'),
@@ -2197,7 +2389,8 @@ class system_settings extends MY_Controller
             $tax1 = ($this->input->post('tax_rate') != 0) ? 1 : 0;
             $tax2 = ($this->input->post('tax_rate2') != 0) ? 1 : 0;
 
-            $data = ['site_name' => DEMO ? 'Stock Manager Advance' : $this->input->post('site_name'),
+            $data = [
+                'site_name' => DEMO ? 'Stock Manager Advance' : $this->input->post('site_name'),
                 'rows_per_page'  => $this->input->post('rows_per_page'),
                 'dateformat'     => $this->input->post('dateformat'),
                 'timezone'       => DEMO ? 'Asia/Kuala_Lumpur' : $this->input->post('timezone'),
@@ -2340,7 +2533,8 @@ class system_settings extends MY_Controller
                 admin_redirect('system_settings/updates');
             }
         }
-        $this->db->update('settings', ['version' => $version, 'update' => 0], ['setting_id' => 1]);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->update('settings', ['version' => $version, 'update' => 0], ['business_id' => $business_id]);
         unlink('./files/updates/' . $file . '.zip');
         $this->session->set_flashdata('success', lang('update_done'));
         admin_redirect('system_settings/updates');
@@ -2358,7 +2552,8 @@ class system_settings extends MY_Controller
         $this->form_validation->set_rules('extra_charges_other', $this->lang->line('extra_charges_others'), 'trim');
 
         if ($this->form_validation->run() == true) {
-            $data = ['active'         => $this->input->post('active'),
+            $data = [
+                'active'         => $this->input->post('active'),
                 'account_email'       => $this->input->post('account_email'),
                 'fixed_charges'       => $this->input->post('fixed_charges'),
                 'extra_charges_my'    => $this->input->post('extra_charges_my'),
@@ -2417,7 +2612,7 @@ class system_settings extends MY_Controller
                 'sales-delete_gift_card'     => $this->input->post('sales-delete_gift_card'),
                 'sales-coordinator'          => $this->input->post('sales-coordinator'),
                 'sales-warehouse_supervisor' => $this->input->post('sales-warehouse_supervisor'),
-        'sales-warehouse_supervisor_shipping'=> $this->input->post('sales-warehouse_supervisor_shipping'),
+                'sales-warehouse_supervisor_shipping' => $this->input->post('sales-warehouse_supervisor_shipping'),
                 'sales-accountant'           => $this->input->post('sales-accountant'),
                 'sales-quality_supervisor'   => $this->input->post('sales-quality_supervisor'),
                 'quotes-index'               => $this->input->post('quotes-index'),
@@ -2485,7 +2680,7 @@ class system_settings extends MY_Controller
                 'transfer_warehouse_supervisor'        => $this->input->post('transfer_warehouse_supervisor'),
 
 
-                
+
             ];
 
             if (POS) {
@@ -2627,7 +2822,8 @@ class system_settings extends MY_Controller
         $this->form_validation->set_rules('extra_charges_other', $this->lang->line('extra_charges_others'), 'trim');
 
         if ($this->form_validation->run() == true) {
-            $data = ['active'         => $this->input->post('active'),
+            $data = [
+                'active'         => $this->input->post('active'),
                 'secret_word'         => $this->input->post('secret_word'),
                 'account_email'       => $this->input->post('account_email'),
                 'fixed_charges'       => $this->input->post('fixed_charges'),
@@ -2649,7 +2845,7 @@ class system_settings extends MY_Controller
             $this->page_construct('settings/skrill', $meta, $this->data);
         }
     }
-       public function directPay()
+    public function directPay()
     {
         $this->form_validation->set_rules('merchant_id', $this->lang->line('merchant_id'), 'trim');
         $this->form_validation->set_rules('authentication_token', $this->lang->line('authentication_token'), 'trim');
@@ -2665,11 +2861,12 @@ class system_settings extends MY_Controller
         $this->form_validation->set_rules('version', $this->lang->line('version'), 'trim');
         $this->form_validation->set_rules('currencyISOCode', $this->lang->line('currencyISOCode'), 'trim');
         $this->form_validation->set_rules('payment_message_id', $this->lang->line('payment_message_id'), 'trim');
-          $this->form_validation->set_rules('refund_message_id', $this->lang->line('refund_message_id'), 'trim');   
-          
-          
+        $this->form_validation->set_rules('refund_message_id', $this->lang->line('refund_message_id'), 'trim');
+
+
         if ($this->form_validation->run() == true) {
-            $data = ['merchant_id'         => $this->input->post('merchant_id'),
+            $data = [
+                'merchant_id'         => $this->input->post('merchant_id'),
                 'authentication_token'         => $this->input->post('authentication_token'),
                 'payment_link'       => $this->input->post('payment_link'),
                 'refund_link'       => $this->input->post('refund_link'),
@@ -2677,11 +2874,11 @@ class system_settings extends MY_Controller
                 'test_auth_token'   => $this->input->post('test_auth_token'),
                 'test_payment_link'    => $this->input->post('test_payment_link'),
                 'test_refund_link' => $this->input->post('test_refund_link'),
-                 'activation' => $this->input->post('activation'),
-                   'version' => $this->input->post('version'),
-                     'currencyISOCode' => $this->input->post('currencyISOCode'),
-                       'payment_message_id' => $this->input->post('payment_message_id'),
-                         'refund_message_id' => $this->input->post('refund_message_id'),
+                'activation' => $this->input->post('activation'),
+                'version' => $this->input->post('version'),
+                'currencyISOCode' => $this->input->post('currencyISOCode'),
+                'payment_message_id' => $this->input->post('payment_message_id'),
+                'refund_message_id' => $this->input->post('refund_message_id'),
             ];
         }
 
@@ -2699,7 +2896,7 @@ class system_settings extends MY_Controller
         }
     }
 
-public function aramex()
+    public function aramex()
     {
         $this->form_validation->set_rules('line1', $this->lang->line('line1'), 'trim');
         $this->form_validation->set_rules('line2', $this->lang->line('line2'), 'trim');
@@ -2715,37 +2912,38 @@ public function aramex()
         $this->form_validation->set_rules('landline_number', $this->lang->line('landline_number'), 'trim');
         $this->form_validation->set_rules('cell_number', $this->lang->line('cell_number'), 'trim');
         $this->form_validation->set_rules('Email', $this->lang->line('Email'), 'trim');
-          $this->form_validation->set_rules('account_entity', $this->lang->line('account_entity'), 'trim');   
-            $this->form_validation->set_rules('account_number', $this->lang->line('account_number'), 'trim');
+        $this->form_validation->set_rules('account_entity', $this->lang->line('account_entity'), 'trim');
+        $this->form_validation->set_rules('account_number', $this->lang->line('account_number'), 'trim');
         $this->form_validation->set_rules('account_pin', $this->lang->line('account_pin'), 'trim');
         $this->form_validation->set_rules('user_name', $this->lang->line('user_name'), 'trim');
         $this->form_validation->set_rules('password', $this->lang->line('password'), 'trim');
-          $this->form_validation->set_rules('version', $this->lang->line('version'), 'trim');   
-          
-          
+        $this->form_validation->set_rules('version', $this->lang->line('version'), 'trim');
+
+
         if ($this->form_validation->run() == true) {
-            $data = ['line1'         => $this->input->post('line1'),
+            $data = [
+                'line1'         => $this->input->post('line1'),
                 'line2'         => $this->input->post('line2'),
                 'city'       => $this->input->post('city'),
                 'postal_code'       => $this->input->post('postal_code'),
                 'country_code'    => $this->input->post('country_code'),
                 'person_name' => $this->input->post('person_name'),
-                 'company_name' => $this->input->post('company_name'),
-                   'landline_number' => $this->input->post('landline_number'),
-                     'cell_number' => $this->input->post('cell_number'),
-                       'Email' => $this->input->post('Email'),
-                         'account_entity' => $this->input->post('account_entity'),
-                           'account_number'         => $this->input->post('account_number'),
+                'company_name' => $this->input->post('company_name'),
+                'landline_number' => $this->input->post('landline_number'),
+                'cell_number' => $this->input->post('cell_number'),
+                'Email' => $this->input->post('Email'),
+                'account_entity' => $this->input->post('account_entity'),
+                'account_number'         => $this->input->post('account_number'),
                 'account_pin'       => $this->input->post('account_pin'),
                 'user_name'       => $this->input->post('user_name'),
                 'password'    => $this->input->post('password'),
                 'version' => $this->input->post('version'),
                 'activation' => $this->input->post('activation'),
-                 'shippment_url' => $this->input->post('shippment_url'),
-                   'pickup_url' => $this->input->post('pickup_url'),
-                     'cell_number' => $this->input->post('cell_number'),
-                       'test_shippment_url' => $this->input->post('test_shippment_url'),
-                         'test_pickup_url' => $this->input->post('test_pickup_url'),
+                'shippment_url' => $this->input->post('shippment_url'),
+                'pickup_url' => $this->input->post('pickup_url'),
+                'cell_number' => $this->input->post('cell_number'),
+                'test_shippment_url' => $this->input->post('test_shippment_url'),
+                'test_pickup_url' => $this->input->post('test_pickup_url'),
             ];
         }
 
@@ -2953,7 +3151,8 @@ public function aramex()
             $this->session->set_flashdata('message', lang('price_updated'));
             admin_redirect('system_settings/group_product_prices/' . $group_id);
         } else {
-            $this->data['userfile'] = ['name' => 'userfile',
+            $this->data['userfile'] = [
+                'name' => 'userfile',
                 'id'                          => 'userfile',
                 'type'                        => 'text',
                 'value'                       => $this->form_validation->set_value('userfile'),
@@ -2994,7 +3193,8 @@ public function aramex()
         $this->form_validation->set_rules('purchase_code', lang('purchase_code'), 'required');
         $this->form_validation->set_rules('envato_username', lang('envato_username'), 'required');
         if ($this->form_validation->run() == true) {
-            $this->db->update('settings', ['purchase_code' => $this->input->post('purchase_code', true), 'envato_username' => $this->input->post('envato_username', true)], ['setting_id' => 1]);
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+            $this->db->update('settings', ['purchase_code' => $this->input->post('purchase_code', true), 'envato_username' => $this->input->post('envato_username', true)], ['business_id' => $business_id]);
             admin_redirect('system_settings/updates');
         } else {
             $fields = ['version' => $this->Settings->version, 'code' => $this->Settings->purchase_code, 'username' => $this->Settings->envato_username, 'site' => base_url()];
@@ -3112,46 +3312,46 @@ public function aramex()
         @chmod($output_path, 0644);
         return false;
     }
-    
-         public function allCountry()
+
+    public function allCountry()
     {
-         $this->data['all_data'] = $this->settings_model->getallCountry();
+        $this->data['all_data'] = $this->settings_model->getallCountry();
         $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('system_settings'), 'page' => lang('country')], ['link' => '#', 'page' => lang('country')]];
         $meta = ['page_title' => lang('country'), 'bc' => $bc];
         $this->page_construct('settings/list_country', $meta, $this->data);
-       // $this->page_construct('pages/blog_page', $meta, $this->data);
+        // $this->page_construct('pages/blog_page', $meta, $this->data);
     }
- 
+
 
 
     public function add_country()
     {
-         $this->form_validation->set_rules('name', lang('name'), 'required|max_length[60]');
+        $this->form_validation->set_rules('name', lang('name'), 'required|max_length[60]');
         $this->form_validation->set_rules('code', lang('code'), 'required|max_length[2]');
-        
-         if ($this->form_validation->run() == true) {
+
+        if ($this->form_validation->run() == true) {
             $data = [
                 'name'        => $this->input->post('name'),
                 'code'        => $this->input->post('code'),
             ];
-         }
-//         if($this->input->post('add_country'))
-// 		{
-// 		    $data['name']=$this->input->post('name');
-// 			$data['code']=$this->input->post('code');
-			
-// 			$response=$this->settings_model->insertCountry($data);
-// 			if($response==true){
-// 			        echo "Records Saved Successfully";
-// 			}
-// 			else{
-// 					echo "Insert error !";
-// 			}
-// 		}
-        
-    elseif ($this->input->post('add_country')) {
+        }
+        //         if($this->input->post('add_country'))
+        // 		{
+        // 		    $data['name']=$this->input->post('name');
+        // 			$data['code']=$this->input->post('code');
+
+        // 			$response=$this->settings_model->insertCountry($data);
+        // 			if($response==true){
+        // 			        echo "Records Saved Successfully";
+        // 			}
+        // 			else{
+        // 					echo "Insert error !";
+        // 			}
+        // 		}
+
+        elseif ($this->input->post('add_country')) {
             $this->session->set_flashdata('error', validation_errors());
             admin_redirect('system_settings/add_country');
         }
@@ -3159,56 +3359,50 @@ public function aramex()
         if ($this->form_validation->run() == true && $this->settings_model->insertCountry($data)) {
             $this->session->set_flashdata('message', lang('Country_added'));
             admin_redirect('system_settings/allCountry');
-        } else{
+        } else {
             $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
             $bc                  = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('add_country')]];
             $meta                = ['page_title' => lang('add_country'), 'bc' => $bc];
-            
+
             $this->page_construct('settings/add_country', $meta, $this->data);
-          //  $this->load->view("blog/add_blog",$result);
+            //  $this->load->view("blog/add_blog",$result);
         }
     }
-     public function delete_country($id = null)
+    public function delete_country($id = null)
     {
         if (!$id) {
             $this->sma->send_json(['error' => 1, 'msg' => lang('id_not_found')]);
         }
-         
-         if($this->settings_model->checkCountryDeletion($id))
-         {
-            if ($this->settings_model->deleteCountry($id)) 
-            {
-                 $this->session->set_flashdata('message', lang('Country_deleted'));
-                 admin_redirect('system_settings/allCountry');
+
+        if ($this->settings_model->checkCountryDeletion($id)) {
+            if ($this->settings_model->deleteCountry($id)) {
+                $this->session->set_flashdata('message', lang('Country_deleted'));
+                admin_redirect('system_settings/allCountry');
             }
-            
-         }else
-         {
-             $this->session->set_flashdata('error', lang('Check the following: Product, warehouse or warehouses with countries. using this country. Please remove this contry from them first.'));
-             admin_redirect('system_settings/allCountry');
-         }
-        
-        
+        } else {
+            $this->session->set_flashdata('error', lang('Check the following: Product, warehouse or warehouses with countries. using this country. Please remove this contry from them first.'));
+            admin_redirect('system_settings/allCountry');
+        }
     }
-    
-    
-     public function edit_country($id = null)
+
+
+    public function edit_country($id = null)
     {
         $page = $this->settings_model->getCountryByID($id);
         $this->form_validation->set_rules('name', lang('name'), 'required|max_length[60]');
         $this->form_validation->set_rules('code', lang('code'), 'required|max_length[2]');
-       
-        
+
+
         if ($this->form_validation->run() == true) {
             $data = [
                 'name'        => $this->input->post('name'),
                 'code'       => $this->input->post('code'),
-               
-            ];
-        }    
 
-        
-        
+            ];
+        }
+
+
+
 
         if ($this->form_validation->run() == true && $this->settings_model->updateCountry($id, $data)) {
             $this->session->set_flashdata('message', lang('Country_updated'));
@@ -3221,49 +3415,48 @@ public function aramex()
             $this->page_construct('settings/edit_country', $meta, $this->data);
         }
     }
-           public function warehousesCountry()
+    public function warehousesCountry()
     {
-         $this->data['warehouses']    = $this->site->getAllWarehouses();
-         $this->data['countries'] = $this->settings_model->getallCountry();
-$this->data['warehousecountries'] = $this->site->getallWCountry();
+        $this->data['warehouses']    = $this->site->getAllWarehouses();
+        $this->data['countries'] = $this->settings_model->getallCountry();
+        $this->data['warehousecountries'] = $this->site->getallWCountry();
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('system_settings'), 'page' => lang('warehouses_with_country')], ['link' => '#', 'page' => lang('warehouses_with_country')]];
         $meta = ['page_title' => lang('warehouses_with_country'), 'bc' => $bc];
         $this->page_construct('settings/warehousecountry', $meta, $this->data);
-       // $this->page_construct('pages/blog_page', $meta, $this->data);
+        // $this->page_construct('pages/blog_page', $meta, $this->data);
     }
-    
+
     public function add_warehouse_country()
     {
-        
-        if($this->input->post('add_warehouse'))
-		{
-		    $countries=$this->input->post('country_id');
-		    $warehousese = $this->input->post('warehouses_id');
-		    
-		    $data = array();
-		    for($i=0; $i < count($countries); $i++)
-		    {
-		       $cwdata = array(
-		           'country_id' => $countries[$i],
-		           'warehouses_id' => $warehousese[$i]
-		           );  
-		       
-		       $data[] = $cwdata;
-		    }
-		}   
-		
-		$response=$this->settings_model->insertWareCountry($data);
-		 
-			if($response==true){
-			        $this->session->set_flashdata('message', 'Warehouse with countries added');
-			}
-		
-			else{
-					 $this->session->set_flashdata('error', 'Error! Warehouse with countries not added');
-					// var_dump($data);
-			}    
-		   
-			/*
+
+        if ($this->input->post('add_warehouse')) {
+            $countries = $this->input->post('country_id');
+            $warehousese = $this->input->post('warehouses_id');
+
+            $data = array();
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+            for ($i = 0; $i < count($countries); $i++) {
+                $cwdata = array(
+                    'country_id' => $countries[$i],
+                    'warehouses_id' => $warehousese[$i],
+                    "business_id" => $business_id
+                );
+
+                $data[] = $cwdata;
+            }
+        }
+
+        $response = $this->settings_model->insertWareCountry($data);
+
+        if ($response == true) {
+            $this->session->set_flashdata('message', 'Warehouse with countries added');
+        } else {
+            $this->session->set_flashdata('error', 'Error! Warehouse with countries not added');
+            // var_dump($data);
+        }
+
+        /*
 		
 		
     }
@@ -3280,7 +3473,7 @@ $this->data['warehousecountries'] = $this->site->getallWCountry();
 					echo "Insert error !";
 			}
 		}*/
-	
-        admin_redirect('system_settings/warehousesCountry');  
+
+        admin_redirect('system_settings/warehousesCountry');
     }
 }

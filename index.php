@@ -40,7 +40,11 @@
  * NOTE: If you change these, also change the error_reporting() code below
  */
 	// define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : 'development');
-	define('ENVIRONMENT', 'production');
+	if(!empty($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] == 'localhost') {
+		define('ENVIRONMENT', 'production');
+	} else {
+		define('ENVIRONMENT', 'production');
+	}
 
 /*
  *---------------------------------------------------------------

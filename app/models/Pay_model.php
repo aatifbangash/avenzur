@@ -11,6 +11,8 @@ class Pay_model extends CI_Model
 
     public function addPayment($data)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
         if ($this->db->insert('payments', $data)) {
             $this->site->updateReference('pay');
             return true;
@@ -20,6 +22,8 @@ class Pay_model extends CI_Model
 
     public function getCompanyByID($id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         return $this->db->get_where('companies', ['id' => $id])->row();
     }
     
@@ -35,12 +39,14 @@ class Pay_model extends CI_Model
 
     public function getDirectPaySettings()
     {
-        return $this->db->get_where('sma_directpay', ['id' => 1])->row();
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        return $this->db->get_where('sma_directpay', ['business_id' => $business_id])->row();
     }
 
     public function getPaypalSettings()
     {
-        return $this->db->get_where('paypal', ['id' => 1])->row();
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        return $this->db->get_where('paypal', ['business_id' => $business_id])->row();
     }
 
     public function getSaleByID($id)
@@ -60,12 +66,15 @@ class Pay_model extends CI_Model
 
     public function getSettings()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where('business_id', $business_id);
         return $this->db->get('settings')->row();
     }
 
     public function getSkrillSettings()
     {
-        return $this->db->get_where('skrill', ['id' => 1])->row();
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        return $this->db->get_where('skrill', ['business_id' => $business_id])->row();
     }
 
     public function updateStatus($id, $status, $note = null)

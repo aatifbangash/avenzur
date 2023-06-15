@@ -11,6 +11,9 @@ class Purchases_model extends CI_Model
 
     public function addExpense($data = [], $attachments = [])
     {
+
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data['business_id'] = $business_id;
         if ($this->db->insert('expenses', $data)) {
             $expense_id = $this->db->insert_id();
             if ($this->site->getReference('ex') == $data['reference']) {
@@ -30,6 +33,8 @@ class Purchases_model extends CI_Model
 
     public function addPayment($data = [])
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
         if ($this->db->insert('payments', $data)) {
             if ($this->site->getReference('ppay') == $data['reference_no']) {
                 $this->site->updateReference('ppay');
@@ -57,6 +62,9 @@ class Purchases_model extends CI_Model
 
     public function addPurchase($data, $items, $attachments = [])
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data['business_id'] = $business_id;
+
         $this->db->trans_start();
         if ($this->db->insert('purchases', $data)) {
             $purchase_id = $this->db->insert_id();
@@ -299,6 +307,8 @@ class Purchases_model extends CI_Model
 
     public function getExpenseCategories()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get('expense_categories');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -418,6 +428,8 @@ class Purchases_model extends CI_Model
 
     public function getProductNames($term, $limit = 20)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where('business_id', $business_id);
         $this->db->where("type = 'standard' AND (name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR supplier1_part_no LIKE '%" . $term . "%' OR supplier2_part_no LIKE '%" . $term . "%' OR supplier3_part_no LIKE '%" . $term . "%' OR supplier4_part_no LIKE '%" . $term . "%' OR supplier5_part_no LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
         $this->db->limit($limit);
         $q = $this->db->get('products');
@@ -566,6 +578,9 @@ class Purchases_model extends CI_Model
     public function returnPurchase($data = [], $items = [])
     {
         $purchase_items = $this->site->getAllPurchaseItems($data['purchase_id']);
+
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
 
         if ($this->db->insert('return_purchases', $data)) {
             $return_id = $this->db->insert_id();
@@ -851,60 +866,58 @@ class Purchases_model extends CI_Model
 
         $sp = '( SELECT si.product_id, s.date as date, s.created_by as created_by, SUM( si.quantity ) soldQty, SUM( si.quantity * si.sale_unit_price ) totalSale from ' . $this->db->dbprefix('costing') . ' si JOIN ' . $this->db->dbprefix('sales') . ' s on s.id = si.sale_id ';
 
-         $start_date = $this->sma->fld($start_date);
-         $end_date   = $end_date ? $this->sma->fld($end_date) : date('Y-m-d');
-         $pp .= " AND p.date >= '{$start_date}' AND p.date <= '{$end_date}' ";
-         $sp .= " s.date >= '{$start_date}' AND s.date <= '{$end_date}' ";
-         $pp .= ' GROUP BY pi.product_id ) PCosts';
-         $sp .= ' GROUP BY si.product_id ) PSales';
-         
+        $start_date = $this->sma->fld($start_date);
+        $end_date   = $end_date ? $this->sma->fld($end_date) : date('Y-m-d');
+        $pp .= " AND p.date >= '{$start_date}' AND p.date <= '{$end_date}' ";
+        $sp .= " s.date >= '{$start_date}' AND s.date <= '{$end_date}' ";
+        $pp .= ' GROUP BY pi.product_id ) PCosts';
+        $sp .= ' GROUP BY si.product_id ) PSales';
+
         $this->db
-                ->select('COALESCE( PSales.soldQty, 0 ) as sold', false)
-                ->from('products')
-                ->join($sp, 'products.id = PSales.product_id', 'left')
-                ->join($pp, 'products.id = PCosts.product_id', 'left')
-                ->where('products.type !=', 'combo');
+            ->select('COALESCE( PSales.soldQty, 0 ) as sold', false)
+            ->from('products')
+            ->join($sp, 'products.id = PSales.product_id', 'left')
+            ->join($pp, 'products.id = PCosts.product_id', 'left')
+            ->where('products.type !=', 'combo');
 
-        $this->db->where($this->db->dbprefix('products') . '.id', $product); 
-         $q =  $this->db->get();
+        $this->db->where($this->db->dbprefix('products') . '.id', $product);
+        $q =  $this->db->get();
 
-            if($q !== false)
-            {
-                 return $this->db->get()->row()->sold;
-
-            } else {
-                return 0;
-            }
-       
-                     
+        if ($q !== false) {
+            return $this->db->get()->row()->sold;
+        } else {
+            return 0;
+        }
     }
 
     public function searchByReference($referenceNo)
     {
-        $q = $this->db->get_where('purchases',['reference_no' => $referenceNo]);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
+        $q = $this->db->get_where('purchases', ['reference_no' => $referenceNo]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
             }
-            return $data; 
-        }else{
-        $data =420;
-        return $data;
+            return $data;
+        } else {
+            $data = 420;
+            return $data;
         }
     }
 
-    public function searchByDate($start_date,$end_date)
+    public function searchByDate($start_date, $end_date)
     {
         $this->db
-        ->select('reference_no,date,supplier,status')
-        ->where('date >=', $start_date)
-        ->where('date <=', $end_date);
+            ->select('reference_no,date,supplier,status')
+            ->where('date >=', $start_date)
+            ->where('date <=', $end_date);
         $q = $this->db->get('purchases');
         if ($q->num_rows() > 0) {
-        foreach (($q->result()) as $row) {
-        $data[] = $row;
-        }
-        return $data;
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
         }
         return false;
     }

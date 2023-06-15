@@ -39,7 +39,8 @@ class Auth extends MY_Controller
 
     public function _valid_csrf_nonce()
     {
-        if ($this->input->post($this->session->flashdata('csrfkey')) !== false && $this->input->post($this->session->flashdata('csrfkey')) == $this->session->flashdata('csrfvalue')
+        if (
+            $this->input->post($this->session->flashdata('csrfkey')) !== false && $this->input->post($this->session->flashdata('csrfkey')) == $this->session->flashdata('csrfvalue')
         ) {
             return true;
         }
@@ -118,6 +119,42 @@ class Auth extends MY_Controller
         }
     }
 
+    public function unique_username($username)
+    {
+
+
+        $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+        $this->db->select('COUNT(*) AS count')
+            ->from('users')
+            // ->where('business_id', $business_id)
+            ->where('username', $username);
+        $total = $this->db->get()->row()->count;
+        if ($total > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function unique_email($email)
+    {
+        $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+        $this->db->select('COUNT(*) AS count')
+            ->from('users')
+            // ->where('business_id', $business_id)
+            ->where('email', $email);
+        $total = $this->db->get()->row()->count;
+        if ($total > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function create_user()
     {
         if (!$this->Owner) {
@@ -126,8 +163,8 @@ class Auth extends MY_Controller
         }
 
         $this->data['title'] = 'Create User';
-        $this->form_validation->set_rules('username', lang('username'), 'trim|is_unique[users.username]');
-        $this->form_validation->set_rules('email', lang('email'), 'trim|is_unique[users.email]');
+        $this->form_validation->set_rules('username', lang('username'), 'trim|callback_unique_username');
+        $this->form_validation->set_rules('email', lang('email'), 'trim|callback_unique_email');
         $this->form_validation->set_rules('status', lang('status'), 'trim|required');
         $this->form_validation->set_rules('group', lang('group'), 'trim|required');
 
@@ -150,7 +187,9 @@ class Auth extends MY_Controller
                 'edit_right'     => $this->input->post('edit_right'),
                 'allow_discount' => $this->input->post('allow_discount'),
                 'allow_discount_value' => $this->input->post('allow_discount_value'),
-                
+                //TIP:- added business id to new user.
+                'business_id' => $this->ion_auth->user()->row()->business_id
+
             ];
             $active = $this->input->post('status');
         }
@@ -159,7 +198,12 @@ class Auth extends MY_Controller
             admin_redirect('auth/users');
         } else {
             $this->data['error']      = (validation_errors() ? validation_errors() : ($this->ion_auth->errors() ? $this->ion_auth->errors() : $this->session->flashdata('error')));
+
+            //TIP:- apply condition on groups.
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+            $this->ion_auth->where('business_id', $business_id);
             $this->data['groups']     = $this->ion_auth->groups()->result_array();
+
             $this->data['billers']    = $this->site->getAllCompanies('biller');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
             $bc                       = [['link' => admin_url('home'), 'page' => lang('home')], ['link' => admin_url('auth/users'), 'page' => lang('users')], ['link' => '#', 'page' => lang('create_user')]];
@@ -396,12 +440,15 @@ class Auth extends MY_Controller
         }
 
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select($this->db->dbprefix('users') . '.id as id, first_name, last_name, email, country, award_points, ' . $this->db->dbprefix('groups') . '.name, active')
             ->from('users')
             ->join('groups', 'users.group_id=groups.id', 'left')
             ->group_by('users.id')
             ->where('company_id', null)
+            //TIP:- added business id check.
+            ->where('users.business_id', $business_id)
             ->edit_column('active', '$1__$2', 'active, id')
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('auth/profile/$1') . "' class='tip' title='" . lang('edit_user') . "'><i class=\"fa fa-edit\"></i></a></div>", 'id');
 
@@ -434,7 +481,7 @@ class Auth extends MY_Controller
         }
 
         if ($this->form_validation->run() == true) {
-            
+
             $remember = (bool)$this->input->post('remember');
 
             if ($this->ion_auth->login($this->input->post('identity'), $this->input->post('password'), $remember)) {
@@ -460,7 +507,7 @@ class Auth extends MY_Controller
                 admin_redirect('login');
             }
         } else {
-            
+
             $this->data['error']   = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
             $this->data['message'] = $this->session->flashdata('message');
             if ($this->Settings->captcha) {
@@ -483,7 +530,8 @@ class Auth extends MY_Controller
                 $query = $this->db->insert_string('captcha', $capdata);
                 $this->db->query($query);
                 $this->data['image']   = $cap['image'];
-                $this->data['captcha'] = ['name' => 'captcha',
+                $this->data['captcha'] = [
+                    'name' => 'captcha',
                     'id'                         => 'captcha',
                     'type'                       => 'text',
                     'class'                      => 'form-control',
@@ -492,14 +540,16 @@ class Auth extends MY_Controller
                 ];
             }
 
-            $this->data['identity'] = ['name' => 'identity',
+            $this->data['identity'] = [
+                'name' => 'identity',
                 'id'                          => 'identity',
                 'type'                        => 'text',
                 'class'                       => 'form-control',
                 'placeholder'                 => lang('email'),
                 'value'                       => $this->form_validation->set_value('identity'),
             ];
-            $this->data['password'] = ['name' => 'password',
+            $this->data['password'] = [
+                'name' => 'password',
                 'id'                          => 'password',
                 'type'                        => 'password',
                 'class'                       => 'form-control',
@@ -650,7 +700,8 @@ class Auth extends MY_Controller
             $query = $this->db->insert_string('captcha', $capdata);
             $this->db->query($query);
             $this->data['image']   = $cap['image'];
-            $this->data['captcha'] = ['name' => 'captcha',
+            $this->data['captcha'] = [
+                'name' => 'captcha',
                 'id'                         => 'captcha',
                 'type'                       => 'text',
                 'class'                      => 'form-control',

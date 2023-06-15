@@ -170,4 +170,30 @@ class Welcome extends MY_Controller
         $this->input->set_cookie($cookie);
         redirect($_SERVER['HTTP_REFERER']);
     }
+
+    public function alter_schema()
+    {
+        $action = $this->input->get('action', TRUE);
+        if (!empty($action) && $action == 'run') {
+            $query = $this->db->query("SHOW tables from {$this->db->database};");
+            $allTables = $query->result_array();
+            if (!empty($allTables)) {
+                foreach ($allTables as $index => $table) {
+                    $tableName = $table["Tables_in_{$this->db->database}"];
+
+                    if ($tableName == "business") continue;
+
+                    $isColumnExistsQuery = $this->db->query("SHOW COLUMNS FROM `{$tableName}` LIKE 'business_id';");
+                    // echo $tableName;
+                    // echo '<Pre>';print_r($isColumnExistsQuery->row());
+                    if (empty($isColumnExistsQuery->row())) {
+                        $this->db->query("ALTER TABLE `{$tableName}` ADD `business_id` int(11) NOT NULL DEFAULT '0';");
+                        $this->db->query("UPDATE `{$tableName}` SET `business_id` = 1;");
+                    }
+                }
+            }
+
+            dd('done');
+        }
+    }
 }

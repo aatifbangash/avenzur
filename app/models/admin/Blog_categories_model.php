@@ -14,6 +14,8 @@ class blog_categories_model  extends CI_Model
 
 
       public function addBcategory($data){
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
      if ($this->db->insert('blog_categories', $data)) {
             return true;
         }
@@ -23,7 +25,9 @@ class blog_categories_model  extends CI_Model
     }
      public function getParentBCategories()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->where('parent_id', null)->or_where('parent_id', 0);
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('blog_categories');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -35,6 +39,8 @@ class blog_categories_model  extends CI_Model
     }
      public function updateBlogCategory($id, $data)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         if ($this->db->update('blog_categories', $data, ['id' => $id])) {
             return true;
         }
@@ -42,6 +48,8 @@ class blog_categories_model  extends CI_Model
     }
         public function getBlogCategoryByID($id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('blog_categories', ['id' => $id]);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -49,14 +57,17 @@ class blog_categories_model  extends CI_Model
         return false;
     }
       public function deleteBlogCategory($id)
-    {
-        if ($this->db->delete('blog_categories', ['id' => $id])) {
+    { 
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        if ($this->db->delete('blog_categories', ['id' => $id, 'business_id' => $business_id])) {
             return true;
         }
         return false;
     }
       function display_records()
           {
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+            $this->db->where('business_id', $business_id);
             $query=$this->db->get("blog_categories");
             return $query->result();
           }

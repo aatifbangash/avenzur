@@ -40,7 +40,25 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('category', 'category'); ?>
-                                <?= form_input('category', set_value('category', $page->category), 'class="form-control" id="category" required=""'); ?>
+                                <select name="category" class="form-control">
+                                 
+                                       <?php   foreach($result_categories as $row) { ?>
+                                        <?php 
+                                        
+                                        if($page->category ==$row->name ){
+                                            echo '<option selected>'.$row->name.'</option>' ;
+                                        }else{
+                                            echo '<option>'.$row->name.'</option>' ;
+                                        }
+                                      ?>
+                                    <?php  } ?>
+                               
+                             
+                                </select>
+
+
+
+                                <!-- <?= form_input('category', set_value('category', $page->category), 'class="form-control" id="category" required=""'); ?> -->
                             </div>
                         </div>
                         <div class="clearfix"></div>

@@ -26,6 +26,8 @@ class Shop_model extends CI_Model
     
     public function addCustomer($data)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
         if ($this->db->insert('companies', $data)) {
             return $this->db->insert_id();
         }
@@ -34,6 +36,8 @@ class Shop_model extends CI_Model
     
     public function addAramexShippment($data)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
         $this->db->insert('aramex_shippment', $data);
             
     }
@@ -42,6 +46,9 @@ class Shop_model extends CI_Model
     {
         $cost = $this->site->costing($items);
         // $this->sma->print_arrays($cost);
+
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
 
         if (is_array($customer) && !empty($customer)) {
             $this->db->insert('companies', $customer);
@@ -55,6 +62,8 @@ class Shop_model extends CI_Model
         }
 
         $this->db->trans_start();
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
         if ($this->db->insert('sales', $data)) {
             $sale_id = $this->db->insert_id();
             $this->site->updateReference('so');
@@ -353,7 +362,8 @@ class Shop_model extends CI_Model
     }
     public function getPaypalSettings()
     {
-        return $this->db->get_where('paypal', ['id' => 1])->row();
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        return $this->db->get_where('paypal', ['business_id' => $business_id])->row();
     }
 
     public function getPriceGroup($id)
@@ -739,6 +749,8 @@ class Shop_model extends CI_Model
 
     public function getSettings()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where('business_id', $business_id);
         return $this->db->get('settings')->row();
     }
 
@@ -749,7 +761,8 @@ class Shop_model extends CI_Model
 
     public function getSkrillSettings()
     {
-        return $this->db->get_where('skrill', ['id' => 1])->row();
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        return $this->db->get_where('skrill', ['business_id' => $business_id])->row();
     }
 
     public function getSpecialPrice()
@@ -877,6 +890,8 @@ public function getProductLocation(){
 }
 public function saveRefundRecord($data)
 	{
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
         $this->db->insert('refund',$data);
         return true;
 	}

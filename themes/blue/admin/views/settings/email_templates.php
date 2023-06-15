@@ -33,8 +33,8 @@
 
                                 <?php echo form_textarea('mail_body', (isset($_POST['mail_body']) ? html_entity_decode($_POST['mail_body']) : html_entity_decode($credentials)), 'class="form-control" id="comment"'); ?>
 
-                                <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
-                                       style="margin-top:15px;"/>
+                                <!-- <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
+                                       style="margin-top:15px;"/> -->
 
                                 <?php echo form_close(); ?>
                             </div>
@@ -44,8 +44,8 @@
 
                                 <?php echo form_textarea('mail_body', (isset($_POST['mail_body']) ? html_entity_decode($_POST['mail_body']) : html_entity_decode($activate_email)), 'class="form-control" id="comment"'); ?>
 
-                                <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
-                                       style="margin-top:15px;"/>
+                                <!-- <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
+                                       style="margin-top:15px;"/> -->
 
                                 <?php echo form_close(); ?>
                             </div>
@@ -55,8 +55,8 @@
 
                                 <?php echo form_textarea('mail_body', (isset($_POST['mail_body']) ? html_entity_decode($_POST['mail_body']) : html_entity_decode($forgot_password)), 'class="form-control" id="comment"'); ?>
 
-                                <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
-                                       style="margin-top:15px;"/>
+                                <!-- <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
+                                       style="margin-top:15px;"/> -->
 
                                 <?php echo form_close(); ?>
                             </div>
@@ -66,8 +66,8 @@
 
                                 <?php echo form_textarea('mail_body', (isset($_POST['mail_body']) ? html_entity_decode($_POST['mail_body']) : html_entity_decode($sale)), 'class="form-control" id="comment"'); ?>
 
-                                <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
-                                       style="margin-top:15px;"/>
+                                <!-- <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
+                                       style="margin-top:15px;"/> -->
 
                                 <?php echo form_close(); ?>
                             </div>
@@ -76,8 +76,8 @@
 
                                 <?php echo form_textarea('mail_body', (isset($_POST['mail_body']) ? html_entity_decode($_POST['mail_body']) : html_entity_decode($quote)), 'class="form-control" id="comment"'); ?>
 
-                                <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
-                                       style="margin-top:15px;"/>
+                                <!-- <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
+                                       style="margin-top:15px;"/> -->
 
                                 <?php echo form_close(); ?>
                             </div>
@@ -86,8 +86,8 @@
 
                                 <?php echo form_textarea('mail_body', (isset($_POST['mail_body']) ? html_entity_decode($_POST['mail_body']) : html_entity_decode($purchase)), 'class="form-control" id="comment"'); ?>
 
-                                <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
-                                       style="margin-top:15px;"/>
+                                <!-- <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
+                                       style="margin-top:15px;"/> -->
 
                                 <?php echo form_close(); ?>
                             </div>
@@ -96,8 +96,8 @@
 
                                 <?php echo form_textarea('mail_body', (isset($_POST['mail_body']) ? html_entity_decode($_POST['mail_body']) : html_entity_decode($transfer)), 'class="form-control" id="comment"'); ?>
 
-                                <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
-                                       style="margin-top:15px;"/>
+                                <!-- <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
+                                       style="margin-top:15px;"/> -->
 
                                 <?php echo form_close(); ?>
                             </div>
@@ -106,8 +106,8 @@
 
                                 <?php echo form_textarea('mail_body', (isset($_POST['mail_body']) ? html_entity_decode($_POST['mail_body']) : html_entity_decode($payment)), 'class="form-control" id="comment"'); ?>
 
-                                <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
-                                       style="margin-top:15px;"/>
+                                <!-- <input type="submit" name="submit" class="btn btn-primary" value="<?= lang('save'); ?>"
+                                       style="margin-top:15px;"/> -->
 
                                 <?php echo form_close(); ?>
                             </div>

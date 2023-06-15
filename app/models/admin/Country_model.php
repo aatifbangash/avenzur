@@ -14,7 +14,8 @@ class Country_model extends CI_Model
 
 
         public function insertCountry($data){
-        
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+            $data["business_id"] = $business_id;
         if ($this->db->insert('countries', $data)) {
             return true;
         }

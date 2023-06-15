@@ -36,6 +36,8 @@ class Products_model extends CI_Model
 
     public function addAdjustment($data, $products)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data['business_id'] = $business_id;
         if ($this->db->insert('adjustments', $data)) {
             $adjustment_id = $this->db->insert_id();
             foreach ($products as $product) {
@@ -53,6 +55,8 @@ class Products_model extends CI_Model
 
     public function addAjaxProduct($data)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
         if ($this->db->insert('products', $data)) {
             $product_id = $this->db->insert_id();
             return $this->getProductByID($product_id);
@@ -62,6 +66,9 @@ class Products_model extends CI_Model
 
     public function addProduct($data, $items, $warehouse_qty, $product_attributes, $photos)
     {
+        //TIP:- added
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data['business_id'] = $business_id;
         if ($this->db->insert('products', $data)) {
             $product_id = $this->db->insert_id();
 
@@ -240,6 +247,8 @@ class Products_model extends CI_Model
 
     public function addStockCount($data)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data['business_id'] = $business_id;
         if ($this->db->insert('stock_counts', $data)) {
             return true;
         }
@@ -341,6 +350,8 @@ class Products_model extends CI_Model
 
     public function getAllProducts()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get('products');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -353,6 +364,8 @@ class Products_model extends CI_Model
 
     public function getAllVariants()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get('variants');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -381,6 +394,8 @@ class Products_model extends CI_Model
 
     public function getBrandByName($name)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('brands', ['name' => $name], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -390,6 +405,8 @@ class Products_model extends CI_Model
 
     public function getCategoryByCode($code)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('categories', ['code' => $code], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -429,6 +446,8 @@ class Products_model extends CI_Model
 
     public function getProductByCode($code)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('products', ['code' => $code], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -447,7 +466,10 @@ class Products_model extends CI_Model
 
     public function getProductComboItems($pid)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
         $this->db->select($this->db->dbprefix('products') . '.id as id, ' . $this->db->dbprefix('products') . '.code as code, ' . $this->db->dbprefix('combo_items') . '.quantity as qty, ' . $this->db->dbprefix('products') . '.name as name, ' . $this->db->dbprefix('combo_items') . '.unit_price as price')->join('products', 'products.code=combo_items.item_code', 'left')->group_by('combo_items.id');
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('combo_items', ['product_id' => $pid]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -501,11 +523,13 @@ class Products_model extends CI_Model
         }
         return false;
     }
-    
-   
+
+
 
     public function getProductOptions($pid)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('product_variants', ['product_id' => $pid]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -554,9 +578,13 @@ class Products_model extends CI_Model
 
     public function getProductsForPrinting($term, $limit = 5)
     {
+
+        //TIP:- added
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name, ' . $this->db->dbprefix('products') . '.price as price')
             ->where('(' . $this->db->dbprefix('products') . ".name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR
                 concat(" . $this->db->dbprefix('products') . ".name, ' (', code, ')') LIKE '%" . $term . "%')")
+            ->where("business_id", $business_id)
             ->limit($limit);
         $q = $this->db->get('products');
         if ($q->num_rows() > 0) {
@@ -620,7 +648,7 @@ class Products_model extends CI_Model
     public function getProductWithCategory($id)
     {
         $this->db->select($this->db->dbprefix('products') . '.*, ' . $this->db->dbprefix('categories') . '.name as category')
-        ->join('categories', 'categories.id=products.category_id', 'left');
+            ->join('categories', 'categories.id=products.category_id', 'left');
         $q = $this->db->get_where('products', ['products.id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -662,7 +690,10 @@ class Products_model extends CI_Model
 
     public function getQASuggestions($term, $limit = 5)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name')
+        ->where("{$this->db->dbprefix('products')}.business_id", $business_id)
             ->where("type != 'combo' AND "
                 . '(' . $this->db->dbprefix('products') . ".name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR
                 concat(" . $this->db->dbprefix('products') . ".name, ' (', code, ')') LIKE '%" . $term . "%')")
@@ -712,10 +743,10 @@ class Products_model extends CI_Model
     public function getStockCountProducts($warehouse_id, $type, $categories = null, $brands = null)
     {
         $this->db->select("{$this->db->dbprefix('products')}.id as id, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('warehouses_products')}.quantity as quantity")
-        ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
-        ->where('warehouses_products.warehouse_id', $warehouse_id)
-        ->where('products.type', 'standard')
-        ->order_by('products.code', 'asc');
+            ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
+            ->where('warehouses_products.warehouse_id', $warehouse_id)
+            ->where('products.type', 'standard')
+            ->order_by('products.code', 'asc');
         if ($categories) {
             $r = 1;
             $this->db->group_start();
@@ -778,7 +809,7 @@ class Products_model extends CI_Model
     public function getSubCategories($parent_id)
     {
         $this->db->select('id as id, name as text')
-        ->where('parent_id', $parent_id)->order_by('name');
+            ->where('parent_id', $parent_id)->order_by('name');
         $q = $this->db->get('categories');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -803,6 +834,9 @@ class Products_model extends CI_Model
 
     public function getSupplierByName($name)
     {
+
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('companies', ['name' => $name, 'group_name' => 'supplier'], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -812,6 +846,9 @@ class Products_model extends CI_Model
 
     public function getTaxRateByName($name)
     {
+
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('tax_rates', ['name' => $name], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -833,6 +870,8 @@ class Products_model extends CI_Model
 
     public function getUnitByCode($code)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('units', ['code' => $code], 1);
         if ($q->num_rows() > 0) {
             return $q->row();

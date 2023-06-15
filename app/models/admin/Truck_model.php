@@ -19,7 +19,8 @@ class Truck_model extends CI_Model
 
     public function getReferenceNo()
     {
-        $q = $this->db->get_where('purchases',['status' => 'ordered']);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $q = $this->db->get_where('purchases',['status' => 'ordered', "business_id"=> $business_id]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -41,9 +42,10 @@ class Truck_model extends CI_Model
         return false;
     }
 
-       public function getTruckById($id)
+    public function getTruckById($id)
     {
-        $q = $this->db->get_where('truck_registration', ['id' => $id]);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $q = $this->db->get_where('truck_registration', ['id' => $id, "business_id"=> $business_id]);
 
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -68,7 +70,8 @@ class Truck_model extends CI_Model
 
     public function getPurchaseDiscount($sid)
     {
-        $q = $this->db->get_where('deals', ['supplier_id' => $sid]);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $q = $this->db->get_where('deals', ['supplier_id' => $sid, "business_id"=> $business_id]);
         if ($q->num_rows() > 0) {
             return $q->row()->discount_purchase_order;
         }

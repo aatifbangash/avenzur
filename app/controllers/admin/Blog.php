@@ -36,10 +36,12 @@ class Blog extends MY_Controller {
  
     public function getBlogs()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->load->library('datatables');
         $this->datatables
             ->select('id, name, slug, category,description, title')
             ->from('blog')
+            ->where('business_id', $business_id)
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('blog/edit_blog/$1') . "' class='tip' title='" . lang('edit_page') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_blog') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('Blog/delete_blog/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
         //->unset_column('id');
 
@@ -55,6 +57,7 @@ class Blog extends MY_Controller {
         $this->form_validation->set_rules('category', lang('category'), 'required');
         $this->form_validation->set_rules('userfile', lang('featured_image','xss_clean'));
         $this->form_validation->set_rules('slug', lang('slug'), 'trim|required|is_unique[pages.slug]');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($this->form_validation->run() == true) {
             $data = [
                 'name'        => $this->input->post('name'),
@@ -65,6 +68,7 @@ class Blog extends MY_Controller {
                 'category'    => $this->input->post('category'),
                 // 'active'      => $this->input->post('active') ? $this->input->post('active') : 0,
                 'updated_at'  => date('Y-m-d H:i:s'),
+                'business_id' => $business_id,
             ];
             
            if ($_FILES['userfile']['size'] > 0) {
@@ -137,6 +141,9 @@ class Blog extends MY_Controller {
   public function edit_blog($id = null)
     {
         $page = $this->Blog_model->getBlogByID($id);
+        if(empty($page)){
+            admin_redirect('Blog/allBlogs');
+        }
         $this->form_validation->set_rules('name', lang('name'), 'required|max_length[60]');
         $this->form_validation->set_rules('title', lang('title'), 'required|max_length[60]');
         $this->form_validation->set_rules('description', lang('description'), 'required');
@@ -224,6 +231,7 @@ class Blog extends MY_Controller {
             $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
             $bc                  = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('edit_blog')]];
             $meta                = ['page_title' => lang('edit_blog'), 'bc' => $bc];
+            $this->data['result_categories']=$this->Blog_categories_model->display_records();
             $this->page_construct('blog/edit_blog', $meta, $this->data);
         }
     }
@@ -245,7 +253,7 @@ class Blog extends MY_Controller {
         $this->form_validation->set_rules('slug', lang('slug'), 'required|is_unique[categories.slug]|alpha_dash');
         $this->form_validation->set_rules('userfile', lang('category_image'), 'xss_clean');
         $this->form_validation->set_rules('description', lang('description'), 'trim|required');
-
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($this->form_validation->run() == true) {
             $data = [
                 'name'        => $this->input->post('name'),
@@ -253,6 +261,7 @@ class Blog extends MY_Controller {
                 'slug'        => $this->input->post('slug'),
                 'description' => $this->input->post('description'),
                 'parent_id'   => $this->input->post('parent'),
+                'business_id' => $business_id,
             ];
 
             if ($_FILES['userfile']['size'] > 0) {
@@ -329,12 +338,13 @@ class Blog extends MY_Controller {
                 public function getBlogCategory()
                 {
                     $print_barcode = anchor('admin/products/print_barcodes/?category=$1', '<i class="fa fa-print"></i>', 'title="' . lang('print_barcodes') . '" class="tip"');
-            
+                    $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
                     $this->load->library('datatables');
                     $this->datatables
                         ->select("{$this->db->dbprefix('blog_categories')}.id as id, {$this->db->dbprefix('blog_categories')}.image, {$this->db->dbprefix('blog_categories')}.code, {$this->db->dbprefix('blog_categories')}.name, {$this->db->dbprefix('blog_categories')}.slug, c.name as parent", false)
                         ->from('blog_categories')
                         ->join('blog_categories c', 'c.id=blog_categories.parent_id', 'left')
+                        ->where('blog_categories.business_id', $business_id)
                         ->group_by('blog_categories.id')
                         ->add_column('Actions', '<div class="text-center">'  . " <a href='" . admin_url('blog/edit_bcategory/$1') . "' data-toggle='modal' data-target='#myModal' class='tip' title='" . lang('edit_blog_category') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_category') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('blog/delete_bcategory/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
             
@@ -365,7 +375,7 @@ class Blog extends MY_Controller {
                     $this->form_validation->set_rules('name', lang('category_name'), 'required|min_length[3]');
                     $this->form_validation->set_rules('userfile', lang('category_image'), 'xss_clean');
                     $this->form_validation->set_rules('description', lang('description'), 'trim|required');
-            
+                    $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
                     if ($this->form_validation->run() == true) {
                         $data = [
                             'name'        => $this->input->post('name'),
@@ -373,6 +383,7 @@ class Blog extends MY_Controller {
                             'slug'        => $this->input->post('slug'),
                             'description' => $this->input->post('description'),
                             'parent_id'   => $this->input->post('parent'),
+                            'business_id' =>$business_id,
                         ];
             
                         if ($_FILES['userfile']['size'] > 0) {

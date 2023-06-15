@@ -11,6 +11,8 @@ class Sales_model extends CI_Model
 
     public function addDelivery($data = [])
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data['business_id'] = $business_id;
         if ($this->db->insert('deliveries', $data)) {
             if ($this->site->getReference('do') == $data['do_reference_no']) {
                 $this->site->updateReference('do');
@@ -54,6 +56,8 @@ class Sales_model extends CI_Model
 
     public function addGiftCard($data = [], $ca_data = [], $sa_data = [])
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data['business_id'] = $business_id;
         if ($this->db->insert('gift_cards', $data)) {
             if (!empty($ca_data)) {
                 $this->db->update('companies', ['award_points' => $ca_data['points']], ['id' => $ca_data['customer']]);
@@ -78,6 +82,8 @@ class Sales_model extends CI_Model
 
     public function addPayment($data = [], $customer_id = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data['business_id'] = $business_id;
         if ($this->db->insert('payments', $data)) {
             if ($this->site->getReference('pay') == $data['reference_no']) {
                 $this->site->updateReference('pay');
@@ -97,6 +103,10 @@ class Sales_model extends CI_Model
 
     public function addSale($data = [], $items = [], $payment = [], $si_return = [], $attachments = [])
     {
+
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data['business_id'] = $business_id;
+
         if (empty($si_return)) {
             $cost = $this->site->costing($items);
             // $this->sma->print_arrays($cost);
@@ -260,8 +270,8 @@ class Sales_model extends CI_Model
     public function getAllGCTopups($card_id)
     {
         $this->db->select("{$this->db->dbprefix('gift_card_topups')}.*, {$this->db->dbprefix('users')}.first_name, {$this->db->dbprefix('users')}.last_name, {$this->db->dbprefix('users')}.email")
-        ->join('users', 'users.id=gift_card_topups.created_by', 'left')
-        ->order_by('id', 'desc')->limit(10);
+            ->join('users', 'users.id=gift_card_topups.created_by', 'left')
+            ->order_by('id', 'desc')->limit(10);
         $q = $this->db->get_where('gift_card_topups', ['card_id' => $card_id]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -300,8 +310,8 @@ class Sales_model extends CI_Model
     {
         $this->db->select('sale_items.*, products.details, product_variants.name as variant');
         $this->db->join('products', 'products.id=sale_items.product_id', 'left')
-        ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
-        ->group_by('sale_items.id');
+            ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
+            ->group_by('sale_items.id');
         $this->db->order_by('id', 'asc');
         $q = $this->db->get_where('sale_items', ['sale_id' => $sale_id]);
         if ($q->num_rows() > 0) {
@@ -451,7 +461,8 @@ class Sales_model extends CI_Model
 
     public function getPaypalSettings()
     {
-        $q = $this->db->get_where('paypal', ['id' => 1]);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $q = $this->db->get_where('paypal', ['business_id' => $business_id]);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -460,6 +471,8 @@ class Sales_model extends CI_Model
 
     public function getProductByCode($code)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('products', ['code' => $code], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -469,6 +482,8 @@ class Sales_model extends CI_Model
 
     public function getProductByName($name)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('products', ['name' => $name], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -690,7 +705,8 @@ class Sales_model extends CI_Model
 
     public function getSkrillSettings()
     {
-        $q = $this->db->get_where('skrill', ['id' => 1]);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $q = $this->db->get_where('skrill', ['business_id' => $business_id]);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -702,6 +718,8 @@ class Sales_model extends CI_Model
         if (!$this->Owner) {
             $this->db->where('group_id !=', 1);
         }
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $this->db->where('group_id !=', 3)->where('group_id !=', 4);
         $q = $this->db->get('users');
         if ($q->num_rows() > 0) {
@@ -983,7 +1001,7 @@ class Sales_model extends CI_Model
         return false;
     }
 
-//    sale invoice
+    //    sale invoice
     public function saleToInvoice($id)
     {
         $this->db->update('sales', ['sale_invoice' => 1], ['id' => $id]);

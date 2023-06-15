@@ -1267,10 +1267,11 @@ class Purchases extends MY_Controller
         </div></div>';
 
         $this->load->library('datatables');
-
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select($this->db->dbprefix('expenses') . ".id as id, date, reference, {$this->db->dbprefix('expense_categories')}.name as category, amount, note, CONCAT({$this->db->dbprefix('users')}.first_name, ' ', {$this->db->dbprefix('users')}.last_name) as user, attachment", false)
             ->from('expenses')
+            ->where("expenses.business_id", $business_id)
             ->join('users', 'users.id=expenses.created_by', 'left')
             ->join('expense_categories', 'expense_categories.id=expenses.category_id', 'left')
             ->group_by('expenses.id');
@@ -1430,15 +1431,16 @@ class Purchases extends MY_Controller
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($warehouse_id) {
             $this->datatables
                 ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
-                ->from('purchases')
+                ->from('purchases')->where('business_id', $business_id)
                 ->where('warehouse_id', $warehouse_id);
         } else {
             $this->datatables
                 ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
-                ->from('purchases');
+                ->from('purchases')->where('business_id', $business_id);
         }
 
        // if($this->sma->checkPermissionsForRequest('p_status_pending'))
@@ -1533,15 +1535,17 @@ class Purchases extends MY_Controller
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($warehouse_id) {
             $this->datatables
                 ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
                 ->from('purchases')
+                ->where("business_id", $business_id)
                 ->where('warehouse_id', $warehouse_id);
         } else {
             $this->datatables
                 ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
-                ->from('purchases');
+                ->from('purchases')->where("business_id", $business_id);
         }
 
        // if($this->sma->checkPermissionsForRequest('p_status_pending'))
@@ -1931,6 +1935,7 @@ class Purchases extends MY_Controller
                                 'unit_cost'         => $unit_cost, // $this->sma->formatDecimal(($item_net_cost + $item_tax), 4),
                                 'real_unit_cost'    => $real_unit_cost,
                                 'base_unit_cost'    => $real_unit_cost,
+                                'business_id'    => $this->ion_auth->user()->row()->business_id,
                             ];
 
                             $products[] = ($product + $gst_data);
@@ -2525,7 +2530,7 @@ class Purchases extends MY_Controller
                 } else {
                     $row->qty = ($bprice ? $bprice / $row->cost : 1);
                 }
-
+// dd($row);
                 $units    = $this->site->getUnitsByBUID($row->base_unit);
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
 

@@ -527,9 +527,10 @@ class Pos extends MY_Controller
         }
 
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
         ->select('id, title, type, profile, path, ip_address, port')
-        ->from('printers')
+        ->from('printers')->where("business_id", $business_id)
         ->add_column('Actions', "<div class='text-center'> <a href='" . admin_url('pos/edit_printer/$1') . "' class='btn-warning btn-xs tip' title='" . lang('edit_printer') . "'><i class='fa fa-edit'></i></a> <a href='#' class='btn-danger btn-xs tip po' title='<b>" . lang('delete_printer') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('pos/delete_printer/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id')
         ->unset_column('id');
         echo $this->datatables->generate();
@@ -738,10 +739,12 @@ class Pos extends MY_Controller
         </div></div>';
 
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($warehouse_id) {
             $this->datatables
                 ->select($this->db->dbprefix('sales') . ".id as id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, biller, customer, (grand_total+COALESCE(rounding, 0)), paid, CONCAT(grand_total, '__', rounding, '__', paid) as balance, sale_status, payment_status, companies.email as cemail")
                 ->from('sales')
+                ->where("sales.business_id", $business_id)
                 ->join('companies', 'companies.id=sales.customer_id', 'left')
                 ->where('warehouse_id', $warehouse_id)
                 ->group_by('sales.id');
@@ -749,6 +752,7 @@ class Pos extends MY_Controller
             $this->datatables
                 ->select($this->db->dbprefix('sales') . ".id as id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, biller, customer, (grand_total+COALESCE(rounding, 0)), paid, CONCAT(grand_total, '__', rounding, '__', paid) as balance, sale_status, payment_status, companies.email as cemail")
                 ->from('sales')
+                ->where("sales.business_id", $business_id)
                 ->join('companies', 'companies.id=sales.customer_id', 'left')
                 ->group_by('sales.id');
         }
@@ -1216,7 +1220,9 @@ class Pos extends MY_Controller
                 admin_redirect('pos/updates');
             }
         }
-        $this->db->update('pos_settings', ['version' => $version], ['pos_id' => 1]);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+        $this->db->update('pos_settings', ['version' => $version], ["business_id" => $business_id]);
         unlink('./files/updates/' . $file . '.zip');
         $this->session->set_flashdata('success', lang('update_done'));
         admin_redirect('pos/updates');
@@ -1558,7 +1564,9 @@ class Pos extends MY_Controller
         $this->form_validation->set_rules('purchase_code', lang('purchase_code'), 'required');
         $this->form_validation->set_rules('envato_username', lang('envato_username'), 'required');
         if ($this->form_validation->run() == true) {
-            $this->db->update('pos_settings', ['purchase_code' => $this->input->post('purchase_code', true), 'envato_username' => $this->input->post('envato_username', true)], ['pos_id' => 1]);
+            $business_id = $this->session->userdata['business_id'];
+          
+            $this->db->update('pos_settings', ['purchase_code' => $this->input->post('purchase_code', true), 'envato_username' => $this->input->post('envato_username', true)], ["business_id" => $business_id]);
             admin_redirect('pos/updates');
         } else {
             $fields = ['version' => $this->pos_settings->version, 'code' => $this->pos_settings->purchase_code, 'username' => $this->pos_settings->envato_username, 'site' => base_url()];

@@ -202,6 +202,8 @@ class Reports_model extends CI_Model
 
     public function getBestSeller($start_date, $end_date, $warehouse_id = null)
     {
+        $business_id = $this->session->userdata['business_id'];
+        
         $this->db
             ->select('product_name, product_code')->select_sum('quantity')
             ->join('sales', 'sales.id = sale_items.sale_id', 'left')
@@ -210,6 +212,7 @@ class Reports_model extends CI_Model
         if ($warehouse_id) {
             $this->db->where('sale_items.warehouse_id', $warehouse_id);
         }
+        $this->db->where("sales.business_id", $business_id);
         $q = $this->db->get('sale_items');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -235,6 +238,9 @@ class Reports_model extends CI_Model
 
     public function getChartData()
     {
+        $business_id = $this->session->userdata['business_id'];
+        // $this->db->where("business_id", $business_id);
+
         $myQuery = "SELECT S.month,
         COALESCE(S.sales, 0) as sales,
         COALESCE( P.purchases, 0 ) as purchases,
@@ -246,16 +252,19 @@ class Reports_model extends CI_Model
                 SUM(product_tax) tax1,
                 SUM(order_tax) tax2
                 FROM " . $this->db->dbprefix('sales') . "
-                WHERE date >= date_sub( now( ) , INTERVAL 12 MONTH )
+                WHERE  business_id = $business_id
+                AND date >= date_sub( now( ) , INTERVAL 12 MONTH )
                 GROUP BY date_format(date, '%Y-%m')) S
             LEFT JOIN ( SELECT  date_format(date, '%Y-%m') Month,
                         SUM(product_tax) ptax,
                         SUM(order_tax) otax,
                         SUM(total) purchases
                         FROM " . $this->db->dbprefix('purchases') . "
+                        WHERE  business_id = $business_id
                         GROUP BY date_format(date, '%Y-%m')) P
             ON S.Month = P.Month
             ORDER BY S.Month";
+            // echo $myQuery;exit;
         $q = $this->db->query($myQuery);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -280,7 +289,7 @@ class Reports_model extends CI_Model
 
         if ($warehouse_id) {
             $this->db->join('sales', 'sales.id=costing.sale_id')
-            ->where('sales.warehouse_id', $warehouse_id);
+                ->where('sales.warehouse_id', $warehouse_id);
         }
 
         $q = $this->db->get('costing');
@@ -292,13 +301,15 @@ class Reports_model extends CI_Model
 
     public function getCustomerOpenReturns($customer_id)
     {
-        $this->db->from('returns')->where('customer_id', $customer_id);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->from('returns')->where('customer_id', $customer_id)->where('business_id', $business_id);
         return $this->db->count_all_results();
     }
 
     public function getCustomerQuotes($customer_id)
     {
-        $this->db->from('quotes')->where('customer_id', $customer_id);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->from('quotes')->where('customer_id', $customer_id)->where('business_id', $business_id);
         return $this->db->count_all_results();
     }
 
@@ -315,7 +326,8 @@ class Reports_model extends CI_Model
 
     public function getCustomerSales($customer_id)
     {
-        $this->db->from('sales')->where('customer_id', $customer_id);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->from('sales')->where('customer_id', $customer_id)->where('business_id', $business_id);
         return $this->db->count_all_results();
     }
 
@@ -359,7 +371,9 @@ class Reports_model extends CI_Model
 
     public function getExpenseCategories()
     {
-        $q = $this->db->get('expense_categories');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $q = $this->db->get_where('expense_categories', ['business_id' => $business_id]);
+        //$q = $this->db->get('expense_categories');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -459,6 +473,8 @@ class Reports_model extends CI_Model
 
     public function getPOSSetting()
     {
+        $business_id = $this->session->userdata['business_id'];
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get('pos_settings');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -468,8 +484,11 @@ class Reports_model extends CI_Model
 
     public function getProductNames($term, $limit = 5)
     {
-        $this->db->select('id, code, name')
+     
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->select('id, code, name')->where("business_id", $business_id)
             ->like('name', $term, 'both')->or_like('code', $term, 'both');
+        
         $this->db->limit($limit);
         $q = $this->db->get('products');
         if ($q->num_rows() > 0) {
@@ -501,8 +520,10 @@ class Reports_model extends CI_Model
 
     public function getPurchasesTotals($supplier_id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('SUM(COALESCE(grand_total, 0)) as total_amount, SUM(COALESCE(paid, 0)) as paid', false)
-            ->where('supplier_id', $supplier_id);
+            ->where('supplier_id', $supplier_id)
+            ->where('business_id', $business_id);
         $q = $this->db->get('purchases');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -515,7 +536,7 @@ class Reports_model extends CI_Model
         $sdate = $date . ' 00:00:00';
         $edate = $date . ' 23:59:59';
         $this->db->select('SUM( COALESCE( grand_total, 0 ) ) AS total', false)
-        ->where('sale_status', 'returned');
+            ->where('sale_status', 'returned');
         if ($date) {
             $this->db->where('date >=', $sdate)->where('date <=', $edate);
         } elseif ($month) {
@@ -556,8 +577,10 @@ class Reports_model extends CI_Model
 
     public function getSalesTotals($customer_id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('SUM(COALESCE(grand_total, 0)) as total_amount, SUM(COALESCE(paid, 0)) as paid', false)
-            ->where('customer_id', $customer_id);
+            ->where('customer_id', $customer_id)
+            ->where('business_id', $business_id);
         $q = $this->db->get('sales');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -567,10 +590,11 @@ class Reports_model extends CI_Model
 
     public function getStaff()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($this->Admin) {
             $this->db->where('group_id !=', 1);
         }
-        $this->db->where('group_id !=', 3)->where('group_id !=', 4);
+        $this->db->where('group_id !=', 3)->where('group_id !=', 4)->where('business_id', $business_id);
         $q = $this->db->get('users');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -681,7 +705,9 @@ class Reports_model extends CI_Model
 
     public function getStockValue()
     {
-        $q = $this->db->query('SELECT SUM(by_price) as stock_by_price, SUM(by_cost) as stock_by_cost FROM ( Select COALESCE(sum(' . $this->db->dbprefix('warehouses_products') . '.quantity), 0)*price as by_price, COALESCE(sum(' . $this->db->dbprefix('warehouses_products') . '.quantity), 0)*cost as by_cost FROM ' . $this->db->dbprefix('products') . ' JOIN ' . $this->db->dbprefix('warehouses_products') . ' ON ' . $this->db->dbprefix('warehouses_products') . '.product_id=' . $this->db->dbprefix('products') . '.id GROUP BY ' . $this->db->dbprefix('products') . '.id ) a');
+        $business_id = $this->session->userdata['business_id'];
+
+        $q = $this->db->query('SELECT SUM(by_price) as stock_by_price, SUM(by_cost) as stock_by_cost FROM ( Select COALESCE(sum(' . $this->db->dbprefix('warehouses_products') . '.quantity), 0)*price as by_price, COALESCE(sum(' . $this->db->dbprefix('warehouses_products') . '.quantity), 0)*cost as by_cost FROM ' . $this->db->dbprefix('products') . ' JOIN ' . $this->db->dbprefix('warehouses_products') . ' ON ' . $this->db->dbprefix('warehouses_products') . '.product_id=' . $this->db->dbprefix('products') . '.id where ' . $this->db->dbprefix('products') . '.business_id = ' . $business_id . ' GROUP BY ' . $this->db->dbprefix('products') . '.id ) a');
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -690,7 +716,8 @@ class Reports_model extends CI_Model
 
     public function getSupplierPurchases($supplier_id)
     {
-        $this->db->from('purchases')->where('supplier_id', $supplier_id);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->from('purchases')->where('supplier_id', $supplier_id)->where('business_id', $business_id);
         return $this->db->count_all_results();
     }
 
@@ -850,7 +877,9 @@ class Reports_model extends CI_Model
 
     public function getWarehouseStockValue($id)
     {
-        $q = $this->db->query('SELECT SUM(by_price) as stock_by_price, SUM(by_cost) as stock_by_cost FROM ( Select sum(COALESCE(' . $this->db->dbprefix('warehouses_products') . '.quantity, 0))*price as by_price, sum(COALESCE(' . $this->db->dbprefix('warehouses_products') . '.quantity, 0))*cost as by_cost FROM ' . $this->db->dbprefix('products') . ' JOIN ' . $this->db->dbprefix('warehouses_products') . ' ON ' . $this->db->dbprefix('warehouses_products') . '.product_id=' . $this->db->dbprefix('products') . '.id WHERE ' . $this->db->dbprefix('warehouses_products') . '.warehouse_id = ? GROUP BY ' . $this->db->dbprefix('products') . '.id ) a', [$id]);
+        $business_id = $this->session->userdata['business_id'];
+
+        $q = $this->db->query('SELECT SUM(by_price) as stock_by_price, SUM(by_cost) as stock_by_cost FROM ( Select sum(COALESCE(' . $this->db->dbprefix('warehouses_products') . '.quantity, 0))*price as by_price, sum(COALESCE(' . $this->db->dbprefix('warehouses_products') . '.quantity, 0))*cost as by_cost FROM ' . $this->db->dbprefix('products') . ' JOIN ' . $this->db->dbprefix('warehouses_products') . ' ON ' . $this->db->dbprefix('warehouses_products') . '.product_id=' . $this->db->dbprefix('products') . '.id WHERE ' . $this->db->dbprefix('warehouses_products') . '.warehouse_id = ? AND ' . $this->db->dbprefix('products') . '.business_id = '.$business_id.' GROUP BY ' . $this->db->dbprefix('products') . '.id ) a', [$id]);
         if ($q->num_rows() > 0) {
             return $q->row();
         }

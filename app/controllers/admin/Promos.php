@@ -119,9 +119,11 @@ class Promos extends MY_Controller
         $this->sma->checkPermissions('index');
 
         $this->load->library('datatables');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->datatables
             ->select("promos.id as id, promos.name, CONCAT(p2b.name, ' (', p2b.code, ')') as product2buy, CONCAT(p2g.name, ' (', p2g.code, ')') as product2get, promos.start_date, promos.end_date")
             ->from('promos')
+            ->where("promos.business_id", $business_id)
             ->join('products as p2b', 'p2b.id=promos.product2buy', 'left')
             ->join('products as p2g', 'p2g.id=promos.product2get', 'left')
             ->add_column('Actions', "<div class=\"text-center\"><a class=\"tip\" title='" . $this->lang->line('edit_promo') . "' href='" . admin_url('promos/edit/$1') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . $this->lang->line('delete_promo') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('promos/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');

@@ -12,6 +12,7 @@ class Cron_model extends CI_Model
 
     public function getSettings()
     {
+        return false;
         $q = $this->db->get_where('settings', ['setting_id' => 1], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -145,6 +146,7 @@ class Cron_model extends CI_Model
 
     private function checkUpdate()
     {
+        return false;
         $fields = ['version' => $this->Settings->version, 'code' => $this->Settings->purchase_code, 'username' => $this->Settings->envato_username, 'site' => base_url()];
         $this->load->helper('update');
         $protocol = is_https() ? 'https://' : 'http://';

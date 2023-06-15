@@ -11,6 +11,8 @@ class Companies_model extends CI_Model
 
     public function addAddress($data)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
         if ($this->db->insert('addresses', $data)) {
             return true;
         }
@@ -27,6 +29,8 @@ class Companies_model extends CI_Model
 
     public function addCompany($data = [])
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data['business_id'] = $business_id;
         if ($this->db->insert('companies', $data)) {
             $cid = $this->db->insert_id();
             return $cid;
@@ -36,6 +40,8 @@ class Companies_model extends CI_Model
 
     public function addDeposit($data, $cdata)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $data["business_id"] = $business_id;
         if ($this->db->insert('deposits', $data) && $this->db->update('companies', $cdata, ['id' => $data['company_id']])) {
             return true;
         }
@@ -44,6 +50,8 @@ class Companies_model extends CI_Model
 
     public function deleteAddress($id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         if ($this->db->delete('addresses', ['id' => $id])) {
             return true;
         }
@@ -56,6 +64,8 @@ class Companies_model extends CI_Model
             return false;
         }
         $this->site->log('Biller', ['model' => $this->getCompanyByID($id)]);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         if ($this->db->delete('companies', ['id' => $id, 'group_name' => 'biller'])) {
             return true;
         }
@@ -101,6 +111,8 @@ class Companies_model extends CI_Model
 
     public function getAddressByID($id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('addresses', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -110,6 +122,8 @@ class Companies_model extends CI_Model
 
     public function getAllBillerCompanies()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('companies', ['group_name' => 'biller']);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -122,6 +136,8 @@ class Companies_model extends CI_Model
 
     public function getAllCustomerCompanies()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('companies', ['group_name' => 'customer']);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -134,6 +150,8 @@ class Companies_model extends CI_Model
 
     public function getAllCustomerGroups()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('customer_groups');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -146,6 +164,8 @@ class Companies_model extends CI_Model
 
     public function getAllPriceGroups()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('price_groups');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -158,6 +178,8 @@ class Companies_model extends CI_Model
 
     public function getAllSupplierCompanies()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('companies', ['group_name' => 'supplier']);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -170,6 +192,8 @@ class Companies_model extends CI_Model
 
     public function getBillerSales($id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $this->db->where('biller_id', $id)->from('sales');
         return $this->db->count_all_results();
     }
@@ -177,6 +201,8 @@ class Companies_model extends CI_Model
     public function getBillerSuggestions($term, $limit = 10)
     {
         $this->db->select('id, company as text');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%') ");
         $q = $this->db->get_where('companies', ['group_name' => 'biller'], $limit);
         if ($q->num_rows() > 0) {
@@ -190,6 +216,8 @@ class Companies_model extends CI_Model
 
     public function getCompanyAddresses($company_id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('addresses', ['company_id' => $company_id]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -202,6 +230,8 @@ class Companies_model extends CI_Model
 
     public function getCompanyByEmail($email)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('companies', ['email' => $email], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -211,6 +241,9 @@ class Companies_model extends CI_Model
 
     public function getCompanyByID($id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where('business_id', $business_id);
+
         $q = $this->db->get_where('companies', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -220,6 +253,8 @@ class Companies_model extends CI_Model
 
     public function getCompanyUsers($company_id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('users', ['company_id' => $company_id]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -232,14 +267,19 @@ class Companies_model extends CI_Model
 
     public function getCustomerSales($id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $this->db->where('customer_id', $id)->from('sales');
         return $this->db->count_all_results();
     }
 
     public function getCustomerSuggestions($term, $limit = 10)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
         $this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name, ')') END) as text, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name, ')') END) as value, phone", false);
         $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get_where('companies', ['group_name' => 'customer'], $limit);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -252,6 +292,8 @@ class Companies_model extends CI_Model
 
     public function getDepositByID($id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('deposits', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -261,6 +303,8 @@ class Companies_model extends CI_Model
 
     public function getSupplierPurchases($id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $this->db->where('supplier_id', $id)->from('purchases');
         return $this->db->count_all_results();
     }
@@ -269,6 +313,11 @@ class Companies_model extends CI_Model
     {
         $this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name, ')') END) as text", false);
         $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+
+        //TIP:- added
+        $business_id = $_SESSION['business_id'];
+        $this->db->where('business_id', $business_id);
+
         $q = $this->db->get_where('companies', ['group_name' => 'supplier'], $limit);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -281,6 +330,8 @@ class Companies_model extends CI_Model
 
     public function updateAddress($id, $data)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         if ($this->db->update('addresses', $data, ['id' => $id])) {
             return true;
         }
@@ -289,6 +340,8 @@ class Companies_model extends CI_Model
 
     public function updateCompany($id, $data = [])
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $this->db->where('id', $id);
         if ($this->db->update('companies', $data)) {
             return true;
@@ -298,6 +351,8 @@ class Companies_model extends CI_Model
 
     public function updateDeposit($id, $data, $cdata)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         if ($this->db->update('deposits', $data, ['id' => $id]) && $this->db->update('companies', $cdata, ['id' => $data['company_id']])) {
             return true;
         }

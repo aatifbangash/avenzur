@@ -11,6 +11,7 @@ class Sync_model extends CI_Model
 
     public function deleteExtraTables()
     {
+        return false;
         $this->db->update('settings', ['version' => '3.2.10'], ['setting_id' => 1]);
         $this->load->dbforge();
         $this->dbforge->drop_table('billers');
