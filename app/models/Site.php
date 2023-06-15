@@ -571,6 +571,8 @@ class Site extends CI_Model
 
     public function getGiftCardByNO($no)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('gift_cards', ['card_no' => $no], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
