@@ -405,6 +405,8 @@ class Pos_model extends CI_Model
 
     public function getAllBillerCompanies()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('companies', ['group_name' => 'biller']);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -417,6 +419,8 @@ class Pos_model extends CI_Model
 
     public function getAllCustomerCompanies()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get_where('companies', ['group_name' => 'customer']);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -458,6 +462,8 @@ class Pos_model extends CI_Model
 
     public function getAllPrinters()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get('printers');
         if ($q->num_rows() > 0) {
             foreach ($q->result() as $row) {
@@ -988,6 +994,8 @@ class Pos_model extends CI_Model
 
     public function getSetting()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get('pos_settings');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -1442,7 +1450,8 @@ class Pos_model extends CI_Model
 
     public function updateSetting($data)
     {
-        $this->db->where('pos_id', '1');
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->where("business_id", $business_id);
         if ($this->db->update('pos_settings', $data)) {
             return true;
         }

@@ -1220,7 +1220,9 @@ class Pos extends MY_Controller
                 admin_redirect('pos/updates');
             }
         }
-        $this->db->update('pos_settings', ['version' => $version], ['pos_id' => 1]);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
+        $this->db->update('pos_settings', ['version' => $version], ["business_id" => $business_id]);
         unlink('./files/updates/' . $file . '.zip');
         $this->session->set_flashdata('success', lang('update_done'));
         admin_redirect('pos/updates');
@@ -1562,7 +1564,9 @@ class Pos extends MY_Controller
         $this->form_validation->set_rules('purchase_code', lang('purchase_code'), 'required');
         $this->form_validation->set_rules('envato_username', lang('envato_username'), 'required');
         if ($this->form_validation->run() == true) {
-            $this->db->update('pos_settings', ['purchase_code' => $this->input->post('purchase_code', true), 'envato_username' => $this->input->post('envato_username', true)], ['pos_id' => 1]);
+            $business_id = $this->session->userdata['business_id'];
+          
+            $this->db->update('pos_settings', ['purchase_code' => $this->input->post('purchase_code', true), 'envato_username' => $this->input->post('envato_username', true)], ["business_id" => $business_id]);
             admin_redirect('pos/updates');
         } else {
             $fields = ['version' => $this->pos_settings->version, 'code' => $this->pos_settings->purchase_code, 'username' => $this->pos_settings->envato_username, 'site' => base_url()];

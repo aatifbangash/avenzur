@@ -268,6 +268,8 @@ class Reports_model extends CI_Model
 
     public function getPOSSetting()
     {
+        $business_id = $this->session->userdata['business_id'];
+        $this->db->where("business_id", $business_id);
         $q = $this->db->get('pos_settings');
         if ($q->num_rows() > 0) {
             return $q->row();
