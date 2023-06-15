@@ -1002,7 +1002,31 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('staff_report'); ?></span>
                                         </a>
                                     </li>
-                                    
+                                    <li id="reports_supplier_trial_balance_report">
+                                        <a href="<?= admin_url('reports/suppliers_trial_balance') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('suppliers_trial_balance_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_customer_trial_balance_report">
+                                        <a href="<?= admin_url('reports/customers_trial_balance') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('customers_trial_balance_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_general_ledger_trial_balance_report">
+                                        <a href="<?= admin_url('reports/general_ledger_trial_balance') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_trial_balance_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_supplier_statement_report">
+                                        <a href="<?= admin_url('reports/supplier_statement') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('supplier_statement_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_customer_statement_report">
+                                        <a href="<?= admin_url('reports/customer_statement') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('customer_statement_report'); ?></span>
+                                        </a>
+                                    </li>
                                 </ul>
                             </li>
                           
@@ -1667,6 +1691,88 @@
                                         <a class="submenu" href="<?= admin_url('truck_registration/add'); ?>">
                                             <i class="fa fa-plus-circle"></i>
                                             <span class="text"> <?= lang('Add Truck Registration'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="mm_truck">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-money"></i>
+                                    <span class="text"> <?= lang('Payments'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/add_payment'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Supplier Payment'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/list_payments'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Supplier Payment'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/debit_memo'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Debit Memo'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/list_debit_memo'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Debit Memo'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/advance_to_supplier'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Supplier Advance'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/list_advance_to_supplier'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Supplier Advance'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/payment_from_customer'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Customer Payment'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/list_payments'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Customer Payment'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/credit_memo'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Credit Memo'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/list_credit_memo'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Credit Memo'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/service_invoice'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Service Invoice'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/list_service_invoice'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Service Invoice'); ?></span>
                                         </a>
                                     </li>
                                 </ul>

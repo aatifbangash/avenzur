@@ -523,6 +523,7 @@ class Sales extends MY_Controller
         /*Accounts Entries*/
         $entry = array(
             'entrytype_id' => 4,
+            'transaction_type' => 'customerpayment',
             'number'       => 'SO-'.$inv->reference_no,
             'date'         => date('Y-m-d'), 
             'dr_total'     => $amount,
@@ -1610,6 +1611,7 @@ class Sales extends MY_Controller
             /*Accounts Entries*/
             $entry = array(
                     'entrytype_id' => 4,
+                    'transaction_type' => 'saleorder',
                     'number'       => 'SO-'.$inv->reference_no,
                     'date'         => date('Y-m-d'), 
                     'dr_total'     => $inv->grand_total,

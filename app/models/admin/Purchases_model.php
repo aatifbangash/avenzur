@@ -349,6 +349,32 @@ class Purchases_model extends CI_Model
         return false;
     }
 
+    public function getAccountsEntryByReferenceNo($reference_number){
+        $q = $this->db->get_where('sma_accounts_entries', ['number' => $reference_number], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+
+        return false;
+    }
+
+    public function getPayments(){
+        $this->db->select('payments.id, payments.date, payments.paid_by, payments.amount, payments.reference_no, payments.note, users.first_name, users.last_name, companies.company, type')
+            ->join('purchases', 'purchases.id=payments.purchase_id', 'left')
+            ->join('companies', 'companies.id=purchases.supplier_id', 'left')
+            ->join('users', 'users.id=payments.created_by', 'left')
+            ->where('type', 'sent')
+            ->where('payments.purchase_id >', 0);
+        $q = $this->db->get('payments');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getPaymentsForPurchase($purchase_id)
     {
         $this->db->select('payments.date, payments.paid_by, payments.amount, payments.reference_no, users.first_name, users.last_name, type')
@@ -652,6 +678,114 @@ class Purchases_model extends CI_Model
         }
 
         return false;
+    }
+
+    public function update_purchase_paid_amount($id, $amount){
+        $q = $this->db->get_where('purchases', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            $row = $q->row();
+            $paid_amount = $row->paid;
+            $new_amount = $paid_amount + $amount;
+            
+            $data = array(
+                'paid' => $new_amount
+            );
+    
+            $this->db->update('purchases', $data, array('id' => $id));
+        }
+        return false;
+    }
+
+    public function getMemoAccountingEntries($id){
+        $this->db->select('sma_accounts_entries.*');
+        $this->db->from('sma_accounts_entries');
+        $this->db->where(['memo_id' => $id]);
+        $query = $this->db->get();
+
+        if ($query->num_rows() > 0) {
+            $data = $query->result();
+            return $data;
+        } else {
+            $data = array();
+            return $data;
+        }
+    }
+
+    public function getDebitMemo($type){
+        $this->db->order_by('date', 'asc');
+        $this->db->select('sma_memo.*, companies.company');
+        $this->db->from('memo');
+        $this->db->join('companies', 'sma_memo.supplier_id = companies.id');
+        $this->db->where(['type' => $type]);
+        $query = $this->db->get();
+
+        if ($query->num_rows() > 0) {
+            $data = $query->result();
+            return $data;
+        } else {
+            $data = array();
+            return $data;
+        }
+    }
+
+    public function getCreditMemo($type){
+        $this->db->order_by('date', 'asc');
+        $this->db->select('sma_memo.*, companies.company');
+        $this->db->from('memo');
+        $this->db->join('companies', 'sma_memo.customer_id = companies.id');
+        $this->db->where(['type' => $type]);
+        $query = $this->db->get();
+
+        if ($query->num_rows() > 0) {
+            $data = $query->result();
+            return $data;
+        } else {
+            $data = array();
+            return $data;
+        }
+    }
+
+    public function getDebitMemoData($id) {
+        $this->db->select('sma_memo.*');
+        $this->db->from('sma_memo');
+        $this->db->where('id', $id);
+        $this->db->limit(1);
+        $query = $this->db->get();
+    
+        if ($query->num_rows() > 0) {
+            $data = $query->row(); // Retrieve the single row
+            return $data;
+        } else {
+            return null; // Return null if no rows are found
+        }
+    }
+
+    public function getDebitMemoEntriesData($id){
+        $this->db->select('sma_memo_entries.*');
+        $this->db->from('sma_memo_entries');
+        $this->db->where(['memo_id' => $id]);
+        $query = $this->db->get();
+        if ($query->num_rows() > 0) {
+            $data = $query->result();
+            return $data;
+        } else {
+            $data = array();
+            return $data;
+        }
+    }
+
+    public function getPendingInvoicesBySupplier($supplier_id){
+        $this->db->order_by('date', 'asc');
+        $q = $this->db->get_where('purchases', ['supplier_id' => $supplier_id, 'status' => 'pending']);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data; 
+        }else{
+            $data = [];
+            return $data;
+        }
     }
 
     public function puchaseToInvoice($id)

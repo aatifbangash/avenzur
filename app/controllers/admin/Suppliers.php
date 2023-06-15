@@ -17,8 +17,597 @@ class Suppliers extends MY_Controller
             redirect($_SERVER['HTTP_REFERER']);
         }
         $this->lang->admin_load('suppliers', $this->Settings->user_language);
+        $this->load->admin_model('purchases_model');
         $this->load->library('form_validation');
         $this->load->admin_model('companies_model');
+    }
+
+    public function deleteFromAccounting($memo_id){
+        $accouting_entries = $this->purchases_model->getMemoAccountingEntries($memo_id);
+        foreach ($accouting_entries as $accouting_entry){
+            $this->db->delete('sma_accounts_entryitems', ['entry_id' => $accouting_entry->id]);
+            $this->db->delete('sma_accounts_entries', ['id' => $accouting_entry->id]);
+        }
+    }
+
+    public function convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $type){
+        $this->load->admin_model('companies_model');
+        $supplier = $this->companies_model->getCompanyByID($supplier_id);
+
+        /*Accounts Entries*/
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => $type,
+            'number'       => 'PM-'.$reference_no,
+            'date'         => date('Y-m-d'), 
+            'dr_total'     => $payment_amount + $bank_charges,
+            'cr_total'     => $payment_amount + $bank_charges,
+            'notes'        => 'Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
+            'pid'          =>  ''
+            );
+        $add  = $this->db->insert('sma_accounts_entries', $entry);
+        $insert_id = $this->db->insert_id();
+
+        //supplier
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $supplier->ledger_account,
+                'amount' => $payment_amount,
+                'narration' => ''
+            )
+        );
+
+        //bank charges
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $bank_charges_account,
+                'amount' => $bank_charges,
+                'narration' => ''
+            )
+        );
+
+        //transfer legdger
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $ledger_account,
+                'amount' => $payment_amount + $bank_charges,
+                'narration' => ''
+            )
+        );
+
+        foreach ($entryitemdata as $row => $itemdata)
+        {
+            $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
+        }
+    }
+
+    public function convert_supplier_advance_invoice($memo_id, $supplier_id, $ledger_account, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $type){
+        $this->load->admin_model('companies_model');
+        $supplier = $this->companies_model->getCompanyByID($supplier_id);
+
+        /*Accounts Entries*/
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => $type,
+            'number'       => 'SPADV-'.$reference_no,
+            'date'         => date('Y-m-d'), 
+            'dr_total'     => $payment_amount + $bank_charges,
+            'cr_total'     => $payment_amount + $bank_charges,
+            'notes'        => 'Supplier Advance Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
+            'pid'          =>  '',
+            'memo_id'      => $memo_id
+            );
+        $add  = $this->db->insert('sma_accounts_entries', $entry);
+        $insert_id = $this->db->insert_id();
+
+        //supplier
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $supplier->ledger_account,
+                'amount' => $payment_amount,
+                'narration' => ''
+            )
+        );
+
+        //bank charges
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $bank_charges_account,
+                'amount' => $bank_charges,
+                'narration' => ''
+            )
+        );
+
+        //transfer legdger
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $ledger_account,
+                'amount' => $payment_amount + $bank_charges,
+                'narration' => ''
+            )
+        );
+
+        foreach ($entryitemdata as $row => $itemdata)
+        {
+            $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
+        }
+    }
+
+    public function convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $type){
+        $this->load->admin_model('companies_model');
+        $supplier = $this->companies_model->getCompanyByID($supplier_id);
+
+        /*Accounts Entries*/
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => $type,
+            'number'       => 'DM-'.$reference_no,
+            'date'         => date('Y-m-d'), 
+            'dr_total'     => $payment_amount + $bank_charges,
+            'cr_total'     => $payment_amount + $bank_charges,
+            'notes'        => 'Debit Memo Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
+            'pid'          =>  '',
+            'memo_id'      => $memo_id
+            );
+        $add  = $this->db->insert('sma_accounts_entries', $entry);
+        $insert_id = $this->db->insert_id();
+
+        //supplier
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $supplier->ledger_account,
+                'amount' => $payment_amount,
+                'narration' => ''
+            )
+        );
+
+        //bank charges
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $bank_charges_account,
+                'amount' => $bank_charges,
+                'narration' => ''
+            )
+        );
+
+        //transfer legdger
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $ledger_account,
+                'amount' => $payment_amount + $bank_charges,
+                'narration' => ''
+            )
+        );
+
+        foreach ($entryitemdata as $row => $itemdata)
+        {
+            $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
+        }
+    }
+
+    public function make_supplier_payment($id, $amount, $reference_no, $date){
+        $payment = [
+            'date'         => $date,
+            'purchase_id'  => $id,
+            'reference_no' => $reference_no,
+            'amount'       => $amount,
+            'note'         => 'Multiple invoices payment',
+            'created_by'   => $this->session->userdata('user_id'),
+            'type'         => 'sent',
+        ];
+
+        $this->purchases_model->addPayment($payment);
+    }
+
+    public function update_purchase_order($id, $amount){
+        $this->purchases_model->update_purchase_paid_amount($id, $amount);
+    }
+
+    public function add_debit_memo($memo_id, $supplier_id, $reference_no, $description, $payment_amount, $date){
+        $memoData = array(
+            'memo_id' => $memo_id,
+            'supplier_id' => $supplier_id,
+            'reference_no' => $reference_no,
+            'description' => $description,
+            'payment_amount' => $payment_amount,
+            'type' => 'memo',
+            'date' => $date
+        );
+        $this->db->insert('sma_memo_entries' ,$memoData);
+    }
+
+    public function add_advance_to_supplier($memo_id, $supplier_id, $reference_no, $description, $payment_amount, $date){
+        $memoData = array(
+            'memo_id' => $memo_id,
+            'supplier_id' => $supplier_id,
+            'reference_no' => $reference_no,
+            'description' => $description,
+            'payment_amount' => $payment_amount,
+            'type' => 'supplieradvance',
+            'date' => $date
+        );
+        $this->db->insert('sma_memo_entries' ,$memoData);
+    }
+
+    public function edit_advance_to_supplier($id=null){
+        $this->sma->checkPermissions(false, true);
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $debit_memo_data = $this->purchases_model->getDebitMemoData($id);
+        $debit_memo_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
+        
+        $data = [];
+        $this->data['memo_data'] = $debit_memo_data;
+        
+        $this->data['memo_entries_data'] = $debit_memo_entries_data;
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->page_construct('suppliers/advance_to_supplier', $meta, $this->data);
+    }
+
+    public function advance_to_supplier(){
+        $this->sma->checkPermissions(false, true);
+        $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
+
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Advance To Supplier')]];
+        $meta = ['page_title' => lang('Advance To Supplier'), 'bc' => $bc];
+        if ($this->form_validation->run() == true) {
+            $request_type = $this->input->post('request_type');
+            $supplier_id      = $this->input->post('supplier');
+            $payments_array      = $this->input->post('payment_amount');
+            $descriptions_array      = $this->input->post('description');
+            $item_ids = $this->input->post('item_id');
+            $reference_no = $this->input->post('reference_no');
+            $payment_total = $this->input->post('payment_total');
+            $ledger_account = $this->input->post('ledger_account');
+            $bank_charges_account = $this->input->post('bank_charges_account');
+            $bank_charges = $this->input->post('bank_charges');
+            $date_fmt = $this->input->post('date');
+
+            $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
+            $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
+            
+            if($isDateValid){
+                $date = $date_fmt;
+            }else{
+                $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
+                $date = $formattedDate->format('Y-m-d');
+            }
+
+            if(array_sum($payments_array) == $payment_total){
+                if($request_type == 'update'){
+                    $memo_id2 = $this->input->post('memo_id');
+                   
+                    // Delete older data
+                    $this->db->delete('sma_memo_entries', ['memo_id' => $memo_id2]);
+                    $this->db->delete('sma_memo', ['id' => $memo_id2]);
+                    $this->deleteFromAccounting($memo_id2);
+                }
+
+                $memoData = array(
+                    'supplier_id' => $supplier_id,
+                    'customer_id' => 0,
+                    'reference_no' => $reference_no,
+                    'payment_amount' => $payment_total,
+                    'bank_charges' => $bank_charges,
+                    'ledger_account' => $ledger_account,
+                    'bank_charges_account' => $bank_charges_account,
+                    'type' => 'supplieradvance',
+                    'date' => $date
+                );
+               
+                $this->db->insert('sma_memo' ,$memoData);
+                $memo_id = $this->db->insert_id();
+
+                for ($i = 0; $i < count($payments_array); $i++) {
+                    $payment_amount = $payments_array[$i];
+                    $description = $descriptions_array[$i];
+                    if($payment_amount > 0){
+                        $this->add_advance_to_supplier($memo_id, $supplier_id, $reference_no, $description, $payment_amount, $date);
+                    }
+                }
+
+                $this->convert_supplier_advance_invoice($memo_id, $supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplieradvance');
+                $this->session->set_flashdata('message', lang('Advance To Supplier added Successfully!'));
+                admin_redirect('suppliers/list_advance_to_supplier');
+            }else{
+                $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+        } else {
+            $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->page_construct('suppliers/advance_to_supplier', $meta, $this->data);
+        }
+    }
+
+    public function list_advance_to_supplier(){
+        $this->data['debit_memo'] = $this->purchases_model->getDebitMemo('supplieradvance');
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->page_construct('suppliers/list_advance_to_supplier', $meta, $this->data);
+    }
+
+    public function list_debit_memo(){
+        $this->data['debit_memo'] = $this->purchases_model->getDebitMemo('memo');
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->page_construct('suppliers/list_debit_memo', $meta, $this->data);
+    }
+
+    public function edit_debit_memo($id = null){
+        $this->sma->checkPermissions(false, true);
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $debit_memo_data = $this->purchases_model->getDebitMemoData($id);
+        $debit_memo_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
+        
+        $data = [];
+        $this->data['memo_data'] = $debit_memo_data;
+        
+        $this->data['memo_entries_data'] = $debit_memo_entries_data;
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->page_construct('suppliers/debit_memo', $meta, $this->data);
+    }
+
+    public function debit_memo(){
+        $this->sma->checkPermissions(false, true);
+        $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
+
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('debit memo')]];
+        $meta = ['page_title' => lang('Debit Memo'), 'bc' => $bc];
+        if ($this->form_validation->run() == true) {
+            $request_type = $this->input->post('request_type');
+            $supplier_id      = $this->input->post('supplier');
+            $payments_array      = $this->input->post('payment_amount');
+            $descriptions_array      = $this->input->post('description');
+            $item_ids = $this->input->post('item_id');
+            $reference_no = $this->input->post('reference_no');
+            $payment_total = $this->input->post('payment_total');
+            $ledger_account = $this->input->post('ledger_account');
+            $bank_charges_account = $this->input->post('bank_charges_account');
+            $bank_charges = $this->input->post('bank_charges');
+            $date_fmt = $this->input->post('date');
+
+            //$date_fmt = '2023-06-27';
+            $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
+            $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
+            
+            if($isDateValid){
+                $date = $date_fmt;
+            }else{
+                $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
+                $date = $formattedDate->format('Y-m-d');
+            }
+            
+            if(array_sum($payments_array) == $payment_total){
+
+                if($request_type == 'update'){
+                    $memo_id2 = $this->input->post('memo_id');
+                   
+                    // Delete older data
+                    $this->db->delete('sma_memo_entries', ['memo_id' => $memo_id2]);
+                    $this->db->delete('sma_memo', ['id' => $memo_id2]);
+                    $this->deleteFromAccounting($memo_id2);
+                }
+
+                $memoData = array(
+                    'supplier_id' => $supplier_id,
+                    'customer_id' => 0,
+                    'reference_no' => $reference_no,
+                    'payment_amount' => $payment_total,
+                    'bank_charges' => $bank_charges,
+                    'ledger_account' => $ledger_account,
+                    'bank_charges_account' => $bank_charges_account,
+                    'type' => 'memo',
+                    'date' => $date
+                );
+               
+                $this->db->insert('sma_memo' ,$memoData);
+                $memo_id = $this->db->insert_id();
+               
+                for ($i = 0; $i < count($payments_array); $i++) {
+                    $payment_amount = $payments_array[$i];
+                    $description = $descriptions_array[$i];
+                    if($payment_amount > 0){
+                        $this->add_debit_memo($memo_id, $supplier_id, $reference_no, $description, $payment_amount, $date);
+                    }
+                }
+
+                $this->convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'debitmemo');
+                $this->session->set_flashdata('message', lang('Debit Memo invoice added Successfully!'));
+                admin_redirect('suppliers/list_debit_memo');
+            }else{
+                $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+        } else {
+            $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->page_construct('suppliers/debit_memo', $meta, $this->data);
+        }
+    }
+
+    public function edit_payment($id = null){
+        $this->sma->checkPermissions(false, true);
+        $this->form_validation->set_rules('payment_id', $this->lang->line('payment_id'), 'required');
+        $this->form_validation->set_rules('amount', $this->lang->line('amount'), 'required');
+
+        if ($this->form_validation->run() == true) {
+            $payment_id      = $this->input->post('payment_id');
+            $amount          = $this->input->post('amount');
+
+            $payment_detail  = $this->purchases_model->getPaymentByID($payment_id);
+            $purchase_detail = $this->purchases_model->getPurchaseByID($payment_detail->purchase_id);
+            
+            $old_amount = $payment_detail->amount;
+
+            $difference = $amount - $old_amount;
+            $accounts_reference_no = 'PM-'.$payment_detail->reference_no;
+            $accounts_entry = $this->purchases_model->getAccountsEntryByReferenceNo($accounts_reference_no);
+            $entry_id = $accounts_entry->id;
+            $dr_total = $accounts_entry->dr_total;
+            $cr_total = $accounts_entry->cr_total;
+
+            $new_dr_total = $dr_total + $difference;
+            $new_cr_total = $cr_total + $difference;
+
+            $updated_price_for_purchase = $purchase_detail->paid + $difference;
+
+            $debit_entry = null;
+            $credit_entry = null;
+
+            $this->db->update('payments', ['amount' => $amount], ['id' => $payment_id]);
+            $this->db->update('purchases', ['paid' => $updated_price_for_purchase], ['id' => $payment_detail->purchase_id]);
+
+            $this->db->update('sma_accounts_entries', ['dr_total' => $new_dr_total, 'cr_total' => $new_cr_total], ['id' => $entry_id]);
+
+            // Debit Entry
+            $this->db->select('*');
+            $this->db->from('sma_accounts_entryitems');
+            $this->db->where('entry_id', $entry_id);
+            $this->db->where('dc', 'D');
+            $this->db->order_by('amount', 'DESC');
+            $this->db->limit(1);
+
+            $query = $this->db->get();
+
+            if ($query->num_rows() > 0) {
+                $debit_entry = $query->row();
+            }
+
+            // Credit Entry
+            $q = $this->db->get_where('sma_accounts_entryitems', ['entry_id' => $entry_id, 'dc' => 'C'], 1);
+            if ($q->num_rows() > 0) {
+                $credit_entry = $q->row();
+            }
+
+            if($debit_entry != null){
+                $debit_entry_amount = $debit_entry->amount + $difference;
+                $this->db->update('sma_accounts_entryitems', ['amount' => $debit_entry_amount], ['id' => $debit_entry->id]);
+            }
+
+            if($credit_entry != null){
+                $credit_entry_amount = $credit_entry->amount + $difference;
+                $this->db->update('sma_accounts_entryitems', ['amount' => $credit_entry_amount], ['id' => $credit_entry->id]);
+            }
+
+            admin_redirect('suppliers/list_payments');
+        }else{
+            if ($this->input->get('id')) {
+                $id = $this->input->get('id');
+            }
+    
+            $this->data['payment']  = $this->purchases_model->getPaymentByID($id);
+            $this->page_construct('suppliers/edit_payment', $meta, $this->data);
+        }
+    }
+
+    public function list_payments(){
+        $this->data['payments'] = $this->purchases_model->getPayments();
+        $this->page_construct('suppliers/list_payments', $meta, $this->data);
+    }
+
+    public function add_payment()
+    {
+        $this->sma->checkPermissions(false, true);
+        $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
+
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('add payment')]];
+        $meta = ['page_title' => lang('Supplier Payments'), 'bc' => $bc];
+
+        if ($this->form_validation->run() == true) {
+            $supplier_id      = $this->input->post('supplier');
+            $payments_array      = $this->input->post('payment_amount');
+            $item_ids = $this->input->post('item_id');
+            $reference_no = $this->input->post('reference_no');
+            $payment_total = $this->input->post('payment_total');
+            $ledger_account = $this->input->post('ledger_account');
+            $bank_charges_account = $this->input->post('bank_charges_account');
+            $bank_charges = $this->input->post('bank_charges');
+            //$date = $this->input->post('date');
+            $due_amount_array = $this->input->post('due_amount');
+
+            $date_fmt = $this->input->post('date');
+
+            $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
+            $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
+            
+            if($isDateValid){
+                $date = $date_fmt;
+            }else{
+                $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
+                $date = $formattedDate->format('Y-m-d');
+            }
+
+            for($i = 0; $i < count($payments_array); $i++){
+                $payment_amount = $payments_array[$i];
+                $item_id = $item_ids[$i];
+                $due_amount = $due_amount_array[$i];
+                if($payment_amount > $due_amount){
+                    $this->session->set_flashdata('error', 'Amount paid cannot be greater than due amount');
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+            }
+
+            if(array_sum($payments_array) == $payment_total){
+                for ($i = 0; $i < count($payments_array); $i++) {
+                    $payment_amount = $payments_array[$i];
+                    $item_id = $item_ids[$i];
+                    $due_amount = $due_amount_array[$i];
+                    if($payment_amount > 0){
+                        $this->update_purchase_order($item_id, $payment_amount);
+                        $this->make_supplier_payment($item_id, $payment_amount, $reference_no, $date);
+                    }
+                }
+
+                $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
+                $this->session->set_flashdata('message', lang('Payment invoice added Successfully!'));
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }else{
+                $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+            
+        } else {
+            $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->page_construct('suppliers/add_payment', $meta, $this->data);
+        }
+    }
+
+    public function pending_invoices(){
+        $supplier_id = $_GET['supplier_id'];
+        if ($rows = $this->purchases_model->getPendingInvoicesBySupplier($supplier_id)) {
+            $data = json_encode($rows);
+        } else {
+            $data = false;
+        }
+        echo $data;
     }
 
     public function add()

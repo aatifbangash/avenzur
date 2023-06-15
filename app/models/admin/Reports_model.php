@@ -9,6 +9,197 @@ class Reports_model extends CI_Model
         parent::__construct();
     }
 
+    public function getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account){
+        $response = array();
+
+        $this->db
+                ->select('COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+                ->from('sma_accounts_entryitems')
+                //->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+                ->where('sma_accounts_entries.date <', $start_date)
+                ->group_by('sma_accounts_entryitems.dc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        $this->db
+                ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code, companies.company')
+                ->from('sma_accounts_entryitems')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+                ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
+                ->join('companies', 'companies.ledger_account=sma_accounts_entryitems.ledger_id')
+                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+                ->where('sma_accounts_entries.date >=', $start_date)
+                ->where('sma_accounts_entries.date <=', $end_date)
+                ->order_by('sma_accounts_entries.date asc');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        $response_array = array('ob' => $data_res, 'report' => $data);
+
+        return $response_array;
+    }
+
+    public function getGeneralLedgerTrialBalance($start_date, $end_date){
+        $response = array();
+
+        $this->db
+                ->select('accounts_ledgers.id, accounts_ledgers.name, accounts_ledgers.notes, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+                ->from('accounts_ledgers')
+                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=accounts_ledgers.id')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+                ->where('sma_accounts_entries.date >=', $start_date)
+                ->where('sma_accounts_entries.date <=', $end_date)
+                ->group_by('accounts_ledgers.id, sma_accounts_entryitems.dc')
+                ->order_by('accounts_ledgers.name asc');
+            $q = $this->db->get();
+                if ($q->num_rows() > 0) {
+                    foreach (($q->result()) as $row) {
+                        $data[] = $row;
+                    }
+                } else {
+                    $data = array();
+                }
+    
+            $response['trs'] = $data;
+
+        $this->db
+                ->select('accounts_ledgers.id, accounts_ledgers.name, accounts_ledgers.notes, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+                ->from('accounts_ledgers')
+                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=accounts_ledgers.id')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+                ->where('sma_accounts_entries.date <', $start_date)
+                ->group_by('accounts_ledgers.id, sma_accounts_entryitems.dc')
+                ->order_by('accounts_ledgers.name asc');
+
+            $q = $this->db->get();
+                if ($q->num_rows() > 0) {
+                    foreach (($q->result()) as $row) {
+                        $data2[] = $row;
+                    }
+                } else {
+                    $data2 = array();
+                }
+    
+            $response['ob'] = $data2;
+    
+            return $response;
+    }
+
+    public function getSuppliersTrialBalance($start_date, $end_date){
+
+        $response = array();
+
+        $this->db
+                ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+                ->from('companies')
+                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+                ->where('companies.group_name', 'supplier')
+                ->where('sma_accounts_entries.date >=', $start_date)
+                ->where('sma_accounts_entries.date <=', $end_date)
+                ->group_by('companies.id, sma_accounts_entryitems.dc')
+                ->order_by('companies.company asc');
+
+            $q = $this->db->get();
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data[] = $row;
+                }
+            } else {
+                $data = array();
+            }
+
+        $response['trs'] = $data;
+
+        $this->db
+                ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+                ->from('companies')
+                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+                ->where('companies.group_name', 'supplier')
+                ->where('sma_accounts_entries.date <', $start_date)
+                ->group_by('companies.id, sma_accounts_entryitems.dc')
+                ->order_by('companies.company asc');
+
+            $q = $this->db->get();
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data2[] = $row;
+                }
+            } else {
+                $data2 = array();
+            }
+
+        $response['ob'] = $data2;
+
+        return $response;
+    }
+
+    public function getCustomersTrialBalance($start_date, $end_date){
+
+        $response = array();
+
+        $this->db
+                ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+                ->from('companies')
+                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+                ->where('companies.group_name', 'customer')
+                ->where('sma_accounts_entries.date >=', $start_date)
+                ->where('sma_accounts_entries.date <=', $end_date)
+                ->group_by('companies.id, sma_accounts_entryitems.dc')
+                ->order_by('companies.company asc');
+
+            $q = $this->db->get();
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data[] = $row;
+                }
+            } else {
+                $data = array();
+            }
+
+        $response['trs'] = $data;
+
+        $this->db
+                ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+                ->from('companies')
+                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+                ->where('companies.group_name', 'customer')
+                ->where('sma_accounts_entries.date <', $start_date)
+                ->group_by('companies.id, sma_accounts_entryitems.dc')
+                ->order_by('companies.company asc');
+
+            $q = $this->db->get();
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data2[] = $row;
+                }
+            } else {
+                $data2 = array();
+            }
+
+        $response['ob'] = $data2;
+
+        return $response;
+    }
+
     public function getBestSeller($start_date, $end_date, $warehouse_id = null)
     {
         $this->db

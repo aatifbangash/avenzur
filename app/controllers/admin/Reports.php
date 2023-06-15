@@ -16,6 +16,7 @@ class Reports extends MY_Controller
         $this->lang->admin_load('reports', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('reports_model');
+        $this->load->admin_model('companies_model');
         $this->data['pb'] = [
             'cash'       => lang('cash'),
             'CC'         => lang('CC'),
@@ -3069,6 +3070,327 @@ class Reports extends MY_Controller
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
         $meta = ['page_title' => lang('suppliers_report'), 'bc' => $bc];
         $this->page_construct('reports/suppliers', $meta, $this->data);
+    }
+
+    public function general_ledger_trial_balance(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date   = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+            $trial_balance_array = $this->reports_model->getGeneralLedgerTrialBalance($start_date, $end_date);
+
+            foreach($trial_balance_array['trs'] as $supplier_data){
+
+                $idExists = false;
+                foreach ($response_arr as $response_item) {
+                    if ($response_item->id == $supplier_data->id) {
+                        $idExists = true;
+                        if($supplier_data->dc == 'D'){
+                            $response_item->trs_debit = $response_item->trs_debit + $supplier_data->total_amount;
+                        }else if($supplier_data->dc == 'C'){
+                            $response_item->trs_credit = $response_item->trs_credit + $supplier_data->total_amount;
+                        }
+                        break;
+                    }
+                }
+                // check object exists or not
+                if(!$idExists){
+                    $obj = new stdClass();
+                    $obj->id = $supplier_data->id;
+                    $obj->name = $supplier_data->name;
+                    $obj->notes = $supplier_data->notes;
+                    $obj->trs_debit = 0;
+                    $obj->trs_credit = 0;
+                    $obj->ob_debit = 0;
+                    $obj->ob_credit = 0;
+                    if($supplier_data->dc == 'D'){
+                        $obj->trs_debit = $supplier_data->total_amount;
+                    }else if($supplier_data->dc == 'C'){
+                        $obj->trs_credit = $supplier_data->total_amount;
+                    }
+                    array_push($response_arr, $obj);  
+                }
+            }
+
+            foreach($trial_balance_array['ob'] as $supplier_data){
+                foreach ($response_arr as $response_item) {
+                    if ($response_item->id == $supplier_data->id) {
+                        if($supplier_data->dc == 'D'){
+                            $response_item->ob_debit = $supplier_data->total_amount;
+                        }else if($supplier_data->dc == 'C'){
+                            $response_item->ob_credit = $supplier_data->total_amount;
+                        }
+                        
+                    }
+                }
+            }
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['trial_balance'] = $response_arr;
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
+            $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
+            $this->page_construct('reports/general_ledger_trial_balance', $meta, $this->data);
+        }else{
+            
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
+            $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
+            $this->page_construct('reports/general_ledger_trial_balance', $meta, $this->data);
+        }
+    }
+
+    public function customer_statement(){
+        $this->sma->checkPermissions('customers');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date   = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        $this->data['suppliers']  = $this->site->getAllCompanies('customer');
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+            $supplier_id      = $this->input->post('customer');
+            
+            $supplier_details  = $this->companies_model->getCompanyByID($supplier_id);
+            $ledger_account = $supplier_details->ledger_account;
+            $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
+            
+            $total_ob = 0;
+            $total_ob_credit = 0;
+            $total_ob_debit = 0;
+            $ob_type = '';
+            foreach ($supplier_statement['ob'] as $ob){
+                if($ob->dc == 'D'){
+                    $total_ob_debit =  $ob->total_amount;
+                }else if($ob->dc == 'C'){
+                    $total_ob_credit =  $ob->total_amount;
+                }
+            }
+            
+            $total_ob = $total_ob_credit - $total_ob_debit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['customer_id'] = $supplier_id;
+            $this->data['ob_type'] = $ob_type;
+            $this->data['total_ob'] = $total_ob;
+            $this->data['supplier_statement'] = $supplier_statement['report'];
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
+            $meta = ['page_title' => lang('customer_statement'), 'bc' => $bc];
+            $this->page_construct('reports/customers_statement', $meta, $this->data);
+
+        }else{
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
+            $meta = ['page_title' => lang('customer_statement'), 'bc' => $bc];
+            $this->page_construct('reports/customers_statement', $meta, $this->data);
+        }
+        
+    }
+
+    public function supplier_statement(){
+        $this->sma->checkPermissions('suppliers');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date   = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+            $supplier_id      = $this->input->post('supplier');
+            
+            $supplier_details  = $this->companies_model->getCompanyByID($supplier_id);
+            $ledger_account = $supplier_details->ledger_account;
+            $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
+            
+            $total_ob = 0;
+            $total_ob_credit = 0;
+            $total_ob_debit = 0;
+            $ob_type = '';
+            foreach ($supplier_statement['ob'] as $ob){
+                if($ob->dc == 'D'){
+                    $total_ob_debit =  $ob->total_amount;
+                }else if($ob->dc == 'C'){
+                    $total_ob_credit =  $ob->total_amount;
+                }
+            }
+            
+            $total_ob = $total_ob_credit - $total_ob_debit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['supplier_id'] = $supplier_id;
+            $this->data['ob_type'] = $ob_type;
+            $this->data['total_ob'] = $total_ob;
+            $this->data['supplier_statement'] = $supplier_statement['report'];
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
+            $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
+            $this->page_construct('reports/suppliers_statement', $meta, $this->data);
+
+        }else{
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
+            $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
+            $this->page_construct('reports/suppliers_statement', $meta, $this->data);
+        }
+        
+    }
+
+    public function suppliers_trial_balance(){
+        $this->sma->checkPermissions('suppliers');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date   = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+            $trial_balance_array = $this->reports_model->getSuppliersTrialBalance($start_date, $end_date);
+            
+            foreach($trial_balance_array['trs'] as $supplier_data){
+
+                $idExists = false;
+                foreach ($response_arr as $response_item) {
+                    if ($response_item->id == $supplier_data->id) {
+                        $idExists = true;
+                        if($supplier_data->dc == 'D'){
+                            $response_item->trs_debit = $response_item->trs_debit + $supplier_data->total_amount;
+                        }else if($supplier_data->dc == 'C'){
+                            $response_item->trs_credit = $response_item->trs_credit + $supplier_data->total_amount;
+                        }
+                        break;
+                    }
+                }
+                // check object exists or not
+                if(!$idExists){
+                    $obj = new stdClass();
+                    $obj->id = $supplier_data->id;
+                    $obj->name = $supplier_data->company;
+                    $obj->ledger_account = $supplier_data->ledger_account;
+                    $obj->trs_debit = 0;
+                    $obj->trs_credit = 0;
+                    $obj->ob_debit = 0;
+                    $obj->ob_credit = 0;
+                    if($supplier_data->dc == 'D'){
+                        $obj->trs_debit = $supplier_data->total_amount;
+                    }else if($supplier_data->dc == 'C'){
+                        $obj->trs_credit = $supplier_data->total_amount;
+                    }
+                    array_push($response_arr, $obj);  
+                }
+            }
+
+            foreach($trial_balance_array['ob'] as $supplier_data){
+                foreach ($response_arr as $response_item) {
+                    if ($response_item->id == $supplier_data->id) {
+                        if($supplier_data->dc == 'D'){
+                            $response_item->ob_debit = $supplier_data->total_amount;
+                        }else if($supplier_data->dc == 'C'){
+                            $response_item->ob_credit = $supplier_data->total_amount;
+                        }
+                        
+                    }
+                }
+            }
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['trial_balance'] = $response_arr;
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
+            $meta = ['page_title' => lang('suppliers_report'), 'bc' => $bc];
+            $this->page_construct('reports/suppliers_trial_balance', $meta, $this->data);
+        }else{
+            
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
+            $meta = ['page_title' => lang('suppliers_report'), 'bc' => $bc];
+            $this->page_construct('reports/suppliers_trial_balance', $meta, $this->data);
+        }
+        
+    }
+
+    public function customers_trial_balance(){
+        $this->sma->checkPermissions('customers');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date   = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+            $trial_balance_array = $this->reports_model->getCustomersTrialBalance($start_date, $end_date);
+            
+            foreach($trial_balance_array['trs'] as $supplier_data){
+
+                $idExists = false;
+                foreach ($response_arr as $response_item) {
+                    if ($response_item->id == $supplier_data->id) {
+                        $idExists = true;
+                        if($supplier_data->dc == 'D'){
+                            $response_item->trs_debit = $response_item->trs_debit + $supplier_data->total_amount;
+                        }else if($supplier_data->dc == 'C'){
+                            $response_item->trs_credit = $response_item->trs_credit + $supplier_data->total_amount;
+                        }
+                        break;
+                    }
+                }
+                // check object exists or not
+                if(!$idExists){
+                    $obj = new stdClass();
+                    $obj->id = $supplier_data->id;
+                    $obj->name = $supplier_data->company;
+                    $obj->ledger_account = $supplier_data->ledger_account;
+                    $obj->trs_debit = 0;
+                    $obj->trs_credit = 0;
+                    $obj->ob_debit = 0;
+                    $obj->ob_credit = 0;
+                    if($supplier_data->dc == 'D'){
+                        $obj->trs_debit = $supplier_data->total_amount;
+                    }else if($supplier_data->dc == 'C'){
+                        $obj->trs_credit = $supplier_data->total_amount;
+                    }
+                    array_push($response_arr, $obj);  
+                }
+            }
+
+            foreach($trial_balance_array['ob'] as $supplier_data){
+                foreach ($response_arr as $response_item) {
+                    if ($response_item->id == $supplier_data->id) {
+                        if($supplier_data->dc == 'D'){
+                            $response_item->ob_debit = $supplier_data->total_amount;
+                        }else if($supplier_data->dc == 'C'){
+                            $response_item->ob_credit = $supplier_data->total_amount;
+                        }
+                        
+                    }
+                }
+            }
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['trial_balance'] = $response_arr;
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_report')]];
+            $meta = ['page_title' => lang('customers_report'), 'bc' => $bc];
+            $this->page_construct('reports/customers_trial_balance', $meta, $this->data);
+        }else{
+            
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_report')]];
+            $meta = ['page_title' => lang('customers_report'), 'bc' => $bc];
+            $this->page_construct('reports/customers_trial_balance', $meta, $this->data);
+        }
+        
     }
 
     public function tax()

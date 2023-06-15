@@ -375,6 +375,7 @@ class Purchases extends MY_Controller
         /*Accounts Entries*/
         $entry = array(
             'entrytype_id' => 4,
+            'transaction_type' => 'supplierpayment',
             'number'       => 'PO-'.$inv->reference_no,
             'date'         => date('Y-m-d'),
             'dr_total'     => $this->sma->formatDecimal($amount + $this->Settings->bank_fees, 4),
@@ -1293,6 +1294,7 @@ class Purchases extends MY_Controller
              /*Accounts Entries*/
             $entry = array(
                     'entrytype_id' => 4,
+                    'transaction_type' => 'purchaseorder',
                     'number'       => 'PO-'.$inv->reference_no,
                     'date'         => date('Y-m-d'), 
                     'dr_total'     => $inv->grand_total,
@@ -2006,6 +2008,7 @@ class Purchases extends MY_Controller
         /*Accounts Entries*/
         $entry = array(
             'entrytype_id' => 4,
+            'transaction_type' => 'returnorder',
             'number'       => 'RO-'.$inv->reference_no,
             'date'         => date('Y-m-d'), 
             'dr_total'     => $inv->grand_total,

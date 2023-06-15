@@ -20,6 +20,36 @@ class Sales_model extends CI_Model
         return false;
     }
 
+    public function update_sale_paid_amount($id, $amount){
+        $q = $this->db->get_where('sales', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            $row = $q->row();
+            $paid_amount = $row->paid;
+            $new_amount = $paid_amount + $amount;
+            
+            $data = array(
+                'paid' => $new_amount
+            );
+    
+            $this->db->update('sales', $data, array('id' => $id));
+        }
+        return false;
+    }
+
+    public function getPendingInvoicesByCustomer($customer_id){
+        $this->db->order_by('date', 'asc');
+        $q = $this->db->get_where('sales', ['customer_id' => $customer_id, 'sale_status' => 'pending']);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data; 
+        }else{
+            $data = [];
+            return $data;
+        }
+    }
+
     /* ----------------- Gift Cards --------------------- */
 
     public function addGiftCard($data = [], $ca_data = [], $sa_data = [])
@@ -375,6 +405,32 @@ class Sales_model extends CI_Model
         $q = $this->db->get_where('payments', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
+        }
+        return false;
+    }
+
+    public function getAccountsEntryByReferenceNo($reference_number){
+        $q = $this->db->get_where('sma_accounts_entries', ['number' => $reference_number], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+
+        return false;
+    }
+
+    public function getPayments(){
+        $this->db->select('payments.id, payments.date, payments.paid_by, payments.amount, payments.reference_no, payments.note, users.first_name, users.last_name, companies.company, type')
+            ->join('sales', 'sales.id=payments.sale_id', 'left')
+            ->join('companies', 'companies.id=sales.customer_id', 'left')
+            ->join('users', 'users.id=payments.created_by', 'left')
+            ->where('type', 'sent')
+            ->where('payments.sale_id >', 0);
+        $q = $this->db->get('payments');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
         }
         return false;
     }
