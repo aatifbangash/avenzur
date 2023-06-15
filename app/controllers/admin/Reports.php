@@ -330,13 +330,15 @@ class Reports extends MY_Controller
 
     public function get_deposits($company_id = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->sma->checkPermissions('customers', true);
         $this->load->library('datatables');
         $this->datatables
             ->select("date, amount, paid_by, CONCAT({$this->db->dbprefix('users')}.first_name, ' ', {$this->db->dbprefix('users')}.last_name) as created_by, note", false)
             ->from('deposits')
             ->join('users', 'users.id=deposits.created_by', 'left')
-            ->where($this->db->dbprefix('deposits') . '.company_id', $company_id);
+            ->where($this->db->dbprefix('deposits') . '.company_id', $company_id)
+            ->where($this->db->dbprefix('deposits') . '.business_id', $business_id);
         echo $this->datatables->generate();
     }
 
@@ -1032,6 +1034,7 @@ class Reports extends MY_Controller
     public function getCustomers($pdf = null, $xls = null)
     {
         $this->sma->checkPermissions('customers', true);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         if ($pdf || $xls) {
             $this->db
@@ -1039,9 +1042,11 @@ class Reports extends MY_Controller
                 ->from('companies')
                 ->join('sales', 'sales.customer_id=companies.id')
                 ->where('companies.group_name', 'customer')
+                ->where('companies.business_id', $business_id)
+                ->where('sales.business_id', $business_id)
                 ->order_by('companies.company asc')
                 ->group_by('companies.id');
-
+                
             $q = $this->db->get();
             if ($q->num_rows() > 0) {
                 foreach (($q->result()) as $row) {
@@ -1092,7 +1097,8 @@ class Reports extends MY_Controller
             $this->session->set_flashdata('error', lang('nothing_found'));
             redirect($_SERVER['HTTP_REFERER']);
         } else {
-            $s = '( SELECT customer_id, count(' . $this->db->dbprefix('sales') . ".id) as total, COALESCE(sum(grand_total), 0) as total_amount, COALESCE(sum(paid), 0) as paid, ( COALESCE(sum(grand_total), 0) - COALESCE(sum(paid), 0)) as balance from {$this->db->dbprefix('sales')} GROUP BY {$this->db->dbprefix('sales')}.customer_id ) FS";
+
+            $s = '( SELECT customer_id, count(' . $this->db->dbprefix('sales') . ".id) as total, COALESCE(sum(grand_total), 0) as total_amount, COALESCE(sum(paid), 0) as paid, ( COALESCE(sum(grand_total), 0) - COALESCE(sum(paid), 0)) as balance from {$this->db->dbprefix('sales')} WHERE {$this->db->dbprefix('sales')}.business_id = {$business_id}  GROUP BY {$this->db->dbprefix('sales')}.customer_id ) FS";
 
             $this->load->library('datatables');
             $this->datatables
@@ -1100,6 +1106,7 @@ class Reports extends MY_Controller
                 ->from('companies')
                 ->join($s, 'FS.customer_id=companies.id')
                 ->where('companies.group_name', 'customer')
+                ->where('companies.business_id', $business_id)
                 ->group_by('companies.id')
                 ->add_column('Actions', "<div class='text-center'><a class=\"tip\" title='" . lang('view_report') . "' href='" . admin_url('reports/customer_report/$1') . "'><span class='label label-primary'>" . lang('view_report') . '</span></a></div>', 'id')
                 ->unset_column('id');
@@ -1288,6 +1295,7 @@ class Reports extends MY_Controller
     public function getPaymentsReport($pdf = null, $xls = null)
     {
         $this->sma->checkPermissions('payments', true);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
 
         $user           = $this->input->get('user') ? $this->input->get('user') : null;
         $supplier       = $this->input->get('supplier') ? $this->input->get('supplier') : null;
@@ -1316,6 +1324,7 @@ class Reports extends MY_Controller
                 ->from('payments')
                 ->join('sales', 'payments.sale_id=sales.id', 'left')
                 ->join('purchases', 'payments.purchase_id=purchases.id', 'left')
+                ->where('sales.business_id', $business_id)
                 ->group_by('payments.id')
                 ->order_by('payments.date desc');
 
@@ -1422,6 +1431,7 @@ class Reports extends MY_Controller
                 ->from('payments')
                 ->join('sales', 'payments.sale_id=sales.id', 'left')
                 ->join('purchases', 'payments.purchase_id=purchases.id', 'left')
+                ->where('sales.business_id', $business_id)
                 ->group_by('payments.id');
 
             if ($user) {
@@ -1840,6 +1850,7 @@ class Reports extends MY_Controller
 
     public function getQuantityAlerts($warehouse_id = null, $pdf = null, $xls = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->sma->checkPermissions('quantity_alerts', true);
         if (!$this->Owner && !$warehouse_id) {
             $user         = $this->site->getUser();
@@ -1852,6 +1863,7 @@ class Reports extends MY_Controller
                     ->select('image, code, name, wp.quantity, alert_quantity')
                     ->from('products')
                     ->join("( SELECT * from {$this->db->dbprefix('warehouses_products')} WHERE warehouse_id = {$warehouse_id}) wp", 'products.id=wp.product_id', 'left')
+                    ->where('products.business_id', $business_id)
                     ->where('alert_quantity >= wp.quantity', null)
                     ->or_where('wp.quantity', null)
                     ->where('track_quantity', 1)
@@ -1861,6 +1873,7 @@ class Reports extends MY_Controller
                 $this->db
                     ->select('image, code, name, quantity, alert_quantity')
                     ->from('products')
+                    ->where('business_id', $business_id)
                     ->where('alert_quantity >= quantity', null)
                     ->or_where('quantity', null)
                     ->where('track_quantity', 1)
@@ -1912,6 +1925,7 @@ class Reports extends MY_Controller
                     ->select('image, code, name, wp.quantity as quantity, alert_quantity')
                     ->from('products')
                     ->join("( SELECT * from {$this->db->dbprefix('warehouses_products')} WHERE warehouse_id = {$warehouse_id}) wp", 'products.id=wp.product_id', 'left')
+                    ->where('products.business_id', $business_id)
                     ->group_start()
                     ->where('alert_quantity >= wp.quantity', null)
                     ->or_where('wp.quantity', null)
@@ -1922,6 +1936,7 @@ class Reports extends MY_Controller
                 $this->datatables
                     ->select('image, code, name, quantity, alert_quantity')
                     ->from('products')
+                    ->where('business_id', $business_id)
                     ->group_start()
                     ->where('alert_quantity >= quantity', null)
                     ->or_where('quantity', null)
@@ -1935,6 +1950,7 @@ class Reports extends MY_Controller
 
     public function getQuotesReport($pdf = null, $xls = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($this->input->get('product')) {
             $product = $this->input->get('product');
         } else {
@@ -1985,6 +2001,7 @@ class Reports extends MY_Controller
                 ->from('quotes')
                 ->join('quote_items', 'quote_items.quote_id=quotes.id', 'left')
                 ->join('warehouses', 'warehouses.id=quotes.warehouse_id', 'left')
+                ->where('quotes.business_id',$business_id)
                 ->group_by('quotes.id');
 
             if ($user) {
@@ -2069,6 +2086,7 @@ class Reports extends MY_Controller
                 ->from('quotes')
                 ->join($qi, 'FQI.quote_id=quotes.id', 'left')
                 ->join('warehouses', 'warehouses.id=quotes.warehouse_id', 'left')
+                ->where('quotes.business_id',$business_id)
                 ->group_by('quotes.id');
 
             if ($user) {
@@ -2219,6 +2237,8 @@ class Reports extends MY_Controller
 
     public function getSalesReport($pdf = null, $xls = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+
         $this->sma->checkPermissions('sales', true);
         $product      = $this->input->get('product') ? $this->input->get('product') : null;
         $user         = $this->input->get('user') ? $this->input->get('user') : null;
@@ -2244,6 +2264,7 @@ class Reports extends MY_Controller
                 ->from('sales')
                 ->join('sale_items', 'sale_items.sale_id=sales.id', 'left')
                 ->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')
+                ->where('sales.business_id', $business_id)
                 ->group_by('sales.id')
                 ->order_by('sales.date desc');
 
@@ -2357,7 +2378,8 @@ class Reports extends MY_Controller
                 ->select("DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, biller, customer, FSI.item_nane as iname, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.id as id", false)
                 ->from('sales')
                 ->join($si, 'FSI.sale_id=sales.id', 'left')
-                ->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left');
+                ->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')
+                ->where('sales.business_id', $business_id);
             // ->group_by('sales.id');
 
             if ($user) {

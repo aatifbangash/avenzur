@@ -110,13 +110,15 @@ class Reports_model extends CI_Model
 
     public function getCustomerOpenReturns($customer_id)
     {
-        $this->db->from('returns')->where('customer_id', $customer_id);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->from('returns')->where('customer_id', $customer_id)->where('business_id', $business_id);
         return $this->db->count_all_results();
     }
 
     public function getCustomerQuotes($customer_id)
     {
-        $this->db->from('quotes')->where('customer_id', $customer_id);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->from('quotes')->where('customer_id', $customer_id)->where('business_id', $business_id);
         return $this->db->count_all_results();
     }
 
@@ -133,7 +135,8 @@ class Reports_model extends CI_Model
 
     public function getCustomerSales($customer_id)
     {
-        $this->db->from('sales')->where('customer_id', $customer_id);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $this->db->from('sales')->where('customer_id', $customer_id)->where('business_id', $business_id);
         return $this->db->count_all_results();
     }
 
@@ -383,8 +386,10 @@ class Reports_model extends CI_Model
 
     public function getSalesTotals($customer_id)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('SUM(COALESCE(grand_total, 0)) as total_amount, SUM(COALESCE(paid, 0)) as paid', false)
-            ->where('customer_id', $customer_id);
+            ->where('customer_id', $customer_id)
+            ->where('business_id', $business_id);
         $q = $this->db->get('sales');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -394,10 +399,11 @@ class Reports_model extends CI_Model
 
     public function getStaff()
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         if ($this->Admin) {
             $this->db->where('group_id !=', 1);
         }
-        $this->db->where('group_id !=', 3)->where('group_id !=', 4);
+        $this->db->where('group_id !=', 3)->where('group_id !=', 4)->where('business_id', $business_id);
         $q = $this->db->get('users');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
