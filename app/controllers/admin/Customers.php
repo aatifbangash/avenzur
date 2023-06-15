@@ -233,7 +233,7 @@ class Customers extends MY_Controller
             if($isDateValid){
                 $date = $date_fmt;
             }else{
-                $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
+                $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
                 $date = $formattedDate->format('Y-m-d');
             }
 
@@ -395,7 +395,7 @@ class Customers extends MY_Controller
             if($isDateValid){
                 $date = $date_fmt;
             }else{
-                $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
+                $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
                 $date = $formattedDate->format('Y-m-d');
             }
 
@@ -568,7 +568,7 @@ class Customers extends MY_Controller
             if($isDateValid){
                 $date = $date_fmt;
             }else{
-                $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
+                $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
                 $date = $formattedDate->format('Y-m-d');
             }
             

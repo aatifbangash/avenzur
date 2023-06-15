@@ -291,7 +291,7 @@ class Suppliers extends MY_Controller
             if($isDateValid){
                 $date = $date_fmt;
             }else{
-                $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
+                $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
                 $date = $formattedDate->format('Y-m-d');
             }
 
@@ -399,7 +399,7 @@ class Suppliers extends MY_Controller
             if($isDateValid){
                 $date = $date_fmt;
             }else{
-                $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
+                $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
                 $date = $formattedDate->format('Y-m-d');
             }
             
@@ -553,17 +553,17 @@ class Suppliers extends MY_Controller
             $due_amount_array = $this->input->post('due_amount');
 
             $date_fmt = $this->input->post('date');
-
+            
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
             $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
             
             if($isDateValid){
                 $date = $date_fmt;
             }else{
-                $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
+                $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
                 $date = $formattedDate->format('Y-m-d');
             }
-
+            
             for($i = 0; $i < count($payments_array); $i++){
                 $payment_amount = $payments_array[$i];
                 $item_id = $item_ids[$i];
