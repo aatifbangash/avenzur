@@ -1437,6 +1437,15 @@ class Pos_model extends CI_Model
         return false;
     }
 
+    public function getPaymentType($id)
+    {
+        $q = $this->db->get_where('payments', ['sale_id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     // public function deleteBill($id)
     // {
     //     if ($this->db->delete('sma_suspended_bills', ['id' => $id])) {

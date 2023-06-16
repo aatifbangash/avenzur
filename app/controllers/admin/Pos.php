@@ -1058,6 +1058,11 @@ class Pos extends MY_Controller
 
                      $sid = $sale['sale_id'];
                     // $sid = 173;
+
+
+                    
+                    $payemntsType = $this->pos_model->getPaymentType($sid);
+                    $paidBillType = $payemntsType->paid_by;
                     
                     $inv = $this->sales_model->getSaleByID($sid);
                     if($inv->sale_invoice == 0){
@@ -1128,17 +1133,30 @@ class Pos extends MY_Controller
                                 );
                         }
 
-                      
-                             // //credit card
-                             $entryitemdata[] = array(
-                                'Entryitem' => array(
-                                    'entry_id' => $insert_id,
-                                    'dc' => 'D',
-                                    'ledger_id' => 121,
-                                    'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
-                                    'narration' => 'Credit Card'
-                                )
+                            if($paidBillType =="cash"){
+                            // //cash
+                            $entryitemdata[] = array(
+                            'Entryitem' => array(
+                            'entry_id' => $insert_id,
+                            'dc' => 'D',
+                            'ledger_id' => 123,
+                            'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
+                            'narration' => 'cash'
+                            )
                             );
+                            }else{
+                               // //credit card
+                            $entryitemdata[] = array(
+                                'Entryitem' => array(
+                                'entry_id' => $insert_id,
+                                'dc' => 'D',
+                                'ledger_id' => 121,
+                                'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
+                                'narration' => 'Credit Card'
+                                )
+                                );  
+                            }
+                          
 
                            // //discount
                            $entryitemdata[] = array(
