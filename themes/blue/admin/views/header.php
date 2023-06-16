@@ -1011,7 +1011,6 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('staff_report'); ?></span>
                                         </a>
                                     </li>
-<<<<<<< Updated upstream
                                     <li id="reports_supplier_trial_balance_report">
                                         <a href="<?= admin_url('reports/suppliers_trial_balance') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('suppliers_trial_balance_report'); ?></span>
