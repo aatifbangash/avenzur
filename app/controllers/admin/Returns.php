@@ -848,7 +848,10 @@ class Returns extends MY_Controller
                 $row->batch_no        = '';
                 $row->expiry          = '';
                 $row->bonus           = '0';
-                
+                $row->dis1            = 0;
+                $row->dis2            = 0;
+
+
                 $combo_items          = false;
                 if ($row->type == 'combo') {
                     $combo_items = $this->site->getProductComboItems($row->id);

@@ -540,7 +540,7 @@
 
 
 
-<script>
+<!-- <script>
 $(document).ready(function (e) {
     $('body a, body button').attr('tabindex', -1);
     check_add_item_val();
@@ -1692,4 +1692,4 @@ if (typeof Storage === 'undefined') {
     });
 }
 
-</script>
+</script> -->
