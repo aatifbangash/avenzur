@@ -26,6 +26,89 @@ class Reports_model extends CI_Model
         return $data_res;
     }
 
+    public function getCustomerAging($duration){
+        $response = array();
+
+        $results = $this->db
+                ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date')
+                ->from('companies')
+                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+                ->where('companies.group_name', 'customer')
+                ->group_by('companies.id, sma_accounts_entryitems.dc')
+                ->order_by('
+                    CASE
+                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1
+                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 60 DAY) THEN 2
+                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 90 DAY) THEN 3
+                        ELSE 4
+                    END
+                ')
+                ->order_by('companies.company asc')
+                ->get()
+                ->result();
+
+        $organizedResults = array();
+        foreach ($results as $result) {
+            $timeRange = $this->getTimeRange($result->date); // Define this function based on your needs
+            $organizedResults[$result->company][$timeRange][] = $result;
+        }
+
+        return $organizedResults;
+    }
+
+    public function getSupplierAging($duration){
+        $response = array();
+
+        $results = $this->db
+                ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date')
+                ->from('companies')
+                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+                ->where('companies.group_name', 'supplier')
+                ->group_by('companies.id, sma_accounts_entryitems.dc')
+                ->order_by('
+                    CASE
+                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1
+                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 60 DAY) THEN 2
+                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 90 DAY) THEN 3
+                        ELSE 4
+                    END
+                ')
+                ->order_by('companies.company asc')
+                ->get()
+                ->result();
+
+        $organizedResults = array();
+        foreach ($results as $result) {
+            $timeRange = $this->getTimeRange($result->date); // Define this function based on your needs
+            $organizedResults[$result->company][$timeRange][] = $result;
+        }
+
+        return $organizedResults;
+    }
+
+    public function getTimeRange($date) {
+        $currentDate = new DateTime(); // Current date
+        $entryDate = new DateTime($date); // Date of the entry
+    
+        $interval = $entryDate->diff($currentDate); // Calculate the difference between the current date and entry date
+    
+        if ($interval->days <= 30) {
+            return 'Current';
+        } elseif ($interval->days <= 60) {
+            return '1-30';
+        } elseif ($interval->days <= 90) {
+            return '31-60';
+        } elseif ($interval->days <= 120) {
+            return '61-90';
+        } elseif ($interval->days <= 150) {
+            return '91-120';
+        } else {
+            return '>120';
+        }
+    }
+
     public function getGeneralLedgerStatement($start_date, $end_date, $supplier_id, $ledger_account){
         $response = array();
 

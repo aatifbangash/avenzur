@@ -1032,6 +1032,16 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_statement_report'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="reports_supplier_aging_report">
+                                        <a href="<?= admin_url('reports/supplier_aging') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('supplier_aging_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_customer_aging_report">
+                                        <a href="<?= admin_url('reports/customer_aging') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('customer_aging_report'); ?></span>
+                                        </a>
+                                    </li>
                                 </ul>
                             </li>
                           
