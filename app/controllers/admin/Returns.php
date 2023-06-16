@@ -823,6 +823,13 @@ class Returns extends MY_Controller
                     $option_id  = false;
                 }
 
+                
+
+                $sold                   = $this->returns_model->getProductsSold($row->id);
+                $row->net_cost          = $sold->cost;
+                
+                 $row->discount1         = 0;
+                 $row->discount2         = 0;
 
                 $row->option = $option_id;
                 if ($row->promotion) {
