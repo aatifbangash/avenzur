@@ -652,11 +652,20 @@
                                             <i class="fa fa-random"></i><span class="text"> <?= lang('list_returns'); ?></span>
                                         </a>
                                     </li>
+                                    
                                     <li id="returns_add">
                                         <a class="submenu" href="<?= admin_url('returns/add'); ?>">
-                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_return'); ?></span>
+                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_Return_Customer'); ?></span>
                                         </a>
                                     </li>
+                                    
+                                    <li id="returns_add">
+                                        <a class="submenu" href="<?= admin_url('returns/add_return'); ?>">
+                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_Return_Supplier'); ?></span>
+                                        </a>
+                                    </li>
+
+
                                 </ul>
                             </li>
 
@@ -827,7 +836,7 @@
                                                 <i class="fa fa-globe"></i><span class="text"> <?= lang('Countries'); ?> </span>
                                                 <span class="chevron closed"></span>
                                             </a>
-                                            <ul>
+                                        <ul>
                                               
                                     
                                     <li id="shop_settings_pages">
@@ -1002,6 +1011,7 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('staff_report'); ?></span>
                                         </a>
                                     </li>
+<<<<<<< Updated upstream
                                     <li id="reports_supplier_trial_balance_report">
                                         <a href="<?= admin_url('reports/suppliers_trial_balance') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('suppliers_trial_balance_report'); ?></span>
@@ -1032,6 +1042,17 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_statement_report'); ?></span>
                                         </a>
                                     </li>
+=======
+
+                                    <li id="reports_incentive_report">
+                                        <a href="<?= admin_url('reports/incentives') ?>">
+                                            <i class="fa fa-users"></i>
+                                            <span class="text"> <?= lang('incentive_report'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    
+>>>>>>> Stashed changes
                                 </ul>
                             </li>
                           
@@ -1637,6 +1658,14 @@
                                             <i class="fa fa-plus-square-o"></i><span class="text"> <?= lang('Entries'); ?></span>
                                         </a>
                                     </li>
+
+                                    <li id="accounts_pos_entries">
+                                        <a class="submenu" href="<?= admin_url('pos_entries'); ?>">
+                                            <i class="fa fa-plus-square-o"></i><span class="text"> <?= lang('Pos Entries'); ?></span>
+                                        </a>
+                                    </li>
+
+
                                     <li id="accounts_purchase_invoice">
                                         <a class="submenu" href="<?= admin_url('invoices'); ?>">
                                             <i class="fa fa-plus-square-o"></i><span class="text"> <?= lang('Invoices'); ?></span>
@@ -1674,11 +1703,12 @@
 
                             </li>
                             <?php } ?>
-                             <?php 
-                             if (isset($this->GP) && $GP['truck_registration_view'] || ($Owner || $Admin) ) {
-                                
-                             ?>
 
+
+                             <?php 
+                             if (isset($this->GP) && $GP['truck_registration_view'] || ($Owner || $Admin) ) { 
+                             ?>
+                             
                              <li class="mm_truck">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-heart-o"></i>

@@ -41,10 +41,11 @@ function row_status($x)
             </div>
         </div>
     </div>
-<?php
-} ?>
-<?php if($Owner || $Admin) {
-        ?>
+
+<?php } ?>
+
+<?php if($Owner || $Admin) { ?>
+
 <div class="row" style="margin-bottom: 15px;">
     <div class="col-lg-12">
         <div class="box">
@@ -52,17 +53,17 @@ function row_status($x)
                 <h2 class="blue"><i class="fa fa-th"></i><span class="break"></span><?= lang('quick_links') ?></h2>
             </div>
             <div class="box-content">
+
                 <div class="col-lg-1 col-md-2 col-xs-6">
                     <a class="bblue white quick-button small" href="<?= admin_url('products') ?>">
                         <i class="fa fa-barcode"></i>
-
                         <p><?= lang('products') ?></p>
                     </a>
                 </div>
+
                 <div class="col-lg-1 col-md-2 col-xs-6">
                     <a class="bdarkGreen white quick-button small" href="<?= admin_url('sales') ?>">
                         <i class="fa fa-heart"></i>
-
                         <p><?= lang('sales') ?></p>
                     </a>
                 </div>
@@ -102,7 +103,6 @@ function row_status($x)
                 <div class="col-lg-1 col-md-2 col-xs-6">
                     <a class="bgrey white quick-button small" href="<?= admin_url('suppliers') ?>">
                         <i class="fa fa-users"></i>
-
                         <p><?= lang('suppliers') ?></p>
                     </a>
                 </div>
@@ -289,22 +289,22 @@ function row_status($x)
                                                 </tr>
                                                 </thead>
                                                 <tbody>
-                                                <?php if (!empty($sales)) {
-            $r = 1;
-            foreach ($sales as $order) {
-                echo '<tr id="' . $order->id . '" class="' . ($order->pos ? 'receipt_link' : 'invoice_link') . '"><td>' . $r . '</td>
-                                                            <td>' . $this->sma->hrld($order->date) . '</td>
-                                                            <td>' . $order->reference_no . '</td>
-                                                            <td>' . $order->customer . '</td>
-                                                            <td>' . row_status($order->sale_status) . '</td>
-                                                            <td class="text-right">' . $this->sma->formatMoney($order->grand_total) . '</td>
-                                                            <td>' . row_status($order->payment_status) . '</td>
-                                                            <td class="text-right">' . $this->sma->formatMoney($order->paid) . '</td>
-                                                        </tr>';
-                $r++;
-            }
-        } else {
-            ?>
+                                            <?php if (!empty($sales)) {
+                                            $r = 1;
+                                            foreach ($sales as $order) {
+                                            echo '<tr id="' . $order->id . '" class="' . ($order->pos ? 'receipt_link' : 'invoice_link') . '"><td>' . $r . '</td>
+                                            <td>' . $this->sma->hrld($order->date) . '</td>
+                                            <td>' . $order->reference_no . '</td>
+                                            <td>' . $order->customer . '</td>
+                                            <td>' . row_status($order->sale_status) . '</td>
+                                            <td class="text-right">' . $this->sma->formatMoney($order->grand_total) . '</td>
+                                            <td>' . row_status($order->payment_status) . '</td>
+                                            <td class="text-right">' . $this->sma->formatMoney($order->paid) . '</td>
+                                            </tr>';
+                                            $r++;
+                                            }
+                                            } else {
+                                            ?>
                                                     <tr>
                                                         <td colspan="7"
                                                             class="dataTables_empty"><?= lang('no_data_available') ?></td>

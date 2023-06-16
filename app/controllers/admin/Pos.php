@@ -16,7 +16,7 @@ class Pos extends MY_Controller
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
-
+        $this->load->admin_model('sales_model');
         $this->load->admin_model('pos_model');
         $this->load->helper('text');
         $this->pos_settings           = $this->pos_model->getSetting();
@@ -43,7 +43,6 @@ class Pos extends MY_Controller
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
         }
-
         $this->form_validation->set_rules('reference_no', lang('reference_no'), 'required');
         $this->form_validation->set_rules('amount-paid', lang('amount'), 'required');
         $this->form_validation->set_rules('paid_by', lang('paid_by'), 'required');
@@ -191,9 +190,8 @@ class Pos extends MY_Controller
         if ($this->input->get('brand_id')) {
             $brand_id = $this->input->get('brand_id');
         }
-
+        
         $products = $this->ajaxproducts(false, $brand_id);
-
         if (!($tcp = $this->pos_model->products_count(false, false, $brand_id))) {
             $tcp = 0;
         }
@@ -345,6 +343,7 @@ class Pos extends MY_Controller
             $this->session->set_flashdata('message', lang('register_closed'));
             admin_redirect('welcome');
         } else {
+
             if ($this->Owner || $this->Admin) {
                 $user_register                    = $user_id ? $this->pos_model->registerData($user_id) : null;
                 $register_open_time               = $user_register ? $user_register->date : null;
@@ -355,6 +354,7 @@ class Pos extends MY_Controller
                 $this->data['cash_in_hand']       = null;
                 $this->data['register_open_time'] = null;
             }
+
             $this->data['error']           = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['ccsales']         = $this->pos_model->getRegisterCCSales($register_open_time, $user_id);
             $this->data['cashsales']       = $this->pos_model->getRegisterCashSales($register_open_time, $user_id);
@@ -663,12 +663,14 @@ class Pos extends MY_Controller
                     $row->discount        = '0';
                     $row->serial          = '';
                     $options              = $this->pos_model->getProductOptions($row->id, $warehouse_id);
+
                     if ($options) {
                         $opt = current($options);
                         if (!$option) {
                             $option = $opt->id;
                         }
-                    }
+                     }
+
                     $row->option          = $option;
                     $row->real_unit_price = $row->price;
                     $row->base_quantity   = 1;
@@ -677,6 +679,7 @@ class Pos extends MY_Controller
                     $row->unit            = $row->sale_unit ? $row->sale_unit : $row->unit;
                     $row->comment         = '';
                     $combo_items          = false;
+
                     // if ($row->type == 'combo') {
                     //     $combo_items = $this->pos_model->getProductComboItems($row->id, $warehouse_id);
                     // }
@@ -834,6 +837,13 @@ class Pos extends MY_Controller
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
 
+                    // $this->db->select('cost')->from('products')->where('id', $item_id);
+                    // $productCost =$this->db->get()->result();
+
+                $q = $this->db->get_where('products',['id' => $item_id]);
+                $productCost = $q->row()->cost;
+
+
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details = $item_type != 'manual' ? $this->pos_model->getProductByCode($item_code) : null;
                     // $unit_price = $real_unit_price;
@@ -874,6 +884,7 @@ class Pos extends MY_Controller
                         'product_name'      => $item_name,
                         'product_type'      => $item_type,
                         'option_id'         => $item_option,
+                        'net_cost'          => $productCost,
                         'net_unit_price'    => $item_net_price,
                         'unit_price'        => $this->sma->formatDecimal($item_net_price + $item_tax),
                         'quantity'          => $item_quantity,
@@ -898,6 +909,8 @@ class Pos extends MY_Controller
                     $total += $this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
                 }
             }
+
+
             if (empty($products)) {
                 $this->form_validation->set_rules('product', lang('order_items'), 'required');
             } elseif ($this->pos_settings->item_order == 0) {
@@ -945,6 +958,7 @@ class Pos extends MY_Controller
                 'created_by'        => $this->session->userdata('user_id'),
                 'hash'              => hash('sha256', microtime() . mt_rand()),
             ];
+
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;
                 $data['sgst'] = $total_sgst;
@@ -1024,6 +1038,7 @@ class Pos extends MY_Controller
                     admin_redirect('pos');
                 }
             } else {
+                $rsdItems = '';
                 if ($sale = $this->pos_model->addSale($data, $products, $payment,$rsdItems, $did)) {
                     $this->session->set_userdata('remove_posls', 1);
                     $msg = $this->lang->line('sale_added');
@@ -1039,7 +1054,164 @@ class Pos extends MY_Controller
                             $redirect_to .= '?print=' . $sale['sale_id'];
                         }
                     }
-                    admin_redirect($redirect_to);
+
+
+                     $sid = $sale['sale_id'];
+                    // $sid = 173;
+                    
+                    $inv = $this->sales_model->getSaleByID($sid);
+                    if($inv->sale_invoice == 0){
+                    if ($this->sales_model->saleToInvoice($sid)) {
+                        
+                        $this->load->admin_model('companies_model');
+                        $customer = $this->companies_model->getCompanyByID($inv->customer_id);
+
+                        /*Accounts Entries*/
+                        $entry = array(
+                        'entrytype_id' => 4,
+                        'number'       => 'SO-'.$inv->reference_no,
+                        'date'         => date('Y-m-d'), 
+                        'dr_total'     => $inv->grand_total,
+                        'cr_total'     => $inv->grand_total,
+                        'notes'        => 'POS Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
+                        'sid'          =>  $inv->id,
+                        'entry_type'   =>  'pos'
+                        );
+                        
+
+                       $add  = $this->db->insert('sma_accounts_entries', $entry);
+                       $insert_id = $this->db->insert_id();
+                        //$insert_id = 999;
+                        $entryitemdata = array();
+
+                        $inv_items = $this->sales_model->getAllSaleItems($sid);
+
+                        $totalSalePrice = 0;
+                        foreach ($inv_items as $item) 
+                        {
+                            $proid = $item->product_id;
+                            $product  = $this->site->getProductByID($proid);
+                            //products
+
+                            $totalSalePrice = ($totalSalePrice)+($item->net_unit_price * $item->quantity);
+                            
+                            $entryitemdata[] = array(
+                                    'Entryitem' => array(
+                                        'entry_id' => $insert_id,
+                                        'dc' => 'D',
+                                        'ledger_id' => $product->purchase_account,
+                                        //'amount' => $item->main_net,
+                                        'amount' => ($item->net_cost * $item->quantity),
+                                        'narration' => 'purchase account'
+                                    )
+                                );
+            
+                                $entryitemdata[] = array(
+                                    'Entryitem' => array(
+                                        'entry_id' => $insert_id,
+                                        'dc' => 'C',
+                                        'ledger_id' => $product->sale_account,
+                                        'amount' => ($item->net_unit_price * $item->quantity),
+                                        'narration' => 'sale account'
+                                    )
+                                );
+            
+                                $entryitemdata[] = array(
+                                    'Entryitem' => array(
+                                        'entry_id' => $insert_id,
+                                        'dc' => 'C',
+                                        'ledger_id' => $product->inventory_account,
+                                        //'amount' => $item->main_net,
+                                        'amount' => ($item->net_cost * $item->quantity),
+                                        'narration' => 'inventory account'
+                                    )
+                                );
+                        }
+
+                      
+                             // //credit card
+                             $entryitemdata[] = array(
+                                'Entryitem' => array(
+                                    'entry_id' => $insert_id,
+                                    'dc' => 'D',
+                                    'ledger_id' => 121,
+                                    'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
+                                    'narration' => 'Credit Card'
+                                )
+                            );
+
+                           // //discount
+                           $entryitemdata[] = array(
+                            'Entryitem' => array(
+                                'entry_id' => $insert_id,
+                                'dc' => 'D',
+                                'ledger_id' => 43,
+                                'amount' => $inv->total_discount,
+                                'narration' => 'discount'
+                            )
+                        );
+
+                     
+                        // //vat on sale
+                        $entryitemdata[] = array(
+                                    'Entryitem' => array(
+                                        'entry_id' => $insert_id,
+                                        'dc' => 'C',
+                                        'ledger_id' => 122,
+                                        'amount' => $inv->order_tax,
+                                        'narration' => 'vat on sale'
+                                    )
+                                );
+
+                        
+            
+            
+                        // //customer
+                        //   $entryitemdata[] = array(
+                        //             'Entryitem' => array(
+                        //                 'entry_id' => $insert_id,
+                        //                 'dc' => 'D',
+                        //                 'ledger_id' => $customer->ledger_account,
+                        //                 'amount' => $inv->grand_total,
+                        //                 'narration' => 'customer'
+                        //               )
+                        //         );
+           
+                        // //total discount
+                        /*$entryitemdata[] = array(
+                               'Entryitem' => array(
+                                   'entry_id' => $insert_id,
+                                   'dc' => 'D',
+                                   'ledger_id' => $this->vat_on_sale,
+                                   'amount' => $inv->total_discount,
+                                   'narration' => 'total discount'
+                               )
+                        );*/
+
+
+                        //  print_r($entryitemdata);
+
+                        //  die();
+                                
+                       //   /*Accounts Entry Items*/
+                       foreach ($entryitemdata as $row => $itemdata)
+                       {
+                             $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
+                       }
+           
+           
+                  
+                         admin_redirect($redirect_to);
+                   }
+                    }else{
+           
+                       $this->session->set_flashdata('error', lang('Sale Already Converted to invoice!'));
+                       admin_redirect($_SERVER['HTTP_REFERER'] ?? 'sales');
+                   }
+
+
+
+                  
                 }
             }
         } else {
@@ -1585,9 +1757,11 @@ class Pos extends MY_Controller
         $this->data['error']   = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $this->data['message'] = $this->session->flashdata('message');
         $inv                   = $this->pos_model->getInvoiceByID($sale_id);
+
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by, true);
         }
+
         $this->data['rows']            = $this->pos_model->getAllInvoiceItems($sale_id);
         $biller_id                     = $inv->biller_id;
         $customer_id                   = $inv->customer_id;

@@ -793,6 +793,7 @@ class Pos_model extends CI_Model
         $this->db->select('COUNT(' . $this->db->dbprefix('payments') . '.id) as total_cheques, COALESCE( grand_total, 0 ) AS total, SUM( COALESCE( amount, 0 ) ) AS paid', false)
             ->join('sales', 'sales.id=payments.sale_id', 'left')
             ->where('type', 'received')->where('payments.date >', $date)->where('paid_by', 'Cheque');
+
         $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
@@ -814,7 +815,6 @@ class Pos_model extends CI_Model
         $this->db->select('SUM( COALESCE( amount, 0 ) ) AS total', false)
             ->where('date >', $date);
         $this->db->where('created_by', $user_id);
-
         $q = $this->db->get('expenses');
         if ($q->num_rows() > 0) {
             return $q->row();
