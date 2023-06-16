@@ -924,7 +924,9 @@ function loadItems() {
                 tr_html +=
                 '<td class="text-right"><input class="form-control input-sm text-right rprice" name="cost_price[]" type="text" id="cost_price_' +
                 row_no +
-                '" value="0"></td>';
+                '" value="' +
+                cost_price +
+                '"></td>';
 
                 tr_html +=
                 '<td class="text-right"><input class="form-control input-sm text-right rprice" name="batch_no[]" type="text" id="batch_no_' +
@@ -947,20 +949,28 @@ function loadItems() {
                 
 
 
-            // if (site.settings.product_serial == 1) {
-            //     tr_html +=
-            //         '<td class="text-right"><input class="form-control input-sm rserial" name="serial[]" type="text" id="serial_' +
-            //         row_no +
-            //         '" value="' +
-            //         item_serial +
-            //         '"></td>';
-            // }
-
-
-
-         
-
-
+            if (site.settings.product_serial == 1) {
+                tr_html +=
+                    '<td class="text-right"><input class="form-control input-sm rserial" name="serial[]" type="text" id="serial_' +
+                    row_no +
+                    '" value="' +
+                    item_serial +
+                    '"></td>';
+            }
+            tr_html +=
+                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="net_price[]" type="hidden" id="price_' +
+                row_no +
+                '" value="' +
+                item_price +
+                '"><input class="ruprice" name="unit_price[]" type="hidden" value="' +
+                unit_price +
+                '"><input class="realuprice" name="real_unit_price[]" type="hidden" value="' +
+                item.row.real_unit_price +
+                '"><span class="text-right sprice" id="sprice_' +
+                row_no +
+                '">' +
+                formatMoney(item_price) +
+                '</span></td>';
             tr_html +=
                 '<td><input class="form-control text-center rquantity" tabindex="' +
                 (site.settings.set_focus == 1 ? an : an + 1) +
@@ -985,32 +995,18 @@ function loadItems() {
                 bonus +
                 '"></td>';
 
-                if ((site.settings.product_discount == 1 && allow_discount == 1) || item_discount) {
-                    tr_html +=
-                        '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="text" id="discount_' +
-                        row_no +
-                        '" value="' +
-                        item_ds +
-                        '"></td>';
-                }
-
             if ((site.settings.product_discount == 1 && allow_discount == 1) || item_discount) {
                 tr_html +=
-                    '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="text" id="discount2_' +
+                    '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="hidden" id="discount_' +
                     row_no +
                     '" value="' +
                     item_ds +
-                    '"></td>';
+                    '"><span class="text-right sdiscount text-danger" id="sdiscount_' +
+                    row_no +
+                    '">' +
+                    formatMoney(0 - item_discount * item_qty) +
+                    '</span></td>';
             }
-
-            // <span class="text-right sdiscount text-danger" id="sdiscount_' +
-            // row_no +
-            // '">' +
-            // formatMoney(0 - item_discount * item_qty) +
-            // '</span>
-
-
-
             if (site.settings.tax1 == 1) {
                 tr_html +=
                     '<td class="text-right"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' +
@@ -1025,61 +1021,12 @@ function loadItems() {
                     formatMoney(pr_tax_val * item_qty) +
                     '</span></td>';
             }
-
-            tr_html +=
-            '<td class="text-right"><input class="form-control input-sm text-right rprice" name="net_price[]" type="hidden" id="price_' +
-            row_no +
-            '" value="' +
-            item_price +
-            '"><input class="ruprice" name="unit_price[]" type="hidden" value="' +
-            unit_price +
-            '"><input class="realuprice" name="real_unit_price[]" type="hidden" value="' +
-            item.row.real_unit_price +
-            '"><span class="text-right sprice" id="sprice_' +
-            row_no +
-            '">' +
-            formatMoney(item_price) +
-            '</span></td>';
-
-
-            tr_html +=
-            '<td class="text-right"><input class="form-control input-sm text-right rprice" name="net_price[]" type="hidden" id="price1_' +
-            row_no +
-            '" value="' +
-            item_price +
-            '"><input class="ruprice" name="unit_price1[]" type="hidden" value="' +
-            unit_price +
-            '"><input class="realuprice" name="real_unit_price1[]" type="hidden" value="' +
-            item.row.real_unit_price +
-            '"><span class="text-right sprice" id="sprice_' +
-            row_no +
-            '">' +
-            formatMoney(item_price) +
-            '</span></td>';
-
             tr_html +=
                 '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' +
                 row_no +
                 '">' +
                 formatMoney((parseFloat(item_price) + parseFloat(pr_tax_val)) * parseFloat(item_qty)) +
                 '</span></td>';
-
-                tr_html +=
-                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="net_price[]" type="hidden" id="price2_' +
-                row_no +
-                '" value="' +
-                item_price +
-                '"><input class="ruprice" name="unit_price2[]" type="hidden" value="' +
-                unit_price +
-                '"><input class="realuprice" name="real_unit_price2[]" type="hidden" value="' +
-                item.row.real_unit_price +
-                '"><span class="text-right sprice" id="sprice_' +
-                row_no +
-                '">' +
-                formatMoney(item_price) +
-                '</span></td>';
-
-
             tr_html +=
                 '<td class="text-center"><i class="fa fa-times tip pointer redel" id="' +
                 row_no +

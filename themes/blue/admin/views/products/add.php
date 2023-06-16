@@ -335,19 +335,30 @@ if (!empty($variants)) {
                     </div>
                     <div id="img-details"></div>
                 </div>
+
                 <div class="col-md-6 col-md-offset-1">
                     <div class="standard">
+
+                        <div class="form-group">
+                            <input type="checkbox" class="checkbox" name="incentive" id="incentive">
+                           <label for="incentive" class="padding05"><?= lang('Is Incentive Product'); ?></label>
+                        </div>
+
+                        <div id="incentiveFields"></div>
+
+
+
 
                         <div id="attrs"></div>
 
                         <div class="form-group">
                             <input type="checkbox" class="checkbox" name="attributes"
-                                   id="attributes" <?= $this->input->post('attributes') || $product_options ? 'checked="checked"' : ''; ?>><label
-                                for="attributes"
-                                class="padding05"><?= lang('product_has_attributes'); ?></label> <?= lang('eg_sizes_colors'); ?>
+                                   id="attributes" <?= $this->input->post('attributes') || $product_options ? 'checked="checked"' : ''; ?>>
+                                <label for="attributes" class="padding05"><?= lang('product_has_attributes'); ?></label> <?= lang('eg_sizes_colors'); ?>
                         </div>
-                        <div class="well well-sm" id="attr-con"
-                             style="<?= $this->input->post('attributes') || $product_options ? '' : 'display:none;'; ?>">
+
+
+                          <div class="well well-sm" id="attr-con" style="<?= $this->input->post('attributes') || $product_options ? '' : 'display:none;'; ?>">
                             <div class="form-group" id="ui" style="margin-bottom: 0;">
                                 <div class="input-group">
                                     <?php echo form_input('attributesInput', '', 'class="form-control select-tags" id="attributesInput" placeholder="' . $this->lang->line('enter_attributes') . '"'); ?>
@@ -359,8 +370,10 @@ if (!empty($variants)) {
                                 </div>
                                 <div style="clear:both;"></div>
                             </div>
+
+
                             <div class="table-responsive">
-                                <table id="attrTable" class="table table-bordered table-condensed table-striped"
+                                   <table id="attrTable" class="table table-bordered table-condensed table-striped"
                                        style="<?= $this->input->post('attributes') || $product_options ? '' : 'display:none;'; ?>margin-bottom: 0; margin-top: 10px;">
                                     <thead>
                                     <tr class="active">
@@ -439,7 +452,6 @@ if (!empty($variants)) {
                         </div>
                         <div class="control-group table-group">
                             <label class="table-label" for="combo"><?= lang('combo_products'); ?></label>
-
                             <div class="controls table-controls">
                                 <table id="prTable"
                                        class="table items table-striped table-bordered table-condensed table-hover">
@@ -666,6 +678,8 @@ if (!empty($variants)) {
         $('.attributes').on('ifUnchecked', function (event) {
             $('#options_' + $(this).attr('id')).slideUp();
         });
+
+
         //$('#cost').removeAttr('required');
         $('#digital_file').change(function () {
             if ($(this).val()) {
@@ -917,6 +931,18 @@ if (!empty($variants)) {
             tokenSeparators: [","],
             multiple: true
         });
+
+  
+
+        $(document).on('ifChecked', '#incentive', function (e) {
+           $('#incentiveFields').html('<div class="form-group"><input type="number" class="form-control ttip" id="incentive_qty" name="incentive_qty" value="" placeholder="Incentive Qty"></div><div class="form-group"><input type="text" class="form-control ttip" name="incentive_value" value="" placeholder="Incentive Value e.g:10 or 10%"></div>');
+        });
+        $(document).on('ifUnchecked', '#incentive', function (e) {
+            $('#incentiveFields').html('');
+        });
+
+
+
         $(document).on('ifChecked', '#attributes', function (e) {
             $('#attr-con').slideDown();
         });
@@ -925,26 +951,32 @@ if (!empty($variants)) {
             $('.attr-remove-all').trigger('click');
             $('#attr-con').slideUp();
         });
+
+
         $('#addAttributes').click(function (e) {
-            e.preventDefault();
-            var attrs_val = $('#attributesInput').val(), attrs;
-            attrs = attrs_val.split(',');
-            for (var i in attrs) {
-                if (attrs[i] !== '') {
-                    <?php if (!empty($warehouses)) {
-            foreach ($warehouses as $warehouse) {
-                //echo '$(\'#attrTable\').show().append(\'<tr class="attr"><td><input type="hidden" name="attr_name[]" value="\' + attrs[i] + \'"><span>\' + attrs[i] + \'</span></td><td class="code text-center"><input type="hidden" name="attr_warehouse[]" value="' . $warehouse->id . '"><span>' . $warehouse->name . '</span></td><td class="price text-right"><input type="hidden" name="attr_price[]" value="0"><span>0</span></span></td><td class="text-center"><i class="fa fa-times delAttr"></i></td></tr>\');';
-                echo '$(\'#attrTable\').show().append(\'<tr class="attr"><td><input type="hidden" name="attr_name[]" value="\' + attrs[i] + \'"><span>\' + attrs[i] + \'</span></td><td class="code text-center"><input type="hidden" name="attr_warehouse[]" value="' . $warehouse->id . '"><span>' . $warehouse->name . '</span></td><td class="quantity text-center"><input type="hidden" name="attr_quantity[]" value="0"><span>0</span></td><td class="price text-right"><input type="hidden" name="attr_price[]" value="0"><span>0</span></span></td><td class="text-center"><i class="fa fa-times delAttr"></i></td></tr>\');';
-            }
+        e.preventDefault();
+        var attrs_val = $('#attributesInput').val(), attrs;
+        attrs = attrs_val.split(',');
+        for (var i in attrs) {
+        if (attrs[i] !== '') {
+        <?php if (!empty($warehouses)) {
+        foreach ($warehouses as $warehouse) {
+        //echo '$(\'#attrTable\').show().append(\'<tr class="attr"><td><input type="hidden" name="attr_name[]" value="\' + attrs[i] + \'"><span>\' + attrs[i] + \'</span></td><td class="code text-center"><input type="hidden" name="attr_warehouse[]" value="' . $warehouse->id . '"><span>' . $warehouse->name . '</span></td><td class="price text-right"><input type="hidden" name="attr_price[]" value="0"><span>0</span></span></td><td class="text-center"><i class="fa fa-times delAttr"></i></td></tr>\');';
+        echo '$(\'#attrTable\').show().append(\'<tr class="attr"><td><input type="hidden" name="attr_name[]" value="\' + attrs[i] + \'"><span>\' + attrs[i] + \'</span></td><td class="code text-center"><input type="hidden" name="attr_warehouse[]" value="' . $warehouse->id . '"><span>' . $warehouse->name . '</span></td><td class="quantity text-center"><input type="hidden" name="attr_quantity[]" value="0"><span>0</span></td><td class="price text-right"><input type="hidden" name="attr_price[]" value="0"><span>0</span></span></td><td class="text-center"><i class="fa fa-times delAttr"></i></td></tr>\');';
+        }
         } else {
-            ?>
-                        //$('#attrTable').show().append('<tr class="attr"><td><input type="hidden" name="attr_name[]" value="' + attrs[i] + '"><span>' + attrs[i] + '</span></td><td class="code text-center"><input type="hidden" name="attr_warehouse[]" value=""><span></span></td><td class="price text-right"><input type="hidden" name="attr_price[]" value="0"><span>0</span></span></td><td class="text-center"><i class="fa fa-times delAttr"></i></td></tr>');
-                         $('#attrTable').show().append('<tr class="attr"><td><input type="hidden" name="attr_name[]" value="' + attrs[i] + '"><span>' + attrs[i] + '</span></td><td class="code text-center"><input type="hidden" name="attr_warehouse[]" value=""><span></span></td><td class="quantity text-center"><input type="hidden" name="attr_quantity[]" value="0"><span></span></td><td class="price text-right"><input type="hidden" name="attr_price[]" value="0"><span>0</span></span></td><td class="text-center"><i class="fa fa-times delAttr"></i></td></tr>');
-                    <?php
+        ?>
+        //$('#attrTable').show().append('<tr class="attr"><td><input type="hidden" name="attr_name[]" value="' + attrs[i] + '"><span>' + attrs[i] + '</span></td><td class="code text-center"><input type="hidden" name="attr_warehouse[]" value=""><span></span></td><td class="price text-right"><input type="hidden" name="attr_price[]" value="0"><span>0</span></span></td><td class="text-center"><i class="fa fa-times delAttr"></i></td></tr>');
+        $('#attrTable').show().append('<tr class="attr"><td><input type="hidden" name="attr_name[]" value="' + attrs[i] + '"><span>' + attrs[i] + '</span></td><td class="code text-center"><input type="hidden" name="attr_warehouse[]" value=""><span></span></td><td class="quantity text-center"><input type="hidden" name="attr_quantity[]" value="0"><span></span></td><td class="price text-right"><input type="hidden" name="attr_price[]" value="0"><span>0</span></span></td><td class="text-center"><i class="fa fa-times delAttr"></i></td></tr>');
+        <?php
         } ?>
-                }
-            }
+        }
+        }
         });
+
+
+
+
 //$('#attributesInput').on('select2-blur', function(){
 //    $('#addAttributes').click();
 //});
@@ -1156,6 +1188,8 @@ if (!empty($variants)) {
             }
         });
     });
+
+
 </script>
 
 <div class="modal" id="aModal" tabindex="-1" role="dialog" aria-labelledby="aModalLabel" aria-hidden="true">

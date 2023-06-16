@@ -13,6 +13,6 @@ $(function(){
         // `event.card_exp_date_year_4` - card expiration year - 4 digits
         // `event.swipe_data` - original swipe data from raw processing or sending to a 3rd party service
 	
-	console.log(event);
+	       console.log(event);
     });
 });

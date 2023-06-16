@@ -1421,6 +1421,7 @@ class Reports extends MY_Controller
                 ->join('purchases', 'payments.purchase_id=purchases.id', 'left')
                 ->group_by('payments.id');
 
+
             if ($user) {
                 $this->datatables->where('payments.created_by', $user);
             }
@@ -3515,6 +3516,67 @@ class Reports extends MY_Controller
         $this->page_construct('reports/users', $meta, $this->data);
     }
 
+
+
+    // public function incentives()
+    // {
+    //     $this->data['users']      = $this->reports_model->getStaff();
+    //     $this->data['incentives']= "incentives";
+    //     $this->data['error']  = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+    //     $bc                   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('staff_report')]];
+    //     $meta                 = ['page_title' => lang('staff_report'), 'bc' => $bc];
+    //     $this->page_construct('reports/incentives', $meta, $this->data);
+    // }
+
+
+    public function incentives()
+    {
+        $this->data['incentives']= "incentive-screen";
+        
+        $this->sma->checkPermissions('sales');
+        $this->data['error']      = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['users']      = $this->reports_model->getStaff();
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['billers']    = $this->site->getAllCompanies('biller');
+        $bc                       = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Pharmacist_Incentice_Report')]];
+        $meta                     = ['page_title' => lang('sales_report'), 'bc' => $bc];
+        $this->page_construct('reports/incentives', $meta, $this->data);
+    }
+
+
+    public function getIncentives()
+    {
+        $this->data['incentives']= "incentive";
+        $this->data['users']      = $this->reports_model->getStaff();
+
+
+        $user         = $this->input->post('user');
+        $start_date   = $this->input->post('start_date');
+        $end_date     = $this->input->post('end_date');
+       
+        if ($start_date) {
+            $start_date = $this->sma->fld($start_date);
+            $end_date   = $this->sma->fld($end_date);
+        }
+      
+     
+
+        $this->db->select('p.*,SUM(t.quantity) as total_quantity,SUM(t.net_unit_price) as total_price',false)
+        ->from('sale_items t')
+        ->join('products p','p.id = t.product_id','full')
+        ->join('sales s','s.id = t.sale_id','full')
+        ->where('s.created_by', $user)
+        // ->where($this->db->dbprefix('sales') . '.date BETWEEN "' . $start_date . '" and "' . $end_date . '"')
+        ->group_by('t.product_id');
+        $this->data['products'] = $this->db->get()->result();
+
+        $this->data['error']  = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $bc                   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('staff_report')]];
+        $meta                 = ['page_title' => lang('staff_report'), 'bc' => $bc];
+        $this->page_construct('reports/incentives', $meta, $this->data);
+    } 
+    
+
     public function warehouse_stock($warehouse = null)
     {
         $this->sma->checkPermissions('index', true);
@@ -3532,4 +3594,7 @@ class Reports extends MY_Controller
         $meta                       = ['page_title' => lang('reports'), 'bc' => $bc];
         $this->page_construct('reports/warehouse_stock', $meta, $this->data);
     }
+
+
+
 }

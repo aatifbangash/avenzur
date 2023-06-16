@@ -76,6 +76,8 @@ class Products extends MY_Controller
                 'track_quantity'    => $this->input->post('track_quantity') ? $this->input->post('track_quantity') : '0',
                 'details'           => $this->input->post('details'),
                 'product_details'   => $this->input->post('product_details'),
+                'incentive_qty'     => $this->input->post('incentive_qty'),
+                'incentive_value'   => $this->input->post('incentive_value'),
                 'supplier1'         => $this->input->post('supplier'),
                 'supplier1price'    => $this->sma->formatDecimal($this->input->post('supplier_price')),
                 'supplier2'         => $this->input->post('supplier_2'),
@@ -108,12 +110,12 @@ class Products extends MY_Controller
                 'hsn_code'          => $this->input->post('hsn_code'),
                 'hide'              => $this->input->post('hide') ? $this->input->post('hide') : 0,
                 'second_name'       => $this->input->post('second_name'),
-                'trade_name'       => $this->input->post('trade_name'),
-                'manufacture_name'       => $this->input->post('manufacture_name'),
-                'main_agent'       => $this->input->post('main_agent'),
-                'purchase_account'       => $this->input->post('purchase_account'),
+                'trade_name'         => $this->input->post('trade_name'),
+                'manufacture_name'   => $this->input->post('manufacture_name'),
+                'main_agent'         => $this->input->post('main_agent'),
+                'purchase_account'   => $this->input->post('purchase_account'),
                 'sale_account'       => $this->input->post('sale_account'),
-                'inventory_account'       => $this->input->post('inventory_account'),
+                'inventory_account'  => $this->input->post('inventory_account'),
             ];
             $warehouse_qty      = null;
             $product_attributes = null;
