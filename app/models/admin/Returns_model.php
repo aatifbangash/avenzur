@@ -93,7 +93,6 @@ class Returns_model extends CI_Model
         return false;
 
     }
-
     public function getProductOptions($product_id)
     {
         $q = $this->db->get_where('product_variants', ['product_id' => $product_id]);

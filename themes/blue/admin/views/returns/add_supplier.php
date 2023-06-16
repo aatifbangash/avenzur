@@ -1631,8 +1631,6 @@ function loadItems() {
                 formatMoney(item_price) +
                 '</span></td>';
 
-
-
             tr_html +=
                 '<td class="text-center"><i class="fa fa-times tip pointer redel" id="' +
                 row_no +

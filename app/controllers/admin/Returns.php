@@ -823,8 +823,7 @@ class Returns extends MY_Controller
                     $option_id  = false;
                 }
 
-                
-
+            
                 $sold                   = $this->returns_model->getProductsSold($row->id);
                 $row->net_cost          = $sold->cost;
                 

@@ -828,6 +828,8 @@ function loadItems() {
              var expiry       = item.row.expiry;
              var discount1       = item.row.discount1;
              var discount2       = item.row.discount2;
+
+             
             var unit_price = item.row.real_unit_price;
             if (item.units && item.row.fup != 1 && product_unit != item.row.base_unit) {
                 $.each(item.units, function () {
