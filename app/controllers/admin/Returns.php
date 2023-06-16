@@ -833,7 +833,6 @@ class Returns extends MY_Controller
                 
                  $row->cost_price = $opt->cost;
                
-                 print_r($row->cost_price);
 
                 // $row->cost       = $row->cost;
 

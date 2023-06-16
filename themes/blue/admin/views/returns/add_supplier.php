@@ -254,32 +254,38 @@
                                         <tr>
                                             <th class="col-md-2"><?= lang('product') . ' (' . lang('code') . ' - ' . lang('name') . ')'; ?></th>
                                            
-                                            <th class="col-md-1"><?= lang('Sale Price'); ?></th>
-                                            <th class="col-md-1"><?= lang('Purchase Price'); ?></th>
-                                            <th class="col-md-1"><?= lang('batch_no'); ?></th>
-                                            <th class="col-md-1"><?= lang('expiry'); ?></th>
-                                           <?php
-                                            if ($Settings->product_serial) {
-                                                echo '<th class="col-md-1">' . lang('serial_no') . '</th>';
-                                            }
-                                            ?>
-                                            <th class="col-md-1"><?= lang('net_unit_price'); ?></th>
-                                            <th class="col-md-1"><?= lang('quantity'); ?></th>
-                                            <th class="col-md-1"><?= lang('Bonus'); ?></th>
-                                            <?php
-                                            if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
-                                                echo '<th class="col-md-1">' . lang('discount') . '</th>';
-                                            }
-                                            ?>
-                                            <?php
-                                            if ($Settings->tax1) {
-                                                echo '<th class="col-md-1">' . lang('product_tax') . '</th>';
-                                            }
-                                            ?>
-                                            <th>
-                                                <?= lang('subtotal'); ?>
+                                                <th class="col-md-1"><?= lang('Sale Price'); ?></th>
+                                                <th class="col-md-1"><?= lang('Purchase Price'); ?></th>
+                                                <th class="col-md-1"><?= lang('batch'); ?></th>
+                                                <th class="col-md-1"><?= lang('expiry_date'); ?></th>
+                                                <th class="col-md-1"><?= lang('qty'); ?></th>
+                                                <th class="col-md-1"><?= lang('Bonus'); ?></th>
+                                                <?php
+                                                if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
+                                                echo '<th class="col-md-1">' . lang('dis 1') . '</th>';
+                                                }
+                                                ?>
+                                                <?php
+                                                if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
+                                                echo '<th class="col-md-1">' . lang('dis 2') . '</th>';
+                                                }
+                                                ?>
+                                                <?php
+                                                if ($Settings->tax1) {
+                                                echo '<th class="col-md-1">' . lang('vat 15%') . '</th>';
+                                                }
+                                                ?>
+
+                                                <th class="col-md-1"><?= lang('Total Purchase'); ?></th>
+                                                <th>
+                                                <?= lang('Total Sale'); ?>
                                                 (<span class="currency"><?= $default_currency->code ?></span>)
-                                            </th>
+                                                </th>
+                                                <th class="col-md-1"><?= lang('Net Sales'); ?></th>
+                                                <th class="col-md-1"><?= lang('Unit Sale'); ?></th>
+
+
+
                                             <th style="width: 30px !important; text-align: center;">
                                                 <i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i>
                                             </th>
