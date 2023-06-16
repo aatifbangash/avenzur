@@ -75,6 +75,8 @@
                 $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
                 echo admin_form_open_multipart('returns/add', $attrib);
                 ?>
+
+                <input type="hidden" name="return_screen"  value="customer">
                 <div class="row">
                     <div class="col-lg-12">
                         <?php if ($Owner || $Admin) {
@@ -153,8 +155,8 @@
                             </div>
                         </div>
 
-                        <?php if ($Settings->tax2) {
-                                    ?>
+                          <?php if ($Settings->tax2) {  ?>
+
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <?= lang('order_tax', 'retax2'); ?>
@@ -166,8 +168,10 @@
                                     echo form_dropdown('order_tax', $tr, (isset($_POST['order_tax']) ? $_POST['order_tax'] : $Settings->default_tax_rate2), 'id="retax2" data-placeholder="' . lang('select') . ' ' . lang('order_tax') . '" class="form-control input-tip select" style="width:100%;"'); ?>
                                 </div>
                             </div>
-                        <?php
-                                } ?>
+
+                            <?php
+                              } 
+                            ?>
 
                         <?php if ($Owner || $Admin || $this->session->userdata('allow_discount')) {
                                     ?>
@@ -194,6 +198,8 @@
                             </div>
                         </div>
                         <div class="clearfix"></div>
+
+                        
 
                         <div class="col-md-12" id="sticker">
                             <div class="well well-sm">
@@ -225,28 +231,38 @@
                                     <table id="reTable" class="table items table-striped table-bordered table-condensed table-hover sortable_table">
                                         <thead>
                                         <tr>
-                                            <th class="col-md-4"><?= lang('product') . ' (' . lang('code') . ' - ' . lang('name') . ')'; ?></th>
-                                            <?php
-                                            if ($Settings->product_serial) {
-                                                echo '<th class="col-md-2">' . lang('serial_no') . '</th>';
-                                            }
-                                            ?>
-                                            <th class="col-md-1"><?= lang('net_unit_price'); ?></th>
-                                            <th class="col-md-1"><?= lang('quantity'); ?></th>
+                                            <th class="col-md-2"><?= lang('product') . ' (' . lang('code') . ' - ' . lang('name') . ')'; ?></th>
+                                           
+                                            <th class="col-md-1"><?= lang('Sale Price'); ?></th>
+                                            <th class="col-md-1"><?= lang('Purchase Price'); ?></th>
+                                            <th class="col-md-1"><?= lang('batch'); ?></th>
+                                            <th class="col-md-1"><?= lang('expiry_date'); ?></th>
+                                            <th class="col-md-1"><?= lang('qty'); ?></th>
+                                            <th class="col-md-1"><?= lang('Bonus'); ?></th>
                                             <?php
                                             if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
-                                                echo '<th class="col-md-1">' . lang('discount') . '</th>';
+                                                echo '<th class="col-md-1">' . lang('dis 1') . '</th>';
+                                            }
+                                            ?>
+                                              <?php
+                                            if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
+                                                echo '<th class="col-md-1">' . lang('dis 2') . '</th>';
                                             }
                                             ?>
                                             <?php
                                             if ($Settings->tax1) {
-                                                echo '<th class="col-md-1">' . lang('product_tax') . '</th>';
+                                                echo '<th class="col-md-1">' . lang('vat 15%') . '</th>';
                                             }
                                             ?>
-                                            <th>
-                                                <?= lang('subtotal'); ?>
+
+                                           <th class="col-md-1"><?= lang('Total Purchase'); ?></th>
+                                           <th>
+                                                <?= lang('Total Sale'); ?>
                                                 (<span class="currency"><?= $default_currency->code ?></span>)
                                             </th>
+                                           <th class="col-md-1"><?= lang('Net Sales'); ?></th>
+                                           <th class="col-md-1"><?= lang('Unit Sale'); ?></th>
+                                           
                                             <th style="width: 30px !important; text-align: center;">
                                                 <i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i>
                                             </th>
