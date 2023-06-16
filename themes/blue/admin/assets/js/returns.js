@@ -821,6 +821,12 @@ function loadItems() {
                 item_name = item.row.name.replace(/"/g, '&#034;').replace(/'/g, '&#039;');
             var product_unit = item.row.unit,
                 base_quantity = item.row.base_quantity;
+
+             var cost_price  = item.row.cost;  
+             var batch_no    = item.row.batch_no;
+             var bonus       = item.row.bonus;
+             var expiry       = item.row.expiry;
+             
             var unit_price = item.row.real_unit_price;
             if (item.units && item.row.fup != 1 && product_unit != item.row.base_unit) {
                 $.each(item.units, function () {
@@ -907,28 +913,54 @@ function loadItems() {
                 '" data-item="' +
                 item_id +
                 '" title="Edit" style="cursor:pointer;"></i></td>';
-            if (site.settings.product_serial == 1) {
+
                 tr_html +=
-                    '<td class="text-right"><input class="form-control input-sm rserial" name="serial[]" type="text" id="serial_' +
-                    row_no +
-                    '" value="' +
-                    item_serial +
-                    '"></td>';
-            }
-            tr_html +=
-                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="net_price[]" type="hidden" id="price_' +
+                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="net_sale_price[]" type="text" id="net_sale_price_' +
                 row_no +
                 '" value="' +
                 item_price +
-                '"><input class="ruprice" name="unit_price[]" type="hidden" value="' +
-                unit_price +
-                '"><input class="realuprice" name="real_unit_price[]" type="hidden" value="' +
-                item.row.real_unit_price +
-                '"><span class="text-right sprice" id="sprice_' +
+                '"></td>';
+
+                tr_html +=
+                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="cost_price[]" type="text" id="cost_price_' +
                 row_no +
-                '">' +
-                formatMoney(item_price) +
-                '</span></td>';
+                '" value="0"></td>';
+
+                tr_html +=
+                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="batch_no[]" type="text" id="batch_no_' +
+                row_no +
+                '" value="' +
+                batch_no +
+                '"></td>';
+
+                tr_html +=
+                '<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="' +
+                expiry +
+                '" data-id="' +
+                row_no +
+                '" data-item="' +
+                item_id +
+                '" id="expiry_' +
+                row_no +
+                '"></td>';
+
+                
+
+
+            // if (site.settings.product_serial == 1) {
+            //     tr_html +=
+            //         '<td class="text-right"><input class="form-control input-sm rserial" name="serial[]" type="text" id="serial_' +
+            //         row_no +
+            //         '" value="' +
+            //         item_serial +
+            //         '"></td>';
+            // }
+
+
+
+         
+
+
             tr_html +=
                 '<td><input class="form-control text-center rquantity" tabindex="' +
                 (site.settings.set_focus == 1 ? an : an + 1) +
@@ -945,18 +977,40 @@ function loadItems() {
                 '"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' +
                 base_quantity +
                 '"></td>';
+
+                tr_html +=
+                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="bonus[]" type="text" id="bonus_' +
+                row_no +
+                '" value="' +
+                bonus +
+                '"></td>';
+
+                if ((site.settings.product_discount == 1 && allow_discount == 1) || item_discount) {
+                    tr_html +=
+                        '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="text" id="discount_' +
+                        row_no +
+                        '" value="' +
+                        item_ds +
+                        '"></td>';
+                }
+
             if ((site.settings.product_discount == 1 && allow_discount == 1) || item_discount) {
                 tr_html +=
-                    '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="hidden" id="discount_' +
+                    '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="text" id="discount2_' +
                     row_no +
                     '" value="' +
                     item_ds +
-                    '"><span class="text-right sdiscount text-danger" id="sdiscount_' +
-                    row_no +
-                    '">' +
-                    formatMoney(0 - item_discount * item_qty) +
-                    '</span></td>';
+                    '"></td>';
             }
+
+            // <span class="text-right sdiscount text-danger" id="sdiscount_' +
+            // row_no +
+            // '">' +
+            // formatMoney(0 - item_discount * item_qty) +
+            // '</span>
+
+
+
             if (site.settings.tax1 == 1) {
                 tr_html +=
                     '<td class="text-right"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' +
@@ -971,12 +1025,61 @@ function loadItems() {
                     formatMoney(pr_tax_val * item_qty) +
                     '</span></td>';
             }
+
+            tr_html +=
+            '<td class="text-right"><input class="form-control input-sm text-right rprice" name="net_price[]" type="hidden" id="price_' +
+            row_no +
+            '" value="' +
+            item_price +
+            '"><input class="ruprice" name="unit_price[]" type="hidden" value="' +
+            unit_price +
+            '"><input class="realuprice" name="real_unit_price[]" type="hidden" value="' +
+            item.row.real_unit_price +
+            '"><span class="text-right sprice" id="sprice_' +
+            row_no +
+            '">' +
+            formatMoney(item_price) +
+            '</span></td>';
+
+
+            tr_html +=
+            '<td class="text-right"><input class="form-control input-sm text-right rprice" name="net_price[]" type="hidden" id="price1_' +
+            row_no +
+            '" value="' +
+            item_price +
+            '"><input class="ruprice" name="unit_price1[]" type="hidden" value="' +
+            unit_price +
+            '"><input class="realuprice" name="real_unit_price1[]" type="hidden" value="' +
+            item.row.real_unit_price +
+            '"><span class="text-right sprice" id="sprice_' +
+            row_no +
+            '">' +
+            formatMoney(item_price) +
+            '</span></td>';
+
             tr_html +=
                 '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' +
                 row_no +
                 '">' +
                 formatMoney((parseFloat(item_price) + parseFloat(pr_tax_val)) * parseFloat(item_qty)) +
                 '</span></td>';
+
+                tr_html +=
+                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="net_price[]" type="hidden" id="price2_' +
+                row_no +
+                '" value="' +
+                item_price +
+                '"><input class="ruprice" name="unit_price2[]" type="hidden" value="' +
+                unit_price +
+                '"><input class="realuprice" name="real_unit_price2[]" type="hidden" value="' +
+                item.row.real_unit_price +
+                '"><span class="text-right sprice" id="sprice_' +
+                row_no +
+                '">' +
+                formatMoney(item_price) +
+                '</span></td>';
+
+
             tr_html +=
                 '<td class="text-center"><i class="fa fa-times tip pointer redel" id="' +
                 row_no +
