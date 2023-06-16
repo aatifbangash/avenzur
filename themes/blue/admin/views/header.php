@@ -1027,6 +1027,11 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('customer_statement_report'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="reports_general_ledger_statement_report">
+                                        <a href="<?= admin_url('reports/general_ledger_statement') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_statement_report'); ?></span>
+                                        </a>
+                                    </li>
                                 </ul>
                             </li>
                           

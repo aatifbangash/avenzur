@@ -3195,6 +3195,52 @@ class Reports extends MY_Controller
         
     }
 
+    public function general_ledger_statement(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date   = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        $this->data['ledgers'] = $this->reports_model->getCompanyLedgers();
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+            $ledger_id      = $this->input->post('ledger');
+
+            $supplier_statement = $this->reports_model->getGeneralLedgerStatement($start_date, $end_date, '', $ledger_id);
+
+            $total_ob = 0;
+            $total_ob_credit = 0;
+            $total_ob_debit = 0;
+            $ob_type = '';
+            foreach ($supplier_statement['ob'] as $ob){
+                if($ob->dc == 'D'){
+                    $total_ob_debit =  $ob->total_amount;
+                }else if($ob->dc == 'C'){
+                    $total_ob_credit =  $ob->total_amount;
+                }
+            }
+            
+            $total_ob = $total_ob_credit - $total_ob_debit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['supplier_id'] = $supplier_id;
+            $this->data['ob_type'] = $ob_type;
+            $this->data['total_ob'] = $total_ob;
+            $this->data['supplier_statement'] = $supplier_statement['report'];
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_statement')]];
+            $meta = ['page_title' => lang('general_ledger_statement'), 'bc' => $bc];
+            $this->page_construct('reports/general_ledger_statement', $meta, $this->data);
+        }else{
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_statement')]];
+            $meta = ['page_title' => lang('general_ledger_statement'), 'bc' => $bc];
+            $this->page_construct('reports/general_ledger_statement', $meta, $this->data);
+        }
+    }
+
     public function supplier_statement(){
         $this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');

@@ -9,6 +9,67 @@ class Reports_model extends CI_Model
         parent::__construct();
     }
 
+    public function getCompanyLedgers(){
+        $this->db
+                ->select('sma_accounts_ledgers.*')
+                ->from('sma_accounts_ledgers')
+                ->order_by('sma_accounts_ledgers.name asc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        return $data_res;
+    }
+
+    public function getGeneralLedgerStatement($start_date, $end_date, $supplier_id, $ledger_account){
+        $response = array();
+
+        $this->db
+                ->select('COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+                ->from('sma_accounts_entryitems')
+                //->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+                ->where('sma_accounts_entries.date <', $start_date)
+                ->group_by('sma_accounts_entryitems.dc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        $this->db
+                ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code, sma_accounts_ledgers.name')
+                ->from('sma_accounts_entryitems')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+                ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
+                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+                ->where('sma_accounts_entries.date >=', $start_date)
+                ->where('sma_accounts_entries.date <=', $end_date)
+                ->order_by('sma_accounts_entries.date asc');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        $response_array = array('ob' => $data_res, 'report' => $data);
+
+        return $response_array;
+    }
+
     public function getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account){
         $response = array();
 
