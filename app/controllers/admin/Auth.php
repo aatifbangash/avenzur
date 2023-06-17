@@ -1194,7 +1194,7 @@ class Auth extends MY_Controller
         }
         
         if ($this->settings_model->deleteCompany($id)) {
-            $this->sma->send_json(['error' => 0, 'msg' => lang('brand_deleted')]);
+            $this->sma->send_json(['error' => 0, 'msg' => "company deleted"]);
         }
     }
 }
