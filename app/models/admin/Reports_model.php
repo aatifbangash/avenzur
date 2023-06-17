@@ -142,14 +142,19 @@ class Reports_model extends CI_Model
 
     public function getDailyPurchases($year, $month, $warehouse_id = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $myQuery = "SELECT DATE_FORMAT( date,  '%e' ) AS date, SUM( COALESCE( product_tax, 0 ) ) AS tax1, SUM( COALESCE( order_tax, 0 ) ) AS tax2, SUM( COALESCE( grand_total, 0 ) ) AS total, SUM( COALESCE( total_discount, 0 ) ) AS discount, SUM( COALESCE( shipping, 0 ) ) AS shipping
             FROM " . $this->db->dbprefix('purchases') . ' WHERE ';
         if ($warehouse_id) {
             $myQuery .= " warehouse_id = {$warehouse_id} AND ";
         }
+
+        $myQuery .= " business_id = {$business_id} AND ";
+
         $myQuery .= " DATE_FORMAT( date,  '%Y-%m' ) =  '{$year}-{$month}'
             GROUP BY DATE_FORMAT( date,  '%e' )";
         $q = $this->db->query($myQuery, false);
+        
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -161,10 +166,8 @@ class Reports_model extends CI_Model
 
     public function getDailySales($year, $month, $warehouse_id = null)
     {
-        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $myQuery = "SELECT DATE_FORMAT( date,  '%e' ) AS date, SUM( COALESCE( product_tax, 0 ) ) AS tax1, SUM( COALESCE( order_tax, 0 ) ) AS tax2, SUM( COALESCE( grand_total, 0 ) ) AS total, SUM( COALESCE( total_discount, 0 ) ) AS discount, SUM( COALESCE( shipping, 0 ) ) AS shipping
             FROM " . $this->db->dbprefix('sales') . ' WHERE ';
-        $myQuery .= $this->db->dbprefix('sales').".business_id = {$business_id} AND ";
         if ($warehouse_id) {
             $myQuery .= " warehouse_id = {$warehouse_id} AND ";
         }
@@ -196,7 +199,6 @@ class Reports_model extends CI_Model
 
     public function getExpenses($date, $warehouse_id = null, $year = null, $month = null)
     {
-        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $sdate = $date . ' 00:00:00';
         $edate = $date . ' 23:59:59';
         $this->db->select('SUM( COALESCE( amount, 0 ) ) AS total', false);
@@ -212,7 +214,6 @@ class Reports_model extends CI_Model
         if ($warehouse_id) {
             $this->db->where('warehouse_id', $warehouse_id);
         }
-        $this->db->where('business_id', $business_id);
 
         $q = $this->db->get('expenses');
         if ($q->num_rows() > 0) {
@@ -223,11 +224,15 @@ class Reports_model extends CI_Model
 
     public function getMonthlyPurchases($year, $warehouse_id = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $myQuery = "SELECT DATE_FORMAT( date,  '%c' ) AS date, SUM( COALESCE( product_tax, 0 ) ) AS tax1, SUM( COALESCE( order_tax, 0 ) ) AS tax2, SUM( COALESCE( grand_total, 0 ) ) AS total, SUM( COALESCE( total_discount, 0 ) ) AS discount, SUM( COALESCE( shipping, 0 ) ) AS shipping
             FROM " . $this->db->dbprefix('purchases') . ' WHERE ';
         if ($warehouse_id) {
             $myQuery .= " warehouse_id = {$warehouse_id} AND ";
         }
+
+        $myQuery .= " business_id = {$business_id} AND ";
+
         $myQuery .= " DATE_FORMAT( date,  '%Y' ) =  '{$year}'
             GROUP BY date_format( date, '%c' ) ORDER BY date_format( date, '%c' ) ASC";
         $q = $this->db->query($myQuery, false);
@@ -242,10 +247,8 @@ class Reports_model extends CI_Model
 
     public function getMonthlySales($year, $warehouse_id = null)
     {
-        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $myQuery = "SELECT DATE_FORMAT( date,  '%c' ) AS date, SUM( COALESCE( product_tax, 0 ) ) AS tax1, SUM( COALESCE( order_tax, 0 ) ) AS tax2, SUM( COALESCE( grand_total, 0 ) ) AS total, SUM( COALESCE( total_discount, 0 ) ) AS discount, SUM( COALESCE( shipping, 0 ) ) AS shipping
             FROM " . $this->db->dbprefix('sales') . ' WHERE ';
-        $myQuery.= $this->db->dbprefix('sales').".business_id = {$business_id} AND ";
         if ($warehouse_id) {
             $myQuery .= " warehouse_id = {$warehouse_id} AND ";
         }
@@ -263,7 +266,6 @@ class Reports_model extends CI_Model
 
     public function getOrderDiscount($date, $warehouse_id = null, $year = null, $month = null)
     {
-        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $sdate = $date . ' 00:00:00';
         $edate = $date . ' 23:59:59';
         $this->db->select('SUM( COALESCE( order_discount, 0 ) ) AS order_discount', false);
@@ -279,7 +281,6 @@ class Reports_model extends CI_Model
         if ($warehouse_id) {
             $this->db->where('warehouse_id', $warehouse_id);
         }
-        $this->db->where('business_id', $business_id);
 
         $q = $this->db->get('sales');
         if ($q->num_rows() > 0) {
@@ -350,7 +351,6 @@ class Reports_model extends CI_Model
 
     public function getReturns($date, $warehouse_id = null, $year = null, $month = null)
     {
-        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $sdate = $date . ' 00:00:00';
         $edate = $date . ' 23:59:59';
         $this->db->select('SUM( COALESCE( grand_total, 0 ) ) AS total', false)
@@ -367,7 +367,7 @@ class Reports_model extends CI_Model
         if ($warehouse_id) {
             $this->db->where('warehouse_id', $warehouse_id);
         }
-        $this->db->where('business_id', $business_id);
+
         $q = $this->db->get('sales');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -425,11 +425,15 @@ class Reports_model extends CI_Model
 
     public function getStaffDailyPurchases($user_id, $year, $month, $warehouse_id = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $myQuery = "SELECT DATE_FORMAT( date,  '%e' ) AS date, SUM( COALESCE( product_tax, 0 ) ) AS tax1, SUM( COALESCE( order_tax, 0 ) ) AS tax2, SUM( COALESCE( grand_total, 0 ) ) AS total, SUM( COALESCE( total_discount, 0 ) ) AS discount, SUM( COALESCE( shipping, 0 ) ) AS shipping
             FROM " . $this->db->dbprefix('purchases') . ' WHERE ';
         if ($warehouse_id) {
             $myQuery .= " warehouse_id = {$warehouse_id} AND ";
         }
+
+        $myQuery .= " business_id = {$business_id} AND ";
+
         $myQuery .= " created_by = {$user_id} AND DATE_FORMAT( date,  '%Y-%m' ) =  '{$year}-{$month}'
             GROUP BY DATE_FORMAT( date,  '%e' )";
         $q = $this->db->query($myQuery, false);
@@ -444,10 +448,8 @@ class Reports_model extends CI_Model
 
     public function getStaffDailySales($user_id, $year, $month, $warehouse_id = null)
     {
-        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $myQuery = "SELECT DATE_FORMAT( date,  '%e' ) AS date, SUM( COALESCE( product_tax, 0 ) ) AS tax1, SUM( COALESCE( order_tax, 0 ) ) AS tax2, SUM( COALESCE( grand_total, 0 ) ) AS total, SUM( COALESCE( total_discount, 0 ) ) AS discount, SUM( COALESCE( shipping, 0 ) ) AS shipping
             FROM " . $this->db->dbprefix('sales') . ' WHERE ';
-        $myQuery.= $this->db->dbprefix('sales').".business_id = {$business_id} AND ";
         if ($warehouse_id) {
             $myQuery .= " warehouse_id = {$warehouse_id} AND ";
         }
@@ -465,11 +467,15 @@ class Reports_model extends CI_Model
 
     public function getStaffMonthlyPurchases($user_id, $year, $warehouse_id = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $myQuery = "SELECT DATE_FORMAT( date,  '%c' ) AS date, SUM( COALESCE( product_tax, 0 ) ) AS tax1, SUM( COALESCE( order_tax, 0 ) ) AS tax2, SUM( COALESCE( grand_total, 0 ) ) AS total, SUM( COALESCE( total_discount, 0 ) ) AS discount, SUM( COALESCE( shipping, 0 ) ) AS shipping
             FROM " . $this->db->dbprefix('purchases') . ' WHERE ';
         if ($warehouse_id) {
             $myQuery .= " warehouse_id = {$warehouse_id} AND ";
         }
+
+        $myQuery .= " business_id = {$business_id} AND ";
+
         $myQuery .= " created_by = {$user_id} AND DATE_FORMAT( date,  '%Y' ) =  '{$year}'
             GROUP BY date_format( date, '%c' ) ORDER BY date_format( date, '%c' ) ASC";
         $q = $this->db->query($myQuery, false);
@@ -484,10 +490,8 @@ class Reports_model extends CI_Model
 
     public function getStaffMonthlySales($user_id, $year, $warehouse_id = null)
     {
-        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $myQuery = "SELECT DATE_FORMAT( date,  '%c' ) AS date, SUM( COALESCE( product_tax, 0 ) ) AS tax1, SUM( COALESCE( order_tax, 0 ) ) AS tax2, SUM( COALESCE( grand_total, 0 ) ) AS total, SUM( COALESCE( total_discount, 0 ) ) AS discount, SUM( COALESCE( shipping, 0 ) ) AS shipping
             FROM " . $this->db->dbprefix('sales') . ' WHERE ';
-        $myQuery.= $this->db->dbprefix('sales').".business_id = {$business_id} AND ";
         if ($warehouse_id) {
             $myQuery .= " warehouse_id = {$warehouse_id} AND ";
         }
@@ -545,11 +549,14 @@ class Reports_model extends CI_Model
 
     public function getTotalExpenses($start, $end, $warehouse_id = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('count(id) as total, sum(COALESCE(amount, 0)) as total_amount', false)
             ->where('date BETWEEN ' . $start . ' and ' . $end);
         if ($warehouse_id) {
             $this->db->where('warehouse_id', $warehouse_id);
         }
+        $this->db->where('business_id', $business_id);
+        
         $q = $this->db->get('expenses');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -559,9 +566,12 @@ class Reports_model extends CI_Model
 
     public function getTotalPaidAmount($start, $end)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('count(id) as total, SUM(COALESCE(amount, 0)) as total_amount', false)
             ->where('type', 'sent')
             ->where('date BETWEEN ' . $start . ' and ' . $end);
+
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('payments');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -571,13 +581,18 @@ class Reports_model extends CI_Model
 
     public function getTotalPurchases($start, $end, $warehouse_id = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('count(id) as total, sum(COALESCE(grand_total, 0)) as total_amount, SUM(COALESCE(paid, 0)) as paid, SUM(COALESCE(total_tax, 0)) as tax', false)
             ->where('status !=', 'pending')
             ->where('date BETWEEN ' . $start . ' and ' . $end);
         if ($warehouse_id) {
             $this->db->where('warehouse_id', $warehouse_id);
         }
+
+        $this->db->where('business_id', $business_id);
+
         $q = $this->db->get('purchases');
+
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -586,9 +601,12 @@ class Reports_model extends CI_Model
 
     public function getTotalReceivedAmount($start, $end)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('count(id) as total, SUM(COALESCE(amount, 0)) as total_amount', false)
             ->where('type', 'received')
             ->where('date BETWEEN ' . $start . ' and ' . $end);
+
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('payments');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -598,9 +616,11 @@ class Reports_model extends CI_Model
 
     public function getTotalReceivedCashAmount($start, $end)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('count(id) as total, SUM(COALESCE(amount, 0)) as total_amount', false)
             ->where('type', 'received')->where('paid_by', 'cash')
             ->where('date BETWEEN ' . $start . ' and ' . $end);
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('payments');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -610,9 +630,11 @@ class Reports_model extends CI_Model
 
     public function getTotalReceivedCCAmount($start, $end)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('count(id) as total, SUM(COALESCE(amount, 0)) as total_amount', false)
             ->where('type', 'received')->where('paid_by', 'CC')
             ->where('date BETWEEN ' . $start . ' and ' . $end);
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('payments');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -622,9 +644,12 @@ class Reports_model extends CI_Model
 
     public function getTotalReceivedChequeAmount($start, $end)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('count(id) as total, SUM(COALESCE(amount, 0)) as total_amount', false)
             ->where('type', 'received')->where('paid_by', 'Cheque')
             ->where('date BETWEEN ' . $start . ' and ' . $end);
+
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('payments');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -634,9 +659,11 @@ class Reports_model extends CI_Model
 
     public function getTotalReceivedPPPAmount($start, $end)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('count(id) as total, SUM(COALESCE(amount, 0)) as total_amount', false)
             ->where('type', 'received')->where('paid_by', 'ppp')
             ->where('date BETWEEN ' . $start . ' and ' . $end);
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('payments');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -646,9 +673,11 @@ class Reports_model extends CI_Model
 
     public function getTotalReceivedStripeAmount($start, $end)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('count(id) as total, SUM(COALESCE(amount, 0)) as total_amount', false)
             ->where('type', 'received')->where('paid_by', 'stripe')
             ->where('date BETWEEN ' . $start . ' and ' . $end);
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('payments');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -658,9 +687,11 @@ class Reports_model extends CI_Model
 
     public function getTotalReturnedAmount($start, $end)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('count(id) as total, SUM(COALESCE(amount, 0)) as total_amount', false)
             ->where('type', 'returned')
             ->where('date BETWEEN ' . $start . ' and ' . $end);
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('payments');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -670,11 +701,13 @@ class Reports_model extends CI_Model
 
     public function getTotalReturnSales($start, $end, $warehouse_id = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('count(id) as total, sum(COALESCE(grand_total, 0)) as total_amount, SUM(COALESCE(paid, 0)) as paid, SUM(COALESCE(total_tax, 0)) as tax', false)
             ->where('date BETWEEN ' . $start . ' and ' . $end);
         if ($warehouse_id) {
             $this->db->where('warehouse_id', $warehouse_id);
         }
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('returns');
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -684,12 +717,14 @@ class Reports_model extends CI_Model
 
     public function getTotalSales($start, $end, $warehouse_id = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select('count(id) as total, sum(COALESCE(grand_total, 0)) as total_amount, SUM(COALESCE(paid, 0)) as paid, SUM(COALESCE(total_tax, 0)) as tax', false)
             ->where('sale_status !=', 'pending')
             ->where('date BETWEEN ' . $start . ' and ' . $end);
         if ($warehouse_id) {
             $this->db->where('warehouse_id', $warehouse_id);
         }
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('sales');
         if ($q->num_rows() > 0) {
             return $q->row();

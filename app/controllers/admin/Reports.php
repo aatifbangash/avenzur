@@ -725,7 +725,6 @@ class Reports extends MY_Controller
 
     public function getBrandsReport($pdf = null, $xls = null)
     {
-        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->sma->checkPermissions('products', true);
         $warehouse  = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
         $brand      = $this->input->get('brand') ? $this->input->get('brand') : null;
@@ -770,7 +769,6 @@ class Reports extends MY_Controller
                 ->from('brands')
                 ->join($sp, 'brands.id = PSales.brand', 'left')
                 ->join($pp, 'brands.id = PCosts.brand', 'left')
-                ->where('brands.business_id', $business_id)
                 ->group_by('brands.id, brands.name')
                 ->order_by('brands.code', 'asc');
 
@@ -852,8 +850,7 @@ class Reports extends MY_Controller
                     (SUM( COALESCE( PSales.totalSale, 0 ) )- SUM( COALESCE( PCosts.totalPurchase, 0 ) ) ) as Profit', false)
                 ->from('brands')
                 ->join($sp, 'brands.id = PSales.brand', 'left')
-                ->join($pp, 'brands.id = PCosts.brand', 'left')
-                ->where('brands.business_id', $business_id);
+                ->join($pp, 'brands.id = PCosts.brand', 'left');
 
             if ($brand) {
                 $this->datatables->where('brands.id', $brand);
@@ -866,7 +863,6 @@ class Reports extends MY_Controller
 
     public function getCategoriesReport($pdf = null, $xls = null)
     {
-        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->sma->checkPermissions('products', true);
         $warehouse  = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
         $category   = $this->input->get('category') ? $this->input->get('category') : null;
@@ -911,7 +907,6 @@ class Reports extends MY_Controller
                 ->from('categories')
                 ->join($sp, 'categories.id = PSales.category', 'left')
                 ->join($pp, 'categories.id = PCosts.category', 'left')
-                ->where('categories.business_id', $business_id)
                 ->group_start()->where('parent_id is NULL', null, false)->or_where('parent_id', 0)->group_end()
                 ->group_by('categories.id, categories.code, categories.name')
                 ->order_by('categories.code', 'asc');
@@ -998,7 +993,6 @@ class Reports extends MY_Controller
                 ->from('categories')
                 ->join($sp, 'categories.id = PSales.category', 'left')
                 ->join($pp, 'categories.id = PCosts.category', 'left')
-                ->where('categories.business_id', $business_id)
                 ->group_start()->where('parent_id is NULL', null, false)->or_where('parent_id', 0)->group_end();
 
             if ($category) {
@@ -1259,7 +1253,6 @@ class Reports extends MY_Controller
 
     public function getExpiryAlerts($warehouse_id = null)
     {
-        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $month = $this->input->get('month') ? $this->input->get('month') : null;
         
         $monthNumber = '+'.$month.'months';
@@ -1278,8 +1271,6 @@ class Reports extends MY_Controller
                 ->from('purchase_items')
                 ->join('products', 'products.id=purchase_items.product_id', 'left')
                 ->join('warehouses', 'warehouses.id=purchase_items.warehouse_id', 'left')
-                ->where('products.business_id', $business_id)
-                ->where('warehouses.business_id', $business_id)
                 ->group_start()
                 ->where('warehouse_id', $warehouse_id)
                 ->where('expiry !=', null)->where('expiry !=', '0000-00-00')
@@ -1292,8 +1283,6 @@ class Reports extends MY_Controller
                 ->from('purchase_items')
                 ->join('products', 'products.id=purchase_items.product_id', 'left')
                 ->join('warehouses', 'warehouses.id=purchase_items.warehouse_id', 'left')
-                ->where('products.business_id', $business_id)
-                ->where('warehouses.business_id', $business_id)
                 ->group_start()
                 ->where('expiry !=', null)->where('expiry !=', '0000-00-00')
                 ->where('quantity_balance >', 0)
@@ -1491,7 +1480,6 @@ class Reports extends MY_Controller
 
     public function getProductsReport($pdf = null, $xls = null)
     {
-        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->sma->checkPermissions('products', true);
 
         $product     = $this->input->get('product') ? $this->input->get('product') : null;
@@ -1546,7 +1534,6 @@ class Reports extends MY_Controller
                 ->join($sp, 'products.id = PSales.product_id', 'left')
                 ->join($pp, 'products.id = PCosts.product_id', 'left')
                 ->where('products.type !=', 'combo')
-                ->where('products.business_id', $business_id)
                 ->group_by('products.code');
 
             if ($product) {
@@ -1669,7 +1656,6 @@ class Reports extends MY_Controller
                 ->join($sp, 'products.id = PSales.product_id', 'left')
                 ->join($pp, 'products.id = PCosts.product_id', 'left')
                 ->where('products.type !=', 'combo')
-                ->where('products.business_id', $business_id)
                 ->group_by('products.code');
 
             if ($product) {

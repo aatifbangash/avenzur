@@ -964,7 +964,8 @@ class Site extends CI_Model
 
     public function getWarehouseByID($id)
     {
-        $q = $this->db->get_where('warehouses', ['id' => $id], 1);
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+        $q = $this->db->get_where('warehouses', ['id' => $id,'business_id' => $business_id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
