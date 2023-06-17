@@ -264,6 +264,14 @@ values ('" . ($totalSettingsRecords + 1) . "',
         return false;
     }
 
+    public function deleteUser($id)
+    {
+        if ($this->db->delete('users', ['id' => $id])) {
+            return true;
+        }
+        return false;
+    }
+
     public function addBrands($data)
     {
         if ($this->db->insert_batch('brands', $data)) {

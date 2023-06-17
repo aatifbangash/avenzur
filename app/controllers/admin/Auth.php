@@ -1051,7 +1051,7 @@ class Auth extends MY_Controller
             ->group_by('users.id')
             ->where('groups.name', 'owner')
             ->edit_column('active', '$1__$2', 'active, id')
-            ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('auth/profile/$1') . "' class='tip' title='" . lang('edit_user') . "'><i class=\"fa fa-edit\"></i></a></div>", 'id');
+            ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('auth/profile/$1') . "' class='tip' title='" . lang('edit_user') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>Delete User</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('auth/delete_superuser/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
 
         // if (!$this->Owner) {
         //     $this->datatables->unset_column('id');
@@ -1059,6 +1059,15 @@ class Auth extends MY_Controller
         echo $this->datatables->generate();
     }
 
+    public function delete_superuser($id) {
+        if (!$id) {
+            $this->sma->send_json(['error' => 1, 'msg' => lang('id_not_found')]);
+        }
+        
+        if ($this->settings_model->deleteUser($id)) {
+            $this->sma->send_json(['error' => 0, 'msg' => "user deleted"]);
+        }
+    }
     public function create_super_user()
     {
 
@@ -1069,10 +1078,11 @@ class Auth extends MY_Controller
         $this->form_validation->set_rules('group', lang('group'), 'trim|required');
 
         if ($this->form_validation->run() == true) {
+            dd($this->input->post());
             $username = strtolower($this->input->post('username'));
             $email    = strtolower($this->input->post('email'));
             $password = $this->input->post('password');
-            $notify   = $this->input->post('notify');
+            $notify   = 0;//$this->input->post('notify');
 
             $additional_data = [
                 'first_name'     => $this->input->post('first_name'),

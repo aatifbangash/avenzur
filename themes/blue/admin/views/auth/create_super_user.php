@@ -128,14 +128,14 @@
                                     <?= lang('view_right', 'view_right'); ?>
                                     <?php
                                     $vropts = [1 => lang('all_records'), 0 => lang('own_records')];
-                                    echo form_dropdown('view_right', $vropts, ($_POST['view_right'] ?? 1), 'id="view_right" class="form-control select" style="width:100%;"');
+                                    echo form_dropdown('view_right', $vropts, 1, 'id="view_right" class="form-control select" style="width:100%;"');
                                     ?>
                                 </div>
                                 <div class="form-group">
                                     <?= lang('edit_right', 'edit_right'); ?>
                                     <?php
                                     $opts = [1 => lang('yes'), 0 => lang('no')];
-                                    echo form_dropdown('edit_right', $opts, ($_POST['edit_right'] ?? 0), 'id="edit_right" class="form-control select" style="width:100%;"');
+                                    echo form_dropdown('edit_right', $opts, 1, 'id="edit_right" class="form-control select" style="width:100%;"');
                                     ?>
                                 </div>
                                 <div class="form-group">
@@ -145,7 +145,7 @@
                                 <div id="allowDiscountInput"></div>
                             </div>
 
-                            <div class="row">
+                            <!-- <div class="row">
                                 <div class="col-md-8">
                                     <label class="checkbox" for="notify">
                                         <input type="checkbox" name="notify" value="1" id="notify" checked="checked"/>
@@ -153,7 +153,7 @@
                                     </label>
                                 </div>
                                 <div class="clearfix"></div>
-                            </div>
+                            </div> -->
 
                         </div>
                     </div>
