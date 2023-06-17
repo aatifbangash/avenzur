@@ -320,9 +320,11 @@ class Reports_model extends CI_Model
 
     public function getPurchasesTax($start_date = null, $end_date = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select_sum('igst')->select_sum('cgst')->select_sum('sgst')
             ->select_sum('product_tax')->select_sum('order_tax')
             ->select_sum('grand_total')->select_sum('paid');
+        $this->db->where('business_id', $business_id);
         if ($start_date) {
             $this->db->where('date >=', $start_date);
         }
@@ -377,6 +379,7 @@ class Reports_model extends CI_Model
 
     public function getSalesTax($start_date = null, $end_date = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->db->select_sum('igst')->select_sum('cgst')->select_sum('sgst')
             ->select_sum('product_tax')->select_sum('order_tax')
             ->select_sum('grand_total')->select_sum('paid');
@@ -386,6 +389,7 @@ class Reports_model extends CI_Model
         if ($end_date) {
             $this->db->where('date <=', $end_date);
         }
+        $this->db->where('business_id', $business_id);
         $q = $this->db->get('sales');
         if ($q->num_rows() > 0) {
             return $q->row();

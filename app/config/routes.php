@@ -44,6 +44,13 @@ $route['reset_password/(:any)']  = 'main/reset_password/$1';
 $route['admin']                      = 'admin/welcome';
 $route['alter_schema']               = 'admin/welcome/alter_schema';
 $route['admin/users']                = 'admin/auth/users';
+
+
+$route['admin/superusers']                = 'admin/auth/superusers';
+$route['admin/companies']                = 'admin/auth/companies';
+// $route['admin/companies']                = 'admin/auth/companies';
+
+
 $route['admin/users/create_user']    = 'admin/auth/create_user';
 $route['admin/users/profile/(:num)'] = 'admin/auth/profile/$1';
 $route['admin/login']                = 'admin/auth/login';
