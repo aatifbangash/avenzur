@@ -344,6 +344,7 @@ class Reports extends MY_Controller
 
     public function get_purchase_taxes($pdf = null, $xls = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->sma->checkPermissions('tax', true);
         $supplier   = $this->input->get('supplier') ? $this->input->get('supplier') : null;
         $warehouse  = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
@@ -359,6 +360,7 @@ class Reports extends MY_Controller
                 ->select("date, reference_no, CONCAT({$this->db->dbprefix('warehouses')}.name, ' (', {$this->db->dbprefix('warehouses')}.code, ')') as warehouse, supplier, igst, cgst, sgst, product_tax, order_tax, grand_total, paid")
                 ->from('purchases')
                 ->join('warehouses', 'warehouses.id=purchases.warehouse_id', 'left')
+                ->where('purchases.business_id', $business_id)
                 ->order_by('purchases.date desc');
 
             if ($supplier) {
@@ -448,7 +450,8 @@ class Reports extends MY_Controller
             $this->datatables
                 ->select("DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, status, CONCAT({$this->db->dbprefix('warehouses')}.name, ' (', {$this->db->dbprefix('warehouses')}.code, ')') as warehouse, supplier, " . ($this->Settings->indian_gst ? 'igst, cgst, sgst,' : '') . " product_tax, order_tax, grand_total, {$this->db->dbprefix('purchases')}.id as id", false)
                 ->from('purchases')
-                ->join('warehouses', 'warehouses.id=purchases.warehouse_id', 'left');
+                ->join('warehouses', 'warehouses.id=purchases.warehouse_id', 'left')
+                ->where('purchases.business_id', $business_id);
             if ($supplier) {
                 $this->datatables->where('supplier_id', $supplier);
             }
@@ -465,6 +468,7 @@ class Reports extends MY_Controller
 
     public function get_sale_taxes($pdf = null, $xls = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->sma->checkPermissions('tax', true);
         $biller     = $this->input->get('biller') ? $this->input->get('biller') : null;
         $warehouse  = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
@@ -480,6 +484,7 @@ class Reports extends MY_Controller
                 ->select("date, reference_no, CONCAT({$this->db->dbprefix('warehouses')}.name, ' (', {$this->db->dbprefix('warehouses')}.code, ')') as warehouse, biller, igst, cgst, sgst, product_tax, order_tax, grand_total, paid, payment_status")
                 ->from('sales')
                 ->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')
+                ->where('sales.business_id', $business_id)
                 ->order_by('date desc');
 
             if ($biller) {
@@ -568,7 +573,8 @@ class Reports extends MY_Controller
             $this->datatables
                 ->select("DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, sale_status, CONCAT({$this->db->dbprefix('warehouses')}.name, ' (', {$this->db->dbprefix('warehouses')}.code, ')') as warehouse, biller, " . ($this->Settings->indian_gst ? 'igst, cgst, sgst,' : '') . " product_tax, order_tax, grand_total, {$this->db->dbprefix('sales')}.id as id", false)
                 ->from('sales')
-                ->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left');
+                ->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')
+                ->where('sales.business_id', $business_id);
             if ($biller) {
                 $this->datatables->where('biller_id', $biller);
             }
@@ -2131,6 +2137,7 @@ class Reports extends MY_Controller
 
     public function getRrgisterlogs($pdf = null, $xls = null)
     {
+        $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
         $this->sma->checkPermissions('register', true);
         if ($this->input->get('user')) {
             $user = $this->input->get('user');
@@ -2157,6 +2164,7 @@ class Reports extends MY_Controller
                 ->select('date, closed_at, CONCAT(' . $this->db->dbprefix('users') . ".first_name, ' ', " . $this->db->dbprefix('users') . ".last_name, ' (', users.email, ')') as user, cash_in_hand, total_cc_slips, total_cheques, total_cash, total_cc_slips_submitted, total_cheques_submitted,total_cash_submitted, note", false)
                 ->from('pos_register')
                 ->join('users', 'users.id=pos_register.user_id', 'left')
+                ->where('users.business_id', $business_id)
                 ->order_by('date desc');
             //->where('status', 'close');
 
@@ -2236,7 +2244,8 @@ class Reports extends MY_Controller
             $this->datatables
                 ->select('date, closed_at, CONCAT(' . $this->db->dbprefix('users') . ".first_name, ' ', " . $this->db->dbprefix('users') . ".last_name, '<br>', " . $this->db->dbprefix('users') . ".email) as user, cash_in_hand, CONCAT(total_cc_slips, ' (', total_cc_slips_submitted, ')'), CONCAT(total_cheques, ' (', total_cheques_submitted, ')'), CONCAT(total_cash, ' (', total_cash_submitted, ')'), note", false)
                 ->from('pos_register')
-                ->join('users', 'users.id=pos_register.user_id', 'left');
+                ->join('users', 'users.id=pos_register.user_id', 'left')
+                ->where('users.business_id', $business_id);
 
             if ($user) {
                 $this->datatables->where('pos_register.user_id', $user);
