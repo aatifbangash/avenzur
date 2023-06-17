@@ -11,6 +11,8 @@ class Auth extends MY_Controller
         $this->load->library('form_validation');
         $this->form_validation->set_error_delimiters($this->config->item('error_start_delimiter', 'ion_auth'), $this->config->item('error_end_delimiter', 'ion_auth'));
         $this->load->admin_model('auth_model');
+        $this->load->admin_model('settings_model');
+        // $this->load->admin_model('sma');
         $this->load->library('ion_auth');
     }
 
@@ -1019,5 +1021,180 @@ class Auth extends MY_Controller
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('users')]];
         $meta = ['page_title' => lang('users'), 'bc' => $bc];
         $this->page_construct('auth/index', $meta, $this->data);
+    }
+
+
+    public function superusers()
+    {
+
+        // echo 'a';exit;
+        if (!$this->loggedIn) {
+            admin_redirect('login');
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('users')]];
+        $meta = ['page_title' => lang('users'), 'bc' => $bc];
+        $this->page_construct('auth/superusers', $meta, $this->data);
+    }
+
+    public function getSuperUsers()
+    {
+
+
+        $this->load->library('datatables');
+        $this->datatables
+            ->select($this->db->dbprefix('users') . '.id as id, first_name, last_name, email, country, award_points, ' . $this->db->dbprefix('groups') . '.name, active')
+            ->from('users')
+            ->join('groups', 'users.group_id=groups.id', 'left')
+            ->group_by('users.id')
+            ->where('groups.name', 'owner')
+            ->edit_column('active', '$1__$2', 'active, id')
+            ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('auth/profile/$1') . "' class='tip' title='" . lang('edit_user') . "'><i class=\"fa fa-edit\"></i></a></div>", 'id');
+
+        // if (!$this->Owner) {
+        //     $this->datatables->unset_column('id');
+        // }
+        echo $this->datatables->generate();
+    }
+
+    public function create_super_user()
+    {
+
+        $this->data['title'] = 'Create User';
+        $this->form_validation->set_rules('username', lang('username'), 'trim|callback_unique_username');
+        $this->form_validation->set_rules('email', lang('email'), 'trim|callback_unique_email');
+        $this->form_validation->set_rules('status', lang('status'), 'trim|required');
+        $this->form_validation->set_rules('group', lang('group'), 'trim|required');
+
+        if ($this->form_validation->run() == true) {
+            $username = strtolower($this->input->post('username'));
+            $email    = strtolower($this->input->post('email'));
+            $password = $this->input->post('password');
+            $notify   = $this->input->post('notify');
+
+            $additional_data = [
+                'first_name'     => $this->input->post('first_name'),
+                'last_name'      => $this->input->post('last_name'),
+                'company'        => $this->input->post('company'),
+                'phone'          => $this->input->post('phone'),
+                'gender'         => $this->input->post('gender'),
+                'group_id'       => $this->input->post('group') ? $this->input->post('group') : '3',
+                'biller_id'      => $this->input->post('biller'),
+                'warehouse_id'   => $this->input->post('warehouse'),
+                'view_right'     => $this->input->post('view_right'),
+                'edit_right'     => $this->input->post('edit_right'),
+                'allow_discount' => $this->input->post('allow_discount'),
+                'allow_discount_value' => $this->input->post('allow_discount_value'),
+                //TIP:- added business id to new user.
+                'business_id' => $this->ion_auth->user()->row()->business_id
+
+            ];
+            $active = $this->input->post('status');
+        }
+        if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data, $active, $notify)) {
+            $this->session->set_flashdata('message', $this->ion_auth->messages());
+            admin_redirect('auth/users');
+        } else {
+            $this->data['error']      = (validation_errors() ? validation_errors() : ($this->ion_auth->errors() ? $this->ion_auth->errors() : $this->session->flashdata('error')));
+
+            //TIP:- apply condition on groups.
+            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
+            $this->ion_auth->where('business_id', $business_id);
+            $this->data['groups']     = $this->ion_auth->groups()->result_array();
+
+            $this->data['billers']    = $this->site->getAllCompanies('biller');
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $bc                       = [['link' => admin_url('home'), 'page' => lang('home')], ['link' => admin_url('auth/users'), 'page' => lang('users')], ['link' => '#', 'page' => lang('create_user')]];
+            $meta                     = ['page_title' => lang('users'), 'bc' => $bc];
+            $this->page_construct('auth/create_super_user', $meta, $this->data);
+        }
+    }
+
+
+    public function companies()
+    {
+
+
+        $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
+        $bc                  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('system_settings'), 'page' => lang('system_settings')], ['link' => '#', 'page' => 'Companies']];
+        $meta                = ['page_title' => 'Companies', 'bc' => $bc];
+        $this->page_construct('settings/companies', $meta, $this->data);
+    }
+
+
+    public function getCompanies()
+    {
+        $this->load->library('datatables');
+
+        $this->datatables
+            ->select('id, name')
+            ->from('business')
+            ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('auth/edit_company/$1') . "' data-toggle='modal' data-target='#myModal' class='tip' title='Edit company'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>Delete Company</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('auth/delete_company/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
+
+        echo $this->datatables->generate();
+    }
+
+
+    public function add_company()
+    {
+
+        $this->form_validation->set_rules('name', "Company name", 'trim|required|is_unique[business.name]');
+
+        if ($this->form_validation->run() == true) {
+            $data = [
+                'name'        => $this->input->post('name'),
+            ];
+        }
+
+        if ($this->form_validation->run() == true && $this->settings_model->addCompany($data)) {
+            $this->session->set_flashdata('message', "Company added");
+            admin_redirect('auth/companies');
+        } else {
+            $this->data['error']    = validation_errors() ? validation_errors() : $this->session->flashdata('error');
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->load->view($this->theme . 'settings/add_company', $this->data);
+        }
+    }
+
+
+    public function edit_company($id)
+    {
+        $this->form_validation->set_rules('name', lang('brand_name'), 'trim|required');
+        $companyDetails = $this->site->getBusinessByID($id);
+        if ($this->input->post('name') != $companyDetails->name) {
+            $this->form_validation->set_rules('name', lang('brand_name'), 'required|is_unique[brands.name]');
+        }
+       
+        if ($this->form_validation->run() == true) {
+            $data = [
+                'name'        => $this->input->post('name'),
+                
+            ];
+
+        }
+
+        if ($this->form_validation->run() == true && $this->settings_model->updateCompany($id, $data)) {
+            $this->session->set_flashdata('message', "Company Updated");
+            admin_redirect('auth/companies');
+        } else {
+            $this->data['error']    = validation_errors() ? validation_errors() : $this->session->flashdata('error');
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->data['brand']    = $companyDetails;
+            $this->load->view($this->theme . 'settings/edit_company', $this->data);
+        }
+    
+    }
+
+    public function delete_company($id)
+    {
+        if (!$id) {
+            $this->sma->send_json(['error' => 1, 'msg' => lang('id_not_found')]);
+        }
+        
+        if ($this->settings_model->deleteCompany($id)) {
+            $this->sma->send_json(['error' => 0, 'msg' => lang('brand_deleted')]);
+        }
     }
 }

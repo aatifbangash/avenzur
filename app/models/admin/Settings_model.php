@@ -19,6 +19,22 @@ class Settings_model extends CI_Model
         return false;
     }
 
+    public function addCompany($data)
+    {
+        if ($this->db->insert('business', $data)) {
+            return true;
+        }
+        return false;
+    }
+
+    public function deleteCompany($id)
+    {
+        if ($this->db->delete('business', ['id' => $id])) {
+            return true;
+        }
+        return false;
+    }
+
     public function addBrands($data)
     {
         if ($this->db->insert_batch('brands', $data)) {
@@ -691,6 +707,14 @@ class Settings_model extends CI_Model
     public function updateBrand($id, $data = [])
     {
         if ($this->db->update('brands', $data, ['id' => $id])) {
+            return true;
+        }
+        return false;
+    }
+
+    public function updateCompany($id, $data = [])
+    {
+        if ($this->db->update('business', $data, ['id' => $id])) {
             return true;
         }
         return false;
