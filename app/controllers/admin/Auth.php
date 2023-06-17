@@ -577,6 +577,7 @@ class Auth extends MY_Controller
         admin_redirect('login/' . $m);
     }
 
+    
     public function profile($id = null)
     {
         if (!$this->ion_auth->logged_in() || !$this->ion_auth->in_group('owner') && $id != $this->session->userdata('user_id')) {
@@ -1051,7 +1052,8 @@ class Auth extends MY_Controller
             ->group_by('users.id')
             ->where('groups.name', 'owner')
             ->edit_column('active', '$1__$2', 'active, id')
-            ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('auth/profile/$1') . "' class='tip' title='" . lang('edit_user') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>Delete User</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('auth/delete_superuser/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
+            ->add_column('Actions', "<div class=\"text-center\"><a href='#' class='tip po' title='<b>Delete User</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('auth/delete_superuser/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
+            // ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('auth/profile_superusers/$1') . "' class='tip' title='" . lang('edit_user') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>Delete User</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('auth/delete_superuser/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
 
         // if (!$this->Owner) {
         //     $this->datatables->unset_column('id');
@@ -1075,10 +1077,10 @@ class Auth extends MY_Controller
         $this->form_validation->set_rules('username', lang('username'), 'trim|callback_unique_username');
         $this->form_validation->set_rules('email', lang('email'), 'trim|callback_unique_email');
         $this->form_validation->set_rules('status', lang('status'), 'trim|required');
-        $this->form_validation->set_rules('group', lang('group'), 'trim|required');
+        $this->form_validation->set_rules('company', lang('company'), 'trim|required');
 
         if ($this->form_validation->run() == true) {
-            dd($this->input->post());
+
             $username = strtolower($this->input->post('username'));
             $email    = strtolower($this->input->post('email'));
             $password = $this->input->post('password');
@@ -1090,29 +1092,25 @@ class Auth extends MY_Controller
                 'company'        => $this->input->post('company'),
                 'phone'          => $this->input->post('phone'),
                 'gender'         => $this->input->post('gender'),
-                'group_id'       => $this->input->post('group') ? $this->input->post('group') : '3',
+                'group_id'       => $this->site->getCompanyGroup($this->input->post('company')),
                 'biller_id'      => $this->input->post('biller'),
                 'warehouse_id'   => $this->input->post('warehouse'),
                 'view_right'     => $this->input->post('view_right'),
                 'edit_right'     => $this->input->post('edit_right'),
                 'allow_discount' => $this->input->post('allow_discount'),
                 'allow_discount_value' => $this->input->post('allow_discount_value'),
-                //TIP:- added business id to new user.
-                'business_id' => $this->ion_auth->user()->row()->business_id
+                'business_id' => $this->input->post('company')
 
             ];
             $active = $this->input->post('status');
         }
         if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data, $active, $notify)) {
             $this->session->set_flashdata('message', $this->ion_auth->messages());
-            admin_redirect('auth/users');
+            admin_redirect('auth/superusers');
         } else {
             $this->data['error']      = (validation_errors() ? validation_errors() : ($this->ion_auth->errors() ? $this->ion_auth->errors() : $this->session->flashdata('error')));
 
-            //TIP:- apply condition on groups.
-            $business_id = $this->session->userdata['business_id'];  //TAG:-replaced
-            $this->ion_auth->where('business_id', $business_id);
-            $this->data['groups']     = $this->ion_auth->groups()->result_array();
+            $this->data['companies']    = $this->site->getCompanies();
 
             $this->data['billers']    = $this->site->getAllCompanies('biller');
             $this->data['warehouses'] = $this->site->getAllWarehouses();

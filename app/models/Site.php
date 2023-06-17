@@ -402,6 +402,34 @@ class Site extends CI_Model
         return false;
     }
 
+    public function getCompanies()
+    {
+
+        $this->db->select('b.id, b.name');
+        $this->db->from('business b');
+        $this->db->join('sma_users u', 'b.id = u.business_id', 'left');
+        $this->db->where('u.id', NULL);
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+    public function getCompanyGroup($companyId)
+    {
+
+        $q = $this->db->get_where('groups', ['business_id' => $companyId, 'name' => 'owner']);
+        if ($q->num_rows() > 0) {
+            return $q->row()->id;
+        }
+        return false;
+    }
+
     public function getAllCurrencies()
     {
         //TIP:- added

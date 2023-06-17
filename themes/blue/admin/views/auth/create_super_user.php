@@ -36,10 +36,17 @@
                             </div>
 
                             <div class="form-group">
-                                <?php echo lang('company', 'company'); ?>
-                                <div class="controls">
-                                    <?php echo form_input('company', '', 'class="form-control" id="company" required="required"'); ?>
-                                </div>
+                                <?= lang('company', 'company'); ?>
+                                <?php
+                                $companiesOps = [];
+                                if(!empty($companies)) {
+                                    foreach($companies as $idx => $company) {
+                                        $companiesOps[$company->id] = $company->name;
+                                    }
+                                }
+                                
+                                echo form_dropdown('company', $companiesOps, ($_POST['company'] ?? ''), 'id="company" required="required" class="form-control select" style="width:100%;"');
+                                ?>
                             </div>
 
                             <div class="form-group">
@@ -86,17 +93,6 @@
                                 <?php
                                 $opt = [1 => lang('active'), 0 => lang('inactive')];
                                 echo form_dropdown('status', $opt, ($_POST['status'] ?? ''), 'id="status" required="required" class="form-control select" style="width:100%;"');
-                                ?>
-                            </div>
-                            <div class="form-group">
-                                <?= lang('group', 'group'); ?>
-                                <?php
-                                foreach ($groups as $group) {
-                                    if ($group['name'] != 'customer' && $group['name'] != 'supplier') {
-                                        $gp[$group['id']] = $group['name'];
-                                    }
-                                }
-                                echo form_dropdown('group', $gp, ($_POST['group'] ?? ''), 'id="group" required="required" class="form-control select" style="width:100%;"');
                                 ?>
                             </div>
 
