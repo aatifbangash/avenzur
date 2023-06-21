@@ -1374,10 +1374,12 @@ function loadItems() {
             var product_unit = item.row.unit,
                 base_quantity = item.row.base_quantity;
 
-             var cost_price  = item.row.cost;  
+             var cost_price  = item.row.net_cost;  
              var batch_no    = item.row.batch_no;
              var bonus       = item.row.bonus;
              var expiry       = item.row.expiry;
+             var discount1       = item.row.discount1;
+             var discount2       = item.row.discount2;
              
             var unit_price = item.row.real_unit_price;
             if (item.units && item.row.fup != 1 && product_unit != item.row.base_unit) {
@@ -1476,7 +1478,9 @@ function loadItems() {
                 tr_html +=
                 '<td class="text-right"><input class="form-control input-sm text-right rprice" name="cost_price[]" type="text" id="cost_price_' +
                 row_no +
-                '" value="0"></td>';
+                '" value="' +
+                cost_price +
+                '"></td>';
 
                 tr_html +=
                 '<td class="text-right"><input class="form-control input-sm text-right rprice" name="batch_no[]" type="text" id="batch_no_' +
@@ -1537,23 +1541,23 @@ function loadItems() {
                 bonus +
                 '"></td>';
 
-                if ((site.settings.product_discount == 1 && allow_discount == 1) || item_discount) {
+               
                     tr_html +=
                         '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="text" id="discount_' +
                         row_no +
                         '" value="' +
-                        item_ds +
+                        discount1 +
                         '"></td>';
-                }
+            
 
-            if ((site.settings.product_discount == 1 && allow_discount == 1) || item_discount) {
+            
                 tr_html +=
                     '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="text" id="discount2_' +
                     row_no +
                     '" value="' +
-                    item_ds +
+                    discount2 +
                     '"></td>';
-            }
+            
 
             // <span class="text-right sdiscount text-danger" id="sdiscount_' +
             // row_no +
@@ -1579,18 +1583,14 @@ function loadItems() {
             }
 
             tr_html +=
-            '<td class="text-right"><input class="form-control input-sm text-right rprice" name="net_price[]" type="hidden" id="price_' +
+            '<td class="text-right"><input class="form-control input-sm text-right rprice" name="cost_price[]" type="hidden" id="cost_price_' +
             row_no +
             '" value="' +
             item_price +
-            '"><input class="ruprice" name="unit_price[]" type="hidden" value="' +
-            unit_price +
-            '"><input class="realuprice" name="real_unit_price[]" type="hidden" value="' +
-            item.row.real_unit_price +
             '"><span class="text-right sprice" id="sprice_' +
             row_no +
             '">' +
-            formatMoney(item_price) +
+            formatMoney(cost_price) +
             '</span></td>';
 
 
@@ -1630,8 +1630,6 @@ function loadItems() {
                 '">' +
                 formatMoney(item_price) +
                 '</span></td>';
-
-
 
             tr_html +=
                 '<td class="text-center"><i class="fa fa-times tip pointer redel" id="' +

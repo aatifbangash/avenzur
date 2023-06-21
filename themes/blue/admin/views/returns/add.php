@@ -451,19 +451,19 @@
                     </div>
                     <?php if ($Settings->tax1) {
                                                 ?>
-                        <div class="form-group">
-                            <label for="mtax" class="col-sm-4 control-label"><?= lang('product_tax') ?> *</label>
+                                <div class="form-group">
+                                <label for="mtax" class="col-sm-4 control-label"><?= lang('product_tax') ?> *</label>
 
-                            <div class="col-sm-8">
+                                <div class="col-sm-8">
                                 <?php
                                 $tr[''] = '';
-                                                foreach ($tax_rates as $tax) {
-                                                    $tr[$tax->id] = $tax->name;
-                                                }
-                                                echo form_dropdown('mtax', $tr, '', 'id="mtax" class="form-control input-tip select" style="width:100%;"'); ?>
-                            </div>
-                        </div>
-                    <?php
+                                foreach ($tax_rates as $tax) {
+                                $tr[$tax->id] = $tax->name;
+                                }
+                                echo form_dropdown('mtax', $tr, '', 'id="mtax" class="form-control input-tip select" style="width:100%;"'); ?>
+                                </div>
+                                </div>
+                                <?php
                                             } ?>
                     <div class="form-group">
                         <label for="mquantity" class="col-sm-4 control-label"><?= lang('quantity') ?> *</label>

@@ -84,6 +84,15 @@ class Returns_model extends CI_Model
         return false;
     }
 
+    public function getProductsSold($product_id)
+    {
+        $q = $this->db->get_where('products', ['id' => $product_id]);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+
+    }
     public function getProductOptions($product_id)
     {
         $q = $this->db->get_where('product_variants', ['product_id' => $product_id]);

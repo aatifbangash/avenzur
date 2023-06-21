@@ -135,7 +135,6 @@ class Returns extends MY_Controller
             } else {
                 krsort($products);
             }
-
             $order_discount = $this->site->calculateDiscount($this->input->post('order_discount'), ($total + $product_tax), true);
             $total_discount = $this->sma->formatDecimal(($order_discount + $product_discount), 4);
             $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
@@ -823,6 +822,11 @@ class Returns extends MY_Controller
                     $option_id  = false;
                 }
 
+                $sold                   = $this->returns_model->getProductsSold($row->id);
+                $row->net_cost          = $sold->cost;
+                
+                 $row->discount1         = 0;
+                 $row->discount2         = 0;
 
                 $row->option = $option_id;
                 if ($row->promotion) {
