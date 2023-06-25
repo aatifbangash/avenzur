@@ -52,6 +52,34 @@
                         <?php echo form_input('vat_no', '', 'class="form-control" id="vat_no"'); ?>
                     </div>
                     <div class="form-group">
+                        <?= lang('Fund Books Account', 'Fund Books Account'); ?>
+                        <?php 
+
+                            echo form_dropdown('fund_books_ledger', $LO,'', 'id="fund_books_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        ?>
+                    </div>
+                    <div class="form-group">
+                        <?= lang('Cogs Account', 'Cogs Account'); ?>
+                        <?php 
+
+                            echo form_dropdown('cogs_ledger', $LO,'', 'id="cogs_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        ?>
+                    </div>
+                    <div class="form-group">
+                        <?= lang('Sales Account', 'Sales Account'); ?>
+                        <?php 
+
+                            echo form_dropdown('sales_ledger', $LO,'', 'id="sales_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        ?>
+                    </div>
+                    <div class="form-group">
+                        <?= lang('Discount Account', 'Discount Account'); ?>
+                        <?php 
+
+                            echo form_dropdown('discount_ledger', $LO,'', 'id="discount_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        ?>
+                    </div>
+                    <div class="form-group">
                         <?= lang('gst_no', 'gst_no'); ?>
                         <?php echo form_input('gst_no', '', 'class="form-control" id="gst_no"'); ?>
                     </div>
@@ -102,6 +130,34 @@
                         <?php 
 
                             echo form_dropdown('ledger_account', $LO,'', 'id="ledger_account" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        ?>
+                    </div>
+                    <div class="form-group">
+                        <?= lang('Credit Card Account', 'Credit Card Account'); ?>
+                        <?php 
+
+                            echo form_dropdown('credit_card_ledger', $LO,'', 'id="credit_card_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        ?>
+                    </div>
+                    <div class="form-group">
+                        <?= lang('Inventory Account', 'Inventory Account'); ?>
+                        <?php 
+
+                            echo form_dropdown('inventory_ledger', $LO,'', 'id="inventory_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        ?>
+                    </div>
+                    <div class="form-group">
+                        <?= lang('Price Difference Account', 'Price Difference Account'); ?>
+                        <?php 
+
+                            echo form_dropdown('price_difference_ledger', $LO,'', 'id="price_difference_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        ?>
+                    </div>
+                    <div class="form-group">
+                        <?= lang('Vat Account', 'Vat Account'); ?>
+                        <?php 
+
+                            echo form_dropdown('vat_on_sales_ledger', $LO,'', 'id="vat_on_sales_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                         ?>
                     </div>
                     <div class="form-group">

@@ -1055,11 +1055,7 @@ class Pos extends MY_Controller
                         }
                     }
 
-
-                     $sid = $sale['sale_id'];
-                    // $sid = 173;
-
-
+                    $sid = $sale['sale_id'];
                     
                     $payemntsType = $this->pos_model->getPaymentType($sid);
                     $paidBillType = $payemntsType->paid_by;
@@ -1067,7 +1063,6 @@ class Pos extends MY_Controller
                     $inv = $this->sales_model->getSaleByID($sid);
                     if($inv->sale_invoice == 0){
                     if ($this->sales_model->saleToInvoice($sid)) {
-                        
                         $this->load->admin_model('companies_model');
                         $customer = $this->companies_model->getCompanyByID($inv->customer_id);
 
@@ -1080,146 +1075,147 @@ class Pos extends MY_Controller
                         'cr_total'     => $inv->grand_total,
                         'notes'        => 'POS Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
                         'sid'          =>  $inv->id,
-                        'entry_type'   =>  'pos'
+                        'transaction_type'   =>  'pos'
                         );
                         
-
-                       $add  = $this->db->insert('sma_accounts_entries', $entry);
-                       $insert_id = $this->db->insert_id();
+                        $add  = $this->db->insert('sma_accounts_entries', $entry);
+                        $insert_id = $this->db->insert_id();
+                        
                         //$insert_id = 999;
                         $entryitemdata = array();
 
                         $inv_items = $this->sales_model->getAllSaleItems($sid);
 
                         $totalSalePrice = 0;
+                        $totalPurchasePrice = 0;
                         foreach ($inv_items as $item) 
                         {
                             $proid = $item->product_id;
                             $product  = $this->site->getProductByID($proid);
-                            //products
 
                             $totalSalePrice = ($totalSalePrice)+($item->net_unit_price * $item->quantity);
-                            
-                            $entryitemdata[] = array(
-                                    'Entryitem' => array(
-                                        'entry_id' => $insert_id,
-                                        'dc' => 'D',
-                                        'ledger_id' => $product->purchase_account,
-                                        //'amount' => $item->main_net,
-                                        'amount' => ($item->net_cost * $item->quantity),
-                                        'narration' => 'purchase account'
-                                    )
-                                );
-            
-                                $entryitemdata[] = array(
-                                    'Entryitem' => array(
-                                        'entry_id' => $insert_id,
-                                        'dc' => 'C',
-                                        'ledger_id' => $product->sale_account,
-                                        'amount' => ($item->net_unit_price * $item->quantity),
-                                        'narration' => 'sale account'
-                                    )
-                                );
-            
-                                $entryitemdata[] = array(
-                                    'Entryitem' => array(
-                                        'entry_id' => $insert_id,
-                                        'dc' => 'C',
-                                        'ledger_id' => $product->inventory_account,
-                                        //'amount' => $item->main_net,
-                                        'amount' => ($item->net_cost * $item->quantity),
-                                        'narration' => 'inventory account'
-                                    )
-                                );
+                            $totalPurchasePrice = $totalPurchasePrice + ($item->net_cost * $item->quantity);
                         }
 
-                            if($paidBillType =="cash"){
+                        $amount_paid_pos = $_POST['amount'][0];
+
+                        if($paidBillType =="cash"){
                             // //cash
                             $entryitemdata[] = array(
                             'Entryitem' => array(
                             'entry_id' => $insert_id,
                             'dc' => 'D',
-                            'ledger_id' => 123,
-                            'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
+                            'ledger_id' => $customer->fund_books_ledger,
+                            //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
+                            'amount' => $amount_paid_pos,
                             'narration' => 'cash'
                             )
                             );
-                            }else{
+                        }else{
                                // //credit card
                             $entryitemdata[] = array(
                                 'Entryitem' => array(
                                 'entry_id' => $insert_id,
                                 'dc' => 'D',
-                                'ledger_id' => 121,
-                                'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
+                                'ledger_id' => $customer->credit_card_ledger,
+                                //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
+                                'amount' => $amount_paid_pos,
                                 'narration' => 'Credit Card'
                                 )
-                                );  
-                            }
+                            );  
+                        }
+
+                        $price_difference = $amount_paid_pos - ($totalSalePrice + $inv->total_tax - $inv->total_discount);
+                        if($price_difference > 0){
+                            $difference_type = 'C';
+                        }else if($price_difference < 0){
+                            $difference_type = 'D';
+                        }
+
+
+                        // cost of goods sold
+                        $entryitemdata[] = array(
+                            'Entryitem' => array(
+                            'entry_id' => $insert_id,
+                            'dc' => 'D',
+                            'ledger_id' => $customer->cogs_ledger,
+                            'amount' => $totalPurchasePrice,
+                            'narration' => 'cost of goods sold'
+                            )
+                        );
+
+                        // inventory
+                        $entryitemdata[] = array(
+                            'Entryitem' => array(
+                            'entry_id' => $insert_id,
+                            'dc' => 'C',
+                            'ledger_id' => $customer->inventory_ledger,
+                            'amount' => $totalPurchasePrice,
+                            'narration' => 'inventory'
+                            )
+                        );
+
+                        // // sale account
+                        $entryitemdata[] = array(
+                            'Entryitem' => array(
+                                'entry_id' => $insert_id,
+                                'dc' => 'C',
+                                'ledger_id' => $customer->sales_ledger,
+                                'amount' => $totalSalePrice,
+                                'narration' => 'sale'
+                            )
+                        );
                           
 
-                           // //discount
-                           $entryitemdata[] = array(
+                        // //discount
+                        $entryitemdata[] = array(
                             'Entryitem' => array(
                                 'entry_id' => $insert_id,
                                 'dc' => 'D',
-                                'ledger_id' => 43,
+                                'ledger_id' => $customer->discount_ledger,
                                 'amount' => $inv->total_discount,
                                 'narration' => 'discount'
                             )
                         );
-
                      
                         // //vat on sale
                         $entryitemdata[] = array(
                                     'Entryitem' => array(
                                         'entry_id' => $insert_id,
                                         'dc' => 'C',
-                                        'ledger_id' => 122,
-                                        'amount' => $inv->order_tax,
+                                        'ledger_id' => $customer->vat_on_sales_ledger,
+                                        'amount' => $inv->total_tax,
                                         'narration' => 'vat on sale'
                                     )
                                 );
 
+                        if($price_difference != 0){
+                            // //price difference
+                            $entryitemdata[] = array(
+                                'Entryitem' => array(
+                                    'entry_id' => $insert_id,
+                                    'dc' => 'C',
+                                    'ledger_id' => $customer->price_difference_ledger,
+                                    'amount' => abs($price_difference),
+                                    'narration' => 'price difference'
+                                )
+                            );
+                        }      
                         
-            
-            
-                        // //customer
-                        //   $entryitemdata[] = array(
-                        //             'Entryitem' => array(
-                        //                 'entry_id' => $insert_id,
-                        //                 'dc' => 'D',
-                        //                 'ledger_id' => $customer->ledger_account,
-                        //                 'amount' => $inv->grand_total,
-                        //                 'narration' => 'customer'
-                        //               )
-                        //         );
-           
-                        // //total discount
-                        /*$entryitemdata[] = array(
-                               'Entryitem' => array(
-                                   'entry_id' => $insert_id,
-                                   'dc' => 'D',
-                                   'ledger_id' => $this->vat_on_sale,
-                                   'amount' => $inv->total_discount,
-                                   'narration' => 'total discount'
-                               )
-                        );*/
+                        $total_invoice_entry = $inv->total_tax + $totalSalePrice + $totalPurchasePrice;
+                        if($price_difference > 0){
+                            $total_invoice_entry += $price_difference;
+                        }
 
-
-                        //  print_r($entryitemdata);
-
-                        //  die();
+                        $this->db->update('sma_accounts_entries', ['dr_total' => $total_invoice_entry, 'cr_total' => $total_invoice_entry], ['id' => $insert_id]);
                                 
                        //   /*Accounts Entry Items*/
                        foreach ($entryitemdata as $row => $itemdata)
                        {
                              $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
                        }
-           
-           
-                  
-                         admin_redirect($redirect_to);
+        
+                        admin_redirect($redirect_to);
                    }
                     }else{
            
