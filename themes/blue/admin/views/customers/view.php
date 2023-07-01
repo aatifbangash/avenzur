@@ -19,6 +19,10 @@
                         <td><?= $customer->company; ?></strong></td>
                     </tr>
                     <tr>
+                        <td><strong><?= lang('code'); ?></strong></td>
+                        <td><?= $customer->code; ?></strong></td>
+                    </tr>
+                    <tr>
                         <td><strong><?= lang('name'); ?></strong></td>
                         <td><?= $customer->name; ?></strong></td>
                     </tr>

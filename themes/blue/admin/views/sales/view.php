@@ -94,7 +94,9 @@
                             echo $customer->address . '<br>' . $customer->city . ' ' . $customer->postal_code . ' ' . $customer->state . '<br>' . $customer->country;
 
                             echo '<p>';
-
+                            if ($customer->code != '-' && $customer->code != '') {
+                                echo '<br>' . lang('code') . ': ' . $customer->code;
+                            }
                             if ($customer->vat_no != '-' && $customer->vat_no != '') {
                                 echo '<br>' . lang('vat_no') . ': ' . $customer->vat_no;
                             }

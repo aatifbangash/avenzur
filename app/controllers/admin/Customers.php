@@ -21,6 +21,10 @@ class Customers extends MY_Controller
         $this->load->admin_model('purchases_model');
         $this->load->library('form_validation');
         $this->load->admin_model('companies_model');
+
+        // Sequence-Code
+        $this->load->library('SequenceCode');
+        $this->sequenceCode = new SequenceCode();
     }
 
     public function deleteFromAccounting($memo_id){
@@ -652,7 +656,8 @@ class Customers extends MY_Controller
                 'sales_ledger'        => $this->input->post('sales_ledger'),
                 'price_difference_ledger'   => $this->input->post('price_difference_ledger'),
                 'discount_ledger'     => $this->input->post('discount_ledger'),
-                'vat_on_sales_ledger' => $this->input->post('vat_on_sales_ledger')
+                'vat_on_sales_ledger' => $this->input->post('vat_on_sales_ledger'),
+                'code'                => $this->sequenceCode->generate('CUS', 5)
             ];
         } elseif ($this->input->post('add_customer')) {
             $this->session->set_flashdata('error', validation_errors());
@@ -844,45 +849,47 @@ class Customers extends MY_Controller
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('customer'));
                     $this->excel->getActiveSheet()->SetCellValue('A1', lang('company'));
-                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('name'));
-                    $this->excel->getActiveSheet()->SetCellValue('C1', lang('email'));
-                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('phone'));
-                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('address'));
-                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('city'));
-                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('state'));
-                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('postal_code'));
-                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('country'));
-                    $this->excel->getActiveSheet()->SetCellValue('J1', lang('vat_no'));
-                    $this->excel->getActiveSheet()->SetCellValue('K1', lang('gst_no'));
-                    $this->excel->getActiveSheet()->SetCellValue('L1', lang('scf1'));
-                    $this->excel->getActiveSheet()->SetCellValue('M1', lang('scf2'));
-                    $this->excel->getActiveSheet()->SetCellValue('N1', lang('scf3'));
-                    $this->excel->getActiveSheet()->SetCellValue('O1', lang('scf4'));
-                    $this->excel->getActiveSheet()->SetCellValue('P1', lang('scf5'));
-                    $this->excel->getActiveSheet()->SetCellValue('Q1', lang('scf6'));
-                    $this->excel->getActiveSheet()->SetCellValue('R1', lang('deposit_amount'));
+                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('code'));
+                    $this->excel->getActiveSheet()->SetCellValue('C1', lang('name'));
+                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('email'));
+                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('phone'));
+                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('address'));
+                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('city'));
+                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('state'));
+                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('postal_code'));
+                    $this->excel->getActiveSheet()->SetCellValue('J1', lang('country'));
+                    $this->excel->getActiveSheet()->SetCellValue('K1', lang('vat_no'));
+                    $this->excel->getActiveSheet()->SetCellValue('L1', lang('gst_no'));
+                    $this->excel->getActiveSheet()->SetCellValue('M1', lang('scf1'));
+                    $this->excel->getActiveSheet()->SetCellValue('N1', lang('scf2'));
+                    $this->excel->getActiveSheet()->SetCellValue('O1', lang('scf3'));
+                    $this->excel->getActiveSheet()->SetCellValue('P1', lang('scf4'));
+                    $this->excel->getActiveSheet()->SetCellValue('Q1', lang('scf5'));
+                    $this->excel->getActiveSheet()->SetCellValue('R1', lang('scf6'));
+                    $this->excel->getActiveSheet()->SetCellValue('S1', lang('deposit_amount'));
 
                     $row = 2;
                     foreach ($_POST['val'] as $id) {
                         $customer = $this->site->getCompanyByID($id);
                         $this->excel->getActiveSheet()->SetCellValue('A' . $row, $customer->company);
-                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $customer->name);
-                        $this->excel->getActiveSheet()->SetCellValue('C' . $row, $customer->email);
-                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $customer->phone);
-                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $customer->address);
-                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $customer->city);
-                        $this->excel->getActiveSheet()->SetCellValue('G' . $row, $customer->state);
-                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $customer->postal_code);
-                        $this->excel->getActiveSheet()->SetCellValue('I' . $row, $customer->country);
-                        $this->excel->getActiveSheet()->SetCellValue('J' . $row, $customer->vat_no);
-                        $this->excel->getActiveSheet()->SetCellValue('K' . $row, $customer->gst_no);
-                        $this->excel->getActiveSheet()->SetCellValue('L' . $row, $customer->cf1);
-                        $this->excel->getActiveSheet()->SetCellValue('M' . $row, $customer->cf2);
-                        $this->excel->getActiveSheet()->SetCellValue('N' . $row, $customer->cf3);
-                        $this->excel->getActiveSheet()->SetCellValue('O' . $row, $customer->cf4);
-                        $this->excel->getActiveSheet()->SetCellValue('P' . $row, $customer->cf5);
-                        $this->excel->getActiveSheet()->SetCellValue('Q' . $row, $customer->cf6);
-                        $this->excel->getActiveSheet()->SetCellValue('R' . $row, $customer->deposit_amount);
+                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $customer->code);
+                        $this->excel->getActiveSheet()->SetCellValue('C' . $row, $customer->name);
+                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $customer->email);
+                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $customer->phone);
+                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $customer->address);
+                        $this->excel->getActiveSheet()->SetCellValue('G' . $row, $customer->city);
+                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $customer->state);
+                        $this->excel->getActiveSheet()->SetCellValue('I' . $row, $customer->postal_code);
+                        $this->excel->getActiveSheet()->SetCellValue('J' . $row, $customer->country);
+                        $this->excel->getActiveSheet()->SetCellValue('K' . $row, $customer->vat_no);
+                        $this->excel->getActiveSheet()->SetCellValue('L' . $row, $customer->gst_no);
+                        $this->excel->getActiveSheet()->SetCellValue('M' . $row, $customer->cf1);
+                        $this->excel->getActiveSheet()->SetCellValue('N' . $row, $customer->cf2);
+                        $this->excel->getActiveSheet()->SetCellValue('O' . $row, $customer->cf3);
+                        $this->excel->getActiveSheet()->SetCellValue('P' . $row, $customer->cf4);
+                        $this->excel->getActiveSheet()->SetCellValue('Q' . $row, $customer->cf5);
+                        $this->excel->getActiveSheet()->SetCellValue('R' . $row, $customer->cf6);
+                        $this->excel->getActiveSheet()->SetCellValue('S' . $row, $customer->deposit_amount);
                         $row++;
                     }
 
@@ -1168,7 +1175,7 @@ class Customers extends MY_Controller
         $this->sma->checkPermissions('index');
         $this->load->library('datatables');
         $this->datatables
-            ->select('id, company, name, email, phone, price_group_name, customer_group_name, vat_no, gst_no, deposit_amount, award_points')
+            ->select('id, company, code, name, email, phone, price_group_name, customer_group_name, vat_no, gst_no, deposit_amount, award_points')
             ->from('companies')
             ->where('group_name', 'customer')
             ->add_column('Actions', "<div class=\"text-center\"><a class=\"tip\" title='" . lang('list_deposits') . "' href='" . admin_url('customers/deposits/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-money\"></i></a> <a class=\"tip\" title='" . lang('add_deposit') . "' href='" . admin_url('customers/add_deposit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-plus\"></i></a> <a class=\"tip\" title='" . lang('list_addresses') . "' href='" . admin_url('customers/addresses/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-location-arrow\"></i></a> <a class=\"tip\" title='" . lang('list_users') . "' href='" . admin_url('customers/users/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-users\"></i></a> <a class=\"tip\" title='" . lang('add_user') . "' href='" . admin_url('customers/add_user/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-user-plus\"></i></a> <a class=\"tip\" title='" . lang('edit_customer') . "' href='" . admin_url('customers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_customer') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('customers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');

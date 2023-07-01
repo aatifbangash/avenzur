@@ -15,11 +15,11 @@
  * Load Library inside the Controller Constructor e.g.
  * 
  * $this->load->library('SequenceCode');
- * $this->SequenceCode = new SequenceCode();
+ * $this->sequenceCode = new SequenceCode();
  * 
  * Call the function 
  * 
- * $this->SequenceCode->generate('CUS', 5);
+ * $this->sequenceCode->generate('CUS', 5);
  * 
  */
 
