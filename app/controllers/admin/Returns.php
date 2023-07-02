@@ -530,6 +530,7 @@ class Returns extends MY_Controller
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 $real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
                 $unit_price         = $this->sma->formatDecimal($_POST['unit_price'][$r]);
+                $item_cost_price      = $_POST['net_cost'];
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_serial        = $_POST['serial'][$r]           ?? '';
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
@@ -574,6 +575,7 @@ class Returns extends MY_Controller
                         'product_name'      => $item_name,
                         'product_type'      => $item_type,
                         'option_id'         => $item_option,
+                        'net_cost'          => $item_cost_price,
                         'net_unit_price'    => $item_net_price,
                         'unit_price'        => $this->sma->formatDecimal($item_net_price + $item_tax),
                         'quantity'          => $item_quantity,
@@ -700,6 +702,7 @@ class Returns extends MY_Controller
                 if ($row->promotion) {
                     $row->price = $row->promo_price;
                 }
+                $row->cost_price      = $item->net_cost;
                 $row->real_unit_price = $item->real_unit_price ?? $row->price;
                 $row->base_quantity   = $item->quantity;
                 $row->base_unit       = $row->unit       ?? $item->product_unit_id;

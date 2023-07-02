@@ -17,6 +17,45 @@ $(document).ready(function (e) {
         loadItems();
     }
 
+    var old_row_batchno;
+    var currTabIndex;
+    $(document)
+        .on('focus', '.rbatchno', function () {
+            old_row_batchno = $(this).val();
+            currTabIndex = $(this).prop('tabindex');
+        })
+        .on('blur', '.rbatchno', function () {
+            var row = $(this).closest('tr');
+            var new_batchno = $(this).val(),
+            item_id = row.attr('data-item-id');
+            var batchfound = findMatchingItemWithSameBatchNo(new_batchno, item_id, reitems);
+            if(batchfound){
+                $(this).val('');
+                reitems[item_id].row.batchno = '';
+                bootbox.alert("Cannot add same batch number for same product");
+            }else{
+                reitems[item_id].row.batchno = new_batchno;
+                localStorage.setItem('reitems', JSON.stringify(reitems));
+                //loadItems();
+            }
+            //$('[tabindex=' + (currTabIndex + 1) + ']').focus();
+            
+        })
+        .on('change', '.rbatchno', function () {
+            var row = $(this).closest('tr');
+            /*if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+                $(this).val(old_row_batchno);
+                bootbox.alert(lang.unexpected_value);
+                return;
+            }*/
+            //var new_batchno = parseFloat($(this).val()),
+            var new_batchno = $(this).val(),
+                item_id = row.attr('data-item-id');
+            /*poitems[item_id].row.batchno = new_batchno;
+            localStorage.setItem('poitems', JSON.stringify(poitems));
+            loadItems();*/
+        });
+
     $('#reset').click(function (e) {
         bootbox.confirm(lang.r_u_sure, function (result) {
             if (result) {
@@ -806,10 +845,13 @@ function loadItems() {
             var item = this;
             var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
             item.order = item.order ? item.order : new Date().getTime();
+            
             var product_id = item.row.id,
                 item_type = item.row.type,
                 combo_items = item.combo_items,
                 item_price = item.row.price,
+                item_cost = item.row.cost_price,
+                item_sale_price = item.row.base_unit_price,
                 item_qty = item.row.qty,
                 item_aqty = item.row.quantity,
                 item_tax_method = item.row.tax_method,
@@ -917,7 +959,7 @@ function loadItems() {
                 item_id +
                 '" title="Edit" style="cursor:pointer;"></i></td>';
 
-                tr_html +=
+                /*tr_html +=
                 '<td class="text-right"><input class="form-control input-sm text-right rprice" name="net_sale_price[]" type="text" id="net_sale_price_' +
                 row_no +
                 '" value="' +
@@ -929,10 +971,34 @@ function loadItems() {
                 row_no +
                 '" value="' +
                 cost_price +
-                '"></td>';
+                '"></td>';*/
 
                 tr_html +=
-                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="batch_no[]" type="text" id="batch_no_' +
+                    '<td class="text-right"><input class="rucost" name="unit_price[]" type="hidden" value="' +
+                    unit_price +
+                    '"><input class="form-control realucost" name="real_unit_price[]" type="hidden" value="' +
+                    item.row.real_unit_price +
+                    '"><input class="form-control input-sm text-center rcost" type="text" name="net_price[]" id="cost_' +
+                    row_no +
+                    '" value="' +
+                    formatDecimal(item_sale_price, 2) +
+                    '"></td>';
+
+                tr_html += 
+                    '<td><input id="rreturn_' +
+                    row_no +
+                    '" class="form-control rcost text-center" name="net_cost[]" type="text" value="' +
+                    formatDecimal(item_cost, 2) +
+                    '" data-id="' +
+                    row_no +
+                    '" data-item="' +
+                    item_id +
+                    '" id="rreturn_' +
+                    row_no +
+                    '"></td>';
+
+                tr_html +=
+                '<td class="text-right"><input class="form-control input-sm text-right rbatchno" name="batch_no[]" type="text" id="batch_no_' +
                 row_no +
                 '" value="' +
                 batch_no +

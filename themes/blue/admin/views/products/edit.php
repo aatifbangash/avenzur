@@ -212,7 +212,7 @@ if (!empty($variants)) {
                         <?php // lang('product_cost', 'cost') ?>
                         <?php // form_input('cost', (isset($_POST['cost']) ? $_POST['cost'] : ($product ? $this->sma->formatDecimal($product->cost) : '')), 'class="form-control tip" id="cost" required="required"') ?>
                     </div>-->
-                    <?= form_hidden('cost', isset($_POST['cost']) ? $_POST['cost'] : ($product ? $this->sma->formatDecimal($product->cost) : ''));?>
+                    <?= form_hidden('cost', isset($_POST['price']) ? $_POST['price'] : ($product ? $this->sma->formatDecimal($product->price) : ''));?>
                     <div class="form-group all">
                         <?= lang('product_price', 'price') ?>
                         <?= form_input('price', (isset($_POST['price']) ? $_POST['price'] : ($product ? $this->sma->formatDecimal($product->price) : '')), 'class="form-control tip" id="price" required="required"') ?>
