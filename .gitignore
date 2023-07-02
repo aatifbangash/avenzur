@@ -1,5 +1,5 @@
 
-app/logs/log-2023-04-14.php
+app/logs/*
 app/config/config.php
 app/config/database.php
 vendor/
