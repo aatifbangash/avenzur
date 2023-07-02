@@ -22,16 +22,17 @@
             "aoColumns": [{
                 "bSortable": false,
                 "mRender": checkbox
-            }, null, null, null, null, null, null, null, null, {"bSortable": false}]
+            }, null, null,null, null, null, null, null, null, null, {"bSortable": false}]
         }).dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('company');?>]", filter_type: "text", data: []},
-            {column_number: 2, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
-            {column_number: 3, filter_default_label: "[<?=lang('email_address');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('phone');?>]", filter_type: "text", data: []},
-            {column_number: 5, filter_default_label: "[<?=lang('city');?>]", filter_type: "text", data: []},
-            {column_number: 6, filter_default_label: "[<?=lang('country');?>]", filter_type: "text", data: []},
-            {column_number: 7, filter_default_label: "[<?=lang('vat_no');?>]", filter_type: "text", data: []},
-            {column_number: 8, filter_default_label: "[<?=lang('gst_no');?>]", filter_type: "text", data: []},
+            {column_number: 2, filter_default_label: "[<?=lang('code');?>]", filter_type: "text", data: []},
+            {column_number: 3, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('email_address');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('phone');?>]", filter_type: "text", data: []},
+            {column_number: 6, filter_default_label: "[<?=lang('city');?>]", filter_type: "text", data: []},
+            {column_number: 7, filter_default_label: "[<?=lang('country');?>]", filter_type: "text", data: []},
+            {column_number: 8, filter_default_label: "[<?=lang('vat_no');?>]", filter_type: "text", data: []},
+            {column_number: 9, filter_default_label: "[<?=lang('gst_no');?>]", filter_type: "text", data: []},
         ], "footer");
     });
 </script>
@@ -92,6 +93,7 @@
                                 <input class="checkbox checkth" type="checkbox" name="check"/>
                             </th>
                             <th><?= lang('company'); ?></th>
+                            <th><?= lang('code'); ?></th>
                             <th><?= lang('name'); ?></th>
                             <th><?= lang('email_address'); ?></th>
                             <th><?= lang('phone'); ?></th>
