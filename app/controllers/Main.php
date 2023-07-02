@@ -6,7 +6,6 @@ class Main extends MY_Shop_Controller
 {
     public function __construct()
     {
-  
         parent::__construct();
                 
             //$this->load->library('session');
