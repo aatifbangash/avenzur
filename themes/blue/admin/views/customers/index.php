@@ -22,18 +22,19 @@
             "aoColumns": [{
                 "bSortable": false,
                 "mRender": checkbox
-            }, null, null, null, null, null, null, null, null, {"mRender": currencyFormat}, null, {"bSortable": false}]
+            }, null, null, null, null, null, null, null, null, null, {"mRender": currencyFormat}, null, {"bSortable": false}]
         }).dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('company');?>]", filter_type: "text", data: []},
-            {column_number: 2, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
-            {column_number: 3, filter_default_label: "[<?=lang('email_address');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('phone');?>]", filter_type: "text", data: []},
-            {column_number: 5, filter_default_label: "[<?=lang('price_group');?>]", filter_type: "text", data: []},
-            {column_number: 6, filter_default_label: "[<?=lang('customer_group');?>]", filter_type: "text", data: []},
-            {column_number: 7, filter_default_label: "[<?=lang('vat_no');?>]", filter_type: "text", data: []},
-            {column_number: 8, filter_default_label: "[<?=lang('gst_no');?>]", filter_type: "text", data: []},
-            {column_number: 9, filter_default_label: "[<?=lang('deposit');?>]", filter_type: "text", data: []},
-            {column_number: 10, filter_default_label: "[<?=lang('award_points');?>]", filter_type: "text", data: []},
+            {column_number: 2, filter_default_label: "[<?=lang('code');?>]", filter_type: "text", data: []},
+            {column_number: 3, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('email_address');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('phone');?>]", filter_type: "text", data: []},
+            {column_number: 6, filter_default_label: "[<?=lang('price_group');?>]", filter_type: "text", data: []},
+            {column_number: 7, filter_default_label: "[<?=lang('customer_group');?>]", filter_type: "text", data: []},
+            {column_number: 8, filter_default_label: "[<?=lang('vat_no');?>]", filter_type: "text", data: []},
+            {column_number: 9, filter_default_label: "[<?=lang('gst_no');?>]", filter_type: "text", data: []},
+            {column_number: 10, filter_default_label: "[<?=lang('deposit');?>]", filter_type: "text", data: []},
+            {column_number: 11, filter_default_label: "[<?=lang('award_points');?>]", filter_type: "text", data: []},
         ], "footer");
         $('#myModal').on('hidden.bs.modal', function () {
             cTable.fnDraw( false );
@@ -100,6 +101,7 @@
                                 <input class="checkbox checkth" type="checkbox" name="check"/>
                             </th>
                             <th><?= lang('company'); ?></th>
+                            <th><?= lang('code'); ?></th>
                             <th><?= lang('name'); ?></th>
                             <th><?= lang('email_address'); ?></th>
                             <th><?= lang('phone'); ?></th>

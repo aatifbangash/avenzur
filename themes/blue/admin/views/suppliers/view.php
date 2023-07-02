@@ -16,6 +16,10 @@
                         <td><?= $supplier->company; ?></strong></td>
                     </tr>
                     <tr>
+                        <td><strong><?= lang('code'); ?></strong></td>
+                        <td><?= $supplier->code; ?></strong></td>
+                    </tr>
+                    <tr>
                         <td><strong><?= lang('name'); ?></strong></td>
                         <td><?= $supplier->name; ?></strong></td>
                     </tr>

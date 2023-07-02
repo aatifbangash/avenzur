@@ -65,10 +65,10 @@ $query_builder = true;
 
 $db['default'] = [
     'dsn'          => '',
-    'hostname'     => '%HOSTNAME%',
-    'username'     => '%USERNAME%',
-    'password'     => '%PASSWORD%',
-    'database'     => '%DATABASE%',
+    'hostname'     => 'localhost',
+    'username'     => 'root',
+    'password'     => '',
+    'database'     => 'avenzur',
     'dbdriver'     => 'mysqli',
     'dbprefix'     => 'sma_',
     'pconnect'     => false,

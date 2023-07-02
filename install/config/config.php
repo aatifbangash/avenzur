@@ -18,7 +18,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 | environments.
 |
 */
-$config['base_url'] = '%DOMAIN%';
+$config['base_url'] = 'http://localhost/avenzur';
 
 /*
 |--------------------------------------------------------------------------
