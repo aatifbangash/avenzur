@@ -6,7 +6,6 @@ class Main extends MY_Shop_Controller
 {
     public function __construct()
     {
-  
         parent::__construct();
                 
             //$this->load->library('session');
@@ -24,6 +23,10 @@ class Main extends MY_Shop_Controller
           $this->load->admin_model('settings_model');
         
          $this->load->library("pagination");
+
+         // Sequence-Code
+        $this->load->library('SequenceCode');
+        $this->sequenceCode = new SequenceCode();
     }
 
     public function activate($id, $code)
@@ -358,11 +361,11 @@ class Main extends MY_Shop_Controller
                 'customer_group_name' => (!empty($customer_group)) ? $customer_group->name : null,
                 'price_group_id'      => (!empty($price_group)) ? $price_group->id : null,
                 'price_group_name'    => (!empty($price_group)) ? $price_group->name : null,
+                'code'                => $this->sequenceCode->generate('CUS', 5)
             ];
-
+           
             $company_id = $this->shop_model->addCustomer($company_data);
-            
-            
+         
             $additional_data = [
                 'first_name' => $this->input->post('first_name'),
                 'last_name'  => $this->input->post('last_name'),

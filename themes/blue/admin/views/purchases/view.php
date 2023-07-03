@@ -65,7 +65,9 @@
                             echo $supplier->address . '<br />' . $supplier->city . ' ' . $supplier->postal_code . ' ' . $supplier->state . '<br />' . $supplier->country;
 
                             echo '<p>';
-
+                            if ($supplier->code != '-' && $supplier->code != '') {
+                                echo '<br>' . lang('code') . ': ' . $supplier->code;
+                            }
                             if ($supplier->vat_no != '-' && $supplier->vat_no != '') {
                                 echo '<br>' . lang('vat_no') . ': ' . $supplier->vat_no;
                             }
