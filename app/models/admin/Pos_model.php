@@ -130,6 +130,7 @@ class Pos_model extends CI_Model
 
     public function addSale($data = [], $items = [], $payments = [],$sid = null)
     {
+        echo 'bb';exit;
         $cost = $this->site->costing($items);
         // $this->sma->print_arrays($cost);
         $this->db->trans_start();

@@ -40,6 +40,7 @@ class Shop_model extends CI_Model
 
     public function addSale($data, $items, $customer, $address)
     {
+        echo 'cc';exit;
         $cost = $this->site->costing($items);
         // $this->sma->print_arrays($cost);
 

@@ -7,7 +7,7 @@
 
 /* Database Queries */
 # ALTER TABLE `sma_companies` ADD `code` VARCHAR(255) NULL DEFAULT NULL;
-
+# ALTER TABLE `sma_sales` ADD `sequence_code` VARCHAR(255) NULL AFTER `sale_invoice`;
 
 
 //=== USAGE ===//
@@ -73,6 +73,12 @@ class SequenceCode
             case 'PRD':
                 $this->_ci->db->select('MAX(code) as maxNumber');
                 $latestCode = $this->_ci->db->get('sma_products')->row_array();
+                break;
+
+            // Product Code
+            case 'SALE':
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_sales')->row_array();
                 break;
         }
 
