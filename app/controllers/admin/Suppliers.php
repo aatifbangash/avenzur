@@ -642,7 +642,7 @@ class Suppliers extends MY_Controller
                 'cf6'         => $this->input->post('cf6'),
                 'gst_no'      => $this->input->post('gst_no'),
                 'ledger_account' => $this->input->post('ledger_account'),
-                'code'           => $this->sequenceCode->generate('SUP', 5)
+                'sequence_code'  => $this->sequenceCode->generate('SUP', 5)
             ];
         } elseif ($this->input->post('add_supplier')) {
             $this->session->set_flashdata('error', validation_errors());
@@ -788,7 +788,7 @@ class Suppliers extends MY_Controller
 
         $this->load->library('datatables');
         $this->datatables
-            ->select('id, company, code, name, email, phone, city, country, vat_no, gst_no')
+            ->select('id, company, sequence_code, name, email, phone, city, country, vat_no, gst_no')
             ->from('companies')
             ->where('group_name', 'supplier')
             ->add_column('Actions', "<div class=\"text-center\"><a class=\"tip\" title='" . $this->lang->line('list_products') . "' href='" . admin_url('products?supplier=$1') . "'><i class=\"fa fa-list\"></i></a> <a class=\"tip\" title='" . $this->lang->line('list_users') . "' href='" . admin_url('suppliers/users/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-users\"></i></a> <a class=\"tip\" title='" . $this->lang->line('add_user') . "' href='" . admin_url('suppliers/add_user/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-plus-circle\"></i></a> <a class=\"tip\" title='" . $this->lang->line('edit_supplier') . "' href='" . admin_url('suppliers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . $this->lang->line('delete_supplier') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('suppliers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
@@ -964,7 +964,7 @@ class Suppliers extends MY_Controller
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('customer'));
                     $this->excel->getActiveSheet()->SetCellValue('A1', lang('company'));
-                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('code'));
+                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('sequence_code'));
                     $this->excel->getActiveSheet()->SetCellValue('C1', lang('name'));
                     $this->excel->getActiveSheet()->SetCellValue('D1', lang('email'));
                     $this->excel->getActiveSheet()->SetCellValue('E1', lang('phone'));
@@ -986,7 +986,7 @@ class Suppliers extends MY_Controller
                     foreach ($_POST['val'] as $id) {
                         $customer = $this->site->getCompanyByID($id);
                         $this->excel->getActiveSheet()->SetCellValue('A' . $row, $customer->company);
-                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $customer->code);
+                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $customer->sequence_code);
                         $this->excel->getActiveSheet()->SetCellValue('C' . $row, $customer->name);
                         $this->excel->getActiveSheet()->SetCellValue('D' . $row, $customer->email);
                         $this->excel->getActiveSheet()->SetCellValue('E' . $row, $customer->phone);

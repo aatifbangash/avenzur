@@ -657,7 +657,7 @@ class Customers extends MY_Controller
                 'price_difference_ledger'   => $this->input->post('price_difference_ledger'),
                 'discount_ledger'     => $this->input->post('discount_ledger'),
                 'vat_on_sales_ledger' => $this->input->post('vat_on_sales_ledger'),
-                'code'                => $this->sequenceCode->generate('CUS', 5)
+                'sequence_code'       => $this->sequenceCode->generate('CUS', 5)
             ];
         } elseif ($this->input->post('add_customer')) {
             $this->session->set_flashdata('error', validation_errors());
@@ -849,7 +849,7 @@ class Customers extends MY_Controller
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('customer'));
                     $this->excel->getActiveSheet()->SetCellValue('A1', lang('company'));
-                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('code'));
+                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('sequence_code'));
                     $this->excel->getActiveSheet()->SetCellValue('C1', lang('name'));
                     $this->excel->getActiveSheet()->SetCellValue('D1', lang('email'));
                     $this->excel->getActiveSheet()->SetCellValue('E1', lang('phone'));
@@ -872,7 +872,7 @@ class Customers extends MY_Controller
                     foreach ($_POST['val'] as $id) {
                         $customer = $this->site->getCompanyByID($id);
                         $this->excel->getActiveSheet()->SetCellValue('A' . $row, $customer->company);
-                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $customer->code);
+                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $customer->sequence_code);
                         $this->excel->getActiveSheet()->SetCellValue('C' . $row, $customer->name);
                         $this->excel->getActiveSheet()->SetCellValue('D' . $row, $customer->email);
                         $this->excel->getActiveSheet()->SetCellValue('E' . $row, $customer->phone);
@@ -1175,7 +1175,7 @@ class Customers extends MY_Controller
         $this->sma->checkPermissions('index');
         $this->load->library('datatables');
         $this->datatables
-            ->select('id, company, code, name, email, phone, price_group_name, customer_group_name, vat_no, gst_no, deposit_amount, award_points')
+            ->select('id, company, sequence_code, name, email, phone, price_group_name, customer_group_name, vat_no, gst_no, deposit_amount, award_points')
             ->from('companies')
             ->where('group_name', 'customer')
             ->add_column('Actions', "<div class=\"text-center\"><a class=\"tip\" title='" . lang('list_deposits') . "' href='" . admin_url('customers/deposits/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-money\"></i></a> <a class=\"tip\" title='" . lang('add_deposit') . "' href='" . admin_url('customers/add_deposit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-plus\"></i></a> <a class=\"tip\" title='" . lang('list_addresses') . "' href='" . admin_url('customers/addresses/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-location-arrow\"></i></a> <a class=\"tip\" title='" . lang('list_users') . "' href='" . admin_url('customers/users/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-users\"></i></a> <a class=\"tip\" title='" . lang('add_user') . "' href='" . admin_url('customers/add_user/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-user-plus\"></i></a> <a class=\"tip\" title='" . lang('edit_customer') . "' href='" . admin_url('customers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_customer') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('customers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');

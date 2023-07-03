@@ -361,7 +361,7 @@ class Main extends MY_Shop_Controller
                 'customer_group_name' => (!empty($customer_group)) ? $customer_group->name : null,
                 'price_group_id'      => (!empty($price_group)) ? $price_group->id : null,
                 'price_group_name'    => (!empty($price_group)) ? $price_group->name : null,
-                'code'                => $this->sequenceCode->generate('CUS', 5)
+                'sequence_code'                => $this->sequenceCode->generate('CUS', 5)
             ];
            
             $company_id = $this->shop_model->addCustomer($company_data);

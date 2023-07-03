@@ -16,8 +16,8 @@
                         <td><?= $supplier->company; ?></strong></td>
                     </tr>
                     <tr>
-                        <td><strong><?= lang('code'); ?></strong></td>
-                        <td><?= $supplier->code; ?></strong></td>
+                        <td><strong><?= lang('sequence_code'); ?></strong></td>
+                        <td><?= $supplier->sequence_code; ?></strong></td>
                     </tr>
                     <tr>
                         <td><strong><?= lang('name'); ?></strong></td>
