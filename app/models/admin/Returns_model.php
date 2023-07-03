@@ -11,15 +11,19 @@ class Returns_model extends CI_Model
 
     public function addReturn($data = [], $items = [])
     {
+        // Enable error reporting
+
         $this->db->trans_start();
         if ($this->db->insert('returns', $data)) {
             $return_id = $this->db->insert_id();
             if ($this->site->getReference('re') == $data['reference_no']) {
                 $this->site->updateReference('re');
             }
+            
             foreach ($items as $item) {
                 $item['return_id'] = $return_id;
                 $this->db->insert('return_items', $item);
+                
                 if ($item['product_type'] == 'standard') {
                     $clause = ['product_id' => $item['product_id'], 'warehouse_id' => $item['warehouse_id'], 'purchase_id' => null, 'transfer_id' => null, 'option_id' => $item['option_id']];
                     $this->site->setPurchaseItem($clause, $item['quantity']);
@@ -36,10 +40,11 @@ class Returns_model extends CI_Model
             $this->sma->update_award_points($data['grand_total'], $data['customer_id'], $data['created_by'], true);
         }
         $this->db->trans_complete();
+        //echo $this->db->trans_status();exit;
         if ($this->db->trans_status() === false) {
             log_message('error', 'An errors has been occurred while adding the sale (Add:Returns_model.php)');
         } else {
-            return true;
+            return $return_id;
         }
 
         return false;
@@ -108,6 +113,15 @@ class Returns_model extends CI_Model
     public function getReturnByID($id)
     {
         $q = $this->db->get_where('returns', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getAccoutsEntryByID($id)
+    {
+        $q = $this->db->get_where('sma_accounts_entries', ['rid' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }

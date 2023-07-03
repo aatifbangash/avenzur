@@ -25,6 +25,14 @@ class Settings_model extends CI_Model
         return false;
     }
 
+    public function setLedgers($data){
+        $this->db->where('setting_id', '1');
+        if ($this->db->update('settings', $data)) {
+            return true;
+        }
+        return false;
+    }
+
     public function addCategories($categories, $subcategories)
     {
         $result = false;

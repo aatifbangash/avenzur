@@ -133,20 +133,21 @@ class MY_Controller extends CI_Controller
             $this->data['DIS'] = $this->DIS;
             //var_dump($dis);
 
-            $this->vat_on_purchase = 121;
+            $this->vat_on_purchase = $this->Settings->vat_on_purchase_ledger;
             $this->data['vat_on_purchase'] = $this->vat_on_purchase; 
 
-            $this->vat_on_sale = 122;
+            $this->vat_on_sale = $this->Settings->vat_on_sale_ledger;
             $this->data['vat_on_sale'] = $this->vat_on_sale; 
 
-            $this->bank_fund_cash = 4;
+            $this->bank_fund_cash = $this->Settings->bank_fund_cash_ledger;
             $this->data['bank_fund_cash'] = $this->bank_fund_cash;
 
-            $this->bank_fees = 109;
+            $this->bank_fees = $this->Settings->bank_fees_ledger;
             $this->data['bank_fees'] = $this->bank_fees;
 
-            $this->bank_checking_account = 1;
+            $this->bank_checking_account = $this->Settings->bank_checking_account_ledger;
             $this->data['bank_checking_account'] = $this->bank_checking_account;
+
         }
     }
 

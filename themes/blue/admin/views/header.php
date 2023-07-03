@@ -764,6 +764,11 @@
                                                 <i class="fa fa-print"></i><span class="text"> <?= lang('list_printers'); ?></span>
                                             </a>
                                         </li>
+                                        <li id="accounts_settings">
+                                            <a href="<?= admin_url('system_settings/add_ledgers') ?>">
+                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Accounts Settings'); ?></span>
+                                            </a>
+                                        </li>
                                         <li id="pos_add_printer">
                                             <a href="<?= admin_url('pos/add_printer') ?>">
                                                 <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_printer'); ?></span>

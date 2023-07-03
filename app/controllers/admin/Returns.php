@@ -255,8 +255,15 @@ class Returns extends MY_Controller
                 $item_name          = $_POST['product_name'][$r];
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 $real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
+                $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $unit_price         = $this->sma->formatDecimal($_POST['unit_price'][$r]);
                 $item_unit_quantity = $_POST['quantity'][$r];
+                $item_batchno        = $_POST['batch_no'][$r];
+                //$item_expiry        = $_POST['expiry'][$r];
+                $item_expiry        = (isset($_POST['expiry'][$r]) && !empty($_POST['expiry'][$r])) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
+                $item_bonus         = $_POST['bonus'][$r];
+                $item_dis1          = $_POST['dis1'][$r];
+                $item_dis2          = $_POST['dis2'][$r];
                 $item_serial        = $_POST['serial'][$r]           ?? '';
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
                 $item_discount      = $_POST['product_discount'][$r] ?? null;
@@ -299,6 +306,7 @@ class Returns extends MY_Controller
                         'product_name'      => $item_name,
                         'product_type'      => $item_type,
                         'option_id'         => $item_option,
+                        'net_cost'          => $item_net_cost,
                         'net_unit_price'    => $item_net_price,
                         'unit_price'        => $this->sma->formatDecimal($item_net_price + $item_tax),
                         'quantity'          => $item_quantity,
@@ -313,7 +321,12 @@ class Returns extends MY_Controller
                         'item_discount'     => $pr_item_discount,
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'serial_no'         => $item_serial,
+                        'expiry'            => $item_expiry,
+                        'batch_no'          => $item_batchno,
                         'real_unit_price'   => $real_unit_price,
+                        'bonus'             => $item_bonus,
+                        'discount1'         => $item_dis1,
+                        'discount2'         => $item_dis2
                     ];
 
                     $products[] = ($product + $gst_data);
@@ -379,17 +392,19 @@ class Returns extends MY_Controller
                 $data['attachment'] = $photo;
             }
 
-            // $this->sma->print_arrays($data, $products);
+            //$this->sma->print_arrays($data, $products);exit;
         }
 
-        if ($this->form_validation->run() == true && $this->returns_model->addReturn($data, $products)) {
-            //$return_insert_id = $this->db->insert_id();
+        if ($this->form_validation->run() == true && $return_insert_id = $this->returns_model->addReturn($data, $products)) {
+
             //$this->returns_model->convert_return_invoice($return_insert_id, $products);
+            $this->convert_return_invoice($return_insert_id);
 
             $this->session->set_userdata('remove_rels', 1);
             $this->session->set_flashdata('message', lang('return_added'));
             admin_redirect('returns');
         } else {
+            
             $this->data['error']      = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['billers']    = $this->site->getAllCompanies('biller');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -401,66 +416,122 @@ class Returns extends MY_Controller
         }
     }
 
-    public function convert_return_invoice($rid, $inv_items){
+    public function convert_return_invoice($rid){
         $inv = $this->returns_model->getReturnByID($rid);
+        
+        $this->load->admin_model('companies_model');
+        $customer = $this->companies_model->getCompanyByID($inv->customer_id);
 
         /*Accounts Entries*/
         $entry = array(
-            'entrytype_id' => 4,
-            'number'       => 'PO-'.$inv->reference_no,
-            'date'         => date('Y-m-d'), 
-            'dr_total'     => $inv->grand_total,
-            'cr_total'     => $inv->grand_total,
-            'notes'        => 'Return Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
-            'pid'          =>  $inv->id
-            );
+        'entrytype_id' => 4,
+        'number'       => 'RCO-'.$inv->reference_no,
+        'date'         => date('Y-m-d'), 
+        'dr_total'     => $inv->grand_total,
+        'cr_total'     => $inv->grand_total,
+        'notes'        => 'RCO Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
+        'rid'          =>  $inv->id,
+        'transaction_type'   =>  'returncustomerorder'
+        );
+        
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
-
+        
+        //$insert_id = 999;
         $entryitemdata = array();
 
-        $inv_items = $this->returns_model->getReturnItems($sid);
-        foreach ($inv_items as $item) {
+        $inv_items = $this->returns_model->getReturnItems($rid);
+
+        $totalSalePrice = 0;
+        $totalPurchasePrice = 0;
+        foreach ($inv_items as $item) 
+        {
             $proid = $item->product_id;
             $product  = $this->site->getProductByID($proid);
-            //products
-            $entryitemdata[] = array(
-                    'Entryitem' => array(
-                        'entry_id' => $insert_id,
-                        'dc' => 'D',
-                        'ledger_id' => $product->inventory_account,
-                        'amount' => $this->sma->formatDecimal($item->net_unit_price * $item->quantity, 4),
-                        'narration' => ''
-                    )
-                );
+
+            $totalSalePrice = ($totalSalePrice)+($item->net_unit_price * $item->quantity);
+            $totalPurchasePrice = $totalPurchasePrice + ($item->net_cost * $item->quantity);
         }
 
-        //vat on purchase
+        $amount_to_pay = $totalSalePrice + $inv->total_tax - $inv->total_discount;
+
+        // //cash
         $entryitemdata[] = array(
             'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'C',
-                'ledger_id' => $this->vat_on_purchase,
-                //'amount' => $inv->order_tax,
-                'amount' => $inv->product_tax,
-                'narration' => ''
+            'entry_id' => $insert_id,
+            'dc' => 'C',
+            'ledger_id' => $customer->fund_books_ledger,
+            //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
+            'amount' => $amount_to_pay,
+            'narration' => 'cash'
             )
         );
 
-        //supplier
+        // cost of goods sold
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+            'entry_id' => $insert_id,
+            'dc' => 'C',
+            'ledger_id' => $customer->cogs_ledger,
+            'amount' => $totalPurchasePrice,
+            'narration' => 'cost of goods sold'
+            )
+        );
+
+        // inventory
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+            'entry_id' => $insert_id,
+            'dc' => 'D',
+            'ledger_id' => $customer->inventory_ledger,
+            'amount' => $totalPurchasePrice,
+            'narration' => 'inventory'
+            )
+        );
+
+        // // sale account
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
                 'dc' => 'D',
-                'ledger_id' => $supplier->ledger_account,
-                'amount' => $inv->grand_total + $inv->product_tax,
-                'narration' => ''
+                'ledger_id' => $customer->sales_ledger,
+                'amount' => $totalSalePrice,
+                'narration' => 'sale'
             )
         );
+            
 
+        // //discount
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $customer->discount_ledger,
+                'amount' => $inv->total_discount,
+                'narration' => 'discount'
+            )
+        );
+        
+        // //vat on sale
+        $entryitemdata[] = array(
+                    'Entryitem' => array(
+                        'entry_id' => $insert_id,
+                        'dc' => 'D',
+                        'ledger_id' => $customer->vat_on_sales_ledger,
+                        'amount' => $inv->total_tax,
+                        'narration' => 'vat on sale'
+                    )
+                );      
+        
+        $total_invoice_entry = $inv->total_tax + $totalSalePrice + $totalPurchasePrice;
+        
+
+        $this->db->update('sma_accounts_entries', ['dr_total' => $total_invoice_entry, 'cr_total' => $total_invoice_entry], ['id' => $insert_id]);
+                
+        //   /*Accounts Entry Items*/
         foreach ($entryitemdata as $row => $itemdata)
         {
-                $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
+                $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
         }
 
     }
@@ -485,7 +556,12 @@ class Returns extends MY_Controller
         }
     }
 
-    
+    public function delete_previous_entry($id){
+        $accouting_entry = $this->returns_model->getAccoutsEntryByID($id);
+
+        $this->db->delete('sma_accounts_entryitems', ['entry_id' => $accouting_entry->id]);
+        $this->db->delete('sma_accounts_entries', ['rid' => $id]);
+    }
 
     public function edit($id = null)
     {
@@ -530,13 +606,18 @@ class Returns extends MY_Controller
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 $real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
                 $unit_price         = $this->sma->formatDecimal($_POST['unit_price'][$r]);
-                $item_cost_price      = $_POST['net_cost'];
+                $item_cost_price      = $_POST['net_cost'][$r];
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_serial        = $_POST['serial'][$r]           ?? '';
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
                 $item_discount      = $_POST['product_discount'][$r] ?? null;
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
+                $item_batchno       = $_POST['batch_no'][$r];
+                $item_expiry        = $_POST['expiry'][$r];
+                $item_bonus         = $_POST['bonus'][$r];
+                $item_dis1          = $_POST['dis1'][$r];
+                $item_dis2          = $_POST['dis2'][$r];
 
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details  = $item_type != 'manual' ? $this->site->getProductByCode($item_code) : null;
@@ -590,7 +671,12 @@ class Returns extends MY_Controller
                         'item_discount'     => $pr_item_discount,
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'serial_no'         => $item_serial,
+                        'batch_no'          => $item_batchno,
+                        'expiry'            => $item_expiry,
                         'real_unit_price'   => $real_unit_price,
+                        'bonus'             => $item_bonus,
+                        'discount1'         => $item_dis1,
+                        'discount2'         => $item_dis2
                     ];
 
                     $products[] = ($product + $gst_data);
@@ -660,6 +746,10 @@ class Returns extends MY_Controller
         }
 
         if ($this->form_validation->run() == true && $this->returns_model->updateReturn($id, $data, $products)) {
+            
+            $this->delete_previous_entry($id);
+            $this->convert_return_invoice($id);
+            
             $this->session->set_userdata('remove_rels', 1);
             $this->session->set_flashdata('message', lang('return_updated'));
             admin_redirect('returns');
@@ -674,6 +764,7 @@ class Returns extends MY_Controller
             $inv_items = $this->returns_model->getReturnItems($id);
             $c         = rand(100000, 9999999);
             foreach ($inv_items as $item) {
+                
                 $row = $this->site->getProductByID($item->product_id);
                 if (!$row) {
                     $row             = json_decode('{}');
@@ -713,6 +804,11 @@ class Returns extends MY_Controller
                 $row->serial          = $item->serial_no;
                 $row->option          = $item->option_id;
                 $row->tax_rate        = $item->tax_rate_id;
+                $row->batch_no        = $item->batch_no;
+                $row->expiry          = $item->expiry;
+                $row->bonus           = $item->bonus;
+                $row->discount1       = $item->discount1;
+                $row->discount2       = $item->discount2;
                 $row->comment         = '';
                 $combo_items          = false;
                 if ($row->type == 'combo') {
@@ -725,6 +821,7 @@ class Returns extends MY_Controller
                 $pr[$ri] = ['id' => $c, 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
                     'row'        => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, ];
                 $c++;
+                
             }
             $this->data['inv_items']  = json_encode($pr);
             $this->data['id']         = $id;

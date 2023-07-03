@@ -860,6 +860,11 @@ function loadItems() {
                 item_option = item.row.option,
                 item_code = item.row.code,
                 item_serial = item.row.serial,
+                item_expiry = item.row.expiry,
+                item_batchno = item.row.batch_no,
+                item_bonus = item.row.bonus,
+                item_dis1 = item.row.discount1,
+                item_dis2 = item.row.discount2,
                 item_name = item.row.name.replace(/"/g, '&#034;').replace(/'/g, '&#039;');
             var product_unit = item.row.unit,
                 base_quantity = item.row.base_quantity;
@@ -1057,17 +1062,26 @@ function loadItems() {
                 '"></td>';
 
                
-                    tr_html +=
-                        '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="text" id="discount_' +
-                        row_no +
-                        '" value="' +
-                        discount1 +
-                        '"></td>';
-            
-
+                /*tr_html +=
+                    '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="text" id="discount_' +
+                    row_no +
+                    '" value="' +
+                    discount1 +
+                    '"></td>';*/
             
                 tr_html +=
-                    '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="text" id="discount2_' +
+                    '<td class="text-right"><input class="form-control input-sm rdiscount" name="dis1[]" type="text" id="discount_' +
+                    row_no +
+                    '" value="' +
+                    discount1 +
+                    '"><input class="form-control input-sm rdiscount" name="product_discount[]" type="hidden" id="discount_' +
+                    row_no +
+                    '" value="' +
+                    discount1 +
+                    '"></td>';
+            
+                tr_html +=
+                    '<td class="text-right"><input class="form-control input-sm rdiscount" name="dis2[]" type="text" id="discount2_' +
                     row_no +
                     '" value="' +
                     discount2 +

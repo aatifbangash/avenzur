@@ -2130,6 +2130,41 @@ class system_settings extends MY_Controller
         }
     }
 
+    public function add_ledgers(){
+        $this->form_validation->set_rules('vat_on_purchase_ledger', lang('Vat On Purchase Ledger'), 'trim|numeric|required');
+        $this->form_validation->set_rules('vat_on_sale_ledger', lang('Vat On Sale Ledger'), 'trim|numeric|required');
+        $this->form_validation->set_rules('bank_fund_cash_ledger', lang('Bank Fund Cash Ledger'), 'trim|numeric|required');
+        $this->form_validation->set_rules('bank_fees_ledger', lang('Bank Fees Ledger'), 'trim|numeric|required');
+        $this->form_validation->set_rules('bank_checking_account_ledger', lang('Bank Checking Account Ledger'), 'trim|numeric|required');
+
+        if ($this->form_validation->run() == true) {
+            $vat_on_purchase_ledger = $this->input->post('vat_on_purchase_ledger');
+            $vat_on_sale_ledger = $this->input->post('vat_on_sale_ledger');
+            $bank_fund_cash_ledger = $this->input->post('bank_fund_cash_ledger');
+            $bank_fees_ledger = $this->input->post('bank_fees_ledger');
+            $bank_checking_account_ledger = $this->input->post('bank_checking_account_ledger');
+
+            $data = [
+                'vat_on_purchase_ledger' => $vat_on_purchase_ledger,
+                'vat_on_sale_ledger' => $vat_on_sale_ledger,
+                'bank_fund_cash_ledger' => $bank_fund_cash_ledger,
+                'bank_fees_ledger' => $bank_fees_ledger,
+                'bank_checking_account_ledger' => $bank_checking_account_ledger,
+            ];
+        }
+
+        if ($this->form_validation->run() == true && $this->settings_model->setLedgers($data)) {
+            $this->session->set_flashdata('message', lang('Ledgers Set Successfully'));
+            admin_redirect('system_settings/add_ledgers');
+        } else {
+            $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['warehouses']      = $this->settings_model->getAllWarehouses();
+            $bc                            = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Accounts Ledgers')]];
+            $meta                          = ['page_title' => lang('Accounts Ledgers'), 'bc' => $bc];
+            $this->page_construct('settings/add_ledgers', $meta, $this->data);
+        }
+    }
+
     public function index()
     {
         $this->load->library('gst');
