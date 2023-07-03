@@ -24,7 +24,7 @@ class Sequence_codes extends MY_Controller
         // 	sma_companies
         $this->db->select('id, group_name');
         $this->db->where('group_name', 'customer');
-        $this->db->where('code IS NULL');
+        $this->db->where('sequence_code IS NULL');
         $this->db->order_by('id', 'ASC');
         $query = $this->db->get('sma_companies');
         if ($query->num_rows() > 0) {
@@ -32,7 +32,7 @@ class Sequence_codes extends MY_Controller
 
                 $code = $this->sequenceCode->generate('CUS', 5);
                 $id = $row->id;
-                $this->db->update('sma_companies', ['code' => $code], ['id' => $id]);
+                $this->db->update('sma_companies', ['sequence_code' => $code], ['id' => $id]);
             }
         }
         echo "Done";
@@ -43,7 +43,7 @@ class Sequence_codes extends MY_Controller
         // 	sma_companies
         $this->db->select('id, group_name');
         $this->db->where('group_name', 'supplier');
-        $this->db->where('code IS NULL');
+        $this->db->where('sequence_code IS NULL');
         $this->db->order_by('id', 'ASC');
         $query = $this->db->get('sma_companies');
         if ($query->num_rows() > 0) {
@@ -51,7 +51,7 @@ class Sequence_codes extends MY_Controller
 
                 $code = $this->sequenceCode->generate('SUP', 5);
                 $id = $row->id;
-                $this->db->update('sma_companies', ['code' => $code], ['id' => $id]);
+                $this->db->update('sma_companies', ['sequence_code' => $code], ['id' => $id]);
             }
         }
         echo "Done";

@@ -100,7 +100,7 @@ class Sales_model extends CI_Model
         // Sequence-Code
         $this->load->library('SequenceCode');
         $this->sequenceCode = new SequenceCode();
-        $data['sequence_code'] = $this->sequenceCode->generate('SALE', 5);
+        $data['sequence_code'] = $this->sequenceCode->generate('SL', 5);
 
         if (empty($si_return)) {
             $cost = $this->site->costing($items);

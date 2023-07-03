@@ -7,6 +7,9 @@
 
 /* Database Queries */
 # ALTER TABLE `sma_companies` ADD `code` VARCHAR(255) NULL DEFAULT NULL;
+# ALTER TABLE `sma_companies` CHANGE `code` `sequence_code` VARCHAR(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL;
+# ALTER TABLE `sma_products` ADD `sequence_code` VARCHAR(255) NULL DEFAULT NULL;
+# ALTER TABLE `sma_purchases` ADD `sequence_code` VARCHAR(255) NULL DEFAULT NULL;
 # ALTER TABLE `sma_sales` ADD `sequence_code` VARCHAR(255) NULL AFTER `sale_invoice`;
 
 
@@ -57,26 +60,32 @@ class SequenceCode
 
                 // Supplier Code
             case 'SUP':
-                $this->_ci->db->select('MAX(code) as maxNumber');
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
                 $this->_ci->db->where('group_name', 'supplier');
                 $latestCode = $this->_ci->db->get('sma_companies')->row_array();
                 break;
 
                 // Customer Code
             case 'CUS':
-                $this->_ci->db->select('MAX(code) as maxNumber');
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
                 $this->_ci->db->where('group_name', 'customer');
                 $latestCode = $this->_ci->db->get('sma_companies')->row_array();
                 break;
 
                 // Product Code
             case 'PRD':
-                $this->_ci->db->select('MAX(code) as maxNumber');
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
                 $latestCode = $this->_ci->db->get('sma_products')->row_array();
                 break;
 
-            // Product Code
-            case 'SALE':
+                // Purchases Code
+            case 'PR':
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_purchases')->row_array();
+                break;
+
+                // Sales Code
+            case 'SL':
                 $this->_ci->db->select('MAX(sequence_code) as maxNumber');
                 $latestCode = $this->_ci->db->get('sma_sales')->row_array();
                 break;
