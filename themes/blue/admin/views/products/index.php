@@ -41,7 +41,7 @@
                 return nRow;
             },
             "aoColumns": [
-                {"bSortable": false, "mRender": checkbox}, {"bSortable": false,"mRender": img_hl}, null, null, null, null, <?php if ($Owner || $Admin) {
+                {"bSortable": false, "mRender": checkbox}, {"bSortable": false,"mRender": img_hl}, null, null, null, null, null, <?php if ($Owner || $Admin) {
                     echo '{"mRender": currencyFormat}, {"mRender": currencyFormat},';
                                                                                                                            } else {
                                                                                                                                if ($this->session->userdata('show_cost')) {
@@ -58,13 +58,14 @@
             ]
         }).fnSetFilteringDelay().dtFilter([
             {column_number: 2, filter_default_label: "[<?=lang('code');?>]", filter_type: "text", data: []},
-            {column_number: 3, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('brand');?>]", filter_type: "text", data: []},
-            {column_number: 5, filter_default_label: "[<?=lang('category');?>]", filter_type: "text", data: []},
-            <?php $col = 5;
+            {column_number: 3, filter_default_label: "[<?=lang('Sequence_Code');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('brand');?>]", filter_type: "text", data: []},
+            {column_number: 6, filter_default_label: "[<?=lang('category');?>]", filter_type: "text", data: []},
+            <?php $col = 6;
             if ($Owner || $Admin) {
-                echo '{column_number : 6, filter_default_label: "[' . lang('cost') . ']", filter_type: "text", data: [] },';
-                echo '{column_number : 7, filter_default_label: "[' . lang('price') . ']", filter_type: "text", data: [] },';
+                echo '{column_number : 7, filter_default_label: "[' . lang('cost') . ']", filter_type: "text", data: [] },';
+                echo '{column_number : 8, filter_default_label: "[' . lang('price') . ']", filter_type: "text", data: [] },';
                 $col += 2;
             } else {
                 if ($this->session->userdata('show_cost')) {
@@ -182,6 +183,7 @@
                             </th>
                             <th style="min-width:40px; width: 40px; text-align: center;"><?php echo $this->lang->line('image'); ?></th>
                             <th><?= lang('code') ?></th>
+                            <th><?= lang('Sequence_Code') ?></th>
                             <th><?= lang('name') ?></th>
                             <th><?= lang('brand') ?></th>
                             <th><?= lang('category') ?></th>
@@ -207,7 +209,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="11" class="dataTables_empty"><?= lang('loading_data_from_server'); ?></td>
+                            <td colspan="12" class="dataTables_empty"><?= lang('loading_data_from_server'); ?></td>
                         </tr>
                         </tbody>
 
@@ -217,6 +219,7 @@
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
                             <th style="min-width:40px; width: 40px; text-align: center;"><?php echo $this->lang->line('image'); ?></th>
+                            <th></th>
                             <th></th>
                             <th></th>
                             <th></th>
