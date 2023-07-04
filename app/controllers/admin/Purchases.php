@@ -31,6 +31,10 @@ class Purchases extends MY_Controller
             'types'    => $this->digital_file_types,
             'max_size' => $this->allowed_file_size,
         ]);
+
+        // Sequence-Code
+        $this->load->library('SequenceCode');
+        $this->sequenceCode = new SequenceCode();
     }
 
     /* -------------------------------------------------------------------------------------------------------------------------------- */
@@ -210,6 +214,7 @@ class Purchases extends MY_Controller
                 'created_by'               => $this->session->userdata('user_id'),
                 'payment_term'             => $payment_term,
                 'due_date'                 => $due_date,
+                'sequence_code'           => $this->sequenceCode->generate('PR', 5)
             ];
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;
@@ -1432,12 +1437,12 @@ class Purchases extends MY_Controller
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
-                ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
+                ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, sequence_code, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
                 ->from('purchases')
                 ->where('warehouse_id', $warehouse_id);
         } else {
             $this->datatables
-                ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
+                ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, sequence_code, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
                 ->from('purchases');
         }
 
@@ -1535,12 +1540,12 @@ class Purchases extends MY_Controller
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
-                ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
+                ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, sequence_code, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
                 ->from('purchases')
                 ->where('warehouse_id', $warehouse_id);
         } else {
             $this->datatables
-                ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
+                ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, sequence_code, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
                 ->from('purchases');
         }
 
@@ -1968,6 +1973,7 @@ class Purchases extends MY_Controller
                 'shipping'                 => $this->sma->formatDecimal($shipping),
                 'grand_total'              => $grand_total,
                 'status'                   => $status,
+                'sequence_code'           => $this->sequenceCode->generate('PR', 5),
                 'created_by'               => $this->session->userdata('username'),
             ];
             if ($this->Settings->indian_gst) {
@@ -2207,6 +2213,7 @@ class Purchases extends MY_Controller
                 'created_by'          => $this->session->userdata('user_id'),
                 'return_purchase_ref' => $reference,
                 'status'              => 'returned',
+                'sequence_code'           => $this->sequenceCode->generate('PR', 5),
                 'payment_status'      => $purchase->payment_status == 'paid' ? 'due' : 'pending',
             ];
             if ($this->Settings->indian_gst) {
@@ -2629,6 +2636,19 @@ class Purchases extends MY_Controller
        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('check_status'), 'page' => lang('Check Status')], ['link' => '#', 'page' => lang('Check Status')]];
        $meta               = ['page_title' => lang('Check Status'), 'bc' => $bc];
        $this->page_construct('purchases/check_status', $meta, $this->data);
+    }
+
+    public function searchBySequenceCode(){ 
+        $sequenceCode = $this->input->post('sequence_code');
+        $purchase = $this->purchases_model->searchBySequenceCode($sequenceCode);
+        if($purchase ==420){
+            $this->data['purchase'] = 420;
+        }else{
+            $this->data['purchase'] = $purchase;
+        }
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('check_status'), 'page' => lang('Check Status')], ['link' => '#', 'page' => lang('Check Status')]];
+        $meta               = ['page_title' => lang('Check Status'), 'bc' => $bc];
+           $this->page_construct('purchases/check_status_list', $meta, $this->data);
     }
 
     public function searchByReference(){ 

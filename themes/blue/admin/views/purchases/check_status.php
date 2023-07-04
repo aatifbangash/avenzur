@@ -40,6 +40,33 @@
                 <?php
                  echo form_close(); ?>
 
+                <?php
+                $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
+                echo admin_form_open_multipart('purchases/searchBySequenceCode', $attrib);
+                ?>
+                <div class="row">
+                    <div class="col-lg-12">
+
+                        <div class="col-md-8">
+                            <div class="form-group">
+                            <?= lang('Search By Sequence Code', 'scode'); ?>
+                                <?php echo form_input('sequence_code', ($_POST['sequence_code'] ?? ''), 'class="form-control input-tip" placeholder="Sequence Code" id="sequence_code" required="required"'); ?>
+                            </div>
+                        </div>
+ 
+                            <div class="col-md-4">
+                            <div class="from-group" style="margin-top:13px;"> 
+                                <?php echo form_submit('Search', $this->lang->line('Search'), 'id="add_truck" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); ?>
+                            </div>
+                           </div>
+                    
+                        
+                    </div>
+                </div>
+
+                <?php
+                 echo form_close(); ?>
+
 
 
                 <?php

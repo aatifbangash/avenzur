@@ -14,7 +14,7 @@
                 });
                 $.ajax({'dataType': 'json', 'type': 'POST', 'url': sSource, 'data': aoData, 'success': fnCallback});
             },
-            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld}, null, null, {"mRender": row_status}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bSortable": false}],
+            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld}, null, null, null, {"mRender": row_status}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bSortable": false}],
             'fnRowCallback': function (nRow, aData, iDisplayIndex) {
                 var oSettings = oTable.fnSettings();
                 nRow.id = aData[0];
@@ -24,21 +24,22 @@
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var total = 0, paid = 0, balance = 0;
                 for (var i = 0; i < aaData.length; i++) {
-                    total += parseFloat(aaData[aiDisplay[i]][5]);
-                    paid += parseFloat(aaData[aiDisplay[i]][6]);
-                    balance += parseFloat(aaData[aiDisplay[i]][7]);
+                    total += parseFloat(aaData[aiDisplay[i]][6]);
+                    paid += parseFloat(aaData[aiDisplay[i]][7]);
+                    balance += parseFloat(aaData[aiDisplay[i]][8]);
                 }
                 var nCells = nRow.getElementsByTagName('th');
-                nCells[5].innerHTML = currencyFormat(total);
-                nCells[6].innerHTML = currencyFormat(paid);
-                nCells[7].innerHTML = currencyFormat(balance);
+                nCells[6].innerHTML = currencyFormat(total);
+                nCells[7].innerHTML = currencyFormat(paid);
+                nCells[8].innerHTML = currencyFormat(balance);
             }
         }).fnSetFilteringDelay().dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
             {column_number: 2, filter_default_label: "[<?=lang('ref_no');?>]", filter_type: "text", data: []},
-            {column_number: 3, filter_default_label: "[<?=lang('supplier');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('purchase_status');?>]", filter_type: "text", data: []},
-            {column_number: 8, filter_default_label: "[<?=lang('payment_status');?>]", filter_type: "text", data: []},
+            {column_number: 3, filter_default_label: "[<?=lang('Sequence Code');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('supplier');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('purchase_status');?>]", filter_type: "text", data: []},
+            {column_number: 9, filter_default_label: "[<?=lang('payment_status');?>]", filter_type: "text", data: []},
         ], "footer");
 
         <?php if ($this->session->userdata('remove_pols')) {
@@ -164,6 +165,7 @@
                             </th>
                             <th><?= lang('date'); ?></th>
                             <th><?= lang('ref_no'); ?></th>
+                            <th><?= lang('Sequence Code'); ?></th>
                             <th><?= lang('supplier'); ?></th>
                             <th><?= lang('purchase_status'); ?></th>
                             <th><?= lang('grand_total'); ?></th>
@@ -176,7 +178,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="11" class="dataTables_empty"><?=lang('loading_data_from_server');?></td>
+                            <td colspan="12" class="dataTables_empty"><?=lang('loading_data_from_server');?></td>
                         </tr>
                         </tbody>
                         <tfoot class="dtFilter">
@@ -184,6 +186,7 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
+                            <th></th>
                             <th></th>
                             <th></th>
                             <th></th>

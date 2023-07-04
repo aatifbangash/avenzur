@@ -893,10 +893,24 @@ class Purchases_model extends CI_Model
         }
     }
 
+    public function searchBySequenceCode($sequenceCode)
+    {
+        $q = $this->db->get_where('purchases',['sequence_code' => $sequenceCode]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data; 
+        }else{
+        $data =420;
+        return $data;
+        }
+    }
+
     public function searchByDate($start_date,$end_date)
     {
         $this->db
-        ->select('reference_no,date,supplier,status')
+        ->select('reference_no,sequence_code,date,supplier,status')
         ->where('date >=', $start_date)
         ->where('date <=', $end_date);
         $q = $this->db->get('purchases');

@@ -59,6 +59,7 @@
                         <thead>
                         <tr style="text-align:center;">
                             <th><?php echo $this->lang->line('Reference no') ?></th>
+                            <th><?php echo $this->lang->line('Sequence Code') ?></th>
                             <th><?php echo $this->lang->line('Date'); ?></th>
                             <th><?php echo $this->lang->line('supplier'); ?></th>
                             <th><?php echo $this->lang->line('status'); ?></th>
@@ -72,6 +73,7 @@
                                 ?>
                                 <tr>
                                     <td><?php  echo $purchase->reference_no; ?></td> 
+                                    <td><?php  echo $purchase->sequence_code; ?></td> 
                                       <td><?php  echo $purchase->date; ?></td> 
                                       <td><?php  echo $purchase->supplier; ?></td> 
                                      <td><?php  echo $purchase->status; ?></td> 
