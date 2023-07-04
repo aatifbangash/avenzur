@@ -20,7 +20,7 @@
                                 <div class="form-group">
                                 <label class="control-label" for="vat_on_purchase_ledger"><?= lang('Vat On Purchase'); ?></label>
                                 <?php 
-                                    echo form_dropdown('vat_on_purchase_ledger', $LO,'', 'id="sale_ledger_account" class="ledger-dropdown form-control" required="required"',$DIS);  
+                                    echo form_dropdown('vat_on_purchase_ledger', $LO, $settings->vat_on_purchase_ledger, 'id="sale_ledger_account" class="ledger-dropdown form-control" required="required"',$DIS);  
                                 ?>
                                 </div>
                             </div>
@@ -28,7 +28,7 @@
                                 <div class="form-group">
                                     <label class="control-label" for="vat_on_sale_ledger"><?= lang('Vat On Sale'); ?></label>
                                     <?php 
-                                        echo form_dropdown('vat_on_sale_ledger', $LO,'', 'id="purchase_ledger_account" class="ledger-dropdown form-control" required="required"',$DIS);  
+                                        echo form_dropdown('vat_on_sale_ledger', $LO, $settings->vat_on_sale_ledger, 'id="purchase_ledger_account" class="ledger-dropdown form-control" required="required"',$DIS);  
                                     ?>
                                     
                                 </div>
@@ -38,7 +38,7 @@
                                 <div class="form-group">
                                     <label class="control-label" for="bank_fund_cash_ledger"><?= lang('Bank Fund Cash'); ?></label>
                                     <?php 
-                                        echo form_dropdown('bank_fund_cash_ledger', $LO,'', 'id="bank_fund_cash_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                                        echo form_dropdown('bank_fund_cash_ledger', $LO, $settings->bank_fund_cash_ledger, 'id="bank_fund_cash_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                                     ?>
                                 </div>
                             </div>
@@ -47,7 +47,7 @@
                                 <div class="form-group">
                                     <label class="control-label" for="bank_fees_ledger"><?= lang('Bank Fees'); ?></label>
                                     <?php 
-                                        echo form_dropdown('bank_fees_ledger', $LO,'', 'id="bank_fees_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                                        echo form_dropdown('bank_fees_ledger', $LO, $settings->bank_fees_ledger, 'id="bank_fees_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                                     ?>
                                 </div>
                             </div>
@@ -56,7 +56,7 @@
                                 <div class="form-group">
                                     <label class="control-label" for="bank_checking_account_ledger"><?= lang('Bank Checking Account'); ?></label>
                                     <?php 
-                                        echo form_dropdown('bank_checking_account_ledger', $LO,'', 'id="bank_checking_account_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                                        echo form_dropdown('bank_checking_account_ledger', $LO, $settings->bank_checking_account_ledger, 'id="bank_checking_account_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                                     ?>
                                 </div>
                             </div>

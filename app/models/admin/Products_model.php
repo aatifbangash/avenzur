@@ -7,6 +7,10 @@ class Products_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+
+        // Sequence-Code
+        $this->load->library('SequenceCode');
+        $this->sequenceCode = new SequenceCode();
     }
 
     public function add_products($products = [])
@@ -16,6 +20,8 @@ class Products_model extends CI_Model
             foreach ($products as $product) {
                 $variants = explode('|', $product['variants']);
                 unset($product['variants']);
+                // Sequence-Code
+                $product['sequence_code'] = $this->sequenceCode->generate('PRD', 5);
                 if ($this->db->insert('products', $product)) {
                     $product_id = $this->db->insert_id();
                     foreach ($warehouses as $warehouse) {
@@ -53,6 +59,8 @@ class Products_model extends CI_Model
 
     public function addAjaxProduct($data)
     {
+        // Sequence-Code
+        $data['sequence_code'] = $this->sequenceCode->generate('PRD', 5);
         if ($this->db->insert('products', $data)) {
             $product_id = $this->db->insert_id();
             return $this->getProductByID($product_id);
@@ -62,6 +70,8 @@ class Products_model extends CI_Model
 
     public function addProduct($data, $items, $warehouse_qty, $product_attributes, $photos)
     {
+        // Sequence-Code
+        $data['sequence_code'] = $this->sequenceCode->generate('PRD', 5);
         if ($this->db->insert('products', $data)) {
             $product_id = $this->db->insert_id();
 

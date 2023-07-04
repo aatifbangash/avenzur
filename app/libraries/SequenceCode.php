@@ -10,7 +10,7 @@
 # ALTER TABLE `sma_companies` CHANGE `code` `sequence_code` VARCHAR(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL;
 # ALTER TABLE `sma_products` ADD `sequence_code` VARCHAR(255) NULL DEFAULT NULL;
 # ALTER TABLE `sma_purchases` ADD `sequence_code` VARCHAR(255) NULL DEFAULT NULL;
-# ALTER TABLE `sma_sales` ADD `sequence_code` VARCHAR(255) NULL DEFAULT NULL;
+# ALTER TABLE `sma_sales` ADD `sequence_code` VARCHAR(255) NULL AFTER `sale_invoice`;
 
 
 //=== USAGE ===//

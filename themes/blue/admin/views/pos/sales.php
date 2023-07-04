@@ -36,7 +36,7 @@
             "aoColumns": [{
                 "bSortable": false,
                 "mRender": checkbox
-            }, {"mRender": fld}, null, null, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": balance}, {"mRender": row_status}, {"mRender": pay_status}, {"bSortable": false}],
+            }, {"mRender": fld}, null, null, null, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": balance}, {"mRender": row_status}, {"mRender": pay_status}, {"bSortable": false}],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0, paid = 0, bal = 0;
                 for (var i = 0; i < aaData.length; i++) {
@@ -150,6 +150,7 @@
                             </th>
                             <th><?= lang('date'); ?></th>
                             <th><?= lang('reference_no'); ?></th>
+                            <th>Code</th>
                             <th><?= lang('biller'); ?></th>
                             <th><?= lang('customer'); ?></th>
                             <th><?= lang('grand_total'); ?></th>

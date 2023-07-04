@@ -97,6 +97,11 @@ class Sales_model extends CI_Model
 
     public function addSale($data = [], $items = [], $payment = [], $si_return = [], $attachments = [])
     {
+        // Sequence-Code
+        $this->load->library('SequenceCode');
+        $this->sequenceCode = new SequenceCode();
+        $data['sequence_code'] = $this->sequenceCode->generate('SL', 5);
+
         if (empty($si_return)) {
             $cost = $this->site->costing($items);
             // $this->sma->print_arrays($cost);

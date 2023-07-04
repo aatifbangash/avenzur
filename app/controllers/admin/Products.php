@@ -23,10 +23,6 @@ class Products extends MY_Controller
         $this->digital_file_types  = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt';
         $this->allowed_file_size   = '1024000';
         $this->popup_attributes    = ['width' => '900', 'height' => '600', 'window_name' => 'sma_popup', 'menubar' => 'yes', 'scrollbars' => 'yes', 'status' => 'no', 'resizable' => 'yes', 'screenx' => '0', 'screeny' => '0'];
-        
-         // Sequence-Code
-         $this->load->library('SequenceCode');
-         $this->sequenceCode = new SequenceCode();
     }
 
     /* ------------------------------------------------------- */
@@ -120,7 +116,6 @@ class Products extends MY_Controller
                 'purchase_account'   => $this->input->post('purchase_account'),
                 'sale_account'       => $this->input->post('sale_account'),
                 'inventory_account'  => $this->input->post('inventory_account'),
-                'sequence_code'      => $this->sequenceCode->generate('PRD', 5),
             ];
             $warehouse_qty      = null;
             $product_attributes = null;

@@ -40,6 +40,11 @@ class Shop_model extends CI_Model
 
     public function addSale($data, $items, $customer, $address)
     {
+        // Sequence-Code
+        $this->load->library('SequenceCode');
+        $this->sequenceCode = new SequenceCode();
+        $data['sequence_code'] = $this->sequenceCode->generate('SL', 5);
+
         $cost = $this->site->costing($items);
         // $this->sma->print_arrays($cost);
 
