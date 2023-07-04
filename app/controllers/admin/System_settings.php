@@ -2158,7 +2158,7 @@ class system_settings extends MY_Controller
             admin_redirect('system_settings/add_ledgers');
         } else {
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
-            $this->data['warehouses']      = $this->settings_model->getAllWarehouses();
+            $this->data['settings']        = $this->settings_model->getSettings();
             $bc                            = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Accounts Ledgers')]];
             $meta                          = ['page_title' => lang('Accounts Ledgers'), 'bc' => $bc];
             $this->page_construct('settings/add_ledgers', $meta, $this->data);
