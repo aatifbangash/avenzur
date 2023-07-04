@@ -392,7 +392,7 @@ class Returns extends MY_Controller
                 $data['attachment'] = $photo;
             }
 
-            $this->sma->print_arrays($data, $products);exit;
+            //$this->sma->print_arrays($data, $products);exit;
         }
 
         if ($this->form_validation->run() == true && $return_insert_id = $this->returns_model->addReturn($data, $products)) {
