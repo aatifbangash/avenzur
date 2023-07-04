@@ -840,7 +840,7 @@ class Returns extends MY_Controller
     {
        
          $this->sma->checkPermissions('index');
-         if ((!$this->Owner || !$this->Admin) && !$warehouse_id) {
+         if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
             $user         = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
          }
@@ -852,7 +852,6 @@ class Returns extends MY_Controller
                 ->from('returns')
                 ->where('warehouse_id', $warehouse_id);
         } else {
-            echo 'here in this block we are...';exit;
             $this->datatables
                 ->select("{$this->db->dbprefix('returns')}.id as id, DATE_FORMAT({$this->db->dbprefix('returns')}.date, '%Y-%m-%d %T') as date, reference_no, biller, {$this->db->dbprefix('returns')}.customer, grand_total, {$this->db->dbprefix('returns')}.attachment")
                 ->from('returns');
