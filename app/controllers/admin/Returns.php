@@ -839,11 +839,11 @@ class Returns extends MY_Controller
     public function getReturns($warehouse_id = null)
     {
        
-        // $this->sma->checkPermissions('index');
-        // if ((!$this->Owner || !$this->Admin) && !$warehouse_id) {
+         $this->sma->checkPermissions('index');
+         if ((!$this->Owner || !$this->Admin) && !$warehouse_id) {
             $user         = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
-        // }
+         }
 
         $this->load->library('datatables');
         if ($warehouse_id) {
