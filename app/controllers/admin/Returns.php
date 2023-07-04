@@ -856,7 +856,7 @@ class Returns extends MY_Controller
                 ->select("{$this->db->dbprefix('returns')}.id as id, DATE_FORMAT({$this->db->dbprefix('returns')}.date, '%Y-%m-%d %T') as date, reference_no, biller, {$this->db->dbprefix('returns')}.customer, grand_total, {$this->db->dbprefix('returns')}.attachment")
                 ->from('returns');
         }
-
+        echo $this->Owner.' - '.$this->Admin.' - '.$this->session->userdata('user_id');exit;
         if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
         }
