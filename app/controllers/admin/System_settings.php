@@ -410,15 +410,37 @@ class system_settings extends MY_Controller
             } else {
                 $map = null;
             }
-            $data = ['code'      => $this->input->post('code'),
-                'name'           => $this->input->post('name'),
-                'phone'          => $this->input->post('phone'),
-                'email'          => $this->input->post('email'),
-                'address'        => $this->input->post('address'),
-                'price_group_id' => $this->input->post('price_group'),
-                'warehouse_type' => $this->input->post('type'),
-                'country'            => $this->input->post('country'),
-            ];
+
+            if($this->input->post('type') == 'warehouse'){
+                $data = ['code'      => $this->input->post('code'),
+                    'name'           => $this->input->post('name'),
+                    'phone'          => $this->input->post('phone'),
+                    'email'          => $this->input->post('email'),
+                    'address'        => $this->input->post('address'),
+                    'price_group_id' => $this->input->post('price_group'),
+                    'warehouse_type' => $this->input->post('type'),
+                    'country'            => $this->input->post('country'),
+                ];
+            }else if($this->input->post('type') == 'pharmacy'){
+                $data = ['code'      => $this->input->post('code'),
+                    'name'           => $this->input->post('name'),
+                    'phone'          => $this->input->post('phone'),
+                    'email'          => $this->input->post('email'),
+                    'address'        => $this->input->post('address'),
+                    'price_group_id' => $this->input->post('price_group'),
+                    'warehouse_type' => $this->input->post('type'),
+                    'country'            => $this->input->post('country'),
+                    'fund_books_ledger'   => $this->input->post('fund_books_ledger'),
+                    'credit_card_ledger'  => $this->input->post('credit_card_ledger'),
+                    'cogs_ledger'         => $this->input->post('cogs_ledger'),
+                    'inventory_ledger'    => $this->input->post('inventory_ledger'),
+                    'sales_ledger'        => $this->input->post('sales_ledger'),
+                    'price_difference_ledger'   => $this->input->post('price_difference_ledger'),
+                    'discount_ledger'     => $this->input->post('discount_ledger'),
+                    'vat_on_sales_ledger' => $this->input->post('vat_on_sales_ledger'),
+                ];
+            }
+
         } elseif ($this->input->post('add_warehouse')) {
             $this->session->set_flashdata('error', validation_errors());
             admin_redirect('system_settings/warehouses');
@@ -1479,15 +1501,35 @@ class system_settings extends MY_Controller
         $this->form_validation->set_rules('map', lang('map_image'), 'xss_clean');
 
         if ($this->form_validation->run() == true) {
-            $data = ['code'      => $this->input->post('code'),
-                'name'           => $this->input->post('name'),
-                'phone'          => $this->input->post('phone'),
-                'email'          => $this->input->post('email'),
-                'address'        => $this->input->post('address'),
-                'price_group_id' => $this->input->post('price_group'),
-                'warehouse_type' => $this->input->post('type'),
-                'country'        => $this->input->post('country')
-            ];
+            if($this->input->post('type') == 'warehouse'){
+                $data = ['code'      => $this->input->post('code'),
+                    'name'           => $this->input->post('name'),
+                    'phone'          => $this->input->post('phone'),
+                    'email'          => $this->input->post('email'),
+                    'address'        => $this->input->post('address'),
+                    'price_group_id' => $this->input->post('price_group'),
+                    'warehouse_type' => $this->input->post('type'),
+                    'country'        => $this->input->post('country')
+                ];
+            }else if($this->input->post('type') == 'pharmacy'){
+                $data = ['code'      => $this->input->post('code'),
+                    'name'           => $this->input->post('name'),
+                    'phone'          => $this->input->post('phone'),
+                    'email'          => $this->input->post('email'),
+                    'address'        => $this->input->post('address'),
+                    'price_group_id' => $this->input->post('price_group'),
+                    'warehouse_type' => $this->input->post('type'),
+                    'country'            => $this->input->post('country'),
+                    'fund_books_ledger'   => $this->input->post('fund_books_ledger'),
+                    'credit_card_ledger'  => $this->input->post('credit_card_ledger'),
+                    'cogs_ledger'         => $this->input->post('cogs_ledger'),
+                    'inventory_ledger'    => $this->input->post('inventory_ledger'),
+                    'sales_ledger'        => $this->input->post('sales_ledger'),
+                    'price_difference_ledger'   => $this->input->post('price_difference_ledger'),
+                    'discount_ledger'     => $this->input->post('discount_ledger'),
+                    'vat_on_sales_ledger' => $this->input->post('vat_on_sales_ledger'),
+                ];
+            }
 
             if ($_FILES['userfile']['size'] > 0) {
                 $this->load->library('upload');

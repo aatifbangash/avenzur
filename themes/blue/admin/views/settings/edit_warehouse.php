@@ -46,9 +46,9 @@
                 <?php
                 
                     $pgs2['warehouse'] = 'Warehouse';
-                    $pgs2['pharmacP'] = 'Pharmacy';
+                    $pgs2['pharmacy'] = 'Pharmacy';
                 
-                echo form_dropdown('type', $pgs2, $warehouse->warehouse_type, 'class="form-control tip select" id="type" style="width:100%;"');
+                echo form_dropdown('type', $pgs2, $warehouse->warehouse_type, 'class="form-control tip select" id="type" style="width:100%;" onchange="loadLedgers(this);"');
                 ?>
             </div>
             <div class="form-group">
@@ -59,6 +59,64 @@
                     $pgs1[$c->id] = $c->name;
                 }
                 echo form_dropdown('country', $pgs1, $warehouse->country, 'class="form-control tip select" id="country" style="width:100%;"');
+                ?>
+            </div>
+
+            <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
+                <?= lang('Fund Books Account', 'Fund Books Account'); ?>
+                <?php 
+
+                    echo form_dropdown('fund_books_ledger', $LO, $warehouse->fund_books_ledger, 'id="fund_books_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+            <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
+                <?= lang('Cogs Account', 'Cogs Account'); ?>
+                <?php 
+
+                    echo form_dropdown('cogs_ledger', $LO, $warehouse->cogs_ledger, 'id="cogs_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+            <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
+                <?= lang('Sales Account', 'Sales Account'); ?>
+                <?php 
+
+                    echo form_dropdown('sales_ledger', $LO, $warehouse->sales_ledger, 'id="sales_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+            <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
+                <?= lang('Discount Account', 'Discount Account'); ?>
+                <?php 
+
+                    echo form_dropdown('discount_ledger', $LO, $warehouse->discount_ledger, 'id="discount_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+
+            <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
+                <?= lang('Credit Card Account', 'Credit Card Account'); ?>
+                <?php 
+
+                    echo form_dropdown('credit_card_ledger', $LO, $warehouse->credit_card_ledger, 'id="credit_card_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+            <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
+                <?= lang('Inventory Account', 'Inventory Account'); ?>
+                <?php 
+
+                    echo form_dropdown('inventory_ledger', $LO, $warehouse->inventory_ledger, 'id="inventory_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+            <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
+                <?= lang('Price Difference Account', 'Price Difference Account'); ?>
+                <?php 
+
+                    echo form_dropdown('price_difference_ledger', $LO, $warehouse->price_difference_ledger, 'id="price_difference_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+            <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
+                <?= lang('Vat Account', 'Vat Account'); ?>
+                <?php 
+
+                    echo form_dropdown('vat_on_sales_ledger', $LO, $warehouse->vat_on_sales_ledger, 'id="vat_on_sales_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                 ?>
             </div>
             
@@ -75,4 +133,20 @@
     <?php echo form_close(); ?>
 </div>
 <script type="text/javascript" src="<?= $assets ?>js/custom.js"></script>
+<script type="text/javascript">
+    function loadLedgers(obj){
+        
+        if(obj.value == 'pharmacy'){
+            var elements = document.getElementsByClassName('ledgers_group');
+            for (var i = 0; i < elements.length; i++) {
+            elements[i].style.display = "block";
+            }
+        }else{
+            var elements = document.getElementsByClassName('ledgers_group');
+            for (var i = 0; i < elements.length; i++) {
+            elements[i].style.display = "none";
+            }
+        }
+    }
+</script>
 <?= $modal_js ?>

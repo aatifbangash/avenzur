@@ -1,4 +1,9 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<style>
+    .ledgers_group{
+        display: none;
+    }
+</style>
 <div class="modal-dialog">
     <div class="modal-content">
         <div class="modal-header">
@@ -43,7 +48,7 @@
             </div>
             <div class="form-group">
                 <label class="control-label" for="type"><?php echo $this->lang->line('Type'); ?></label>
-                 <select class="form-control" id="type" name="type" >
+                 <select class="form-control" id="type" name="type" onchange="loadLedgers(this);" >
                      <option value="warehouse">Warehouse</option>
                      <option value="pharmacy">Pharmacy</option>
                  </select>
@@ -68,6 +73,65 @@
               //  echo form_dropdown('country', $pgss, 'class="form-control" id="country" ');
                 ?>
             </div>
+
+            <div class="form-group ledgers_group">
+                <?= lang('Fund Books Account', 'Fund Books Account'); ?>
+                <?php 
+
+                    echo form_dropdown('fund_books_ledger', $LO,'', 'id="fund_books_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+            <div class="form-group ledgers_group">
+                <?= lang('Cogs Account', 'Cogs Account'); ?>
+                <?php 
+
+                    echo form_dropdown('cogs_ledger', $LO,'', 'id="cogs_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+            <div class="form-group ledgers_group">
+                <?= lang('Sales Account', 'Sales Account'); ?>
+                <?php 
+
+                    echo form_dropdown('sales_ledger', $LO,'', 'id="sales_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+            <div class="form-group ledgers_group">
+                <?= lang('Discount Account', 'Discount Account'); ?>
+                <?php 
+
+                    echo form_dropdown('discount_ledger', $LO,'', 'id="discount_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+
+            <div class="form-group ledgers_group">
+                <?= lang('Credit Card Account', 'Credit Card Account'); ?>
+                <?php 
+
+                    echo form_dropdown('credit_card_ledger', $LO,'', 'id="credit_card_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+            <div class="form-group ledgers_group">
+                <?= lang('Inventory Account', 'Inventory Account'); ?>
+                <?php 
+
+                    echo form_dropdown('inventory_ledger', $LO,'', 'id="inventory_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+            <div class="form-group ledgers_group">
+                <?= lang('Price Difference Account', 'Price Difference Account'); ?>
+                <?php 
+
+                    echo form_dropdown('price_difference_ledger', $LO,'', 'id="price_difference_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+            <div class="form-group ledgers_group">
+                <?= lang('Vat Account', 'Vat Account'); ?>
+                <?php 
+
+                    echo form_dropdown('vat_on_sales_ledger', $LO,'', 'id="vat_on_sales_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+
             <!--<div class="form-group">-->
             <!--    <?= lang('warehouse_map', 'image') ?>-->
             <!--    <input id="image" type="file" data-browse-label="<?= lang('browse'); ?>" name="userfile" data-show-upload="false" data-show-preview="false"-->
@@ -81,4 +145,19 @@
     <?php echo form_close(); ?>
 </div>
 <script type="text/javascript" src="<?= $assets ?>js/custom.js"></script>
+<script type="text/javascript">
+    function loadLedgers(obj){
+        if(obj.value == 'pharmacy'){
+            var elements = document.getElementsByClassName('ledgers_group');
+            for (var i = 0; i < elements.length; i++) {
+            elements[i].style.display = "block";
+            }
+        }else{
+            var elements = document.getElementsByClassName('ledgers_group');
+            for (var i = 0; i < elements.length; i++) {
+            elements[i].style.display = "none";
+            }
+        }
+    }
+</script>
 <?= $modal_js ?>

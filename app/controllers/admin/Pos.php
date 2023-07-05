@@ -1064,7 +1064,8 @@ class Pos extends MY_Controller
                     if($inv->sale_invoice == 0){
                     if ($this->sales_model->saleToInvoice($sid)) {
                         $this->load->admin_model('companies_model');
-                        $customer = $this->companies_model->getCompanyByID($inv->customer_id);
+                        $this->load->admin_model('settings_model');
+                        $customer = $this->settings_model->getWarehouseByID($inv->warehouse_id);
 
                         /*Accounts Entries*/
                         $entry = array(
