@@ -585,7 +585,7 @@ if (!empty($variants)) {
                                
                                     <?php 
 
-                                echo form_dropdown('purchase_account', $LO, ($_POST['purchase_account'] ?? $purchase->purchase_account), 'id="purchase_account" class="ledger-dropdown form-control" required="required"',$DIS);  
+                                echo form_dropdown('purchase_account', $LO, ($_POST['purchase_account'] ?? $product->purchase_account), 'id="purchase_account" class="ledger-dropdown form-control" required="required"',$DIS);  
 
                                ?>
                                     
@@ -597,7 +597,7 @@ if (!empty($variants)) {
                                 <label for="Sales Account">COGS Account</lable>
                                    <?php 
 
-                                echo form_dropdown('sale_account', $LO, ($_POST['sale_account'] ?? $purchase->purchase_account), 'id="sale_account" class="ledger-dropdown form-control" required="required"',$DIS);  
+                                echo form_dropdown('sale_account', $LO, ($_POST['sale_account'] ?? $product->purchase_account), 'id="sale_account" class="ledger-dropdown form-control" required="required"',$DIS);  
 
                                ?>
                                     
@@ -609,7 +609,7 @@ if (!empty($variants)) {
                                 <label for="Inventory Account">Income Account</lable>
                                  <?php 
 
-                                echo form_dropdown('inventory_account', $LO, ($_POST['inventory_account'] ?? $purchase->purchase_account), 'id="inventory_account" class="ledger-dropdown form-control" required="required"',$DIS);  
+                                echo form_dropdown('inventory_account', $LO, ($_POST['inventory_account'] ?? $product->purchase_account), 'id="inventory_account" class="ledger-dropdown form-control" required="required"',$DIS);  
 
                                ?>
                                     

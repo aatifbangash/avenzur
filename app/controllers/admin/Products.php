@@ -33,7 +33,7 @@ class Products extends MY_Controller
         $warehouses = $this->site->getAllWarehouses();
         $this->form_validation->set_rules('category', lang('category'), 'required|is_natural_no_zero');
         if ($this->input->post('type') == 'standard') {
-            $this->form_validation->set_rules('cost', lang('product_cost'), 'required');
+            //$this->form_validation->set_rules('cost', lang('product_cost'), 'required');
             $this->form_validation->set_rules('unit', lang('product_unit'), 'required');
         }
         $this->form_validation->set_rules('code', lang('product_code'), 'is_unique[products.code]|alpha_dash');
@@ -64,7 +64,7 @@ class Products extends MY_Controller
                 'brand'             => $this->input->post('brand'),
                 'category_id'       => $this->input->post('category'),
                 'subcategory_id'    => $this->input->post('subcategory') ? $this->input->post('subcategory') : null,
-                'cost'              => $this->sma->formatDecimal($this->input->post('cost')),
+                'cost'              => $this->sma->formatDecimal($this->input->post('price')),
                 'price'             => $this->sma->formatDecimal($this->input->post('price')),
                 'unit'              => $this->input->post('unit'),
                 'sale_unit'         => $this->input->post('default_sale_unit'),
@@ -912,7 +912,7 @@ class Products extends MY_Controller
         }
         $this->form_validation->set_rules('category', lang('category'), 'required|is_natural_no_zero');
         if ($this->input->post('type') == 'standard') {
-            $this->form_validation->set_rules('cost', lang('product_cost'), 'required');
+            //$this->form_validation->set_rules('cost', lang('product_cost'), 'required');
             $this->form_validation->set_rules('unit', lang('product_unit'), 'required');
         }
         $this->form_validation->set_rules('code', lang('product_code'), 'alpha_dash');
@@ -948,7 +948,7 @@ class Products extends MY_Controller
                 'brand'             => $this->input->post('brand'),
                 'category_id'       => $this->input->post('category'),
                 'subcategory_id'    => $this->input->post('subcategory') ? $this->input->post('subcategory') : null,
-                'cost'              => $this->sma->formatDecimal($this->input->post('cost')),
+                'cost'              => $this->sma->formatDecimal($this->input->post('price')),
                 'price'             => $this->sma->formatDecimal($this->input->post('price')),
                 'unit'              => $this->input->post('unit'),
                 'sale_unit'         => $this->input->post('default_sale_unit'),
