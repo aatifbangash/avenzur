@@ -3549,26 +3549,38 @@ class Reports extends MY_Controller
         $this->data['incentives']= "incentive";
         $this->data['users']      = $this->reports_model->getStaff();
 
-
         $user         = $this->input->post('user');
         $start_date   = $this->input->post('start_date');
         $end_date     = $this->input->post('end_date');
-       
-        if ($start_date) {
-            $start_date = $this->sma->fld($start_date);
-            $end_date   = $this->sma->fld($end_date);
-        }
-      
-     
+        if(!empty($user)){
+                   
+            if ($start_date) {
+                $start_date = $this->sma->fld($start_date);
+                $end_date   = $this->sma->fld($end_date);
+            }
+        
+        
 
-        $this->db->select('p.*,SUM(t.quantity) as total_quantity,SUM(t.net_unit_price) as total_price',false)
-        ->from('sale_items t')
-        ->join('products p','p.id = t.product_id','full')
-        ->join('sales s','s.id = t.sale_id','full')
-        ->where('s.created_by', $user)
-        // ->where($this->db->dbprefix('sales') . '.date BETWEEN "' . $start_date . '" and "' . $end_date . '"')
-        ->group_by('t.product_id');
-        $this->data['products'] = $this->db->get()->result();
+            $this->db->select('p.*,SUM(t.quantity) as total_quantity,SUM(t.net_unit_price) as total_price',false)
+            ->from('sale_items t')
+            ->join('products p','p.id = t.product_id','full')
+            ->join('sales s','s.id = t.sale_id','full')
+            ->where('s.created_by', $user)
+            ->where('p.incentive_qty IS NOT NULL', NULL)
+            ->group_by('t.product_id');
+
+            
+            if ($start_date && $start_date != "0000-00-00 00:00:00") {
+                $this->db->where('s.date >=', $start_date);
+            
+
+                if ($end_date  && $end_date != "0000-00-00 00:00:00") {
+                    $this->db->where('s.date <=', $end_date);
+                }
+            }
+            $this->data['products'] = $this->db->get()->result();
+            
+        }
 
         $this->data['error']  = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $bc                   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('staff_report')]];
