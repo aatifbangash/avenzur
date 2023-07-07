@@ -58,6 +58,10 @@
                             <td><?= $product->name; ?></td>
                         </tr>
                         <tr>
+                            <td><?= lang('Sequence Code'); ?></td>
+                            <td><?php echo $product->sequence_code; ?></td>
+                        </tr>
+                        <tr>
                             <td><?= lang('code'); ?></td>
                             <td><?= $product->code; ?></td>
                         </tr>

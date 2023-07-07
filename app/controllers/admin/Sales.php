@@ -2796,7 +2796,7 @@ class Sales extends MY_Controller
                 $units    = $this->site->getUnitsByBUID($row->base_unit);
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
                 $row->batch_no = $row->batchno;
-                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ') - '.$row->batch_no, 'category' => $row->category_id,
+                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ') - '.$row->batch_no.' - '.$row->sequence_code, 'category' => $row->category_id,
                     'row'     => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, ];
                 $r++;
             }
