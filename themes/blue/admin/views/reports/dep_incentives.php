@@ -92,8 +92,6 @@
                                 <th><?= lang('Total Quantity'); ?></th>
                                 <th><?= lang('Last selling price'); ?></th>
                                 <th><?= lang('Incentive selling value'); ?></th>
-                                <th><?= lang('To date'); ?></th>
-                                -->
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
