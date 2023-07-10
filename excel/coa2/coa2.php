@@ -1,5 +1,7 @@
 <?php
-
+//ALTER TABLE `sma_accounts_groups` ADD `name_arabic` VARCHAR(255) NOT NULL DEFAULT '' AFTER `name`, ADD `type1` VARCHAR(255) NOT NULL DEFAULT '' AFTER `name_arabic`, ADD `type2` VARCHAR(255) NOT NULL DEFAULT '' AFTER `type1`, ADD `category` VARCHAR(255) NOT NULL DEFAULT '' AFTER `type2`;
+//
+//ALTER TABLE `sma_accounts_ledgers` ADD `name_arabic` VARCHAR(255) NOT NULL DEFAULT '' AFTER `name`, ADD `type1` VARCHAR(255) NOT NULL DEFAULT '' AFTER `name_arabic`, ADD `type2` VARCHAR(255) NOT NULL DEFAULT '' AFTER `type1`, ADD `category` VARCHAR(255) NOT NULL DEFAULT '' AFTER `type2`;
 if (($open = fopen("coa2.csv", "r")) !== false) {
     while (($data = fgetcsv($open, 1000, ",")) !== false) {
         //if($data[6] >=1000) continue;
@@ -59,9 +61,7 @@ foreach($array as $row){
     
 }
 
-
-
-$mysqli = new mysqli("localhost", "root", "", "avenzur");
+$mysqli = new mysqli("localhost", "root", "", "tododev_pharmacy");
 
 // Check connection
 if ($mysqli->connect_errno) {
@@ -72,21 +72,21 @@ if ($mysqli->connect_errno) {
 if (!empty($data)) {
     
     foreach ($data as $key => $level1) {
-        
+        // total asset
         $sql1 = "INSERT INTO `sma_accounts_groups` 
                         SET `parent_id`= NULL,
                             `code`='{$level1[0]}',
-                            `name`='{$level1[1]}',
-                            `name_arabic`='{$level1[2]}',
+                            `name`='{$mysqli->escape_string($level1[1])}',
+                            `name_arabic`='{$mysqli->escape_string($level1[2])}',
                             `type1`='{$level1[4]}',
                             `type2`='{$level1[6]}',
-                            `category`='{$level1[7]}',                        
-                            `affects_gross`='[value-5]'";
+                            `category`='{$mysqli->escape_string($level1[7])}'";
         $mysqli->query($sql1);
         $level1ID = $mysqli->insert_id;
      
 
         if (!empty($level1['children'])) {
+            // current asset
             foreach ($level1['children'] as $key2 => $level2) {
 
                 //INSERT ROW
@@ -94,6 +94,7 @@ if (!empty($data)) {
 
 
                 if (!empty($level2['children'])) {
+                    // total equalent
                     foreach ($level2['children'] as $key3 => $level3) {
 
                         //INSERT ROW
@@ -101,6 +102,7 @@ if (!empty($data)) {
 
                        
                         if (!empty($level3['children'])) {
+                            // total bank account
                             foreach ($level3['children'] as $key3 => $level4) {
 
 
@@ -109,10 +111,11 @@ if (!empty($data)) {
 
                                 
                                 if (!empty($level4['children'])) {
+                                    // total rataj
                                     foreach ($level4['children'] as $key4 => $level5) {
                                        
                                         //INSERT ROW
-                                        $level5ID = InsRec($level3ID, $level5);
+                                        $level5ID = InsRec($level4ID, $level5);
                                        
                                     }
                                 }
@@ -129,16 +132,16 @@ if (!empty($data)) {
 
 function InsRec($previousLevelId, $row){
     global $mysqli;
+    $levelID = false;
     if(strtolower($row[3])=='group'){
         $sql = "INSERT INTO `sma_accounts_groups` 
                         SET `parent_id`= {$previousLevelId},
                             `code`='{$row[0]}',
-                            `name`='{$row[1]}',
-                            `name_arabic`='{$row[2]}',
+                            `name`='{$mysqli->escape_string($row[1])}',
+                            `name_arabic`='{$mysqli->escape_string($row[2])}',
                             `type1`='{$row[4]}',
                             `type2`='{$row[6]}',
-                            `category`='{$row[7]}',                        
-                            `affects_gross`='[value-5]'";
+                            `category`='{$mysqli->escape_string($row[7])}'";
 
         $mysqli->query($sql);
         $levelID = $mysqli->insert_id;
@@ -155,11 +158,11 @@ function InsRec($previousLevelId, $row){
         $sql = "INSERT INTO `sma_accounts_ledgers` 
                             SET `group_id`='{$previousLevelId}',
                                 `code`='{$row[0]}',
-                                `name`='{$row[1]}',
-                                `name_arabic`='{$row[2]}',
+                                `name`='{$mysqli->escape_string($row[1])}',
+                                `name_arabic`='{$mysqli->escape_string($row[2])}',
                                 `type1`='{$row[4]}',
                                 `type2`='{$row[6]}',
-                                `category`='{$row[7]}',
+                                `category`='{$mysqli->escape_string($row[7])}',
                                 `op_balance_dc`='{$op_balance_dc}',
                                 `notes`=''";
          $mysqli->query($sql);

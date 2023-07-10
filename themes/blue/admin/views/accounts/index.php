@@ -151,6 +151,11 @@
                 echo '<th>' . (lang('accounts_index_type')) . '</th>';
                 echo '<th>' . (lang('accounts_index_op_balance')) . ' (' .$this->mAccountSettings->currency_symbol. ')' . '</th>';
                 echo '<th>' . (lang('accounts_index_cl_balance')) . ' (' .$this->mAccountSettings->currency_symbol. ')' . '</th>';
+
+//                   echo '<th>' . (lang('Type1')) . '</th>';
+//                   echo '<th>' . (lang('Type2')) . '</th>';
+//                   echo '<th>' . (lang('Category')) . '</th>';
+
                 echo '<th>' . (lang('accounts_index_action')) . '</th>';
                 echo '</thead>';
                 echo "<tbody>";

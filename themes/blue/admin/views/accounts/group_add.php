@@ -93,6 +93,28 @@ function getNumber() {
 							echo "</div>";		
 						echo "</div>";
 						echo "</div>";
+
+                    echo "<div class='row'>";
+                    echo "<div class='col-xs-4'>";
+                    echo '<div class="form-group">';
+                    echo form_label(lang('Type1'), 'type1');
+                    echo form_input('type1', set_value('type1') ,array('class' => 'form-control', 'id'=> 'g_type1'));
+                    echo "</div>";
+                    echo "</div>";
+                    echo "<div class='col-xs-4'>";
+                    echo '<div class="form-group">';
+                    echo form_label(lang('Type2'), 'type2');
+                    echo form_input('type2', set_value('type2') ,array('class' => 'form-control', 'id'=> 'g_type2'));
+                    echo "</div>";
+                    echo "</div>";
+                    echo "<div class='col-xs-4'>";
+                    echo '<div class="form-group">';
+                    echo form_label(lang('Category'), 'category');
+                    echo form_input('category', set_value('category') ,array('class' => 'form-control'));
+                    echo "</div>";
+                    echo "</div>";
+                    echo "</div>";
+
 						
 						echo '<div class="form-group required" id="AffectsGross">';
 						echo form_label(lang('groups_views_add_label_affects'), 'affects_gross');
