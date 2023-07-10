@@ -505,7 +505,7 @@ class Sales_model extends CI_Model
     {
         $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
 
-        $this->db->select('products.*, purchase_items.batchno, purchase_items.expiry, FWP.quantity as quantity, categories.id as category_id, categories.name as category_name', false)
+        $this->db->select('products.*, purchase_items.batchno, purchase_items.serial_number, purchase_items.expiry, FWP.quantity as quantity, categories.id as category_id, categories.name as category_name', false)
             ->join($wp, 'FWP.product_id=products.id', 'left')
             // ->join('warehouses_products FWP', 'FWP.product_id=products.id', 'left')
             ->join('purchase_items', 'purchase_items.product_id=products.id', 'left')

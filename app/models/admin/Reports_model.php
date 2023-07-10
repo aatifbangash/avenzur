@@ -709,6 +709,11 @@ class Reports_model extends CI_Model
         return false;
     }
 
+    public function getAllCategories()
+    {
+        return $this->db->get('categories')->result();
+    }
+
     public function getStaff()
     {
         if ($this->Admin) {

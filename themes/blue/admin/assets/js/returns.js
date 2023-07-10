@@ -767,6 +767,22 @@ $(document).ready(function (e) {
         $('#mpro_tax').text(formatMoney(pr_tax_val));
     });
 
+    var old_row_serialno;
+    var currTabIndex;
+    $(document)
+        .on('focus', '.rserialno', function () {
+            old_row_serialno = $(this).val();
+            currTabIndex = $(this).prop('tabindex');
+        })
+        .on('change', '.rserialno', function () {
+            var row = $(this).closest('tr');
+            var new_serialno = $(this).val(),
+            item_id = row.attr('data-item-id');
+            reitems[item_id].row.serial_number = new_serialno;
+            localStorage.setItem('reitems', JSON.stringify(reitems));
+            loadItems();
+        });
+
     /* --------------------------
      * Edit Row Quantity Method
      --------------------------- */
@@ -818,6 +834,91 @@ $(document).ready(function (e) {
             localStorage.setItem('reitems', JSON.stringify(reitems));
             loadItems();
         });
+
+    var old_cost;
+        $(document)
+            .on('focus', '.rcost', function () {
+                old_cost = $(this).val();
+            })
+            .on('change', '.rcost', function () {
+                var row = $(this).closest('tr');
+                if (!is_numeric($(this).val())) {
+                    $(this).val(old_cost);
+                    bootbox.alert(lang.unexpected_value);
+                    return;
+                }
+                var new_cost = parseFloat($(this).val()),
+                    item_id = row.attr('data-item-id');
+                reitems[item_id].row.cost_price = new_cost;
+                localStorage.setItem('reitems', JSON.stringify(reitems));
+                loadItems();
+            });
+
+    /* --------------------------
+     * Edit Row Bonus Method rbonus
+     -------------------------- */
+     var old_row_bonus;
+     $(document)
+         .on('focus', '.rbonus', function () {
+             old_row_bonus = $(this).val();
+         })
+         .on('change', '.rbonus', function () {
+             var row = $(this).closest('tr');
+             if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+                 $(this).val(old_row_bonus);
+                 bootbox.alert(lang.unexpected_value);
+                 return;
+             }
+             var new_bonus = parseFloat($(this).val()),
+                 item_id = row.attr('data-item-id');
+                 reitems[item_id].row.bonus = new_bonus;
+             localStorage.setItem('reitems', JSON.stringify(reitems));
+             loadItems();
+         });
+
+    /* --------------------------
+     * Edit Row Discount2 Method rdis2 rbatchno
+     -------------------------- */
+     var old_row_dis2;
+     $(document)
+         .on('focus', '.rdiscount2', function () {
+             old_row_dis2 = $(this).val();
+         })
+         .on('change', '.rdiscount2', function () {
+             var row = $(this).closest('tr');
+             if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+                 $(this).val(old_row_dis2);
+                 bootbox.alert(lang.unexpected_value);
+                 return;
+             }
+             var new_dis2 = parseFloat($(this).val()),
+                 item_id = row.attr('data-item-id');
+             reitems[item_id].row.discount2 = new_dis2;
+             localStorage.setItem('reitems', JSON.stringify(reitems));
+             loadItems();
+         });
+ 
+         /* --------------------------
+      * Edit Row Discount1 Method rdis1
+      -------------------------- */
+     var old_row_dis1;
+     $(document)
+         .on('focus', '.rdiscount1', function () {
+             old_row_dis1 = $(this).val();
+         })
+         .on('change', '.rdiscount1', function () {
+             var row = $(this).closest('tr');
+             if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+                 $(this).val(old_row_dis1);
+                 bootbox.alert(lang.unexpected_value);
+                 return;
+             }
+             var new_dis1 = parseFloat($(this).val()),
+                 item_id = row.attr('data-item-id');
+                 reitems[item_id].row.discount1 = new_dis1;
+             localStorage.setItem('reitems', JSON.stringify(reitems));
+             loadItems();
+         });
 });
 
 //localStorage.clear();
@@ -862,6 +963,7 @@ function loadItems() {
                 item_serial = item.row.serial,
                 item_expiry = item.row.expiry,
                 item_batchno = item.row.batch_no,
+                item_serialno = item.row.serial_number,
                 item_bonus = item.row.bonus,
                 item_dis1 = item.row.discount1,
                 item_dis2 = item.row.discount2,
@@ -938,6 +1040,42 @@ function loadItems() {
             item_price = item_tax_method == 0 ? formatDecimal(unit_price - pr_tax_val, 4) : formatDecimal(unit_price);
             unit_price = formatDecimal(unit_price + item_discount, 4);
 
+            var total_after_dis1 = 0.0;
+            var total_after_dis2 = 0.0;
+
+            var total_after_dis1_b = 0.0;
+            var total_after_dis2_b = 0.0;
+
+            var vat_15_a = 0.0;
+            var vat_15_b = 0.0;
+            var net_price_a = 0.0;
+            var net_price_b = 0.0;
+
+            var dis1_a = 0.0;
+            var dis2_a = 0.0;
+            var dis1_b = 0.0;
+            var dis2_b = 0.0;
+
+            var main_net = 0.0;
+
+            var total_before_dis_vat = (parseFloat(item_price)) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty); 
+
+            dis1_a = total_before_dis_vat * parseFloat((item_dis1 / 100));
+            total_after_dis1 =  total_before_dis_vat - dis1_a;
+            dis2_a = total_after_dis1 *  parseFloat((item_dis2/100));
+            total_after_dis2 =  total_after_dis1 - dis2_a;
+            vat_15_a = total_after_dis2 * parseFloat(item.tax_rate.rate/100);//total_after_dis2 * parseFloat(15/100);
+            net_price_a = vat_15_a + total_after_dis2;
+
+            var total_purchases = (parseFloat(item_cost)) * parseFloat(item_qty);
+            var total_sales = (parseFloat(item_sale_price)) * (parseFloat(item_qty) + parseFloat(item_bonus));
+            //console.log(item_qty+' -- '+item_bonus+' -- '+item_sale_price+' -- '+total_sales);
+            total_after_dis1 = total_sales * parseFloat((item_dis1 / 100));
+            total_after_dis2 = (total_sales - total_after_dis1) * parseFloat((item_dis2 / 100));
+            //main_net = net_price_a;// + net_price_b;
+            main_net = total_sales - (total_after_dis1 + total_after_dis2);
+            var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus);
+
             var row_no = item.id;
             var newTr = $('<tr id="row_' + row_no + '" class="row_' + item_id + '" data-item-id="' + item_id + '"></tr>');
             tr_html =
@@ -983,7 +1121,7 @@ function loadItems() {
                     unit_price +
                     '"><input class="form-control realucost" name="real_unit_price[]" type="hidden" value="' +
                     item.row.real_unit_price +
-                    '"><input class="form-control input-sm text-center rcost" type="text" name="net_price[]" id="cost_' +
+                    '"><input class="form-control input-sm text-center rprice" type="text" name="net_price[]" id="cost_' +
                     row_no +
                     '" value="' +
                     formatDecimal(item_sale_price, 2) +
@@ -999,6 +1137,17 @@ function loadItems() {
                     '" data-item="' +
                     item_id +
                     '" id="rreturn_' +
+                    row_no +
+                    '"></td>';
+
+                tr_html +=
+                    '<td><input class="form-control rserialno" name="serial_no[]" type="text" value="' +
+                    item_serialno +
+                    '" data-id="' +
+                    row_no +
+                    '" data-item="' +
+                    item_id +
+                    '" id="serialno_' +
                     row_no +
                     '"></td>';
 
@@ -1055,7 +1204,7 @@ function loadItems() {
                 '"></td>';
 
                 tr_html +=
-                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="bonus[]" type="text" id="bonus_' +
+                '<td class="text-right"><input class="form-control input-sm text-right rbonus" name="bonus[]" type="text" id="bonus_' +
                 row_no +
                 '" value="' +
                 bonus +
@@ -1070,7 +1219,7 @@ function loadItems() {
                     '"></td>';*/
             
                 tr_html +=
-                    '<td class="text-right"><input class="form-control input-sm rdiscount" name="dis1[]" type="text" id="discount_' +
+                    '<td class="text-right"><input class="form-control input-sm rdiscount1" name="dis1[]" type="text" id="discount_' +
                     row_no +
                     '" value="' +
                     discount1 +
@@ -1081,7 +1230,7 @@ function loadItems() {
                     '"></td>';
             
                 tr_html +=
-                    '<td class="text-right"><input class="form-control input-sm rdiscount" name="dis2[]" type="text" id="discount2_' +
+                    '<td class="text-right"><input class="form-control input-sm rdiscount2" name="dis2[]" type="text" id="discount2_' +
                     row_no +
                     '" value="' +
                     discount2 +
@@ -1111,7 +1260,7 @@ function loadItems() {
                     '</span></td>';
             }
 
-            tr_html +=
+            /*tr_html +=
             '<td class="text-right"><input class="form-control input-sm text-right rprice" name="cost_price[]" type="hidden" id="cost_price_' +
             row_no +
             '" value="' +
@@ -1158,7 +1307,33 @@ function loadItems() {
                 row_no +
                 '">' +
                 formatMoney(item_price) +
+                '</span></td>';*/
+
+            tr_html +=
+                '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' +
+                row_no +
+                '">' +
+                formatMoney(total_purchases) +
                 '</span></td>';
+
+            tr_html +=
+                '<td class="text-right"><span class="text-right ssubtotal" id="total_sale_' +
+                row_no +
+                '">' +
+                formatMoney(total_sales) +
+                '</span></td>';
+
+            tr_html +=
+                '<td class="text-right"><span class="text-right rnet" id="net_' +
+                row_no +
+                '">'+formatMoney(main_net)+'</span></td>';
+
+            tr_html +=
+                '<td class="text-right"><span class="text-right ssubtotal" id="tes2_' +
+                row_no +
+                '">' +
+                formatMoney(new_unit_cost) +
+                '</span></td>'; 
 
 
             tr_html +=

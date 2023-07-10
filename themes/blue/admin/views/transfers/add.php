@@ -281,6 +281,7 @@
                                         <thead>
                                         <tr>
                                             <th class="col-md-4"><?= lang('product') . ' (' . lang('code') . ' - ' . lang('name') . ')'; ?></th>
+                                            <th class="col-md-1">Serial No. </th>
                                             <th class="col-md-1">Batch </th>
                                             <?php
                                             if ($Settings->product_expiry) {

@@ -169,6 +169,26 @@ $(document).ready(function () {
     });
 
     /* --------------------------
+     * Edit Row Serial Number
+     -------------------------- */
+
+    var old_row_serialno;
+    var currTabIndex;
+    $(document)
+        .on('focus', '.rserialno', function () {
+            old_row_serialno = $(this).val();
+            currTabIndex = $(this).prop('tabindex');
+        })
+        .on('change', '.rserialno', function () {
+            var row = $(this).closest('tr');
+            var new_serialno = $(this).val(),
+            item_id = row.attr('data-item-id');
+            toitems[item_id].row.serial_number = new_serialno;
+            localStorage.setItem('toitems', JSON.stringify(toitems));
+            loadItems();
+        });
+
+    /* --------------------------
      * Edit Row Quantity Method
      -------------------------- */
     var old_row_qty;
@@ -385,6 +405,7 @@ function loadItems() {
                 item_bqty = item.row.quantity_balance,
                 item_oqty = item.row.ordered_quantity,
                 item_expiry = new Date(item.row.expiry).toLocaleDateString('en-GB'),
+                item_serialno = item.row.serial_number,
                 item_aqty = item.row.quantity,
                 item_tax_method = item.row.tax_method,
                 item_ds = item.row.discount,
@@ -454,6 +475,17 @@ function loadItems() {
                 '" data-item="' +
                 item_id +
                 '" title="Edit" style="cursor:pointer;"></i></td>';
+            
+            tr_html +=
+                '<td><input class="form-control rserialno" name="serial_no[]" type="text" value="' +
+                item_serialno +
+                '" data-id="' +
+                row_no +
+                '" data-item="' +
+                item_id +
+                '" id="serialno_' +
+                row_no +
+                '"></td>';
 
             tr_html +=
                 '<td><input class="form-control" name="batchno[]" type="text" value="' +

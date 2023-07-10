@@ -243,6 +243,7 @@
                                             <th class="col-md-4"><?= lang('product') . ' (' . lang('code') . ' - ' . lang('name') . ')'; ?></th>
                                             <th class="col-md-1"><?= lang('Sale Price'); ?></th>
                                             <th class="col-md-1"><?= lang('Purchase Price'); ?></th>
+                                            <th class="col-md-1"><?= lang('Serial No.'); ?></th>
                                             <th class="col-md-1"><?= lang('batch'); ?></th>
                                             <th class="col-md-1"><?= lang('expiry_date'); ?></th>
                                             <th class="col-md-1"><?= lang('qty'); ?></th>
