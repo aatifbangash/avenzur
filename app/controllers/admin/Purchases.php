@@ -88,6 +88,7 @@ class Purchases extends MY_Controller
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
                 $item_batchno = $_POST['batchno'][$r];
+                $item_serial_no = $_POST['serial_no'][$r];
                 $item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
@@ -161,6 +162,7 @@ class Purchases extends MY_Controller
                         'supplier_part_no'  => $supplier_part_no,
                         'subtotal2'         => $this->sma->formatDecimal($subtotal2),
                         'batchno'           => $item_batchno,
+                        'serial_number'     => $item_serial_no,
                         'bonus'             => $item_bonus,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
@@ -679,6 +681,7 @@ class Purchases extends MY_Controller
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
                 $item_batchno = $_POST['batchno'][$r];
+                $item_serial_no = $_POST['serial_no'][$r];
                 $item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
@@ -758,6 +761,7 @@ class Purchases extends MY_Controller
                         'date'              => date('Y-m-d', strtotime($date)),
                         'subtotal2'         => $this->sma->formatDecimal($subtotal2),
                         'batchno'           => $item_batchno,
+                        'serial_number'     => $item_serial_no,
                         'bonus'             => $item_bonus,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
@@ -884,10 +888,11 @@ class Purchases extends MY_Controller
                 $row->tax_rate         = $item->tax_rate_id;
                 $row->bonus            = $item->bonus;
                 $row->dis1             = $item->discount1;
-                $row->dis2            = $item->discount2;
+                $row->dis2             = $item->discount2;
                 $row->totalbeforevat   = $item->totalbeforevat;
-                $row->main_net            = $item->main_net;
-                $row->batchno            = $item->batchno;
+                $row->main_net         = $item->main_net;
+                $row->batchno          = $item->batchno;
+                $row->serial_number    = $item->serial_number;
                 $row->get_supplier_discount = $supplier_purchase_discount ;
                 $row->three_month_sale = $this->purchases_model->getThreeMonthSale($item->product_id,$start_date,$end_date);
                 $row->warehouse_shelf = $item->warehouse_shelf;
@@ -2522,6 +2527,7 @@ class Purchases extends MY_Controller
                 $row->dis1         = 0;
                 $row->dis2         = 0;
                 $row->batchno      = '';
+                $row->serial_number      = '';
                 $row->warehouse_shelf = '';
                 //$row->three_month_sale = $this->purchases_model->getThreeMonthSale($row->id,$start_date,$end_date);
                 $row->get_supplier_discount = $this->deals_model->getPurchaseDiscount($supplier_id);

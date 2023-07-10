@@ -1105,6 +1105,22 @@ $(document).ready(function (e) {
         $('#mpro_tax').text(formatMoney(pr_tax_val));
     });
 
+    var old_row_serialno;
+    var currTabIndex;
+    $(document)
+        .on('focus', '.rserialno', function () {
+            old_row_serialno = $(this).val();
+            currTabIndex = $(this).prop('tabindex');
+        })
+        .on('change', '.rserialno', function () {
+            var row = $(this).closest('tr');
+            var new_serialno = $(this).val(),
+            item_id = row.attr('data-item-id');
+            slitems[item_id].row.serial_number = new_serialno;
+            localStorage.setItem('slitems', JSON.stringify(slitems));
+            loadItems();
+        });
+
     /* --------------------------
      * Edit Row BatchNo Method rbatchno
      -------------------------- */
@@ -1120,7 +1136,6 @@ $(document).ready(function (e) {
              //var new_batchno = parseFloat($(this).val()),
              var new_batchno = $(this).val(),
                  item_id = row.attr('data-item-id');
-             console.log(new_batchno);
              slitems[item_id].row.batch_no = new_batchno;
              localStorage.setItem('slitems', JSON.stringify(slitems));
              loadItems();
@@ -1354,6 +1369,7 @@ function loadItems() {
                 item_serial = item.row.serial,
                 item_expiry = item_expiry_date,
                 item_batchno = item.row.batch_no,
+                item_serialno = item.row.serial_number,
                 item_lotno = item.row.lot_no,
                 item_bonus = item.row.bonus,
                 item_dis1 = item.row.dis1,
@@ -1577,6 +1593,17 @@ function loadItems() {
                     '" id="batchno_' +
                     row_no +
                     '"></td>';*/
+
+            tr_html +=
+                    '<td><input class="form-control rserialno" name="serial_no[]" type="text" value="' +
+                    item_serialno +
+                    '" data-id="' +
+                    row_no +
+                    '" data-item="' +
+                    item_id +
+                    '" id="serialno_' +
+                    row_no +
+                    '"></td>';
 
             tr_html +=
                     '<td><input class="form-control rbatchno" name="batchno[]" type="text" value="' +

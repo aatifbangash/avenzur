@@ -91,6 +91,7 @@ class Sales extends MY_Controller
                 
                 $item_expiry        = (isset($_POST['expiry'][$r]) && !empty($_POST['expiry'][$r])) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
                 $item_batchno       = $_POST['batchno'][$r]          ?? '';
+                $item_serial_no     = $_POST['serial_no'][$r]        ?? '';
                 $item_lotno         = $_POST['lotno'][$r]            ?? '';
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
                 $item_discount      = $_POST['product_discount'][$r] ?? null;
@@ -161,7 +162,7 @@ class Sales extends MY_Controller
                         'item_discount'     => $pr_item_discount,
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'serial_no'         => $item_serial,
-
+                        'serial_number'     => $item_serial_no,
                         'expiry'            => $item_expiry,
                         'batch_no'          => $item_batchno,
                         'lot_no'            => $item_lotno,
@@ -333,7 +334,8 @@ class Sales extends MY_Controller
                     $row->tax_rate        = $item->tax_rate_id;
                     $row->serial          = '';
                     $row->expiry          = '';
-                    $row->batchNo        = '';
+                    $row->batchNo         = '';
+                    $row->serial_number   = '';
                     $row->lotNo          = '';
                     $row->option          = $item->option_id;
                     $options              = $this->sales_model->getProductOptions($row->id, $item->warehouse_id);
@@ -933,6 +935,7 @@ class Sales extends MY_Controller
 
                 $item_expiry        = (isset($_POST['expiry'][$r]) && !empty($_POST['expiry'][$r])) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
                 $item_batchno       = $_POST['batchno'][$r]          ?? '';
+                $item_serial_no     = $_POST['serial_no'][$r]        ?? '';
                 $item_lotno         = $_POST['lotno'][$r]            ?? '';
 
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
@@ -1021,8 +1024,9 @@ class Sales extends MY_Controller
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'serial_no'         => $item_serial,
                         'expiry'            => $item_expiry,
-                        'batch_no'           => $item_batchno,
-                        'lot_no'             => $item_lotno,
+                        'batch_no'          => $item_batchno,
+                        'serial_number'     => $item_serial_no,
+                        'lot_no'            => $item_lotno,
                         'real_unit_price'   => $real_unit_price,
                         'subtotal2'         => $this->sma->formatDecimal($subtotal2),
                         'bonus'             => $item_bonus,
@@ -1145,6 +1149,7 @@ class Sales extends MY_Controller
                 
                 $row->expiry          = (($item->expiry && $item->expiry != '0000-00-00') ? $this->sma->hrsd($item->expiry) : '');
                 $row->batch_no        = $item->batch_no;
+                $row->serial_number   = $item->serial_number;
                 $row->lot_no          = $item->lot_no;
                 
                 $row->option          = $item->option_id;

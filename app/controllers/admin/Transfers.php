@@ -73,6 +73,7 @@ class Transfers extends MY_Controller
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_tax_rate      = $_POST['product_tax'][$r] ?? null;
                 $item_batchno       = $_POST['batchno'][$r];
+                $item_serial_no     = $_POST['serial_no'][$r];
                 $item_expiry        = isset($_POST['expiry'][$r]) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
                 
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'undefined' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
@@ -137,6 +138,7 @@ class Transfers extends MY_Controller
                         'real_unit_cost'    => $real_unit_cost,
                         'date'              => date('Y-m-d', strtotime($date)),
                         'batchno'           => $item_batchno,
+                        'serial_number'   => $item_serial_no
                     ];
 
                     $products[] = ($product + $gst_data);
@@ -474,6 +476,7 @@ class Transfers extends MY_Controller
                 $ordered_quantity   = $_POST['ordered_quantity'][$r];
                 $item_tax_rate      = $_POST['product_tax'][$r] ?? null;
                 $item_batchno       = $_POST['batchno'][$r];
+                $item_serial_no     = $_POST['serial_no'][$r];
                 $item_expiry        = isset($_POST['expiry'][$r]) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'undefined' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 $item_unit          = $_POST['product_unit'][$r];
@@ -527,6 +530,7 @@ class Transfers extends MY_Controller
                         'real_unit_cost'    => $real_unit_cost,
                         'date'              => date('Y-m-d', strtotime($date)),
                         'batchno'           => $item_batchno,
+                        'serial_number'     => $item_serial_no
                     ];
 
                     $products[] = ($product + $gst_data);
@@ -604,6 +608,7 @@ class Transfers extends MY_Controller
                 $row->tax_rate       = $item->tax_rate_id;
                 $row->option         = $item->option_id;
                 $row->batchno        = $item->batchno;
+                $row->serial_number  = $item->serial_number;
                 $row->expiry        = $item->expiry;
                 $options             = $this->transfers_model->getProductOptions($row->id, $this->data['transfer']->from_warehouse_id, false);
                 $pis                 = $this->site->getPurchasedItems($item->product_id, $item->warehouse_id, $item->option_id);

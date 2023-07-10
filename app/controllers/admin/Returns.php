@@ -258,7 +258,8 @@ class Returns extends MY_Controller
                 $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $unit_price         = $this->sma->formatDecimal($_POST['unit_price'][$r]);
                 $item_unit_quantity = $_POST['quantity'][$r];
-                $item_batchno        = $_POST['batch_no'][$r];
+                $item_batchno       = $_POST['batch_no'][$r];
+                $item_serial_no     = $_POST['serial_no'][$r];
                 //$item_expiry        = $_POST['expiry'][$r];
                 $item_expiry        = (isset($_POST['expiry'][$r]) && !empty($_POST['expiry'][$r])) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
                 $item_bonus         = $_POST['bonus'][$r];
@@ -323,6 +324,7 @@ class Returns extends MY_Controller
                         'serial_no'         => $item_serial,
                         'expiry'            => $item_expiry,
                         'batch_no'          => $item_batchno,
+                        'serial_number'     => $item_serial_no,
                         'real_unit_price'   => $real_unit_price,
                         'bonus'             => $item_bonus,
                         'discount1'         => $item_dis1,
@@ -614,6 +616,7 @@ class Returns extends MY_Controller
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
                 $item_batchno       = $_POST['batch_no'][$r];
+                $item_serial_no     = $_POST['serial_no'][$r];
                 $item_expiry        = $_POST['expiry'][$r];
                 $item_bonus         = $_POST['bonus'][$r];
                 $item_dis1          = $_POST['dis1'][$r];
@@ -672,6 +675,7 @@ class Returns extends MY_Controller
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'serial_no'         => $item_serial,
                         'batch_no'          => $item_batchno,
+                        'serial_number'     => $item_serial_no,
                         'expiry'            => $item_expiry,
                         'real_unit_price'   => $real_unit_price,
                         'bonus'             => $item_bonus,
@@ -805,6 +809,7 @@ class Returns extends MY_Controller
                 $row->option          = $item->option_id;
                 $row->tax_rate        = $item->tax_rate_id;
                 $row->batch_no        = $item->batch_no;
+                $row->serial_number   = $item->serial_number;
                 $row->expiry          = $item->expiry;
                 $row->bonus           = $item->bonus;
                 $row->discount1       = $item->discount1;
@@ -950,6 +955,7 @@ class Returns extends MY_Controller
                 $row->serial          = '';
                 $row->comment         = '';
                 $row->batch_no        = '';
+                $row->serial_number   = '';
                 $row->expiry          = '';
                 $row->bonus           = '0';
                 $row->dis1            = 0;

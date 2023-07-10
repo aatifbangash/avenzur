@@ -767,6 +767,22 @@ $(document).ready(function (e) {
         $('#mpro_tax').text(formatMoney(pr_tax_val));
     });
 
+    var old_row_serialno;
+    var currTabIndex;
+    $(document)
+        .on('focus', '.rserialno', function () {
+            old_row_serialno = $(this).val();
+            currTabIndex = $(this).prop('tabindex');
+        })
+        .on('change', '.rserialno', function () {
+            var row = $(this).closest('tr');
+            var new_serialno = $(this).val(),
+            item_id = row.attr('data-item-id');
+            reitems[item_id].row.serial_number = new_serialno;
+            localStorage.setItem('reitems', JSON.stringify(reitems));
+            loadItems();
+        });
+
     /* --------------------------
      * Edit Row Quantity Method
      --------------------------- */
@@ -947,6 +963,7 @@ function loadItems() {
                 item_serial = item.row.serial,
                 item_expiry = item.row.expiry,
                 item_batchno = item.row.batch_no,
+                item_serialno = item.row.serial_number,
                 item_bonus = item.row.bonus,
                 item_dis1 = item.row.discount1,
                 item_dis2 = item.row.discount2,
@@ -1120,6 +1137,17 @@ function loadItems() {
                     '" data-item="' +
                     item_id +
                     '" id="rreturn_' +
+                    row_no +
+                    '"></td>';
+
+                tr_html +=
+                    '<td><input class="form-control rserialno" name="serial_no[]" type="text" value="' +
+                    item_serialno +
+                    '" data-id="' +
+                    row_no +
+                    '" data-item="' +
+                    item_id +
+                    '" id="serialno_' +
                     row_no +
                     '"></td>';
 
