@@ -1063,6 +1063,12 @@
                                             <span class="text"> <?= lang('incentive_report'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="reports_incentive_report">
+                                        <a href="<?= admin_url('reports/departmental_incentive') ?>">
+                                            <i class="fa fa-users"></i>
+                                            <span class="text"> <?= lang('departmental_incentive'); ?></span>
+                                        </a>
+                                    </li>
 
                                 </ul>
                             </li>

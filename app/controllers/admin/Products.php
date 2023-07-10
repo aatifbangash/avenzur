@@ -1478,7 +1478,7 @@ class Products extends MY_Controller
         if ($rows) {
             foreach ($rows as $row) {
                 $variants = $this->products_model->getProductOptions($row->id);
-                $pr[]     = ['id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')', 'code' => $row->code, 'name' => $row->name, 'price' => $row->price, 'qty' => 1, 'variants' => $variants];
+                $pr[]     = ['id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')'.($row->sequence_code ? ' - '.$row->sequence_code : ''), 'code' => $row->code, 'name' => $row->name, 'sequence_code'=>$row->code, 'price' => $row->price, 'qty' => 1, 'variants' => $variants];
             }
             $this->sma->send_json($pr);
         } else {

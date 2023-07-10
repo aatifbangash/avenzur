@@ -47,3 +47,4 @@ $lang['pr_not_found']                                = 'No product found ';
 $lang['line_no']                                     = 'Line Number';
 $lang['transfer_order']                              = 'Transfer Order';
 $lang['unit_cost']                                   = 'Unit Cost';
+$lang['departmental_incentive']                     = 'Departmental incentive report';
