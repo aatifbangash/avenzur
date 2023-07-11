@@ -67,6 +67,27 @@ $(document).ready(function() {
 							</div>
 						</div>
 
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label><?= lang('Type1'); ?></label>
+                                <input type="text" name="type1" id="l_type1" value="<?= set_value('type1');?>" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label><?= lang('Type2'); ?></label>
+                                <input type="text" name="type2" id="l_type2" value="<?= set_value('type2');?>" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-4S">
+                            <div class="form-group">
+                                <label><?= lang('Category'); ?></label>
+                                <input type="text" name="category" value="<?= set_value('category');?>" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
 						<div class="form-group">
 							<label><?= lang('ledgers_views_add_label_op_blnc'); ?></label>
 							<div class="row">

@@ -46,6 +46,13 @@ class Ledgers extends MY_Controller {
 				'op_balance_dc' => $this->input->post('op_balance_dc'),
 				'notes' => $this->input->post('notes'),
 				'reconciliation' => 0,
+
+                //                'name_arabic' => $this->input->post('name_arabic'),
+                'type1' => $this->input->post('type1'),
+                'type2' => $this->input->post('type2'),
+                'category' => $this->input->post('category'),
+
+
 				'type' => 0,
 			);
 
@@ -132,6 +139,12 @@ class Ledgers extends MY_Controller {
 				'op_balance_dc' => $this->input->post('op_balance_dc'),
 				'notes' => $this->input->post('notes'),
 				'reconciliation' => 0,
+
+                //                'name_arabic' => $this->input->post('name_arabic'),
+                'type1' => $this->input->post('type1'),
+                'type2' => $this->input->post('type2'),
+                'category' => $this->input->post('category'),
+
 				'type' => 0,
 			);
 

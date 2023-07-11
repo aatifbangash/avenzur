@@ -68,6 +68,28 @@ $(document).ready(function() {
 					echo "</div>";
 					echo "</div>";
 
+
+                echo "<div class='row'>";
+                echo "<div class='col-xs-5'>";
+                echo '<div class="form-group">';
+                echo form_label(lang('Type1'), 'type1');
+                echo form_input('type1',set_value('type1', $group['type1']) ,array('class' => 'form-control'));
+                echo "</div>";
+                echo "</div>";
+                echo "<div class='col-xs-2'>";
+                echo '<div class="form-group">';
+                echo form_label(lang('Type2'), 'type2');
+                echo form_input('type2',set_value('type2', $group['type2']) ,array('class' => 'form-control'));
+                echo "</div>";
+                echo "</div>";
+                echo "<div class='col-xs-5'>";
+                echo '<div class="form-group">';
+                echo form_label(lang('Category'), 'category');
+                echo form_input('category',set_value('category', $group['category']) ,array('class' => 'form-control'));
+                echo "</div>";
+                echo "</div>";
+                echo "</div>";
+
 						
 					echo '<div class="form-group required" id="AffectsGross">';
 					echo form_label(lang('groups_views_edit_label_affects'), 'affects_gross');
