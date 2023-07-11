@@ -77,6 +77,9 @@
                             $total_liabilities = 0;
                         ?>
                         <div class="tablewrap" style="overflow:hidden;">
+                            <?php 
+                            if(isset($balance_sheet['ledger_groups'])){
+                            ?>
                             <div class="leftwrap">
                                 <div class="table-head"><?= lang('ASSETS'); ?></div>
                                 <div class="table-content">
@@ -153,10 +156,16 @@
                                 ?>
                                 </div>
                             </div>
+
+                        <?php }else{
+                            echo "No results to show";
+                        }
+                        ?>
+
                         </div>
                         <div class="bottom-wrap" style="overflow: hidden;">
-                            <div class="table-head" style="width: 50%;float:left;"><span style="float:left;margin-left:20px;"><?= lang('TOTAL ASSETS'); ?></span><span style="float:right;margin-right:20px;"><?= $total_assets; ?></span></div>
-                            <div class="table-head" style="width: 50%;float:left;"><span style="float:left;margin-left:20px;"><?= lang('TOTAL LIABILITIES'); ?></span><span style="float:right;margin-right:20px;"><?= $total_liabilities; ?></span></div>
+                            <div class="table-head" style="width: 50%;float:left;"><span style="float:left;margin-left:20px;"><?= lang('TOTAL ASSETS'); ?></span><span style="float:right;margin-right:20px;"><?= number_format($total_assets, 2, '.', ''); ?></span></div>
+                            <div class="table-head" style="width: 50%;float:left;"><span style="float:left;margin-left:20px;"><?= lang('TOTAL LIABILITIES'); ?></span><span style="float:right;margin-right:20px;"><?= number_format($total_liabilities, 2, '.', ''); ?></span></div>
                         </div>
                     </div>
                 
