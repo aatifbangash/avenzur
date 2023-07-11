@@ -1066,7 +1066,7 @@ class Pos extends MY_Controller
                         $this->load->admin_model('companies_model');
                         $this->load->admin_model('settings_model');
                         $customer = $this->settings_model->getWarehouseByID($inv->warehouse_id);
-                        print_r($customer);
+
                         /*Accounts Entries*/
                         $entry = array(
                         'entrytype_id' => 4,
@@ -1156,8 +1156,6 @@ class Pos extends MY_Controller
                             )
                         );
 
-                        echo 'total sale price: '.$totalSalePrice;
-
                         // // sale account
                         $entryitemdata[] = array(
                             'Entryitem' => array(
@@ -1211,7 +1209,7 @@ class Pos extends MY_Controller
                         }
 
                         $this->db->update('sma_accounts_entries', ['dr_total' => $total_invoice_entry, 'cr_total' => $total_invoice_entry], ['id' => $insert_id]);
-                                print_r($entryitemdata);exit;
+                                
                        //   /*Accounts Entry Items*/
                        foreach ($entryitemdata as $row => $itemdata)
                        {
