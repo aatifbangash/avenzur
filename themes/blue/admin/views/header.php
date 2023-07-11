@@ -1056,7 +1056,11 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('customer_aging_report'); ?></span>
                                         </a>
                                     </li>
-
+                                    <li id="reports_balance_sheet">
+                                        <a href="<?= admin_url('reports/balance_sheet') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('balance_sheet'); ?></span>
+                                        </a>
+                                    </li>
                                     <li id="reports_incentive_report">
                                         <a href="<?= admin_url('reports/incentives') ?>">
                                             <i class="fa fa-users"></i>

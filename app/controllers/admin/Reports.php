@@ -3415,6 +3415,60 @@ class Reports extends MY_Controller
         
     }
 
+    public function balance_sheet(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $date = $this->input->post('date') ? $this->input->post('date') : null;
+        if($date){
+            $ledger_groups = $this->reports_model->getLedgerGroups();
+            $assets_balance = $this->reports_model->getAssetsBalance($date);
+            $liabilities_balance = $this->reports_model->getLiabilitiesBalance($date);
+            $equity_balance = $this->reports_model->getEquityBalance($date);
+
+            //print_r($liabilities_balance);exit;
+            foreach ($ledger_groups as $ledger_group){
+                if(!isset($ledger_group->ledgers)){
+                    $ledger_group->ledgers = array();
+                }
+                
+                foreach($assets_balance as $asset_balance){
+                    if($ledger_group->id == $asset_balance->group_id){
+                        array_push($ledger_group->ledgers, $asset_balance);
+                    }
+                }
+
+                foreach($liabilities_balance as $liability_balance){
+                    if($ledger_group->id == $liability_balance->group_id){
+                        array_push($ledger_group->ledgers, $liability_balance);
+                    }
+                }
+
+                foreach($equity_balance as $equity){
+                    if($ledger_group->id == $equity->group_id){
+                        array_push($ledger_group->ledgers, $equity);
+                    }
+                }
+            }
+
+            $response_arr['assets'] = $assets_balance;
+            $response_arr['liabilities'] = $liabilities_balance;
+            $response_arr['equity'] = $equity_balance;
+            $response_arr['ledger_groups'] = $ledger_groups;
+            $this->data['date'] = $date;
+            $this->data['balance_sheet'] = $response_arr;
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('balance_sheet')]];
+            $meta = ['page_title' => lang('balance_sheet'), 'bc' => $bc];
+            $this->page_construct('reports/balance_sheet', $meta, $this->data);
+        }else{
+            
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('balance_sheet')]];
+            $meta = ['page_title' => lang('balance_sheet'), 'bc' => $bc];
+            $this->page_construct('reports/balance_sheet', $meta, $this->data);
+        }
+    }
+
     public function customers_trial_balance(){
         $this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');

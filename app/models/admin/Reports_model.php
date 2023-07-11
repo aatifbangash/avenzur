@@ -26,6 +26,114 @@ class Reports_model extends CI_Model
         return $data_res;
     }
 
+    public function getLedgerGroups(){
+        $this->db
+                ->select('sma_accounts_groups.*')
+                ->from('sma_accounts_groups')
+                ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.group_id = sma_accounts_groups.id')
+                ->where('sma_accounts_groups.type1', 'B/S')
+                ->group_by('sma_accounts_groups.id')
+                ->order_by('sma_accounts_groups.id asc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        return $data_res;
+    }
+
+    public function getEquityBalance($date){
+        $response = array();
+
+        $this->db
+                ->select('sma_accounts_ledgers.id, sma_accounts_ledgers.group_id, sma_accounts_ledgers.name, sma_accounts_ledgers.category,
+                SUM(CASE WHEN sma_accounts_entryitems.dc = "C" THEN sma_accounts_entryitems.amount ELSE 0 END) AS credit_sum,
+                SUM(CASE WHEN sma_accounts_entryitems.dc = "D" THEN sma_accounts_entryitems.amount ELSE 0 END) AS debit_sum')
+                ->from('sma_accounts_ledgers')
+                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id = sma_accounts_ledgers.id', 'left')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
+                ->where('sma_accounts_ledgers.type1', 'B/S')
+                ->where('sma_accounts_ledgers.type2', 'Equity')
+                ->group_by('sma_accounts_ledgers.id');
+        $q = $this->db->get();
+        if(!empty($q)){
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data_res[] = $row;
+                }
+            } else {
+                $data_res = array();
+            }
+        }else{
+            $data_res = array();
+        }
+        
+        return $data_res;
+    }
+
+    public function getLiabilitiesBalance($date){
+        $response = array();
+
+        $this->db
+                ->select('sma_accounts_ledgers.id, sma_accounts_ledgers.group_id, sma_accounts_ledgers.name, sma_accounts_ledgers.category,
+                SUM(CASE WHEN sma_accounts_entryitems.dc = "C" THEN sma_accounts_entryitems.amount ELSE 0 END) AS credit_sum,
+                SUM(CASE WHEN sma_accounts_entryitems.dc = "D" THEN sma_accounts_entryitems.amount ELSE 0 END) AS debit_sum')
+                ->from('sma_accounts_ledgers')
+                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id = sma_accounts_ledgers.id', 'left')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
+                ->where('sma_accounts_ledgers.type1', 'B/S')
+                ->where('sma_accounts_ledgers.type2', 'Liabilities')
+                ->group_by('sma_accounts_ledgers.id');
+        $q = $this->db->get();
+        if(!empty($q)){
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data_res[] = $row;
+                }
+            } else {
+                $data_res = array();
+            }
+        }else{
+            $data_res = array();
+        }
+        
+        return $data_res;
+    }
+
+    public function getAssetsBalance($date){
+        $response = array();
+        $this->db
+                ->select('sma_accounts_ledgers.id, sma_accounts_ledgers.group_id, sma_accounts_ledgers.name, sma_accounts_ledgers.category,
+                SUM(CASE WHEN sma_accounts_entryitems.dc = "C" THEN sma_accounts_entryitems.amount ELSE 0 END) AS credit_sum,
+                SUM(CASE WHEN sma_accounts_entryitems.dc = "D" THEN sma_accounts_entryitems.amount ELSE 0 END) AS debit_sum')
+                ->from('sma_accounts_ledgers')
+                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id = sma_accounts_ledgers.id', 'left')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
+                ->where('sma_accounts_ledgers.type1', 'B/S')
+                ->where('sma_accounts_ledgers.type2', 'Assets')
+                ->group_by('sma_accounts_ledgers.id');
+        $q = $this->db->get();
+        if(!empty($q)){
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data_res[] = $row;
+                }
+            } else {
+                $data_res = array();
+            }
+        }else{
+            $data_res = array();
+        }
+        
+        return $data_res;
+    }
+
+
+
     public function getCustomerAging($duration){
         $response = array();
 
