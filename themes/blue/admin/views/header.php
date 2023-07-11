@@ -659,11 +659,11 @@
                                         </a>
                                     </li>
                                     
-                                    <li id="returns_add">
-                                        <a class="submenu" href="<?= admin_url('returns/add_return'); ?>">
-                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_Return_Supplier'); ?></span>
+                                    <!--<li id="returns_add">
+                                        <a class="submenu" href="<?php //echo admin_url('returns/add_return'); ?>">
+                                            <i class="fa fa-plus-circle"></i><span class="text"> <?php //echo lang('Add_Return_Supplier'); ?></span>
                                         </a>
-                                    </li>
+                                    </li>-->
 
 
                                 </ul>
