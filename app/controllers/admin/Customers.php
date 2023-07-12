@@ -523,6 +523,9 @@ class Customers extends MY_Controller
     }
 
     public function list_service_invoice(){
+        ini_set('display_errors', '1');
+        ini_set('display_startup_errors', '1');
+        error_reporting(E_ALL);
         $this->data['service_invoices'] = $this->purchases_model->getCreditMemo('serviceinvoice');
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
         $this->page_construct('customers/list_service_invoice', $meta, $this->data); 
