@@ -252,7 +252,7 @@
                                     <div class="form-group">
                                         <?php
                                             $wh[''] = '';
-                                        foreach ($warehouses as $warehouse) {
+                                        foreach ($pharmacies as $warehouse) {
                                             $wh[$warehouse->id] = $warehouse->name;
                                         }
                                         echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $Settings->default_warehouse), 'id="poswarehouse" class="form-control pos-input-tip" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('warehouse') . '" required="required" style="width:100%;" '); ?>

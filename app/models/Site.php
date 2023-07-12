@@ -430,6 +430,17 @@ class Site extends CI_Model
         return false;
     }
 
+    public function getAllPharmacies()
+    {
+        $q = $this->db->get_where('warehouses', ['warehouse_type' => 'pharmacy']);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
 
     public function getAllWarehouses()
     {
