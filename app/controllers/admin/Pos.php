@@ -1209,14 +1209,13 @@ class Pos extends MY_Controller
                         }
 
                         $this->db->update('sma_accounts_entries', ['dr_total' => $total_invoice_entry, 'cr_total' => $total_invoice_entry], ['id' => $insert_id]);
-                         echo '<pre>';       
+                                
                        //   /*Accounts Entry Items*/
                        foreach ($entryitemdata as $row => $itemdata)
                        {
-                           print_r($itemdata['Entryitem']);
                              $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
                        }
-                       exit;
+        
                         admin_redirect($redirect_to);
                    }
                     }else{
