@@ -1080,9 +1080,9 @@ class Pos extends MY_Controller
                         );
                         
                         $add  = $this->db->insert('sma_accounts_entries', $entry);
-                        $insert_id = $this->db->insert_id();
+                        //$insert_id = $this->db->insert_id();
                         
-                        //$insert_id = 999;
+                        $insert_id = 999;
                         $entryitemdata = array();
 
                         $inv_items = $this->sales_model->getAllSaleItems($sid);
@@ -1208,8 +1208,8 @@ class Pos extends MY_Controller
                             $total_invoice_entry += $price_difference;
                         }
 
-                        $this->db->update('sma_accounts_entries', ['dr_total' => $total_invoice_entry, 'cr_total' => $total_invoice_entry], ['id' => $insert_id]);
-                                
+                        //$this->db->update('sma_accounts_entries', ['dr_total' => $total_invoice_entry, 'cr_total' => $total_invoice_entry], ['id' => $insert_id]);
+                          print_r($entryitemdata);exit;      
                        //   /*Accounts Entry Items*/
                        foreach ($entryitemdata as $row => $itemdata)
                        {
