@@ -218,6 +218,7 @@ $lang['supplier_aging_report']            = 'Supplier Aging Report';
 $lang['customer_aging']                   = 'Customer Aging';
 $lang['customer_aging_report']            = 'Customer Aging Report';
 $lang['balance_sheet']                    = 'Balance Sheet';
+$lang['financial_position']               = 'Financial Position';
 $lang['your_ip']                          = 'Your IP Address';
 $lang['last_login_at']                    = 'Last login at';
 $lang['notification_post_at']             = 'Notification posted at';

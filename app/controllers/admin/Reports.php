@@ -3415,6 +3415,51 @@ class Reports extends MY_Controller
         
     }
 
+    public function financial_position(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $date = $this->input->post('date') ? $this->input->post('date') : null;
+        if($date){
+            $ledger_groups = $this->reports_model->getPLLedgerGroups();
+            $income_balance = $this->reports_model->getIncome($date);
+            $expense_balance = $this->reports_model->getExpense($date);
+
+            foreach ($ledger_groups as $ledger_group){
+                if(!isset($ledger_group->ledgers)){
+                    $ledger_group->ledgers = array();
+                }
+                
+                foreach($income_balance as $income){
+                    if($ledger_group->id == $income->group_id){
+                        array_push($ledger_group->ledgers, $income);
+                    }
+                }
+
+                foreach($expense_balance as $expense){
+                    if($ledger_group->id == $expense->group_id){
+                        array_push($ledger_group->ledgers, $expense);
+                    }
+                }
+            }
+            
+            $response_arr['income_balance'] = $income_balance;
+            $response_arr['expense_balance'] = $expense_balance;
+            $response_arr['ledger_groups'] = $ledger_groups;
+            $this->data['date'] = $date;
+            $this->data['financial_position'] = $response_arr;
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('financial_position')]];
+            $meta = ['page_title' => lang('financial_position'), 'bc' => $bc];
+            $this->page_construct('reports/financial_position', $meta, $this->data);
+        }else{
+            
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('financial_position')]];
+            $meta = ['page_title' => lang('financial_position'), 'bc' => $bc];
+            $this->page_construct('reports/financial_position', $meta, $this->data);
+        }
+    }
+
     public function balance_sheet(){
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 

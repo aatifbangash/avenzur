@@ -1061,6 +1061,11 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('balance_sheet'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="reports_financial_position">
+                                        <a href="<?= admin_url('reports/financial_position') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('financial_position'); ?></span>
+                                        </a>
+                                    </li>
                                     <li id="reports_incentive_report">
                                         <a href="<?= admin_url('reports/incentives') ?>">
                                             <i class="fa fa-users"></i>
