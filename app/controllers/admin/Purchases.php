@@ -1328,7 +1328,7 @@ class Purchases extends MY_Controller
                             'dc' => 'D',
                             'ledger_id' => $product->inventory_account,
                             'amount' => $item->main_net,
-                            'narration' => ''
+                            'narration' => 'Finished goods'
                         )
                     );
 
@@ -1341,7 +1341,7 @@ class Purchases extends MY_Controller
                             'ledger_id' => $this->vat_on_purchase,
                             //'amount' => $inv->order_tax,
                             'amount' => $inv->product_tax,
-                            'narration' => ''
+                            'narration' => 'Vat on Purchase'
                         )
                     );
             //supplier
@@ -1351,7 +1351,7 @@ class Purchases extends MY_Controller
                             'dc' => 'C',
                             'ledger_id' => $supplier->ledger_account,
                             'amount' => $inv->grand_total + $inv->product_tax,
-                            'narration' => ''
+                            'narration' => 'Accounts payable'
                         )
                     );
 
