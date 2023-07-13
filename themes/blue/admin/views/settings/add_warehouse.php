@@ -117,13 +117,13 @@
                     echo form_dropdown('inventory_ledger', $LO,'', 'id="inventory_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                 ?>
             </div>
-            <div class="form-group ledgers_group">
-                <?= lang('Price Difference Account', 'Price Difference Account'); ?>
+            <!--<div class="form-group ledgers_group">
+                <?php //echo lang('Price Difference Account', 'Price Difference Account'); ?>
                 <?php 
 
-                    echo form_dropdown('price_difference_ledger', $LO,'', 'id="price_difference_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                    //echo form_dropdown('price_difference_ledger', $LO,'', 'id="price_difference_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                 ?>
-            </div>
+            </div>-->
             <div class="form-group ledgers_group">
                 <?= lang('Vat Account', 'Vat Account'); ?>
                 <?php 

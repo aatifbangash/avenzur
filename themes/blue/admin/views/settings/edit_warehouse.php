@@ -105,13 +105,13 @@
                     echo form_dropdown('inventory_ledger', $LO, $warehouse->inventory_ledger, 'id="inventory_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                 ?>
             </div>
-            <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
-                <?= lang('Price Difference Account', 'Price Difference Account'); ?>
+            <!--<div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
+                <?php //echo lang('Price Difference Account', 'Price Difference Account'); ?>
                 <?php 
 
-                    echo form_dropdown('price_difference_ledger', $LO, $warehouse->price_difference_ledger, 'id="price_difference_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                    //echo form_dropdown('price_difference_ledger', $LO, $warehouse->price_difference_ledger, 'id="price_difference_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                 ?>
-            </div>
+            </div>-->
             <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
                 <?= lang('Vat Account', 'Vat Account'); ?>
                 <?php 

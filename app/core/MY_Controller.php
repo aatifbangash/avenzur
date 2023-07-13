@@ -120,6 +120,7 @@ class MY_Controller extends CI_Controller
             $ledgers->build(0); // set ledger id to [NULL] and ledger name to [None] 
             $ledgers->toList($ledgers, -1); // create a list of ledgers array
             $this->ledger_options= $ledgers->ledgerList; // pass ledger list to view
+            $new_ledgers = array();
 
             foreach ($this->ledger_options as $id => $ledger)
             {
@@ -127,9 +128,13 @@ class MY_Controller extends CI_Controller
                 if($id < 0 )
                 {
                    $this->DIS[] = $id;
+                }else{
+                    array_push($new_ledgers, $ledger);
                 }
             } 
-            $this->data['LO'] = $this->LO;
+            
+            //$this->data['LO'] = $this->LO;
+            $this->data['LO'] = $new_ledgers;
             $this->data['DIS'] = $this->DIS;
             //var_dump($dis);
 

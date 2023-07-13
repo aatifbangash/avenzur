@@ -435,7 +435,7 @@ class system_settings extends MY_Controller
                     'cogs_ledger'         => $this->input->post('cogs_ledger'),
                     'inventory_ledger'    => $this->input->post('inventory_ledger'),
                     'sales_ledger'        => $this->input->post('sales_ledger'),
-                    'price_difference_ledger'   => $this->input->post('price_difference_ledger'),
+                    //'price_difference_ledger'   => $this->input->post('price_difference_ledger'),
                     'discount_ledger'     => $this->input->post('discount_ledger'),
                     'vat_on_sales_ledger' => $this->input->post('vat_on_sales_ledger'),
                 ];
@@ -1525,7 +1525,7 @@ class system_settings extends MY_Controller
                     'cogs_ledger'         => $this->input->post('cogs_ledger'),
                     'inventory_ledger'    => $this->input->post('inventory_ledger'),
                     'sales_ledger'        => $this->input->post('sales_ledger'),
-                    'price_difference_ledger'   => $this->input->post('price_difference_ledger'),
+                    //'price_difference_ledger'   => $this->input->post('price_difference_ledger'),
                     'discount_ledger'     => $this->input->post('discount_ledger'),
                     'vat_on_sales_ledger' => $this->input->post('vat_on_sales_ledger'),
                 ];

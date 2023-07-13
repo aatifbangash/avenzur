@@ -1190,7 +1190,7 @@ class Pos extends MY_Controller
                                     )
                                 );
 
-                        if($price_difference != 0){
+                        /*if($price_difference != 0){
                             // //price difference
                             $entryitemdata[] = array(
                                 'Entryitem' => array(
@@ -1201,12 +1201,12 @@ class Pos extends MY_Controller
                                     'narration' => 'price difference'
                                 )
                             );
-                        }      
+                        }  */    
                         
                         $total_invoice_entry = $inv->total_tax + $totalSalePrice + $totalPurchasePrice;
-                        if($price_difference > 0){
+                        /*if($price_difference > 0){
                             $total_invoice_entry += $price_difference;
-                        }
+                        }*/
 
                         $this->db->update('sma_accounts_entries', ['dr_total' => $total_invoice_entry, 'cr_total' => $total_invoice_entry], ['id' => $insert_id]);
                                 
