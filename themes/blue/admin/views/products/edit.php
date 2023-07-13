@@ -575,10 +575,11 @@ if (!empty($variants)) {
                         </div>
                         <div class="col-md-4">
                             <div class="form-group all">
-                                <label for="Sales Account">COGS Account</lable>
+                                <label for="Purchase Account">COGS Account</lable>
                                    <?php 
 
-                                echo form_dropdown('sale_account', $LO, (isset($_POST['sale_account'])) ? $_POST['sale_account']: ($product ? $product->sale_account : ''), 'id="sale_account" class="ledger-dropdown form-control" required="required"',$DIS);  
+                                echo form_dropdown('purchase_account', $LO, (isset($_POST['purchase_account'])) ? $_POST['purchase_account']: ($product ? $product->purchase_account : ''), 'id="purchase_account" class="ledger-dropdown form-control" required="required"',$DIS); 
+                                 
 
                                ?>
                                     
@@ -587,10 +588,10 @@ if (!empty($variants)) {
                         </div>
                         <div class="col-md-4">
                             <div class="form-group all">
-                                <label for="Purchase Account">Income Account</lable>
+                                <label for="Sale Account">Income Account</lable>
                                  <?php 
 
-echo form_dropdown('purchase_account', $LO, (isset($_POST['purchase_account'])) ? $_POST['purchase_account']: ($product ? $product->purchase_account : ''), 'id="purchase_account" class="ledger-dropdown form-control" required="required"',$DIS); 
+                                echo form_dropdown('sale_account', $LO, (isset($_POST['sale_account'])) ? $_POST['sale_account']: ($product ? $product->sale_account : ''), 'id="sale_account" class="ledger-dropdown form-control" required="required"',$DIS); 
 
                                ?>
                                     

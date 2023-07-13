@@ -594,10 +594,12 @@ if (!empty($variants)) {
                         </div>
                         <div class="col-md-4">
                             <div class="form-group all">
-                                <label for="Sales Account">COGS Account</lable>
+                                <label for="Purchase Account">COGS Account</lable>
                                    <?php 
 
-                                echo form_dropdown('sale_account', $LO, ($_POST['sale_account'] ?? $product->purchase_account), 'id="sale_account" class="ledger-dropdown form-control" required="required"',$DIS);  
+                                echo form_dropdown('purchase_account', $LO, ($_POST['purchase_account'] ?? $product->purchase_account), 'id="purchase_account" class="ledger-dropdown form-control" required="required"',$DIS);
+
+                                  
 
                                ?>
                                     
@@ -606,10 +608,10 @@ if (!empty($variants)) {
                         </div>
                         <div class="col-md-4">
                             <div class="form-group all">
-                                <label for="Purchase Account">Income Account</lable>
+                                <label for="Sale Account">Income Account</lable>
                                  <?php 
 
-                                echo form_dropdown('purchase_account', $LO, ($_POST['purchase_account'] ?? $product->purchase_account), 'id="purchase_account" class="ledger-dropdown form-control" required="required"',$DIS);
+                                echo form_dropdown('sale_account', $LO, ($_POST['sale_account'] ?? $product->purchase_account), 'id="sale_account" class="ledger-dropdown form-control" required="required"',$DIS);
 
                                ?>
                                     
