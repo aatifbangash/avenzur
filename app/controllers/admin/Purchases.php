@@ -1328,7 +1328,7 @@ class Purchases extends MY_Controller
                             'dc' => 'D',
                             'ledger_id' => $product->inventory_account,
                             'amount' => $item->main_net,
-                            'narration' => 'Finished goods'
+                            'narration' => 'Inventory'
                         )
                     );
 

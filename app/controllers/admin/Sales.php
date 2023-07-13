@@ -1642,7 +1642,7 @@ class Sales extends MY_Controller
                              'ledger_id' => $product->purchase_account,
                              //'amount' => $item->main_net,
                              'amount' => ($item->net_cost * $item->quantity),
-                             'narration' => 'purchase account'
+                             'narration' => 'cost of good sold'
                          )
                      );
  
