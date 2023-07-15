@@ -71,19 +71,22 @@ $(document).ready(function() {
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label><?= lang('Type1'); ?></label>
-                                <input type="text" name="type1" id="l_type1" value="<?= set_value('type1');?>" class="form-control">
+								<!-- <input type="text" name="type1" id="l_type1" value="<?= set_value('type1');?>" class="form-control"> -->
+                                <?= form_dropdown('type1', $accountTypeOne, set_value('type1', $ledger['type1']),array('class' => 'form-control', 'id'=>'l_type1')); ?>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label><?= lang('Type2'); ?></label>
-                                <input type="text" name="type2" id="l_type2" value="<?= set_value('type2');?>" class="form-control">
+                                <!-- <input type="text" name="type2" id="l_type2" value="<?= set_value('type2');?>" class="form-control"> -->
+								<?= form_dropdown('type2', $accountTypeTwo, set_value('type2', $ledger['type2']),array('class' => 'form-control', 'id'=>'l_type2')); ?>
                             </div>
                         </div>
-                        <div class="col-md-4S">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label><?= lang('Category'); ?></label>
-                                <input type="text" name="category" value="<?= set_value('category');?>" class="form-control">
+                                <!-- <input type="text" name="category" value="<?= set_value('category');?>" class="form-control"> -->
+								<?= form_dropdown('category', $accountCategories, set_value('category', $ledger['category']),array('class' => 'form-control', 'id'=>'category')); ?>
                             </div>
                         </div>
                     </div>

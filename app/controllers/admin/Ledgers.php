@@ -1,18 +1,21 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
-class Ledgers extends MY_Controller {
-	public function __construct() {
-        parent::__construct();
-         $this->load->library('form_validation');
-    }   
+class Ledgers extends MY_Controller
+{
+	public function __construct()
+	{
+		parent::__construct();
+		$this->load->library('form_validation');
+	}
 
-    /**
- * add method
- *
- * @return void
- */
-	public function add() {
+	/**
+	 * add method
+	 *
+	 * @return void
+	 */
+	public function add()
+	{
 
 		$allowed = $this->mAccountSettings->decimal_places;
 		$this->form_validation->set_rules('name', lang('ledgers_cntrler_add_form_validation_label_name'), 'required');
@@ -30,15 +33,20 @@ class Ledgers extends MY_Controller {
 			$parentGroups->build(0);
 			$parentGroups->toList($parentGroups, -1);
 			$this->data['parents'] = $parentGroups->groupList;
+
+			// Drop-Downs
+			$groupLedgerArrs = $parentGroups->accountGroupLedgerOptions();
+			$this->data['accountTypeOne'] = $groupLedgerArrs['accountTypeOne'];
+			$this->data['accountTypeTwo'] = $groupLedgerArrs['accountTypeTwo'];
+			$this->data['accountCategories'] = $groupLedgerArrs['accountCategories'];
+
 			// render page
 
 			$bc  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('accounts'), 'page' => lang('accounts')], ['link' => '#', 'page' => lang('Add Legder')]];
-	        $meta = ['page_title' => lang('Accounts'), 'bc' => $bc];
-	        $this->page_construct('accounts/ledger_add', $meta, $this->data);
-
-
-        } else {
-        	$data = array(
+			$meta = ['page_title' => lang('Accounts'), 'bc' => $bc];
+			$this->page_construct('accounts/ledger_add', $meta, $this->data);
+		} else {
+			$data = array(
 				'code' => NULL,
 				'op_balance' => 0,
 				'name' => $this->input->post('name'),
@@ -47,10 +55,10 @@ class Ledgers extends MY_Controller {
 				'notes' => $this->input->post('notes'),
 				'reconciliation' => 0,
 
-                //                'name_arabic' => $this->input->post('name_arabic'),
-                'type1' => $this->input->post('type1'),
-                'type2' => $this->input->post('type2'),
-                'category' => $this->input->post('category'),
+				//                'name_arabic' => $this->input->post('name_arabic'),
+				'type1' => $this->input->post('type1'),
+				'type2' => $this->input->post('type2'),
+				'category' => $this->input->post('category'),
 
 
 				'type' => 0,
@@ -69,23 +77,24 @@ class Ledgers extends MY_Controller {
 				$data['op_balance'] = $this->input->post('op_balance');
 			}
 			/* Count number of decimal places */
-			
+
 			$this->db->insert('sma_accounts_ledgers', $data);
 			//$this->settings_model->add_log(lang('ledgers_cntrler_add_label_add_log') . $this->input->post('name'), 1);
-			
+
 			$this->session->set_flashdata('message', sprintf(lang('ledgers_cntrler_add_ledger_created_successfully'), $this->input->post('name')));
 			admin_redirect('accounts');
-        }
+		}
 	}
 
-/**
- * edit method
- *
- * @throws NotFoundException
- * @param string $id
- * @return void
- */
-	public function edit($id = null) {
+	/**
+	 * edit method
+	 *
+	 * @throws NotFoundException
+	 * @param string $id
+	 * @return void
+	 */
+	public function edit($id = null)
+	{
 		/* Check for valid group */
 		if (empty($id)) {
 			$this->session->set_flashdata('error', lang('ledgers_cntrler_edit_ledger_not_specified_error'));
@@ -96,12 +105,12 @@ class Ledgers extends MY_Controller {
 			$this->session->set_flashdata('error', lang('ledgers_cntrler_edit_ledger_not_found_error'));
 			admin_redirect('accounts');
 		}
-		$original_value = $ledger['code'] ;
-	    if($this->input->post('code') != $original_value) {
-	       $is_unique =  'is_unique[sma_accounts_ledgers.code]';
-	    } else {
-	       $is_unique =  '';
-	    }
+		$original_value = $ledger['code'];
+		if ($this->input->post('code') != $original_value) {
+			$is_unique =  'is_unique[sma_accounts_ledgers.code]';
+		} else {
+			$is_unique =  '';
+		}
 
 		$allowed = $this->mAccountSettings->decimal_places;
 		$this->form_validation->set_rules('name', 'ledgers_cntrler_edit_form_validation_label_name', 'required');
@@ -120,12 +129,20 @@ class Ledgers extends MY_Controller {
 			$parentGroups->toList($parentGroups, -1);
 			$this->data['parents'] = $parentGroups->groupList;
 			$this->data['ledger'] = $ledger;
+
+			// Drop-Downs
+			$groupLedgerArrs = $parentGroups->accountGroupLedgerOptions();
+			$this->data['accountTypeOne'] = $groupLedgerArrs['accountTypeOne'];
+			$this->data['accountTypeTwo'] = $groupLedgerArrs['accountTypeTwo'];
+			$this->data['accountCategories'] = $groupLedgerArrs['accountCategories'];
+
+
 			// render page
-		$bc  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('accounts'), 'page' => lang('accounts')], ['link' => '#', 'page' => lang('Edit Legder')]];
-	        $meta = ['page_title' => lang('Accounts'), 'bc' => $bc];
-	        $this->page_construct('accounts/ledger_edit', $meta, $this->data);
-        } else {
-        	/* Check if acccount is locked */
+			$bc  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('accounts'), 'page' => lang('accounts')], ['link' => '#', 'page' => lang('Edit Legder')]];
+			$meta = ['page_title' => lang('Accounts'), 'bc' => $bc];
+			$this->page_construct('accounts/ledger_edit', $meta, $this->data);
+		} else {
+			/* Check if acccount is locked */
 			if ($this->mAccountSettings->account_locked == 1) {
 				$this->session->set_flashdata('error', lang('ledgers_cntrler_edit_account_locked_error'));
 				admin_redirect('accounts');
@@ -140,10 +157,10 @@ class Ledgers extends MY_Controller {
 				'notes' => $this->input->post('notes'),
 				'reconciliation' => 0,
 
-                //                'name_arabic' => $this->input->post('name_arabic'),
-                'type1' => $this->input->post('type1'),
-                'type2' => $this->input->post('type2'),
-                'category' => $this->input->post('category'),
+				//                'name_arabic' => $this->input->post('name_arabic'),
+				'type1' => $this->input->post('type1'),
+				'type2' => $this->input->post('type2'),
+				'category' => $this->input->post('category'),
 
 				'type' => 0,
 			);
@@ -160,13 +177,12 @@ class Ledgers extends MY_Controller {
 			if (!empty($this->input->post('op_balance'))) {
 				$data['op_balance'] = $this->input->post('op_balance');
 			}
-			
+
 			$this->db->where('id', $id);
 			$this->db->update('sma_accounts_ledgers', $data);
 			//$this->settings_model->add_log(lang('ledgers_cntrler_edit_label_add_log') . $this->input->post('name'), 1);
 			admin_redirect('accounts');
-        }
-
+		}
 	}
 
 
@@ -178,7 +194,8 @@ class Ledgers extends MY_Controller {
 	 * @param string $id
 	 * @return void
 	 */
-	public function delete($id = null) {
+	public function delete($id = null)
+	{
 
 		/* Check if valid id */
 		if (empty($id)) {
@@ -215,7 +232,8 @@ class Ledgers extends MY_Controller {
 	 *
 	 * @return void
 	 */
-	public function cl($id = null) {
+	public function cl($id = null)
+	{
 
 		/* Read ledger id from url get request */
 		if ($id == null) {
@@ -234,7 +252,7 @@ class Ledgers extends MY_Controller {
 		$ledger = $this->db->get('sma_accounts_ledgers')->row_array();
 		if (!$ledger) {
 			$cl = array('cl' => array('dc' => '', 'amount' => ''));
-		}else{
+		} else {
 			$cl = $this->ledger_model->closingBalance($id);
 			$status = 'ok';
 			if ($ledger['type'] == 1) {
@@ -244,18 +262,20 @@ class Ledgers extends MY_Controller {
 			}
 
 			/* Return closing balance */
-			$cl = array('cl' => 
-					array(
-						'dc' => $cl['dc'],
-						'amount' => $cl['amount'],
-						'status' => $status,
-					)
+			$cl = array(
+				'cl' =>
+				array(
+					'dc' => $cl['dc'],
+					'amount' => $cl['amount'],
+					'status' => $status,
+				)
 			);
 		}
 		echo json_encode($cl);
 	}
 
-	public function getNextCode() {
+	public function getNextCode()
+	{
 		$id = $_POST['id'];
 		$this->db->where('id', $id);
 		$p_group_code = $this->db->get('sma_accounts_groups')->row()->code;
@@ -268,15 +288,9 @@ class Ledgers extends MY_Controller {
 			$new_index = end($l_array);
 			$new_index += 1;
 			$new_index = sprintf("%04d", $new_index);
-			echo $p_group_code."-".$new_index;
-		}else{
-			echo $p_group_code."-0001";
+			echo $p_group_code . "-" . $new_index;
+		} else {
+			echo $p_group_code . "-0001";
 		}
-
 	}
-
-
 }
-
-
-

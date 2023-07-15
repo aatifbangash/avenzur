@@ -5,7 +5,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class MY_Controller extends CI_Controller
 {
     public $mDateArray = array();
-    
+
     public function __construct()
     {
         parent::__construct();
@@ -25,7 +25,7 @@ class MY_Controller extends CI_Controller
         } else {
             $this->Settings->user_rtl = $this->Settings->rtl;
         }
-        
+
         $this->theme = $this->Settings->theme . '/admin/views/';
         if (is_dir(VIEWPATH . $this->Settings->theme . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR)) {
             $this->data['assets'] = base_url() . 'themes/' . $this->Settings->theme . '/admin/assets/';
@@ -102,7 +102,7 @@ class MY_Controller extends CI_Controller
                 $this->load->library('gst');
             }
 
-            /* Accounts Variable*/    
+            /* Accounts Variable*/
             $this->mAccountSettings = $this->db->get('accounts_settings')->row();
             $this->mAccountSettings->decimals_sep = '.';
             $this->mAccountSettings->thousands_sep = ',';
@@ -119,30 +119,28 @@ class MY_Controller extends CI_Controller
             //$ledgers->restriction_bankcash = $entrytype['restriction_bankcash'];
             $ledgers->build(0); // set ledger id to [NULL] and ledger name to [None] 
             $ledgers->toList($ledgers, -1); // create a list of ledgers array
-            $this->ledger_options= $ledgers->ledgerList; // pass ledger list to view
+            $this->ledger_options = $ledgers->ledgerList; // pass ledger list to view
             $new_ledgers = array();
 
-            foreach ($this->ledger_options as $id => $ledger)
-            {
+            foreach ($this->ledger_options as $id => $ledger) {
                 $this->LO[$id] = $ledger;
-                if($id < 0 )
-                {
-                   $this->DIS[] = $id;
-                }else{
+                if ($id < 0) {
+                    $this->DIS[] = $id;
+                } else {
                     array_push($new_ledgers, $ledger);
                 }
-            } 
-            
+            }
+
             //$this->data['LO'] = $this->LO;
             $this->data['LO'] = $new_ledgers;
             $this->data['DIS'] = $this->DIS;
             //var_dump($dis);
 
             $this->vat_on_purchase = $this->Settings->vat_on_purchase_ledger;
-            $this->data['vat_on_purchase'] = $this->vat_on_purchase; 
+            $this->data['vat_on_purchase'] = $this->vat_on_purchase;
 
             $this->vat_on_sale = $this->Settings->vat_on_sale_ledger;
-            $this->data['vat_on_sale'] = $this->vat_on_sale; 
+            $this->data['vat_on_sale'] = $this->vat_on_sale;
 
             $this->bank_fund_cash = $this->Settings->bank_fund_cash_ledger;
             $this->data['bank_fund_cash'] = $this->bank_fund_cash;
@@ -152,7 +150,6 @@ class MY_Controller extends CI_Controller
 
             $this->bank_checking_account = $this->Settings->bank_checking_account_ledger;
             $this->data['bank_checking_account'] = $this->bank_checking_account;
-
         }
     }
 

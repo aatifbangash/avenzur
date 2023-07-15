@@ -36,6 +36,12 @@ class Groups extends MY_Controller
             $parentGroups->toList($parentGroups, -1);
             $this->data['parents'] = $parentGroups->groupList;
 
+            // Drop-Downs
+            $groupLedgerArrs = $parentGroups->accountGroupLedgerOptions();
+			$this->data['accountTypeOne'] = $groupLedgerArrs['accountTypeOne'];
+			$this->data['accountTypeTwo'] = $groupLedgerArrs['accountTypeTwo'];
+			$this->data['accountCategories'] = $groupLedgerArrs['accountCategories'];
+
             // render page
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('accounts'), 'page' => lang('accounts')], ['link' => '#', 'page' => lang('Add Group')]];
             $meta = ['page_title' => lang('Accounts'), 'bc' => $bc];
@@ -120,6 +126,13 @@ class Groups extends MY_Controller
             $parentGroups->toList($parentGroups, -1);
             $this->data['parents'] = $parentGroups->groupList;
             $this->data['group'] = $group;
+
+            // Drop-Downs
+            $groupLedgerArrs = $parentGroups->accountGroupLedgerOptions();
+			$this->data['accountTypeOne'] = $groupLedgerArrs['accountTypeOne'];
+			$this->data['accountTypeTwo'] = $groupLedgerArrs['accountTypeTwo'];
+			$this->data['accountCategories'] = $groupLedgerArrs['accountCategories'];
+            
             // render page
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('accounts'), 'page' => lang('accounts')], ['link' => '#', 'page' => lang('Edit Group')]];
             $meta = ['page_title' => lang('Accounts'), 'bc' => $bc];
@@ -160,7 +173,6 @@ class Groups extends MY_Controller
             $this->session->set_flashdata('message', sprintf(lang('groups_cntrler_edit_group_updated_successfully'), $this->input->post('name')));
             admin_redirect('accounts');
         }
-
     }
 
     /**
@@ -214,7 +226,6 @@ class Groups extends MY_Controller
         //$this->settings_model->add_log(lang('groups_cntrler_delete_label_add_log') . $group['name'], 1);
         $this->session->set_flashdata('message', sprintf(lang('groups_cntrler_delete_group_deleted_successfully'), $group['name']));
         admin_redirect('accounts');
-
     }
 
     public function getNextCode()
@@ -239,10 +250,5 @@ class Groups extends MY_Controller
         } else {
             echo $p_group_code . "-01";
         }
-
     }
-
 }
-
-
-

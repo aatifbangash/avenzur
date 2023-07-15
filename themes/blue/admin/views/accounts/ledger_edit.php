@@ -59,19 +59,22 @@ $(document).ready(function() {
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label><?= lang('Type1'); ?></label>
-                                <input type="text" name="type1" class="form-control" value="<?= set_value('type1', $ledger['type1']); ?>" >
+                                <!-- <input type="text" name="type1" class="form-control" value="<?= set_value('type1', $ledger['type1']); ?>" > -->
+                                <?= form_dropdown('type1', $accountTypeOne, set_value('type1', $ledger['type1']),array('class' => 'form-control', 'id'=>'g_type1')); ?>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label><?= lang('Type2'); ?></label>
-                                <input type="text" name="type2" class="form-control" value="<?= set_value('type2', $ledger['type2']); ?>" >
+                                <!-- <input type="text" name="type2" class="form-control" value="<?= set_value('type2', $ledger['type2']); ?>" > -->
+                                <?= form_dropdown('Type2', $accountTypeTwo, set_value('type2', $ledger['type2']),array('class' => 'form-control', 'id'=>'g_type1')); ?>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label><?= lang('Category'); ?></label>
-                                <input type="text" name="category" class="form-control" value="<?= set_value('category', $ledger['category']); ?>" >
+                                <!-- <input type="text" name="category" class="form-control" value="<?= set_value('category', $ledger['category']); ?>" > -->
+                                <?= form_dropdown('category', $accountCategories, set_value('category', $ledger['category']),array('class' => 'form-control', 'id'=>'category')); ?>
                             </div>
                         </div>
                     </div>
