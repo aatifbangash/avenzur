@@ -1635,37 +1635,38 @@ class Sales extends MY_Controller
                  $product  = $this->site->getProductByID($proid);
                  //products
                  
-                 $entryitemdata[] = array(
-                         'Entryitem' => array(
-                             'entry_id' => $insert_id,
-                             'dc' => 'D',
-                             'ledger_id' => $product->purchase_account,
-                             //'amount' => $item->main_net,
-                             'amount' => ($item->net_cost * $item->quantity),
-                             'narration' => 'cost of good sold'
-                         )
-                     );
+
+                //  $entryitemdata[] = array(
+                //          'Entryitem' => array(
+                //              'entry_id' => $insert_id,
+                //              'dc' => 'D',
+                //              'ledger_id' => $product->purchase_account,
+                //              //'amount' => $item->main_net,
+                //              'amount' => ($item->net_cost * $item->quantity),
+                //              'narration' => 'cost of good sold'
+                //          )
+                //      );
  
-                     $entryitemdata[] = array(
-                         'Entryitem' => array(
-                             'entry_id' => $insert_id,
-                             'dc' => 'C',
-                             'ledger_id' => $product->sale_account,
-                             'amount' => $item->main_net,
-                             'narration' => 'sale account'
-                         )
-                     );
+                //      $entryitemdata[] = array(
+                //          'Entryitem' => array(
+                //              'entry_id' => $insert_id,
+                //              'dc' => 'C',
+                //              'ledger_id' => $product->sale_account,
+                //              'amount' => $item->main_net,
+                //              'narration' => 'sale account'
+                //          )
+                //      );
  
-                     $entryitemdata[] = array(
-                         'Entryitem' => array(
-                             'entry_id' => $insert_id,
-                             'dc' => 'C',
-                             'ledger_id' => $product->inventory_account,
-                             //'amount' => $item->main_net,
-                             'amount' => ($item->net_cost * $item->quantity),
-                             'narration' => 'inventory account'
-                         )
-                     );
+                //      $entryitemdata[] = array(
+                //          'Entryitem' => array(
+                //              'entry_id' => $insert_id,
+                //              'dc' => 'C',
+                //              'ledger_id' => $product->inventory_account,
+                //              //'amount' => $item->main_net,
+                //              'amount' => ($item->net_cost * $item->quantity),
+                //              'narration' => 'inventory account'
+                //          )
+                //      );
  
              }
           

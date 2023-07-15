@@ -112,9 +112,9 @@ class Products extends MY_Controller
                 'trade_name'         => $this->input->post('trade_name'),
                 'manufacture_name'   => $this->input->post('manufacture_name'),
                 'main_agent'         => $this->input->post('main_agent'),
-                'purchase_account'   => $this->input->post('purchase_account'),
-                'sale_account'       => $this->input->post('sale_account'),
-                'inventory_account'  => $this->input->post('inventory_account'),
+                // 'purchase_account'   => $this->input->post('purchase_account'),
+                // 'sale_account'       => $this->input->post('sale_account'),
+                // 'inventory_account'  => $this->input->post('inventory_account'),
             ];
             $warehouse_qty      = null;
             $product_attributes = null;
@@ -994,9 +994,9 @@ class Products extends MY_Controller
                 'trade_name'       => $this->input->post('trade_name'),
                 'manufacture_name'       => $this->input->post('manufacture_name'),
                 'main_agent'       => $this->input->post('main_agent'),
-                'purchase_account'       => $this->input->post('purchase_account'),
-                'sale_account'       => $this->input->post('sale_account'),
-                'inventory_account'       => $this->input->post('inventory_account'),
+                // 'purchase_account'       => $this->input->post('purchase_account'),
+                // 'sale_account'       => $this->input->post('sale_account'),
+                // 'inventory_account'       => $this->input->post('inventory_account'),
             ];
             $warehouse_qty      = null;
             $product_attributes = null;
