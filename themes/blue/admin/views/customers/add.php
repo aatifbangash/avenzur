@@ -87,9 +87,6 @@
                         }
                         ?>
                     </div>
-
-                </div>
-                <div class="col-md-6">
                     <div class="form-group">
                         <?= lang('postal_code', 'postal_code'); ?>
                         <?php echo form_input('postal_code', '', 'class="form-control" id="postal_code"'); ?>
@@ -98,11 +95,47 @@
                         <?= lang('country', 'country'); ?>
                         <?php echo form_input('country', '', 'class="form-control" id="country"'); ?>
                     </div>
+
+                </div>
+                <div class="col-md-6">
+                  
                     <div class="form-group">
                         <?= lang('Ledger Account', 'Ledger Account'); ?>
                         <?php 
 
                             echo form_dropdown('ledger_account', $LO,'', 'id="ledger_account" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        ?>
+                    </div>
+
+                    <div class="form-group">
+                        <?= lang('Sales Account', 'Sales Account'); ?>
+                        <?php 
+
+                            echo form_dropdown('sales_ledger', $LO,'', 'id="sales_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        ?>
+                    </div>
+
+                    <div class="form-group">
+                        <?= lang('COGS Account', 'COGS Account'); ?>
+                        <?php 
+
+                            echo form_dropdown('cogs_ledger', $LO,'', 'id="cogs_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        ?>
+                    </div>
+
+                    <div class="form-group">
+                        <?= lang('Discount Account', 'Discount Account'); ?>
+                        <?php 
+
+                            echo form_dropdown('discount_ledger', $LO,'', 'id="discount_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        ?>
+                    </div>
+
+                    <div class="form-group">
+                        <?= lang('Return Account', 'Return Account'); ?>
+                        <?php 
+
+                            echo form_dropdown('return_ledger', $LO,'', 'id="return_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                         ?>
                     </div>
                     

@@ -651,11 +651,12 @@ class Customers extends MY_Controller
                 'ledger_account'      => $this->input->post('ledger_account'),
                 //'fund_books_ledger'   => $this->input->post('fund_books_ledger'),
                 //'credit_card_ledger'  => $this->input->post('credit_card_ledger'),
-                //'cogs_ledger'         => $this->input->post('cogs_ledger'),
+                'cogs_ledger'         => $this->input->post('cogs_ledger'),
                 //'inventory_ledger'    => $this->input->post('inventory_ledger'),
-                //'sales_ledger'        => $this->input->post('sales_ledger'),
+                'sales_ledger'        => $this->input->post('sales_ledger'),
                 //'price_difference_ledger'   => $this->input->post('price_difference_ledger'),
-                //'discount_ledger'     => $this->input->post('discount_ledger'),
+                'discount_ledger'     => $this->input->post('discount_ledger'),
+                'return_ledger'     => $this->input->post('return_ledger'),
                 //'vat_on_sales_ledger' => $this->input->post('vat_on_sales_ledger'),
                 'sequence_code'       => $this->sequenceCode->generate('CUS', 5)
             ];
@@ -1025,12 +1026,13 @@ class Customers extends MY_Controller
                 'ledger_account'      => $this->input->post('ledger_account'),
                 //'fund_books_ledger'   => $this->input->post('fund_books_ledger'),
                 //'credit_card_ledger'  => $this->input->post('credit_card_ledger'),
-                //'cogs_ledger'         => $this->input->post('cogs_ledger'),
+                'cogs_ledger'         => $this->input->post('cogs_ledger'),
                 //'inventory_ledger'    => $this->input->post('inventory_ledger'),
-                //'sales_ledger'        => $this->input->post('sales_ledger'),
+                'sales_ledger'        => $this->input->post('sales_ledger'),
                 //'price_difference_ledger'   => $this->input->post('price_difference_ledger'),
-                //'discount_ledger'     => $this->input->post('discount_ledger'),
+                'discount_ledger'     => $this->input->post('discount_ledger'),
                 //'vat_on_sales_ledger' => $this->input->post('vat_on_sales_ledger')
+                'return_ledger'     => $this->input->post('return_ledger'),
             ];
         } elseif ($this->input->post('edit_customer')) {
             $this->session->set_flashdata('error', validation_errors());

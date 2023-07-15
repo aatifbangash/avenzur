@@ -3,3 +3,7 @@
 # Update Product Ledgers to stop accidentail entries:
 
 UPDATE sma_products SET purchase_account = 0, sale_account = 0, inventory_account = 0;
+
+# Add Ledger into Customer table:
+
+ALTER TABLE `sma_companies` ADD `return_ledger` BIGINT NULL DEFAULT NULL AFTER `vat_on_sales_ledger`;
