@@ -420,6 +420,7 @@ class system_settings extends MY_Controller
                     'price_group_id' => $this->input->post('price_group'),
                     'warehouse_type' => $this->input->post('type'),
                     'country'            => $this->input->post('country'),
+                    'inventory_ledger'    => $this->input->post('inventory_ledger'),
                 ];
             }else if($this->input->post('type') == 'pharmacy'){
                 $data = ['code'      => $this->input->post('code'),
@@ -1509,7 +1510,8 @@ class system_settings extends MY_Controller
                     'address'        => $this->input->post('address'),
                     'price_group_id' => $this->input->post('price_group'),
                     'warehouse_type' => $this->input->post('type'),
-                    'country'        => $this->input->post('country')
+                    'country'        => $this->input->post('country'),
+                    'inventory_ledger'    => $this->input->post('inventory_ledger'),
                 ];
             }else if($this->input->post('type') == 'pharmacy'){
                 $data = ['code'      => $this->input->post('code'),

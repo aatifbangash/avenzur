@@ -62,6 +62,15 @@
                 ?>
             </div>
 
+            <div class="form-group">
+                <?= lang('Inventory Account', 'Inventory Account'); ?>
+                <?php 
+                    echo form_dropdown('inventory_ledger', $LO, $warehouse->inventory_ledger, 'id="inventory_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+
+
+
             <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
                 <?= lang('Fund Books Account', 'Fund Books Account'); ?>
                 <?php 
@@ -98,13 +107,7 @@
                     echo form_dropdown('credit_card_ledger', $LO, $warehouse->credit_card_ledger, 'id="credit_card_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                 ?>
             </div>
-            <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
-                <?= lang('Inventory Account', 'Inventory Account'); ?>
-                <?php 
-
-                    echo form_dropdown('inventory_ledger', $LO, $warehouse->inventory_ledger, 'id="inventory_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
-                ?>
-            </div>
+            
             <!--<div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
                 <?php //echo lang('Price Difference Account', 'Price Difference Account'); ?>
                 <?php 

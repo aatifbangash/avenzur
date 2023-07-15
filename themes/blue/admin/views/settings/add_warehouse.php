@@ -56,14 +56,14 @@
                  <div class="form-group">
                 <label class="control-label" for="country"><?php echo $this->lang->line('country'); ?></label>
                    <select class="form-control" id="country" name="country" >
-                                                                <!--<option value="both">Both</option>-->
+                    <!--<option value="both">Both</option>-->
                                                                 
-                                                                <?php
-                                                                   foreach($country as $country)
-                                                                   {
-                                                                    echo '<option value="'.$country->id.'">'.$country->name.'</option>';
-                                                                   }
-                                                                  ?>
+                            <?php
+                                foreach($country as $country)
+                                {
+                                echo '<option value="'.$country->id.'">'.$country->name.'</option>';
+                                }
+                                ?>
                     </select>
                 <?php
               //  $pgss[''] = lang('select') . ' ' . lang('country');
@@ -73,6 +73,16 @@
               //  echo form_dropdown('country', $pgss, 'class="form-control" id="country" ');
                 ?>
             </div>
+
+            <div class="form-group">
+                <?= lang('Inventory Account', 'Inventory Account'); ?>
+                <?php 
+
+                    echo form_dropdown('inventory_ledger', $LO,'', 'id="inventory_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                ?>
+            </div>
+
+            
 
             <div class="form-group ledgers_group">
                 <?= lang('Fund Books Account', 'Fund Books Account'); ?>
@@ -110,13 +120,7 @@
                     echo form_dropdown('credit_card_ledger', $LO,'', 'id="credit_card_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                 ?>
             </div>
-            <div class="form-group ledgers_group">
-                <?= lang('Inventory Account', 'Inventory Account'); ?>
-                <?php 
-
-                    echo form_dropdown('inventory_ledger', $LO,'', 'id="inventory_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
-                ?>
-            </div>
+            
             <!--<div class="form-group ledgers_group">
                 <?php //echo lang('Price Difference Account', 'Price Difference Account'); ?>
                 <?php 

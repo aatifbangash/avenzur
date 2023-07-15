@@ -1,0 +1,5 @@
+
+
+# Update Product Ledgers to stop accidentail entries:
+
+UPDATE sma_products SET purchase_account = 0, sale_account = 0, inventory_account = 0;
