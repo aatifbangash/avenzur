@@ -69,8 +69,10 @@ $(document).ready(function() {
             <div class="box-body">
               <div>
                 <?php
-                    echo (lang('entries_views_views_label_number')) . ' : ' . ($this->functionscore->toEntryNumber($entry['number'], $entry['entrytype_id']));
+                    echo (lang('Id')) . ' : ' . ($entry['id']);
                     echo '<br /><br />';
+                    //echo (lang('entries_views_views_label_number')) . ' : ' . ($this->functionscore->toEntryNumber($entry['number'], $entry['entrytype_id']));
+                    //echo '<br /><br />';
                     echo (lang('entries_views_views_label_date')) . ' : ' . ($this->functionscore->dateFromSql($entry['date']));
                     echo '<br /><br />';
 
