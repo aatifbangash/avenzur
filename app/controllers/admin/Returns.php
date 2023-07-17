@@ -256,6 +256,7 @@ class Returns extends MY_Controller
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 $real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
                 $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
+                $item_net_price      = $this->sma->formatDecimal($_POST['net_price'][$r]);
                 $unit_price         = $this->sma->formatDecimal($_POST['unit_price'][$r]);
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_batchno       = $_POST['batch_no'][$r];
@@ -275,7 +276,7 @@ class Returns extends MY_Controller
                     $product_details  = $item_type != 'manual' ? $this->site->getProductByCode($item_code) : null;
                     $pr_discount      = $this->site->calculateDiscount($item_discount, $unit_price);
                     $unit_price       = $this->sma->formatDecimal($unit_price - $pr_discount);
-                    $item_net_price   = $unit_price;
+                    //$item_net_price   = $unit_price;
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
                     $product_discount += $pr_item_discount;
                     $pr_item_tax = $item_tax = 0;
@@ -287,7 +288,8 @@ class Returns extends MY_Controller
                         $item_tax    = $this->sma->formatDecimal($ctax['amount']);
                         $tax         = $ctax['tax'];
                         if (!$product_details || (!empty($product_details) && $product_details->tax_method != 1)) {
-                            $item_net_price = $unit_price - $item_tax;
+                            //$item_net_price = $unit_price - $item_tax;
+                            $item_net_price = $item_net_price - $item_tax;
                         }
                         $pr_item_tax = $this->sma->formatDecimal(($item_tax * $item_unit_quantity), 4);
                         if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($biller_details->state == $customer_details->state), $tax_details)) {
@@ -423,6 +425,8 @@ class Returns extends MY_Controller
         
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($inv->customer_id);
+        $warehouse_id = $inv->warehouse_id;
+        $warehouse_ledgers = $this->site->getWarehouseByID($warehouse_id);
 
         /*Accounts Entries*/
         $entry = array(
@@ -462,10 +466,10 @@ class Returns extends MY_Controller
             'Entryitem' => array(
             'entry_id' => $insert_id,
             'dc' => 'C',
-            'ledger_id' => $customer->fund_books_ledger,
+            'ledger_id' => $customer->ledger_account,
             //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
             'amount' => $amount_to_pay,
-            'narration' => 'cash'
+            'narration' => 'customer'
             )
         );
 
@@ -485,7 +489,7 @@ class Returns extends MY_Controller
             'Entryitem' => array(
             'entry_id' => $insert_id,
             'dc' => 'D',
-            'ledger_id' => $customer->inventory_ledger,
+            'ledger_id' => $warehouse_ledgers->inventory_ledger,
             'amount' => $totalPurchasePrice,
             'narration' => 'inventory'
             )
@@ -498,7 +502,7 @@ class Returns extends MY_Controller
                 'dc' => 'D',
                 'ledger_id' => $customer->sales_ledger,
                 'amount' => $totalSalePrice,
-                'narration' => 'sale'
+                'narration' => 'sale account'
             )
         );
             
@@ -519,7 +523,7 @@ class Returns extends MY_Controller
                     'Entryitem' => array(
                         'entry_id' => $insert_id,
                         'dc' => 'D',
-                        'ledger_id' => $customer->vat_on_sales_ledger,
+                        'ledger_id' => $this->vat_on_sale,
                         'amount' => $inv->total_tax,
                         'narration' => 'vat on sale'
                     )

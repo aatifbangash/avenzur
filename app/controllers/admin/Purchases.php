@@ -1300,6 +1300,8 @@ class Purchases extends MY_Controller
             $this->load->admin_model('companies_model');
             $supplier = $this->companies_model->getCompanyByID($inv->supplier_id);
             $inv_items = $this->purchases_model->getAllPurchaseItems($pid);
+            $warehouse_id = $inv->warehouse_id;
+            $warehouse_ledgers = $this->site->getWarehouseByID($warehouse_id);
 
              /*Accounts Entries*/
             $entry = array(
@@ -1326,7 +1328,8 @@ class Purchases extends MY_Controller
                         'Entryitem' => array(
                             'entry_id' => $insert_id,
                             'dc' => 'D',
-                            'ledger_id' => $product->inventory_account,
+                            //'ledger_id' => $product->inventory_account,
+                            'ledger_id' => $warehouse_ledgers->inventory_ledger,
                             'amount' => $item->main_net,
                             'narration' => 'Inventory'
                         )
@@ -2013,6 +2016,8 @@ class Purchases extends MY_Controller
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($inv->supplier_id);
         $inv_items = $this->purchases_model->getAllPurchaseItems($pid);
+        $warehouse_id = $inv->warehouse_id;
+        $warehouse_ledgers = $this->site->getWarehouseByID($warehouse_id);
         
         //$inv = $this->purchases_model->getReturnByID($rid);
 
@@ -2041,9 +2046,10 @@ class Purchases extends MY_Controller
                     'Entryitem' => array(
                         'entry_id' => $insert_id,
                         'dc' => 'C',
-                        'ledger_id' => $product->inventory_account,
+                        //'ledger_id' => $product->inventory_account,
+                        'ledger_id' => $warehouse_ledgers->inventory_ledger,
                         'amount' => -1*($item->subtotal),
-                        'narration' => ''
+                        'narration' => 'Inventory'
                     )
                 );
         }
@@ -2056,7 +2062,7 @@ class Purchases extends MY_Controller
                 'ledger_id' => $this->vat_on_purchase,
                 //'amount' => $inv->order_tax,
                 'amount' => -1*($inv->product_tax),
-                'narration' => ''
+                'narration' => 'Vat on Purchase'
             )
         );
 
@@ -2067,7 +2073,7 @@ class Purchases extends MY_Controller
                 'dc' => 'D',
                 'ledger_id' => $supplier->ledger_account,
                 'amount' => -1*($inv->grand_total),
-                'narration' => ''
+                'narration' => 'Accounts payable'
             )
         );
 
