@@ -38,7 +38,6 @@ class Transfers_model extends CI_Model
             $add  = $this->db->insert('sma_accounts_entries', $entry);
             $insert_id = $this->db->insert_id();
 
-            //$insert_id = 999;
             $entryitemdata = array();
 
             $entryitemdata[] = array(
@@ -489,6 +488,10 @@ class Transfers_model extends CI_Model
                     $this->site->syncQuantity(null, null, null, $item['product_id']);
                 }
             }
+
+            if($status == 'completed'){
+                $this->addTransferAccountEntries($id);
+            }
         }
         $this->db->trans_complete();
         if ($this->db->trans_status() === false) {
@@ -572,6 +575,11 @@ class Transfers_model extends CI_Model
                     $this->db->insert('attachments', $attachment);
                 }
             }
+
+            if($status == 'completed'){
+                $this->addTransferAccountEntries($id);
+            }
+
         }
         $this->db->trans_complete();
         if ($this->db->trans_status() === false) {
