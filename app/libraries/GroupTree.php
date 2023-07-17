@@ -166,7 +166,8 @@ class GroupTree
 			"Total Salaries & Wages" => "Total Salaries & Wages",
 			"Total Sales" => "Total Sales",
 			"Total Sales Return" => "Total Sales Return",
-			"Total Selling & Marketing Exp" => "Total Selling & Marketing Exp"
+			"Total Selling & Marketing Exp" => "Total Selling & Marketing Exp",
+			"Total of Good in Transit" => "Total of Good in Transit"
 		];
 
 		return ['accountTypeOne' => $typeOneArr, 'accountTypeTwo' => $typeTwoArr, 'accountCategories' => $categoriesArr];
