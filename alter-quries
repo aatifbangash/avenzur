@@ -12,3 +12,8 @@ ALTER TABLE `sma_companies` ADD `return_ledger` BIGINT NULL DEFAULT NULL AFTER `
 # Create New Table for Accounts 
 
 CREATE TABLE `sma_accounts_ledgers_cats` (`id` INT NOT NULL AUTO_INCREMENT , `name` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;
+
+
+ALTER TABLE `sma_warehouses` ADD `goods_in_transit` TINYINT(1) NOT NULL DEFAULT '0' AFTER `vat_on_sales_ledger`;
+
+ALTER TABLE `sma_accounts_entries` ADD `tid` INT NOT NULL AFTER `rid`;
