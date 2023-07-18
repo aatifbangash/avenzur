@@ -2072,7 +2072,7 @@ class Purchases extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => 'D',
                 'ledger_id' => $supplier->ledger_account,
-                'amount' => -1*($inv->grand_total),
+                'amount' => -1*($inv->grand_total + $inv->product_tax),
                 'narration' => 'Accounts payable'
             )
         );
