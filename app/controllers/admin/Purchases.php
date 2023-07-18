@@ -1608,6 +1608,7 @@ class Purchases extends MY_Controller
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses']   = $this->site->getAllWarehouses();
             $this->data['warehouse_id'] = $warehouse_id;
+            echo 'warehouseid: '.$warehouse_id;exit;
             $this->data['warehouse']    = $warehouse_id ? $this->site->getWarehouseByID($warehouse_id) : null;
         } else {
             $this->data['warehouses']   = null;
