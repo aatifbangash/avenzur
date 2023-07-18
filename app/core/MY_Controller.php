@@ -131,6 +131,15 @@ class MY_Controller extends CI_Controller
                 }
             }*/
 
+            foreach ($this->ledger_options as $id => $ledger)
+            {
+                $this->LO[$id] = $ledger;
+                if($id < 0 )
+                {
+                   $this->DIS[] = $id;
+                }
+            } 
+
             $this->data['LO'] = $this->LO;
             //$this->data['LO'] = $new_ledgers;
             $this->data['DIS'] = $this->DIS;
