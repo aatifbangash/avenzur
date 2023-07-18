@@ -2195,6 +2195,7 @@ class system_settings extends MY_Controller
                 'bank_fees_ledger' => $bank_fees_ledger,
                 'bank_checking_account_ledger' => $bank_checking_account_ledger,
             ];
+            print_r($data);exit;
         }
 
         if ($this->form_validation->run() == true && $this->settings_model->setLedgers($data)) {

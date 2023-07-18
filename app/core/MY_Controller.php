@@ -122,17 +122,17 @@ class MY_Controller extends CI_Controller
             $this->ledger_options = $ledgers->ledgerList; // pass ledger list to view
             $new_ledgers = array();
 
-            foreach ($this->ledger_options as $id => $ledger) {
+            /*foreach ($this->ledger_options as $id => $ledger) {
                 $this->LO[$id] = $ledger;
                 if ($id < 0) {
                     $this->DIS[] = $id;
                 } else {
                     array_push($new_ledgers, $ledger);
                 }
-            }
+            }*/
 
-            //$this->data['LO'] = $this->LO;
-            $this->data['LO'] = $new_ledgers;
+            $this->data['LO'] = $this->LO;
+            //$this->data['LO'] = $new_ledgers;
             $this->data['DIS'] = $this->DIS;
             //var_dump($dis);
 
