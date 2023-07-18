@@ -1606,8 +1606,7 @@ class Purchases extends MY_Controller
         $this->sma->checkPermissions();
         
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        echo 'Warehouse...'.$this->session->userdata('warehouse_id');exit;
-        if ((!$this->Owner && !$this->Admin) || !$this->session->userdata('warehouse_id')) {
+        if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses']   = $this->site->getAllWarehouses();
             $this->data['warehouse_id'] = $warehouse_id;
             $this->data['warehouse']    = $warehouse_id ? $this->site->getWarehouseByID($warehouse_id) : null;
