@@ -1604,9 +1604,9 @@ class Purchases extends MY_Controller
     public function index($warehouse_id = null)
     {
         $this->sma->checkPermissions();
-        echo 'here we are...';exit;
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
+            echo 'Hooo....';exit;
             $this->data['warehouses']   = $this->site->getAllWarehouses();
             $this->data['warehouse_id'] = $warehouse_id;
             $this->data['warehouse']    = $warehouse_id ? $this->site->getWarehouseByID($warehouse_id) : null;
