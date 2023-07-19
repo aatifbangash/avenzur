@@ -461,7 +461,7 @@ class Transfers extends MY_Controller
             $to_warehouse_code      = $to_warehouse_details->code;
             $to_warehouse_name      = $to_warehouse_details->name;
 
-            echo 'Towarehouse: '.$to_warehouse.'<br />';
+            echo 'Towarehouse: '.$from_warehouse.'<br />';
 
             $total       = 0;
             $product_tax = 0;
@@ -547,7 +547,7 @@ class Transfers extends MY_Controller
                 krsort($products);
             }
 
-            echo 'Later - Towarehouse: '.$to_warehouse.'<br />';
+            echo 'Later - Towarehouse: '.$from_warehouse.'<br />';
 
             $grand_total = $this->sma->formatDecimal(($total + $shipping + $product_tax), 4);
             $data        = ['transfer_no' => $transfer_no,
