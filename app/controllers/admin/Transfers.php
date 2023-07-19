@@ -80,6 +80,9 @@ class Transfers extends MY_Controller
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
+                echo $item_code.' - '.$real_unit_cost.' - '.$unit_cost.' - '.$item_quantity;
+                exit;
+
                 if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity)) {
                     $product_details = $this->transfers_model->getProductByCode($item_code);
                     // if (!$this->Settings->overselling) {
@@ -145,7 +148,6 @@ class Transfers extends MY_Controller
                     $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
                 }
             }
-            print_r($products);exit;
             if (empty($products)) {
                 $this->form_validation->set_rules('product', lang('order_items'), 'required');
             } else {
