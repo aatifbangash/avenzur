@@ -642,7 +642,7 @@ class Transfers extends MY_Controller
                     'row'        => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, ];
                 $c++;
             }
-            print_r($this->data['transfer']);exit;
+
             $this->data['transfer_items'] = json_encode($pr);
             $this->data['id']             = $id;
             $this->data['warehouses']     = $this->site->getAllWarehouses();
