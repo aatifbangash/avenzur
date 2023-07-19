@@ -844,7 +844,6 @@ class Transfers extends MY_Controller
         $bprice    = $strict ? null : $analyzed['price']    ?? null;
 
         $rows = $this->transfers_model->getProductNamesWithBatches($sr, $warehouse_id);
-        print_r($rows);exit;
         if ($rows) {
             $r = 0;
             foreach ($rows as $row) {
