@@ -18,13 +18,7 @@ class Company extends MY_Controller
 
     public function login($companyKey)
     {
-        $companyId = $companyKey / 999;
-        $company = $this->multi_company_model->getSingleCompany($companyId);
-        if(empty($company)) die("Invalid request");
-
-        $cookieValue = "$companyKey";
-        $expirationTime = time() + 3600 * 9999999;
-        setcookie($cookieName, $cookieValue, $expirationTime, '/');
+        echo 'heerrr';exit;
     }
 
     public function index()
