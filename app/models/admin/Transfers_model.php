@@ -577,7 +577,7 @@ class Transfers_model extends CI_Model
             }
 
             if($status == 'completed'){
-                $this->addTransferAccountEntries($id);
+                //$this->addTransferAccountEntries($id);
             }
 
         }
