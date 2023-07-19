@@ -7,10 +7,10 @@ class Company extends MY_Controller
     public function __construct()
     {
         parent::__construct();
-//        if (!$this->loggedIn || !$this->Owner) {
-//            $this->session->set_userdata('requested_page', $this->uri->uri_string());
-//            admin_redirect('login');
-//        }
+        if (!$this->loggedIn || !$this->Owner) {
+            $this->session->set_userdata('requested_page', $this->uri->uri_string());
+            admin_redirect('login');
+        }
 
         $this->load->admin_model('db_model');
         $this->load->admin_model('multi_company_model');
@@ -18,7 +18,7 @@ class Company extends MY_Controller
 
     public function login()
     {
-        echo 'heerrr';exit;
+//        echo 'heerrr';exit;
     }
 
     public function index()
@@ -27,7 +27,7 @@ class Company extends MY_Controller
             'error' => null,
             'company_added' => null
         ];
-        echo 'a';exit;
+
         if (!empty($_POST)) {
             if (empty($_POST['company_name'])) $this->data['payload']['error'] = true;
 
