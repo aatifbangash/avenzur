@@ -16,11 +16,6 @@ class Company extends MY_Controller
         $this->load->admin_model('multi_company_model');
     }
 
-    public function login()
-    {
-        echo 'heerrr';exit;
-    }
-
     public function index()
     {
         $this->data['payload'] = [
