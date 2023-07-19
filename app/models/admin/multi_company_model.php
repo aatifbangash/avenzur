@@ -4,7 +4,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Multi_company_model extends CI_Model
 {
-    protected string $table = 'multi_company';
+//    protected string $table = 'multi_company';
 
 
     public function __construct()
