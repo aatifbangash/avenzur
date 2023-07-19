@@ -232,6 +232,11 @@ class Main extends MY_Shop_Controller
             redirect('admin/logout');
         }
         $logout   = $this->ion_auth->logout();
+
+        if (isset($_COOKIE['companyID'])) {
+            $expirationTime = (time() + 3600 * 9999999) * -1;
+            setcookie("companyID", "", $expirationTime, '/');
+        }
         $referrer = ($_SERVER['HTTP_REFERER'] ?? '/');
         $this->session->set_flashdata('message', $this->ion_auth->messages());
         redirect($m ? 'login/m' : $referrer);

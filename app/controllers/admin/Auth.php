@@ -17,7 +17,7 @@ class Auth extends MY_Controller
     public function _get_csrf_nonce()
     {
         $this->load->helper('string');
-        $key   = random_string('alnum', 8);
+        $key = random_string('alnum', 8);
         $value = random_string('alnum', 20);
         $this->session->set_flashdata('csrfkey', $key);
         $this->session->set_flashdata('csrfvalue', $value);
@@ -28,7 +28,7 @@ class Auth extends MY_Controller
     public function _render_page($view, $data = null, $render = false)
     {
         $this->viewdata = (empty($data)) ? $this->data : $data;
-        $view_html      = $this->load->view('header', $this->viewdata, $render);
+        $view_html = $this->load->view('header', $this->viewdata, $render);
         $view_html .= $this->load->view($view, $this->viewdata, $render);
         $view_html = $this->load->view('footer', $this->viewdata, $render);
 
@@ -133,24 +133,24 @@ class Auth extends MY_Controller
 
         if ($this->form_validation->run() == true) {
             $username = strtolower($this->input->post('username'));
-            $email    = strtolower($this->input->post('email'));
+            $email = strtolower($this->input->post('email'));
             $password = $this->input->post('password');
-            $notify   = $this->input->post('notify');
+            $notify = $this->input->post('notify');
 
             $additional_data = [
-                'first_name'     => $this->input->post('first_name'),
-                'last_name'      => $this->input->post('last_name'),
-                'company'        => $this->input->post('company'),
-                'phone'          => $this->input->post('phone'),
-                'gender'         => $this->input->post('gender'),
-                'group_id'       => $this->input->post('group') ? $this->input->post('group') : '3',
-                'biller_id'      => $this->input->post('biller'),
-                'warehouse_id'   => $this->input->post('warehouse'),
-                'view_right'     => $this->input->post('view_right'),
-                'edit_right'     => $this->input->post('edit_right'),
+                'first_name' => $this->input->post('first_name'),
+                'last_name' => $this->input->post('last_name'),
+                'company' => $this->input->post('company'),
+                'phone' => $this->input->post('phone'),
+                'gender' => $this->input->post('gender'),
+                'group_id' => $this->input->post('group') ? $this->input->post('group') : '3',
+                'biller_id' => $this->input->post('biller'),
+                'warehouse_id' => $this->input->post('warehouse'),
+                'view_right' => $this->input->post('view_right'),
+                'edit_right' => $this->input->post('edit_right'),
                 'allow_discount' => $this->input->post('allow_discount'),
                 'allow_discount_value' => $this->input->post('allow_discount_value'),
-                
+
             ];
             $active = $this->input->post('status');
         }
@@ -158,12 +158,12 @@ class Auth extends MY_Controller
             $this->session->set_flashdata('message', $this->ion_auth->messages());
             admin_redirect('auth/users');
         } else {
-            $this->data['error']      = (validation_errors() ? validation_errors() : ($this->ion_auth->errors() ? $this->ion_auth->errors() : $this->session->flashdata('error')));
-            $this->data['groups']     = $this->ion_auth->groups()->result_array();
-            $this->data['billers']    = $this->site->getAllCompanies('biller');
+            $this->data['error'] = (validation_errors() ? validation_errors() : ($this->ion_auth->errors() ? $this->ion_auth->errors() : $this->session->flashdata('error')));
+            $this->data['groups'] = $this->ion_auth->groups()->result_array();
+            $this->data['billers'] = $this->site->getAllCompanies('biller');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
-            $bc                       = [['link' => admin_url('home'), 'page' => lang('home')], ['link' => admin_url('auth/users'), 'page' => lang('users')], ['link' => '#', 'page' => lang('create_user')]];
-            $meta                     = ['page_title' => lang('users'), 'bc' => $bc];
+            $bc = [['link' => admin_url('home'), 'page' => lang('home')], ['link' => admin_url('auth/users'), 'page' => lang('users')], ['link' => '#', 'page' => lang('create_user')]];
+            $meta = ['page_title' => lang('users'), 'bc' => $bc];
             $this->page_construct('auth/create_user', $meta, $this->data);
         }
     }
@@ -179,8 +179,8 @@ class Auth extends MY_Controller
                 $this->session->set_flashdata('error', validation_errors());
                 redirect($_SERVER['HTTP_REFERER']);
             } else {
-                $this->data['csrf']     = $this->_get_csrf_nonce();
-                $this->data['user']     = $this->ion_auth->user($id)->row();
+                $this->data['csrf'] = $this->_get_csrf_nonce();
+                $this->data['user'] = $this->ion_auth->user($id)->row();
                 $this->data['modal_js'] = $this->site->modal_js();
                 $this->load->view($this->theme . 'auth/deactivate_user', $this->data);
             }
@@ -270,55 +270,55 @@ class Auth extends MY_Controller
                 if ($id == $this->session->userdata('user_id')) {
                     $data = [
                         'first_name' => $this->input->post('first_name'),
-                        'last_name'  => $this->input->post('last_name'),
-                        'company'    => $this->input->post('company'),
-                        'phone'      => $this->input->post('phone'),
-                        'gender'     => $this->input->post('gender'),
+                        'last_name' => $this->input->post('last_name'),
+                        'company' => $this->input->post('company'),
+                        'phone' => $this->input->post('phone'),
+                        'gender' => $this->input->post('gender'),
                     ];
                 } elseif ($this->ion_auth->in_group('customer', $id) || $this->ion_auth->in_group('supplier', $id)) {
                     $data = [
                         'first_name' => $this->input->post('first_name'),
-                        'last_name'  => $this->input->post('last_name'),
-                        'company'    => $this->input->post('company'),
-                        'phone'      => $this->input->post('phone'),
-                        'gender'     => $this->input->post('gender'),
+                        'last_name' => $this->input->post('last_name'),
+                        'company' => $this->input->post('company'),
+                        'phone' => $this->input->post('phone'),
+                        'gender' => $this->input->post('gender'),
                     ];
                 } else {
                     $data = [
-                        'first_name'     => $this->input->post('first_name'),
-                        'last_name'      => $this->input->post('last_name'),
-                        'company'        => $this->input->post('company'),
-                        'username'       => $this->input->post('username'),
-                        'email'          => $this->input->post('email'),
-                        'phone'          => $this->input->post('phone'),
-                        'gender'         => $this->input->post('gender'),
-                        'active'         => $this->input->post('status'),
-                        'group_id'       => $this->input->post('group'),
-                        'biller_id'      => $this->input->post('biller') ? $this->input->post('biller') : null,
-                        'warehouse_id'   => $this->input->post('warehouse') ? $this->input->post('warehouse') : null,
-                        'award_points'   => $this->input->post('award_points'),
-                        'view_right'     => $this->input->post('view_right'),
-                        'edit_right'     => $this->input->post('edit_right'),
+                        'first_name' => $this->input->post('first_name'),
+                        'last_name' => $this->input->post('last_name'),
+                        'company' => $this->input->post('company'),
+                        'username' => $this->input->post('username'),
+                        'email' => $this->input->post('email'),
+                        'phone' => $this->input->post('phone'),
+                        'gender' => $this->input->post('gender'),
+                        'active' => $this->input->post('status'),
+                        'group_id' => $this->input->post('group'),
+                        'biller_id' => $this->input->post('biller') ? $this->input->post('biller') : null,
+                        'warehouse_id' => $this->input->post('warehouse') ? $this->input->post('warehouse') : null,
+                        'award_points' => $this->input->post('award_points'),
+                        'view_right' => $this->input->post('view_right'),
+                        'edit_right' => $this->input->post('edit_right'),
                         'allow_discount' => $this->input->post('allow_discount'),
                     ];
                 }
             } elseif ($this->Admin) {
                 $data = [
-                    'first_name'   => $this->input->post('first_name'),
-                    'last_name'    => $this->input->post('last_name'),
-                    'company'      => $this->input->post('company'),
-                    'phone'        => $this->input->post('phone'),
-                    'gender'       => $this->input->post('gender'),
-                    'active'       => $this->input->post('status'),
+                    'first_name' => $this->input->post('first_name'),
+                    'last_name' => $this->input->post('last_name'),
+                    'company' => $this->input->post('company'),
+                    'phone' => $this->input->post('phone'),
+                    'gender' => $this->input->post('gender'),
+                    'active' => $this->input->post('status'),
                     'award_points' => $this->input->post('award_points'),
                 ];
             } else {
                 $data = [
                     'first_name' => $this->input->post('first_name'),
-                    'last_name'  => $this->input->post('last_name'),
-                    'company'    => $this->input->post('company'),
-                    'phone'      => $this->input->post('phone'),
-                    'gender'     => $this->input->post('gender'),
+                    'last_name' => $this->input->post('last_name'),
+                    'company' => $this->input->post('company'),
+                    'phone' => $this->input->post('phone'),
+                    'gender' => $this->input->post('gender'),
                 ];
             }
 
@@ -423,6 +423,11 @@ class Auth extends MY_Controller
 
     public function login($m = null)
     {
+        if (!empty($m)) {
+            $expirationTime = (time() + 3600 * 9999999);
+            setcookie("companyID", $m, $expirationTime, '/');
+        }
+
         if ($this->loggedIn) {
             $this->session->set_flashdata('error', $this->session->flashdata('error'));
             admin_redirect('welcome');
@@ -434,7 +439,7 @@ class Auth extends MY_Controller
         }
 
         if ($this->form_validation->run() == true) {
-            
+
             $remember = (bool)$this->input->post('remember');
 
             if ($this->ion_auth->login($this->input->post('identity'), $this->input->post('password'), $remember)) {
@@ -460,57 +465,57 @@ class Auth extends MY_Controller
                 admin_redirect('login');
             }
         } else {
-            
-            $this->data['error']   = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+            $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
             $this->data['message'] = $this->session->flashdata('message');
             if ($this->Settings->captcha) {
                 $this->load->helper('captcha');
                 $vals = [
-                    'img_path'    => './assets/captcha/',
-                    'img_url'     => base_url('assets/captcha/'),
-                    'img_width'   => 150,
-                    'img_height'  => 34,
+                    'img_path' => './assets/captcha/',
+                    'img_url' => base_url('assets/captcha/'),
+                    'img_width' => 150,
+                    'img_height' => 34,
                     'word_length' => 5,
-                    'colors'      => ['background' => [255, 255, 255], 'border' => [204, 204, 204], 'text' => [102, 102, 102], 'grid' => [204, 204, 204]],
+                    'colors' => ['background' => [255, 255, 255], 'border' => [204, 204, 204], 'text' => [102, 102, 102], 'grid' => [204, 204, 204]],
                 ];
-                $cap     = create_captcha($vals);
+                $cap = create_captcha($vals);
                 $capdata = [
                     'captcha_time' => $cap['time'],
-                    'ip_address'   => $this->input->ip_address(),
-                    'word'         => $cap['word'],
+                    'ip_address' => $this->input->ip_address(),
+                    'word' => $cap['word'],
                 ];
 
                 $query = $this->db->insert_string('captcha', $capdata);
                 $this->db->query($query);
-                $this->data['image']   = $cap['image'];
+                $this->data['image'] = $cap['image'];
                 $this->data['captcha'] = ['name' => 'captcha',
-                    'id'                         => 'captcha',
-                    'type'                       => 'text',
-                    'class'                      => 'form-control',
-                    'required'                   => 'required',
-                    'placeholder'                => lang('type_captcha'),
+                    'id' => 'captcha',
+                    'type' => 'text',
+                    'class' => 'form-control',
+                    'required' => 'required',
+                    'placeholder' => lang('type_captcha'),
                 ];
             }
 
             $this->data['identity'] = ['name' => 'identity',
-                'id'                          => 'identity',
-                'type'                        => 'text',
-                'class'                       => 'form-control',
-                'placeholder'                 => lang('email'),
-                'value'                       => $this->form_validation->set_value('identity'),
+                'id' => 'identity',
+                'type' => 'text',
+                'class' => 'form-control',
+                'placeholder' => lang('email'),
+                'value' => $this->form_validation->set_value('identity'),
             ];
             $this->data['password'] = ['name' => 'password',
-                'id'                          => 'password',
-                'type'                        => 'password',
-                'class'                       => 'form-control',
-                'required'                    => 'required',
-                'placeholder'                 => lang('password'),
+                'id' => 'password',
+                'type' => 'password',
+                'class' => 'form-control',
+                'required' => 'required',
+                'placeholder' => lang('password'),
             ];
             $this->data['allow_reg'] = $this->Settings->allow_reg;
             if ($m == 'db') {
                 $this->data['message'] = lang('db_restored');
             } elseif ($m) {
-                $this->data['error'] = lang('we_are_sorry_as_this_sction_is_still_under_development.');
+//                $this->data['error'] = lang('we_are_sorry_as_this_sction_is_still_under_development.');
             }
 
             $this->load->view($this->theme . 'auth/login', $this->data);
@@ -520,6 +525,12 @@ class Auth extends MY_Controller
     public function logout($m = null)
     {
         $logout = $this->ion_auth->logout();
+
+        if (isset($_COOKIE['companyID'])) {
+            $expirationTime = (time() + 3600 * 9999999) * -1;
+            setcookie("companyID", "", $expirationTime, '/');
+        }
+
         $this->session->set_flashdata('message', $this->ion_auth->messages());
 
         admin_redirect('login/' . $m);
@@ -537,60 +548,60 @@ class Auth extends MY_Controller
 
         $this->data['title'] = lang('profile');
 
-        $user                     = $this->ion_auth->user($id)->row();
-        $groups                   = $this->ion_auth->groups()->result_array();
-        $this->data['csrf']       = $this->_get_csrf_nonce();
-        $this->data['user']       = $user;
-        $this->data['groups']     = $groups;
-        $this->data['billers']    = $this->site->getAllCompanies('biller');
+        $user = $this->ion_auth->user($id)->row();
+        $groups = $this->ion_auth->groups()->result_array();
+        $this->data['csrf'] = $this->_get_csrf_nonce();
+        $this->data['user'] = $user;
+        $this->data['groups'] = $groups;
+        $this->data['billers'] = $this->site->getAllCompanies('biller');
         $this->data['warehouses'] = $this->site->getAllWarehouses();
 
-        $this->data['error']    = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['password'] = [
-            'name'  => 'password',
-            'id'    => 'password',
+            'name' => 'password',
+            'id' => 'password',
             'class' => 'form-control',
-            'type'  => 'password',
+            'type' => 'password',
             'value' => '',
         ];
         $this->data['password_confirm'] = [
-            'name'  => 'password_confirm',
-            'id'    => 'password_confirm',
+            'name' => 'password_confirm',
+            'id' => 'password_confirm',
             'class' => 'form-control',
-            'type'  => 'password',
+            'type' => 'password',
             'value' => '',
         ];
         $this->data['min_password_length'] = $this->config->item('min_password_length', 'ion_auth');
-        $this->data['old_password']        = [
-            'name'  => 'old',
-            'id'    => 'old',
+        $this->data['old_password'] = [
+            'name' => 'old',
+            'id' => 'old',
             'class' => 'form-control',
-            'type'  => 'password',
+            'type' => 'password',
         ];
         $this->data['new_password'] = [
-            'name'    => 'new',
-            'id'      => 'new',
-            'type'    => 'password',
-            'class'   => 'form-control',
+            'name' => 'new',
+            'id' => 'new',
+            'type' => 'password',
+            'class' => 'form-control',
             'pattern' => '^.{' . $this->data['min_password_length'] . '}.*$',
         ];
         $this->data['new_password_confirm'] = [
-            'name'    => 'new_confirm',
-            'id'      => 'new_confirm',
-            'type'    => 'password',
-            'class'   => 'form-control',
+            'name' => 'new_confirm',
+            'id' => 'new_confirm',
+            'type' => 'password',
+            'class' => 'form-control',
             'pattern' => '^.{' . $this->data['min_password_length'] . '}.*$',
         ];
         $this->data['user_id'] = [
-            'name'  => 'user_id',
-            'id'    => 'user_id',
-            'type'  => 'hidden',
+            'name' => 'user_id',
+            'id' => 'user_id',
+            'type' => 'hidden',
             'value' => $user->id,
         ];
 
         $this->data['id'] = $id;
 
-        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('auth/users'), 'page' => lang('users')], ['link' => '#', 'page' => lang('profile')]];
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('auth/users'), 'page' => lang('users')], ['link' => '#', 'page' => lang('profile')]];
         $meta = ['page_title' => lang('profile'), 'bc' => $bc];
         $this->page_construct('auth/profile', $meta, $this->data);
     }
@@ -616,102 +627,102 @@ class Auth extends MY_Controller
 
         if ($this->form_validation->run() == true) {
             $username = strtolower($this->input->post('username'));
-            $email    = strtolower($this->input->post('email'));
+            $email = strtolower($this->input->post('email'));
             $password = $this->input->post('password');
 
             $additional_data = [
                 'first_name' => $this->input->post('first_name'),
-                'last_name'  => $this->input->post('last_name'),
-                'company'    => $this->input->post('company'),
-                'phone'      => $this->input->post('phone'),
+                'last_name' => $this->input->post('last_name'),
+                'company' => $this->input->post('company'),
+                'phone' => $this->input->post('phone'),
             ];
         }
         if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data)) {
             $this->session->set_flashdata('message', $this->ion_auth->messages());
             admin_redirect('login');
         } else {
-            $this->data['error']  = (validation_errors() ? validation_errors() : ($this->ion_auth->errors() ? $this->ion_auth->errors() : $this->session->flashdata('error')));
+            $this->data['error'] = (validation_errors() ? validation_errors() : ($this->ion_auth->errors() ? $this->ion_auth->errors() : $this->session->flashdata('error')));
             $this->data['groups'] = $this->ion_auth->groups()->result_array();
 
             $this->load->helper('captcha');
             $vals = [
-                'img_path'   => './assets/captcha/',
-                'img_url'    => admin_url() . 'assets/captcha/',
-                'img_width'  => 150,
+                'img_path' => './assets/captcha/',
+                'img_url' => admin_url() . 'assets/captcha/',
+                'img_width' => 150,
                 'img_height' => 34,
             ];
-            $cap     = create_captcha($vals);
+            $cap = create_captcha($vals);
             $capdata = [
                 'captcha_time' => $cap['time'],
-                'ip_address'   => $this->input->ip_address(),
-                'word'         => $cap['word'],
+                'ip_address' => $this->input->ip_address(),
+                'word' => $cap['word'],
             ];
 
             $query = $this->db->insert_string('captcha', $capdata);
             $this->db->query($query);
-            $this->data['image']   = $cap['image'];
+            $this->data['image'] = $cap['image'];
             $this->data['captcha'] = ['name' => 'captcha',
-                'id'                         => 'captcha',
-                'type'                       => 'text',
-                'class'                      => 'form-control',
-                'placeholder'                => lang('type_captcha'),
+                'id' => 'captcha',
+                'type' => 'text',
+                'class' => 'form-control',
+                'placeholder' => lang('type_captcha'),
             ];
 
             $this->data['first_name'] = [
-                'name'     => 'first_name',
-                'id'       => 'first_name',
-                'type'     => 'text',
-                'class'    => 'form-control',
+                'name' => 'first_name',
+                'id' => 'first_name',
+                'type' => 'text',
+                'class' => 'form-control',
                 'required' => 'required',
-                'value'    => $this->form_validation->set_value('first_name'),
+                'value' => $this->form_validation->set_value('first_name'),
             ];
             $this->data['last_name'] = [
-                'name'     => 'last_name',
-                'id'       => 'last_name',
-                'type'     => 'text',
+                'name' => 'last_name',
+                'id' => 'last_name',
+                'type' => 'text',
                 'required' => 'required',
-                'class'    => 'form-control',
-                'value'    => $this->form_validation->set_value('last_name'),
+                'class' => 'form-control',
+                'value' => $this->form_validation->set_value('last_name'),
             ];
             $this->data['email'] = [
-                'name'     => 'email',
-                'id'       => 'email',
-                'type'     => 'text',
+                'name' => 'email',
+                'id' => 'email',
+                'type' => 'text',
                 'required' => 'required',
-                'class'    => 'form-control',
-                'value'    => $this->form_validation->set_value('email'),
+                'class' => 'form-control',
+                'value' => $this->form_validation->set_value('email'),
             ];
             $this->data['company'] = [
-                'name'     => 'company',
-                'id'       => 'company',
-                'type'     => 'text',
+                'name' => 'company',
+                'id' => 'company',
+                'type' => 'text',
                 'required' => 'required',
-                'class'    => 'form-control',
-                'value'    => $this->form_validation->set_value('company'),
+                'class' => 'form-control',
+                'value' => $this->form_validation->set_value('company'),
             ];
             $this->data['phone'] = [
-                'name'     => 'phone',
-                'id'       => 'phone',
-                'type'     => 'text',
+                'name' => 'phone',
+                'id' => 'phone',
+                'type' => 'text',
                 'required' => 'required',
-                'class'    => 'form-control',
-                'value'    => $this->form_validation->set_value('phone'),
+                'class' => 'form-control',
+                'value' => $this->form_validation->set_value('phone'),
             ];
             $this->data['password'] = [
-                'name'     => 'password',
-                'id'       => 'password',
-                'type'     => 'password',
+                'name' => 'password',
+                'id' => 'password',
+                'type' => 'password',
                 'required' => 'required',
-                'class'    => 'form-control',
-                'value'    => $this->form_validation->set_value('password'),
+                'class' => 'form-control',
+                'value' => $this->form_validation->set_value('password'),
             ];
             $this->data['password_confirm'] = [
-                'name'     => 'password_confirm',
-                'id'       => 'password_confirm',
-                'type'     => 'password',
+                'name' => 'password_confirm',
+                'id' => 'password_confirm',
+                'type' => 'password',
                 'required' => 'required',
-                'class'    => 'form-control',
-                'value'    => $this->form_validation->set_value('password_confirm'),
+                'class' => 'form-control',
+                'value' => $this->form_validation->set_value('password_confirm'),
             ];
 
             $this->load->view('auth/register', $this->data);
@@ -722,18 +733,18 @@ class Auth extends MY_Controller
     {
         $this->load->helper('captcha');
         $vals = [
-            'img_path'    => './assets/captcha/',
-            'img_url'     => base_url('assets/captcha/'),
-            'img_width'   => $this->input->get('width') ? $this->input->get('width') : 150,
-            'img_height'  => $this->input->get('height') ? $this->input->get('height') : 34,
+            'img_path' => './assets/captcha/',
+            'img_url' => base_url('assets/captcha/'),
+            'img_width' => $this->input->get('width') ? $this->input->get('width') : 150,
+            'img_height' => $this->input->get('height') ? $this->input->get('height') : 34,
             'word_length' => 5,
-            'colors'      => ['background' => [255, 255, 255], 'border' => [204, 204, 204], 'text' => [102, 102, 102], 'grid' => [204, 204, 204]],
+            'colors' => ['background' => [255, 255, 255], 'border' => [204, 204, 204], 'text' => [102, 102, 102], 'grid' => [204, 204, 204]],
         ];
-        $cap     = create_captcha($vals);
+        $cap = create_captcha($vals);
         $capdata = [
             'captcha_time' => $cap['time'],
-            'ip_address'   => $this->input->ip_address(),
-            'word'         => $cap['word'],
+            'ip_address' => $this->input->ip_address(),
+            'word' => $cap['word'],
         ];
         $query = $this->db->insert_string('captcha', $capdata);
         $this->db->query($query);
@@ -755,37 +766,37 @@ class Auth extends MY_Controller
             $this->form_validation->set_rules('new_confirm', lang('confirm_password'), 'required');
 
             if ($this->form_validation->run() == false) {
-                $this->data['error']               = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-                $this->data['message']             = $this->session->flashdata('message');
-                $this->data['title']               = lang('reset_password');
+                $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+                $this->data['message'] = $this->session->flashdata('message');
+                $this->data['title'] = lang('reset_password');
                 $this->data['min_password_length'] = $this->config->item('min_password_length', 'ion_auth');
-                $this->data['new_password']        = [
-                    'name'                   => 'new',
-                    'id'                     => 'new',
-                    'type'                   => 'password',
-                    'class'                  => 'form-control',
-                    'pattern'                => '(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}',
+                $this->data['new_password'] = [
+                    'name' => 'new',
+                    'id' => 'new',
+                    'type' => 'password',
+                    'class' => 'form-control',
+                    'pattern' => '(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}',
                     'data-bv-regexp-message' => lang('pasword_hint'),
-                    'placeholder'            => lang('new_password'),
+                    'placeholder' => lang('new_password'),
                 ];
                 $this->data['new_password_confirm'] = [
-                    'name'                      => 'new_confirm',
-                    'id'                        => 'new_confirm',
-                    'type'                      => 'password',
-                    'class'                     => 'form-control',
-                    'data-bv-identical'         => 'true',
-                    'data-bv-identical-field'   => 'new',
+                    'name' => 'new_confirm',
+                    'id' => 'new_confirm',
+                    'type' => 'password',
+                    'class' => 'form-control',
+                    'data-bv-identical' => 'true',
+                    'data-bv-identical-field' => 'new',
                     'data-bv-identical-message' => lang('pw_not_same'),
-                    'placeholder'               => lang('confirm_password'),
+                    'placeholder' => lang('confirm_password'),
                 ];
                 $this->data['user_id'] = [
-                    'name'  => 'user_id',
-                    'id'    => 'user_id',
-                    'type'  => 'hidden',
+                    'name' => 'user_id',
+                    'id' => 'user_id',
+                    'type' => 'hidden',
                     'value' => $user->id,
                 ];
-                $this->data['csrf']           = $this->_get_csrf_nonce();
-                $this->data['code']           = $code;
+                $this->data['csrf'] = $this->_get_csrf_nonce();
+                $this->data['code'] = $code;
                 $this->data['identity_label'] = $user->email;
                 //render
                 $this->load->view($this->theme . 'auth/reset_password', $this->data);
@@ -840,12 +851,12 @@ class Auth extends MY_Controller
             if ($_FILES['avatar']['size'] > 0) {
                 $this->load->library('upload');
 
-                $config['upload_path']   = 'assets/uploads/avatars';
+                $config['upload_path'] = 'assets/uploads/avatars';
                 $config['allowed_types'] = 'gif|jpg|png';
                 //$config['max_size'] = '500';
-                $config['max_width']    = $this->Settings->iwidth;
-                $config['max_height']   = $this->Settings->iheight;
-                $config['overwrite']    = false;
+                $config['max_width'] = $this->Settings->iwidth;
+                $config['max_height'] = $this->Settings->iheight;
+                $config['overwrite'] = false;
                 $config['encrypt_name'] = true;
                 $config['max_filename'] = 25;
 
@@ -861,12 +872,12 @@ class Auth extends MY_Controller
 
                 $this->load->helper('file');
                 $this->load->library('image_lib');
-                $config['image_library']  = 'gd2';
-                $config['source_image']   = 'assets/uploads/avatars/' . $photo;
-                $config['new_image']      = 'assets/uploads/avatars/thumbs/' . $photo;
+                $config['image_library'] = 'gd2';
+                $config['source_image'] = 'assets/uploads/avatars/' . $photo;
+                $config['new_image'] = 'assets/uploads/avatars/thumbs/' . $photo;
                 $config['maintain_ratio'] = true;
-                $config['width']          = 150;
-                $config['height']         = 150;
+                $config['width'] = 150;
+                $config['height'] = 150;
 
                 $this->image_lib->clear();
                 $this->image_lib->initialize($config);
@@ -965,7 +976,7 @@ class Auth extends MY_Controller
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
-        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('users')]];
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('users')]];
         $meta = ['page_title' => lang('users'), 'bc' => $bc];
         $this->page_construct('auth/index', $meta, $this->data);
     }
