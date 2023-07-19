@@ -427,6 +427,7 @@ class Transfers extends MY_Controller
 
     public function edit($id = null)
     {
+        echo 'Kwanay ke ghen dee';exit;
         $this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
