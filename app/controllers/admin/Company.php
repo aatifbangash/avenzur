@@ -7,13 +7,13 @@ class Company extends MY_Controller
     public function __construct()
     {
         parent::__construct();
-//        if (!$this->loggedIn || !$this->Owner) {
-//            $this->session->set_userdata('requested_page', $this->uri->uri_string());
-//            admin_redirect('login');
-//        }
+        if (!$this->loggedIn || !$this->Owner) {
+            $this->session->set_userdata('requested_page', $this->uri->uri_string());
+            admin_redirect('login');
+        }
 
-//        $this->load->admin_model('db_model');
-//        $this->load->admin_model('multi_company_model');
+        $this->load->admin_model('db_model');
+        $this->load->admin_model('multi_company_model');
     }
 
     public function login($companyKey)
