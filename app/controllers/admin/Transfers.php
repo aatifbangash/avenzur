@@ -521,7 +521,7 @@ class Transfers extends MY_Controller
                         'product_unit_code' => $unit->code,
                         'unit_quantity'     => $item_unit_quantity,
                         'quantity_balance'  => $balance_qty,
-                        //'warehouse_id'      => $to_warehouse,
+                        'warehouse_id'      => $to_warehouse,
                         'item_tax'          => $pr_item_tax,
                         'tax_rate_id'       => $item_tax_rate,
                         'tax'               => $tax,
@@ -532,10 +532,6 @@ class Transfers extends MY_Controller
                         'batchno'           => $item_batchno,
                         'serial_number'     => $item_serial_no
                     ];
-
-                    if($from_warehouse != $to_warehouse){
-                        $product['warehouse_id'] = $to_warehouse;
-                    }
 
                     $products[] = ($product + $gst_data);
                     $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
@@ -550,39 +546,23 @@ class Transfers extends MY_Controller
             }
 
             $grand_total = $this->sma->formatDecimal(($total + $shipping + $product_tax), 4);
-
-            if($from_warehouse != $to_warehouse){
-                $data        = ['transfer_no' => $transfer_no,
-                    'date'                    => $date,
-                    'from_warehouse_id'       => $from_warehouse,
-                    'from_warehouse_code'     => $from_warehouse_code,
-                    'from_warehouse_name'     => $from_warehouse_name,
-                    'to_warehouse_id'         => $to_warehouse,
-                    'to_warehouse_code'       => $to_warehouse_code,
-                    'to_warehouse_name'       => $to_warehouse_name,
-                    'note'                    => $note,
-                    'total_tax'               => $product_tax,
-                    'total'                   => $total,
-                    'grand_total'             => $grand_total,
-                    'created_by'              => $this->session->userdata('user_id'),
-                    'status'                  => $status,
-                    'shipping'                => $shipping,
-                    'type'                    => 'transfer',
-                ];
-            }else if($from_warehouse == $to_warehouse){
-                $data        = ['transfer_no' => $transfer_no,
-                    'date'                    => $date,
-                    'note'                    => $note,
-                    'total_tax'               => $product_tax,
-                    'total'                   => $total,
-                    'grand_total'             => $grand_total,
-                    'created_by'              => $this->session->userdata('user_id'),
-                    'status'                  => $status,
-                    'shipping'                => $shipping,
-                    'type'                    => 'transfer',
-                ];
-            }
-
+            $data        = ['transfer_no' => $transfer_no,
+                'date'                    => $date,
+                'from_warehouse_id'       => $from_warehouse,
+                'from_warehouse_code'     => $from_warehouse_code,
+                'from_warehouse_name'     => $from_warehouse_name,
+                'to_warehouse_id'         => $to_warehouse,
+                'to_warehouse_code'       => $to_warehouse_code,
+                'to_warehouse_name'       => $to_warehouse_name,
+                'note'                    => $note,
+                'total_tax'               => $product_tax,
+                'total'                   => $total,
+                'grand_total'             => $grand_total,
+                'created_by'              => $this->session->userdata('user_id'),
+                'status'                  => $status,
+                'shipping'                => $shipping,
+                'type'                    => 'transfer',
+            ];
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;
                 $data['sgst'] = $total_sgst;
@@ -662,7 +642,7 @@ class Transfers extends MY_Controller
                     'row'        => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, ];
                 $c++;
             }
-
+            print_r($this->data['transfer']);exit;
             $this->data['transfer_items'] = json_encode($pr);
             $this->data['id']             = $id;
             $this->data['warehouses']     = $this->site->getAllWarehouses();
