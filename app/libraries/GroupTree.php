@@ -135,39 +135,13 @@ class GroupTree
 			"Revenue" => "Revenue"
 		];
 
-		$categoriesArr = [
-			"" => " - ",
-			"Total Accrued Expenses" => "Total Accrued Expenses",
-			"Total Amportization Expenses" => "Total Amportization Expenses",
-			"Total Assets" => "Total Assets",
-			"Total Bank Accounts" => "Total Bank Accounts",
-			"Total Cash and Cash Equivalents" => "Total Cash and Cash Equivalents",
-			"Total Cost Of Goods Sales" => "Total Cost Of Goods Sales",
-			"Total Current Assets" => "Total Current Assets",
-			"Total Current Liabilities" => "Total Current Liabilities",
-			"Total Dep and Amor Expenses" => "Total Dep and Amor Expenses",
-			"Total Equity" => "Total Equity",
-			"Total Fixed Assets" => "Total Fixed Assets",
-			"Total General & Admin. Expenses" => "Total General & Admin. Expenses",
-			"Total Goodwill" => "Total Goodwill",
-			"Total Gross Profit" => "Total Gross Profit",
-			"Total Interest and Taxes" => "Total Interest and Taxes",
-			"Total Inventory" => "Total Inventory",
-			"Total Letter of Credit" => "Total Letter of Credit",
-			"Total Liabilities" => "Total Liabilities",
-			"Total Net Sales" => "Total Net Sales",
-			"Total Non-Current Assets" => "Total Non-Current Assets",
-			"Total Non-Current Liabilities" => "Total Non-Current Liabilities",
-			"Total Operating Expenses" => "Total Operating Expenses",
-			"Total Other Current asset" => "Total Other Current asset",
-			"Total Other Expenses" => "Total Other Expenses",
-			"Total Other Income & Expenses" => "Total Other Income & Expenses",
-			"Total Prepaid Expenses" => "Total Prepaid Expenses",
-			"Total Salaries & Wages" => "Total Salaries & Wages",
-			"Total Sales" => "Total Sales",
-			"Total Sales Return" => "Total Sales Return",
-			"Total Selling & Marketing Exp" => "Total Selling & Marketing Exp"
-		];
+
+		$this->_ci->db->order_by('sma_accounts_ledgers_cats.name', 'asc');
+		$groupCategories = $this->_ci->db->get('sma_accounts_ledgers_cats')->result_array();
+		$categoriesArr[] = " - ";
+		foreach ($groupCategories as $cats) {
+			$categoriesArr[$cats['name']] = $cats['name'];
+		}
 
 		return ['accountTypeOne' => $typeOneArr, 'accountTypeTwo' => $typeTwoArr, 'accountCategories' => $categoriesArr];
 	}

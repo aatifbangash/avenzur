@@ -1235,6 +1235,7 @@ class Products extends MY_Controller
             $meta                              = ['page_title' => lang('edit_product'), 'bc' => $bc];
             $this->page_construct('products/edit', $meta, $this->data);
         }
+        
     }
 
     public function edit_adjustment($id)

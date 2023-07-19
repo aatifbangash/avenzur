@@ -985,12 +985,16 @@ function loadItems() {
 
                
                var total_purchases = (parseFloat(item_cost)) * parseFloat(item_qty);
-               var total_sales = (parseFloat(item_sale_price)) * parseFloat(item_qty + item_bonus);
+               //var total_sales = (parseFloat(item_sale_price)) * parseFloat(item_qty + item_bonus);
+               var total_sales = (parseFloat(item_sale_price)) * parseFloat(item_qty);
                total_after_dis1 = total_purchases * parseFloat((item_dis1 / 100));
                total_after_dis2 = (total_purchases - total_after_dis1) * parseFloat((item_dis2 / 100));
                //main_net = net_price_a;// + net_price_b;
                main_net = total_purchases - (total_after_dis1 + total_after_dis2);
-               var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus);
+               //var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus);
+               var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty);
+
+               var item_qty = item_qty + item_bonus;
 
             var row_no = item.id;
 

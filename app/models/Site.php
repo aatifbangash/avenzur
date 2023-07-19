@@ -927,6 +927,15 @@ class Site extends CI_Model
         return false;
     }
 
+    public function getGoodsTrasitWareHouse()
+    {
+        $q = $this->db->get_where('warehouses', ['goods_in_transit' => 1], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getWarehouseProduct($warehouse_id, $product_id)
     {
         $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse_id], 1);

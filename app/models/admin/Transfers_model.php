@@ -9,6 +9,85 @@ class Transfers_model extends CI_Model
         parent::__construct();
     }
 
+    public function addTransferAccountEntries($transferId){
+
+        $transfer = $this->getTransferByID($transferId);
+
+        $toWareHouseId = $transfer->to_warehouse_id;
+        $fromWareHouseId = $transfer->from_warehouse_id;
+
+       $toWareHouse =  $this->site->getWarehouseByID($toWareHouseId);
+       $fromWareHouse =  $this->site->getWarehouseByID($fromWareHouseId);
+       $goodsTrasitWareHouse = $this->site->getGoodsTrasitWareHouse();
+
+        // Credit & Debit to one same Account (Goods in Transit)
+        $accountsTotal = $transfer->grand_total + $transfer->grand_total;
+
+         /*Accounts Entries*/
+         $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => 'transferorder',
+            'number'       => 'TR-'.$transfer->transfer_no,
+            'date'         => date('Y-m-d'), 
+            'dr_total'     => $accountsTotal,
+            'cr_total'     => $accountsTotal,
+            'notes'        => 'Transfer Reference: '.$transfer->transfer_no.' Date: '.date('Y-m-d H:i:s'),
+            'tid'          =>  $transfer->id
+            );
+    
+            $add  = $this->db->insert('sma_accounts_entries', $entry);
+            $insert_id = $this->db->insert_id();
+
+            $entryitemdata = array();
+
+            $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $goodsTrasitWareHouse->inventory_ledger,
+                
+                'amount' => $transfer->grand_total,
+                'narration' => 'goods in transit'
+            )
+            );
+
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $fromWareHouse->inventory_ledger,
+                    'amount' => $transfer->grand_total,
+                    'narration' => 'inventry'
+                )
+            );  
+
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $goodsTrasitWareHouse->inventory_ledger,
+                    'amount' => $transfer->grand_total,
+                    'narration' => 'goods in transit'
+                )
+            );  
+
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $toWareHouse->inventory_ledger,
+                    'amount' => $transfer->grand_total,
+                    'narration' => 'inventry'
+                )
+            );  
+
+            foreach ($entryitemdata as $row => $itemdata)
+            {
+                
+                  $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
+            }
+    }
+
     public function addTransfer($data = [], $items = [], $attachments = [])
     {
         $this->db->trans_start();
@@ -42,6 +121,11 @@ class Transfers_model extends CI_Model
                     $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['quantity'], $item['option_id']);
                 }
             }
+
+            if($status == 'completed'){
+                $this->addTransferAccountEntries($transfer_id);
+            }
+
         }
         $this->db->trans_complete();
         if ($this->db->trans_status() === false) {
@@ -404,6 +488,10 @@ class Transfers_model extends CI_Model
                     $this->site->syncQuantity(null, null, null, $item['product_id']);
                 }
             }
+
+            if($status == 'completed'){
+                $this->addTransferAccountEntries($id);
+            }
         }
         $this->db->trans_complete();
         if ($this->db->trans_status() === false) {
@@ -487,6 +575,11 @@ class Transfers_model extends CI_Model
                     $this->db->insert('attachments', $attachment);
                 }
             }
+
+            if($status == 'completed'){
+                $this->addTransferAccountEntries($id);
+            }
+
         }
         $this->db->trans_complete();
         if ($this->db->trans_status() === false) {

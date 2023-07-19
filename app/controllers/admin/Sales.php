@@ -1612,6 +1612,8 @@ class Sales extends MY_Controller
             $this->load->admin_model('companies_model');
             $customer = $this->companies_model->getCompanyByID($inv->customer_id);
             $inv_items = $this->sales_model->getAllSaleItems($sid);
+            $warehouse_id = $inv->warehouse_id;
+            $warehouse_ledgers = $this->site->getWarehouseByID($warehouse_id);
 
             /*Accounts Entries*/
             $entry = array(
@@ -1636,37 +1638,37 @@ class Sales extends MY_Controller
                  //products
                  
 
-                //  $entryitemdata[] = array(
-                //          'Entryitem' => array(
-                //              'entry_id' => $insert_id,
-                //              'dc' => 'D',
-                //              'ledger_id' => $product->purchase_account,
-                //              //'amount' => $item->main_net,
-                //              'amount' => ($item->net_cost * $item->quantity),
-                //              'narration' => 'cost of good sold'
-                //          )
-                //      );
+                $entryitemdata[] = array(
+                    'Entryitem' => array(
+                        'entry_id' => $insert_id,
+                        'dc' => 'D',
+                        'ledger_id' => $customer->cogs_ledger,
+                        //'amount' => $item->main_net,
+                        'amount' => ($item->net_cost * $item->quantity),
+                        'narration' => 'cost of goods sold'
+                    )
+                );
  
-                //      $entryitemdata[] = array(
-                //          'Entryitem' => array(
-                //              'entry_id' => $insert_id,
-                //              'dc' => 'C',
-                //              'ledger_id' => $product->sale_account,
-                //              'amount' => $item->main_net,
-                //              'narration' => 'sale account'
-                //          )
-                //      );
+                $entryitemdata[] = array(
+                    'Entryitem' => array(
+                        'entry_id' => $insert_id,
+                        'dc' => 'C',
+                        'ledger_id' => $customer->sales_ledger,
+                        'amount' => $item->main_net,
+                        'narration' => 'sale account'
+                    )
+                );
  
-                //      $entryitemdata[] = array(
-                //          'Entryitem' => array(
-                //              'entry_id' => $insert_id,
-                //              'dc' => 'C',
-                //              'ledger_id' => $product->inventory_account,
-                //              //'amount' => $item->main_net,
-                //              'amount' => ($item->net_cost * $item->quantity),
-                //              'narration' => 'inventory account'
-                //          )
-                //      );
+                $entryitemdata[] = array(
+                    'Entryitem' => array(
+                        'entry_id' => $insert_id,
+                        'dc' => 'C',
+                        'ledger_id' => $warehouse_ledgers->inventory_ledger,
+                        //'amount' => $item->main_net,
+                        'amount' => ($item->net_cost * $item->quantity),
+                        'narration' => 'inventory account'
+                    )
+                );
  
              }
           
@@ -1688,7 +1690,7 @@ class Sales extends MY_Controller
                              'entry_id' => $insert_id,
                              'dc' => 'D',
                              'ledger_id' => $customer->ledger_account,
-                             'amount' => ($inv->grand_total + $inv->product_tax),
+                             'amount' => ($inv->grand_total),
                              'narration' => 'customer'
                            )
                      );

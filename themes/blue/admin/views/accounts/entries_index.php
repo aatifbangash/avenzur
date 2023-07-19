@@ -33,6 +33,7 @@
               <table class="table table-bordered table-condensed table-striped">
                 <thead>
                     <tr>
+                        <th><?= lang('Id'); ?></th>
                         <th><?= lang('entries_views_index_th_date'); ?></th>
                         <th><?= lang('entries_views_index_th_number'); ?></th>
                         <th><?= lang('entries_views_index_th_ledger'); ?></th>
@@ -53,6 +54,7 @@
                     $entryTypeLabel = $q->label;
                     ?>
                         <tr>
+                            <td><?= $entry['id'] ?></td>
                             <td><?=  $this->functionscore->dateFromSql($entry['date']) ?></td>
                             <td><?= $entry['number'] ?></td>
                             <td><?= ($this->functionscore->entryLedgers($entry['id'])) ?></td>

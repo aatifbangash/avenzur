@@ -272,7 +272,8 @@
                                         'type'  => 'hidden',
                                         'name'  => 'from_warehouse',
                                         'id'    => 'from_warehouse',
-                                        'value' => $this->session->userdata('warehouse_id'),
+                                        //'value' => $this->session->userdata('warehouse_id'),
+                                        'value' => $transfer->from_warehouse_id,
                                     ];
                                     echo form_input($warehouse_input);
                                 } ?>

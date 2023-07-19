@@ -9,7 +9,6 @@ UPDATE sma_products SET purchase_account = 0, sale_account = 0, inventory_accoun
 ALTER TABLE `sma_companies` ADD `return_ledger` BIGINT NULL DEFAULT NULL AFTER `vat_on_sales_ledger`;
 
 
-#################
 CREATE TABLE `sma_dbs` (
   `id` int(11) NOT NULL,
   `db_name` varchar(255) NOT NULL,
@@ -25,8 +24,6 @@ ALTER TABLE `sma_dbs`
 ALTER TABLE `sma_dbs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
-#################
-#################
 CREATE TABLE `sma_multi_company` (
   `id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -40,4 +37,13 @@ ALTER TABLE `sma_multi_company`
 
 ALTER TABLE `sma_multi_company`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-#################
+
+# Create New Table for Accounts 
+
+CREATE TABLE `sma_accounts_ledgers_cats` (`id` INT NOT NULL AUTO_INCREMENT , `name` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;
+
+
+ALTER TABLE `sma_warehouses` ADD `goods_in_transit` TINYINT(1) NOT NULL DEFAULT '0' AFTER `vat_on_sales_ledger`;
+
+ALTER TABLE `sma_accounts_entries` ADD `tid` INT NOT NULL AFTER `rid`;
+
