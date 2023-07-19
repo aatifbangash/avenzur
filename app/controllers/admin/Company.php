@@ -12,8 +12,8 @@ class Company extends MY_Controller
 //            admin_redirect('login');
 //        }
 
-        $this->load->admin_model('db_model');
-        $this->load->admin_model('multi_company_model');
+//        $this->load->admin_model('db_model');
+//        $this->load->admin_model('multi_company_model');
     }
 
     public function login($companyKey)
