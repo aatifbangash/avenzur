@@ -18,7 +18,7 @@ class Company extends MY_Controller
 
     public function login()
     {
-//        echo 'heerrr';exit;
+        echo 'heerrr';exit;
     }
 
     public function index()
