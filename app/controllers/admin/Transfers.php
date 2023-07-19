@@ -80,8 +80,8 @@ class Transfers extends MY_Controller
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
-                echo $item_code.' - '.$real_unit_cost.' - '.$unit_cost.' - '.$item_quantity;
-                exit;
+                // This is added because transfer was breaking
+                $real_unit_cost = isset($real_unit_cost) ? $real_unit_cost : '0.00';
 
                 if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity)) {
                     $product_details = $this->transfers_model->getProductByCode($item_code);
