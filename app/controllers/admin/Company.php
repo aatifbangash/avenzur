@@ -57,22 +57,4 @@ class Company extends MY_Controller
 
     }
 
-    public function writeTenantFile()
-    {
-        $uploadPath = FCPATH . 'tenant' . DIRECTORY_SEPARATOR;
-        $this->load->helper('file');
-
-        $allDatabases = $this->multi_company_model->getAllDatabase();
-        if (!empty($allDatabases)) {
-            $dbs = [];
-            foreach ($allDatabases as $k => $db) {
-                $dbs[$db->companyId] = $db;
-            }
-
-            write_file($uploadPath . "dd.json", json_encode($allDatabases));
-            return true;
-        }
-        return false;
-    }
-
 }
