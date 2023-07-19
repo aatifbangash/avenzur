@@ -449,7 +449,6 @@ class Transfers extends MY_Controller
             } else {
                 $date = date('Y-m-d H:i:s');
             }
-            echo 'To: '.$to_warehouse.' - From: '.$from_warehouse;exit;
             $to_warehouse           = $this->input->post('to_warehouse');
             $from_warehouse         = $this->input->post('from_warehouse');
             $note                   = $this->sma->clear_tags($this->input->post('note'));
@@ -545,6 +544,8 @@ class Transfers extends MY_Controller
             } else {
                 krsort($products);
             }
+
+            print_r($products);exit;
 
             $grand_total = $this->sma->formatDecimal(($total + $shipping + $product_tax), 4);
             $data        = ['transfer_no' => $transfer_no,
