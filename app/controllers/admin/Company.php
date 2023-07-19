@@ -27,6 +27,7 @@ class Company extends MY_Controller
             'error' => null,
             'company_added' => null
         ];
+        echo 'a';exit;
         if (!empty($_POST)) {
             if (empty($_POST['company_name'])) $this->data['payload']['error'] = true;
 
