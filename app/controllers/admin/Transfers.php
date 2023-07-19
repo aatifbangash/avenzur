@@ -145,6 +145,7 @@ class Transfers extends MY_Controller
                     $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
                 }
             }
+            print_r($products);exit;
             if (empty($products)) {
                 $this->form_validation->set_rules('product', lang('order_items'), 'required');
             } else {
