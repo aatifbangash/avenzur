@@ -545,8 +545,6 @@ class Transfers extends MY_Controller
                 krsort($products);
             }
 
-            print_r($products);exit;
-
             $grand_total = $this->sma->formatDecimal(($total + $shipping + $product_tax), 4);
             $data        = ['transfer_no' => $transfer_no,
                 'date'                    => $date,
@@ -574,6 +572,7 @@ class Transfers extends MY_Controller
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
             // $this->sma->print_arrays($data, $products);
+            print_r($data);exit;
         }
 
         if ($this->form_validation->run() == true && $this->transfers_model->updateTransfer($id, $data, $products, $attachments)) {
