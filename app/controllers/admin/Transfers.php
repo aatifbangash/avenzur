@@ -427,7 +427,6 @@ class Transfers extends MY_Controller
 
     public function edit($id = null)
     {
-        echo 'Kwanay ke ghen dee';exit;
         $this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
@@ -450,6 +449,7 @@ class Transfers extends MY_Controller
             } else {
                 $date = date('Y-m-d H:i:s');
             }
+            echo 'To: '.$to_warehouse.' - From: '.$from_warehouse;exit;
             $to_warehouse           = $this->input->post('to_warehouse');
             $from_warehouse         = $this->input->post('from_warehouse');
             $note                   = $this->sma->clear_tags($this->input->post('note'));
