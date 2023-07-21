@@ -30,8 +30,8 @@
                 <div class="box-content">
                     <div class="row">
                         <div class="col-lg-12">
-                            <p class="introtext">Below is your company name and login admin panel. You can
-                                copy the details.</p>
+                            <p class="introtext">Below is your company name and admin panel details. You can
+                                copy the details and store it with you for later use.</p>
                             <?php $attrib = ['class' => 'form-horizontal', 'data-toggle' => 'validator', 'role' => 'form'];
                             echo admin_form_open('company/index', $attrib);
                             ?>
@@ -40,10 +40,26 @@
                                     Name:- <?php echo $payload['row']['company_name'] ?></label>
                             </div>
                             <div class="mb-3">
-                                <label for="owner_password" class="form-label">Admin URL:-</label>
+                                <label for="owner_password" class="form-label">Company ID:-</label>
+                                <?php echo ($payload['row']['company_id'] * 999); ?>
+                            </div>
+                            <div class="mb-3">
+                                <label for="owner_password" class="form-label">Admin Login URL:-</label>
                                 <a href="<?php echo admin_url("login/" . ($payload['row']['company_id'] * 999)); ?>"><?php echo admin_url("login/" . ($payload['row']['company_id'] * 999)); ?></a>
                             </div>
+                            <div class="mb-3">
+                                <label for="owner_password" class="form-label">Default Username:-</label>
+                                owner
+                            </div>
+                            <div class="mb-3">
+                                <label for="owner_password" class="form-label">Default Password:-</label>
+                                12345678
+                            </div>
+
                             <?php echo form_close(); ?>
+                            <div class="mb-3">
+                                <button id="downloadButton">Download Content</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -83,5 +99,29 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('downloadButton').addEventListener('click', function() {
+        event.preventDefault();
+        // Get the content of the <div>
+        var divContent = document.querySelector('.form-horizontal').innerText;
+
+        // Create a Blob (binary large object) from the div content
+        var blob = new Blob([divContent], { type: 'text/plain' });
+
+        // Create a temporary URL for the Blob
+        var url = URL.createObjectURL(blob);
+
+        // Create a download link and click it programmatically
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'details.txt';
+        a.click();
+
+        // Release the temporary URL
+        URL.revokeObjectURL(url);
+    });
+</script>
+
 </body>
 </html>
