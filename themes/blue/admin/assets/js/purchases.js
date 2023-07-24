@@ -591,7 +591,7 @@ $(document).ready(function () {
             old_row_batchno = $(this).val();
             currTabIndex = $(this).prop('tabindex');
         })
-        .on('blur', '.rbatchno', function () {
+        /*.on('blur', '.rbatchno', function () {
             var row = $(this).closest('tr');
             var new_batchno = $(this).val(),
             item_id = row.attr('data-item-id');
@@ -607,7 +607,7 @@ $(document).ready(function () {
             }
             //$('[tabindex=' + (currTabIndex + 1) + ']').focus();
             
-        })
+        })*/
         .on('change', '.rbatchno', function () {
             var row = $(this).closest('tr');
             /*if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
@@ -618,9 +618,9 @@ $(document).ready(function () {
             //var new_batchno = parseFloat($(this).val()),
             var new_batchno = $(this).val(),
                 item_id = row.attr('data-item-id');
-            /*poitems[item_id].row.batchno = new_batchno;
+            poitems[item_id].row.batchno = new_batchno;
             localStorage.setItem('poitems', JSON.stringify(poitems));
-            loadItems();*/
+            loadItems();
         });
            /* --------------------------
      * Edit Row Discount2 Method rdis2 rbatchno
@@ -994,7 +994,7 @@ function loadItems() {
                //var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus);
                var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty);
 
-               var item_qty = item_qty + item_bonus;
+               //var item_qty = item_qty + item_bonus;
 
             var row_no = item.id;
 
@@ -1120,7 +1120,7 @@ function loadItems() {
                 base_quantity +
                 '"></td>';
 
-            tr_html +=
+            /*tr_html +=
                 '<td><input class="form-control text-center rbonus" name="bonus[]" type="text" data-id="' +
                 row_no +
                 '" data-item="' +
@@ -1128,7 +1128,7 @@ function loadItems() {
                 '" id="bonus_' +
                 row_no +
                 '" value="'+ formatDecimal(item_bonus)
-                +'"onClick="this.select();"></td>';
+                +'"onClick="this.select();"></td>';*/
 
             tr_html +=
                 '<td><input class="form-control text-center rdis1" name="dis1[]" type="text" data-id="' +

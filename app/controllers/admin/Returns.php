@@ -263,7 +263,7 @@ class Returns extends MY_Controller
                 $item_serial_no     = $_POST['serial_no'][$r];
                 //$item_expiry        = $_POST['expiry'][$r];
                 $item_expiry        = (isset($_POST['expiry'][$r]) && !empty($_POST['expiry'][$r])) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
-                $item_bonus         = $_POST['bonus'][$r];
+                //$item_bonus         = $_POST['bonus'][$r];
                 $item_dis1          = $_POST['dis1'][$r];
                 $item_dis2          = $_POST['dis2'][$r];
                 $item_serial        = $_POST['serial'][$r]           ?? '';
@@ -328,7 +328,8 @@ class Returns extends MY_Controller
                         'batch_no'          => $item_batchno,
                         'serial_number'     => $item_serial_no,
                         'real_unit_price'   => $real_unit_price,
-                        'bonus'             => $item_bonus,
+                        //'bonus'             => $item_bonus,
+                        'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2
                     ];
@@ -622,7 +623,7 @@ class Returns extends MY_Controller
                 $item_batchno       = $_POST['batch_no'][$r];
                 $item_serial_no     = $_POST['serial_no'][$r];
                 $item_expiry        = $_POST['expiry'][$r];
-                $item_bonus         = $_POST['bonus'][$r];
+                //$item_bonus         = $_POST['bonus'][$r];
                 $item_dis1          = $_POST['dis1'][$r];
                 $item_dis2          = $_POST['dis2'][$r];
 
@@ -682,7 +683,8 @@ class Returns extends MY_Controller
                         'serial_number'     => $item_serial_no,
                         'expiry'            => $item_expiry,
                         'real_unit_price'   => $real_unit_price,
-                        'bonus'             => $item_bonus,
+                        //'bonus'             => $item_bonus,
+                        'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2
                     ];

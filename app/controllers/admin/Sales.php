@@ -97,7 +97,7 @@ class Sales extends MY_Controller
                 $item_discount      = $_POST['product_discount'][$r] ?? null;
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
-                $item_bonus = $_POST['bonus'][$r];
+                //$item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
@@ -169,7 +169,8 @@ class Sales extends MY_Controller
 
                         'real_unit_price'   => $real_unit_price,
                         'subtotal2'         => $this->sma->formatDecimal($subtotal2),
-                        'bonus'             => $item_bonus,
+                        //'bonus'           => $item_bonus,
+                        'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
                         'totalbeforevat'    => $totalbeforevat,
@@ -944,7 +945,7 @@ class Sales extends MY_Controller
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
 
-                $item_bonus = $_POST['bonus'][$r];
+                //$item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
@@ -1029,7 +1030,8 @@ class Sales extends MY_Controller
                         'lot_no'            => $item_lotno,
                         'real_unit_price'   => $real_unit_price,
                         'subtotal2'         => $this->sma->formatDecimal($subtotal2),
-                        'bonus'             => $item_bonus,
+                        //'bonus'           => $item_bonus,
+                        'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
                         'totalbeforevat'    => $totalbeforevat,
@@ -2804,7 +2806,7 @@ class Sales extends MY_Controller
                 $units    = $this->site->getUnitsByBUID($row->base_unit);
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
                 $row->batch_no = $row->batchno;
-                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ') - '.$row->batch_no.' - '.$row->sequence_code, 'category' => $row->category_id,
+                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ') - '.$row->batch_no, 'category' => $row->category_id,
                     'row'     => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, ];
                 $r++;
             }

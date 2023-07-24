@@ -1671,7 +1671,7 @@ function loadItems() {
                 '">' +
                 formatMoney((parseFloat(item_price)) * parseFloat(item_qty)) +
                 '</span></td>';*/
-            tr_html +=
+            /*tr_html +=
                 '<td><input class="form-control text-center rbonus" name="bonus[]" type="text" tabindex="' +
                 (site.settings.set_focus == 1 ? an : an + 1) +
                 '" data-id="' +
@@ -1681,7 +1681,7 @@ function loadItems() {
                 '" id="bonus_' +
                 row_no +
                 '" value="'+ formatDecimal(item_bonus)
-                +'"onClick="this.select();"></td>';    
+                +'"onClick="this.select();"></td>';    */
 
             /*tr_html +=
                 '<td><input class="form-control text-center rdis1" name="dis1[]" type="text" tabindex="' +

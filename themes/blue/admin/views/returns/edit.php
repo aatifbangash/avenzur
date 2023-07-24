@@ -247,7 +247,7 @@
                                             <th class="col-md-1"><?= lang('batch'); ?></th>
                                             <th class="col-md-1"><?= lang('expiry_date'); ?></th>
                                             <th class="col-md-1"><?= lang('qty'); ?></th>
-                                            <th class="col-md-1"><?= lang('Bonus'); ?></th>
+                                            <!--<th class="col-md-1"><?php //echo lang('Bonus'); ?></th>-->
                                             <?php
                                             if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
                                                 echo '<th class="col-md-1">' . lang('dis 1') . '</th>';

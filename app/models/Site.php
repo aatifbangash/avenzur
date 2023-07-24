@@ -1122,7 +1122,13 @@ class Site extends CI_Model
     public function syncProductQty($product_id, $warehouse_id)
     {
         $balance_qty    = $this->getBalanceQuantity($product_id);
-        $wh_balance_qty = $this->getBalanceQuantity($product_id, $warehouse_id);
+        $wh_old_balance_qty = $this->getBalanceQuantity($product_id, $warehouse_id);
+        //$wh_sale_qty = $this->getSaleQuantity($product_id, $warehouse_id);
+        //$wh_return_qty = $this->getCustomerReturnsQuantity($product_id, $warehouse_id);
+        
+        //$wh_balance_qty = $wh_old_balance_qty - $wh_sale_qty + $wh_return_qty;
+        $wh_balance_qty = $wh_old_balance_qty;
+
         if ($this->db->update('products', ['quantity' => $balance_qty], ['id' => $product_id])) {
             if ($this->getWarehouseProducts($product_id, $warehouse_id)) {
                 $this->db->update('warehouses_products', ['quantity' => $wh_balance_qty], ['product_id' => $product_id, 'warehouse_id' => $warehouse_id]);
@@ -1351,6 +1357,52 @@ class Site extends CI_Model
             return true;
         }
         return false;
+    }
+
+    private function getCustomerReturnsQuantity($product_id, $warehouse_id = null)
+    {
+        $this->db->select('SUM(COALESCE(sma_return_items.quantity, 0)) as stock', false)
+                 ->from('sma_returns')
+                 ->join('sma_return_items', 'sma_returns.id = sma_return_items.return_id')
+                 ->where('sma_return_items.product_id', $product_id);
+
+        if ($warehouse_id) {
+            $this->db->where('sma_returns.warehouse_id', $warehouse_id);
+        }
+        $q =  $this->db->get();
+        if($q !== false)
+        {
+            if ($q->num_rows() > 0) {
+                $data = $q->row();
+                return $data->stock;
+            } 
+        }
+        
+        return 0;
+    }
+
+    private function getSaleQuantity($product_id, $warehouse_id = null)
+    {
+        $this->db->select('SUM(COALESCE(sma_sale_items.quantity, 0)) as stock', false)
+                 ->from('sma_sales')
+                 ->join('sma_sale_items', 'sma_sales.id = sma_sale_items.sale_id')
+                 //->where('sale_status', 'completed')
+                 ->where('sma_sale_items.product_id', $product_id);
+
+        if ($warehouse_id) {
+            $this->db->where('sma_sales.warehouse_id', $warehouse_id);
+        }
+        $this->db->group_start()->where('sale_status', 'completed')->group_end();
+        $q =  $this->db->get();
+        if($q !== false)
+        {
+            if ($q->num_rows() > 0) {
+                $data = $q->row();
+                return $data->stock;
+            } 
+        }
+        
+        return 0;
     }
 
     private function getBalanceQuantity($product_id, $warehouse_id = null)

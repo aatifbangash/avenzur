@@ -1203,12 +1203,12 @@ function loadItems() {
                 base_quantity +
                 '"></td>';
 
-                tr_html +=
+                /*tr_html +=
                 '<td class="text-right"><input class="form-control input-sm text-right rbonus" name="bonus[]" type="text" id="bonus_' +
                 row_no +
                 '" value="' +
                 bonus +
-                '"></td>';
+                '"></td>';*/
 
                
                 /*tr_html +=

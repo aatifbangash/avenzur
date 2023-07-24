@@ -243,7 +243,7 @@
                 
                 tr_html += '<td><input class="form-control text-center rquantity" name="quantity[]" type="text" value="' + formatDecimal(item_qty) + '" data-id="' + row_no + '" data-item="' + item_id + '" id="quantity_' + row_no + '" onClick="this.select();"><input name="product_unit[]" type="hidden" class="runit" value="' + product_unit + '"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' + base_quantity + '"></td>';
 
-                tr_html += '<td><input class="form-control bonus" name="bonus[]" type="text" value="' + bonus + '" data-id="' + row_no + '" data-item="' + item_id + '" id="bonus' + row_no + '"></td>';
+                //tr_html += '<td><input class="form-control bonus" name="bonus[]" type="text" value="' + bonus + '" data-id="' + row_no + '" data-item="' + item_id + '" id="bonus' + row_no + '"></td>';
 
                 tr_html += '<td><input class="form-control discount1" name="discount1[]" type="text" value="' + discount1 + '" data-id="' + row_no + '" data-item="' + item_id + '" id="discount1' + row_no + '"></td>';
 
@@ -435,7 +435,7 @@
                                             <th class="col-md-1"><?= lang('received'); ?></th>
                                             <th class="col-md-1"><?= lang('return_quantity'); ?></th>
 
-                                            <th class="col-md-1"><?= lang('bonus'); ?></th>
+                                            <!--<th class="col-md-1"><?php //echo lang('bonus'); ?></th>-->
                                             <th class="col-md-1"><?= lang('dis 1'); ?></th>
                                             <th class="col-md-1"><?= lang('dis 2'); ?></th>
                                             <!-- <?php

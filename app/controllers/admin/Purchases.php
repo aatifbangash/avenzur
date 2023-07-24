@@ -89,7 +89,7 @@ class Purchases extends MY_Controller
 
                 $item_batchno = $_POST['batchno'][$r];
                 $item_serial_no = $_POST['serial_no'][$r];
-                $item_bonus = $_POST['bonus'][$r];
+                //$item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
@@ -163,7 +163,8 @@ class Purchases extends MY_Controller
                         'subtotal2'         => $this->sma->formatDecimal($subtotal2),
                         'batchno'           => $item_batchno,
                         'serial_number'     => $item_serial_no,
-                        'bonus'             => $item_bonus,
+                        //'bonus'             => $item_bonus,
+                        'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
                         'totalbeforevat'    => $totalbeforevat,
@@ -682,7 +683,7 @@ class Purchases extends MY_Controller
 
                 $item_batchno = $_POST['batchno'][$r];
                 $item_serial_no = $_POST['serial_no'][$r];
-                $item_bonus = $_POST['bonus'][$r];
+                //$item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
@@ -762,7 +763,8 @@ class Purchases extends MY_Controller
                         'subtotal2'         => $this->sma->formatDecimal($subtotal2),
                         'batchno'           => $item_batchno,
                         'serial_number'     => $item_serial_no,
-                        'bonus'             => $item_bonus,
+                        //'bonus'             => $item_bonus,
+                        'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
                         'totalbeforevat'    => $totalbeforevat,
