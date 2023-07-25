@@ -77,7 +77,7 @@ class Purchases_model extends CI_Model
                     }
                 }
                 if ($data['status'] == 'received' || $data['status'] == 'returned') {
-                    $this->updateAVCO(['product_id' => $item['product_id'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'cost' => $item['base_unit_cost'] ?? $item['real_unit_cost']]);
+                    $this->updateAVCO(['product_id' => $item['product_id'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'batch' => $item['batchno'], 'cost' => $item['base_unit_cost'] ?? $item['real_unit_cost']]);
                 }
             }
 
@@ -199,7 +199,7 @@ class Purchases_model extends CI_Model
             $this->db->delete('payments', ['purchase_id' => $id]);
             if ($purchase->status == 'received' || $purchase->status == 'partial') {
                 foreach ($purchase_items as $oitem) {
-                    $this->updateAVCO(['product_id' => $oitem->product_id, 'warehouse_id' => $oitem->warehouse_id, 'quantity' => (0 - $oitem->quantity), 'cost' => $oitem->real_unit_cost]);
+                    $this->updateAVCO(['product_id' => $oitem->product_id, 'warehouse_id' => $oitem->warehouse_id, 'batch' => $oitem->batchno, 'quantity' => (0 - $oitem->quantity), 'cost' => $oitem->real_unit_cost]);
                     $received = $oitem->quantity_received ? $oitem->quantity_received : $oitem->quantity;
                     if ($oitem->quantity_balance < $received) {
                         $clause = ['purchase_id' => null, 'transfer_id' => null, 'product_id' => $oitem->product_id, 'warehouse_id' => $oitem->warehouse_id, 'option_id' => $oitem->option_id];
@@ -538,9 +538,9 @@ class Purchases_model extends CI_Model
         return false;
     }
 
-    public function getWarehouseProductQuantity($warehouse_id, $product_id)
+    public function getWarehouseProductQuantity($warehouse_id, $product_id, $batchno)
     {
-        $q = $this->db->get_where('warehouses_products', ['warehouse_id' => $warehouse_id, 'product_id' => $product_id], 1);
+        $q = $this->db->get_where('warehouses_products', ['warehouse_id' => $warehouse_id, 'product_id' => $product_id, 'batchno' => $batchno], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -602,15 +602,16 @@ class Purchases_model extends CI_Model
 
     public function updateAVCO($data)
     {
-        if ($wp_details = $this->getWarehouseProductQuantity($data['warehouse_id'], $data['product_id'])) {
+        if ($wp_details = $this->getWarehouseProductQuantity($data['warehouse_id'], $data['product_id'], $data['batch'])) {
             $total_cost     = (($wp_details->quantity * $wp_details->avg_cost) + ($data['quantity'] * $data['cost']));
             $total_quantity = $wp_details->quantity + $data['quantity'];
+
             if (!empty($total_quantity)) {
                 $avg_cost = ($total_cost / $total_quantity);
-                $this->db->update('warehouses_products', ['avg_cost' => $avg_cost], ['product_id' => $data['product_id'], 'warehouse_id' => $data['warehouse_id']]);
+                $this->db->update('warehouses_products', ['avg_cost' => $avg_cost], ['product_id' => $data['product_id'], 'warehouse_id' => $data['warehouse_id'], 'batchno' => $data['batch']]);
             }
         } else {
-            $this->db->insert('warehouses_products', ['product_id' => $data['product_id'], 'warehouse_id' => $data['warehouse_id'], 'avg_cost' => $data['cost'], 'quantity' => 0]);
+            $this->db->insert('warehouses_products', ['product_id' => $data['product_id'], 'warehouse_id' => $data['warehouse_id'], 'avg_cost' => $data['cost'], 'quantity' => 0, 'batchno' => $data['batch']]);
         }
     }
 
@@ -650,7 +651,7 @@ class Purchases_model extends CI_Model
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 $this->db->insert('purchase_items', $item);
                 if ($data['status'] == 'received' || $data['status'] == 'partial') {
-                    $this->updateAVCO(['product_id' => $item['product_id'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'cost' => $item['real_unit_cost']]);
+                    $this->updateAVCO(['product_id' => $item['product_id'], 'batch' => $item['batchno'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'cost' => $item['real_unit_cost']]);
                 }
             }
             $this->site->syncQuantity(null, null, $oitems);
@@ -665,7 +666,7 @@ class Purchases_model extends CI_Model
             if ($data['status'] == 'received' || $data['status'] == 'partial') {
                 $this->site->syncQuantity(null, $id);
                 foreach ($oitems as $oitem) {
-                    $this->updateAVCO(['product_id' => $oitem->product_id, 'warehouse_id' => $oitem->warehouse_id, 'quantity' => (0 - $oitem->quantity), 'cost' => $oitem->real_unit_cost]);
+                    $this->updateAVCO(['product_id' => $oitem->product_id, 'batch' => $item['batchno'], 'warehouse_id' => $oitem->warehouse_id, 'quantity' => (0 - $oitem->quantity), 'cost' => $oitem->real_unit_cost]);
                 }
             }
             $this->site->syncPurchasePayments($id);
@@ -823,7 +824,7 @@ class Purchases_model extends CI_Model
                     $qb = $status == 'received' ? ($item->quantity_balance + ($item->quantity - $item->quantity_received)) : $item->quantity_balance;
                     $qr = $status == 'received' ? $item->quantity : $item->quantity_received;
                     $this->db->update('purchase_items', ['status' => $status, 'quantity_balance' => $qb, 'quantity_received' => $qr], ['id' => $item->id]);
-                    $this->updateAVCO(['product_id' => $item->product_id, 'warehouse_id' => $item->warehouse_id, 'quantity' => $item->quantity, 'cost' => $item->real_unit_cost]);
+                    $this->updateAVCO(['product_id' => $item->product_id, 'warehouse_id' => $item->warehouse_id, 'batch' => $item->batchno, 'quantity' => $item->quantity, 'cost' => $item->real_unit_cost]);
                 }
                 $this->site->syncQuantity(null, null, $items);
             } elseif (($purchase->status == 'received' || $purchase->status == 'partial') && ($status == 'ordered' || $status == 'pending')) {
@@ -831,7 +832,7 @@ class Purchases_model extends CI_Model
                     $qb = 0;
                     $qr = 0;
                     $this->db->update('purchase_items', ['status' => $status, 'quantity_balance' => $qb, 'quantity_received' => $qr], ['id' => $item->id]);
-                    $this->updateAVCO(['product_id' => $item->product_id, 'warehouse_id' => $item->warehouse_id, 'quantity' => $item->quantity, 'cost' => $item->real_unit_cost]);
+                    $this->updateAVCO(['product_id' => $item->product_id, 'warehouse_id' => $item->warehouse_id, 'batch' => $item->batchno, 'quantity' => $item->quantity, 'cost' => $item->real_unit_cost]);
                 }
                 $this->site->syncQuantity(null, null, $items);
             }

@@ -86,7 +86,7 @@ class Purchases extends MY_Controller
                 $supplier_part_no   = (isset($_POST['part_no'][$r]) && !empty($_POST['part_no'][$r])) ? $_POST['part_no'][$r] : null;
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
-
+                
                 $item_batchno = $_POST['batchno'][$r];
                 $item_serial_no = $_POST['serial_no'][$r];
                 //$item_bonus = $_POST['bonus'][$r];
@@ -94,7 +94,7 @@ class Purchases extends MY_Controller
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
                 $main_net = $_POST['main_net'][$r];
-
+                
                 if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity)) {
                     $product_details = $this->purchases_model->getProductByCode($item_code);
                     if ($item_expiry) {
@@ -2132,6 +2132,7 @@ class Purchases extends MY_Controller
                 $item_discount      = $_POST['product_discount'][$r] ?? null;
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = (0 - $_POST['product_base_quantity'][$r]);
+                $item_batch         = $_POST['batch_no'][$r];
 
                 if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity)) {
                     $product_details = $this->purchases_model->getProductByCode($item_code);
@@ -2174,6 +2175,7 @@ class Purchases extends MY_Controller
                         'net_unit_cost'     => $item_net_cost,
                         'unit_cost'         => $this->sma->formatDecimal($item_net_cost + $item_tax),
                         'quantity'          => $item_quantity,
+                        'batchno'             => $item_batch,
                         'product_unit_id'   => $item_unit,
                         'product_unit_code' => $unit->code,
                         'unit_quantity'     => $item_unit_quantity,
