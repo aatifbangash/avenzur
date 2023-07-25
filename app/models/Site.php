@@ -395,6 +395,18 @@ class Site extends CI_Model
         return false;
     }
 
+    public function getAllReturnItems($return_id)
+    {
+        $q = $this->db->get_where('return_items', ['return_id' => $return_id]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getAllPurchaseItems($purchase_id)
     {
         $q = $this->db->get_where('purchase_items', ['purchase_id' => $purchase_id]);
@@ -1238,6 +1250,30 @@ class Site extends CI_Model
         return false;
     }
 
+    public function syncQuantityReturn($return_id, $product_id = null)
+    {
+        if ($return_id) {
+            $warehouses = $this->getAllWarehouses();
+            $return_items = $this->getAllReturnItems($return_id);
+            foreach ($return_items as $item) {
+                if ($item->product_type == 'standard') {
+                    $this->syncProductQty($item->product_id, $item->warehouse_id, $item->batch_no);
+                    if (isset($item->option_id) && !empty($item->option_id)) {
+                        $this->syncVariantQty($item->option_id, $item->warehouse_id, $item->product_id);
+                    }
+                } elseif ($item->product_type == 'combo') {
+                    $wh          = $this->Settings->overselling ? null : $item->warehouse_id;
+                    $combo_items = $this->getProductComboItems($item->product_id, $wh);
+                    foreach ($combo_items as $combo_item) {
+                        if ($combo_item->type == 'standard') {
+                            $this->syncProductQty($combo_item->id, $item->warehouse_id, $item->batch_no);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public function syncQuantity($sale_id = null, $purchase_id = null, $oitems = null, $product_id = null)
     {
         if ($sale_id) {
@@ -1294,6 +1330,7 @@ class Site extends CI_Model
         } elseif ($product_id) {
             $warehouses = $this->getAllWarehouses();
             foreach ($warehouses as $warehouse) {
+                print_r($product_id);exit;
                 $this->syncProductQty($product_id, $warehouse->id);
                 $this->checkOverSold($product_id, $warehouse->id);
                 $quantity           = 0;

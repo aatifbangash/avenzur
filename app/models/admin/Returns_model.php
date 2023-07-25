@@ -12,7 +12,7 @@ class Returns_model extends CI_Model
     public function addReturn($data = [], $items = [])
     {
         // Enable error reporting
-
+        
         $this->db->trans_start();
         if ($this->db->insert('returns', $data)) {
             $return_id = $this->db->insert_id();
@@ -25,9 +25,10 @@ class Returns_model extends CI_Model
                 $this->db->insert('return_items', $item);
                 
                 if ($item['product_type'] == 'standard') {
-                    $clause = ['product_id' => $item['product_id'], 'warehouse_id' => $item['warehouse_id'], 'purchase_id' => null, 'transfer_id' => null, 'option_id' => $item['option_id']];
+                    $clause = ['product_id' => $item['product_id'], 'warehouse_id' => $item['warehouse_id'], 'batchno' => $item['batch_no'], 'purchase_id' => null, 'transfer_id' => null, 'option_id' => $item['option_id']];
                     $this->site->setPurchaseItem($clause, $item['quantity']);
-                    $this->site->syncQuantity(null, null, null, $item['product_id']);
+                    $this->site->syncQuantityReturn($return_id, $item['product_id']);
+                    
                 } elseif ($item['product_type'] == 'combo') {
                     $combo_items = $this->site->getProductComboItems($item['product_id']);
                     foreach ($combo_items as $combo_item) {
