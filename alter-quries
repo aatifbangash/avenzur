@@ -47,3 +47,4 @@ ALTER TABLE `sma_warehouses` ADD `goods_in_transit` TINYINT(1) NOT NULL DEFAULT 
 
 ALTER TABLE `sma_accounts_entries` ADD `tid` INT NOT NULL AFTER `rid`;
 
+ALTER TABLE `sma_warehouses_products` ADD `batchno` VARCHAR(50) NOT NULL AFTER `avg_cost`;

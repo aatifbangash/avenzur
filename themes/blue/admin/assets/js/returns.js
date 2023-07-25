@@ -1341,7 +1341,7 @@ function loadItems() {
                 row_no +
                 '" title="Remove" style="cursor:pointer;"></i></td>';
             newTr.html(tr_html);
-            newTr.prependTo('#reTable');
+            newTr.appendTo('#reTable');
             total += formatDecimal((parseFloat(item_price) + parseFloat(pr_tax_val)) * parseFloat(item_qty), 4);
             count += parseFloat(item_qty);
             an++;
