@@ -507,45 +507,60 @@ table#poTable td input.form-control {
                         <div class="col-md-12">
                             <div class="from-group">
 
-                            <?php 
-                            if($GP["purchase_manager"] && ( $purchase->status == 'pending' || $purchase->status == 'ordered' || $purchase->status == 'rejected'))
-                            {
-                            echo '<input type="submit" class="btn btn-primary" id="postatus1" name="status" value="ordered" style="margin:15px 0;"/>
-                               <input type="submit" class="btn btn-warning" id="postatus2" name="status" value="rejected" style="margin:15px 0;"/>';
-                               
+                            <?php
 
-                            }else if($GP["purchase_receiving_supervisor"]  ){
+                                if ($Owner) {
 
-                                if($inv->status == 'received' || $inv->status == 'partial' )
-                                {
+                                    // OWNER 
+                                    if ($purchase->status == 'pending' || $purchase->status == 'ordered' || $purchase->status == 'rejected' || $inv->status != 'received' || $inv->status != 'partial') {
 
-                                }else{
+                                        echo '<input type="submit" class="btn btn-primary" id="postatus1" name="status" value="ordered" style="margin:15px 0;"/>
+                                        <input type="submit" class="btn btn-warning" id="postatus2" name="status" value="rejected" style="margin:15px 0;"/>';
+                                    }
 
-                                    echo '<input type="submit" class="btn btn-primary" id="postatus1" name="status" value="received" style="margin:15px 0;"/>
-                               <input type="submit" class="btn btn-warning" id="postatus2" name="status" value="partial" style="margin:15px 0;"/>
-                               <input type="submit" class="btn btn-danger" id="postatus3" name="status" value="rejected" style="margin:15px 0;"/>';
+                                    if ($inv->status == 'received' || $inv->status == 'partial') {
+                                        echo form_submit('shelf_status', 'Shelves Added', 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
+                                    }
 
+                                    if ($inv->shelf_status != NULL && $inv->validate == NULL) {
+                                        echo form_submit('validate', 'validate', 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
+                                    }
+
+                                    echo form_submit('edit_pruchase', $this->lang->line('submit'), 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
+
+                                } else {
+
+                                    // OLD Flow
+
+                                    if ($GP["purchase_manager"] && ($purchase->status == 'pending' || $purchase->status == 'ordered' || $purchase->status == 'rejected')) {
+                                        echo '<input type="submit" class="btn btn-primary" id="postatus1" name="status" value="ordered" style="margin:15px 0;"/>
+                                <input type="submit" class="btn btn-warning" id="postatus2" name="status" value="rejected" style="margin:15px 0;"/>';
+                                    } else if ($GP["purchase_receiving_supervisor"]) {
+
+                                        if ($inv->status == 'received' || $inv->status == 'partial') {
+                                        } else {
+
+                                            echo '<input type="submit" class="btn btn-primary" id="postatus1" name="status" value="received" style="margin:15px 0;"/>
+                                <input type="submit" class="btn btn-warning" id="postatus2" name="status" value="partial" style="margin:15px 0;"/>
+                                <input type="submit" class="btn btn-danger" id="postatus3" name="status" value="rejected" style="margin:15px 0;"/>';
+                                        }
+                                    } else if ($GP["purchase_warehouse_supervisor"] && ($inv->status == 'received' || $inv->status == 'partial')) {
+
+                                        echo form_submit('shelf_status', 'Shelves Added', 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
+                                    } else if ($GP["purchase_supervisor"] && ($inv->shelf_status != NULL)) {
+
+                                        if ($inv->validate != NULL) {
+                                        } else {
+
+                                            echo form_submit('validate', 'validate', 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
+                                        }
+                                    } else {
+                                        echo form_submit('edit_pruchase', $this->lang->line('submit'), 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
+                                    }
                                 }
-
-                            }else if($GP["purchase_warehouse_supervisor"] && ($inv->status == 'received' || $inv->status == 'partial')){
                            
-                                echo form_submit('shelf_status','Shelves Added', 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');    
-                            
-                            }else if($GP["purchase_supervisor"] && ($inv->shelf_status != NULL)){
-
-                                if($inv->validate != NULL){
-
-                                }else{
-                                
-                                echo form_submit('validate','validate', 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); 
-                                }
-                            
-                            }else{
-                                echo form_submit('edit_pruchase', $this->lang->line('submit'), 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); 
-                            }
-
-                                 ?>
-                               <!-- <button type="button" class="btn btn-danger" id="reset"><?= lang('reset') ?></button>-->
+                            ?>
+                            <!-- <button type="button" class="btn btn-danger" id="reset"><?= lang('reset') ?></button>-->
                             </div>
                         </div>
                     </div>
