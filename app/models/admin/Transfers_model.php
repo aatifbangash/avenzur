@@ -117,8 +117,9 @@ class Transfers_model extends CI_Model
                     }
                 }
 
-                if ($status == 'sent' || $status == 'completed') {
-                    $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['quantity'], $item['option_id']);
+                //if ($status == 'sent' || $status == 'completed') {
+                if ($status == 'completed') {
+                    $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id']);
                 }
             }
 
@@ -422,9 +423,9 @@ class Transfers_model extends CI_Model
         return $ostatus;
     }
 
-    public function syncTransderdItem($product_id, $warehouse_id, $quantity, $option_id = null)
+    public function syncTransderdItem($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null)
     {
-        if ($pis = $this->site->getPurchasedItems($product_id, $warehouse_id, $option_id)) {
+        if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
             $balance_qty = $quantity;
             foreach ($pis as $pi) {
                 if ($balance_qty <= $quantity && $quantity > 0) {
@@ -443,10 +444,10 @@ class Transfers_model extends CI_Model
                 }
             }
         } else {
-            $clause = ['purchase_id' => null, 'transfer_id' => null, 'product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'option_id' => $option_id];
+            $clause = ['purchase_id' => null, 'transfer_id' => null, 'product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batch_no, 'option_id' => $option_id];
             $this->site->setPurchaseItem($clause, (0 - $quantity));
         }
-        $this->site->syncQuantity(null, null, null, $product_id);
+        $this->site->syncQuantity(null, null, null, $product_id, $batch_no);
     }
 
     public function updateQuantity($product_id, $warehouse_id, $quantity)
@@ -563,8 +564,9 @@ class Transfers_model extends CI_Model
                     $this->db->insert('transfer_items', $item);
                 }
 
-                if ($data['status'] == 'sent' || $data['status'] == 'completed') {
-                    $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['quantity'], $item['option_id']);
+                //if ($data['status'] == 'sent' || $data['status'] == 'completed') {
+                if ($data['status'] == 'completed') {
+                    $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id']);
                 }
             }
 

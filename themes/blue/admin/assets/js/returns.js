@@ -828,9 +828,10 @@ $(document).ready(function (e) {
                 bootbox.alert(lang.unexpected_value);
                 return;
             }
+
             var new_price = parseFloat($(this).val()),
                 item_id = row.attr('data-item-id');
-            reitems[item_id].row.price = new_price;
+            reitems[item_id].row.base_unit_price = new_price;
             localStorage.setItem('reitems', JSON.stringify(reitems));
             loadItems();
         });
@@ -946,7 +947,7 @@ function loadItems() {
             var item = this;
             var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
             item.order = item.order ? item.order : new Date().getTime();
-            
+
             var product_id = item.row.id,
                 item_type = item.row.type,
                 combo_items = item.combo_items,
@@ -978,7 +979,7 @@ function loadItems() {
              var discount1       = item.row.discount1;
              var discount2       = item.row.discount2;
 
-             
+
             var unit_price = item.row.real_unit_price;
             if (item.units && item.row.fup != 1 && product_unit != item.row.base_unit) {
                 $.each(item.units, function () {
@@ -1341,7 +1342,7 @@ function loadItems() {
                 row_no +
                 '" title="Remove" style="cursor:pointer;"></i></td>';
             newTr.html(tr_html);
-            newTr.prependTo('#reTable');
+            newTr.appendTo('#reTable');
             total += formatDecimal((parseFloat(item_price) + parseFloat(pr_tax_val)) * parseFloat(item_qty), 4);
             count += parseFloat(item_qty);
             an++;

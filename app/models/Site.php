@@ -968,6 +968,14 @@ class Site extends CI_Model
         return false;
     }
 
+    public function getExpiryFromBatch($product_id, $batchno, $warehouse_id){
+        $q = $this->db->get_where('sma_purchase_items', ['product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false; 
+    }
+
     public function getGoodsTrasitWareHouse()
     {
         $q = $this->db->get_where('warehouses', ['goods_in_transit' => 1], 1);
@@ -1188,6 +1196,10 @@ class Site extends CI_Model
                     $this->db->insert('warehouses_products', ['quantity' => $wh_balance_qty, 'product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno]);
                 }
             }
+
+            $purchaseObj = $this->getExpiryFromBatch($product_id, $batchno, $warehouse_id);
+            $this->db->update('warehouses_products', ['expiry' => $purchaseObj->expiry, 'purchase_cost' => $purchaseObj->net_unit_cost], ['product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno]);
+
             return true;
         }
         return false;
@@ -1274,7 +1286,7 @@ class Site extends CI_Model
         }
     }
 
-    public function syncQuantity($sale_id = null, $purchase_id = null, $oitems = null, $product_id = null)
+    public function syncQuantity($sale_id = null, $purchase_id = null, $oitems = null, $product_id = null, $batch_no = null)
     {
         if ($sale_id) {
             $sale_items = $this->getAllSaleItems($sale_id);
@@ -1330,8 +1342,7 @@ class Site extends CI_Model
         } elseif ($product_id) {
             $warehouses = $this->getAllWarehouses();
             foreach ($warehouses as $warehouse) {
-                print_r($product_id);exit;
-                $this->syncProductQty($product_id, $warehouse->id);
+                $this->syncProductQty($product_id, $warehouse->id, $batch_no);
                 $this->checkOverSold($product_id, $warehouse->id);
                 $quantity           = 0;
                 $warehouse_products = $this->getWarehouseProducts($product_id);
