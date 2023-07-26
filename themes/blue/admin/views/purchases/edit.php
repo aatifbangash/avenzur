@@ -512,20 +512,30 @@ table#poTable td input.form-control {
                                 if ($Owner) {
 
                                     // OWNER 
-                                    if ($purchase->status == 'pending' || $purchase->status == 'ordered' || $purchase->status == 'rejected' || $inv->status != 'received' || $inv->status != 'partial') {
+                                    if ($purchase->status == 'pending' || $purchase->status == 'ordered' || $purchase->status == 'rejected') {
 
                                         echo '<input type="submit" class="btn btn-primary" id="postatus1" name="status" value="ordered" style="margin:15px 0;"/>
                                         <input type="submit" class="btn btn-warning" id="postatus2" name="status" value="rejected" style="margin:15px 0;"/>';
+                                       
                                     }
 
                                     if ($inv->status == 'received' || $inv->status == 'partial') {
                                         echo form_submit('shelf_status', 'Shelves Added', 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
+                                    }else{
+                                        echo '<input type="submit" class="btn btn-primary" id="postatus1" name="status" value="received" style="margin:15px 0;"/>
+                                <input type="submit" class="btn btn-warning" id="postatus2" name="status" value="partial" style="margin:15px 0;"/>
+                                <input type="submit" class="btn btn-danger" id="postatus3" name="status" value="rejected" style="margin:15px 0;"/>';
                                     }
 
-                                    if ($inv->shelf_status != NULL && $inv->validate == NULL) {
-                                        echo form_submit('validate', 'validate', 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
-                                    }
+                                    if (($inv->shelf_status != NULL)) {
 
+                                        if ($inv->validate != NULL) {
+                                        } else {
+
+                                            echo form_submit('validate', 'validate', 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
+                                        }
+                                    }
+                                    
                                     echo form_submit('edit_pruchase', $this->lang->line('submit'), 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
 
                                 } else {
