@@ -1198,7 +1198,7 @@ class Site extends CI_Model
             }
 
             $purchaseObj = $this->getExpiryFromBatch($product_id, $batchno, $warehouse_id);
-            $this->db->update('warehouses_products', ['expiry' => $purchaseObj->expiry], ['product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno]);
+            $this->db->update('warehouses_products', ['expiry' => $purchaseObj->expiry, 'cost' => $purchaseObj->net_unit_cost], ['product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno]);
 
             return true;
         }
