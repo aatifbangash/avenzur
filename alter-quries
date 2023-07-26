@@ -47,3 +47,7 @@ ALTER TABLE `sma_warehouses` ADD `goods_in_transit` TINYINT(1) NOT NULL DEFAULT 
 
 ALTER TABLE `sma_accounts_entries` ADD `tid` INT NOT NULL AFTER `rid`;
 
+
+# Add expiry
+ALTER TABLE `sma_warehouses_products` ADD `expiry` DATE NULL DEFAULT NULL AFTER `batchno`;
+

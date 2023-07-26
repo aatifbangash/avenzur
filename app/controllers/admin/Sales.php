@@ -1188,8 +1188,20 @@ class Sales extends MY_Controller
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
                 $ri       = $this->Settings->item_addition ? $row->id : $c;
 
+                $batches = $this->sales_model->getProductBatchesData($row->id, $item->warehouse_id);
+
+                $row->batchQuantity = 0;               
+                if ($batches) {
+                    foreach ($batches as $batchesR) {
+                        if($batchesR->batchno == $row->batch_no){
+                            $row->batchQuantity = $batchesR->quantity;
+                            break;
+                        }
+                    }
+                }
+
                 $pr[$ri] = ['id' => $c, 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
-                    'row'        => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, ];
+                    'row'        => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, 'batches'=>$batches];
                 $c++;
             }
 
@@ -2805,9 +2817,13 @@ class Sales extends MY_Controller
                 }
                 $units    = $this->site->getUnitsByBUID($row->base_unit);
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
-                $row->batch_no = $row->batchno;
-                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ') - '.$row->batch_no, 'category' => $row->category_id,
-                    'row'     => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, ];
+                $row->batch_no = '';
+                $row->batchQuantity = 0;
+                $row->expiry  = null;
+                
+                $batches = $this->sales_model->getProductBatchesData($row->id, $warehouse_id);
+                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')', 'category' => $row->category_id,
+                    'row'     => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, 'batches'=>$batches];
                 $r++;
             }
             $this->sma->send_json($pr);

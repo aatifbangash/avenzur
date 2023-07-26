@@ -505,12 +505,12 @@ class Sales_model extends CI_Model
     {
         $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
 
-        $this->db->select('products.*, purchase_items.batchno, purchase_items.serial_number, purchase_items.expiry, FWP.quantity as quantity, categories.id as category_id, categories.name as category_name', false)
+        $this->db->select('products.*, purchase_items.serial_number, FWP.quantity as quantity, categories.id as category_id, categories.name as category_name', false)
             ->join($wp, 'FWP.product_id=products.id', 'left')
             // ->join('warehouses_products FWP', 'FWP.product_id=products.id', 'left')
             ->join('purchase_items', 'purchase_items.product_id=products.id', 'left')
             ->join('categories', 'categories.id=products.category_id', 'left')
-            ->group_by('products.id, purchase_items.batchno');
+            ->group_by('products.id');
         if ($this->Settings->overselling) {
             $this->db->where("({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
         } else {
@@ -600,6 +600,21 @@ class Sales_model extends CI_Model
         }
         return false;
     }
+
+
+    public function getProductBatchesData($product_id, $warehouse)
+    {
+        $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        
+            return $data;
+        }
+        return false;
+    }
+
 
     public function getProductVariantByName($name, $product_id)
     {
