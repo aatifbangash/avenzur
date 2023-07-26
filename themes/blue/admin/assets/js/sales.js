@@ -1257,7 +1257,7 @@ $(document).ready(function (e) {
             }
             var new_price = parseFloat($(this).val()),
                 item_id = row.attr('data-item-id');
-            slitems[item_id].row.base_unit_price = new_price;
+            slitems[item_id].row.price = new_price;
             localStorage.setItem('slitems', JSON.stringify(slitems));
             loadItems();
         });
@@ -1358,7 +1358,8 @@ function loadItems() {
                 combo_items = item.combo_items,
                 item_price = item.row.price,
                 item_cost  = item.row.cost,
-                item_sale_price = item.row.base_unit_price,
+                //item_sale_price = item.row.base_unit_price,
+                item_sale_price = item.row.price,
                 item_qty = item.row.qty,
                 item_aqty = item.row.quantity,
                 item_tax_method = item.row.tax_method,
@@ -1554,7 +1555,8 @@ function loadItems() {
 
                 tr_html +=
                     '<td class="text-right"><input class="rucost" name="unit_price[]" type="hidden" value="' +
-                    unit_price +
+                    //unit_price +
+                    item_sale_price +
                     '"><input class="form-control realucost" name="real_unit_price[]" type="hidden" value="' +
                     item.row.real_unit_price +
                     '"><input class="form-control input-sm text-center rcost" type="text" name="net_price[]" id="cost_' +
