@@ -968,6 +968,14 @@ class Site extends CI_Model
         return false;
     }
 
+    public function getExpiryFromBatch($product_id, $batchno, $warehouse_id){
+        $q = $this->db->get_where('sma_purchase_items', ['product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false; 
+    }
+
     public function getGoodsTrasitWareHouse()
     {
         $q = $this->db->get_where('warehouses', ['goods_in_transit' => 1], 1);
@@ -1188,6 +1196,10 @@ class Site extends CI_Model
                     $this->db->insert('warehouses_products', ['quantity' => $wh_balance_qty, 'product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno]);
                 }
             }
+
+            $purchaseObj = $this->getExpiryFromBatch($product_id, $batchno, $warehouse_id);
+            $this->db->update('warehouses_products', ['expiry' => $purchaseObj->expiry], ['product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno]);
+
             return true;
         }
         return false;
