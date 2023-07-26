@@ -1298,6 +1298,13 @@ class Purchases extends MY_Controller
     public function convert_purchse_invoice($pid)
     {
         if ($this->purchases_model->puchaseToInvoice($pid)) {
+
+            # Update Purchase to Completed
+            if(isset($this->GP) && $this->GP['accountant']){
+                $this->db->update('purchases', ['status' => 'received'], ['id' => $pid]);
+                $this->site->syncQuantity(null, $pid);
+            }
+
             $inv = $this->purchases_model->getPurchaseByID($pid);
             $this->load->admin_model('companies_model');
             $supplier = $this->companies_model->getCompanyByID($inv->supplier_id);
