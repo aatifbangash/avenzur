@@ -1756,12 +1756,12 @@ function loadItems() {
                 row_no +
                 '">'+formatMoney(main_net)+'</span></td>';   */
 
-            tr_html +=
+            /*tr_html +=
                 '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' +
                 row_no +
                 '">' +
                 formatMoney(total_purchases) +
-                '</span></td>';
+                '</span></td>';*/
 
             tr_html +=
                 '<td class="text-right"><span class="text-right ssubtotal" id="total_sale_' +
@@ -1842,7 +1842,7 @@ function loadItems() {
             formatMoney(grand_total_vat) +
             '</th>';
 
-        tfoot += '<th class="text-right">' + formatMoney(grand_total_purchases) + '</th>';
+        //tfoot += '<th class="text-right">' + formatMoney(grand_total_purchases) + '</th>';
 
         tfoot += '<th class="text-right">' + formatMoney(grand_total_sales) + '</th>';
 

@@ -426,7 +426,7 @@ table#slTable td input.form-control {
                                             <th class="col-md-1">dis 1</th>
                                             <th class="col-md-1">dis 2</th>
                                             <th class="col-md-1">Vat 15%</th>
-                                            <th class="col-md-1">Total Purchases</th>
+                                            <!--<th class="col-md-1">Total Purchases</th>-->
                                             <th class="col-md-1">Total Sales</th>
                                             <th class="col-md-1">Net Sales</th>
                                             <th class="col-md-1">Unit Sale</th>
