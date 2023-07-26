@@ -1521,4 +1521,17 @@ class Site extends CI_Model
         }
         return 0;
     }
+
+    public function getProductBatchesData($product_id, $warehouse)
+    {
+        $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        
+            return $data;
+        }
+        return false;
+    }
 }

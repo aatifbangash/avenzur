@@ -1188,8 +1188,9 @@ class Sales extends MY_Controller
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
                 $ri       = $this->Settings->item_addition ? $row->id : $c;
 
-                $batches = $this->sales_model->getProductBatchesData($row->id, $item->warehouse_id);
+                $batches = $this->site->getProductBatchesData($row->id, $item->warehouse_id);
 
+                $row->batchPurchaseCost = $row->cost; 
                 $row->batchQuantity = 0;               
                 if ($batches) {
                     foreach ($batches as $batchesR) {
@@ -2797,7 +2798,7 @@ class Sales extends MY_Controller
                     $row->price = $row->price + (($row->price * $customer_group->percent) / 100);
                 }
                 $row->real_unit_price = $row->price;
-                $row->base_quantity   = 1;
+                $row->base_quantity   = 0;
                 $row->base_unit       = $row->unit;
                 $row->base_unit_price = $row->price;
                 $row->unit            = $row->sale_unit ? $row->sale_unit : $row->unit;
@@ -2813,15 +2814,16 @@ class Sales extends MY_Controller
                     $row->qty           = $qty;
                     $row->base_quantity = $qty;
                 } else {
-                    $row->qty = ($bprice ? $bprice / $row->price : 1);
+                    $row->qty = ($bprice ? $bprice / $row->price : 0);
                 }
                 $units    = $this->site->getUnitsByBUID($row->base_unit);
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
                 $row->batch_no = '';
                 $row->batchQuantity = 0;
+                $row->batchPurchaseCost = 0;
                 $row->expiry  = null;
                 
-                $batches = $this->sales_model->getProductBatchesData($row->id, $warehouse_id);
+                $batches = $this->site->getProductBatchesData($row->id, $warehouse_id);
                 $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')', 'category' => $row->category_id,
                     'row'     => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, 'batches'=>$batches];
                 $r++;

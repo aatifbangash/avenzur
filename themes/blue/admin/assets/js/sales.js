@@ -1142,6 +1142,9 @@ $(document).ready(function (e) {
 
             var batchQty =  $(this).find(':selected').data('batchqty');
             slitems[item_id].row.batchQuantity = batchQty;
+
+            var batchPurchaseCost =  $(this).find(':selected').data('batchpurchasecost');
+            slitems[item_id].row.batchPurchaseCost = batchPurchaseCost;
            
 
              slitems[item_id].row.batch_no = new_batchno;
@@ -1575,13 +1578,13 @@ function loadItems() {
                     row_no +
                     '" value="' +
                     formatDecimal(item_sale_price, 2) +
-                    '"></td>';
+                    '">';
 
                 tr_html +=
-                    '<td><input id="ssale_' +
+                    '<input id="ssale_' +
                     row_no +
-                    '" class="form-control scost text-center" name="net_cost[]" type="text" value="' +
-                    formatDecimal(item.row.cost, 2) +
+                    '" class="form-control scost text-center" name="net_cost[]" type="hidden" value="' +
+                    formatDecimal(item.row.batchPurchaseCost, 2) +
                     '" data-id="' +
                     row_no +
                     '" data-item="' +
@@ -1626,14 +1629,14 @@ function loadItems() {
             //         row_no +
             //         '"></td>';
 
-            var batchesOptions = '<option value="" data-batchExpiry="null" data-batchQty="0">--</option>';
+            var batchesOptions = '<option value="" data-batchExpiry="null" data-batchQty="0"  data-batchpurchasecost="0">--</option>';
             if (item.batches !== false) {
                 $.each(item.batches, function () {
                     batchSelected = "";
                     if (this.batchno == item_batchno) {
                         batchSelected = "selected";
                     }
-                    batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'" value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
+                    batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'"  data-batchpurchasecost="'+this.purchase_cost+'" value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
                 });
             }
 
@@ -1823,7 +1826,7 @@ function loadItems() {
             count += parseFloat(item_qty);
             an++;
 
-            base_quantity += item_bonus;
+            //base_quantity += item_bonus;
 
             if (item_type == 'standard' && item.options !== false) {
                 $.each(item.options, function () {
@@ -1856,6 +1859,15 @@ function loadItems() {
                     });
                 }
             }
+
+            // Thi will override all the above checks
+            if(base_quantity > item_batchQuantity){
+                $('#row_' + row_no).addClass('danger');
+                if (site.settings.overselling != 1) {
+                    $('#add_sale, #edit_sale').attr('disabled', true);
+                }
+            }
+
         });
 
         var col = 8;
