@@ -1374,7 +1374,7 @@ function loadItems() {
                 item_bonus = item.row.bonus,
                 item_dis1 = item.row.dis1,
                 item_dis2 = item.row.dis2,
-            
+
             // if(item_expiry == 'undefined'){
             //     item_expiry = '';
             //    }
@@ -1464,9 +1464,9 @@ function loadItems() {
 
             var main_net = 0.0;
 
-            var total_before_dis_vat = (parseFloat(item_price)) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty); 
+            var total_before_dis_vat = (parseFloat(item_price)) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty);
 
-           
+
 
                dis1_a = total_before_dis_vat * parseFloat((item_dis1 / 100));
                total_after_dis1 =  total_before_dis_vat - dis1_a;
@@ -1563,7 +1563,7 @@ function loadItems() {
                     formatDecimal(item_sale_price, 2) +
                     '"></td>';
 
-                tr_html += 
+                tr_html +=
                     '<td><input id="ssale_' +
                     row_no +
                     '" class="form-control scost text-center" name="net_cost[]" type="text" value="' +
@@ -1575,7 +1575,7 @@ function loadItems() {
                     '" id="ssale_' +
                     row_no +
                     '"></td>';
-                    
+
 
             /*if (site.settings.product_serial == 1) {
                 tr_html +=
@@ -1585,7 +1585,7 @@ function loadItems() {
                     item_serial +
                     '"></td>';
             }*/
-            
+
 
             /*tr_html +=
                     '<td><input class="form-control rbatchno" name="batchno[]" type="text" value="' +
@@ -1692,11 +1692,11 @@ function loadItems() {
                 item_id +
                 '" id="dis1_' +
                 row_no +
-                '" value="'+item_dis1+'" onClick="this.select();"></td>';       
+                '" value="'+item_dis1+'" onClick="this.select();"></td>';
             tr_html +=
                 '<td class="text-right"><span class="text-right rafterdis1" id="afterdis1_' +
                 row_no +
-                '">'+formatMoney(total_after_dis1)+'</span></td>';  
+                '">'+formatMoney(total_after_dis1)+'</span></td>';
             tr_html +=
                 '<td><input class="form-control text-center rdis2" name="dis2[]" type="text" tabindex="' +
                 (site.settings.set_focus == 1 ? an : an + 1) +
@@ -1706,12 +1706,12 @@ function loadItems() {
                 item_id +
                 '" id="dis2_' +
                 row_no +
-                '" value="'+item_dis2+'" onClick="this.select();"></td>';       
+                '" value="'+item_dis2+'" onClick="this.select();"></td>';
             tr_html +=
                 '<td class="text-right"><span class="text-right rtotalbvat" id="totalbvat_' +
                 row_no +
-                '">'+formatMoney(total_after_dis2)+'</span></td>';  */  
-                
+                '">'+formatMoney(total_after_dis2)+'</span></td>';  */
+
             tr_html +=
                 '<td><input class="form-control text-center rdis1" name="dis1[]" type="text" data-id="' +
                 row_no +
@@ -1750,12 +1750,12 @@ function loadItems() {
                     pr_tax.id +
                     '"><span class="text-right rvat15" id="vat15_' +
                 row_no +
-                '">'+formatMoney(vat_15_a)+'</span></td>';    */ 
+                '">'+formatMoney(vat_15_a)+'</span></td>';    */
             /*tr_html +=
                 '<td class="text-right"><span class="text-right rnet" id="net_' +
                 row_no +
-                '">'+formatMoney(main_net)+'</span></td>';   */     
-                
+                '">'+formatMoney(main_net)+'</span></td>';   */
+
             tr_html +=
                 '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' +
                 row_no +
@@ -1780,14 +1780,14 @@ function loadItems() {
                 row_no +
                 '">' +
                 formatMoney(new_unit_cost) +
-                '</span></td>'; 
+                '</span></td>';
 
             tr_html +=
                 '<td class="text-center"><i class="fa fa-times tip pointer sldel" id="' +
                 row_no +
                 '" title="Remove" style="cursor:pointer;"></i></td>';
             newTr.html(tr_html);
-            newTr.prependTo('#slTable');
+            newTr.appendTo('#slTable');
             total += formatDecimal(main_net, 4);
             grand_total_vat += formatDecimal(vat_15_a, 4);
             grand_total_purchases += formatDecimal(total_purchases, 4);
@@ -1841,9 +1841,9 @@ function loadItems() {
             '">Total</th><th class="text-center">' +
             formatMoney(grand_total_vat) +
             '</th>';
-        
+
         tfoot += '<th class="text-right">' + formatMoney(grand_total_purchases) + '</th>';
-        
+
         tfoot += '<th class="text-right">' + formatMoney(grand_total_sales) + '</th>';
 
         tfoot +=
