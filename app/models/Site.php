@@ -1274,7 +1274,7 @@ class Site extends CI_Model
         }
     }
 
-    public function syncQuantity($sale_id = null, $purchase_id = null, $oitems = null, $product_id = null)
+    public function syncQuantity($sale_id = null, $purchase_id = null, $oitems = null, $product_id = null, $batch_no = null)
     {
         if ($sale_id) {
             $sale_items = $this->getAllSaleItems($sale_id);
@@ -1330,8 +1330,7 @@ class Site extends CI_Model
         } elseif ($product_id) {
             $warehouses = $this->getAllWarehouses();
             foreach ($warehouses as $warehouse) {
-                print_r($product_id);exit;
-                $this->syncProductQty($product_id, $warehouse->id);
+                $this->syncProductQty($product_id, $warehouse->id, $batch_no);
                 $this->checkOverSold($product_id, $warehouse->id);
                 $quantity           = 0;
                 $warehouse_products = $this->getWarehouseProducts($product_id);
