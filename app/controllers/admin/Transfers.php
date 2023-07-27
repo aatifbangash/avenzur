@@ -637,9 +637,21 @@ class Transfers extends MY_Controller
                 $units    = $this->site->getUnitsByBUID($row->base_unit);
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
                 $ri       = $this->Settings->item_addition ? $row->id : $c;
+                
+                $batches = $this->site->getProductBatchesData($row->id, $transfer->from_warehouse_id);
+                //$row->batchPurchaseCost = $row->cost; 
+                $row->batchQuantity = 0;               
+                if ($batches) {
+                    foreach ($batches as $batchesR) {
+                        if($batchesR->batchno == $row->batchno){
+                            $row->batchQuantity = $batchesR->quantity;
+                            break;
+                        }
+                    }
+                }
 
                 $pr[$ri] = ['id' => $c, 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
-                    'row'        => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, ];
+                    'row'        => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options,  'batches'=>$batches];
                 $c++;
             }
 
@@ -851,11 +863,11 @@ class Transfers extends MY_Controller
                 $option                = false;
                 $row->quantity         = 0;
                 $row->item_tax_method  = $row->tax_method;
-                $row->base_quantity    = 1;
+                $row->base_quantity    = 0;
                 $row->base_unit        = $row->unit;
                 $row->base_unit_cost   = $row->cost;
                 $row->unit             = $row->purchase_unit ? $row->purchase_unit : $row->unit;
-                $row->qty              = 1;
+                $row->qty              = 0;
                 $row->discount         = '0';
                 //$row->expiry           = '';
                 $row->quantity_balance = 0;
@@ -902,11 +914,18 @@ class Transfers extends MY_Controller
                     $row->qty           = $qty;
                     $row->base_quantity = $qty;
                 } else {
-                    $row->qty = ($bprice ? $bprice / $row->cost : 1);
+                    $row->qty = ($bprice ? $bprice / $row->cost : 0);
                 }
 
-                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ') - '.$row->batchno,
-                    'row'     => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, ];
+                $row->batch_no = '';
+                $row->batchQuantity = 0;
+                $row->batchPurchaseCost = 0;
+                $row->expiry  = null;
+
+                $batches = $this->site->getProductBatchesData($row->id, $warehouse_id);
+
+                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
+                    'row'     => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options,  'batches'=>$batches ];
                 $r++;
             }
             $this->sma->send_json($pr);
