@@ -1872,7 +1872,7 @@ class Purchases extends MY_Controller
                     exit();
                 }
                 $titles = array_shift($arrResult);
-                $keys   = ['code', 'net_unit_cost', 'quantity', 'variant', 'item_tax_rate', 'discount', 'expiry'];
+                $keys   = ['code', 'net_unit_cost', 'quantity', 'variant', 'item_tax_rate', 'discount', 'expiry', 'sale_price','batchno','serial_number'];
                 $final  = [];
                 foreach ($arrResult as $key => $value) {
                     $final[] = array_combine($keys, $value);
@@ -1899,6 +1899,10 @@ class Purchases extends MY_Controller
                             $item_tax_rate    = $csv_pr['item_tax_rate'];
                             $item_discount    = $csv_pr['discount'];
                             $item_expiry      = isset($csv_pr['expiry']) ? $this->sma->fsd($csv_pr['expiry']) : null;
+
+                            $item_sale_price    = $csv_pr['sale_price'];
+                            $item_batchno    = $csv_pr['batchno'];
+                            $item_serial_number    = $csv_pr['serial_number'];
 
                             $pr_discount      = $this->site->calculateDiscount($item_discount, $item_net_cost);
                             $pr_item_discount = $this->sma->formatDecimal(($pr_discount * $item_quantity), 4);
@@ -1947,6 +1951,9 @@ class Purchases extends MY_Controller
                                 'discount'          => $item_discount,
                                 'item_discount'     => $pr_item_discount,
                                 'expiry'            => $item_expiry,
+                                'sale_price'            => $item_sale_price,
+                                'batchno'            => $item_batchno,
+                                'serial_number'            => $item_serial_number,
                                 'subtotal'          => $subtotal,
                                 'date'              => date('Y-m-d', strtotime($date)),
                                 'status'            => $status,

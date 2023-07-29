@@ -1,2 +1,2 @@
-Product Code,Net Unit Cost,Quantity,Product Variant,Tax Rate Name,Discount,Expiry
-PR-001,15,10,Red,No Tax,10%,12/31/2015
+Product Code,Net Unit Cost,Quantity,Product Variant,Tax Rate Name,Expiry,Sale Price,Batch No,Serial Number,Discount1,Discount2
+PR-001,15,10,Red,No Tax,31/12/2025,230,a111,111,0,0
