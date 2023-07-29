@@ -1833,6 +1833,7 @@ class Purchases extends MY_Controller
             $supplier         = $supplier_details->company && $supplier_details->company != '-' ? $supplier_details->company : $supplier_details->name;
             $note             = $this->sma->clear_tags($this->input->post('note'));
 
+            $total_sale_price = 0;
             $total            = 0;
             $product_tax      = 0;
             $product_discount = 0;
@@ -1872,7 +1873,7 @@ class Purchases extends MY_Controller
                     exit();
                 }
                 $titles = array_shift($arrResult);
-                $keys   = ['code', 'net_unit_cost', 'quantity', 'variant', 'item_tax_rate', 'discount', 'expiry', 'sale_price','batchno','serial_number'];
+                $keys   = ['code', 'net_unit_cost', 'quantity', 'variant', 'item_tax_rate', 'expiry', 'sale_price','batchno','serial_number','discount1','discount2'];
                 $final  = [];
                 foreach ($arrResult as $key => $value) {
                     $final[] = array_combine($keys, $value);
@@ -1903,10 +1904,19 @@ class Purchases extends MY_Controller
                             $item_sale_price    = $csv_pr['sale_price'];
                             $item_batchno    = $csv_pr['batchno'];
                             $item_serial_number    = $csv_pr['serial_number'];
+                            $item_discount1    = $csv_pr['discount1'];
+                            $item_discount2    = $csv_pr['discount2'];
 
-                            $pr_discount      = $this->site->calculateDiscount($item_discount, $item_net_cost);
-                            $pr_item_discount = $this->sma->formatDecimal(($pr_discount * $item_quantity), 4);
-                            $product_discount += $pr_item_discount;
+                            $pr_discount = 0;
+                            // $pr_discount      = $this->site->calculateDiscount($item_discount, $item_net_cost);
+                            // $pr_item_discount = $this->sma->formatDecimal(($pr_discount * $item_quantity), 4);
+                            // $product_discount += $pr_item_discount;
+
+                            $total_purchases = $item_net_cost * $item_quantity;
+                            $total_after_dicount_1 = $total_purchases * ($item_discount1/100);
+                            $total_after_dicount_2 = ($total_purchases - $total_after_dicount_1) * ($item_discount2/100);
+                            $main_net = $total_purchases - ($total_after_dicount_1 +  $total_after_dicount_2);
+
 
                             $tax           = '';
                             $pr_item_tax   = 0;
@@ -1930,7 +1940,11 @@ class Purchases extends MY_Controller
                             }
 
                             $product_tax += $pr_item_tax;
-                            $subtotal       = (($item_net_cost * $item_quantity) + $pr_item_tax);
+                            // $subtotal       = (($item_net_cost * $item_quantity) + $pr_item_tax);
+                            $subtotal = $main_net;
+                            $subtotal2 = (($item_net_cost * $item_quantity));// + $pr_item_tax);
+
+
                             $unit           = $this->site->getUnitByID($product_details->unit);
                             $real_unit_cost = $this->sma->formatDecimal(($unit_cost + $pr_discount), 4);
                             $product        = [
@@ -1954,7 +1968,12 @@ class Purchases extends MY_Controller
                                 'sale_price'            => $item_sale_price,
                                 'batchno'            => $item_batchno,
                                 'serial_number'            => $item_serial_number,
-                                'subtotal'          => $subtotal,
+                                'discount1'         => $item_discount1,
+                                'discount2'         => $item_discount2,
+                                'totalbeforevat'    => $total_after_dicount_2,
+                                'main_net'          => $main_net,
+                                'subtotal'          => $this->sma->formatDecimal($subtotal),
+                                'subtotal2'          => $this->sma->formatDecimal($subtotal2),
                                 'date'              => date('Y-m-d', strtotime($date)),
                                 'status'            => $status,
                                 'unit_cost'         => $unit_cost, // $this->sma->formatDecimal(($item_net_cost + $item_tax), 4),
@@ -1963,7 +1982,10 @@ class Purchases extends MY_Controller
                             ];
 
                             $products[] = ($product + $gst_data);
-                            $total += $this->sma->formatDecimal(($item_net_cost * $item_quantity), 4);
+                            // $total += $this->sma->formatDecimal(($item_net_cost * $item_quantity), 4);
+                            $total += $this->sma->formatDecimal($main_net, 4);
+                            $total_sale_price +=  $this->sma->formatDecimal($item_sale_price, 4);
+
                         } else {
                             $this->session->set_flashdata('error', $this->lang->line('pr_not_found') . ' ( ' . $csv_pr['code'] . ' ). ' . $this->lang->line('line_no') . ' ' . $rw);
                             redirect($_SERVER['HTTP_REFERER']);
@@ -1973,10 +1995,12 @@ class Purchases extends MY_Controller
                 }
             }
 
-            $order_discount = $this->site->calculateDiscount($this->input->post('discount') ? $this->input->post('order_discount') : null, ($total + $product_tax), true);
+            // $order_discount = $this->site->calculateDiscount($this->input->post('discount') ? $this->input->post('order_discount') : null, ($total + $product_tax), true);
+            $order_discount = $this->site->calculateDiscount($this->input->post('discount'), $total, true);//$this->site->calculateDiscount($this->input->post('discount'), ($total + $product_tax), true);
             $total_discount = $this->sma->formatDecimal(($order_discount + $product_discount), 4);
             $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
             $total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
+
             // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
             $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
             $data        = ['reference_no' => $reference,
@@ -1986,6 +2010,7 @@ class Purchases extends MY_Controller
                 'warehouse_id'             => $warehouse_id,
                 'note'                     => $note,
                 'total'                    => $total,
+                'total_sale'               => $total_sale_price,
                 'product_discount'         => $product_discount,
                 'order_discount_id'        => $this->input->post('discount'),
                 'order_discount'           => $order_discount,
