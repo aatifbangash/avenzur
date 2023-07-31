@@ -533,11 +533,12 @@ class Products extends MY_Controller
                     fclose($handle);
                 }
                 $titles = array_shift($arrResult);
-                $keys   = ['code', 'quantity', 'variant'];
+                $keys   = ['code', 'quantity', 'saleprice', 'unitcost', 'batch', 'expiry', 'vat', 'variant'];
                 $final  = [];
                 foreach ($arrResult as $key => $value) {
                     $final[] = array_combine($keys, $value);
                 }
+                
                 // $this->sma->print_arrays($final);
                 $rw = 2;
                 foreach ($final as $pr) {
@@ -548,7 +549,12 @@ class Products extends MY_Controller
                         $csv_quantity = trim($pr['quantity']);
                         $type         = $csv_quantity > 0 ? 'addition' : 'subtraction';
                         $quantity     = $csv_quantity > 0 ? $csv_quantity : (0 - $csv_quantity);
-
+                        $batch        = trim($pr['batch']);
+                        $expiry       = trim($pr['expiry']);
+                        $vat          = trim($pr['vat']);
+                        $sale_price   = trim($pr['saleprice']);
+                        $unit_cost   = trim($pr['unitcost']);
+                        
                         if (!$this->Settings->overselling && $type == 'subtraction') {
                             if ($variant) {
                                 if ($op_wh_qty = $this->products_model->getProductWarehouseOptionQty($variant, $warehouse_id)) {
@@ -576,6 +582,11 @@ class Products extends MY_Controller
                             'product_id'   => $product->id,
                             'type'         => $type,
                             'quantity'     => $quantity,
+                            'batchno'        => $batch,
+                            'expiry'       => $expiry,
+                            'vat'          => $vat,
+                            'sale_price'   => $sale_price,
+                            'unit_cost'    => $unit_cost,
                             'warehouse_id' => $warehouse_id,
                             'option_id'    => $variant,
                         ];
@@ -589,7 +600,7 @@ class Products extends MY_Controller
                 $this->form_validation->set_rules('csv_file', lang('upload_file'), 'required');
             }
 
-            // $this->sma->print_arrays($data, $products);
+            //$this->sma->print_arrays($data, $products);
         }
 
         if ($this->form_validation->run() == true && $this->products_model->addAdjustment($data, $products)) {

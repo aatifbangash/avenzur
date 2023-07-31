@@ -947,11 +947,11 @@ class Products_model extends CI_Model
     public function syncAdjustment($data = [])
     {
         if (!empty($data)) {
-            $clause = ['product_id' => $data['product_id'], 'option_id' => $data['option_id'], 'warehouse_id' => $data['warehouse_id'], 'status' => 'received'];
+            $clause = ['product_id' => $data['product_id'], 'unit_cost' => $data['unit_cost'], 'sale_price' => $data['sale_price'], 'vat' => $data['vat'], 'batchno' => $data['batchno'], 'expiry' => $data['expiry'], 'option_id' => $data['option_id'], 'warehouse_id' => $data['warehouse_id'], 'status' => 'received'];
             $qty    = $data['type'] == 'subtraction' ? 0 - $data['quantity'] : 0 + $data['quantity'];
-            $this->site->setPurchaseItem($clause, $qty);
-
-            $this->site->syncProductQty($data['product_id'], $data['warehouse_id']);
+            $this->site->setAdjustmentPurchaseItem($clause, $qty);
+            
+            $this->site->syncProductQty($data['product_id'], $data['warehouse_id'], $data['batchno']);
             if ($data['option_id']) {
                 $this->site->syncVariantQty($data['option_id'], $data['warehouse_id'], $data['product_id']);
             }

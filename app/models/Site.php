@@ -1119,6 +1119,64 @@ class Site extends CI_Model
         return '<script type="text/javascript">' . file_get_contents($this->data['assets'] . 'js/modal.js') . '</script>';
     }
 
+    public function setAdjustmentPurchaseItem($clause, $qty){
+        if ($product = $this->getProductByID($clause['product_id'])) {
+            $vat = $clause['vat'];
+            unset($clause['vat']);
+
+            if ($pi = $this->getPurchasedItem($clause)) {
+                if ($pi->quantity_balance > 0) {
+                    $quantity_balance = $pi->quantity_balance + $qty;
+                    log_message('error', 'More than zero: ' . $quantity_balance . ' = ' . $pi->quantity_balance . ' + ' . $qty . ' PI: ' . print_r($pi, true));
+                } else {
+                    $quantity_balance = $pi->quantity_balance + $qty;
+                    log_message('error', 'Less than zero: ' . $quantity_balance . ' = ' . $pi->quantity_balance . ' + ' . $qty . ' PI: ' . print_r($pi, true));
+                }
+                return $this->db->update('purchase_items', ['quantity_balance' => $quantity_balance], ['id' => $pi->id]);
+            }
+
+            $unit                        = $this->getUnitByID($product->unit);
+            $clause['product_unit_id']   = $product->unit;
+            $clause['product_unit_code'] = $unit->code;
+            $clause['product_code']      = $product->code;
+            $clause['product_name']      = $product->name;
+            $clause['purchase_id']       = $clause['transfer_id']       = $clause['item_tax']       = null;
+            $clause['net_unit_cost']     = $clause['real_unit_cost']     = $clause['unit_cost'];
+            $clause['quantity_balance']  = $clause['quantity']  = $clause['unit_quantity']  = $clause['quantity_received']  = $qty;
+            $clause['subtotal']          = ($clause['net_unit_cost'] * $qty);
+            
+            if (isset($vat) && $vat != 0) {
+                $tax_details           = $this->site->getTaxRateByID($vat);
+                $ctax                  = $this->calculateTax($product, $tax_details, $clause['net_unit_cost']);
+                $item_tax              = $clause['item_tax']              = $ctax['amount'];
+                $tax                   = $clause['tax']                   = $ctax['tax'];
+                $clause['tax_rate_id'] = $tax_details->id;
+                if ($product->tax_method != 1) {
+                    $clause['net_unit_cost'] = $clause['net_unit_cost'] - $item_tax;
+                    $clause['unit_cost']     = $clause['net_unit_cost'];
+                } else {
+                    $clause['net_unit_cost'] = $clause['net_unit_cost'];
+                    $clause['unit_cost']     = $clause['net_unit_cost'] + $item_tax;
+                }
+                $pr_item_tax = $this->sma->formatDecimal($item_tax * $clause['unit_quantity'], 4);
+                if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($this->Settings->state == $supplier_details->state), $tax_details)) {
+                    $clause['gst']  = $gst_data['gst'];
+                    $clause['cgst'] = $gst_data['cgst'];
+                    $clause['sgst'] = $gst_data['sgst'];
+                    $clause['igst'] = $gst_data['igst'];
+                }
+                $clause['subtotal'] = (($clause['net_unit_cost'] * $clause['unit_quantity']) + $pr_item_tax);
+            }
+            $clause['status']    = 'received';
+            $clause['date']      = date('Y-m-d');
+            $clause['option_id'] = !empty($clause['option_id']) && is_numeric($clause['option_id']) ? $clause['option_id'] : null;
+            log_message('error', 'Why else: ' . print_r($clause, true));
+            
+            return $this->db->insert('purchase_items', $clause);
+        }
+        return false;
+    }
+
     public function setPurchaseItem($clause, $qty)
     {
         if ($product = $this->getProductByID($clause['product_id'])) {
