@@ -124,7 +124,7 @@
                                 File</a>
                             <span class="text-warning"><?php echo $this->lang->line('csv1'); ?></span><br>
                             <?php echo $this->lang->line('csv2'); ?> <span
-                                class="text-info">(<?= lang('product_code') . ', ' . lang('net_unit_cost') . ', ' . lang('quantity') . ', ' . lang('product_variant') . ', ' . lang('tax_rate_name') . ', ' . lang('discount') . ', ' . lang('expiry'); ?>
+                                class="text-info">(<?= lang('product_code') . ', ' . lang('net_unit_cost') . ', ' . lang('quantity') . ', ' . lang('product_variant') . ', ' . lang('tax_rate_name') . ', ' . lang('discount') . ', ' . lang('expiry') . ', ' . lang('Sale Price') . ', ' . lang('Batch No') . ', ' . lang('Serial Number') . ', ' . lang('Discount1') . ', ' . lang('Discount2'); ?>
                                 )</span> <?php echo $this->lang->line('csv3'); ?><br>
                             <strong><?= sprintf(lang('x_col_required'), 3); ?></strong>
                         </div>

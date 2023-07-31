@@ -14,6 +14,31 @@ $(document).ready(function () {
             $('#tostatus').select2('readonly', true);
         }
     }
+
+    $(document)
+         .on('focus', '.rbatchno', function () {
+            
+         })
+         .on('change', '.rbatchno', function () {
+             var row = $(this).closest('tr');
+             var new_batchno = $(this).val(),
+                 item_id = row.attr('data-item-id');
+            
+                 var batchExpiry =  $(this).find(':selected').data('batchexpiry');
+                 toitems[item_id].row.expiry = batchExpiry;
+     
+                 var batchQty =  $(this).find(':selected').data('batchqty');
+                 toitems[item_id].row.batchQuantity = batchQty;
+     
+                 var batchPurchaseCost =  $(this).find(':selected').data('batchpurchasecost');
+                 toitems[item_id].row.batchPurchaseCost = batchPurchaseCost;
+                
+     
+                 toitems[item_id].row.batch_no = new_batchno;
+             localStorage.setItem('toitems', JSON.stringify(toitems));            
+             loadItems();
+         });
+
     var old_shipping;
     $('#toshipping')
         .focus(function () {
@@ -398,13 +423,19 @@ function loadItems() {
             item.order = item.order ? item.order : order_no++;
             var from_warehouse = localStorage.getItem('from_warehouse'),
                 check = false;
+
+            var item_expiry='';
+            if(item.row.expiry != null){                
+                item_expiry = new Date(item.row.expiry).toLocaleDateString('en-GB')
+            }
+
             var product_id = item.row.id,
                 item_type = item.row.type,
                 item_cost = item.row.cost,
                 item_qty = item.row.qty,
                 item_bqty = item.row.quantity_balance,
                 item_oqty = item.row.ordered_quantity,
-                item_expiry = new Date(item.row.expiry).toLocaleDateString('en-GB'),
+                //item_expiry = new Date(item.row.expiry).toLocaleDateString('en-GB'),
                 item_serialno = item.row.serial_number,
                 item_aqty = item.row.quantity,
                 item_tax_method = item.row.tax_method,
@@ -413,9 +444,10 @@ function loadItems() {
                 item_option = item.row.option,
                 item_code = item.row.code,
                 item_serial = item.row.serial,
+                item_batchQuantity = item.row.batchQuantity,
                 item_name = item.row.name.replace(/"/g, '&#034;').replace(/'/g, '&#039;');
             
-            var batchno = item.row.batchno;
+            var batchno = item.row.batch_no;
             var unit_cost = item.row.real_unit_cost;
             var product_unit = item.row.unit,
                 base_quantity = item.row.base_quantity;
@@ -423,6 +455,8 @@ function loadItems() {
             var pr_tax = item.tax_rate;
             var pr_tax_val = 0,
                 pr_tax_rate = 0;
+            
+            
             if (site.settings.tax1 == 1) {
                 if (pr_tax !== false) {
                     if (pr_tax.type == 1) {
@@ -487,16 +521,31 @@ function loadItems() {
                 row_no +
                 '"></td>';
 
-            tr_html +=
-                '<td><input class="form-control" name="batchno[]" type="text" value="' +
-                batchno +
-                '" data-id="' +
-                row_no +
-                '" data-item="' +
-                item_id +
-                '" id="batchno_' +
-                row_no +
-                '"></td>';
+
+        
+                var batchesOptions = '<option value="" data-batchExpiry="null" data-batchQty="0"  data-batchpurchasecost="0">--</option>';
+                if (item.batches !== false) {
+                    $.each(item.batches, function () {
+                        batchSelected = "";
+                        if (this.batchno == batchno) {
+                            batchSelected = "selected";
+                        }
+                        batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'"  data-batchpurchasecost="'+this.purchase_cost+'" value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
+                    });
+                }
+    
+                tr_html += '<td><select class="form-control rbatchno" name="batchno[]" id="batchno_' + row_no +'">'+batchesOptions+'</select></td>';
+    
+            // tr_html +=
+            //     '<td><input class="form-control" name="batchno[]" type="text" value="' +
+            //     batchno +
+            //     '" data-id="' +
+            //     row_no +
+            //     '" data-item="' +
+            //     item_id +
+            //     '" id="batchno_' +
+            //     row_no +
+            //     '"></td>';
 
             if (site.settings.product_expiry == 1) {
                 tr_html +=
@@ -545,7 +594,7 @@ function loadItems() {
                 product_unit +
                 '"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' +
                 base_quantity +
-                '"></td>';
+                '"><span style="font-size:10px;margin-top:5px;" class="batchQuantity">'+item_batchQuantity+'</span></td>';
 
                 tr_html +=
                 '<td><span>' +
@@ -591,6 +640,13 @@ function loadItems() {
                 $('#row_' + row_no).addClass('danger');
                 $('#add_transfer, #edit_transfer').attr('disabled', true);
             }
+
+            // Thi will override all the above checks
+            if(base_quantity > item_batchQuantity){
+                $('#row_' + row_no).addClass('danger');
+                $('#add_transfer, #edit_transfer').attr('disabled', true);
+            }
+
         });
 
         var col = 2;

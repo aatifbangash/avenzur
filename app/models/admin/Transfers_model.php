@@ -234,10 +234,10 @@ class Transfers_model extends CI_Model
 
     public function getProductNamesWithBatches($term, $warehouse_id, $limit = 10)
     {
-        $this->db->select('products.id, code, name, warehouses_products.quantity, cost, tax_rate, type, unit, purchase_unit, tax_method, purchase_items.batchno, purchase_items.serial_number, purchase_items.expiry')
+        $this->db->select('products.id, code, name, warehouses_products.quantity, cost, tax_rate, type, unit, purchase_unit, tax_method, purchase_items.serial_number')
             ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
             ->join('purchase_items', 'purchase_items.product_id=products.id', 'left')
-            ->group_by('products.id, purchase_items.batchno');
+            ->group_by('products.id');
         if ($this->Settings->overselling) {
             $this->db->where("type = 'standard' AND (name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
         } else {

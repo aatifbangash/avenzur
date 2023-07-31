@@ -1136,6 +1136,17 @@ $(document).ready(function (e) {
              //var new_batchno = parseFloat($(this).val()),
              var new_batchno = $(this).val(),
                  item_id = row.attr('data-item-id');
+            
+            var batchExpiry =  $(this).find(':selected').data('batchexpiry');
+            slitems[item_id].row.expiry = batchExpiry;
+
+            var batchQty =  $(this).find(':selected').data('batchqty');
+            slitems[item_id].row.batchQuantity = batchQty;
+
+            var batchPurchaseCost =  $(this).find(':selected').data('batchpurchasecost');
+            slitems[item_id].row.batchPurchaseCost = batchPurchaseCost;
+           
+
              slitems[item_id].row.batch_no = new_batchno;
              localStorage.setItem('slitems', JSON.stringify(slitems));
              loadItems();
@@ -1347,11 +1358,14 @@ function loadItems() {
             item.order = item.order ? item.order : new Date().getTime();
             const pattern = /^\d{2}\/\d{2}\/\d{4}$/;
             const isFormattedDate = pattern.test(item.row.expiry);
-            var item_expiry_date;
-            if(isFormattedDate){
-                item_expiry_date = item.row.expiry;
-            }else{
-                item_expiry_date = new Date(item.row.expiry).toLocaleDateString('en-GB');
+           
+            var item_expiry_date='';
+            if(item.row.expiry != null){                
+                if(isFormattedDate){
+                    item_expiry_date = item.row.expiry;
+                }else{
+                    item_expiry_date = new Date(item.row.expiry).toLocaleDateString('en-GB');
+                }
             }
             var product_id = item.row.id,
                 item_type = item.row.type,
@@ -1375,6 +1389,7 @@ function loadItems() {
                 item_bonus = item.row.bonus,
                 item_dis1 = item.row.dis1,
                 item_dis2 = item.row.dis2,
+                item_batchQuantity = item.row.batchQuantity,
 
             // if(item_expiry == 'undefined'){
             //     item_expiry = '';
@@ -1563,13 +1578,13 @@ function loadItems() {
                     row_no +
                     '" value="' +
                     formatDecimal(item_sale_price, 2) +
-                    '"></td>';
+                    '">';
 
                 tr_html +=
-                    '<td><input id="ssale_' +
+                    '<input id="ssale_' +
                     row_no +
-                    '" class="form-control scost text-center" name="net_cost[]" type="text" value="' +
-                    formatDecimal(item.row.cost, 2) +
+                    '" class="form-control scost text-center" name="net_cost[]" type="hidden" value="' +
+                    formatDecimal(item.row.batchPurchaseCost, 2) +
                     '" data-id="' +
                     row_no +
                     '" data-item="' +
@@ -1607,12 +1622,25 @@ function loadItems() {
                     row_no +
                     '"></td>';
 
-            tr_html +=
-                    '<td><input class="form-control rbatchno" name="batchno[]" type="text" value="' +
-                    item_batchno +
-                    '" id="batchno_' +
-                    row_no +
-                    '"></td>';
+            // tr_html +=
+            //         '<td><input class="form-control rbatchno" name="batchno[]" type="text" value="' +
+            //         item_batchno +
+            //         '" id="batchno_' +
+            //         row_no +
+            //         '"></td>';
+
+            var batchesOptions = '<option value="" data-batchExpiry="null" data-batchQty="0"  data-batchpurchasecost="0">--</option>';
+            if (item.batches !== false) {
+                $.each(item.batches, function () {
+                    batchSelected = "";
+                    if (this.batchno == item_batchno) {
+                        batchSelected = "selected";
+                    }
+                    batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'"  data-batchpurchasecost="'+this.purchase_cost+'" value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
+                });
+            }
+
+            tr_html += '<td><select class="form-control rbatchno" name="batchno[]" id="batchno_' + row_no +'">'+batchesOptions+'</select></td>';
 
             tr_html +=
                     '<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="' +
@@ -1640,7 +1668,7 @@ function loadItems() {
                 product_unit +
                 '"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' +
                 base_quantity +
-                '"></td>';
+                '"><span style="position:absolute;font-size:10px;margin-top:5px;" class="batchQuantity">'+item_batchQuantity+'</span></td>';
            /* if ((site.settings.product_discount == 1 && allow_discount == 1) || item_discount) {
                 tr_html +=
                     '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="hidden" id="discount_' +
@@ -1798,7 +1826,7 @@ function loadItems() {
             count += parseFloat(item_qty);
             an++;
 
-            base_quantity += item_bonus;
+            //base_quantity += item_bonus;
 
             if (item_type == 'standard' && item.options !== false) {
                 $.each(item.options, function () {
@@ -1831,6 +1859,15 @@ function loadItems() {
                     });
                 }
             }
+
+            // Thi will override all the above checks
+            if(base_quantity > item_batchQuantity){
+                $('#row_' + row_no).addClass('danger');
+                if (site.settings.overselling != 1) {
+                    $('#add_sale, #edit_sale').attr('disabled', true);
+                }
+            }
+
         });
 
         var col = 8;

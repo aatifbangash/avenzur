@@ -1256,7 +1256,7 @@ class Site extends CI_Model
             }
 
             $purchaseObj = $this->getExpiryFromBatch($product_id, $batchno, $warehouse_id);
-            $this->db->update('warehouses_products', ['expiry' => $purchaseObj->expiry, 'purchase_cost' => $purchaseObj->net_unit_cost], ['product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno]);
+            $this->db->update('warehouses_products', ['expiry' => $purchaseObj->expiry], ['product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno]);
 
             return true;
         }
@@ -1578,5 +1578,18 @@ class Site extends CI_Model
             return $data->stock;
         }
         return 0;
+    }
+
+    public function getProductBatchesData($product_id, $warehouse)
+    {
+        $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        
+            return $data;
+        }
+        return false;
     }
 }
