@@ -62,11 +62,11 @@
         echo '<td>'.lang('accounts_index_td_label_ledger').'</td>';
 
         echo '<td style="text-align:right">';
-        echo $CI->functionscore->toCurrency($data['op_total_dc'], $data['op_total']);
+        echo $data['op_total_dc'], $data['op_total'];
         echo '</td>';
 
         echo '<td style="text-align:right">';
-        echo $CI->functionscore->toCurrency($data['cl_total_dc'], $data['cl_total']);
+        echo $data['cl_total_dc'], $data['cl_total'];
         echo '</td>';
 
         echo '<td class="td-actions">';
