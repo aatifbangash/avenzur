@@ -55,5 +55,16 @@ ALTER TABLE `sma_warehouses_products` ADD `batchno` VARCHAR(50) NOT NULL AFTER `
 ALTER TABLE `sma_warehouses_products` ADD `expiry` DATE NULL DEFAULT NULL AFTER `batchno`;
 
 
+# Insert Account-Categories 
 
-
+INSERT INTO sma_accounts_ledgers_cats(name) SELECT category FROM (
+    (SELECT
+        category
+    FROM
+        sma_accounts_ledgers)
+    UNION
+   ( SELECT
+        category
+    FROM
+    sma_accounts_groups)
+) A;
