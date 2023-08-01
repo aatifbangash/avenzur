@@ -67,4 +67,4 @@ INSERT INTO sma_accounts_ledgers_cats(name) SELECT category FROM (
         category
     FROM
     sma_accounts_groups)
-) A;
+) A WHERE category <> '';
