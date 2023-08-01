@@ -81,7 +81,9 @@ class Purchases extends MY_Controller
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'undefined' ? $_POST['product_option'][$r] : null;
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
-                $item_discount      = $_POST['product_discount'][$r] ?? null;
+                //$item_discount      = $_POST['product_discount'][$r] ?? null;
+                $item_discount      = $_POST['dis1'][$r] ?? null;
+                $item_discount2      = $_POST['dis2'][$r] ?? null;
                 $item_expiry        = (isset($_POST['expiry'][$r]) && !empty($_POST['expiry'][$r])) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
                 $supplier_part_no   = (isset($_POST['part_no'][$r]) && !empty($_POST['part_no'][$r])) ? $_POST['part_no'][$r] : null;
                 $item_unit          = $_POST['product_unit'][$r];
@@ -105,30 +107,39 @@ class Purchases extends MY_Controller
                         }
                     }
                     // $unit_cost = $real_unit_cost;
-                    $pr_discount      = $this->site->calculateDiscount($item_discount, $unit_cost);
-                    $unit_cost        = $this->sma->formatDecimal($unit_cost - $pr_discount);
-                    $item_net_cost    = $unit_cost;
+                    $pr_discount      = $this->site->calculateDiscount($item_discount.'%', $unit_cost);
+                    $amount_after_dis1 = $unit_cost - $pr_discount;
+                    $pr_discount2      = $this->site->calculateDiscount($item_discount2.'%', $amount_after_dis1);
+
+                    $item_net_cost        = $this->sma->formatDecimal($unit_cost - $pr_discount - $pr_discount2);
+                    //$item_net_cost    = $unit_cost;
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
-                    $product_discount += $pr_item_discount;
+                    $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $item_unit_quantity);
+                    $product_discount += ($pr_item_discount + $pr_item_discount2);
                     $pr_item_tax = $item_tax = 0;
                     $tax         = '';
+                    
+                    $totalbeforevat = ($item_sale_price*$item_quantity) - $pr_item_discount - $pr_item_discount2;
+                    $totalpurcahsesbeforevat = ($unit_cost*$item_quantity) - $pr_item_discount - $pr_item_discount2;
 
                     if (isset($item_tax_rate) && $item_tax_rate != 0) {
                         $tax_details = $this->site->getTaxRateByID($item_tax_rate);
                         $ctax        = $this->site->calculateTax($product_details, $tax_details,$unit_cost);
                         $item_tax    = $this->sma->formatDecimal($ctax['amount']);
                         $tax         = $ctax['tax'];
+                        
                         if ($product_details->tax_method != 1) {
                             $item_net_cost = $unit_cost - $item_tax;
                         }
-                        $pr_item_tax = $this->sma->formatDecimal(($totalbeforevat*($tax_details->rate/100)), 4);//$this->sma->formatDecimal($item_tax * $item_unit_quantity, 4);
+                        $pr_item_tax = $this->sma->formatDecimal(($totalpurcahsesbeforevat*($tax_details->rate/100)), 4);//$this->sma->formatDecimal($item_tax * $item_unit_quantity, 4);
+                        
                         if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($this->Settings->state == $supplier_details->state), $tax_details)) {
                             $total_cgst += $gst_data['cgst'];
                             $total_sgst += $gst_data['sgst'];
                             $total_igst += $gst_data['igst'];
                         }
                     }
-
+                    
                     $product_tax += $pr_item_tax;
                     $subtotal = $main_net; //(($item_net_cost * $item_unit_quantity) + $pr_item_tax);
                     $subtotal2 = (($item_net_cost * $item_unit_quantity));// + $pr_item_tax);
@@ -227,7 +238,7 @@ class Purchases extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            // $this->sma->print_arrays($data, $products);
+            //$this->sma->print_arrays($data, $products);exit;
         }
 
         if ($this->form_validation->run() == true && $this->purchases_model->addPurchase($data, $products, $attachments)) {
@@ -673,7 +684,9 @@ class Purchases extends MY_Controller
                 $quantity_received  = $_POST['received_base_quantity'][$r];
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'undefined' ? $_POST['product_option'][$r] : null;
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
-                $item_discount      = $_POST['product_discount'][$r] ?? null;
+                //$item_discount      = $_POST['product_discount'][$r] ?? null;
+                $item_discount      = $_POST['dis1'][$r] ?? null;
+                $item_discount2      = $_POST['dis2'][$r] ?? null;
                 $item_expiry        = (isset($_POST['expiry'][$r]) && !empty($_POST['expiry'][$r])) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
                 $supplier_part_no   = (isset($_POST['part_no'][$r]) && !empty($_POST['part_no'][$r])) ? $_POST['part_no'][$r] : null;
                 $quantity_balance   = $_POST['quantity_balance'][$r];
@@ -705,15 +718,24 @@ class Purchases extends MY_Controller
                 if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity) && isset($quantity_balance)) {
                     $product_details = $this->purchases_model->getProductByCode($item_code);
                     // $unit_cost = $real_unit_cost;
-                    $pr_discount      = $this->site->calculateDiscount($item_discount, $unit_cost);
-                    $unit_cost        = $this->sma->formatDecimal($unit_cost - $pr_discount);
+                    //$pr_discount      = $this->site->calculateDiscount($item_discount, $unit_cost);
+                    $pr_discount      = $this->site->calculateDiscount($item_discount.'%', $unit_cost);
+                    $amount_after_dis1 = $unit_cost - $pr_discount;
+                    $pr_discount2      = $this->site->calculateDiscount($item_discount2.'%', $amount_after_dis1);
+
+                    //$unit_cost        = $this->sma->formatDecimal($unit_cost - $pr_discount);
+                    $unit_cost        = $this->sma->formatDecimal($unit_cost - $pr_discount - $pr_discount2);
                     $item_net_cost    = $unit_cost;
+                    //$pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
-                    $product_discount += $pr_item_discount;
+                    $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $item_unit_quantity);
+                    $product_discount += ($pr_item_discount + $pr_item_discount2);
+
+                    //$product_discount += $pr_item_discount;
                     $pr_item_tax = 0;
                     $item_tax    = 0;
                     $tax         = '';
-
+                    
                     if (isset($item_tax_rate) && $item_tax_rate != 0) {
                         $tax_details = $this->site->getTaxRateByID($item_tax_rate);
                         $ctax        = $this->site->calculateTax($product_details, $tax_details, $unit_cost);
@@ -723,6 +745,7 @@ class Purchases extends MY_Controller
                             $item_net_cost = $unit_cost - $item_tax;
                         }
                         $pr_item_tax = $this->sma->formatDecimal($item_tax * $item_unit_quantity, 4);
+                        
                         if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($this->Settings->state == $supplier_details->state), $tax_details)) {
                             $total_cgst += $gst_data['cgst'];
                             $total_sgst += $gst_data['sgst'];
@@ -841,7 +864,7 @@ class Purchases extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            //$this->sma->print_arrays($data, $products);
+            //$this->sma->print_arrays($data, $products);exit;
         }
 
         if ($this->form_validation->run() == true && $this->purchases_model->updatePurchase($id, $data, $products, $attachments)) {
@@ -886,7 +909,8 @@ class Purchases extends MY_Controller
                 $options               = $this->purchases_model->getProductOptions($row->id);
                 $row->option           = $item->option_id;
                 $row->real_unit_cost   = $item->real_unit_cost;
-                $row->cost             = $this->sma->formatDecimal($item->net_unit_cost + ($item->item_discount / $item->quantity));
+                //$row->cost             = $this->sma->formatDecimal($item->net_unit_cost + ($item->item_discount / $item->quantity));
+                $row->cost             = $item->real_unit_cost;
                 $row->tax_rate         = $item->tax_rate_id;
                 $row->bonus            = $item->bonus;
                 $row->dis1             = $item->discount1;

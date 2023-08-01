@@ -1445,10 +1445,10 @@ function loadItems() {
                 if (pr_tax !== false && pr_tax != 0) {
                     if (pr_tax.type == 1) {
                         if (item_tax_method == '0') {
-                            pr_tax_val = formatDecimal((unit_price * parseFloat(pr_tax.rate)) / (100 + parseFloat(pr_tax.rate)), 4);
+                            pr_tax_val = formatDecimal((item_sale_price * parseFloat(pr_tax.rate)) / (100 + parseFloat(pr_tax.rate)), 4);
                             pr_tax_rate = formatDecimal(pr_tax.rate) + '%';
                         } else {
-                            pr_tax_val = formatDecimal((unit_price * parseFloat(pr_tax.rate)) / 100, 4);
+                            pr_tax_val = formatDecimal((item_sale_price * parseFloat(pr_tax.rate)) / 100, 4);
                             pr_tax_rate = formatDecimal(pr_tax.rate) + '%';
                         }
                     } else if (pr_tax.type == 2) {
@@ -1457,6 +1457,7 @@ function loadItems() {
                     }
                 }
             }
+
             pr_tax_val = formatDecimal(pr_tax_val);
             product_tax += formatDecimal(pr_tax_val * item_qty);
             item_price = item_tax_method == 0 ? formatDecimal(unit_price - pr_tax_val, 4) : formatDecimal(unit_price);
@@ -1480,7 +1481,7 @@ function loadItems() {
 
             var main_net = 0.0;
 
-            var total_before_dis_vat = (parseFloat(item_price)) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty);
+            var total_before_dis_vat = (parseFloat(item_sale_price)) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty);
 
 
 
