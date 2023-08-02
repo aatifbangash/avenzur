@@ -68,3 +68,7 @@ INSERT INTO sma_accounts_ledgers_cats(name) SELECT category FROM (
     FROM
     sma_accounts_groups)
 ) A WHERE category <> '';
+
+# Transfer Sequence Code
+
+ALTER TABLE `sma_transfers` ADD `sequence_code` VARCHAR(255) NULL DEFAULT '' AFTER `type`;

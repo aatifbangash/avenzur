@@ -20,6 +20,7 @@
                 <div class="row bold">
                     <div class="col-xs-4"><?= lang('date'); ?>: <?= $this->sma->hrld($transfer->date); ?>
                         <br><?= lang('ref'); ?>: <?= $transfer->transfer_no; ?>
+                        <br><?= lang('Transfer No'); ?>: <?= $transfer->sequence_code; ?>
                     </div>
                     <div class="col-xs-6 pull-right text-right order_barcodes">
                         <img src="<?= admin_url('misc/barcode/' . $this->sma->base64url_encode($transfer->transfer_no) . '/code128/74/0/1'); ?>" alt="<?= $transfer->transfer_no; ?>" class="bcimg" />

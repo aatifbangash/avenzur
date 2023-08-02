@@ -116,4 +116,23 @@ class Sequence_codes extends MY_Controller
         }
         echo "Done";
     }
+
+    public function updatetransfer()
+    {
+        // 	sma_purchases
+        $this->db->select('id');
+        $this->db->where('sequence_code IS NULL');
+        $this->db->or_where('sequence_code = ""');
+        $this->db->order_by('id', 'ASC');
+        $query = $this->db->get('sma_transfers');
+        if ($query->num_rows() > 0) {
+            foreach (($query->result()) as $row) {
+
+                $code = $this->sequenceCode->generate('TR', 5);
+                $id = $row->id;
+                $this->db->update('sma_transfers', ['sequence_code' => $code], ['id' => $id]);
+            }
+        }
+        echo "Done";
+    }
 }
