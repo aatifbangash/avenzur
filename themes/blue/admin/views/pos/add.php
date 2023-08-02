@@ -329,9 +329,9 @@
                                     </tr>
                                     <tr>
                                         <td style="padding: 5px 10px;"><?=lang('order_tax');?>
-                                            <a href="#" id="pptax2">
+                                            <!--<a href="#" id="pptax2">
                                                 <i class="fa fa-edit"></i>
-                                            </a>
+                                            </a>-->
                                         </td>
                                         <td class="text-right" style="padding: 5px 10px;font-size: 14px; font-weight:bold;">
                                             <span id="ttax2">0.00</span>

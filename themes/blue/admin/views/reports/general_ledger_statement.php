@@ -81,6 +81,7 @@
                                 <?php
                                     $count = 0;
                                     $balance = $total_ob;
+                                   
                                     foreach($supplier_statement as $statement){
                                         
                                         if($statement->dc == 'D'){
@@ -92,7 +93,7 @@
                                         ?>
                                             <tr>
                                                 <td><?= $count; ?></td>
-                                                <td><?= $statement->transaction_type; ?></td>
+                                                <td><a target="blank" href="admin/entries/view/journal/<?php echo $statement->entry_id; ?>"><?= $statement->transaction_type; ?></a></td>
                                                 <td><?= $statement->date; ?></td>
                                                 <td><?= $statement->code; ?></td>
                                                 <td><?= $statement->name; ?></td>

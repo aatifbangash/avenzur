@@ -308,8 +308,8 @@ class Reports_model extends CI_Model
                 //->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
                 ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
                 ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
-                ->where('sma_accounts_entries.date <', $start_date)
-                ->group_by('sma_accounts_entryitems.dc');
+                ->where('sma_accounts_entries.date <', $start_date);
+                //->group_by('sma_accounts_entryitems.dc');
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
