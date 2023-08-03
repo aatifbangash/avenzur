@@ -249,7 +249,7 @@
                                                     <tbody>
                                                     <?php foreach ($warehouses as $warehouse) {
                                                             if ($warehouse->quantity != 0) {
-                                                                echo '<tr><td>' . $warehouse->name . ' (' . $warehouse->code . ')</td><td><strong>' . $this->sma->formatQuantity($warehouse->quantity) . '</strong>' . ($warehouse->rack ? ' (' . $warehouse->rack . ')' : '') . '</td>' . (($Owner || $Admin || $this->session->userdata('show_cost')) ? '<td>' . $warehouse->avg_cost . '</td>' : '') . '</tr>';
+                                                                echo '<tr><td>' . $warehouse->name . ' (' . $warehouse->code . ')</td><td><strong>' . $this->sma->formatQuantity($warehouse->quantity) . '</strong>' . ($warehouse->rack ? ' (' . $warehouse->rack . ')' : '') . '</td>' . (($Owner || $Admin || $this->session->userdata('show_cost')) ? '<td>' . $this->sma->formatDecimal($warehouse->avg_cost) . '</td>' : '') . '</tr>';
                                                             }
                                                         } ?>
                                                     </tbody>
