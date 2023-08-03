@@ -30,6 +30,10 @@ class Transfers extends MY_Controller
             'types'    => $this->digital_file_types,
             'max_size' => $this->allowed_file_size,
         ]);
+
+        // Sequence-Code
+        $this->load->library('SequenceCode');
+        $this->sequenceCode = new SequenceCode();
     }
 
     public function add()
@@ -168,6 +172,7 @@ class Transfers extends MY_Controller
                 'status'                  => $status,
                 'shipping'                => $shipping,
                 'type'                    => 'transfer',
+                'sequence_code'           => $this->sequenceCode->generate('TR', 5)
             ];
 
             if ($this->Settings->indian_gst) {
@@ -776,7 +781,7 @@ class Transfers extends MY_Controller
         $this->load->library('datatables');
 
         $this->datatables
-            ->select('id, date, transfer_no, from_warehouse_name as fname, from_warehouse_code as fcode, to_warehouse_name as tname,to_warehouse_code as tcode, total, total_tax, grand_total, status, attachment')
+            ->select('id, date, transfer_no, sequence_code, from_warehouse_name as fname, from_warehouse_code as fcode, to_warehouse_name as tname,to_warehouse_code as tcode, total, total_tax, grand_total, status, attachment')
             ->from('transfers')
             ->edit_column('fname', '$1 ($2)', 'fname, fcode')
             ->edit_column('tname', '$1 ($2)', 'tname, tcode');
@@ -1346,6 +1351,7 @@ class Transfers extends MY_Controller
                 'status'                  => $status,
                 'shipping'                => $shipping,
                 'type'                    => 'transfer',
+                'sequence_code'           => $this->sequenceCode->generate('TR', 5)
             ];
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;

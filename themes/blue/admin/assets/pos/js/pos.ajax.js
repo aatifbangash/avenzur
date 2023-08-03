@@ -1163,6 +1163,7 @@ function loadItems() {
         total_discount = 0;
         order_data = {};
         bill_data = {};
+        total_vat = 0;
 
         $('#posTable tbody').empty();
         var time = new Date().getTime() / 1000;
@@ -1299,7 +1300,9 @@ function loadItems() {
                 }
             }
             pr_tax_val = formatDecimal(pr_tax_val);
-            item_price = item_tax_method == 0 ? formatDecimal(unit_price - pr_tax_val, 4) : formatDecimal(unit_price);
+            total_vat += pr_tax_val;
+            //item_price = item_tax_method == 0 ? formatDecimal(unit_price - pr_tax_val, 4) : formatDecimal(unit_price);
+            item_price = formatDecimal(unit_price);
             unit_price = formatDecimal(unit_price + item_discount, 4);
 
             if (pos_settings.item_order == 1 && category != item.row.category_id) {
@@ -1358,13 +1361,13 @@ function loadItems() {
                 item_name +
                 (sel_opt != '' ? ' (' + sel_opt + ')' : '') +
                 '</span><span class="lb"></span>' +
-                (item.free
+                /*(item.free
                     ? ''
                     : '<i class="pull-right fa fa-edit fa-bx tip pointer edit" id="' +
                       row_no +
                       '" data-item="' +
                       item_id +
-                      '" title="Edit" style="cursor:pointer;"></i>') +
+                      '" title="Edit" style="cursor:pointer;"></i>') +*/
                 '<i class="pull-right fa fa-comment fa-bx' +
                 (item_comment != '' ? '' : '-o') +
                 ' tip pointer comment" id="' +
@@ -1413,7 +1416,7 @@ function loadItems() {
                 '"><span class="text-right sprice" id="sprice_' +
                 row_no +
                 '">' +
-                formatMoney(parseFloat(item_price) + parseFloat(pr_tax_val)) +
+                formatMoney(parseFloat(item_price)) +
                 '</span></td>';
             tr_html +=
                 '<td>' +
@@ -1610,6 +1613,9 @@ function loadItems() {
         product_tax = formatDecimal(product_tax);
         total_discount = formatDecimal(order_discount + product_discount);
 
+        $('#ttax2').text(formatMoney(total_vat));
+        //localStorage.setItem('postax2', total_vat);
+
         // Totals calculations after item addition
         var gtotal = parseFloat(total + invoice_tax - order_discount + parseFloat(shipping));
         $('#total').text(formatMoney(total));
@@ -1617,7 +1623,7 @@ function loadItems() {
         $('#total_items').val(parseFloat(count) - 1);
         $('#tds').text('(' + formatMoney(product_discount) + ') ' + formatMoney(order_discount));
         if (site.settings.tax2 != 0) {
-            $('#ttax2').text(formatMoney(invoice_tax));
+            //$('#ttax2').text(formatMoney(invoice_tax));
         }
         $('#tship').text(parseFloat(shipping) > 0 ? formatMoney(shipping) : '');
         $('#gtotal').text(formatMoney(gtotal));

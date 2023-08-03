@@ -721,7 +721,7 @@ class Products_model extends CI_Model
 
     public function getStockCountProducts($warehouse_id, $type, $categories = null, $brands = null)
     {
-        $this->db->select("{$this->db->dbprefix('products')}.id as id, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('warehouses_products')}.quantity as quantity")
+        $this->db->select("{$this->db->dbprefix('products')}.id as id, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.price as sale_price, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('warehouses_products')}.quantity as quantity, {$this->db->dbprefix('warehouses_products')}.batchno as batchno, {$this->db->dbprefix('warehouses_products')}.expiry as expiry, {$this->db->dbprefix('warehouses_products')}.purchase_cost")
         ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
         ->where('warehouses_products.warehouse_id', $warehouse_id)
         ->where('products.type', 'standard')
@@ -765,7 +765,7 @@ class Products_model extends CI_Model
 
     public function getStockCountProductVariants($warehouse_id, $product_id)
     {
-        $this->db->select("{$this->db->dbprefix('product_variants')}.name, {$this->db->dbprefix('warehouses_products_variants')}.quantity as quantity")
+        $this->db->select("{$this->db->dbprefix('product_variants')}.name, {$this->db->dbprefix('warehouses_products_variants')}.quantity as quantity, {$this->db->dbprefix('products')}.price as sale_price, {$this->db->dbprefix('warehouses_products')}.batchno as batchno, {$this->db->dbprefix('warehouses_products')}.expiry as expiry, {$this->db->dbprefix('warehouses_products')}.purchase_cost")
             ->join('warehouses_products_variants', 'warehouses_products_variants.option_id=product_variants.id', 'left');
         $q = $this->db->get_where('product_variants', ['product_variants.product_id' => $product_id, 'warehouses_products_variants.warehouse_id' => $warehouse_id]);
         if ($q->num_rows() > 0) {

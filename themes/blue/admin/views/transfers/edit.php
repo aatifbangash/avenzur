@@ -237,6 +237,13 @@
                         <?php } ?>
 
                         <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="Transfer No.">Transfer No</label>
+                                <?php echo form_input('sequence_code',  ($_POST['sequence_code'] ?? $transfer->sequence_code), 'class="form-control input-tip" readonly id="transfer_number"'); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
                             <div class="form-group" style="margin-bottom:5px;">
                                 <?= lang('shipping', 'toshipping'); ?>
                                 <?php echo form_input('shipping', '', 'class="form-control input-tip" id="toshipping"'); ?>

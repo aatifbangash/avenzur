@@ -754,33 +754,37 @@ class Products extends MY_Controller
             $pr       = 0;
             $rw       = 0;
             foreach ($products as $product) {
-                if ($variants = $this->products_model->getStockCountProductVariants($warehouse_id, $product->id)) {
+                /*if ($variants = $this->products_model->getStockCountProductVariants($warehouse_id, $product->id)) {
                     foreach ($variants as $variant) {
                         $items[] = [
                             'product_code' => $product->code,
                             'product_name' => $product->name,
-                            'variant'      => $variant->name,
-                            'expected'     => $variant->quantity,
-                            'counted'      => '',
+                            'batch_no'      => $product->batchno,
+                            'expiry'      => $product->expiry,
+                            'balance'     => $product->quantity,
+                            'purchase_price' => $product->purchase_cost,
+                            'sale_price'  => $product->sale_price
                         ];
                         $rw++;
                     }
-                } else {
+                } else {*/
                     $items[] = [
                         'product_code' => $product->code,
                         'product_name' => $product->name,
-                        'variant'      => '',
-                        'expected'     => $product->quantity,
-                        'counted'      => '',
+                        'batch_no'      => $product->batchno,
+                        'expiry'      => $product->expiry,
+                        'balance'     => $product->quantity,
+                        'purchase_price' => $product->purchase_cost,
+                        'sale_price'  => $product->sale_price
                     ];
                     $rw++;
-                }
+                //}
                 $pr++;
             }
             if (!empty($items)) {
                 $csv_file = fopen('./files/' . $name, 'w');
                 fprintf($csv_file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-                fputcsv($csv_file, [lang('product_code'), lang('product_name'), lang('variant'), lang('expected'), lang('counted')]);
+                fputcsv($csv_file, [lang('product_code'), lang('product_name'), lang('Batch'), lang('Expiry'), lang('Balance'), lang('Purchase Price'), lang('Sale Price')]);
                 foreach ($items as $item) {
                     fputcsv($csv_file, $item);
                 }

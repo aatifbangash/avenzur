@@ -14,7 +14,7 @@
                 });
                 $.ajax({'dataType': 'json', 'type': 'POST', 'url': sSource, 'data': aoData, 'success': fnCallback});
             },
-            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld}, null, null, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": row_status}, {"bSortable": false,"mRender": attachment}, {"bSortable": false}],
+            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld}, null, null, null, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": row_status}, {"bSortable": false,"mRender": attachment}, {"bSortable": false}],
             'fnRowCallback': function (nRow, aData, iDisplayIndex) {
                 var oSettings = oTable.fnSettings();
                 nRow.id = aData[0];
@@ -24,29 +24,29 @@
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var row_total = 0, tax = 0, gtotal = 0;
                 for (var i = 0; i < aaData.length; i++) {
-                    row_total += parseFloat(aaData[aiDisplay[i]][5]);
-                    tax += parseFloat(aaData[aiDisplay[i]][6]);
-                    gtotal += parseFloat(aaData[aiDisplay[i]][7]);
+                    row_total += parseFloat(aaData[aiDisplay[i]][6]);
+                    tax += parseFloat(aaData[aiDisplay[i]][7]);
+                    gtotal += parseFloat(aaData[aiDisplay[i]][8]);
                 }
                 var nCells = nRow.getElementsByTagName('th');
-                nCells[5].innerHTML = currencyFormat(formatMoney(row_total));
-                nCells[6].innerHTML = currencyFormat(formatMoney(tax));
-                nCells[7].innerHTML = currencyFormat(formatMoney(gtotal));
+                nCells[6].innerHTML = currencyFormat(formatMoney(row_total));
+                nCells[7].innerHTML = currencyFormat(formatMoney(tax));
+                nCells[8].innerHTML = currencyFormat(formatMoney(gtotal));
             }
         }).fnSetFilteringDelay().dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
             {column_number: 2, filter_default_label: "[<?=lang('ref_no');?>]", filter_type: "text", data: []},
             {
-                column_number: 3,
+                column_number: 4,
                 filter_default_label: "[<?=lang('warehouse') . ' (' . lang('from') . ')';?>]",
                 filter_type: "text", data: []
             },
             {
-                column_number: 4,
+                column_number: 5,
                 filter_default_label: "[<?=lang('warehouse') . ' (' . lang('to') . ')';?>]",
                 filter_type: "text", data: []
             },
-            {column_number: 8, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
+            {column_number: 9, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
         ], "footer");
     });
 </script>
@@ -108,6 +108,7 @@
                             </th>
                             <th><?= lang('date'); ?></th>
                             <th><?= lang('ref_no'); ?></th>
+                            <th><?= lang('Transfer No'); ?></th>
                             <th><?= lang('warehouse') . ' (' . lang('from') . ')'; ?></th>
                             <th><?= lang('warehouse') . ' (' . lang('to') . ')'; ?></th>
                             <th><?= lang('total'); ?></th>
@@ -128,7 +129,7 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
-                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
                             <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i></th>
                             <th style="width:100px; text-align: center;"><?= lang('actions'); ?></th>
                         </tr>
