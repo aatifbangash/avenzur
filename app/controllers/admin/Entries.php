@@ -10,15 +10,44 @@ class Entries extends MY_Controller
     
 	public function index() {
 
-		$conditions = array(); // conditions if any
-		if ($conditions)
-		{
-			// if any conditions apply where clause
-			$this->db->where($conditions);
+		$eid         = $this->input->get('eid');
+        $tran_number   = $this->input->get('tran_number');
+		$start_date     = $this->input->get('start_date');
+        $end_date     = $this->input->get('end_date');
+
+		if ($start_date) {
+			$start_date = $this->sma->fld($start_date);
+			$end_date   = $this->sma->fld($end_date);
+		}
+		
+		// $conditions = array(); // conditions if any
+		// if ($conditions)
+		// {
+		// 	// if any conditions apply where clause
+		// 	$this->db->where($conditions);
+		// }
+
+		if ($start_date && $start_date != "0000-00-00 00:00:00") {
+			$this->db->where('date >=', $start_date);		
+
+			if ($end_date  && $end_date != "0000-00-00 00:00:00") {
+				$this->db->where('date <=', $end_date);
+			}
+		}
+
+		if(!empty($eid)){
+			$this->db->where('id =', $eid);	
+		}
+
+		if(!empty($tran_number)){
+			$this->db->where('number =', $tran_number);	
 		}
 
 		// select all entries
 		$query = $this->db->get('sma_accounts_entries');
+
+		
+
 
 		// pass an array of all entries to view
 		$this->data['entries'] = $query->result_array();

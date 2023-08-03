@@ -23,7 +23,61 @@
             </ul>
         </div>
     </div>
+
     <div class="box-content">
+
+
+       
+
+        
+            <?php
+            $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'method' => 'get'];
+            echo admin_form_open('entries', $attrib);
+            ?>
+
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                    <label class="control-label" for="eid"><?= lang('ID'); ?></label>
+                    <?php echo form_input('eid', (isset($_GET['eid']) ? $_GET['eid'] : ''), 'class="form-control" id="eid"'); ?>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                    <label class="control-label" for="trans_number"><?= lang('entries_views_index_th_number'); ?></label>
+                    <?php echo form_input('tran_number', (isset($_GET['tran_number']) ? $_GET['tran_number'] : ''), 'class="form-control" id="tran_number"'); ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="control-label" for="start_date"><?= lang('From Date'); ?></label>
+                        <?php echo form_input('start_date', (isset($_GET['start_date']) ? $_GET['start_date'] : ''), 'class="form-control datetime" id="start_date"'); ?>
+                    </div>
+                </div>
+
+                <div class="col-sm-4">
+                    <div class="form-group">
+                    <label class="control-label" for="end_date"><?= lang('To Date'); ?></label>
+                        <?php echo form_input('end_date', (isset($_GET['end_date']) ? $_GET['end_date'] : ''), 'class="form-control datetime" id="end_date"'); ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <button class="btn btn-primary" name="submit" type="submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+            <?php echo form_close(); ?>
+       
+        
+
      	<div class="row">
             <div class="col-xs-12">
           <div class="box">
