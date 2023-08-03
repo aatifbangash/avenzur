@@ -776,7 +776,7 @@ class Entries extends MY_Controller
 							(
 								'dc' => $data['dc'],
 								'ledger_id' => $data['ledger_id'],
-								'dr_amount' => $data['amount'],
+								'dr_amount' => $this->sma->formatDecimal($data['amount']),
 								'cr_amount' => '',
 								'narration' => $data['narration'],
 								'ledgername' => $this->ledger_model->getName($data['ledger_id']),
@@ -789,7 +789,7 @@ class Entries extends MY_Controller
 								'dc' => $data['dc'],
 								'ledger_id' => $data['ledger_id'],
 								'dr_amount' => '',
-								'cr_amount' => $data['amount'],
+								'cr_amount' => $this->sma->formatDecimal($data['amount']),
 								'narration' => $data['narration'],
 								'ledgername' => $this->ledger_model->getName($data['ledger_id']),
 								'ledger_balance' => $ledger_balance
@@ -804,7 +804,7 @@ class Entries extends MY_Controller
 							(
 								'dc' => $data['dc'],
 								'ledger_id' => $data['ledger_id'],
-								'dr_amount' => $data['amount'],
+								'dr_amount' => $this->sma->formatDecimal($data['amount']),
 								'cr_amount' => '',
 								'narration' => $data['narration'],
 							);
@@ -815,7 +815,7 @@ class Entries extends MY_Controller
 								'dc' => $data['dc'],
 								'ledger_id' => $data['ledger_id'],
 								'dr_amount' => '',
-								'cr_amount' => $data['amount'],
+								'cr_amount' => $this->sma->formatDecimal($data['amount']),
 								'narration' => $data['narration'],
 							);
 						}
@@ -1155,7 +1155,7 @@ class Entries extends MY_Controller
 					'dc' => $data['dc'],
 					'ledger_id' => $data['ledger_id'],
 					'ledger_name' => $this->ledger_model->getName($data['ledger_id']),
-					'dr_amount' => $data['amount'],
+					'dr_amount' => $this->sma->formatDecimal($data['amount']),
 					'cr_amount' => '',
 					'narration' => $data['narration']
 				);
@@ -1168,7 +1168,7 @@ class Entries extends MY_Controller
 					'ledger_id' => $data['ledger_id'],
 					'ledger_name' => $this->ledger_model->getName($data['ledger_id']),
 					'dr_amount' => '',
-					'cr_amount' => $data['amount'],
+					'cr_amount' => $this->sma->formatDecimal($data['amount']),
 					'narration' => $data['narration']
 
 				);
@@ -1181,8 +1181,8 @@ class Entries extends MY_Controller
 		$this->data['allTags'] = $this->db->get('sma_accounts_tags')->result_array(); // fetch all tags and pass to view
 		$this->data['entry'] = $entry; // pass entry to view
 		
-		$this->data['dr_amount_total'] = $dr_amount_total;
-		$this->data['cr_amount_total'] = $cr_amount_total;
+		$this->data['dr_amount_total'] = $this->sma->formatDecimal($dr_amount_total);
+		$this->data['cr_amount_total'] = $this->sma->formatDecimal($cr_amount_total);
 		// render page
 		$bc  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('entries'), 'page' => lang('Entries')], ['link' => '#', 'page' => lang('Entries')]];
         $meta = ['page_title' => lang('Accounts'), 'bc' => $bc];
