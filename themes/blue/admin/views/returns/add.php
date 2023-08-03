@@ -13,9 +13,9 @@
             source: function (request, response) {
                 $.ajax({
                     type: 'get',
-                    url: '<?= admin_url('returns/suggestions'); ?>',
+                    url: '<?= admin_url('returns/bch_suggestions'); ?>',
                     dataType: "json",
-                    data: { term: request.term },
+                    data: { term: request.term, warehouse_id: $("#rewarehouse").val(), },
                     success: function (data) {
                         $(this).removeClass('ui-autocomplete-loading');
                         response(data);
@@ -234,7 +234,7 @@
                                             <th class="col-md-2"><?= lang('product') . ' (' . lang('code') . ' - ' . lang('name') . ')'; ?></th>
                                            
                                             <th class="col-md-1"><?= lang('Sale Price'); ?></th>
-                                            <th class="col-md-1"><?= lang('Purchase Price'); ?></th>
+                                            <!-- <th class="col-md-1"><?= lang('Purchase Price'); ?></th> -->
                                             <th class="col-md-1"><?= lang('Serial No.'); ?></th>
                                             <th class="col-md-1"><?= lang('batch'); ?></th>
                                             <th class="col-md-1"><?= lang('expiry_date'); ?></th>
@@ -256,7 +256,7 @@
                                             }
                                             ?>
 
-                                           <th class="col-md-1"><?= lang('Total Purchase'); ?></th>
+                                           <!-- <th class="col-md-1"><?= lang('Total Purchase'); ?></th> -->
                                            <th>
                                                 <?= lang('Total Sale'); ?>
                                                 (<span class="currency"><?= $default_currency->code ?></span>)

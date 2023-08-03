@@ -834,8 +834,21 @@ class Returns extends MY_Controller
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
                 $ri       = $this->Settings->item_addition ? $row->id : $c;
 
+                $batches = $this->site->getProductBatchesData($row->id, $item->warehouse_id);
+
+                $row->batchPurchaseCost = $row->cost_price; 
+                $row->batchQuantity = 0;               
+                if ($batches) {
+                    foreach ($batches as $batchesR) {
+                        if($batchesR->batchno == $row->batch_no){
+                            $row->batchQuantity = $batchesR->quantity;
+                            break;
+                        }
+                    }
+                }
+
                 $pr[$ri] = ['id' => $c, 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
-                    'row'        => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, ];
+                    'row'        => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options,  'batches'=>$batches];
                 $c++;
                 
             }
@@ -983,6 +996,105 @@ class Returns extends MY_Controller
                 // $row->batch_no = $row->batchno;
                 $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
                     'row'     => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, ];
+                $r++;
+            }
+            $this->sma->send_json($pr);
+        } else {
+            $this->sma->send_json([['id' => 0, 'label' => lang('no_match_found'), 'value' => $term]]);
+        }
+    }
+
+    public function bch_suggestions()
+    {
+        $term = $this->input->get('term', true);
+        $warehouse_id = $this->input->get('warehouse_id', true);
+
+        if (strlen($term) < 1 || !$term) {
+            die("<script type='text/javascript'>setTimeout(function(){ window.top.location.href = '" . admin_url('welcome') . "'; }, 10);</script>");
+        }
+        $analyzed  = $this->sma->analyze_term($term);
+        $sr        = $analyzed['term'];
+        $option_id = $analyzed['option_id'];
+        $sr        = addslashes($sr);
+        $strict    = $analyzed['strict']                    ?? false;
+        $qty       = $strict ? null : $analyzed['quantity'] ?? null;
+        $bprice    = $strict ? null : $analyzed['price']    ?? null;
+
+        $rows = $this->returns_model->getProductNamesWithBatches($sr, $warehouse_id, $pos);
+
+        if ($rows) {
+            $r = 0;
+            foreach ($rows as $row) {
+                $c      = uniqid(mt_rand(), true);
+                $option = false;
+                unset($row->cost, $row->details, $row->product_details, $row->image, $row->barcode_symbology, $row->cf1, $row->cf2, $row->cf3, $row->cf4, $row->cf5, $row->cf6, $row->supplier1price, $row->supplier2price, $row->cfsupplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1, $row->supplier2, $row->supplier3, $row->supplier4, $row->supplier5, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
+                $row->item_tax_method = $row->tax_method;
+                $options              = $this->returns_model->getProductOptions($row->id);
+
+                if ($options) {
+                    $opt = $option_id && $r == 0 ? $this->returns_model->getProductOptionByID($option_id) : current($options);
+                    if (!$option_id || $r > 0) {
+                        $option_id = $opt->id;
+                    }
+                } else {
+                    $opt        = json_decode('{}');
+                    $opt->price = 0;
+                    $opt->cost = 0;
+                    $option_id  = false;
+                }
+
+                $sold                   = $this->returns_model->getProductsSold($row->id);
+                $row->net_cost          = $sold->cost;
+                
+                 $row->discount1         = 0;
+                 $row->discount2         = 0;
+
+                $row->option = $option_id;
+                if ($row->promotion) {
+                    $row->price = $row->promo_price;
+                }
+
+
+                
+                 $row->cost_price = $opt->cost;
+               
+
+                // $row->cost       = $row->cost;
+
+                $row->base_quantity   = 0;
+                $row->base_unit       = $row->unit;
+                $row->real_unit_price = $row->price;
+                $row->base_unit_price = $row->price;
+                $row->unit            = $row->sale_unit ? $row->sale_unit : $row->unit;
+                $row->qty             = 0;
+                $row->discount        = '0';
+                $row->serial          = '';
+                $row->comment         = '';
+                $row->batch_no        = '';
+                $row->serial_number   = '';
+                $row->expiry          = '';
+                $row->bonus           = '0';
+                $row->dis1            = 0;
+                $row->dis2            = 0;
+
+
+                $combo_items          = false;
+                if ($row->type == 'combo') {
+                    $combo_items = $this->site->getProductComboItems($row->id);
+                }
+                $row->qty = $qty ? $qty : ($bprice ? $bprice / $row->price : 0);
+                $units    = $this->site->getUnitsByBUID($row->base_unit);
+                $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
+                // $row->batch_no = $row->batchno;
+                $row->batch_no = '';
+                $row->batchQuantity = 0;
+                $row->batchPurchaseCost = 0;
+                $row->expiry  = null;
+                
+                $batches = $this->site->getProductBatchesData($row->id, $warehouse_id);
+
+                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
+                    'row'     => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, 'batches'=>$batches];
                 $r++;
             }
             $this->sma->send_json($pr);

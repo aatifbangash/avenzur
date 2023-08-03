@@ -23,38 +23,57 @@ $(document).ready(function (e) {
         .on('focus', '.rbatchno', function () {
             old_row_batchno = $(this).val();
             currTabIndex = $(this).prop('tabindex');
-        })
-        .on('blur', '.rbatchno', function () {
+        }).on('change', '.rbatchno', function () {
             var row = $(this).closest('tr');
-            var new_batchno = $(this).val(),
-            item_id = row.attr('data-item-id');
-            var batchfound = findMatchingItemWithSameBatchNo(new_batchno, item_id, reitems);
-            if(batchfound){
-                $(this).val('');
-                reitems[item_id].row.batchno = '';
-                bootbox.alert("Cannot add same batch number for same product");
-            }else{
-                reitems[item_id].row.batchno = new_batchno;
-                localStorage.setItem('reitems', JSON.stringify(reitems));
-                //loadItems();
-            }
-            //$('[tabindex=' + (currTabIndex + 1) + ']').focus();
-            
-        })
-        .on('change', '.rbatchno', function () {
-            var row = $(this).closest('tr');
-            /*if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
-                $(this).val(old_row_batchno);
-                bootbox.alert(lang.unexpected_value);
-                return;
-            }*/
             //var new_batchno = parseFloat($(this).val()),
             var new_batchno = $(this).val(),
                 item_id = row.attr('data-item-id');
-            /*poitems[item_id].row.batchno = new_batchno;
-            localStorage.setItem('poitems', JSON.stringify(poitems));
-            loadItems();*/
+           
+           var batchExpiry =  $(this).find(':selected').data('batchexpiry');
+           reitems[item_id].row.expiry = batchExpiry;
+
+           var batchQty =  $(this).find(':selected').data('batchqty');
+           reitems[item_id].row.batchQuantity = batchQty;
+
+           var batchPurchaseCost =  $(this).find(':selected').data('batchpurchasecost');
+           reitems[item_id].row.batchPurchaseCost = batchPurchaseCost;
+          
+
+           reitems[item_id].row.batch_no = new_batchno;
+            localStorage.setItem('reitems', JSON.stringify(reitems));
+            loadItems();
         });
+        // .on('blur', '.rbatchno', function () {
+        //     var row = $(this).closest('tr');
+        //     var new_batchno = $(this).val(),
+        //     item_id = row.attr('data-item-id');
+        //     var batchfound = findMatchingItemWithSameBatchNo(new_batchno, item_id, reitems);
+        //     if(batchfound){
+        //         $(this).val('');
+        //         reitems[item_id].row.batchno = '';
+        //         bootbox.alert("Cannot add same batch number for same product");
+        //     }else{
+        //         reitems[item_id].row.batchno = new_batchno;
+        //         localStorage.setItem('reitems', JSON.stringify(reitems));
+        //         //loadItems();
+        //     }
+        //     //$('[tabindex=' + (currTabIndex + 1) + ']').focus();
+            
+        // })
+        // .on('change', '.rbatchno', function () {
+        //     var row = $(this).closest('tr');
+        //     /*if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+        //         $(this).val(old_row_batchno);
+        //         bootbox.alert(lang.unexpected_value);
+        //         return;
+        //     }*/
+        //     //var new_batchno = parseFloat($(this).val()),
+        //     var new_batchno = $(this).val(),
+        //         item_id = row.attr('data-item-id');
+        //     /*poitems[item_id].row.batchno = new_batchno;
+        //     localStorage.setItem('poitems', JSON.stringify(poitems));
+        //     loadItems();*/
+        // });
 
     $('#reset').click(function (e) {
         bootbox.confirm(lang.r_u_sure, function (result) {
@@ -948,6 +967,18 @@ function loadItems() {
             var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
             item.order = item.order ? item.order : new Date().getTime();
 
+            const pattern = /^\d{2}\/\d{2}\/\d{4}$/;
+            const isFormattedDate = pattern.test(item.row.expiry);
+
+            var item_expiry_date='';
+            if(item.row.expiry != null){                
+                if(isFormattedDate){
+                    item_expiry_date = item.row.expiry;
+                }else{
+                    item_expiry_date = new Date(item.row.expiry).toLocaleDateString('en-GB');
+                }
+            }
+
             var product_id = item.row.id,
                 item_type = item.row.type,
                 combo_items = item.combo_items,
@@ -965,9 +996,10 @@ function loadItems() {
                 item_expiry = item.row.expiry,
                 item_batchno = item.row.batch_no,
                 item_serialno = item.row.serial_number,
-                item_bonus = item.row.bonus,
+                item_bonus = 0;//item.row.bonus,
                 item_dis1 = item.row.discount1,
                 item_dis2 = item.row.discount2,
+                item_batchQuantity = item.row.batchQuantity,
                 item_name = item.row.name.replace(/"/g, '&#034;').replace(/'/g, '&#039;');
             var product_unit = item.row.unit,
                 base_quantity = item.row.base_quantity;
@@ -975,7 +1007,7 @@ function loadItems() {
              var cost_price  = item.row.net_cost;  
              var batch_no    = item.row.batch_no;
              var bonus       = item.row.bonus;
-             var expiry       = item.row.expiry;
+             var expiry       = item_expiry_date;//item.row.expiry;
              var discount1       = item.row.discount1;
              var discount2       = item.row.discount2;
 
@@ -1126,13 +1158,13 @@ function loadItems() {
                     row_no +
                     '" value="' +
                     formatDecimal(item_sale_price, 2) +
-                    '"></td>';
+                    '">';
 
                 tr_html += 
-                    '<td><input id="rreturn_' +
+                    '<input id="rreturn_' +
                     row_no +
-                    '" class="form-control rcost text-center" name="net_cost[]" type="text" value="' +
-                    formatDecimal(item_cost, 2) +
+                    '" class="form-control rcost text-center" name="net_cost[]" type="hidden" value="' +
+                    formatDecimal(item.row.batchPurchaseCost, 2) +
                     '" data-id="' +
                     row_no +
                     '" data-item="' +
@@ -1152,12 +1184,26 @@ function loadItems() {
                     row_no +
                     '"></td>';
 
-                tr_html +=
-                '<td class="text-right"><input class="form-control input-sm text-right rbatchno" name="batch_no[]" type="text" id="batch_no_' +
-                row_no +
-                '" value="' +
-                batch_no +
-                '"></td>';
+                // tr_html +=
+                // '<td class="text-right"><input class="form-control input-sm text-right rbatchno" name="batch_no[]" type="text" id="batch_no_' +
+                // row_no +
+                // '" value="' +
+                // batch_no +
+                // '"></td>';
+
+                var batchesOptions = '<option value="" data-batchExpiry="null" data-batchQty="0"  data-batchpurchasecost="0">--</option>';
+                if (item.batches !== false) {
+                    $.each(item.batches, function () {
+                        batchSelected = "";
+                        if (this.batchno == item_batchno) {
+                            batchSelected = "selected";
+                        }
+                        batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'"  data-batchpurchasecost="'+this.purchase_cost+'" value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
+                    });
+                }
+
+                tr_html += '<td><select class="form-control rbatchno" name="batch_no[]" id="batch_no_' + row_no +'">'+batchesOptions+'</select></td>';
+
 
                 tr_html +=
                 '<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="' +
@@ -1202,7 +1248,7 @@ function loadItems() {
                 product_unit +
                 '"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' +
                 base_quantity +
-                '"></td>';
+                '"><span style="font-size:10px;margin-top:5px;" class="batchQuantity">'+item_batchQuantity+'</span></td>';
 
                 /*tr_html +=
                 '<td class="text-right"><input class="form-control input-sm text-right rbonus" name="bonus[]" type="text" id="bonus_' +
@@ -1310,12 +1356,12 @@ function loadItems() {
                 formatMoney(item_price) +
                 '</span></td>';*/
 
-            tr_html +=
-                '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' +
-                row_no +
-                '">' +
-                formatMoney(total_purchases) +
-                '</span></td>';
+            // tr_html +=
+            //     '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' +
+            //     row_no +
+            //     '">' +
+            //     formatMoney(total_purchases) +
+            //     '</span></td>';
 
             tr_html +=
                 '<td class="text-right"><span class="text-right ssubtotal" id="total_sale_' +
