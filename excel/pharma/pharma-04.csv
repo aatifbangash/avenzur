@@ -1,0 +1,528 @@
+Account Number,Account Name Eng.,Account Name Arabic,Acc. Kind,Type 1,Normal Bal,Type 2,Category,,
+01-00-00-00-0000,Total Assets,اجمالي الاصوال,Group,B/S,Debit,Assets,,0000,Total Assets
+01-01-00-00-0000,Total Current Assets,اجمالي الاصول المتداولة,Group,B/S,Debit,Assets,Total Assets,0000,Total Current Assets
+01-01-01-00-0000,Total Cash and Cash Equivalents,اجمالي النقد وما في حكمه,Group,B/S,Debit,Assets,Total Current Assets,0000,Total Cash and Cash Equivalents
+01-01-01-01-0000,Total Bank Accounts,اجمالي البنوك,Group,B/S,Debit,Assets,Total Cash and Cash Equivalents,0000,Total Bank Accounts
+01-01-01-01-0001,ANB Store 01080 9519 555 00 11,ANB Store 01080 9519 555 00 11,Ledger,B/S,Debit,Assets,Total Bank Accounts,0001,0
+01-01-01-01-0002,INMA Store- 68 200 164 326 000,INMA Store- 68 200 164 326 000,Ledger,B/S,Debit,Assets,Total Bank Accounts,0002,0
+01-01-01-01-0003,NCB Store- 265 604 74 000 108,NCB Store- 265 604 74 000 108,Ledger,B/S,Debit,Assets,Total Bank Accounts,0003,
+01-01-01-01-0004,SHB- Store a/c 010410587000,SHB- Store a/c 010410587000,Ledger,B/S,Debit,Assets,Total Bank Accounts,0004,
+01-01-01-01-0005,RAJ- Store -203608010713845,RAJ- Store -203608010713845,Ledger,B/S,Debit,Assets,Total Bank Accounts,0005,
+01-01-01-01-0006,SFB Store 98012200141,SFB Store 98012200141,Ledger,B/S,Debit,Assets,Total Bank Accounts,0006,
+01-01-01-01-0007,Jazira Store 0038597459001,Jazira Store 0038597459001,Ledger,B/S,Debit,Assets,Total Bank Accounts,0007,
+01-01-01-01-0008,SABB Store 011 555 141 001,SABB Store 011 555 141 001,Ledger,B/S,Debit,Assets,Total Bank Accounts,0008,
+01-01-01-01-0009,SIB Store 010 770 618 1001,SIB Store 010 770 618 1001,Ledger,B/S,Debit,Assets,Total Bank Accounts,0009,
+01-01-01-01-0010,BILAD Store 442121733180006,BILAD Store 442121733180006,Ledger,B/S,Debit,Assets,Total Bank Accounts,0010,
+01-01-01-01-0011,BILAD 2 Store 442121733180014,BILAD 2 Store 442121733180014,Ledger,B/S,Debit,Assets,Total Bank Accounts,0011,
+01-01-01-01-0012,INMA Store- 68 200 164 326 001,INMA Store- 68 200 164 326 001,Ledger,B/S,Debit,Assets,Total Bank Accounts,0012,
+01-01-01-01-0013,INMA Store($)- 84000164326000,INMA Store($)- 84000164326000,Ledger,B/S,Debit,Assets,Total Bank Accounts,0013,
+01-01-01-01-0014,NCB Store 2- 29547428890102,NCB Store 2- 29547428890102,Ledger,B/S,Debit,Assets,Total Bank Accounts,0014,
+01-01-01-01-0015,Riyad Store - 2671652629940,Riyad Store - 2671652629940,Ledger,B/S,Debit,Assets,Total Bank Accounts,0015,
+01-01-01-01-0016,NBD Store 1016045704701,NBD Store 1016045704701,Ledger,B/S,Debit,Assets,Total Bank Accounts,0016,
+01-01-01-01-0017,NBD Store 1016045704702,NBD Store 1016045704702,Ledger,B/S,Debit,Assets,Total Bank Accounts,0017,
+01-01-01-01-0018,NBD Store 9996045704705,NBD Store 9996045704705,Ledger,B/S,Debit,Assets,Total Bank Accounts,0018,
+01-01-01-01-0019,Cash on Hand,Cash on Hand,,,,,,,
+01-01-01-02-0000,Total Collection Boxes,اجمالي النقد بالصناديق,Group,B/S,Debit,Assets,Total Bank Accounts,0000,Total Collection Boxes
+01-01-01-02-0001,Cash on Hand,النقد بالصناديق - المركز الرئيسى,Ledger,B/S,Debit,Assets,Total Collection Boxes,0001,0
+01-01-01-03-0000,Total Personal Petty Cash,اجمالي العهدة المالية الشخصية,Group,B/S,Debit,Assets,Total Cash and Cash Equivalents,0000,Total Personal Petty Cash
+01-01-01-03-0001,Petty cash - Yousef Omar,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0001,0
+01-01-01-03-0002,Petty cash - Hesham Hagag,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0002,0
+01-01-01-03-0003,Petty Cash - Ahmed Abdallah,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0003,0
+01-01-01-03-0004,Petty Cash - Sari Al Shamari,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0004,0
+01-01-01-03-0005,Petty Cash - Hisham Dana,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0005,0
+01-01-01-03-0006,Petty Cash - Abdelhamid Driver,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0006,0
+01-01-01-03-0007,Petty Cash - Amr Eid,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0007,0
+01-01-01-03-0008,Petty Cash - Monir Hanif,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0008,0
+01-01-01-03-0009,Petty cash Abdelrahman Alsedan,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0009,0
+01-01-01-03-0010,Petty Cash - Wael Driver,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0010,0
+01-01-01-03-0011,Petty Cash - Hussain Abdelaziz,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0011,0
+01-01-01-03-0012,Petty Cash - Ehab Ahmed,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0012,0
+01-01-01-03-0013,Petty Cash -Mohamed Ali,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0013,0
+01-01-01-03-0014,Petty Cash - Medhat Ramadan,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0014,0
+01-01-01-03-0015,Petty Cash Rehab Alanazi,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0015,0
+01-01-01-03-0016,Petty Cash - Mohamed Soliman,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0016,0
+01-01-01-03-0017,Petty Cash - Gehad Abdul Ghany,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0017,0
+01-01-01-03-0018,Petty Cash - Fahad Alqahtani,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0018,0
+01-01-01-03-0019,Petty Cash - Sarfaraz Khan,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0019,0
+01-01-01-03-0020,Petty Cash – Islam,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0020,0
+01-01-01-03-0021,Petty Cash - Abu Marar,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0021,0
+01-01-01-03-0022,Petty Cash - Dr. Mubarak Nasir,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0022,0
+01-01-01-03-0023,Petty Cash - mohamed Albrrawy,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0023,0
+01-01-01-03-0024,Petty Cash - Roshdi Yousef,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0024,0
+01-01-01-03-0025,Petty Cash - Husain Hamad Saud,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0025,0
+01-01-01-03-0026,Petty Cash - Meshari Alanazi,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0026,0
+01-01-01-03-0027,Petty Cash - Khalil Ahmed Gul,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0027,0
+01-01-01-03-0028,Petty Cash -Abdulkareem Alanazi,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0028,0
+01-01-01-03-0029,Petty Cash - Metab Alanazi,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0029,0
+01-01-01-03-0030,Petty Cash - Mohammed Rabea Tah,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0030,0
+01-01-01-03-0031,Petty Cash - Magdi Retaj,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0031,0
+01-01-01-03-0032,Petty Cash - Ahmed Gherab,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0032,0
+01-01-01-03-0033,Petty Cash - Saud Raza Faleh,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0033,0
+01-01-01-03-0034,Petty Cash - Karam,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0034,0
+01-01-01-03-0035,Petty Cash - Adel Serry,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0035,0
+01-01-01-03-0036,Petty Cash - Faris Albarrak,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0036,0
+01-01-01-03-0037,Petty Cash - Hatim Eisa,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0037,0
+01-01-01-03-0038,Petty Cash - Khalid Alosaymi,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0038,0
+01-01-01-03-0039,Petty Cash - Moataz Moham Abdul,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0039,0
+01-01-01-03-0040,Petty Cash - Altaf Hussain,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0040,0
+01-01-01-03-0041,Petty Cash - Eng Ghalib,,Ledger,B/S,Debit,Assets,Total Personal Petty Cash,0041,0
+01-01-02-00-0000,Total Account Receivable,اجمالي العملاء ( الذمم المدينة ),Group,B/S,Debit,Assets,Total Current Assets,0000,Total Account Receivable
+01-01-02-00-0001,Account Receivable,الذمم التجارية - عملاء فرماء,Ledger,B/S,Debit,Assets,Total Money Market Funds,0001,0
+01-01-02-00-0002,Provision for doubtful debts,مخصص الديون المشكوك في تحصيلها,Ledger,B/S,Debit,Assets,Total Money Market Funds,0002,0
+01-01-03-00-0000,Total Note Receivable,اجمالي السندات المستحقة القبض,Group,B/S,Debit,Assets,Total Current Assets,0000,Total Note Receivable
+01-01-03-00-0001,Check Under Collection,شيكات تحت التحصيل,Ledger,B/S,Debit,Assets,Total Money Market Funds,0001,0
+01-01-04-00-0000,Total Inventory,اجمالي المخزون,Group,B/S,Debit,Assets,Total Current Assets,0000,Total Inventory
+01-01-04-01-0000,Total of Warehouses Inventory,اجمالي مخزون المستودع,Group,B/S,Debit,Assets,Total Inventory,0000,Total of Warehouses Inventory
+01-01-04-01-0001,Main warehouse inventory ( Sulay ),مخزون المستودع الرئسيى بالحائر,Ledger,B/S,Debit,Assets,Total of Warehouses Inventory,0001,0
+01-01-04-01-0002,Main warehouse inventory 2, مخزون مستودع الرئيسي 2,Ledger,B/S,Debit,Assets,Total of Warehouses Inventory,0002,0
+01-01-04-03-0001,Goods in transit,بضاعة بالطريق,Ledger,B/S,Debit,Assets,Total of Good in Transit,0001,0
+01-01-05-00-0000,Total Prepaid Expenses,اجمالي المصاريف المقدمة,Group,B/S,Debit,Assets,Total Current Assets,0000,Total Prepaid Expenses
+01-01-05-01-0000,Total Prepaid Exp. - Rent,اجمالي مصاريف الايجار المقدمة,Group,B/S,Debit,Assets,Total Prepaid Expenses,0000,Total Prepaid Exp. - Rent
+01-01-05-01-0001,Rent 1,,Ledger,B/S,Debit,Assets,Total Prepaid Exp. - Rent,0001,0
+01-01-05-01-0002,Rent 2,,Ledger,B/S,Debit,Assets,Total Prepaid Exp. - Rent,0002,0
+01-01-05-01-0003,Rent 3,,Ledger,B/S,Debit,Assets,Total Prepaid Exp. - Rent,0003,0
+01-01-05-01-0004,Rent 4,,Ledger,B/S,Debit,Assets,Total Prepaid Exp. - Rent,0004,0
+01-01-05-01-0005,Rent 5,,Ledger,B/S,Debit,Assets,Total Prepaid Exp. - Rent,0005,0
+01-01-05-01-0006,Rent 6,,Ledger,B/S,Debit,Assets,Total Prepaid Exp. - Rent,0006,0
+01-01-05-02-0000,Total Prepaid Ex - Medical Insurance,اجمالي مصاريف مقدمة - التامين الطبي,Group,B/S,Debit,Assets,Total Prepaid Expenses,0000,Total Prepaid Ex - Medical Insurance
+01-01-05-02-0001,Prepaid Ex - Medical Insurance ,مصاريف مقدمة - تامين طبي ,Ledger,B/S,Debit,Assets,Total Prepaid Ex - Medical Insurance,0001,0
+01-01-05-03-0000,Total Prepaid Exp - Property Insurance,اجمالي مصاريف مقدمة - تامين الممتلكات,Group,B/S,Debit,Assets,Total Prepaid Expenses,0000,Total Prepaid Exp - Property Insurance
+01-01-05-03-0001,Prepaid Exp - Property Insurance,مصاريف مقدمة - تامين الممتلكات,Ledger,B/S,Debit,Assets,Total Prepaid Exp - General Insurance,0001,0
+01-01-05-03-0000,Total Prepaid Exp - Bank chargers,اجمالي مصاريف مقدمة - رسوم بنكية,Group,B/S,Debit,Assets,Total Prepaid Expenses,0000,Total Prepaid Exp - Bank chargers
+01-01-05-03-0001,Prepaid Exp - Bank chargers,مصاريف مقدمة - رسوم بنكية,Ledger,B/S,Debit,Assets,Total Prepaid Exp - General Insurance,0001,0
+01-01-07-00-0000,Total Other Current asset,اجمالي الاصول المتداولة الاخرى,Group,B/S,Debit,Assets,Total Current Assets,0000,Total Other Current asset
+01-01-07-01-0000,Total Employee loans,اجمالي سلف الموظفين,Group,B/S,Debit,Assets,Total Other Current asset,0000,Total Employee loans
+01-01-07-01-0001,Employees Loan - Employee 1,سلف الموظفين - موظف 1,Ledger,B/S,Debit,Assets,Total Employee loans,0001,0
+01-01-07-01-0002,Employees Loan - Employee 2,سلف الموظفين - موظف 2,Ledger,B/S,Debit,Assets,Total Employee loans,0002,0
+01-01-07-01-0003,Employees Loan - Employee 3,سلف الموظفين - موظف 3,Ledger,B/S,Debit,Assets,Total Employee loans,0003,0
+01-01-07-01-0004,Employees Loan - Employee 4,سلف الموظفين - موظف 4,Ledger,B/S,Debit,Assets,Total Employee loans,0004,0
+01-01-07-01-0005,Employees Loan - Employee 5,سلف الموظفين - موظف 5,Ledger,B/S,Debit,Assets,Total Employee loans,0005,0
+01-01-07-01-0006,Employees Loan - Employee 6,سلف الموظفين - موظف 6,Ledger,B/S,Debit,Assets,Total Employee loans,0006,0
+01-01-07-01-0007,Employees Loan - Employee 7,سلف الموظفين - موظف 7,Ledger,B/S,Debit,Assets,Total Employee loans,0007,0
+01-01-07-01-0008,Employees Loan - Employee 8,سلف الموظفين - موظف 8,Ledger,B/S,Debit,Assets,Total Employee loans,0008,0
+01-01-07-01-0009,Employees Loan - Employee 9,سلف الموظفين - موظف 9,Ledger,B/S,Debit,Assets,Total Employee loans,0009,0
+01-01-07-01-0010,Employees Loan - Employee 10,سلف الموظفين - موظف 10,Ledger,B/S,Debit,Assets,Total Employee loans,0010,0
+01-01-07-01-0011,Employees Loan - Employee 11,سلف الموظفين - موظف 11,Ledger,B/S,Debit,Assets,Total Employee loans,,
+01-01-07-01-0012,Employees Loan - Employee 12,سلف الموظفين - موظف 12,Ledger,B/S,Debit,Assets,Total Employee loans,,
+01-01-07-01-0013,Employees Loan - Employee 13,سلف الموظفين - موظف 13,Ledger,B/S,Debit,Assets,Total Employee loans,,
+01-01-07-01-0014,Employees Loan - Employee 14,سلف الموظفين - موظف 14,Ledger,B/S,Debit,Assets,Total Employee loans,,
+01-01-07-01-0015,Employees Loan - Employee 15,سلف الموظفين - موظف 15,Ledger,B/S,Debit,Assets,Total Employee loans,,
+01-01-07-01-0016,Employees Loan - Employee 16,سلف الموظفين - موظف 16,Ledger,B/S,Debit,Assets,Total Employee loans,,
+01-01-07-01-0017,Employees Loan - Employee 17,سلف الموظفين - موظف 17,Ledger,B/S,Debit,Assets,Total Employee loans,,
+01-01-07-01-0018,Employees Loan - Employee 18,سلف الموظفين - موظف 18,Ledger,B/S,Debit,Assets,Total Employee loans,,
+01-01-07-01-0019,Employees Loan - Employee 19,سلف الموظفين - موظف 19,Ledger,B/S,Debit,Assets,Total Employee loans,,
+01-01-07-01-0020,Employees Loan - Employee 20,سلف الموظفين - موظف 20,Ledger,B/S,Debit,Assets,Total Employee loans,,
+01-01-07-01-0021,Employees Loan - Employee 21,سلف الموظفين - موظف 21,Ledger,B/S,Debit,Assets,Total Employee loans,,
+01-01-07-03-0000,Total Advances To Suppliers,اجمالي دفعات مقدمة للموردين,Group,B/S,Debit,Assets,Total Other Current asset,0000,Total Advances To Suppliers
+01-01-07-03-0001,Advances To Trade Suppliers,دفعات مقدمة للموردين,Ledger,B/S,Debit,Assets,Total Advances To Suppliers,0001,0
+01-01-07-03-0002,Advances To General Suppliers,دفعات مقدمة لموردين اخريين,Ledger,B/S,Debit,Assets,Total Advances To Suppliers,0002,0
+01-01-07-03-0003,Advances & Prepayments Medicen,دفعات مقدمة عن خدمات طبية ,Ledger,B/S,Debit,Assets,Total Advances To Suppliers,0003,0
+01-01-07-04-0000,Total LC's Cash Margin,اجمالي اعتمادات مستندية - تامين نقدي,Group,B/S,Debit,Assets,Total Other Current asset,0000,Total LC's Cash Margin
+01-01-07-04-0001,ANB Store 01080 9519 555 00 11,اعتمادات مستندية - تامين نقدي - البنك العربي,Ledger,B/S,Debit,Assets,Total LC's Cash Margin,0001,0
+01-01-07-04-0002,INMA Store- 68 200 164 326 000,اعتمادات مستندية - تامين نقدي - بنك الانماء,Ledger,B/S,Debit,Assets,Total LC's Cash Margin,0002,
+01-01-07-04-0003,RAJ- Store -203608010713845,اعتمادات مستندية - تامين نقدي - بنك الراجحي,Ledger,B/S,Debit,Assets,Total LC's Cash Margin,0003,
+01-01-07-04-0004,SIB Store 010 770 618 1001,اعتمادات مستندية - تامين نقدي - بنك الاستثمار,Ledger,B/S,Debit,Assets,Total LC's Cash Margin,0004,
+01-01-07-04-0005,BILAD Store 442121733180006,اعتمادات مستندية - تامين نقدي - بنك البلاد,Ledger,B/S,Debit,Assets,Total LC's Cash Margin,0005,
+01-01-07-04-0006,NBD Store 1016045704701,اعتمادات مستندية - تامين نقدي - بنك الامارات,Ledger,B/S,Debit,Assets,Total LC's Cash Margin,0006,0
+01-01-07-05-0000,Total LG's,اجمالي خطابات ضمان - تامين نقدي,Group,B/S,Debit,Assets,Total Other Current asset,0000,Total LG's
+01-01-07-05-0001,LG's Bank ............,خطابات ضمان - تامين نقدي,Ledger,B/S,Debit,Assets,Total LG's,0001,0
+01-01-07-06-0000,Total Claims of Other Receivable,اجمالي مطالبات الذمم المدينة الاخرى,Group,B/S,Debit,Assets,Total Other Current asset,0000,Total Claims of Other Receivable
+01-01-07-06-0001,VAT on Purchases,ضريبة القيمة المضافة على المشتريات,Ledger,B/S,Debit,Assets,Total Claims of Other Receivable,0001,0
+01-01-08-00-0000,Total Intercompany Receivable,اجمالي ذمم مدينة اطراف ذات علاقة,Group,B/S,Debit,Assets,Total Current Assets,0000,Total Intercompany Receivable
+01-01-08-00-0001,Pharma Factory Co.,ذمم مدينة اطراف ذات علاقة 1,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0001,
+01-01-08-00-0002,Pharma Pharmacy Co.,ذمم مدينة اطراف ذات علاقة 2,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0002,
+01-01-08-00-0003,Pharma Holding Co. Bio Pharma,ذمم مدينة اطراف ذات علاقة 3,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0003,
+01-01-08-00-0004,Pharma Consulting Est.,ذمم مدينة اطراف ذات علاقة 4,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0004,
+01-01-08-00-0005,Adwaa Alwafi For Trading Est.,ذمم مدينة اطراف ذات علاقة 5,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0005,
+01-01-08-00-0006,Bio Pharma Co.,ذمم مدينة اطراف ذات علاقة 6,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0006,
+01-01-08-00-0007,Pharma Investment Co.,ذمم مدينة اطراف ذات علاقة 7,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0007,
+01-01-08-00-0008,Pharma Care Co.,ذمم مدينة اطراف ذات علاقة 8,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0008,
+01-01-08-00-0009,Al Athel Tree Est.,ذمم مدينة اطراف ذات علاقة 9,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0009,
+01-01-08-00-0010,Retaj  Al-Seha Co,ذمم مدينة اطراف ذات علاقة 10,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0010,
+01-01-08-00-0011,Misr Algadeidah for Investment,ذمم مدينة اطراف ذات علاقة 11,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0011,
+01-01-08-00-0012,Sama Aldawa Co.,ذمم مدينة اطراف ذات علاقة 12,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0012,
+01-01-08-00-0013,Cloud Vision Co.,ذمم مدينة اطراف ذات علاقة 13,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0013,0
+01-01-08-00-0014,Watan Pharma Factory,ذمم مدينة اطراف ذات علاقة 14,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0014,0
+01-01-08-00-0015,Localizer Mall Pharmacy,ذمم مدينة اطراف ذات علاقة 15,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0015,0
+01-01-08-00-0016,Rawabi Al Amal Co,ذمم مدينة اطراف ذات علاقة 16,Ledger,B/S,Debit,Assets,Total Intercompany Receivable,0016,0
+01-01-09-00-0000,Total Deferred Banks Interest,اجمالي الفوائد المصرفية المؤجلة,Group,B/S,Debit,Assets,Total Current Assets,0000,Total Deferred Banks Interest
+01-01-09-00-0001,Deferred Interest -ANB Store 01080 9519 555 00 11,الفوائد المؤجلة- البنك العربي,Ledger,B/S,Debit,Assets,Total Deferred Banks Interest,0001,0
+01-01-09-00-0002,Deferred Interest - INMA Store- 68 200 164 326 000,الفوائد المؤجلة- بنك الانماء,Ledger,B/S,Debit,Assets,Total Deferred Banks Interest,0002,0
+01-01-09-00-0003,Deferred Interest - RAJ- Store -203608010713845,الفوائد المؤجلة- بنك الراجحي,Ledger,B/S,Debit,Assets,Total Deferred Banks Interest,0003,0
+01-01-09-00-0004,Deferred Interest - SIB Store 010 770 618 1001,الفوائد المؤجلة - بنك الاستثمار,Ledger,B/S,Debit,Assets,Total Deferred Banks Interest,0004,0
+01-01-09-00-0005,Deferred Interest - BILAD Store 442121733180006,الفوائد المؤجلة - بنك البلاد,Ledger,B/S,Debit,Assets,Total Deferred Banks Interest,0005,0
+01-01-09-00-0006,Deferred Interest - NBD Store 1016045704701,الفوائد المؤجلة - بنك الامارات,Ledger,B/S,Debit,Assets,Total Deferred Banks Interest,0006,0
+01-02-00-00-0000,Total Non-Current Assets,اجمالي الاصول الغير المتداولة,Group,B/S,Debit,Assets,Total Assets,0000,Total Non-Current Assets
+01-02-01-00-0000,Total Long Term Investment,اجمالي الاستثمار طويل الاجل,Group,B/S,Debit,Assets,Total Non-Current Assets,0000,Total Long Term Investment
+01-02-01-00-0001,Rawabi Al Amal Co. Inv,الاستثمار طويل الاجل 1,Ledger,B/S,Debit,Assets,Total Long Term Investment,0001,0
+01-02-01-00-0002,Pharma Holding Co. Inv,الاستثمار طويل الاجل 2,Ledger,B/S,Debit,Assets,Total Long Term Investment,0002,0
+01-02-01-00-0003,Retaj Al-Seha Co. Inv,الاستثمار طويل الاجل 3,Ledger,B/S,Debit,Assets,Total Long Term Investment,0003,0
+01-02-02-00-0000,Total Long Term Investment,اجمالي الاصول غير الملموسة,Group,B/S,Debit,Assets,Total Non-Current Assets,0000,Total Long Term Investment
+01-02-02-00-0001,Advances To Purchase Assets,,Ledger,B/S,Debit,Assets,Total Long Term Investment,0001,0
+01-02-02-00-0002,Construction In Progress,,Ledger,B/S,Debit,Assets,Total Long Term Investment,0002,0
+01-02-02-00-0003,Security Deposits,,Ledger,B/S,Debit,Assets,Total Long Term Investment,0003,0
+01-02-02-00-0004,Deferred revenue expenses,,Ledger,B/S,Debit,Assets,Total Long Term Investment,0004,0
+01-02-02-00-0005,Intangible Assets,,Ledger,B/S,Debit,Assets,Total Long Term Investment,0005,0
+01-02-02-00-0006,Defferred Exp.,,Ledger,B/S,Debit,Assets,Total Long Term Investment,0006,0
+01-02-07-00-0000,Total Fixed Assets,اجمالي الاصول الثابتة,Group,B/S,Debit,Assets,Total Non-Current Assets,0000,Total Fixed Assets
+01-02-07-01-0000,Total of Land,اجمالي الاراضي,Group,B/S,Debit,Assets,Total Fixed Assets,0000,Total of Land
+01-02-07-01-0001,Land Cost,تكلفة الارض,Ledger,B/S,Debit,Assets,Total of Land,0001,0
+01-02-07-02-0000,Total Buildings,اجمالي المباني,Group,B/S,Debit,Assets,Total Fixed Assets,0000,Total Buildings
+01-02-07-02-0001,Buildings Coast,تكلفة المباني,Ledger,B/S,Debit,Assets,Total Buildings,0001,0
+01-02-07-02-0002,Accum Dep. Buildings,مجمع اهلاك المباني,Ledger,B/S,Credit,Assets,Total Buildings,0002,0
+01-02-07-03-0000,Total Leasehold improvement,اجمالي تجهيزات وتحسينات,Group,B/S,Debit,Assets,Total Fixed Assets,0000,Total Leasehold improvement
+01-02-07-03-0001,Leasehold improvement Cost,تكلفة تجهيزات وتحسينات,Ledger,B/S,Debit,Assets,Total Leasehold improvement,0001,0
+01-02-07-03-0002,Acc Dep. Leasehold improvement,مجمع اهلاك تجهيزات وتحسينات,Ledger,B/S,Credit,Assets,Total Leasehold improvement,0002,0
+01-02-07-04-0000,Total Air Conditions,اجمالي المكيفات,Group,B/S,Debit,Assets,Total Fixed Assets,0000,Total Air Conditions
+01-02-07-04-0001,Air Conditions Cost,تكلفة المكيفات,Ledger,B/S,Debit,Assets,Total Air Conditions,0001,0
+01-02-07-04-0002,Accum Dep.Air Conditions,مجمع اهلاك المكيفات,Ledger,B/S,Credit,Assets,Total Air Conditions,0002,0
+01-02-07-05-0000,Total Furniture & Fixture,اجمالي اثاث ومفروشات,Group,B/S,Debit,Assets,Total Fixed Assets,0000,Total Furniture & Fixture
+01-02-07-05-0001,Furniture & Fixture Cost,تكلفة اثاث ومفروشات,Ledger,B/S,Debit,Assets,Total Furniture & Fixture,0001,0
+01-02-07-05-0002,Accum Dep. Furniture& Fixture,مجمع اهلاك اثاث ومفروشات,Ledger,B/S,Credit,Assets,Total Furniture & Fixture,0002,0
+01-02-07-06-0000,Total Office Equipment,اجمالي معدات مكتبية,Group,B/S,Debit,Assets,Total Fixed Assets,0000,Total Office Equipment
+01-02-07-06-0001,Office Equipment Cost,تكلفة معدات مكتبية,Ledger,B/S,Debit,Assets,Total Office Equipment,0001,0
+01-02-07-06-0002,Accum. Depr.Office Equipment,مجمع اهلاك معدات مكتبية,Ledger,B/S,Credit,Assets,Total Office Equipment,0002,0
+01-02-07-07-0000,Total Computer Hard & Software,اجمالي اجهزة وبرامج كمبيوتر,Group,B/S,Debit,Assets,Total Fixed Assets,0000,Total Computer Hard & Software
+01-02-07-07-0001,Computer Hard & Software Cot,تكلفة اجهزة وبرامج كمبيوتر,Ledger,B/S,Debit,Assets,Total Computer Hard & Software,0001,0
+01-02-07-07-0002,Acc Dep. - Computer Hard & Soft,مجمع اهلاك اجهزة وبرامج كمبيوتر,Ledger,B/S,Credit,Assets,Total Computer Hard & Software,0002,0
+01-02-07-08-0000,Total Tools,اجمالي عدد وادوات,Group,B/S,Debit,Assets,Total Fixed Assets,0000,Total Tools
+01-02-07-08-0001,Tools Cost,تكلفة عدد وادوات,Ledger,B/S,Debit,Assets,Total Tools,0001,0
+01-02-07-08-0002,Accum Dep. Tools,مجمع اهلاك عدد وادوات,Ledger,B/S,Credit,Assets,Total Tools,0002,0
+01-02-07-09-0000,Total Vehicles,اجمالي السيارات,Group,B/S,Debit,Assets,Total Fixed Assets,0000,Total Vehicles
+01-02-07-09-0001,Vehicles Cost,تكلفة السيارات,Ledger,B/S,Debit,Assets,Total Vehicles,0001,0
+01-02-07-09-0002,Accum Dep. Vehicles,مجمع اهلاك السيارات,Ledger,B/S,Credit,Assets,Total Vehicles,0002,0
+02-00-00-00-0000,Total Liabilities,اجمالي الالتزامات,Group,B/S,Credit,Liabilities,,0000,Total Liabilities
+02-01-00-00-0000,Total Current Liabilities,اجمالي الالتزامات المتداولة,Group,B/S,Credit,Liabilities,Total Liabilities,0000,Total Current Liabilities
+02-01-01-00-0000,Total Account Payable,اجمالي الموردين ( الذمم الدائنة ),Group,B/S,Credit,Liabilities,Total Current Liabilities,0000,Total Account Payable
+02-01-01-00-0001,Trade Account Payable Local,موردين محليين ,Ledger,B/S,Credit,Liabilities,Total Account Payable,0001,0
+02-01-01-00-0002,Trade Account Payable foreigner,موردى خارجين,Ledger,B/S,Credit,Liabilities,Total Account Payable,0002,0
+02-01-01-00-0003,Non-Trade Account Payable,موردى خدمات واصول ,Ledger,B/S,Credit,Liabilities,Total Account Payable,0003,0
+02-01-02-00-0000,Total Accrued Expenses,اجمالي المصاريف المستحقة,Group,B/S,Credit,Liabilities,Total Current Liabilities,0000,Total Accrued Expenses
+02-01-02-01-0000,Total Accrued Company Expenses - Rent,مصاريف مستحقة - الشركة - ايجار,Group,B/S,Credit,Liabilities,Total Accrued Expenses,0000,Total Accrued Company Expenses - Rent
+02-01-02-01-0001,Accrued Rent 1,ايجار مستحق 1,Ledger,B/S,Credit,Liabilities,Total Accrued Company Expenses - Rent,0001,0
+02-01-02-02-0000,Total Accrued Professional Service - Audit,مصاريف مستحقة - خدمات مهنية - تدقيق,Group,B/S,Credit,Liabilities,Total Accrued Expenses,0000,Total Accrued Professional Service - Audit
+02-01-02-02-0001,Accrued Audit Fees 1,رسوم تدقيق مستحقة 1,Ledger,B/S,Credit,Liabilities,Total Accrued Professional Service - Audit,0001,0
+02-01-02-03-0000,Total Accrued Professional Service - Consultancy,مصاريف مستحقة - خدمات مهنية - استشارات,Group,B/S,Credit,Liabilities,Total Accrued Expenses,0000,Total Accrued Professional Service - Consultancy
+02-01-02-03-0001,Accrued Consultancy Fees 1,رسوم استشارات مستحقة 1,Ledger,B/S,Credit,Liabilities,Total Accrued Professional Service - Consultancy,0001,0
+02-01-02-04-0000,Total Accrued Employee Benefits - Salaries,مصاريف مستحقة - منافع الموظفين - رواتب,Group,B/S,Credit,Liabilities,Total Accrued Expenses,0000,Total Accrued Employee Benefits - Salaries
+02-01-02-04-0001,Accrued Salaries - Employee 1,رواتب مستحقة - موظف 1,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0001,0
+02-01-02-04-0002,Accrued Salaries - Employee 2,رواتب مستحقة - موظف 2,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0002,0
+02-01-02-04-0003,Accrued Salaries - Employee 3,رواتب مستحقة - موظف 3,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0003,0
+02-01-02-04-0004,Accrued Salaries - Employee 4,رواتب مستحقة - موظف 4,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0004,0
+02-01-02-04-0005,Accrued Salaries - Employee 5,رواتب مستحقة - موظف 5,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0005,0
+02-01-02-04-0006,Accrued Salaries - Employee 6,رواتب مستحقة - موظف 6,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0006,0
+02-01-02-04-0007,Accrued Salaries - Employee 7,رواتب مستحقة - موظف 7,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0007,0
+02-01-02-04-0008,Accrued Salaries - Employee 8,رواتب مستحقة - موظف 8,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0008,0
+02-01-02-04-0009,Accrued Salaries - Employee 9,رواتب مستحقة - موظف 9,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0009,0
+02-01-02-04-0010,Accrued Salaries - Employee 10,رواتب مستحقة - موظف 10,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0010,0
+02-01-02-04-0011,Accrued Salaries - Employee 11,رواتب مستحقة - موظف 11,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0011,0
+02-01-02-04-0012,Accrued Salaries - Employee 12,رواتب مستحقة - موظف 12,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0012,0
+02-01-02-04-0013,Accrued Salaries - Employee 13,رواتب مستحقة - موظف 13,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0013,0
+02-01-02-04-0014,Accrued Salaries - Employee 14,رواتب مستحقة - موظف 14,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0014,0
+02-01-02-04-0015,Accrued Salaries - Employee 15,رواتب مستحقة - موظف 15,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0015,0
+02-01-02-04-0016,Accrued Salaries - Employee 16,رواتب مستحقة - موظف 16,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0016,0
+02-01-02-04-0017,Accrued Salaries - Employee 17,رواتب مستحقة - موظف 17,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0017,0
+02-01-02-04-0018,Accrued Salaries - Employee 18,رواتب مستحقة - موظف 18,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0018,0
+02-01-02-04-0019,Accrued Salaries - Employee 19,رواتب مستحقة - موظف 19,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0019,0
+02-01-02-04-0020,Accrued Salaries - Employee 20,رواتب مستحقة - موظف 20,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0020,0
+02-01-02-04-0021,Accrued Salaries - Employee 21,رواتب مستحقة - موظف 21,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0021,0
+02-01-02-04-0022,Accrued Salaries - Employee 22,رواتب مستحقة - موظف 22,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0022,0
+02-01-02-04-0023,Accrued Salaries - Employee 23,رواتب مستحقة - موظف 23,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0023,0
+02-01-02-04-0024,Accrued Salaries - Employee 24,رواتب مستحقة - موظف 24,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0024,0
+02-01-02-04-0025,Accrued Salaries - Employee 25,رواتب مستحقة - موظف 25,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0025,0
+02-01-02-04-0026,Accrued Salaries - Employee 16,رواتب مستحقة - موظف 26,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0026,0
+02-01-02-04-0027,Accrued Salaries - Employee 17,رواتب مستحقة - موظف 27,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0027,0
+02-01-02-04-0028,Accrued Salaries - Employee 18,رواتب مستحقة - موظف 28,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0028,0
+02-01-02-04-0029,Accrued Salaries - Employee 19,رواتب مستحقة - موظف 29,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0029,0
+02-01-02-04-0030,Accrued Salaries - Employee 20,رواتب مستحقة - موظف 30,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0030,0
+02-01-02-04-0031,Accrued Salaries - Employee 21,رواتب مستحقة - موظف 31,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0031,0
+02-01-02-04-0032,Accrued Salaries - Employee 22,رواتب مستحقة - موظف 32,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0032,0
+02-01-02-04-0033,Accrued Salaries - Employee 23,رواتب مستحقة - موظف 33,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0033,0
+02-01-02-04-0034,Accrued Salaries - Employee 24,رواتب مستحقة - موظف 34,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0034,0
+02-01-02-04-0035,Accrued Salaries - Employee 25,رواتب مستحقة - موظف 35,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Salaries,0035,0
+02-01-02-05-0000,Total Accrued Employee Benefits - Vacation & Annual Ticket,مصاريف مستحقة - منافع الموظفين - اجازة وتذاكر سنوية,Group,B/S,Credit,Liabilities,Total Accrued Expenses,0000,Total Accrued Employee Benefits - Vacation & Annual Ticket
+02-01-02-05-0001,Accrued Vacation,مصاريف مستحقة - اجازة سنوية,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Vacation & Annual Ticket,0001,0
+02-01-02-05-0002,Accrued Annual Ticket,مصاريف مستحقة - تذاكر سنوية,Ledger,B/S,Credit,Liabilities,Total Accrued Employee Benefits - Vacation & Annual Ticket,0002,0
+02-01-02-06-0000,Accrued Taxes,الضرائب المستحقة,Group,B/S,Credit,Liabilities,Total Accrued Expenses,0000,Accrued Taxes
+02-01-02-06-0001,Accrued Zakat,الزكاة المستحقة,Ledger,B/S,Credit,Liabilities,Accrued Taxes,0001,0
+02-01-02-06-0002,Accrued  Withholding Tax,ضريبة الاستقطاع المستحقة,Ledger,B/S,Credit,Liabilities,Accrued Taxes,0002,0
+02-01-03-00-0000,Total Letter of Credit,اجمالي الاعتمادات المستندية,Group,B/S,Credit,Liabilities,Total Current Liabilities,0000,Total Letter of Credit
+02-01-03-01-0000,Total Letter of credit - ANB,اجمالي الاعتمادات - بنك العربي,Group,B/S,Credit,Liabilities,Total Letter of Credit,0000,Total Letter of credit - ANB
+02-01-03-01-0001,LC - ANB Bank 1,اعتماد مستندي - بنك العربي - 1,Ledger,B/S,Credit,Liabilities,Total Letter of credit - Riyad Bank,0001,0
+02-01-03-02-0000,Total Letter of credit - Inma Bank,اجمالي الاعتمادات - بنك الانماء,Group,B/S,Credit,Liabilities,Total Letter of Credit,0000,Total Letter of credit - Inma Bank
+02-01-03-02-0001,LC - Inma Bank 1,اعتماد مستندي - بنك الانماء - 1,Ledger,B/S,Credit,Liabilities,Total Letter of credit - Inma Bank,0001,0
+02-01-03-03-0000,Total Letter of credit -  NBD  Bank,اجمالي الاعتمادات - بنك الامارات الوطني دبي,Group,B/S,Credit,Liabilities,Total Letter of Credit,0000,Total Letter of credit -  NBD  Bank
+02-01-03-03-0001,LC - NBD Bank 1,اعتماد مستندي - بنك الامارات الوطني دبي - 1,Ledger,B/S,Credit,Liabilities,Total Letter of credit - Inma Bank,0001,0
+02-01-03-04-0000,Total Letter of credit - SIB Bank,اجمالي الاعتمادات - بنك الاستثمار,Group,B/S,Credit,Liabilities,Total Letter of Credit,0000,Total Letter of credit - SIB Bank
+02-01-03-04-0001,LC - SIB Bank 1,اعتماد مستندي - بنك الاستثمار - 1,Ledger,B/S,Credit,Liabilities,Total Letter of credit - Inma Bank,0001,0
+02-01-03-05-0000,Total Letter of credit - Rajhi Bank,اجمالي الاعتمادات - بنك الراجحي,Group,B/S,Credit,Liabilities,Total Letter of Credit,0000,Total Letter of credit - Rajhi Bank
+02-01-03-05-0001,LC - Rajhi Bank 1,اعتماد مستندي - بنك الراجحي - 1,Ledger,B/S,Credit,Liabilities,Total Letter of credit - Riyad Bank,0001,0
+02-01-03-06-0000,Total Letter of credit - Albilad Bank,اجمالي الاعتمادات - بنك البلاد,Group,B/S,Credit,Liabilities,Total Letter of Credit,0000,Total Letter of credit - Albilad Bank
+02-01-03-06-0001,LC - Albilad Bank 1,اعتماد مستندي - بنك البلاد - 1,Ledger,B/S,Credit,Liabilities,Total Letter of credit - Inma Bank,0001,0
+02-01-03-07-0000,Total Letter of credit - SABB Bank,اجمالي الاعتمادات - بنك ساب,Group,B/S,Credit,Liabilities,Total Letter of Credit,0000,Total Letter of credit - SABB Bank
+02-01-03-07-0001,LC - SABB Bank 1,اعتماد مستندي - بنك ساب - 1,Ledger,B/S,Credit,Liabilities,Total Letter of credit - Inma Bank,0001,0
+02-01-03-08-0000,Total Letter of credit - Aljazirah Bank,اجمالي الاعتمادات - بنك الجزيرة,Group,B/S,Credit,Liabilities,Total Letter of Credit,0000,Total Letter of credit - Aljazirah Bank
+02-01-03-08-0001,LC - Aljazirah Bank 1,اعتماد مستندي - بنك الجزيرة - 1,Ledger,B/S,Credit,Liabilities,Total Letter of credit - Inma Bank,0001,0
+02-01-04-00-0000,Total Current Portion of Long-Term Loan,اجمالي الجزء المتداول من قروض طويلة الاجل,Group,B/S,Credit,Liabilities,Total Current Liabilities,0000,Total Current Portion of Long-Term Loan
+02-01-04-01-0000,Total Current Portion of Long-Term Loan-Riyad Bank,اجمالي الجزء المتداول من قروض طويلة الاجل -بنك الرياض,Group,B/S,Credit,Liabilities,Total Current Liabilities,0000,Total Current Portion of Long-Term Loan-Riyad Bank
+02-01-04-01-0001,Current Portion of long-Term Loan - Riyad Bank,الجزء المتداول من قروض طويلة الاجل - بنك الرياض,Ledger,B/S,Credit,Liabilities,Total Current Portion of Long-Term Loan,0001,0
+02-01-04-02-0000,Current Portion of long-Term Loan - Yanal (Orix),الجزء المتداول من قروض طويلة الاجل - ينال (اوركس سابقا),Ledger,B/S,Credit,Liabilities,Total Current Portion of Long-Term Loan,0000,Current Portion of long-Term Loan - Yanal (Orix)
+02-01-04-02-0001,Current Portion of long-Term Loan - Yanal (Orix)- 1,الجزء المتداول من قروض طويلة الاجل - ينال (اوركس سابقا) 1,Ledger,B/S,Credit,Liabilities,Total Current Portion of Long-Term Loan,0001,0
+02-01-04-02-0002,Current Portion of long-Term Loan - Yanal (Orix)- 2,الجزء المتداول من قروض طويلة الاجل - ينال (اوركس سابقا) 2,Ledger,B/S,Credit,Liabilities,Total Current Portion of Long-Term Loan,0002,0
+02-01-04-02-0003,Current Portion of long-Term Loan - Yanal (Orix)- 3,الجزء المتداول من قروض طويلة الاجل - ينال (اوركس سابقا) 3,Ledger,B/S,Credit,Liabilities,Total Current Portion of Long-Term Loan,0003,0
+02-01-04-02-0004,Current Portion of long-Term Loan - Yanal (Orix)- 4,الجزء المتداول من قروض طويلة الاجل - ينال (اوركس سابقا) 4,Ledger,B/S,Credit,Liabilities,Total Current Portion of Long-Term Loan,0004,0
+02-01-04-02-0005,Current Portion of long-Term Loan - Yanal (Orix)- 5,الجزء المتداول من قروض طويلة الاجل - ينال (اوركس سابقا) 5,Ledger,B/S,Credit,Liabilities,Total Current Portion of Long-Term Loan,0005,0
+02-01-04-02-0006,Current Portion of long-Term Loan - Yanal (Orix)- 6,الجزء المتداول من قروض طويلة الاجل - ينال (اوركس سابقا) 6,Ledger,B/S,Credit,Liabilities,Total Current Portion of Long-Term Loan,0006,0
+02-01-04-02-0007,Current Portion of long-Term Loan - Yanal (Orix)- 7,الجزء المتداول من قروض طويلة الاجل - ينال (اوركس سابقا) 7,Ledger,B/S,Credit,Liabilities,Total Current Portion of Long-Term Loan,0007,0
+02-01-04-02-0008,Current Portion of long-Term Loan - Yanal (Orix)- 8,الجزء المتداول من قروض طويلة الاجل - ينال (اوركس سابقا) 8,Ledger,B/S,Credit,Liabilities,Total Current Portion of Long-Term Loan,0008,0
+02-01-05-00-0000,Total Other creditors,اجمالي دائنون اخرون,Group,B/S,Credit,Liabilities,Total Current Liabilities,0000,Total Other creditors
+02-01-05-00-0001,Other creditors,دائنون اخرون ,Ledger,B/S,Credit,Liabilities,Total Other creditors,0001,0
+02-01-07-00-0000,Total Current Contributions By Owners,اجمالي مساهمات الملاك,Group,B/S,Credit,Liabilities,Total Current Liabilities,0000,Total Current Contributions By Owners
+02-01-07-00-0001,Current Contributions Owner 1,مساهمات الاملاك - المالك 1,Ledger,B/S,Credit,Liabilities,Total Current Contributions By Owners,0001,0
+02-01-07-00-0002,Current Contributions Owner 2,مساهمات الاملاك - المالك 2,Ledger,B/S,Credit,Liabilities,Total Current Contributions By Owners,0002,0
+02-01-08-00-0000,Total Intercompany Payable,اجمالي جهات ذات علاقة دائنة,Group,B/S,Credit,Liabilities,Total Current Liabilities,0000,Total Intercompany Payable
+02-01-08-00-0001,Intercompany Payable ,جهات ذات علاقة دائنة ,Ledger,B/S,Credit,Liabilities,Total Intercompany Payable,0001,0
+02-01-09-00-0000,Total Accrued Banks Interest,اجمالي الفوائد المستحقة للبنوك,Group,B/S,Credit,Liabilities,Total Current Liabilities,0000,Total Accrued Banks Interest
+02-01-09-00-0001,Accrued Interest - ANB Bank,الفوائد المستحقة - بنك العربي,Ledger,B/S,Credit,Liabilities,Total Accrued Banks Interest,0001,0
+02-01-09-00-0002,Accrued Interest - Alinma Bank,الفوائد المستحقة - بنك الانماء,Ledger,B/S,Credit,Liabilities,Total Accrued Banks Interest,0002,0
+02-01-09-00-0003,Accrued Interest - SIB Bank,الفوائد المستحقة - بنك الاستثمار,Ledger,B/S,Credit,Liabilities,Total Accrued Banks Interest,0003,0
+02-01-09-00-0004,Accrued Interest - NBD Bank,الفوائد المستحقة - بنك الامارات دبي الوطني,Ledger,B/S,Credit,Liabilities,Total Accrued Banks Interest,0004,0
+02-01-09-00-0005,Accrued Interest - Rajhi Bank,الفوائد المستحقة - بنك الراجحي,Ledger,B/S,Credit,Liabilities,Total Accrued Banks Interest,0005,0
+02-01-09-00-0006,Accrued Interest - Albilad Bank,الفوائد المستحقة - بنك البلاد,Ledger,B/S,Credit,Liabilities,Total Accrued Banks Interest,0006,0
+02-01-09-00-0007,Accrued Interest - Riyahd Bank,الفوائد المستحقة - بنك الرياض,Ledger,B/S,Credit,Liabilities,Total Accrued Banks Interest,0007,0
+02-01-09-00-0008,Accrued Interest - SABB Bank,الفوائد المستحقة - بنك ساب,Ledger,B/S,Credit,Liabilities,Total Accrued Banks Interest,0008,0
+02-01-09-00-0009,Accrued Interest - Aljazirah Bank,الفوائد المستحقة - بنك الجزيرة,Ledger,B/S,Credit,Liabilities,Total Accrued Banks Interest,0009,0
+02-01-09-00-0010,Accrued Interest - YANAL,الفوائد المستحقة - ينال (اوركس سابقا),Ledger,B/S,Credit,Liabilities,Total Accrued Banks Interest,0010,0
+02-01-10-00-0000,Total Claims of Other Payable,اجمالي مطالبات الذمم الدائنة الاخرى,Group,B/S,Credit,Liabilities,Total Current Liabilities,0000,Total Claims of Other Payable
+02-01-10-00-0001,VAT on Sales,ضريبة القيمة المضافة على المبيعات,Ledger,B/S,Credit,Liabilities,Total Claims of Other Payable,0001,0
+02-01-10-00-0002,VAT Settlement,تسوية ضريبة القيمة المضافة,Ledger,B/S,Credit,Liabilities,Total Claims of Other Payable,0002,0
+02-02-00-00-0000,Total Non-Current Liabilities,اجمالي الالتزامات الغير المتداولة,Group,B/S,Credit,Liabilities,Total Liabilities,0000,Total Non-Current Liabilities
+02-02-01-00-0000,Total End of Service Provision,اجمالي مخصص نهاية الخدمة,Group,B/S,Credit,Liabilities,Total Non-Current Liabilities,0000,Total End of Service Provision
+02-02-01-00-0001,End of Service Provision,مخصص نهاية الخدمة,Ledger,B/S,Credit,Liabilities,Total End of Service Provision,0001,0
+02-02-02-00-0000,Total Long Term Loans,اجمالي القروض طويلة الاجل,Group,B/S,Credit,Liabilities,Total Non-Current Liabilities,0000,Total Long Term Loans
+02-02-02-01-0000,Long Term Loan Riyad Bank,قرض طويل الاجل - بنك الرياض,Ledger,B/S,Credit,Liabilities,Total Long Term Loans,0000,Long Term Loan Riyad Bank
+02-02-02-01-0001,Long Term Loan 2,قرض طويل الاجل- بنك الرياض,Ledger,B/S,Credit,Liabilities,Total Long Term Loans,0001,0
+02-02-02-02-0000,Long Term Loan - Yanal (Orix),قرض طويل الاجل - ينال (اوركس سابقا),Ledger,B/S,Credit,Liabilities,Total Long Term Loans,0000,Long Term Loan - Yanal (Orix)
+02-02-02-02-0001,Long Term Loan - Yanal (Orix) -1,قرض طويل الاجل - ينال (اوركس سابقا) - 1,Ledger,B/S,Credit,Liabilities,Total Long Term Loans,0001,0
+02-02-02-02-0002,Long Term Loan - Yanal (Orix) -2,قرض طويل الاجل - ينال (اوركس سابقا) - 2,Ledger,B/S,Credit,Liabilities,Total Long Term Loans,0002,0
+02-02-02-02-0003,Long Term Loan - Yanal (Orix) -3,قرض طويل الاجل - ينال (اوركس سابقا) - 3,Ledger,B/S,Credit,Liabilities,Total Long Term Loans,0003,0
+02-02-02-02-0004,Long Term Loan - Yanal (Orix) -4,قرض طويل الاجل - ينال (اوركس سابقا) - 4,Ledger,B/S,Credit,Liabilities,Total Long Term Loans,0004,0
+02-02-02-02-0005,Long Term Loan - Yanal (Orix) -5,قرض طويل الاجل - ينال (اوركس سابقا) - 5,Ledger,B/S,Credit,Liabilities,Total Long Term Loans,0005,0
+02-02-02-02-0006,Long Term Loan - Yanal (Orix) -6,قرض طويل الاجل - ينال (اوركس سابقا) - 6,Ledger,B/S,Credit,Liabilities,Total Long Term Loans,0006,0
+03-00-00-00-0000,Total Equity,حقوق الملكية,Group,B/S,Credit,Equity,,0000,Total Equity
+03-01-00-00-0000,Total Capital,اجمالي راس المال,Group,B/S,Credit,Equity,Total Equity,0000,Total Capital
+03-01-00-00-0001,Capital,راس المال,Ledger,B/S,Credit,Equity,Total Capital,0001,0
+03-01-00-00-0003,Treasury stock,اسهم الخزينة,Ledger,B/S,Credit,Equity,Total Capital,0003,0
+03-02-00-00-0000,Total Reserves,اجمالي الاحتياطي,Group,B/S,Credit,Equity,Total Equity,0000,Total Reserves
+03-02-00-00-0001,Statutory Reserve,الاحتياطي النظامي,Ledger,B/S,Credit,Equity,Total Reserves,0001,0
+03-02-00-00-0002,General Reserve,الاحتياطي العام,Ledger,B/S,Credit,Equity,Total Reserves,0002,0
+03-03-00-00-0000,Total Earnings,اجمالي الارباح,Group,B/S,Credit,Equity,Total Equity,0000,Total Earnings
+03-03-00-00-0001,Retained Earnings Prior Years,الارباح المبقاة ( المحتجزة ),Ledger,B/S,Credit,Equity,Total Earnings,0001,0
+03-03-00-00-0002,Current Period Profits / Loss,ارباح وخسائر الفترة,Ledger,B/S,Credit,Equity,Total Earnings,0002,0
+03-03-00-00-0003,Accumulated OCI,مجمع الدخل الشامل الاخر,Ledger,B/S,Credit,Equity,Total Earnings,0003,0
+04-00-00-00-0000,Total Gross Profit,اجمالي مجمل الربح,Group,P/L,Credit,Revenue,,0000,Total Gross Profit
+04-01-00-00-0000,Total Net Sales,اجمالي صافي المبيعات,Group,P/L,Credit,Revenue,Total Gross Profit,0000,Total Net Sales
+04-01-01-00-0000,Total Sales,اجمالي المبيعات,Group,P/L,Credit,Revenue,Total Net Sales,0000,Total Sales
+04-01-01-01-0000,Total Sales - Trade Customers,اجمالي المبيعات - العملاء التجاريين,Group,P/L,Credit,Revenue,Total Sales,0000,Total Sales - Trade Customers
+04-01-01-01-0001,Sales - Trade Customers ( WH ),المبيعات - العملاء التجاريين ( المستودع ),Ledger,P/L,Credit,Revenue,Total Sales - Trade Customers,0001,0
+04-01-02-00-0000,Total Sales Return,اجمالي مردودات المبيعات,Group,P/L,Debit,Revenue,Total Net Sales,0000,Total Sales Return
+04-01-02-01-0000,Total Sales Return -  Trade Customers,اجمالي مردودات المبيعات - العملاء التجاريين,Group,P/L,Debit,Revenue,Total Sales Return,0000,Total Sales Return -  Trade Customers
+04-01-02-01-0001,Sales Return -  Trade Customers ( WH ),مردودات المبيعات - العملاء التجاريين ( المستودع ),Ledger,P/L,Debit,Revenue,Total Sales Return -  Trade Customers,0001,0
+04-01-03-00-0000,Toatal Trade Discount,اجمالي الخصم التجاري,Group,P/L,Debit,Revenue,Total Net Sales,0000,Toatal Trade Discount
+04-01-03-00-0001,Trade Discount - Trade Customer,الخصم التجاري - العملاء التجاريين,Ledger,P/L,Debit,Revenue,Toatal Trade Discount,0001,0
+04-02-00-00-0000,Total Cost Of Goods Sales,اجمالي تكلفة البضاعة المباعة,Group,P/L,Debit,Cost Of Sales,Total Gross Profit,0000,Total Cost Of Goods Sales
+04-02-01-00-0000,Total Cost Of Goods Sales - Trade Customers,اجمالي تكلفة البضاعة المباعة - العملاء التجاريين,Group,P/L,Debit,Cost Of Sales,Total Cost Of Goods Sales,0000,Total Cost Of Goods Sales - Trade Customers
+04-02-01-00-0001,Cost Of Goods Sales - Trade Customers ( WH ),تكلفة البضاعة المباعة - العملاء التجاريين ( المستودع ),Ledger,P/L,Debit,Cost Of Sales,Total Cost Of Goods Sales - Trade Customers,0001,0
+04-02-03-00-0000,Total Other Costs,اجمالي تكاليف اخرى,Group,P/L,Debit,Cost Of Sales,Total Cost Of Goods Sales,0000,Total Other Costs
+04-02-03-00-0001,Physical Count Variances,تكاليف اخرى - فروق عجز وزيادة مخزنية,Ledger,P/L,Debit,Cost Of Sales,Total Other Costs,0001,0
+04-02-03-00-0002,Price difference - Halala,تكاليف اخرى - فرق الهللات ,Ledger,P/L,Debit,Cost Of Sales,Total Other Costs,0002,0
+04-02-03-00-0003,Packaging Materials Exp.,تكاليف اخرى - مواد تعبئة وتغليف,Ledger,P/L,Debit,Cost Of Sales,Total Other Costs,0003,0
+05-00-00-00-0000,Total Operating Expenses,اجمالى تكاليف التشغيل,Group,P/L,Debit,Operating Expenses,,0000,Total Operating Expenses
+05-01-00-00-0000,Total Selling & Marketing Exp,اجمالي مصاريف البيع والتسويق,Group,P/L,Debit,Operating Expenses,Total Operating Expenses,0000,Total Selling & Marketing Exp
+05-01-01-00-0000,Total Selling Expenses,اجمالي مصاريف البيع,Group,P/L,Debit,Operating Expenses,Total Selling & Marketing Exp,0000,Total Selling Expenses
+05-01-01-00-0001,Allowed discount Exp. ,مصاريف بيعية - خصم مسموح به ,Ledger,P/L,Debit,Operating Expenses,Total Selling Expenses,0001,0
+05-01-01-00-0002,List Commission Exp. ,مصاريف بيعية - م .عمولة اللستة ,Ledger,P/L,Debit,Operating Expenses,Total Selling Expenses,0002,0
+05-01-01-00-0003,Sale commission Exp. ,مصاريف بيعية - عمولة بيع ,Ledger,P/L,Debit,Operating Expenses,Total Selling Expenses,0003,0
+05-01-01-00-0004,Customers additional discount Exp. ,مصاريف بيعية - خصم اضافي للعملاء,Ledger,P/L,Debit,Operating Expenses,Total Selling Expenses,0004,0
+05-01-02-00-0000,Total Advertising Expenses,اجمالي مصروفات دعاية واعلان,Group,P/L,Debit,Operating Expenses,Total Selling & Marketing Exp,0000,Total Advertising Expenses
+05-01-02-00-0001,Media Advertising Exp,مصاريف دعاية - الاعلان بالميديا,Ledger,P/L,Debit,Operating Expenses,Total Advertising Expenses,0001,0
+05-01-02-00-0002,Flyers and Broacher’s Exp,مصاريف دعاية - البروشورات والنشرات,Ledger,P/L,Debit,Operating Expenses,Total Advertising Expenses,0002,0
+05-01-02-00-0003,Group Meeting Exp,مصاريف دعاية - الاجتماعات,Ledger,P/L,Debit,Operating Expenses,Total Advertising Expenses,0003,0
+05-01-02-00-0004,Digital Marketing Exp,مصاريف دعاية - التسويق الرقمي,Ledger,P/L,Debit,Operating Expenses,Total Advertising Expenses,0004,0
+05-01-02-00-0005,Gifts Exp,مصاريف دعاية - هدايا,Ledger,P/L,Debit,Operating Expenses,Total Advertising Expenses,0005,0
+05-01-02-00-0006,Promotions Exp,مصاريف دعاية -  عروض ترويجية,Ledger,P/L,Debit,Operating Expenses,Total Advertising Expenses,0006,0
+05-01-02-00-0007,Marketing Samples Exp,مصاريف دعاية - عينات تسويقية,Ledger,P/L,Debit,Operating Expenses,Total Advertising Expenses,0007,0
+05-02-00-00-0000,Total Salaries & Wages,اجمالي مصروفات اجور ورواتب,Group,P/L,Debit,Operating Expenses,Total Operating Expenses,0000,Total Salaries & Wages
+05-02-01-00-0000,Total Personnal Costs  1,اجمالي مصروفات تكاليف الموظفين 1,Group,P/L,Debit,Operating Expenses,Total Salaries & Wages,0000,Total Personnal Costs  1
+05-02-01-00-0001,Basic Salary Exp,راتب اساسي,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs  1,0001,0
+05-02-01-00-0002,Housing Allowance Exp,بدل سكن,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs  1,0002,0
+05-02-01-00-0003,Transport allowance Exp,بدل انتقال,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs  1,0003,0
+05-02-01-00-0004,Fuel Allowance Exp,بدل محروقات,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs  1,0004,0
+05-02-01-00-0005,Telephone allowance Exp,بدل هاتف,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs  1,0005,0
+05-02-01-00-0006,Food Allowance Exp,بدل طعام,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs  1,0006,0
+05-02-01-00-0007,Overtime Allowance Exp,اضافى خارج دوام,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs  1,0007,0
+05-02-01-00-0008,Education Allowance Exp,بدل تعليم,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs  1,0008,0
+05-02-02-00-0000,Total Personnal Costs 2,اجمالي مصروفات تكاليف الموظفين 2,Group,P/L,Debit,Operating Expenses,Total Salaries & Wages,0000,Total Personnal Costs 2
+05-02-02-00-0001,Temporary Staff Salaries Exp,رواتب عمالة مؤقتة,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs 2,0001,0
+05-02-02-00-0002,Bonus Exp,مكافئات,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs 2,0002,0
+05-02-02-00-0003,Payroll Deduction Exp,خصومات رواتب,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs 2,0003,0
+05-02-02-00-0004,Annual Leave pay Exp,راتب اجازة,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs 2,0004,0
+05-02-02-00-0005,Annual Air ticket Exp,تذاكر سفر اجازات,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs 2,0005,0
+05-02-02-00-0006,End of Service Expense,مكافئة نهاية الخدمة,Ledger,P/L,Debit,Operating Expenses,Total Personnal Costs 2,0006,0
+05-02-03-00-0000,Total Other Staff Costs,اجمالي مصروفات تكاليف موظفين اخرى,Group,P/L,Debit,Operating Expenses,Total Salaries & Wages,0000,Total Other Staff Costs
+05-02-03-00-0001,Medical Insurance Exp,تامين طبي,Ledger,P/L,Debit,Operating Expenses,Total Other Staff Costs,0001,0
+05-02-03-00-0002,Medical Expense,مصروف علاج,Ledger,P/L,Debit,Operating Expenses,Total Other Staff Costs,0002,0
+05-02-03-00-0003,Training Expenses,مصاريف تدريب,Ledger,P/L,Debit,Operating Expenses,Total Other Staff Costs,0003,0
+05-02-03-00-0004,Uniforms Exp,زي موحد,Ledger,P/L,Debit,Operating Expenses,Total Other Staff Costs,0004,0
+05-02-04-00-0000,Total Employee Governmental Exp,اجمالي مصروفات حكومية للموظفين,Group,P/L,Debit,Operating Expenses,Total Salaries & Wages,0000,Total Employee Governmental Exp
+05-02-04-00-0001,GOSI,تامينات اجتماعية,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0001,0
+05-02-04-00-0002,Iqama and Work Permit Charges,تجديد اقامات وتصريح عمل,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0002,0
+05-02-04-00-0003,Transfer of Sponsorship,نقل كفالات,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0003,0
+05-02-04-00-0004,Change of Profession,تغيير مهنة,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0004,0
+05-02-04-00-0005,Re-Entry Visa Charges,تاشيرة خروج وعودة,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0005,0
+05-02-04-00-0006,Employment Visa Charges,مصاريف تاشيرات,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0006,0
+05-02-04-00-0007,Family Visa Charges,تاشيرات زيارة عائلية,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0007,0
+05-02-04-00-0008,Attestation/ Translation Charges,تصديقات وترجمة,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0008,0
+05-02-04-00-0009,Medical Tests charges,رسوم اختبار طبي,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0009,0
+05-02-04-00-0010,Pharmacist MOH License Fees,رسوم ترخيص الصحة للصيدلي,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0010,0
+05-02-04-00-0011,Pharmacist MOH Examination Fees,رسوم اختبار الصيدلي,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0011,0
+05-02-04-00-0012,Pharmacist Basic Life Saving Course Fees,رسوم دروة للصيدلي,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0012,0
+05-02-04-00-0013,Pharmacist Registration Card Expenses,رسوم تسجيل كارد مزاولة مهنة للصيدلي,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0013,0
+05-02-04-00-0014,Muqeem Charge,رسوم خدمات مقيم,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0014,0
+05-02-04-00-0015,Emp. other Gov. License,رسوم تراخيص اخرى للموظفين,Ledger,P/L,Debit,Operating Expenses,Total Employee Governmental Exp,0015,0
+05-02-05-00-0000,Total Recruitment Expense,اجمالي مصروفات استقدام,Group,P/L,Debit,Operating Expenses,Total Salaries & Wages,0000,Total Recruitment Expense
+05-02-05-00-0001,Recruitment Advertising,اعلانات لاستقدام عمالة,Ledger,P/L,Debit,Operating Expenses,Total Recruitment Expense,0001,0
+05-02-05-00-0002,Recruitment Agency Fees,اتعاب مكتب الاستقدام,Ledger,P/L,Debit,Operating Expenses,Total Recruitment Expense,0002,0
+05-02-05-00-0003,Recruitment Expense Reimbursement,مصاريف استقدام,Ledger,P/L,Debit,Operating Expenses,Total Recruitment Expense,0003,0
+05-02-05-00-0004,Recruitment Joining / relocation Expense,مصاريف نقل موظفين,Ledger,P/L,Debit,Operating Expenses,Total Recruitment Expense,0004,0
+05-03-00-00-0000,Toatl Rent Expenses,اجمالي مصاريف ايجارات,Group,P/L,Debit,Operating Expenses,Total Operating Expenses,0000,Toatl Rent Expenses
+05-03-00-00-0001,Office Rent,ايجارات مكاتب,Ledger,P/L,Debit,Operating Expenses,Total Recruitment Expense,0001,0
+05-03-00-00-0002,Warehouse Rent,ايجارات مستودعات,Ledger,P/L,Debit,Operating Expenses,Total Recruitment Expense,0002,0
+05-03-00-00-0003,Pharmacy Rent,ايجارات صيدليات,Ledger,P/L,Debit,Operating Expenses,Total Recruitment Expense,0003,0
+05-03-00-00-0004,Labor House,ايجارات سكن عاملين,Ledger,P/L,Debit,Operating Expenses,Total Recruitment Expense,0004,0
+05-03-00-00-0005,Finder Fee (Rent Commissions),عمولة تاجير ( خلو قدم ),Ledger,P/L,Debit,Operating Expenses,Total Recruitment Expense,0005,0
+05-04-00-00-0000,Total General & Admin. Expenses,اجمالي مصروفات ادارية وعمومية,Group,P/L,Debit,Operating Expenses,Total Operating Expenses,0000,Total General & Admin. Expenses
+05-04-01-00-0000,Total Business Travel,اجمالي مصروفات رحلات عمل,Group,P/L,Debit,Operating Expenses,Total General & Admin. Expenses,0000,Total Business Travel
+05-04-01-00-0001,Travel - Accommodation,اقامة - رحلات عمل,Ledger,P/L,Debit,Operating Expenses,Total Business Travel,0001,0
+05-04-01-00-0002,Travel - Air Tickets,تذاكر سفر - رحلات عمل,Ledger,P/L,Debit,Operating Expenses,Total Business Travel,0002,0
+05-04-01-00-0003,Travel - Transportation,نقل - رحلات عمل,Ledger,P/L,Debit,Operating Expenses,Total Business Travel,0003,0
+05-04-01-00-0004,Travel - Per Diems,بدل - رحلات عمل,Ledger,P/L,Debit,Operating Expenses,Total Business Travel,0004,0
+05-04-01-00-0005,Travel - Other Expenses,مصاريف اخرى - رحلات عمل,Ledger,P/L,Debit,Operating Expenses,Total Business Travel,0005,0
+05-04-02-00-0000,Total Communication Expense,اجمالي مصروفات الاتصالات,Group,P/L,Debit,Operating Expenses,Total General & Admin. Expenses,0000,Total Communication Expense
+05-04-02-00-0001,Telephone Expense,هاتف,Ledger,P/L,Debit,Operating Expenses,Total Communication Expense,0001,0
+05-04-02-00-0002,Internet Services,خدمات انترنت,Ledger,P/L,Debit,Operating Expenses,Total Communication Expense,0002,0
+05-04-02-00-0003,Courier / Postage Expense,بريد,Ledger,P/L,Debit,Operating Expenses,Total Communication Expense,0003,0
+05-04-03-00-0000,Total Gen Serv And Maintenance,اجمالي مصروفات صيانة وخدمات عامة,Group,P/L,Debit,Operating Expenses,Total General & Admin. Expenses,0000,Total Gen Serv And Maintenance
+05-04-03-00-0001,Security Services,خدمات حراسة,Ledger,P/L,Debit,Operating Expenses,Total Gen Serv And Maintenance,0001,0
+05-04-03-00-0002,Cleaning Services,خدمات نظافة,Ledger,P/L,Debit,Operating Expenses,Total Gen Serv And Maintenance,0002,0
+05-04-03-00-0003,General Repairs,خدمات صيانة عامة,Ledger,P/L,Debit,Operating Expenses,Total Gen Serv And Maintenance,0003,0
+05-04-03-00-0004,Air-condition Repairs,خدمات صيانة مكيفات,Ledger,P/L,Debit,Operating Expenses,Total Gen Serv And Maintenance,0004,0
+05-04-03-00-0005,Electrical Repair Expense,خدمات صيانة كهرباء,Ledger,P/L,Debit,Operating Expenses,Total Gen Serv And Maintenance,0005,0
+05-04-04-00-0000,Total Insurance General,اجمالي مصروفات التامين,Group,P/L,Debit,Operating Expenses,Total General & Admin. Expenses,0000,Total Insurance General
+05-04-04-00-0001,Insurance - Property,التامين على الممتلكات,Ledger,P/L,Debit,Operating Expenses,Total Insurance General,0001,0
+05-04-04-00-0002,Insurance - Cash,التامين علي النقد,Ledger,P/L,Debit,Operating Expenses,Total Insurance General,0002,0
+05-04-04-00-0003,Insurance - Fidelity,التامين على خيانة الامانه,Ledger,P/L,Debit,Operating Expenses,Total Insurance General,0003,0
+05-04-04-00-0004,Insurance - Marine,التامين على النقل البحري,Ledger,P/L,Debit,Operating Expenses,Total Insurance General,0004,0
+05-04-04-00-0005,Insurance - In-Land Transit,التامين على البضاعة بالطريق,Ledger,P/L,Debit,Operating Expenses,Total Insurance General,0005,0
+05-04-04-00-0006,Insurance - Vehicle,التامين على السيارات,Ledger,P/L,Debit,Operating Expenses,Total Insurance General,0006,0
+05-04-05-00-0000,Total Professional Services,اجمالي مصروفات خدمات مهنية,Group,P/L,Debit,Operating Expenses,Total General & Admin. Expenses,0000,Total Professional Services
+05-04-05-00-0001,Audit Fees,اتعاب مراجعة,Ledger,P/L,Debit,Operating Expenses,Total Professional Services,0001,0
+05-04-05-00-0002,Legal Fees,اتعاب قانونية,Ledger,P/L,Debit,Operating Expenses,Total Professional Services,0002,0
+05-04-05-00-0003,Taxation Fees,اتعاب ضريبية,Ledger,P/L,Debit,Operating Expenses,Total Professional Services,0003,0
+05-04-05-00-0004,Consultancy Fees,اتعاب استشارات,Ledger,P/L,Debit,Operating Expenses,Total Professional Services,0004,0
+05-04-06-00-0000,Total Lic & Other Governmental,اجمالي مصروفات تراخيص ورسوم حكومية اخرى,Group,P/L,Debit,Operating Expenses,Total General & Admin. Expenses,0000,Total Lic & Other Governmental
+05-04-06-00-0001,Commercial Registration,سجلات تجارية,Ledger,P/L,Debit,Operating Expenses,Total Lic & Other Governmental,0001,0
+05-04-06-00-0002,Municipal Fees / Signboard License,رسوم بلدية - رخصة اللوحة,Ledger,P/L,Debit,Operating Expenses,Total Lic & Other Governmental,0002,0
+05-04-06-00-0003,MOH Licenses,ترخيص وزارة الصحة,Ledger,P/L,Debit,Operating Expenses,Total Lic & Other Governmental,0003,0
+05-04-06-00-0004,Saudi FDA,رسوم هيئة الغذاء والدواء,Ledger,P/L,Debit,Operating Expenses,Total Lic & Other Governmental,0004,0
+05-04-06-00-0005,Safety Inspection Fees,رسوم فحص السلامة,Ledger,P/L,Debit,Operating Expenses,Total Lic & Other Governmental,0005,0
+05-04-06-00-0006,Software license,ترخيص برامج,Ledger,P/L,Debit,Operating Expenses,Total Lic & Other Governmental,0006,0
+05-04-06-00-0007,Attestation Expense,تصديقات غرفة تجارية,Ledger,P/L,Debit,Operating Expenses,Total Lic & Other Governmental,0007,0
+05-04-06-00-0008,Translation Expense,مصاريف ترجمة,Ledger,P/L,Debit,Operating Expenses,Total Lic & Other Governmental,0008,0
+05-04-06-00-0009,Penalties,مخالفات,Ledger,P/L,Debit,Operating Expenses,Total Lic & Other Governmental,0009,0
+05-04-06-00-0010,Other License and Fees,رسوم وتراخيص اخرى,Ledger,P/L,Debit,Operating Expenses,Total Lic & Other Governmental,0010,0
+05-04-07-00-0000,Total Bank Charges,اجمالي مصروفات بنكية,Group,P/L,Debit,Operating Expenses,Total General & Admin. Expenses,0000,Total Bank Charges
+05-04-07-00-0001,Bank Charges,مصروفات بنكية,Ledger,P/L,Debit,Operating Expenses,Total Bank Charges,0001,0
+05-04-07-00-0002,Credit Card Commissions,عمولة بطاقات ائتمان,Ledger,P/L,Debit,Operating Expenses,Total Bank Charges,0002,0
+05-04-07-00-0003,POS Fees,رسوم نقاط بيع,Ledger,P/L,Debit,Operating Expenses,Total Bank Charges,0003,0
+05-04-07-00-0004,LC and LG Charges,مصاريف اعتمادات وخطابات ضمان,Ledger,P/L,Debit,Operating Expenses,Total Bank Charges,0004,0
+05-04-07-00-0005,Fake Currency Notes,عملات مزورة,Ledger,P/L,Debit,Operating Expenses,Total Bank Charges,0005,0
+05-04-07-00-0006,Foreign Exchange Difference,فرق تقيم عملات اجنبية,Ledger,P/L,Debit,Operating Expenses,Total Bank Charges,0006,0
+05-04-07-00-0007,Other Bank Charge,مصاريف بنكية اخرى,Ledger,P/L,Debit,Operating Expenses,Total Bank Charges,0007,0
+05-04-08-00-0000,Total Miscellaneous Expenses,اجمالي مصروفات نثرية,Group,P/L,Debit,Operating Expenses,Total General & Admin. Expenses,0000,Total Miscellaneous Expenses
+05-04-08-00-0001,Stationery And Printing,قرطاسية ومطبوعات,Ledger,P/L,Debit,Operating Expenses,Total Miscellaneous Expenses,0001,0
+05-04-08-00-0002,G&A Consumables,مواد مستلهكة ادارية,Ledger,P/L,Debit,Operating Expenses,Total Miscellaneous Expenses,0002,0
+05-04-08-00-0003,Electricity,كهرباء,Ledger,P/L,Debit,Operating Expenses,Total Miscellaneous Expenses,0003,0
+05-04-08-00-0004,Water,مياه,Ledger,P/L,Debit,Operating Expenses,Total Miscellaneous Expenses,0004,0
+05-04-08-00-0005,Cafeteria Supplies And Refreshm,مستلزمات ضيافة,Ledger,P/L,Debit,Operating Expenses,Total Miscellaneous Expenses,0005,0
+05-04-08-00-0006,Cleaning Supplies and Materials,مستلزمات نظافة,Ledger,P/L,Debit,Operating Expenses,Total Miscellaneous Expenses,0006,0
+05-04-08-00-0007,Public Relations Expenses,مصاريف علاقات عامة,Ledger,P/L,Debit,Operating Expenses,Total Miscellaneous Expenses,0007,0
+05-04-08-00-0008,Donation Expenses,مصاريف تبرعات,Ledger,P/L,Debit,Operating Expenses,Total Miscellaneous Expenses,0008,0
+05-04-08-00-0009,Taxi Exp.,مصروف تاكسي,Ledger,P/L,Debit,Operating Expenses,Total Miscellaneous Expenses,0009,0
+05-04-08-00-0011,Fixed Assets Not Capitalized,الاصول الثابتة غير المرسملة,Ledger,P/L,Debit,Operating Expenses,Total Miscellaneous Expenses,0011,0
+05-05-00-00-0000,Total Dep and Amor Expenses,اجمالي مصروف الاستهلاك والاطفاء,Group,P/L,Debit,Operating Expenses,Total Operating Expenses,0000,Total Dep and Amor Expenses
+05-05-01-00-0000,Total Depreciation Exp,اجمالي استهلاك اصول ثابتة,Group,P/L,Debit,Operating Expenses,Total Dep and Amor Expenses,0000,Total Depreciation Exp
+05-05-01-00-0002,Depr. Exp. - Buildings,استهلاك اصول ثابتة - مباني,Ledger,P/L,Debit,Operating Expenses,Total Depreciation Exp,0002,0
+05-05-01-00-0003,Depr. Exp. - Leasehold Improve,اطفاء اصول ثابتة - تجهيزات وتحسينات,Ledger,P/L,Debit,Operating Expenses,Total Depreciation Exp,0003,0
+05-05-01-00-0004,Depr. Exp. - Air Conditions,استهلاك اصول ثابتة - مكيفات,Ledger,P/L,Debit,Operating Expenses,Total Depreciation Exp,0004,0
+05-05-01-00-0005,Depr. Exp. - Furniture & Fixtur,استهلاك اصول ثابتة - اثاث ومفروشات,Ledger,P/L,Debit,Operating Expenses,Total Depreciation Exp,0005,0
+05-05-01-00-0006,Depr. Exp. - Office Equipment,استهلاك اصول ثابتة - معدات مكتبية,Ledger,P/L,Debit,Operating Expenses,Total Depreciation Exp,0006,0
+05-05-01-00-0007,Depr. Exp. - Computer Hardware,استهلاك اصول ثابتة - اجهزة وبرامج كمبيوتر,Ledger,P/L,Debit,Operating Expenses,Total Depreciation Exp,0007,0
+05-05-01-00-0008,Depr. Exp. - Tools,استهلاك اصول ثابتة - عدد وادوات,Ledger,P/L,Debit,Operating Expenses,Total Depreciation Exp,0008,0
+05-05-01-00-0009,Depr. Exp. - Vehicles,استهلاك اصول ثابتة - سيارات,Ledger,P/L,Debit,Operating Expenses,Total Depreciation Exp,0009,0
+05-05-02-00-0000,Total Amportization Expenses,اجمالي مصاريف الاطفاء,Group,P/L,Debit,Operating Expenses,Total Dep and Amor Expenses,0000,Total Amportization Expenses
+05-05-02-01-0000,Total Amportization of Trad Mark,اجمالي اطفاء العلامات التجارية,Group,P/L,Debit,Operating Expenses,Total Amportization Expenses,0000,Total Amportization of Trad Mark
+05-05-02-01-0001, Amportization of TM 1,اطفاء علامة تجارية - 1,Ledger,P/L,Debit,Operating Expenses,Total Amportization of Trad Mark,0001,0
+05-05-02-02-0000,Total Amportization of Goodwill,اجمالي اطفاء الشهرة,Group,P/L,Debit,Operating Expenses,Total Amportization Expenses,0000,Total Amportization of Goodwill
+05-05-02-02-0001,Amort. Exp. - Goodwill 1, اطفاء الشهرة -  1,Ledger,P/L,Debit,Operating Expenses,Total Amportization of Goodwill,0001,0
+05-05-03-00-0000,Total Dep. Right-of-Use Asset Exp.,اجمالي استهلاك - حق استخدام اصول ثابتة,Group,P/L,Debit,Operating Expenses,Total Dep and Amor Expenses,0000,Total Dep. Right-of-Use Asset Exp.
+05-05-03-00-0001,Dep. Right-of-Use Asset - 1,استهلاك - حق استخدام اصول ثابتة - 1,Ledger,P/L,Debit,Operating Expenses,Total Dep. Right-of-Use Asset Exp.,0001,0
+06-00-00-00-0000,Total Other Income & Expenses,اجمالي الايرادات والمصروفات الاخرى,Group,P/L,Credit,Other Income,,0000,Total Other Income & Expenses
+06-01-00-00-0000,Total Other Income,اجمالي ايرادات اخرى,Group,P/L,Credit,Other Income,Total Other Income & Expenses,0000,Total Other Income
+06-01-00-00-0001,ATM Machine Rentals,ايراد محقق من تاجير صراف الي,Ledger,P/L,Credit,Other Income,Total Other Income,0001,0
+06-01-00-00-0002,Rent Income,ايراد محقق من تاجير محلات,Ledger,P/L,Credit,Other Income,Total Other Income,0002,0
+06-01-00-00-0003,Cash Discount Received,ايراد محقق من خصم نقدي مكتسب,Ledger,P/L,Credit,Other Income,Total Other Income,0003,0
+06-01-00-00-0004,Marketing Support income,ايراد محقق من دعم تسويقي,Ledger,P/L,Credit,Other Income,Total Other Income,0004,0
+06-01-00-00-0005,Pharmacist Incentives Income,ايراد محقق من تحفيز صيادلة,Ledger,P/L,Credit,Other Income,Total Other Income,0005,0
+06-01-00-00-0006,Opening Fees Income,ايراد محقق من رسوم ادخال اصناف,Ledger,P/L,Credit,Other Income,Total Other Income,0006,0
+06-01-00-00-0007,Gondola Fees Income,ايراد محقق من تاجير جندولا,Ledger,P/L,Credit,Other Income,Total Other Income,0007,0
+06-01-00-00-0008,Listing Fees Income,ايراد محقق من رسوم القائمة,Ledger,P/L,Credit,Other Income,Total Other Income,0008,0
+06-01-00-00-0009,Space Rent Income,ايراد محقق من تاجير اماكن داخلية,Ledger,P/L,Credit,Other Income,Total Other Income,0009,0
+06-01-00-00-0010,Advertisement & Promotion Income,ايراد محقق من دعاية ترويجية داخلية,Ledger,P/L,Credit,Other Income,Total Other Income,0010,0
+06-01-00-00-0011,Delivery Charges Income,ايراد محقق من خدمات تسليم البضاعة,Ledger,P/L,Credit,Other Income,Total Other Income,0011,0
+06-01-00-00-0012,Storage Income,ايراد محقق من خدمات تخزين البضاعة,Ledger,P/L,Credit,Other Income,Total Other Income,0012,0
+06-01-00-00-0013,Scrap Sales Income,ايراد محقق من  بيع السكراب,Ledger,P/L,Credit,Other Income,Total Other Income,0013,0
+06-01-00-00-0014,Murabaha Income,ايراد محقق من مرابحات اسلامية,Ledger,P/L,Credit,Other Income,Total Other Income,0014,0
+06-01-00-00-0015,Service on Behalf Income,ايراد محقق من خدمات بالانابة عن الغير,Ledger,P/L,Credit,Other Income,Total Other Income,0015,0
+06-01-00-00-0016,HRDF Income,ايراد محقق من صندوق تنمية الموارد البشرية,Ledger,P/L,Credit,Other Income,Total Other Income,0016,0
+06-01-00-00-0017,Insurance Compensation Income,ايراد محقق من تعويض شركات التامين,Ledger,P/L,Credit,Other Income,Total Other Income,0017,0
+06-01-00-00-0018,Profit and Loss - Actuarial,ارباح وخسائر اكتواري,Ledger,P/L,Credit,Other Income,Total Other Income,0018,0
+06-02-00-00-0000,Total Other Expenses,اجمالي مصروفات اخرى,Group,P/L,Debit,Other Expenses,Total Other Income & Expenses,0000,Total Other Expenses
+06-02-00-00-0001,Store Closing Expenses,اعباء ناتجه عن اقفال مواقع,Ledger,P/L,Debit,Other Expenses,Total Other Expenses,0001,0
+06-02-00-00-0002,Board Member Benefits,مكافئات اعضاء مجلس الادارة,Ledger,P/L,Debit,Other Expenses,Total Other Expenses,0002,0
+06-02-00-00-0003,other expenses,مصروفات متنوعة,Ledger,P/L,Debit,Other Expenses,Total Other Expenses,0003,0
+07-00-00-00-0000,Total Profit/Loss on Asset Disp,اجمالي ارباح او خسائر بيع اصول ثابتة,Group,P/L,Debit,Other Expenses,Total Other Expenses,0000,Total Profit/Loss on Asset Disp
+07-00-00-00-0001,Profit / Loss on Disposal of Land,ارباح او خسائر بيع اصول ثابتة - اراضي,Ledger,P/L,Debit,Other Expenses,Total Profit/Loss on Asset Disp,0001,0
+07-00-00-00-0002,Profit / Loss on Disposal of Buildings,ارباح او خسائر بيع اصول ثابتة - مباني,Ledger,P/L,Debit,Other Expenses,Total Profit/Loss on Asset Disp,0002,0
+07-00-00-00-0003,Profit/Loss on Disposal of Leasehold Improvements,ارباح او خسائر بيع اصول ثابتة - تجهيزات وتحسينات,Ledger,P/L,Debit,Other Expenses,Total Profit/Loss on Asset Disp,0003,0
+07-00-00-00-0004,Profit / Loss on Disposal of Air Conditions,ارباح او خسائر بيع اصول ثابتة - مكيفات,Ledger,P/L,Debit,Other Expenses,Total Profit/Loss on Asset Disp,0004,0
+07-00-00-00-0005,Profit/Loss on Disposal of Machinery & Equipment,ارباح او خسائر بيع اصول ثابتة - الات ومعدات,Ledger,P/L,Debit,Other Expenses,Total Profit/Loss on Asset Disp,0005,0
+07-00-00-00-0006,Profit/Loss on Disposal of Furniture & Fixture Dep,ارباح او خسائر بيع اصول ثابتة - اثاث ومفروشات,Ledger,P/L,Debit,Other Expenses,Total Profit/Loss on Asset Disp,0006,0
+07-00-00-00-0007,Profit / Loss on Disposal of Office Equipment,ارباح او خسائر بيع اصول ثابتة - معدات مكتبية,Ledger,P/L,Debit,Other Expenses,Total Profit/Loss on Asset Disp,0007,0
+07-00-00-00-0008,Profit / Loss on Disposal of Computer HW & SW,ارباح او خسائر بيع اصول ثابتة- جهزة وبرامج كمبيوتر,Ledger,P/L,Debit,Other Expenses,Total Profit/Loss on Asset Disp,0008,0
+07-00-00-00-0009,Profit / Loss on Disposal of Tools,ارباح او خسائر بيع اصول ثابتة - عدد وادوات,Ledger,P/L,Debit,Other Expenses,Total Profit/Loss on Asset Disp,0009,0
+07-00-00-00-0010,Profit / Loss on Disposal of Motor Vehicles,ارباح او خسائر بيع اصول ثابتة - سيارات,Ledger,P/L,Debit,Other Expenses,Total Profit/Loss on Asset Disp,0010,0
+08-00-00-00-0000,Total Interest and Taxes,اجمالي الفوائد والضرائب,Group,P/L,Debit,Other Expenses,,0000,Total Interest and Taxes
+08-01-00-00-0000,Total Interest,اجمالي مصروفات فوائد بنكية,Group,P/L,Debit,Other Expenses,Total Interest and Taxes,0000,Total Interest
+08-01-00-00-0001,Overdraft Charges,فوائد سحب على المكشوف,Ledger,P/L,Debit,Other Expenses,Total Interest,0001,0
+08-01-00-00-0002,Loan Interest,فوائد قروض,Ledger,P/L,Debit,Other Expenses,Total Interest,0002,0
+08-01-00-00-0003,Bank Facility Fees,رسوم تسهيلات بنكية,Ledger,P/L,Debit,Other Expenses,Total Interest,0003,0
+08-01-00-00-0004,Murabaha Financial Charge,رسوم مرابحات اسلامية,Ledger,P/L,Debit,Other Expenses,Total Interest,0004,0
+08-01-00-00-0005,Extensions and Early Payment Fees,رسوم تاخير السداد,Ledger,P/L,Debit,Other Expenses,Total Interest,0005,0
+08-01-00-00-0006,Interest on Financing Lease,فوائد تاجير تمويلي,Ledger,P/L,Debit,Other Expenses,Total Interest,0006,0
+08-01-00-00-0007,Discounting Interest Exp,مصروف الفائدة,Ledger,P/L,Debit,Other Expenses,Total Interest,0007,0
+08-01-00-00-0008,Finance Charge,مصاريف متابعة تمويل,Ledger,P/L,Debit,Other Expenses,Total Interest,0008,0
+08-02-00-00-0000,Total Taxes,اجمالي زكاة وضرائب,Group,P/L,Debit,Other Expenses,Total Interest and Taxes,0000,Total Taxes
+08-02-00-00-0001,Zakat Expense,زكاة شرعية,Ledger,P/L,Debit,Other Expenses,Total Taxes,0001,0
+08-02-00-00-0002,Withholding Tax Expense,ضريبة استقطاع من المنبع,Ledger,P/L,Debit,Other Expenses,Total Taxes,0002,0
+08-02-00-00-0003,VAT Expense,ضريبة القيمة المضافة,Ledger,P/L,Debit,Other Expenses,Total Taxes,0003,0
