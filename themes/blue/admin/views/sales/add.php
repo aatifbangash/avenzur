@@ -681,6 +681,12 @@ table#slTable td input.form-control {
 
                         </div>
                         <div class="col-md-12">
+                            <?php
+                            $data = array(
+                                'name' => 'add_sale',
+                                'onclick'=>"return confirm('Are you sure to proceed?')"
+                            );
+                            ?>
                             <div
                                 class="fprom-group"><?php echo form_submit('add_sale', lang('submit'), 'id="add_sale" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); ?>
                                 <button type="button" class="btn btn-danger" id="reset"><?= lang('reset') ?></div>
