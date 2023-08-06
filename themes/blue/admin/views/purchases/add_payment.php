@@ -131,7 +131,13 @@
 
         </div>
         <div class="modal-footer">
-            <?php echo form_submit('add_payment', lang('add_payment'), 'class="btn btn-primary"'); ?>
+            <?php
+            $data = array(
+                'name' => 'add_payment',
+                'onclick'=>"return confirm('Are you sure to proceed?')"
+            );
+            ?>
+            <?php echo form_submit($data, lang('add_payment'), 'class="btn btn-primary"'); ?>
         </div>
     </div>
     <?php echo form_close(); ?>
