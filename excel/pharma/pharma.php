@@ -2,7 +2,7 @@
 //ALTER TABLE `sma_accounts_groups` ADD `name_arabic` VARCHAR(255) NOT NULL DEFAULT '' AFTER `name`, ADD `type1` VARCHAR(255) NOT NULL DEFAULT '' AFTER `name_arabic`, ADD `type2` VARCHAR(255) NOT NULL DEFAULT '' AFTER `type1`, ADD `category` VARCHAR(255) NOT NULL DEFAULT '' AFTER `type2`;
 //
 //ALTER TABLE `sma_accounts_ledgers` ADD `name_arabic` VARCHAR(255) NOT NULL DEFAULT '' AFTER `name`, ADD `type1` VARCHAR(255) NOT NULL DEFAULT '' AFTER `name_arabic`, ADD `type2` VARCHAR(255) NOT NULL DEFAULT '' AFTER `type1`, ADD `category` VARCHAR(255) NOT NULL DEFAULT '' AFTER `type2`;
-if (($open = fopen("coa2.csv", "r")) !== false) {
+if (($open = fopen("pharma-04.csv", "r")) !== false) {
     while (($data = fgetcsv($open, 1000, ",")) !== false) {
         //if($data[6] >=1000) continue;
         $array[] = $data;
@@ -133,7 +133,7 @@ if (!empty($data)) {
 function InsRec($previousLevelId, $row){
     global $mysqli;
     $levelID = false;
-    if(strtolower($row[3])=='group'){
+    if(!empty($row[3]) && strtolower($row[3])=='group'){
         $sql = "INSERT INTO `sma_accounts_groups` 
                         SET `parent_id`= {$previousLevelId},
                             `code`='{$row[0]}',
@@ -147,7 +147,7 @@ function InsRec($previousLevelId, $row){
         $levelID = $mysqli->insert_id;
     }
 
-    if(strtolower($row[3])=='ledger'){
+    if(!empty($row[3]) && strtolower($row[3])=='ledger'){
 
         if(strtolower($row[5])=='debit'){
             $op_balance_dc = 'D';

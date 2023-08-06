@@ -499,8 +499,14 @@ table#poTable td input.form-control {
 
                         </div>
                         <div class="col-md-12">
+                            <?php
+                            $data = array(
+                                'name' => 'add_pruchase',
+                                'onclick'=>"return confirm('Are you sure to proceed?')"
+                            );
+                            ?>
                             <div
-                                class="from-group"><?php echo form_submit('add_pruchase', $this->lang->line('submit'), 'id="add_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); ?>
+                                class="from-group"><?php echo form_submit($data, $this->lang->line('submit'), 'id="add_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); ?>
                                 <button type="button" class="btn btn-danger" id="reset"><?= lang('reset') ?></button>
                             </div>
                         </div>
