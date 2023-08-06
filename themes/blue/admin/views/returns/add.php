@@ -296,8 +296,14 @@
                             </div>
                         </div>
                         <div class="col-md-12">
+                            <?php
+                            $data = array(
+                                'name' => 'add_return',
+                                'onclick'=>"return confirm('Are you sure to proceed?')"
+                            );
+                            ?>
                             <div
-                                class="fprom-group"><?php echo form_submit('add_return', lang('submit'), 'id="add_return" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); ?>
+                                class="fprom-group"><?php echo form_submit($data, lang('submit'), 'id="add_return" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); ?>
                                 <button type="button" class="btn btn-danger" id="reset"><?= lang('reset') ?></div>
                         </div>
                     </div>

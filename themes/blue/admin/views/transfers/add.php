@@ -316,9 +316,14 @@
                                 <?php echo form_textarea('note', ($_POST['note'] ?? ''), 'id="tonote" class="form-control" style="margin-top: 10px; height: 100px;"'); ?>
                             </div>
 
-
+                            <?php
+                            $data = array(
+                                'name' => 'add_transfer',
+                                'onclick'=>"return confirm('Are you sure to proceed?')"
+                            );
+                            ?>
                             <div
-                                class="from-group"><?php echo form_submit('add_transfer', $this->lang->line('submit'), 'id="add_transfer" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); ?>
+                                class="from-group"><?php echo form_submit($data, $this->lang->line('submit'), 'id="add_transfer" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); ?>
                                 <button type="button" class="btn btn-danger" id="reset"><?= lang('reset') ?></button>
                             </div>
                         </div>
