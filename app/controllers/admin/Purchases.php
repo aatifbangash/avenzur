@@ -151,7 +151,7 @@ class Purchases extends MY_Controller
                         'product_name'      => $product_details->name,
                         'option_id'         => $item_option,
                         'net_unit_cost'     => $item_net_cost,
-                        'unit_cost'         => $this->sma->formatDecimal($item_net_cost), //+ $item_tax),
+                        'unit_cost'         => $this->sma->formatDecimal($unit_cost), //+ $item_tax),
                         'quantity'          => $item_quantity,
                         'product_unit_id'   => $item_unit,
                         'product_unit_code' => $unit->code,
@@ -864,7 +864,7 @@ class Purchases extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            //$this->sma->print_arrays($data, $products);exit;
+            $this->sma->print_arrays($data, $products);exit;
         }
 
         if ($this->form_validation->run() == true && $this->purchases_model->updatePurchase($id, $data, $products, $attachments)) {
@@ -910,7 +910,7 @@ class Purchases extends MY_Controller
                 $row->option           = $item->option_id;
                 $row->real_unit_cost   = $item->real_unit_cost;
                 //$row->cost             = $this->sma->formatDecimal($item->net_unit_cost + ($item->item_discount / $item->quantity));
-                $row->cost             = $item->real_unit_cost;
+                $row->cost             = $item->unit_cost;
                 $row->tax_rate         = $item->tax_rate_id;
                 $row->bonus            = $item->bonus;
                 $row->dis1             = $item->discount1;

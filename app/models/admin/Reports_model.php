@@ -815,6 +815,222 @@ class Reports_model extends CI_Model
         return false;
     }
 
+    public function getInventoryMovementReport($start_date = null, $end_date = null){
+
+        $response_array = array();
+        // Purchased Items
+        $this->db
+                ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as purchased_items, sma_purchase_items.net_unit_cost')
+                ->from('sma_products')
+                ->join('sma_purchase_items', 'sma_purchase_items.product_id=sma_products.id')
+                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+                ->where('sma_purchase_items.date >=', $start_date)
+                ->where('sma_purchase_items.date <=', $end_date)
+                ->where('sma_purchases.return_id IS NULL')
+                ->group_by('sma_products.id')
+                ->order_by('sma_products.id asc');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        $response_array['period']['purchased_items'] = $data;
+
+        // Sold Items
+        $this->db
+                ->select('sma_products.code, sma_products.name, SUM(sma_sale_items.quantity) as sale_items, sma_sale_items.net_unit_price')
+                ->from('sma_products')
+                ->join('sma_sale_items', 'sma_sale_items.product_id=sma_products.id')
+                ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
+                ->where('sma_sales.date >=', $start_date)
+                ->where('sma_sales.date <=', $end_date)
+                //->where('sma_purchases.return_id IS NULL')
+                ->group_by('sma_products.id')
+                ->order_by('sma_products.id asc');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        $response_array['period']['sale_items'] = $data;
+
+        // Items returned to supplier
+        $this->db
+                ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as sreturn_items, sma_purchase_items.net_unit_cost')
+                ->from('sma_products')
+                ->join('sma_purchase_items', 'sma_purchase_items.product_id=sma_products.id')
+                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+                ->where('sma_purchase_items.date >=', $start_date)
+                ->where('sma_purchase_items.date <=', $end_date)
+                ->where('sma_purchases.return_id IS NOT NULL')
+                ->group_by('sma_products.id')
+                ->order_by('sma_products.id asc');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        $response_array['period']['supplier_return_items'] = $data;
+
+        // Items returned By Customer
+        $this->db
+                ->select('sma_products.code, sma_products.name, SUM(sma_return_items.quantity) as creturn_items, sma_return_items.net_unit_price')
+                ->from('sma_products')
+                ->join('sma_return_items', 'sma_return_items.product_id=sma_products.id')
+                ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
+                ->where('sma_returns.date >=', $start_date)
+                ->where('sma_returns.date <=', $end_date)
+                ->group_by('sma_products.id')
+                ->order_by('sma_products.id asc');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        $response_array['period']['customer_return_items'] = $data;
+
+
+        // Opening Balance Purchased Items
+        $this->db
+                ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as purchased_items, sma_purchase_items.net_unit_cost')
+                ->from('sma_products')
+                ->join('sma_purchase_items', 'sma_purchase_items.product_id=sma_products.id')
+                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+                ->where('sma_purchase_items.date <', $start_date)
+                //->where('sma_purchase_items.date <=', $end_date)
+                ->where('sma_purchases.return_id IS NULL')
+                ->group_by('sma_products.id')
+                ->order_by('sma_products.id asc');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        $response_array['ob']['purchased_items'] = $data;
+
+        // Opening Balance Sold Items
+        $this->db
+                ->select('sma_products.code, sma_products.name, SUM(sma_sale_items.quantity) as sale_items, sma_sale_items.net_unit_price')
+                ->from('sma_products')
+                ->join('sma_sale_items', 'sma_sale_items.product_id=sma_products.id')
+                ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
+                ->where('sma_sales.date <', $start_date)
+                //->where('sma_sales.date <=', $end_date)
+                //->where('sma_purchases.return_id IS NULL')
+                ->group_by('sma_products.id')
+                ->order_by('sma_products.id asc');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        $response_array['ob']['sale_items'] = $data;
+
+        // Opening Balance Items returned to supplier
+        $this->db
+                ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as sreturn_items, sma_purchase_items.net_unit_cost')
+                ->from('sma_products')
+                ->join('sma_purchase_items', 'sma_purchase_items.product_id=sma_products.id')
+                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+                ->where('sma_purchase_items.date <', $start_date)
+                //->where('sma_purchase_items.date <=', $end_date)
+                ->where('sma_purchases.return_id IS NOT NULL')
+                ->group_by('sma_products.id')
+                ->order_by('sma_products.id asc');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        $response_array['ob']['supplier_return_items'] = $data;
+
+        // Opening Balance Items returned By Customer
+        $this->db
+                ->select('sma_products.code, sma_products.name, SUM(sma_return_items.quantity) as creturn_items, sma_return_items.net_unit_price')
+                ->from('sma_products')
+                ->join('sma_return_items', 'sma_return_items.product_id=sma_products.id')
+                ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
+                ->where('sma_returns.date <', $start_date)
+                //->where('sma_returns.date <=', $end_date)
+                ->group_by('sma_products.id')
+                ->order_by('sma_products.id asc');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        $response_array['ob']['customer_return_items'] = $data;
+
+        print_r($response_array);exit;
+
+        return $data;
+    }
+
+    public function getVatPurchaseReport($start_date = null, $end_date = null){
+
+        $this->db
+                ->select('sma_purchases.id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as transaction_id, sma_purchases.supplier, sma_purchases.date, sma_purchases.invoice_number, sma_purchases.grand_total as total_with_vat, sma_purchases.total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
+                ->from('sma_purchases')
+                ->join('sma_companies', 'sma_companies.id=sma_purchases.supplier_id')
+                ->join('sma_purchase_items', 'sma_purchase_items.purchase_id=sma_purchases.id')
+                ->where('sma_purchases.date >=', $start_date)
+                ->where('sma_purchases.date <=', $end_date)
+                ->where('sma_purchases.return_id IS NULL')
+                ->group_by('sma_purchase_items.purchase_id')
+                ->order_by('sma_purchases.date asc');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        return $data;
+    }
+
     public function getPurchasesTax($start_date = null, $end_date = null)
     {
         $this->db->select_sum('igst')->select_sum('cgst')->select_sum('sgst')
