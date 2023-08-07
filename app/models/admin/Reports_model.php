@@ -818,7 +818,9 @@ class Reports_model extends CI_Model
     public function getInventoryMovementReport($start_date = null, $end_date = null){
 
         $response_array = array();
+        
         // Purchased Items
+        $data = array();
         $this->db
                 ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as purchased_items, sma_purchase_items.net_unit_cost')
                 ->from('sma_products')
@@ -842,6 +844,7 @@ class Reports_model extends CI_Model
         $response_array['period']['purchased_items'] = $data;
 
         // Sold Items
+        $data = array();
         $this->db
                 ->select('sma_products.code, sma_products.name, SUM(sma_sale_items.quantity) as sale_items, sma_sale_items.net_unit_price')
                 ->from('sma_products')
@@ -865,6 +868,7 @@ class Reports_model extends CI_Model
         $response_array['period']['sale_items'] = $data;
 
         // Items returned to supplier
+        $data = array();
         $this->db
                 ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as sreturn_items, sma_purchase_items.net_unit_cost')
                 ->from('sma_products')
@@ -888,6 +892,7 @@ class Reports_model extends CI_Model
         $response_array['period']['supplier_return_items'] = $data;
 
         // Items returned By Customer
+        $data = array();
         $this->db
                 ->select('sma_products.code, sma_products.name, SUM(sma_return_items.quantity) as creturn_items, sma_return_items.net_unit_price')
                 ->from('sma_products')
@@ -911,6 +916,7 @@ class Reports_model extends CI_Model
 
 
         // Opening Balance Purchased Items
+        $data = array();
         $this->db
                 ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as purchased_items, sma_purchase_items.net_unit_cost')
                 ->from('sma_products')
@@ -934,6 +940,7 @@ class Reports_model extends CI_Model
         $response_array['ob']['purchased_items'] = $data;
 
         // Opening Balance Sold Items
+        $data = array();
         $this->db
                 ->select('sma_products.code, sma_products.name, SUM(sma_sale_items.quantity) as sale_items, sma_sale_items.net_unit_price')
                 ->from('sma_products')
@@ -957,6 +964,7 @@ class Reports_model extends CI_Model
         $response_array['ob']['sale_items'] = $data;
 
         // Opening Balance Items returned to supplier
+        $data = array();
         $this->db
                 ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as sreturn_items, sma_purchase_items.net_unit_cost')
                 ->from('sma_products')
@@ -980,6 +988,7 @@ class Reports_model extends CI_Model
         $response_array['ob']['supplier_return_items'] = $data;
 
         // Opening Balance Items returned By Customer
+        $data = array();
         $this->db
                 ->select('sma_products.code, sma_products.name, SUM(sma_return_items.quantity) as creturn_items, sma_return_items.net_unit_price')
                 ->from('sma_products')
@@ -1001,9 +1010,7 @@ class Reports_model extends CI_Model
 
         $response_array['ob']['customer_return_items'] = $data;
 
-        print_r($response_array);exit;
-
-        return $data;
+        return $response_array;
     }
 
     public function getVatPurchaseReport($start_date = null, $end_date = null){

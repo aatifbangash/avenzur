@@ -3598,6 +3598,21 @@ class Reports extends MY_Controller
             $start_date = $this->sma->fld($from_date);
             $end_date   = $this->sma->fld($to_date);
             $inventory_array = $this->reports_model->getInventoryMovementReport($start_date, $end_date);
+            $response_arr = array();
+            echo '<pre>';print_r($inventory_array);exit;
+            foreach($inventory_array['period'] as $inventory_data){
+                print_r($inventory_data);exit;
+                /*foreach ($response_arr as $response_item) {
+                    if ($response_item->id == $supplier_data->id) {
+                        if($supplier_data->dc == 'D'){
+                            $response_item->ob_debit = $supplier_data->total_amount;
+                        }else if($supplier_data->dc == 'C'){
+                            $response_item->ob_credit = $supplier_data->total_amount;
+                        }
+                        
+                    }
+                }*/
+            }
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
