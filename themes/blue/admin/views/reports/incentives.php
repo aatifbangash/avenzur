@@ -289,7 +289,7 @@ if ($this->input->post('end_date')) {
                                     } else {
                                         $incentivePrice = 0;
                                     }
-                                    echo "<tr><td>$product->code</td><td>$product->name</td><td>$product->incentive_qty</td><td>$product->incentive_value</td><td>$product->total_quantity</td><td>$product->total_price</td><td>$incentivePrice</td></tr>";
+                                    echo "<tr><td>$product->code</td><td>$product->name</td><td>$product->incentive_qty</td><td>$product->incentive_value</td><td>".$this->sma->formatQuantity($product->total_quantity)."</td><td>".$this->sma->formatDecimal($product->total_price)."</td><td>$incentivePrice</td></tr>";
                                 }
                             }
 
