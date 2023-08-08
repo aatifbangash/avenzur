@@ -21,7 +21,7 @@ if ($attachments || (isset($inv) && $inv->attachment)) {
                 <span class="hidden-sm hidden-xs"><?= $attachment->orig_name ?: lang('attachment') . ' ' . ($key + 1) ?></span>
             </a>
             <?php
-            if ($Owner || $Admin) {
+            if (($Owner ||  $Admin) && empty($doNotShowDelete)) {
                 ?>
             <a id="delete-attachment" class="badge btn btn-danger tip" style="background-color:#d9534f;" href="<?= admin_url('welcome/delete/' . $attachment->id . '/' . $attachment->file_name) ?>" title="<?= lang('delete') ?>">
                 <i class="fa fa-times"></i>

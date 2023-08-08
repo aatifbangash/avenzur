@@ -6,6 +6,19 @@ class Entries extends MY_Controller
 	public function __construct() {
         parent::__construct();
         $this->load->library('form_validation');
+
+		$this->digital_upload_path = 'files/';
+        $this->upload_path         = 'assets/uploads/';
+        $this->thumbs_path         = 'assets/uploads/thumbs/';
+        $this->image_types         = 'gif|jpg|jpeg|png|tif';
+        $this->digital_file_types  = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt';
+        $this->allowed_file_size   = '1024000';
+        $this->data['logo']        = true;
+        $this->load->library('attachments', [
+            'path'     => $this->digital_upload_path,
+            'types'    => $this->digital_file_types,
+            'max_size' => $this->allowed_file_size,
+        ]);
     }   
     
 	public function index() {
@@ -462,6 +475,16 @@ class Entries extends MY_Controller
 			if ($add)
 			{
 			   	$insert_id = $this->db->insert_id(); // get inserted entry id
+
+
+				$attachments        = $this->attachments->upload();				
+				if (!empty($attachments)) {
+					foreach ($attachments as $attachment) {
+						$attachment['subject_id']   = $insert_id;
+						$attachment['subject_type'] = 'journal';
+						$this->db->insert('attachments', $attachment);
+					}
+				}
 
 			   	// loop for inserting entry item data array to [entryitems] table - db
 				foreach ($entryitemdata as $row => $itemdata)
@@ -969,6 +992,16 @@ class Entries extends MY_Controller
 			// if update successfull
 			if ($update)
 			{
+
+				$attachments        = $this->attachments->upload();				
+				if (!empty($attachments)) {
+					foreach ($attachments as $attachment) {
+						$attachment['subject_id']   = $id;
+						$attachment['subject_type'] = 'journal';
+						$this->db->insert('attachments', $attachment);
+					}
+				}
+
 			   	/* Delete all original entryitems */
 				$this->db->where('entry_id', $id); // select all entry items where entry_id equals passed id
 				$this->db->delete('sma_accounts_entryitems'); // delete selected entry items
@@ -1204,6 +1237,23 @@ class Entries extends MY_Controller
 			
                 $cr_amount_total =($cr_amount_total)+($data['amount']);
 			}
+		}
+
+		
+
+		$this->data['defaultAttachments']     = $this->site->getAttachments($entry['id'], 'journal');
+
+
+		if($entry['pid'] > 0){
+			$this->data['purchasesAttachments']  = $this->site->getAttachments($entry['pid'], 'purchase');
+		}
+
+		if($entry['sid']> 0){
+			$this->data['saleAttachments']     = $this->site->getAttachments($entry['sid'], 'sale');
+		}
+
+		if($entry['tid']> 0){
+			$this->data['transferAttachments']     = $this->site->getAttachments($entry['tid'], 'transfer');
 		}
 
 		$this->data['curEntryitems'] = $curEntryitems; // pass current entry items to view

@@ -604,8 +604,8 @@ $(document).ready(function() {
                         );
                     }
 
-                    echo form_open();
-
+                    echo admin_form_open_multipart('entries/add/journal', []);
+                   
                     $prefixNumber = '';
                     $suffixNumber = '';
 
@@ -777,7 +777,16 @@ $(document).ready(function() {
                     echo '<tr class="bold-text">' . '<td>' . lang('entries_views_add_items_td_diff') . '</td>' . '<td>' . '</td>' . '<td id="dr-diff">' . '</td>' . '<td id="cr-diff">' . '</td>' . '<td>' . '</td>' . '<td>' . '</td>' . '<td>' . '</td>' . '</tr>';
 
                     echo '</table>';
-
+                    echo '<br />';
+                    echo '<div class="row">';
+                    echo '<div class="col-xs-4">
+                            <div class="form-group">
+                            
+                                '.lang('attachments', 'document').'
+                                <input id="document" type="file" data-browse-label="'.lang('browse').'" name="attachments[]" multiple data-show-upload="false" data-show-preview="false" class="form-control file">
+                            </div>
+                        </div>';
+                    echo '</div>';
                     echo '<br />';
                     echo '<div class="form-group">';
                     echo form_label(lang('entries_views_add_label_note'), 'note');
