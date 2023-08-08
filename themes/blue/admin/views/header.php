@@ -1016,6 +1016,16 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('staff_report'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="reports_vat_purchase_report">
+                                        <a href="<?= admin_url('reports/vat_purchase') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('vat_purchase_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_inventory_movement_report">
+                                        <a href="<?= admin_url('reports/inventory_movement') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('inventory_movement_report'); ?></span>
+                                        </a>
+                                    </li>
                                     <li id="reports_supplier_trial_balance_report">
                                         <a href="<?= admin_url('reports/suppliers_trial_balance') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('suppliers_trial_balance_report'); ?></span>

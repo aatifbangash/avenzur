@@ -3103,6 +3103,7 @@ class Reports extends MY_Controller
                     $obj = new stdClass();
                     $obj->id = $supplier_data->id;
                     $obj->name = $supplier_data->name;
+                    $obj->code = $supplier_data->code;
                     $obj->notes = $supplier_data->notes;
                     $obj->trs_debit = 0;
                     $obj->trs_credit = 0;
@@ -3585,6 +3586,74 @@ class Reports extends MY_Controller
             $this->page_construct('reports/customers_trial_balance', $meta, $this->data);
         }
         
+    }
+
+    public function inventory_movement(){
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date   = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+            $inventory_array = $this->reports_model->getInventoryMovementReport($start_date, $end_date);
+            $response_arr = array();
+            echo '<pre>';print_r($inventory_array);exit;
+            foreach($inventory_array['period'] as $inventory_data){
+                print_r($inventory_data);exit;
+                /*foreach ($response_arr as $response_item) {
+                    if ($response_item->id == $supplier_data->id) {
+                        if($supplier_data->dc == 'D'){
+                            $response_item->ob_debit = $supplier_data->total_amount;
+                        }else if($supplier_data->dc == 'C'){
+                            $response_item->ob_credit = $supplier_data->total_amount;
+                        }
+                        
+                    }
+                }*/
+            }
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['vat_purchase'] = $vat_purchase_array;
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_movement_report')]];
+            $meta = ['page_title' => lang('inventory_movement_report'), 'bc' => $bc];
+            $this->page_construct('reports/inventory_movement_report', $meta, $this->data);
+        }else{
+            
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_movement_report')]];
+            $meta = ['page_title' => lang('inventory_movement_report'), 'bc' => $bc];
+            $this->page_construct('reports/inventory_movement_report', $meta, $this->data);
+        }
+    }
+
+    public function vat_purchase()
+    {
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date   = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+            $vat_purchase_array = $this->reports_model->getVatPurchaseReport($start_date, $end_date);
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['vat_purchase'] = $vat_purchase_array;
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
+            $meta = ['page_title' => lang('vat_purchase_report'), 'bc' => $bc];
+            $this->page_construct('reports/vat_purchase_report', $meta, $this->data);
+        }else{
+            
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
+            $meta = ['page_title' => lang('vat_purchase_report'), 'bc' => $bc];
+            $this->page_construct('reports/vat_purchase_report', $meta, $this->data);
+        }
     }
 
     public function tax()

@@ -151,7 +151,7 @@ class Purchases extends MY_Controller
                         'product_name'      => $product_details->name,
                         'option_id'         => $item_option,
                         'net_unit_cost'     => $item_net_cost,
-                        'unit_cost'         => $this->sma->formatDecimal($item_net_cost), //+ $item_tax),
+                        'unit_cost'         => $this->sma->formatDecimal($unit_cost), //+ $item_tax),
                         'quantity'          => $item_quantity,
                         'product_unit_id'   => $item_unit,
                         'product_unit_code' => $unit->code,
@@ -680,6 +680,7 @@ class Purchases extends MY_Controller
                 $unit_cost          = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
                 $real_unit_cost     = $this->sma->formatDecimal($_POST['real_unit_cost'][$r]);
                 $item_sale_price    = $this->sma->formatDecimal($_POST['sale_price'][$r]);
+
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $quantity_received  = $_POST['received_base_quantity'][$r];
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'undefined' ? $_POST['product_option'][$r] : null;
@@ -724,8 +725,8 @@ class Purchases extends MY_Controller
                     $pr_discount2      = $this->site->calculateDiscount($item_discount2.'%', $amount_after_dis1);
 
                     //$unit_cost        = $this->sma->formatDecimal($unit_cost - $pr_discount);
-                    $unit_cost        = $this->sma->formatDecimal($unit_cost - $pr_discount - $pr_discount2);
-                    $item_net_cost    = $unit_cost;
+                    $item_net_cost        = $this->sma->formatDecimal($unit_cost - $pr_discount - $pr_discount2);
+                    //$item_net_cost    = $unit_cost;
                     //$pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
                     $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $item_unit_quantity);
@@ -764,7 +765,7 @@ class Purchases extends MY_Controller
                         'product_name'      => $product_details->name,
                         'option_id'         => $item_option,
                         'net_unit_cost'     => $item_net_cost,
-                        'unit_cost'         => $this->sma->formatDecimal($item_net_cost + $item_tax),
+                        'unit_cost'         => $this->sma->formatDecimal($unit_cost),
                         'quantity'          => $item_quantity,
                         'product_unit_id'   => $item_unit,
                         'product_unit_code' => $unit->code,
@@ -910,7 +911,7 @@ class Purchases extends MY_Controller
                 $row->option           = $item->option_id;
                 $row->real_unit_cost   = $item->real_unit_cost;
                 //$row->cost             = $this->sma->formatDecimal($item->net_unit_cost + ($item->item_discount / $item->quantity));
-                $row->cost             = $item->real_unit_cost;
+                $row->cost             = $item->unit_cost;
                 $row->tax_rate         = $item->tax_rate_id;
                 $row->bonus            = $item->bonus;
                 $row->dis1             = $item->discount1;
