@@ -55,6 +55,7 @@
                             <thead>
                             <tr>
                                 <th>#</th>
+                                <th><?= lang('code'); ?></th>
                                 <th><?= lang('name'); ?></th>
                                 <th><?= lang('OB Debit'); ?></th>
                                 <th><?= lang('OB Credit'); ?></th>
@@ -67,6 +68,12 @@
                             <tbody style="text-align:center;">
                                 <?php
                                     $count = 0;
+                                    $total_ob_debit = 0;
+                                    $total_ob_credit = 0;
+                                    $total_trs_debit = 0;
+                                    $total_trs_credit = 0;
+                                    $total_eb_debit = 0;
+                                    $total_eb_credit = 0;
                                     foreach ($trial_balance as $data){
                                         $ob_debit = $data->ob_debit > $data->ob_credit ? $data->ob_debit - $data->ob_credit : 0;
                                         $ob_credit = $data->ob_credit > $data->ob_debit ? $data->ob_credit - $data->ob_debit : 0;
@@ -74,9 +81,24 @@
                                         $eb_debit = $ob_debit - $data->trs_credit + $data->trs_debit;
                                         $eb_credit = $ob_credit - $data->trs_debit + $data->trs_credit;
                                         $count++;
+
+                                        $total_ob_debit += $ob_debit;
+                                        $total_ob_credit += $ob_credit;
+                                        $total_trs_debit += $data->trs_debit;
+                                        $total_trs_credit += $data->trs_credit;
+                                        if($eb_debit > 0){
+                                            $total_eb_debit += $eb_debit;
+                                        }
+
+                                        if($eb_credit > 0){
+                                            $total_eb_credit += $eb_credit;
+                                        }
+                                    
+
                                         ?>
                                             <tr>
                                                 <td><?= $count; ?></td>
+                                                <td><?= $data->code; ?></td>
                                                 <td><?= $data->name; ?></td>
                                                 <td><?= $ob_debit > 0 ? $ob_debit : '-'; ?></td>
                                                 <td><?= $ob_credit > 0 ? $ob_credit : '-'; ?></td>
@@ -88,7 +110,15 @@
                                         <?php
                                     }
                                 ?>
-                                
+                                <tr>
+                                    <td colspan="3">Totals: </td>
+                                    <td colspan="1"><?= number_format($total_ob_debit, 2, '.', ''); ?></td>
+                                    <td colspan="1"><?= number_format($total_ob_credit, 2, '.', ''); ?></td>
+                                    <td colspan="1"><?= number_format($total_trs_debit, 2, '.', ''); ?></td>
+                                    <td colspan="1"><?= number_format($total_trs_credit, 2, '.', ''); ?></td>
+                                    <td colspan="1"><?= number_format($total_eb_debit, 2, '.', ''); ?></td>
+                                    <td colspan="1"><?= number_format($total_eb_credit, 2, '.', ''); ?></td>
+                                </tr>
                             </tbody>
                             <tfoot></tfoot>
                         </table>

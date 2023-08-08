@@ -3103,6 +3103,7 @@ class Reports extends MY_Controller
                     $obj = new stdClass();
                     $obj->id = $supplier_data->id;
                     $obj->name = $supplier_data->name;
+                    $obj->code = $supplier_data->code;
                     $obj->notes = $supplier_data->notes;
                     $obj->trs_debit = 0;
                     $obj->trs_credit = 0;
