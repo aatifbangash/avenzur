@@ -99,6 +99,11 @@ class Purchases extends MY_Controller
                 
                 if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity)) {
                     $product_details = $this->purchases_model->getProductByCode($item_code);
+                    if($product_details->price != $item_sale_price){
+                        // update product sale price
+                        $this->purchases_model->updateProductSalePrice($item_code, $item_sale_price);
+                    }
+                    
                     if ($item_expiry) {
                         $today = date('Y-m-d');
                         if ($item_expiry <= $today) {
@@ -718,6 +723,10 @@ class Purchases extends MY_Controller
                 }
                 if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity) && isset($quantity_balance)) {
                     $product_details = $this->purchases_model->getProductByCode($item_code);
+                    if($product_details->price != $item_sale_price){
+                        // update product sale price
+                        $this->purchases_model->updateProductSalePrice($item_code, $item_sale_price);
+                    }
                     // $unit_cost = $real_unit_cost;
                     //$pr_discount      = $this->site->calculateDiscount($item_discount, $unit_cost);
                     $pr_discount      = $this->site->calculateDiscount($item_discount.'%', $unit_cost);

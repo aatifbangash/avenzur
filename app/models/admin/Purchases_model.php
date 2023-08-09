@@ -189,6 +189,12 @@ class Purchases_model extends CI_Model
         return false;
     }
 
+    public function updateProductSalePrice($item_code, $item_sale_price){
+        if ($this->db->update('sma_products', ['price' => $item_sale_price], ['code' => $item_code])) {
+            return true;
+        }
+    }
+
     public function deletePurchase($id)
     {
         $this->db->trans_start();
