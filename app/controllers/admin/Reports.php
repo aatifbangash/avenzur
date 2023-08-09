@@ -3606,9 +3606,9 @@ class Reports extends MY_Controller
                 /*foreach ($response_arr as $response_item) {
                     if ($response_item->id == $supplier_data->id) {
                         if($supplier_data->dc == 'D'){
-                            $response_item->ob_debit = $supplier_data->total_amount;
+                            $response_item->ob_debit = $this->sma->formatDecimal($supplier_data->total_amount);
                         }else if($supplier_data->dc == 'C'){
-                            $response_item->ob_credit = $supplier_data->total_amount;
+                            $response_item->ob_credit = $this->sma->formatDecimal($supplier_data->total_amount);
                         }
                         
                     }

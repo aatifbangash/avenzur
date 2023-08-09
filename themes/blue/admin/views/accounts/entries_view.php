@@ -159,6 +159,39 @@ $(document).ready(function() {
 
                     echo '<br /><br />';
                     ?>
+
+                    <?php 
+                    echo 'Journal Attachments<br />';
+                    $attachments = $defaultAttachments;
+                    include(dirname(__FILE__) . '/../partials/attachments.php'); 
+                    ?>
+
+                    <?php 
+                    if(!empty($purchasesAttachments)){
+                        echo 'Purchase Attachments<br />';
+                        $attachments = $purchasesAttachments;
+                        $doNotShowDelete = 1;
+                        include(dirname(__FILE__) . '/../partials/attachments.php'); 
+                    }
+                    ?>
+
+                    <?php 
+                     if(!empty($saleAttachments)){
+                        echo 'Sale Attachments<br />';
+                        $attachments = $saleAttachments;
+                        $doNotShowDelete = 1;
+                        include(dirname(__FILE__) . '/../partials/attachments.php'); 
+                     }
+                    ?>
+
+                    <?php 
+                     if(!empty($transferAttachments)){
+                        echo 'Transfer Attachments<br />';
+                        $attachments = $transferAttachments;
+                        $doNotShowDelete = 1;
+                        include(dirname(__FILE__) . '/../partials/attachments.php'); 
+                     }
+                    ?>
                     
                     <a href="<?= admin_url('entries/edit/').$entrytype['label'].'/'.$entry['id'];?>" class="btn btn-primary"><?= lang('entries_views_views_td_actions_edit_btn'); ?></a>
                     <a href="<?= admin_url('entries/delete/').$entrytype['label'].'/'.$entry['id'];?>" class="btn btn-danger"><?= lang('entries_views_views_td_actions_delete_btn'); ?></a>
