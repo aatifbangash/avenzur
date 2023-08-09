@@ -736,6 +736,9 @@ class Purchases extends MY_Controller
                     $pr_item_tax = 0;
                     $item_tax    = 0;
                     $tax         = '';
+					
+					//$totalbeforevat = ($item_sale_price*$item_quantity) - $pr_item_discount - $pr_item_discount2;
+                    $totalpurcahsesbeforevat = ($unit_cost*$item_quantity) - $pr_item_discount - $pr_item_discount2;
                     
                     if (isset($item_tax_rate) && $item_tax_rate != 0) {
                         $tax_details = $this->site->getTaxRateByID($item_tax_rate);
@@ -745,7 +748,8 @@ class Purchases extends MY_Controller
                         if ($product_details->tax_method != 1) {
                             $item_net_cost = $unit_cost - $item_tax;
                         }
-                        $pr_item_tax = $this->sma->formatDecimal($item_tax * $item_unit_quantity, 4);
+                        //$pr_item_tax = $this->sma->formatDecimal($item_tax * $item_unit_quantity, 4);
+						$pr_item_tax = $this->sma->formatDecimal(($totalpurcahsesbeforevat*($tax_details->rate/100)), 4);//$this->sma->formatDecimal($item_tax * $item_unit_quantity, 4);
                         
                         if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($this->Settings->state == $supplier_details->state), $tax_details)) {
                             $total_cgst += $gst_data['cgst'];
