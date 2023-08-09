@@ -364,17 +364,17 @@ class Transfers_model extends CI_Model
         return false;
     }
 
-    public function getWarehouseProduct($warehouse_id, $product_id, $variant_id)
+    public function getWarehouseProduct($warehouse_id, $product_id, $variant_id, $item_batchno)
     {
         if ($variant_id) {
             return $this->getProductWarehouseOptionQty($variant_id, $warehouse_id);
         }
-        return $this->getWarehouseProductQuantity($warehouse_id, $product_id);
+        return $this->getWarehouseProductQuantity($warehouse_id, $product_id, $item_batchno);
     }
 
-    public function getWarehouseProductQuantity($warehouse_id, $product_id)
+    public function getWarehouseProductQuantity($warehouse_id, $product_id, $item_batchno)
     {
-        $q = $this->db->get_where('warehouses_products', ['warehouse_id' => $warehouse_id, 'product_id' => $product_id], 1);
+        $q = $this->db->get_where('warehouses_products', ['warehouse_id' => $warehouse_id, 'product_id' => $product_id, 'batchno' => $item_batchno], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
