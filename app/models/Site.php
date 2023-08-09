@@ -1437,7 +1437,7 @@ class Site extends CI_Model
             $payment_status = $paid == 0 ? 'pending' : $sale->payment_status;
             if ($this->sma->formatDecimal($grand_total) == 0 || $this->sma->formatDecimal($grand_total) <= $this->sma->formatDecimal($paid)) {
                 $payment_status = 'paid';
-            } elseif ($sale->due_date <= date('Y-m-d') && !$sale->sale_id) {
+            } elseif ($sale->due_date <= date('Y-m-d') && !$sale->sale_id && $sale->sale_status == 'completed') {
                 $payment_status = 'due';
             } elseif ($paid != 0) {
                 $payment_status = 'partial';
@@ -1447,10 +1447,11 @@ class Site extends CI_Model
                 return true;
             }
         } else {
-            $payment_status = ($sale->due_date <= date('Y-m-d')) ? 'due' : 'pending';
-            if ($this->db->update('sales', ['paid' => 0, 'payment_status' => $payment_status], ['id' => $id])) {
-                return true;
-            }
+            //$payment_status = ($sale->due_date <= date('Y-m-d')) ? 'due' : 'pending';
+            //if ($this->db->update('sales', ['paid' => 0, 'payment_status' => $payment_status], ['id' => $id])) {
+            //    return true;
+            //}
+            return true;
         }
 
         return false;
@@ -1585,6 +1586,16 @@ class Site extends CI_Model
         $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
+
+                $query = $this->db->get_where('sma_purchase_items', ['product_id' => $product_id, 'warehouse_id' => $warehouse, 'batchno' => $row->batchno, 'sale_price >' => 0], 1);
+                if ($query->num_rows() > 0) {
+                    $rowp = $query->row();
+                    $batch_sale_price = $rowp->sale_price;
+                }else{
+                    $batch_sale_price = 0;
+                }
+
+                $row->batch_sale_price = $batch_sale_price;
                 $data[] = $row;
             }
         

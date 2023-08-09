@@ -1146,6 +1146,8 @@ $(document).ready(function (e) {
             var batchPurchaseCost =  $(this).find(':selected').data('batchpurchasecost');
             slitems[item_id].row.batchPurchaseCost = batchPurchaseCost;
            
+            var batchSalePrice = $(this).find(':selected').data('batchsaleprice');
+            slitems[item_id].row.price = batchSalePrice;
 
              slitems[item_id].row.batch_no = new_batchno;
              localStorage.setItem('slitems', JSON.stringify(slitems));
@@ -1630,14 +1632,14 @@ function loadItems() {
             //         row_no +
             //         '"></td>';
 
-            var batchesOptions = '<option value="" data-batchExpiry="null" data-batchQty="0"  data-batchpurchasecost="0">--</option>';
+            var batchesOptions = '<option value="" data-batchExpiry="null" data-batchQty="0"  data-batchpurchasecost="0" data-batchsaleprice="0">--</option>';
             if (item.batches !== false) {
                 $.each(item.batches, function () {
                     batchSelected = "";
                     if (this.batchno == item_batchno) {
                         batchSelected = "selected";
                     }
-                    batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'"  data-batchpurchasecost="'+this.purchase_cost+'" value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
+                    batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'" data-batchsaleprice="'+this.batch_sale_price+'"  data-batchpurchasecost="'+this.purchase_cost+'" value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
                 });
             }
 
@@ -1862,7 +1864,7 @@ function loadItems() {
             }
 
             // Thi will override all the above checks
-            if(base_quantity > item_batchQuantity){
+            if(parseFloat(base_quantity) > parseFloat(item_batchQuantity)){
                 $('#row_' + row_no).addClass('danger');
                 if (site.settings.overselling != 1) {
                     $('#add_sale, #edit_sale').attr('disabled', true);
