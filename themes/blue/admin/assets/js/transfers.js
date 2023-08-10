@@ -447,7 +447,7 @@ function loadItems() {
                 item_batchQuantity = item.row.batchQuantity,
                 item_name = item.row.name.replace(/"/g, '&#034;').replace(/'/g, '&#039;');
             
-            var batchno = item.row.batchno;
+            var batchno = item.row.batch_no;
             var unit_cost = item.row.real_unit_cost;
             var product_unit = item.row.unit,
                 base_quantity = item.row.base_quantity;

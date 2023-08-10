@@ -612,7 +612,7 @@ class Transfers extends MY_Controller
                 $row->real_unit_cost = $item->real_unit_cost;
                 $row->tax_rate       = $item->tax_rate_id;
                 $row->option         = $item->option_id;
-                $row->batchno        = $item->batchno;
+                $row->batch_no        = $item->batchno;
                 $row->serial_number  = $item->serial_number;
                 $row->expiry        = $item->expiry;
                 $options             = $this->transfers_model->getProductOptions($row->id, $this->data['transfer']->from_warehouse_id, false);
@@ -648,13 +648,13 @@ class Transfers extends MY_Controller
                 $row->batchQuantity = 0;               
                 if ($batches) {
                     foreach ($batches as $batchesR) {
-                        if($batchesR->batchno == $row->batchno){
+                        if($batchesR->batchno == $row->batch_no){
                             $row->batchQuantity = $batchesR->quantity;
                             break;
                         }
                     }
                 }
-
+                
                 $pr[$ri] = ['id' => $c, 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
                     'row'        => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options,  'batches'=>$batches];
                 $c++;
