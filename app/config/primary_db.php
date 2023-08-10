@@ -1,7 +1,17 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-if (isset($_COOKIE['companyID'])) {
+$url = $_SERVER['REQUEST_URI'];
+
+if(strpos($url, '/admin/') === false){
+    // Connection to Primary DB Start
+    $connection = new mysqli($hostname, $username, $password, 'directpa_pharma');
+    if ($connection->connect_error) {
+        die("Connection failed: " . $connection->connect_error);
+    }
+
+    $connection->close();
+}else if (isset($_COOKIE['companyID'])) {
 
     // Connection to Primary DB Start
     $connection = new mysqli($hostname, $username, $password, $database);
