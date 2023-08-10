@@ -1,17 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-$url = $_SERVER['REQUEST_URI'];
-
-if(strpos($url, '/admin/') === false){
-    // Connection to Primary DB Start
-    $connection = new mysqli($hostname, $username, $password, 'retaj');
-    if ($connection->connect_error) {
-        die("Connection failed: " . $connection->connect_error);
-    }
-
-    $connection->close();
-}else if (isset($_COOKIE['companyID'])) {
+if (isset($_COOKIE['companyID'])) {
 
     // Connection to Primary DB Start
     $connection = new mysqli($hostname, $username, $password, $database);
@@ -38,4 +28,5 @@ if(strpos($url, '/admin/') === false){
     }
     $connection->close();
 }
+
 // Connection to Primary DB End
