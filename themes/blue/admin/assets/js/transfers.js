@@ -642,7 +642,7 @@ function loadItems() {
             }
 
             // Thi will override all the above checks
-            if(base_quantity > item_batchQuantity){
+            if(parseFloat(base_quantity) > parseFloat(item_batchQuantity)){
                 $('#row_' + row_no).addClass('danger');
                 $('#add_transfer, #edit_transfer').attr('disabled', true);
             }
