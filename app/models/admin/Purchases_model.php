@@ -189,8 +189,8 @@ class Purchases_model extends CI_Model
         return false;
     }
 
-    public function updateProductSalePrice($item_code, $item_sale_price){
-        if ($this->db->update('sma_products', ['price' => $item_sale_price], ['code' => $item_code])) {
+    public function updateProductSalePrice($item_code, $item_sale_price, $item_tax_rate){
+        if ($this->db->update('sma_products', ['price' => $item_sale_price, 'tax_rate' => $item_tax_rate], ['code' => $item_code])) {
             return true;
         }
     }

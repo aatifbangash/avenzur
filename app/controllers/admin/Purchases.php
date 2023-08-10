@@ -101,7 +101,7 @@ class Purchases extends MY_Controller
                     $product_details = $this->purchases_model->getProductByCode($item_code);
                     if($product_details->price != $item_sale_price){
                         // update product sale price
-                        $this->purchases_model->updateProductSalePrice($item_code, $item_sale_price);
+                        $this->purchases_model->updateProductSalePrice($item_code, $item_sale_price, $item_tax_rate);
                     }
                     
                     if ($item_expiry) {
@@ -725,7 +725,7 @@ class Purchases extends MY_Controller
                     $product_details = $this->purchases_model->getProductByCode($item_code);
                     if($product_details->price != $item_sale_price){
                         // update product sale price
-                        $this->purchases_model->updateProductSalePrice($item_code, $item_sale_price);
+                        $this->purchases_model->updateProductSalePrice($item_code, $item_sale_price, $item_tax_rate);
                     }
                     // $unit_cost = $real_unit_cost;
                     //$pr_discount      = $this->site->calculateDiscount($item_discount, $unit_cost);
