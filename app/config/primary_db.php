@@ -5,7 +5,7 @@ $url = $_SERVER['REQUEST_URI'];
 
 if(strpos($url, '/admin/') === false){
     // Connection to Primary DB Start
-    $connection = new mysqli($hostname, $username, $password, 'directpa_pharma');
+    $connection = new mysqli($hostname, $username, $password, 'retaj');
     if ($connection->connect_error) {
         die("Connection failed: " . $connection->connect_error);
     }
