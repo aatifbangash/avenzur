@@ -107,18 +107,18 @@
                                                 <td><?= $item->id; ?></td>
                                                 <td><?= $item->code; ?></td>
                                                 <td><?= $item->name; ?></td>
-                                                <td><?= $openingQuantity; ?></td>
-                                                <td><?= $openingUnitCost; ?></td>
-                                                <td><?= $openingQuantity * $openingUnitCost; ?></td>
-                                                <td><?= $item->item_purchased->quantity; ?></td>
-                                                <td><?= $item->item_purchased->net_unit_cost; ?></td>
-                                                <td><?= $totalPurchasedAmount; ?></td>
-                                                <td><?= $item->item_sold->quantity; ?></td>
-                                                <td><?= $item->item_sold->net_unit_price; ?></td>
-                                                <td><?= $totalSoldAmount; ?></td>
-                                                <td><?= $closingQuantity; ?> </td>
-                                                <td><?= $closingUnitCost; ?> </td>
-                                                <td><?= $closingQuantity * $closingUnitCost; ?> </td>
+                                                <td><?= $this->sma->formatQuantity($openingQuantity); ?></td>
+                                                <td><?= $this->sma->formatQuantity($openingUnitCost); ?></td>
+                                                <td><?= $this->sma->formatQuantity($openingQuantity * $openingUnitCost); ?></td>
+                                                <td><?= $this->sma->formatQuantity($item->item_purchased->quantity); ?></td>
+                                                <td><?= $this->sma->formatQuantity($item->item_purchased->net_unit_cost); ?></td>
+                                                <td><?= $this->sma->formatQuantity($totalPurchasedAmount); ?></td>
+                                                <td><?= $this->sma->formatQuantity($item->item_sold->quantity); ?></td>
+                                                <td><?= $this->sma->formatQuantity($item->item_sold->net_unit_price); ?></td>
+                                                <td><?= $this->sma->formatQuantity($totalSoldAmount); ?></td>
+                                                <td><?= $this->sma->formatQuantity($closingQuantity); ?> </td>
+                                                <td><?= $this->sma->formatQuantity($closingUnitCost); ?> </td>
+                                                <td><?= $this->sma->formatQuantity($closingQuantity * $closingUnitCost); ?> </td>
 
                                             </tr>
                                         <?php
@@ -136,4 +136,5 @@
         </div>
     </div>
     <?php echo form_close(); ?>
+        
 </div>
