@@ -629,17 +629,18 @@ function loadItems() {
             total += formatDecimal((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty), 4);
             count += parseFloat(item_qty);
             an++;
-            if (item.options !== false) {
+            /*if (item.options !== false) {
                 $.each(item.options, function () {
                     if (this.id == item_option && base_quantity > this.quantity) {
                         $('#row_' + row_no).addClass('danger');
                         $('#add_transfer, #edit_transfer').attr('disabled', true);
                     }
                 });
-            } /*else if (base_quantity > item_aqty) {
+            } else if (base_quantity > item_aqty) {
                 $('#row_' + row_no).addClass('danger');
                 $('#add_transfer, #edit_transfer').attr('disabled', true);
             }*/
+
 
             // Thi will override all the above checks
             if(parseFloat(base_quantity) > parseFloat(item_batchQuantity)){

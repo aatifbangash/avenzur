@@ -1831,7 +1831,7 @@ function loadItems() {
 
             //base_quantity += item_bonus;
 
-            if (item_type == 'standard' && item.options !== false) {
+            /*if (item_type == 'standard' && item.options !== false) {
                 $.each(item.options, function () {
                     if (this.id == item_option && base_quantity > this.quantity) {
                         $('#row_' + row_no).addClass('danger');
@@ -1840,12 +1840,12 @@ function loadItems() {
                         }
                     }
                 });
-            } /*else if (item_type == 'standard' && base_quantity > item_aqty) {
+            } else if (item_type == 'standard' && base_quantity > item_aqty) {
                 $('#row_' + row_no).addClass('danger');
                 if (site.settings.overselling != 1) {
                     $('#add_sale, #edit_sale').attr('disabled', true);
                 }
-            }*/ else if (item_type == 'combo') {
+            } else if (item_type == 'combo') {
                 if (combo_items === false) {
                     $('#row_' + row_no).addClass('danger');
                     if (site.settings.overselling != 1) {
@@ -1861,7 +1861,7 @@ function loadItems() {
                         }
                     });
                 }
-            }
+            }*/
 
             // Thi will override all the above checks
             if(parseFloat(base_quantity) > parseFloat(item_batchQuantity)){
