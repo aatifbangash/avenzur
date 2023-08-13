@@ -1013,6 +1013,32 @@ class Reports_model extends CI_Model
         return $response_array;
     }
 
+    public function getVatPurchaseLedgerReport($start_date = null, $end_date = null){
+
+        $this->db
+                ->select('sma_purchases.id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as transaction_id, sma_purchases.supplier, sma_purchases.date, sma_purchases.invoice_number, sma_purchases.grand_total as total_with_vat, sma_purchases.total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
+                ->from('sma_accounts_ledgers')
+                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
+                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+                ->join('sma_purchase_items', 'sma_purchase_items.id=sma_accounts_entries.pid')
+                ->where('sma_accounts_entries.date >=', $start_date)
+                ->where('sma_accounts_entries.date <=', $end_date)
+                ->where('sma_accounts_ledgers.name = VAT on Purchases')
+                ->group_by('sma_accounts_entries.entry_id')
+                ->order_by('sma_accounts_entries.date asc');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        return $data;
+    }
+
     public function getVatPurchaseReport($start_date = null, $end_date = null){
 
         $this->db

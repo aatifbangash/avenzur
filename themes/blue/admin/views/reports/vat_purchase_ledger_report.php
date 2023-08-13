@@ -6,7 +6,7 @@
 </script>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('vat_purchase_report').' (Invoice)'; ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('vat_purchase_report').' (Ledger)'; ?></h2>
 
         <div class="box-icon">
             <ul class="btn-tasks">
@@ -19,7 +19,7 @@
         <div class="row">
         <?php
             $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            echo admin_form_open_multipart('reports/vat_purchase', $attrib)
+            echo admin_form_open_multipart('reports/vat_purchase_ledger', $attrib)
         ?>
         <div class="col-lg-12">
                 <div class="row">

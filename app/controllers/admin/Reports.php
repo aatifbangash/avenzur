@@ -3656,6 +3656,33 @@ class Reports extends MY_Controller
         }
     }
 
+    public function vat_purchase_ledger()
+    {
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date   = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+            $vat_purchase_array = $this->reports_model->getVatPurchaseLedgerReport($start_date, $end_date);
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['vat_purchase'] = $vat_purchase_array;
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
+            $meta = ['page_title' => lang('vat_purchase_report'), 'bc' => $bc];
+            $this->page_construct('reports/vat_purchase_ledger_report', $meta, $this->data);
+        }else{
+            
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
+            $meta = ['page_title' => lang('vat_purchase_report'), 'bc' => $bc];
+            $this->page_construct('reports/vat_purchase_ledger_report', $meta, $this->data);
+        }
+    }
+
     public function tax()
     {
         $this->sma->checkPermissions();

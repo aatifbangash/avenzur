@@ -1,5 +1,53 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <script>
+    var payment_amount = 0;
+
+    function paymentChanged(obj){
+        payment_amount = obj.value;
+
+        var v = $('#customer_id').val();
+        console.log(v);
+        if (v) {
+            $.ajax({
+                url: '<?= admin_url('customers/pending_invoices?customer_id=') ?>' + v,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    <?= $this->security->get_csrf_token_name() ?>: '<?= $this->security->get_csrf_hash() ?>'
+                },
+                success: function (response) {
+                    $('#poTable tbody').empty();
+                    
+                    for(var i=0;i<response.length;i++){
+                        var purchase_date = response[i].date;
+                        var reference_id = response[i].reference_no;
+                        var total_amount = response[i].grand_total;
+                        var paid_amount = response[i].paid;
+                        var due_amount = response[i].grand_total - response[i].paid;
+                        var to_pay = 0;
+
+                        if(payment_amount > due_amount){
+                            to_pay = due_amount;
+                            payment_amount = payment_amount - due_amount;
+                        }else{
+                            to_pay = payment_amount;
+                            payment_amount = 0;
+                        }
+
+                        var newTr = $('<tr id="row_' + response[i].id + '" class="row_' + response[i].id + '" data-item-id="' + response[i].id + '"></tr>');
+                        tr_html = '<td>'+purchase_date+'</td>';
+                        tr_html += '<td>'+reference_id+'</td>';
+                        tr_html += '<td>'+total_amount+'</td>';
+                        tr_html += '<td>'+due_amount+'<input name="due_amount[]" data-item-id="' + response[i].id + '" value="'+due_amount+'" type="hidden" class="rid" /></td>';
+                        tr_html += '<td><input name="payment_amount[]" data-item-id="' + response[i].id + '" type="text" class="rid" value="'+to_pay+'" readonly /><input name="item_id[]" type="hidden" value="' + response[i].id + '"></td>';
+                        newTr.html(tr_html);
+                        newTr.appendTo('#poTable');
+                    }
+                }
+            });
+        }
+    }
+
     $(document).ready(function () {
 
         $('#customer_id').change(function () {
@@ -14,20 +62,31 @@
                     },
                     success: function (response) {
                         $('#poTable tbody').empty();
+                        console.log(response);
                         for(var i=0;i<response.length;i++){
                             var purchase_date = response[i].date;
                             var reference_id = response[i].reference_no;
                             var total_amount = response[i].grand_total;
                             var paid_amount = response[i].paid;
                             var due_amount = response[i].grand_total - response[i].paid;
+                            var to_pay = 0;
+
+                            if(payment_amount > due_amount){
+                                to_pay = due_amount;
+                                payment_amount = payment_amount - due_amount;
+                            }else{
+                                to_pay = payment_amount;
+                                payment_amount = 0;
+                            }
+
                             var newTr = $('<tr id="row_' + response[i].id + '" class="row_' + response[i].id + '" data-item-id="' + response[i].id + '"></tr>');
                             tr_html = '<td>'+purchase_date+'</td>';
                             tr_html += '<td>'+reference_id+'</td>';
                             tr_html += '<td>'+total_amount+'</td>';
                             tr_html += '<td>'+due_amount+'<input name="due_amount[]" data-item-id="' + response[i].id + '" value="'+due_amount+'" type="hidden" class="rid" /></td>';
-                            tr_html += '<td><input name="payment_amount[]" data-item-id="' + response[i].id + '" type="text" class="rid" /><input name="item_id[]" type="hidden" value="' + response[i].id + '"></td>';
+                            tr_html += '<td><input name="payment_amount[]" data-item-id="' + response[i].id + '" type="text" class="rid" value="'+to_pay+'" readonly /><input name="item_id[]" type="hidden" value="' + response[i].id + '"></td>';
                             newTr.html(tr_html);
-                            newTr.prependTo('#poTable');
+                            newTr.appendTo('#poTable');
                         }
                     }
                 });
@@ -77,7 +136,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('Invoice Amount', 'poref'); ?>
-                                <?php echo form_input('payment_total', ($_POST['payment_amount'] ?? $_POST['payment_total']), 'class="form-control input-tip" id="payment_amount"'); ?>
+                                <?php echo form_input('payment_total', ($_POST['payment_amount'] ?? $_POST['payment_total']), 'class="form-control input-tip" onchange="paymentChanged(this);" id="payment_amount"'); ?>
                             </div>
                         </div>
 
@@ -140,23 +199,23 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <!--<div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('Vat', 'poref'); ?>
-                                <?php echo form_input('vat_charges', ($_POST['vat_charges'] ?? $_POST['vat_charges']), 'class="form-control input-tip" id="vat_charges"'); ?>
+                                <?php //echo lang('Vat', 'poref'); ?>
+                                <?php //echo form_input('vat_charges', ($_POST['vat_charges'] ?? $_POST['vat_charges']), 'class="form-control input-tip" id="vat_charges"'); ?>
                             </div>
-                        </div>
+                        </div>-->
 
-                        <div class="col-md-4">
+                        <!--<div class="col-md-4">
                             <div class="form-group">
-                            <?= lang('Vat Account', 'pocustomer'); ?>
+                            <?php //echo lang('Vat Account', 'pocustomer'); ?>
                             <?php 
 
-                                echo form_dropdown('vat_account', $LO, ($_POST['vat_account'] ?? $purchase->vat_account), 'id="vat_account" class="ledger-dropdown form-control" required="required"',$DIS);  
+                                //echo form_dropdown('vat_account', $LO, ($_POST['vat_account'] ?? $purchase->vat_account), 'id="vat_account" class="ledger-dropdown form-control" required="required"',$DIS);  
 
                             ?>
                             </div>
-                        </div>
+                        </div>-->
 
                         <div class="col-md-4" style="margin-bottom: 20px;">
                             <div class="from-group">

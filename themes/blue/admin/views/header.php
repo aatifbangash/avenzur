@@ -1018,7 +1018,12 @@
                                     </li>
                                     <li id="reports_vat_purchase_report">
                                         <a href="<?= admin_url('reports/vat_purchase') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('vat_purchase_report'); ?></span>
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('vat_purchase_report').' (Invoice)'; ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_vat_purchase_report">
+                                        <a href="<?= admin_url('reports/vat_purchase_ledger') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('vat_purchase_report').' (Ledger)'; ?></span>
                                         </a>
                                     </li>
                                     <li id="reports_inventory_movement_report">

@@ -35,7 +35,7 @@ class Customers extends MY_Controller
         }
     }
 
-    public function convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_amount, $vat_account, $va_charges, $reference_no, $type){
+    public function convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_amount, $reference_no, $type){
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($customer_id);
 
@@ -45,8 +45,8 @@ class Customers extends MY_Controller
             'transaction_type' => $type,
             'number'       => 'PMC-'.$reference_no,
             'date'         => date('Y-m-d'), 
-            'dr_total'     => $payment_amount + $va_charges,
-            'cr_total'     => $payment_amount + $va_charges,
+            'dr_total'     => $payment_amount,
+            'cr_total'     => $payment_amount,
             'notes'        => 'Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
             'pid'          =>  ''
             );
@@ -59,13 +59,13 @@ class Customers extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => 'D',
                 'ledger_id' => $customer->ledger_account,
-                'amount' => $payment_amount + $va_charges,
+                'amount' => $payment_amount,
                 'narration' => ''
             )
         );
 
         //vat charges
-        $entryitemdata[] = array(
+        /*$entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
                 'dc' => 'C',
@@ -73,7 +73,7 @@ class Customers extends MY_Controller
                 'amount' => $va_charges,
                 'narration' => ''
             )
-        );
+        );*/
 
         //transfer legdger
         $entryitemdata[] = array(
@@ -224,8 +224,8 @@ class Customers extends MY_Controller
             $reference_no = $this->input->post('reference_no');
             $payment_total = $this->input->post('payment_total');
             $ledger_account = $this->input->post('ledger_account');
-            $vat_account = $this->input->post('vat_account');
-            $vat_charges = $this->input->post('vat_charges');
+            //$vat_account = $this->input->post('vat_account');
+            //$vat_charges = $this->input->post('vat_charges');
             //$date = $this->input->post('date');
             $due_amount_array = $this->input->post('due_amount');
 
@@ -256,13 +256,14 @@ class Customers extends MY_Controller
                     $payment_amount = $payments_array[$i];
                     $item_id = $item_ids[$i];
                     $due_amount = $due_amount_array[$i];
+
                     if($payment_amount > 0){
                         $this->update_sale_order($item_id, $payment_amount);
                         $this->make_customer_payment($item_id, $payment_amount, $reference_no, $date);
                     }
                 }
 
-                $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_total, $vat_account, $vat_charges, $reference_no, 'customerpayment');
+                $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_total, $reference_no, 'customerpayment');
                 $this->session->set_flashdata('message', lang('Customer invoice added Successfully!'));
                 admin_redirect($_SERVER['HTTP_REFERER']);
             }else{
