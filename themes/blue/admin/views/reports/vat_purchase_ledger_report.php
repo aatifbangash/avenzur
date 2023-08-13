@@ -81,7 +81,7 @@
                                                 <td><?= $data->supplier_code; ?></td>
                                                 <td><?= $data->supplier; ?></td>
                                                 <td><?= $data->vat_no; ?></td>
-                                                <td>Purchase</td>
+                                                <td><?= $data->type; ?></td>
                                                 <td><?= $this->sma->formatQuantity($data->total_quantity); ?></td>
                                                 <td><?=  $this->sma->formatDecimal($data->total_with_vat - $data->total_tax); ?></td>
                                                 <td><?= $this->sma->formatDecimal($data->total_tax); ?></td>

@@ -1296,26 +1296,45 @@ class Reports_model extends CI_Model
     public function getVatPurchaseLedgerReport($start_date = null, $end_date = null){
 
         $this->db
-                ->select('sma_purchases.id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as transaction_id, sma_purchases.supplier, sma_purchases.date, sma_purchases.invoice_number, sma_purchases.grand_total as total_with_vat, sma_purchases.total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
+                ->select('sma_purchases.id as purchase_id, SUM(sma_purchase_items.quantity) as total_quantity, sma_accounts_entries.id as transaction_id, sma_purchases.supplier, sma_accounts_entries.date, sma_accounts_entries.number as invoice_number, sma_purchases.grand_total as total_with_vat, SUM(sma_accounts_entryitems.amount) as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
                 ->from('sma_accounts_ledgers')
                 ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
                 ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-                ->join('sma_purchase_items', 'sma_purchase_items.id=sma_accounts_entries.pid')
+                ->join('sma_purchases', 'sma_purchases.id=sma_accounts_entries.pid', 'left')
+                ->join('sma_companies', 'sma_companies.id=sma_purchases.supplier_id', 'left')
+                ->join('sma_purchase_items', 'sma_purchase_items.purchase_id=sma_purchases.id', 'left')
                 ->where('sma_accounts_entries.date >=', $start_date)
                 ->where('sma_accounts_entries.date <=', $end_date)
-                ->where('sma_accounts_ledgers.name = VAT on Purchases')
-                ->group_by('sma_accounts_entries.entry_id')
+                ->where('sma_accounts_ledgers.name =', 'VAT on Purchases')
+                ->group_by('sma_accounts_entries.id, sma_purchase_items.id')
+                //->having('SUM(sma_purchase_items.quantity) >=', 0)
                 ->order_by('sma_accounts_entries.date asc');
 
         $q = $this->db->get();
+        $sqlQuery = $this->db->last_query();
+        //echo "Generated SQL Query: " . $sqlQuery;exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
-                $data[] = $row;
+                if($row->purchase_id == ''){
+                    $row->type = 'Manual';
+                    $row->total_quantity = '0';
+                    $row->supplier_code = '-';
+                    $row->vat_no = '-';
+                    $row->supplier = 'Manual Journal Entry';
+                    $row->total_with_vat = $row->total_tax;
+                }else{
+                    $row->type = 'Purchase';
+                }
+
+                if($row->total_quantity >= 0 || $row->purchase_id == ''){
+                    $data[] = $row;
+                }
+                
             }
         } else {
             $data = array();
         }
-
+        
         return $data;
     }
 
@@ -1328,8 +1347,9 @@ class Reports_model extends CI_Model
                 ->join('sma_purchase_items', 'sma_purchase_items.purchase_id=sma_purchases.id')
                 ->where('sma_purchases.date >=', $start_date)
                 ->where('sma_purchases.date <=', $end_date)
-                ->where('sma_purchases.return_id IS NULL')
+                //->where('sma_purchases.return_id IS NULL')
                 ->group_by('sma_purchase_items.purchase_id')
+                ->having('SUM(sma_purchase_items.quantity) >=', 0)
                 ->order_by('sma_purchases.date asc');
 
         $q = $this->db->get();
