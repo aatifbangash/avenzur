@@ -814,8 +814,288 @@ class Reports_model extends CI_Model
         }
         return false;
     }
-
+    
     public function getInventoryMovementReport($start_date = null, $end_date = null){
+        $response_array = array();
+        $productIDs = $this->getProductIDsByDateRange($start_date, $end_date);
+        // Purchased Items
+        $data = array();
+        if (!empty($productIDs)) {   
+            $this->db->select('id, code, name')
+                    ->from('sma_products')
+                    ->where_in('id', $productIDs)
+                    ->order_by('id asc')        
+                    ->limit(500, 0);
+
+            $q = $this->db->get();
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+
+                    $itemPurchased = $this->itemPurchased($row->id, $start_date, $end_date);               
+                    if ($itemPurchased) {
+                        $row->item_purchased = $itemPurchased;
+                    }                
+
+                    $itemReturnedByCustomer = $this->itemReturnedByCustomer($row->id, $start_date, $end_date);
+                    if ($itemReturnedByCustomer) {
+                        $row->item_return_by_customer = $itemReturnedByCustomer;
+
+                    }                 
+
+                    $itemPurchasedOpeningBlance = $this->itemPurchasedOpeningBlance($row->id, $start_date);
+                    if ($itemPurchasedOpeningBlance) {
+                        $row->item_purchased_opening_balance = $itemPurchasedOpeningBlance;                    
+                    } 
+
+                    $itemSold = $this->itemSold($row->id, $start_date, $end_date);
+                    if ($itemSold) {
+                        $row->item_sold = $itemSold;                  
+                    } 
+
+                    $itemReturnedToSupplier = $this->itemReturnedToSupplier($row->id, $start_date, $end_date);
+                    if ($itemReturnedToSupplier) {
+                        $row->item_returned_to_supplier = $itemReturnedToSupplier;
+                    }  
+
+                    $itemSoldOpeningBalance = $this->itemSoldOpeningBalance($row->id, $start_date, $end_date);
+                    if ($itemSoldOpeningBalance) {
+                        $row->item_sold_opening_balance = $itemSoldOpeningBalance;
+                    } 
+
+                    $itemReturnedByCustomerOpeningBlance = $this->itemReturnedByCustomerOpeningBlance($row->id, $start_date, $end_date);
+                    if ($itemSoldOpeningBalance) {
+                        $row->item_returned_by_customer_opening_blance = $itemReturnedByCustomerOpeningBlance;
+                    } 
+
+                    $data[] = $row;
+               }
+            } else {
+                $data = array();
+            } 
+        }
+        
+        //  $sqlQuery = $this->db->last_query();
+        //  echo "Generated SQL Query: " . $sqlQuery;exit;
+
+        return $data;
+    }
+
+    private function getProductIDsByDateRange($start_date = null, $end_date = null) {
+        $productIDs = array();
+
+        // Fetch product IDs from sma_purchase_items
+        $this->db
+            ->select('DISTINCT (sma_purchase_items.product_id )')
+            ->from('sma_purchase_items')
+            ->join('sma_purchases', 'sma_purchases.id = sma_purchase_items.purchase_id')
+            ->where('sma_purchase_items.date >=', $start_date)
+            ->where('sma_purchase_items.date <=', $end_date)
+            ->where('sma_purchases.return_id IS NULL');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach ($q->result() as $row) {
+                $productIDs[] = $row->product_id;
+            }
+        } 
+
+        // Fetch product IDs from sma_sale_items
+        $this->db
+            ->select('DISTINCT (sma_sale_items.product_id)')
+            ->from('sma_sale_items')
+            ->join('sma_sales', 'sma_sales.id = sma_sale_items.sale_id')
+            ->where('sma_sales.date >=', $start_date)
+            ->where('sma_sales.date <=', $end_date);
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach ($q->result() as $row) {
+                $productIDs[] = $row->product_id;
+            }
+        }
+
+        // Fetch product IDs from sma_return_items
+        $this->db
+            ->select('DISTINCT (sma_return_items.product_id)')
+            ->from('sma_return_items')
+            ->join('sma_returns', 'sma_returns.id = sma_return_items.return_id')
+            ->where('sma_returns.date >=', $start_date)
+            ->where('sma_returns.date <=', $end_date);
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach ($q->result() as $row) {
+                $productIDs[] = $row->product_id;
+            }
+        }
+
+        // Remove duplicates and return the array of unique product IDs
+        $uniqueProductIDs = array_unique($productIDs);
+
+        return $uniqueProductIDs;
+    }
+
+
+    private function itemPurchased($itemId, $start_date = null, $end_date = null){
+        $this->db
+                ->select('SUM(sma_purchase_items.quantity) as quantity, sma_purchase_items.net_unit_cost')
+
+                ->from('sma_purchase_items')
+                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+                ->where('sma_purchase_items.product_id', $itemId)
+                ->where('sma_purchase_items.date >=', $start_date)
+                ->where('sma_purchase_items.date <=', $end_date)
+                ->where('sma_purchases.return_id IS NULL')
+                ->group_by('sma_purchase_items.product_id');
+
+        $q = $this->db->get();
+
+        if ($q->num_rows() > 0) {           
+            return  $q->row(); // Return the single row
+        } else {
+            $notFoundObject = (object) [
+                            'quantity' => 0,          
+                            'net_unit_cost' => 0.00,
+                        ];
+            return $notFoundObject;
+        }
+    }
+    
+    private function itemReturnedByCustomer($itemId, $start_date = null, $end_date = null) {
+        $this->db
+                ->select('SUM(sma_return_items.quantity) as quantity, sma_return_items.net_unit_price')
+                ->from('sma_return_items')
+                ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
+                ->where('sma_return_items.product_id', $itemId)
+                ->where('sma_returns.date >=', $start_date)
+                ->where('sma_returns.date <=', $end_date)
+                ->group_by('sma_return_items.product_id');
+
+        $q = $this->db->get();
+
+        if ($q->num_rows() > 0) {
+            return $q->row(); // Return the single row
+        } else {
+            $notFoundObject = (object) [
+                            'quantity' => 0,          
+                            'net_unit_price' => 0.00,
+                        ];
+            return $notFoundObject;
+        }
+    }
+    
+    private function itemPurchasedOpeningBlance($itemId, $start_date = null) {
+        $this->db
+                ->select('SUM(sma_purchase_items.quantity) as quantity, sma_purchase_items.net_unit_cost')            
+                ->from('sma_purchase_items')
+                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+                ->where ('sma_purchase_items.product_id',$itemId)
+                ->where('sma_purchase_items.date <', $start_date)
+                ->where('sma_purchases.return_id IS NULL')
+                ->group_by('sma_purchase_items.product_id');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->row(); // Return the single row
+        } else {
+            $notFoundObject = (object) [
+                            'quantity' => 0,          
+                            'net_unit_cost' => 0.00,
+                        ];
+            return $notFoundObject;
+        }
+    }
+    
+    private function itemSold($itemId, $start_date = null, $end_date = null) {
+        $this->db
+                ->select('SUM(sma_sale_items.quantity) as quantity, sma_sale_items.net_unit_price')
+                
+                ->from('sma_sale_items')
+                ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
+                ->where('sma_sale_items.product_id',$itemId)
+                ->where('sma_sales.date >=', $start_date)
+                ->where('sma_sales.date <=', $end_date)
+                //->where('sma_purchases.return_id IS NULL')
+                ->group_by('sma_sale_items.product_id');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->row(); // Return the single row
+        } else {
+            $notFoundObject = (object) [
+                            'quantity' => 0,          
+                            'net_unit_price' => 0.00,
+                        ];
+            return $notFoundObject;
+        }
+    }
+    private function itemReturnedToSupplier($itemId, $start_date = null, $end_date = null) {
+        $this->db
+                ->select('SUM(sma_purchase_items.quantity) as quantity, sma_purchase_items.net_unit_cost')
+                
+                ->from('sma_purchase_items')
+                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+                ->where('sma_purchase_items.product_id', $itemId)
+                ->where('sma_purchase_items.date >=', $start_date)
+                ->where('sma_purchase_items.date <=', $end_date)
+                ->where('sma_purchases.return_id IS NOT NULL')
+                ->group_by('sma_purchase_items.product_id');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->row(); // Return the single row
+        } else {
+            $notFoundObject = (object) [
+                            'quantity' => 0,          
+                            'net_unit_cost' => 0.00,
+                        ];
+            return $notFoundObject;
+        }
+    }
+    
+    private function itemSoldOpeningBalance($itemId, $start_date = null){
+        $this->db
+                ->select('SUM(sma_sale_items.quantity) as quantity, sma_sale_items.net_unit_price')
+                ->from('sma_sale_items')
+                ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
+                ->where('sma_sale_items.product_id',$itemId)
+                ->where('sma_sales.date <', $start_date)
+                //->where('sma_sales.date <=', $end_date)
+                //->where('sma_purchases.return_id IS NULL')
+                ->group_by('sma_sale_items.product_id');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->row(); // Return the single row
+        } else {
+            $notFoundObject = (object) [
+                            'quantity' => 0,          
+                            'net_unit_price' => 0.00,
+                        ];
+            return $notFoundObject;
+        }
+    }
+    
+     private function itemReturnedByCustomerOpeningBlance($itemId, $start_date = null) {
+        $this->db
+                ->select('SUM(sma_return_items.quantity), sma_return_items.net_unit_price')
+                ->from('sma_return_items')
+                ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
+                ->where('sma_return_items.product_id', $itemId)
+                ->where('sma_returns.date <', $start_date)
+                ->group_by('sma_return_items.product_id');
+
+        $q = $this->db->get();
+
+        if ($q->num_rows() > 0) {
+            return $q->row(); // Return the single row
+        } else {
+             $notFoundObject = (object) [
+                            'quantity' => 0,          
+                            'net_unit_price' => 0.00,
+                        ];
+            return $notFoundObject;
+        }
+    }
+    
+    public function getInventoryMovementReportBK($start_date = null, $end_date = null){
 
         $response_array = array();
         

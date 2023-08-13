@@ -74,21 +74,52 @@
                             <tbody style="text-align:center;">
                                 <?php
                                     $count = 1;
-                                    foreach ($vat_purchase as $data){
+                                    foreach ($vat_purchase as $item){
+                                        
+                                        $openingQuantity = $item->item_purchased_opening_balance->quantity;
+                                        $openingUnitCost = $item->item_purchased_opening_balance->net_unit_cost;
+
+                                        $totalPurchasedAmount = $item->item_purchased->quantity * $item->item_purchased->net_unit_cost;
+                                        $totalReturnedByCustomerAmount = $item->item_return_by_customer->quantity * $item->item_return_by_customer->net_unit_price;
+                                        $totalSoldAmount = $item->item_sold->quantity * $item->item_sold->net_unit_price;
+                                        $totalReturnedToSupplierAmount = $item->item_returned_to_supplier->quantity * $item->item_returned_to_supplier->net_unit_cost;
+
+                                        $closingQuantity = $openingQuantity
+                                            + $item->item_purchased->quantity
+                                            - $item->item_return_by_customer->quantity
+                                            - $item->item_sold->quantity
+                                            + $item->item_returned_to_supplier->quantity;
+        
+                                    
+                                        if ($closingQuantity > 0) {
+                                            $closingUnitCost = (
+                                                ($openingQuantity * $openingUnitCost)
+                                                + $totalPurchasedAmount
+                                                - $totalReturnedByCustomerAmount
+                                                - $totalSoldAmount
+                                                + $totalReturnedToSupplierAmount
+                                            ) / $closingQuantity;
+                                        } else 
+                                            $closingQuantity = 0;
+        
                                         ?>
                                             <tr>
-                                                <td><?= $count; ?></td>
-                                                <td><?= $data->date; ?></td>
-                                                <td><?= $data->invoice_number; ?></td>
-                                                <td><?= $data->transaction_id; ?></td>
-                                                <td><?= $data->supplier_code; ?></td>
-                                                <td><?= $data->supplier; ?></td>
-                                                <td><?= $data->vat_no; ?></td>
-                                                <td>Purchase</td>
-                                                <td><?= $this->sma->formatQuantity($data->total_quantity); ?></td>
-                                                <td><?=  $this->sma->formatDecimal($data->total_with_vat - $data->total_tax); ?></td>
-                                                <td><?= $this->sma->formatDecimal($data->total_tax); ?></td>
-                                                <td><?= $this->sma->formatDecimal($data->total_with_vat); ?></td>
+                                                <td><?= $item->id; ?></td>
+                                                <td><?= $item->code; ?></td>
+                                                <td><?= $item->name; ?></td>
+                                                <td><?= $this->sma->formatQuantity($openingQuantity); ?></td>
+                                                <td><?= $this->sma->formatQuantity($openingUnitCost); ?></td>
+                                                <td><?= $this->sma->formatQuantity($openingQuantity * $openingUnitCost); ?></td>
+                                                <td><?= $this->sma->formatQuantity($item->item_purchased->quantity); ?></td>
+                                                <td><?= $this->sma->formatQuantity($item->item_purchased->net_unit_cost); ?></td>
+                                                <td><?= $this->sma->formatQuantity($totalPurchasedAmount); ?></td>
+                                                <td><?= $this->sma->formatQuantity($item->item_sold->quantity); ?></td>
+                                                <td><?= $this->sma->formatQuantity($item->item_sold->net_unit_price); ?></td>
+                                                <td><?= $this->sma->formatQuantity($totalSoldAmount); ?></td>
+                                                <td><?= $this->sma->formatQuantity($closingQuantity); ?> </td>
+                                                <td><?= $this->sma->formatQuantity($closingUnitCost); ?> </td>
+                                                <td><?= $this->sma->formatQuantity($closingQuantity * $closingUnitCost); ?> </td>
+
                                             </tr>
                                         <?php
                                         $count++;
@@ -104,5 +135,5 @@
 
         </div>
     </div>
-    <?php echo form_close(); ?>
+    <?php echo form_close(); ?>        
 </div>
