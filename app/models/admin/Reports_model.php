@@ -1306,7 +1306,7 @@ class Reports_model extends CI_Model
                 ->where('sma_accounts_entries.date >=', $start_date)
                 ->where('sma_accounts_entries.date <=', $end_date)
                 ->where('sma_accounts_ledgers.name =', 'VAT on Purchases')
-                ->group_by('sma_accounts_entries.id, sma_purchase_items.id')
+                ->group_by('sma_accounts_entries.id')
                 //->having('SUM(sma_purchase_items.quantity) >=', 0)
                 ->order_by('sma_accounts_entries.date asc');
 
