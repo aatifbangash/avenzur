@@ -471,7 +471,7 @@ function loadItems() {
                         pr_tax_val = parseFloat(pr_tax.rate);
                         pr_tax_rate = pr_tax.rate;
                     }
-                    product_tax += pr_tax_val * item_qty;
+                    //product_tax += pr_tax_val * item_qty;
                     product_tax += formatDecimal(formatDecimal(pr_tax_val) * item_qty);
                 }
             }
@@ -596,9 +596,9 @@ function loadItems() {
                 base_quantity +
                 '"><span style="font-size:10px;margin-top:5px;" class="batchQuantity">'+item_batchQuantity+'</span></td>';
 
-                tr_html +=
+                /*tr_html +=
                 '<td><span>' +
-                formatDecimal(item_aqty, 4)+'</span></td>';
+                formatDecimal(item_aqty, 4)+'</span></td>';*/
 
             if (site.settings.tax1 == 1) {
                 tr_html +=
