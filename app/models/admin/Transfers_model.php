@@ -119,7 +119,7 @@ class Transfers_model extends CI_Model
 
                 if ($status == 'sent' || $status == 'completed') {
                 //if ($status == 'completed') {
-                    $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status);
+                    $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'add');
                 }
             }
 
@@ -423,10 +423,10 @@ class Transfers_model extends CI_Model
         return $ostatus;
     }
 
-    public function syncTransderdItem($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null, $status)
+    public function syncTransderdItem($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null, $status, $type)
     {
         if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
-            if($status == "sent" || $status == "completed"){
+            if(($status == "sent" && $type == 'add') || ($status == "completed" && $type == 'add')){
                 $balance_qty = $quantity;
                 foreach ($pis as $pi) {
                     if ($balance_qty <= $quantity && $quantity > 0) {
@@ -569,7 +569,7 @@ class Transfers_model extends CI_Model
 
                 if ($data['status'] == 'sent' || $data['status'] == 'completed') {
                 //if ($data['status'] == 'completed') {
-                    $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status);
+                    $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'edit');
                 }
             }
 
