@@ -3091,9 +3091,9 @@ class Reports extends MY_Controller
                     if ($response_item->id == $supplier_data->id) {
                         $idExists = true;
                         if($supplier_data->dc == 'D'){
-                            $response_item->trs_debit = $response_item->trs_debit + $supplier_data->total_amount;
+                            $response_item->trs_debit = $this->sma->formatDecimal($response_item->trs_debit + $supplier_data->total_amount);
                         }else if($supplier_data->dc == 'C'){
-                            $response_item->trs_credit = $response_item->trs_credit + $supplier_data->total_amount;
+                            $response_item->trs_credit = $this->sma->formatDecimal($response_item->trs_credit + $supplier_data->total_amount);
                         }
                         break;
                     }
@@ -3110,9 +3110,9 @@ class Reports extends MY_Controller
                     $obj->ob_debit = 0;
                     $obj->ob_credit = 0;
                     if($supplier_data->dc == 'D'){
-                        $obj->trs_debit = $supplier_data->total_amount;
+                        $obj->trs_debit = $this->sma->formatDecimal($supplier_data->total_amount);
                     }else if($supplier_data->dc == 'C'){
-                        $obj->trs_credit = $supplier_data->total_amount;
+                        $obj->trs_credit = $this->sma->formatDecimal($supplier_data->total_amount);
                     }
                     array_push($response_arr, $obj);  
                 }
@@ -3122,9 +3122,9 @@ class Reports extends MY_Controller
                 foreach ($response_arr as $response_item) {
                     if ($response_item->id == $supplier_data->id) {
                         if($supplier_data->dc == 'D'){
-                            $response_item->ob_debit = $supplier_data->total_amount;
+                            $response_item->ob_debit = $this->sma->formatDecimal($supplier_data->total_amount);
                         }else if($supplier_data->dc == 'C'){
-                            $response_item->ob_credit = $supplier_data->total_amount;
+                            $response_item->ob_credit = $this->sma->formatDecimal($supplier_data->total_amount);
                         }
                         
                     }
@@ -3182,7 +3182,7 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['customer_id'] = $supplier_id;
             $this->data['ob_type'] = $ob_type;
-            $this->data['total_ob'] = $total_ob;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];
 
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
@@ -3230,7 +3230,7 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['supplier_id'] = $supplier_id;
             $this->data['ob_type'] = $ob_type;
-            $this->data['total_ob'] = $total_ob;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];
 
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_statement')]];
@@ -3280,7 +3280,7 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['supplier_id'] = $supplier_id;
             $this->data['ob_type'] = $ob_type;
-            $this->data['total_ob'] = $total_ob;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];
 
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
@@ -3337,7 +3337,7 @@ class Reports extends MY_Controller
                 }
             }
         }
-        $this->data['supplier_aging'] = $response_arr;
+        $this->data['supplier_aging'] = $this->sma->formatDecimal($response_arr);
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_aging')]];
         $meta = ['page_title' => lang('suppliers_aging'), 'bc' => $bc];
         $this->page_construct('reports/suppliers_aging', $meta, $this->data);
