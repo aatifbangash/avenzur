@@ -426,7 +426,7 @@ class Transfers_model extends CI_Model
     public function syncTransderdItem($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null, $status)
     {
         if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
-            if($status == "sent"){
+            if($status == "sent" || $status == "completed"){
                 $balance_qty = $quantity;
                 foreach ($pis as $pi) {
                     if ($balance_qty <= $quantity && $quantity > 0) {
