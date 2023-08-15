@@ -1622,7 +1622,7 @@ class Products extends MY_Controller
                 $this->datatables->join('categories', 'products.category_id=categories.id', 'left')
                 ->join('units', 'products.unit=units.id', 'left')
                 ->join('brands', 'products.brand=brands.id', 'left')
-                ->group_by('products.id');
+                ->group_by('wp.product_id');
 
         }
         if (!$this->Owner && !$this->Admin) {
