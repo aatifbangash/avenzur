@@ -837,10 +837,12 @@ class Pos extends MY_Controller
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
-
+                $product_details = $this->pos_model->getProductQuantityWithNearestExpiry($item_id, $warehouse_id);
+                $batch_no = $product_details['batchno'];
+                $expiry = $product_details['expiry'];
                     // $this->db->select('cost')->from('products')->where('id', $item_id);
                     // $productCost =$this->db->get()->result();
-
+                
                 $q = $this->db->get_where('products',['id' => $item_id]);
                 $productCost = $q->row()->cost;
 
@@ -900,6 +902,8 @@ class Pos extends MY_Controller
                         'item_discount'     => $pr_item_discount,
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'serial_no'         => $item_serial,
+                        'expiry'            => $expiry,
+                        'batch_no'          => $batch_no,
                         'real_unit_price'   => $real_unit_price,
                         'comment'           => $item_comment,
                     ];

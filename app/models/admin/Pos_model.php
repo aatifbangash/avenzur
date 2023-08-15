@@ -682,6 +682,26 @@ class Pos_model extends CI_Model
         return false;
     }
 
+    public function getProductQuantityWithNearestExpiry($product_id, $warehouse)
+    {
+        $now = date('Y-m-d');  // Current date in the format 'YYYY-MM-DD'
+
+        $this->db->select('*');
+        $this->db->from('warehouses_products');
+        $this->db->where('product_id', $product_id);
+        $this->db->where('warehouse_id', $warehouse);
+        $this->db->where('quantity >', 0);
+        $this->db->where('expiry >=', $now);  // Select products with expiry greater than or equal to the current date
+        $this->db->order_by('expiry', 'ASC'); // Order by expiry in ascending order
+        $this->db->limit(1);
+        $q = $this->db->get();
+
+        if ($q->num_rows() > 0) {
+            return $q->row_array(); //$q->row();
+        }
+        return false;
+    }
+
     public function getProductsByCode($code)
     {
         $this->db->like('code', $code, 'both')->order_by('code');
