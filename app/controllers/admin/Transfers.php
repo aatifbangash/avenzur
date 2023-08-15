@@ -608,7 +608,13 @@ class Transfers extends MY_Controller
                 $row->ordered_quantity = $item->quantity;
                 $row->quantity        += $item->quantity_balance;
                 $row->cost           = $item->net_unit_cost;
-                $row->unit_cost      = $item->net_unit_cost + ($item->item_tax / $item->quantity);
+                
+                if($item->quantity > 0){
+                    $row->unit_cost      = $item->net_unit_cost + ($item->item_tax / $item->quantity);
+                }else{
+                    $row->unit_cost      = $item->net_unit_cost;
+                }
+                
                 $row->real_unit_cost = $item->real_unit_cost;
                 $row->tax_rate       = $item->tax_rate_id;
                 $row->option         = $item->option_id;
