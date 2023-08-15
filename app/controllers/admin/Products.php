@@ -1613,16 +1613,13 @@ class Products extends MY_Controller
                 ->from('products');
                 if ($this->Settings->display_all_products) {
                     $this->datatables->join('warehouses_products wp', "wp.product_id=products.id", 'left');
-                // $this->datatables->join("( SELECT product_id, quantity, rack from {$this->db->dbprefix('warehouses_products')} WHERE warehouse_id = {$warehouse_id}) wp", 'products.id=wp.product_id', 'left');
                 } else {
                     $this->datatables->join('warehouses_products wp', 'products.id=wp.product_id', 'left')
-                    //->where('wp.warehouse_id', $warehouse_id)
                     ->where('wp.quantity !=', 0);
                 }
                 $this->datatables->join('categories', 'products.category_id=categories.id', 'left')
                 ->join('units', 'products.unit=units.id', 'left')
-                ->join('brands', 'products.brand=brands.id', 'left')
-                ->group_by('products.id');
+                ->join('brands', 'products.brand=brands.id', 'left');
 
         }
         if (!$this->Owner && !$this->Admin) {
