@@ -234,7 +234,7 @@ class Transfers_model extends CI_Model
 
     public function getProductNamesWithBatches($term, $warehouse_id, $limit = 10)
     {
-        $this->db->select('products.id, code, name, warehouses_products.quantity, cost, tax_rate, type, unit, purchase_unit, tax_method, purchase_items.serial_number')
+        $this->db->select('products.id, products.price, code, name, warehouses_products.quantity, cost, tax_rate, type, unit, purchase_unit, tax_method, purchase_items.serial_number')
             ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
             ->join('purchase_items', 'purchase_items.product_id=products.id', 'left')
             ->group_by('products.id');

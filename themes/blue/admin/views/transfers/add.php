@@ -288,7 +288,7 @@
                                                 echo '<th class="col-md-2">' . $this->lang->line('expiry_date') . '</th>';
                                             }
                                             ?>
-                                            <th class="col-md-1"><?= lang('net_unit_cost'); ?></th>
+                                            <th class="col-md-1"><?= lang('Sales Price'); ?></th>
                                             <th class="col-md-1"><?= lang('quantity'); ?></th>
                                             <th class="col-md-1"><?= lang('Actual Quantity'); ?></th>
                                             <?php

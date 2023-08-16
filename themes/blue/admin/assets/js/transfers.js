@@ -260,7 +260,7 @@ $(document).ready(function () {
             }
             var new_cost = parseFloat($(this).val()),
                 item_id = row.attr('data-item-id');
-            toitems[item_id].row.cost = new_cost;
+            toitems[item_id].row.price = new_cost;
             localStorage.setItem('toitems', JSON.stringify(toitems));
             loadItems();
         });
@@ -429,9 +429,12 @@ function loadItems() {
                 item_expiry = new Date(item.row.expiry).toLocaleDateString('en-GB')
             }
 
+            item.row.cost = item.row.price;
+
             var product_id = item.row.id,
                 item_type = item.row.type,
                 item_cost = item.row.cost,
+                //item_price = item.row.price,
                 item_qty = item.row.qty,
                 item_bqty = item.row.quantity_balance,
                 item_oqty = item.row.ordered_quantity,
@@ -448,7 +451,8 @@ function loadItems() {
                 item_name = item.row.name.replace(/"/g, '&#034;').replace(/'/g, '&#039;');
             
             var batchno = item.row.batch_no;
-            var unit_cost = item.row.real_unit_cost;
+            //var unit_cost = item.row.real_unit_cost;
+            var unit_cost = item.row.cost;
             var product_unit = item.row.unit,
                 base_quantity = item.row.base_quantity;
 
@@ -559,7 +563,8 @@ function loadItems() {
                     row_no +
                     '"></td>';
             }
-            tr_html +=
+            
+            /*tr_html +=
                 '<td class="text-right"><input class="form-control input-sm text-right rcost" name="net_cost[]" type="hidden" id="cost_' +
                 row_no +
                 '" value="' +
@@ -572,7 +577,18 @@ function loadItems() {
                 row_no +
                 '">' +
                 formatMoney(item_cost) +
-                '</span></td>';
+                '</span></td>';*/
+
+            tr_html +=
+                '<td class="text-right"><input class="form-control input-sm text-left rcost" name="net_cost[]" type="text" id="cost_' +
+                row_no +
+                '" value="' +
+                formatDecimal(item_cost) +
+                '"><input class="rucost" name="unit_cost[]" type="hidden" value="' +
+                unit_cost +
+                '"><input class="realucost" name="real_unit_cost[]" type="hidden" value="' +
+                item.row.real_unit_cost +
+                '"></td>';
 
                 
             tr_html +=
