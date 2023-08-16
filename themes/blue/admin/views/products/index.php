@@ -50,11 +50,11 @@
                                                                                                                                if ($this->session->userdata('show_price')) {
                                                                                                                                    echo '{"mRender": currencyFormat},';
                                                                                                                                }
-                                                                                                                           } ?> {"mRender": formatQuantity}, null, <?php if (!$warehouse_id || !$Settings->racks) {
+                                                                                                                           } ?> {"mRender": formatQuantity,"bSearchable": false}, null, <?php if (!$warehouse_id || !$Settings->racks) {
     echo '{"bVisible": false},';
                                                                                                                            } else {
                                                                                                                                echo '{"bSortable": true},';
-                                                                                                                           } ?> {"mRender": formatQuantity}, {"bSortable": false}
+                                                                                                                           } ?> {"mRender": formatQuantity,"bSearchable": false}, {"bSortable": false}
             ]
         }).fnSetFilteringDelay().dtFilter([
             {column_number: 2, filter_default_label: "[<?=lang('code');?>]", filter_type: "text", data: []},
