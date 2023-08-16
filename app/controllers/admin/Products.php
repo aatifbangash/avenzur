@@ -1553,7 +1553,7 @@ class Products extends MY_Controller
         $this->sma->checkPermissions('index', true);
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
 
-        if ((!$this->Owner || !$this->Admin) && !$warehouse_id) {
+        if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
             $user         = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
         }
@@ -1583,7 +1583,7 @@ class Products extends MY_Controller
             </ul>
         </div></div>';
         $this->load->library('datatables');
-        if ((!$this->Owner && !$this->Admin) && $warehouse_id) {
+        if ($warehouse_id) {
             $this->datatables
             ->select($this->db->dbprefix('products') . ".id as productid, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.code as code,{$this->db->dbprefix('products')}.sequence_code as sequence_code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname, cost as cost, price as price, COALESCE(wp.quantity, 0) as quantity, {$this->db->dbprefix('units')}.code as unit, wp.rack as rack, alert_quantity", false)
             ->from('products');
