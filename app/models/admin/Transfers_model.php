@@ -423,6 +423,35 @@ class Transfers_model extends CI_Model
         return $ostatus;
     }
 
+    public function syncTransderdSavedItems($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null, $status, $type){
+        if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
+            if(($status == "sent" && $type == 'edit')){
+                $balance_qty = $quantity;
+                foreach ($pis as $pi) {
+                    if ($balance_qty <= $quantity && $quantity > 0) {
+                        if ($pi->quantity_balance >= $quantity) {
+                            $balance_qty = $pi->quantity_balance - $quantity;
+                            $this->db->update('purchase_items', ['quantity_balance' => $balance_qty], ['id' => $pi->id]);
+                            $quantity = 0;
+                        } elseif ($quantity > 0) {
+                            $quantity    = $quantity - $pi->quantity_balance;
+                            $balance_qty = $quantity;
+                            $this->db->update('purchase_items', ['quantity_balance' => 0], ['id' => $pi->id]);
+                        }
+                    }
+                    if ($quantity == 0) {
+                        break;
+                    }
+                }
+            }
+            
+        } else {
+            $clause = ['purchase_id' => null, 'transfer_id' => null, 'product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batch_no, 'option_id' => $option_id];
+            $this->site->setPurchaseItem($clause, (0 - $quantity));
+        }
+        $this->site->syncQuantity(null, null, null, $product_id, $batch_no);
+    }
+
     public function syncTransderdItem($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null, $status, $type)
     {
         if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
@@ -567,8 +596,9 @@ class Transfers_model extends CI_Model
                     $this->db->insert('transfer_items', $item);
                 }
 
-                if ($data['status'] == 'sent' || $data['status'] == 'completed') {
-                //if ($data['status'] == 'completed') {
+                if($ostatus == 'save' && $data['status'] == 'sent'){
+                    $this->syncTransderdSavedItems($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'edit');
+                }else if($data['status'] == 'sent' || $data['status'] == 'completed'){
                     $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'edit');
                 }
             }
