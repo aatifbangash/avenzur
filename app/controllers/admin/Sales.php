@@ -876,6 +876,12 @@ class Sales extends MY_Controller
         }
 
         $inv = $this->sales_model->getInvoiceByID($id);
+        
+        if($inv->sale_status == 'completed'){
+            $this->session->set_flashdata('error', 'Cannot edit completed sales');
+
+            admin_redirect('sales');
+        }
         if ($inv->sale_status == 'returned' || $inv->return_id || $inv->return_sale_ref) {
             $this->session->set_flashdata('error', lang('sale_x_action'));
             admin_redirect($_SERVER['HTTP_REFERER'] ?? 'welcome');

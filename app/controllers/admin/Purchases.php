@@ -634,6 +634,13 @@ class Purchases extends MY_Controller
             $id = $this->input->get('id');
         }
         $inv = $this->purchases_model->getPurchaseByID($id);
+        
+        if($inv->status == 'received'){
+            $this->session->set_flashdata('error', 'Cannot edit received orders');
+
+            admin_redirect('purchases');
+        }
+
         $supplier_purchase_discount =  $this->deals_model->getPurchaseDiscount($inv->supplier_id);
         if ($inv->status == 'returned' || $inv->return_id || $inv->return_purchase_ref) {
             $this->session->set_flashdata('error', lang('purchase_x_action'));
@@ -1428,6 +1435,8 @@ class Purchases extends MY_Controller
         }
         $detail_link      = anchor('admin/purchases/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('purchase_details'));
         $payments_link    = anchor('admin/purchases/payments/$1', '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
+        $transfer_link    = anchor('admin/purchases/transfer/$1', '<i class="fa fa-money"></i> ' . lang('Transfer to Pharmacy'), 'data-toggle="modal" data-target="#myModal"');
+
 
         if(isset($this->GP) && $this->GP['accountant'])
         {
@@ -1482,6 +1491,7 @@ class Purchases extends MY_Controller
                 <li>' . $print_barcode . '</li>
                 <li>' . $return_link . '</li>
                 <li>' . $delete_link . '</li>
+                <li>' . $transfer_link . '</li>
             </ul>
             </div></div>';
 
@@ -1741,6 +1751,16 @@ class Purchases extends MY_Controller
         $this->data['payments'] = $this->purchases_model->getPurchasePayments($id);
         $this->data['inv']      = $this->purchases_model->getPurchaseByID($id);
         $this->load->view($this->theme . 'purchases/payments', $this->data);
+    }
+
+    public function transfer($id = null)
+    {
+        $this->sma->checkPermissions(false, true);
+
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['payments'] = $this->purchases_model->getPurchasePayments($id);
+        $this->data['inv']      = $this->purchases_model->getPurchaseByID($id);
+        $this->load->view($this->theme . 'purchases/transfer', $this->data);
     }
 
     /* ----------------------------------------------------------------------------- */

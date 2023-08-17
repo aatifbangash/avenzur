@@ -440,6 +440,13 @@ class Transfers extends MY_Controller
             $id = $this->input->get('id');
         }
         $transfer = $this->transfers_model->getTransferByID($id);
+        
+        if($transfer->status == 'completed'){
+            $this->session->set_flashdata('error', 'Cannot edit completed transfers');
+
+            admin_redirect('transfers');
+        }
+
         if (!$this->session->userdata('edit_right')) {
             $this->sma->view_rights($transfer->created_by);
         }
