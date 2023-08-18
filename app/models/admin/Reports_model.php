@@ -1341,12 +1341,13 @@ class Reports_model extends CI_Model
     public function getVatPurchaseReport($start_date = null, $end_date = null){
 
         $this->db
-                ->select('sma_purchases.id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as transaction_id, sma_purchases.supplier, sma_purchases.date, sma_purchases.invoice_number, sma_purchases.grand_total as total_with_vat, sma_purchases.total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
+                ->select('sma_purchases.id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as transaction_id, sma_purchases.supplier, sma_purchases.date, sma_purchases.invoice_number, sma_purchases.grand_total as total_with_vat, sma_purchases.total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code, sma_tax_rates.name as tax_name')
                 ->from('sma_purchases')
                 ->join('sma_companies', 'sma_companies.id=sma_purchases.supplier_id')
                 ->join('sma_purchase_items', 'sma_purchase_items.purchase_id=sma_purchases.id')
-                ->where('sma_purchases.date >=', $start_date)
-                ->where('sma_purchases.date <=', $end_date)
+                ->join('sma_tax_rates', 'sma_tax_rates.id=sma_purchases.order_tax_id')
+                ->where('DATE(sma_purchases.date) >=', $start_date)
+                ->where('DATE(sma_purchases.date) <=', $end_date)
                 //->where('sma_purchases.return_id IS NULL')
                 ->group_by('sma_purchase_items.purchase_id')
                 ->having('SUM(sma_purchase_items.quantity) >=', 0)
