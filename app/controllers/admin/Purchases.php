@@ -1758,9 +1758,16 @@ class Purchases extends MY_Controller
         $this->sma->checkPermissions(false, true);
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        $this->data['payments'] = $this->purchases_model->getPurchasePayments($id);
-        $this->data['inv']      = $this->purchases_model->getPurchaseByID($id);
+        //$this->data['payments'] = $this->purchases_model->getPurchasePayments($id);
+        //$this->data['inv']      = $this->purchases_model->getPurchaseByID($id);
         $this->load->view($this->theme . 'purchases/transfer', $this->data);
+    }
+
+    public function transfer_stock(){
+        $this->sma->checkPermissions(false, true);
+
+        $warehouse = $this->input->post('warehouse');
+        echo 'warehouse: '.$warehouse;exit;
     }
 
     /* ----------------------------------------------------------------------------- */
