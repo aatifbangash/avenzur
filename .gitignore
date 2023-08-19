@@ -3,3 +3,4 @@ app/logs/*
 app/config/config.php
 app/config/database.php
 vendor/
+files/

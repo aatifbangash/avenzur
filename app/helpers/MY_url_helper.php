@@ -65,3 +65,11 @@ if (!function_exists('dd')) {
         die();
     }
 }
+
+if (!function_exists('lq')) {
+    function lq()
+    {
+        $args = func_get_args();
+        dd($args[0]->db->last_query());
+    }
+}
