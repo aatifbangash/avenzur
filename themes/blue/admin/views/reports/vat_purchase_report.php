@@ -104,20 +104,21 @@
                                 
                             </tbody>
                             <tfoot>
-                            <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th class="text-center"><?= $this->sma->formatQuantity($totalQty); ?></th>
-                                <th>&nbsp;</th>
-                                <th class="text-center"><?= $this->sma->formatDecimal($totalWithoutTax); ?></th>
-                                <th class="text-center"><?= $this->sma->formatDecimal($totalTax); ?></th>
-                                <th class="text-center"><?= $this->sma->formatDecimal($totalWithTax); ?></th>
-
+                                <tr>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th class="text-center"><?= $this->sma->formatQuantity($totalQty); ?></th>
+                                    <th>&nbsp;</th>
+                                    <th class="text-center"><?= $this->sma->formatDecimal($totalWithoutTax); ?></th>
+                                    <th class="text-center"><?= $this->sma->formatDecimal($totalTax); ?></th>
+                                    <th class="text-center"><?= $this->sma->formatDecimal($totalWithTax); ?></th>
+                                </tr>
                             </tfoot>
                         </table>
                     </div>

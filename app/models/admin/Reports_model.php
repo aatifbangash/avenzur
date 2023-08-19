@@ -1296,11 +1296,12 @@ class Reports_model extends CI_Model
     public function getVatPurchaseLedgerReport($start_date = null, $end_date = null){
 
         $this->db
-                ->select('sma_purchases.id as purchase_id, SUM(sma_purchase_items.quantity) as total_quantity, sma_accounts_entries.id as transaction_id, sma_purchases.supplier, sma_accounts_entries.date, sma_accounts_entries.number as invoice_number, sma_purchases.grand_total as total_with_vat, SUM(sma_accounts_entryitems.amount) as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
+                ->select('sma_purchases.id as purchase_id, SUM(sma_purchase_items.quantity) as total_quantity, sma_accounts_entries.id as transaction_id, sma_purchases.supplier, sma_accounts_entries.date, sma_accounts_entries.number as invoice_number, sma_purchases.grand_total as total_with_vat, SUM(sma_accounts_entryitems.amount) as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code,sma_tax_rates.name as tax_name')
                 ->from('sma_accounts_ledgers')
                 ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
                 ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
                 ->join('sma_purchases', 'sma_purchases.id=sma_accounts_entries.pid', 'left')
+                ->join('sma_tax_rates', 'sma_tax_rates.id=sma_purchases.order_tax_id', 'left')
                 ->join('sma_companies', 'sma_companies.id=sma_purchases.supplier_id', 'left')
                 ->join('sma_purchase_items', 'sma_purchase_items.purchase_id=sma_purchases.id', 'left')
                 ->where('sma_accounts_entries.date >=', $start_date)
@@ -1322,6 +1323,7 @@ class Reports_model extends CI_Model
                     $row->vat_no = '-';
                     $row->supplier = 'Manual Journal Entry';
                     $row->total_with_vat = $row->total_tax;
+                    $row->tax_name = '-';
                 }else{
                     $row->type = 'Purchase';
                 }
