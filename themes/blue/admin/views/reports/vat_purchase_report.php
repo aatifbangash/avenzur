@@ -63,7 +63,7 @@
                                 <th><?= lang('VAT No.'); ?></th>
                                 <th><?= lang('Purchases Type'); ?></th>
                                 <th><?= lang('Qty'); ?></th>
-                                <th><?= lang('Tax'); ?></th>
+                                <!-- <th><?= lang('Tax'); ?></th> -->
                                 <th><?= lang('Total Purchases Value'); ?></th>
                                 <th><?= lang('VAT on Purchases'); ?></th>
                                 <th><?= lang('Total with VAT'); ?></th>
@@ -92,7 +92,7 @@
                                                 <td><?= $data->vat_no; ?></td>
                                                 <td>Purchase</td>
                                                 <td><?= $this->sma->formatQuantity($data->total_quantity); ?></td>
-                                                <td><?= $data->tax_name; ?></td>
+                                                <!-- <td><?= $data->tax_name; ?></td> -->
                                                 <td><?=  $this->sma->formatDecimal($data->total_with_vat - $data->total_tax); ?></td>
                                                 <td><?= $this->sma->formatDecimal($data->total_tax); ?></td>
                                                 <td><?= $this->sma->formatDecimal($data->total_with_vat); ?></td>
@@ -104,20 +104,21 @@
                                 
                             </tbody>
                             <tfoot>
-                            <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th class="text-center"><?= $this->sma->formatQuantity($totalQty); ?></th>
-                                <th>&nbsp;</th>
-                                <th class="text-center"><?= $this->sma->formatDecimal($totalWithoutTax); ?></th>
-                                <th class="text-center"><?= $this->sma->formatDecimal($totalTax); ?></th>
-                                <th class="text-center"><?= $this->sma->formatDecimal($totalWithTax); ?></th>
-
+                                <tr>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th class="text-center"><?= $this->sma->formatQuantity($totalQty); ?></th>
+                                    <!-- <th>&nbsp;</th> -->
+                                    <th class="text-center"><?= $this->sma->formatDecimal($totalWithoutTax); ?></th>
+                                    <th class="text-center"><?= $this->sma->formatDecimal($totalTax); ?></th>
+                                    <th class="text-center"><?= $this->sma->formatDecimal($totalWithTax); ?></th>
+                                </tr>
                             </tfoot>
                         </table>
                     </div>

@@ -751,6 +751,7 @@ class Products extends MY_Controller
             $this->load->helper('string');
             $name     = random_string('md5') . '.csv';
             $products = $this->products_model->getStockCountProducts($warehouse_id, $type, $categories, $brands);
+
             $pr       = 0;
             $rw       = 0;
             foreach ($products as $product) {
@@ -768,23 +769,28 @@ class Products extends MY_Controller
                         $rw++;
                     }
                 } else {*/
+//                dd($product);
                     $items[] = [
                         'product_code' => $product->code,
                         'product_name' => $product->name,
                         'batch_no'      => $product->batchno,
                         'expiry'      => $product->expiry,
-                        'balance'     => $product->quantity,
+                        'balance'     => intval($product->quantity),
                         'purchase_price' => $product->purchase_cost,
-                        'sale_price'  => $product->sale_price
+                        'sale_price'  => $this->sma->formatDecimal($product->sale_price),
+                        'item_cost' => $this->sma->formatDecimal($product->item_cost),
+                        'total_cost' => $this->sma->formatDecimal($product->item_cost) * (!empty(intval($product->quantity)) ? $product->quantity : 1),
+                        'total_sale_price' => $this->sma->formatDecimal($product->sale_price) * (!empty(intval($product->quantity)) ? $product->quantity : 1)
                     ];
                     $rw++;
                 //}
                 $pr++;
             }
+
             if (!empty($items)) {
                 $csv_file = fopen('./files/' . $name, 'w');
                 fprintf($csv_file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-                fputcsv($csv_file, [lang('product_code'), lang('product_name'), lang('Batch'), lang('Expiry'), lang('Balance'), lang('Purchase Price'), lang('Sale Price')]);
+                fputcsv($csv_file, [lang('product_code'), lang('product_name'), lang('Batch'), lang('Expiry'), lang('Balance'), lang('Purchase Price'), lang('Sale Price'), 'Item Cost', 'Total Cost', 'Total Sale Price']);
                 foreach ($items as $item) {
                     fputcsv($csv_file, $item);
                 }

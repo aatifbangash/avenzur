@@ -98,48 +98,48 @@ class Products_model extends CI_Model
 
                         if (!$product_attributes) {
                             $tax_rate_id = $tax_rate ? $tax_rate->id : null;
-                            $tax         = $tax_rate ? (($tax_rate->type == 1) ? $tax_rate->rate . '%' : $tax_rate->rate) : null;
-                            $unit_cost   = $data['cost'];
+                            $tax = $tax_rate ? (($tax_rate->type == 1) ? $tax_rate->rate . '%' : $tax_rate->rate) : null;
+                            $unit_cost = $data['cost'];
                             if ($tax_rate) {
                                 if ($tax_rate->type == 1 && $tax_rate->rate != 0) {
                                     if ($data['tax_method'] == '0') {
-                                        $pr_tax_val    = ($data['cost'] * $tax_rate->rate) / (100 + $tax_rate->rate);
+                                        $pr_tax_val = ($data['cost'] * $tax_rate->rate) / (100 + $tax_rate->rate);
                                         $net_item_cost = $data['cost'] - $pr_tax_val;
-                                        $item_tax      = $pr_tax_val * $wh_qty['quantity'];
+                                        $item_tax = $pr_tax_val * $wh_qty['quantity'];
                                     } else {
                                         $net_item_cost = $data['cost'];
-                                        $pr_tax_val    = ($data['cost'] * $tax_rate->rate) / 100;
-                                        $unit_cost     = $data['cost'] + $pr_tax_val;
-                                        $item_tax      = $pr_tax_val * $wh_qty['quantity'];
+                                        $pr_tax_val = ($data['cost'] * $tax_rate->rate) / 100;
+                                        $unit_cost = $data['cost'] + $pr_tax_val;
+                                        $item_tax = $pr_tax_val * $wh_qty['quantity'];
                                     }
                                 } else {
                                     $net_item_cost = $data['cost'];
-                                    $item_tax      = $tax_rate->rate;
+                                    $item_tax = $tax_rate->rate;
                                 }
                             } else {
                                 $net_item_cost = $data['cost'];
-                                $item_tax      = 0;
+                                $item_tax = 0;
                             }
 
                             $subtotal = (($net_item_cost * $wh_qty['quantity']) + $item_tax);
 
                             $item = [
-                                'product_id'        => $product_id,
-                                'product_code'      => $data['code'],
-                                'product_name'      => $data['name'],
-                                'net_unit_cost'     => $net_item_cost,
-                                'unit_cost'         => $unit_cost,
-                                'real_unit_cost'    => $unit_cost,
-                                'quantity'          => $wh_qty['quantity'],
-                                'quantity_balance'  => $wh_qty['quantity'],
+                                'product_id' => $product_id,
+                                'product_code' => $data['code'],
+                                'product_name' => $data['name'],
+                                'net_unit_cost' => $net_item_cost,
+                                'unit_cost' => $unit_cost,
+                                'real_unit_cost' => $unit_cost,
+                                'quantity' => $wh_qty['quantity'],
+                                'quantity_balance' => $wh_qty['quantity'],
                                 'quantity_received' => $wh_qty['quantity'],
-                                'item_tax'          => $item_tax,
-                                'tax_rate_id'       => $tax_rate_id,
-                                'tax'               => $tax,
-                                'subtotal'          => $subtotal,
-                                'warehouse_id'      => $wh_qty['warehouse_id'],
-                                'date'              => date('Y-m-d'),
-                                'status'            => 'received',
+                                'item_tax' => $item_tax,
+                                'tax_rate_id' => $tax_rate_id,
+                                'tax' => $tax,
+                                'subtotal' => $subtotal,
+                                'warehouse_id' => $wh_qty['warehouse_id'],
+                                'date' => date('Y-m-d'),
+                                'status' => 'received',
                             ];
                             $this->db->insert('purchase_items', $item);
                             $this->site->syncProductQty($product_id, $wh_qty['warehouse_id']);
@@ -153,7 +153,7 @@ class Products_model extends CI_Model
                     $pr_attr_details = $this->getPrductVariantByPIDandName($product_id, $pr_attr['name']);
 
                     $pr_attr['product_id'] = $product_id;
-                    $variant_warehouse_id  = $pr_attr['warehouse_id'];
+                    $variant_warehouse_id = $pr_attr['warehouse_id'];
                     unset($pr_attr['warehouse_id']);
                     if ($pr_attr_details) {
                         $option_id = $pr_attr_details->id;
@@ -165,47 +165,47 @@ class Products_model extends CI_Model
                         $this->db->insert('warehouses_products_variants', ['option_id' => $option_id, 'product_id' => $product_id, 'warehouse_id' => $variant_warehouse_id, 'quantity' => $pr_attr['quantity']]);
 
                         $tax_rate_id = $tax_rate ? $tax_rate->id : null;
-                        $tax         = $tax_rate ? (($tax_rate->type == 1) ? $tax_rate->rate . '%' : $tax_rate->rate) : null;
-                        $unit_cost   = $data['cost'];
+                        $tax = $tax_rate ? (($tax_rate->type == 1) ? $tax_rate->rate . '%' : $tax_rate->rate) : null;
+                        $unit_cost = $data['cost'];
                         if ($tax_rate) {
                             if ($tax_rate->type == 1 && $tax_rate->rate != 0) {
                                 if ($data['tax_method'] == '0') {
-                                    $pr_tax_val    = ($data['cost'] * $tax_rate->rate) / (100 + $tax_rate->rate);
+                                    $pr_tax_val = ($data['cost'] * $tax_rate->rate) / (100 + $tax_rate->rate);
                                     $net_item_cost = $data['cost'] - $pr_tax_val;
-                                    $item_tax      = $pr_tax_val * $pr_attr['quantity'];
+                                    $item_tax = $pr_tax_val * $pr_attr['quantity'];
                                 } else {
                                     $net_item_cost = $data['cost'];
-                                    $pr_tax_val    = ($data['cost'] * $tax_rate->rate) / 100;
-                                    $unit_cost     = $data['cost'] + $pr_tax_val;
-                                    $item_tax      = $pr_tax_val * $pr_attr['quantity'];
+                                    $pr_tax_val = ($data['cost'] * $tax_rate->rate) / 100;
+                                    $unit_cost = $data['cost'] + $pr_tax_val;
+                                    $item_tax = $pr_tax_val * $pr_attr['quantity'];
                                 }
                             } else {
                                 $net_item_cost = $data['cost'];
-                                $item_tax      = $tax_rate->rate;
+                                $item_tax = $tax_rate->rate;
                             }
                         } else {
                             $net_item_cost = $data['cost'];
-                            $item_tax      = 0;
+                            $item_tax = 0;
                         }
 
                         $subtotal = (($net_item_cost * $pr_attr['quantity']) + $item_tax);
-                        $item     = [
-                            'product_id'        => $product_id,
-                            'product_code'      => $data['code'],
-                            'product_name'      => $data['name'],
-                            'net_unit_cost'     => $net_item_cost,
-                            'unit_cost'         => $unit_cost,
-                            'quantity'          => $pr_attr['quantity'],
-                            'option_id'         => $option_id,
-                            'quantity_balance'  => $pr_attr['quantity'],
+                        $item = [
+                            'product_id' => $product_id,
+                            'product_code' => $data['code'],
+                            'product_name' => $data['name'],
+                            'net_unit_cost' => $net_item_cost,
+                            'unit_cost' => $unit_cost,
+                            'quantity' => $pr_attr['quantity'],
+                            'option_id' => $option_id,
+                            'quantity_balance' => $pr_attr['quantity'],
                             'quantity_received' => $pr_attr['quantity'],
-                            'item_tax'          => $item_tax,
-                            'tax_rate_id'       => $tax_rate_id,
-                            'tax'               => $tax,
-                            'subtotal'          => $subtotal,
-                            'warehouse_id'      => $variant_warehouse_id,
-                            'date'              => date('Y-m-d'),
-                            'status'            => 'received',
+                            'item_tax' => $item_tax,
+                            'tax_rate_id' => $tax_rate_id,
+                            'tax' => $tax,
+                            'subtotal' => $subtotal,
+                            'warehouse_id' => $variant_warehouse_id,
+                            'date' => date('Y-m-d'),
+                            'status' => 'received',
                         ];
                         $item['option_id'] = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                         $this->db->insert('purchase_items', $item);
@@ -384,7 +384,7 @@ class Products_model extends CI_Model
             foreach (($q->result()) as $row) {
                 $data[] = $row;
             }
-           
+
             return $data;
         }
         return false;
@@ -512,8 +512,7 @@ class Products_model extends CI_Model
         }
         return false;
     }
-    
-   
+
 
     public function getProductOptions($pid)
     {
@@ -565,8 +564,8 @@ class Products_model extends CI_Model
 
     public function getProductsForPrinting($term, $limit = 5)
     {
-        $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name, ' . $this->db->dbprefix('products') . '.price as price, '. $this->db->dbprefix('products') . '.sequence_code as sequence_code')
-            ->where('(' . $this->db->dbprefix('products') . ".name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR " . $this->db->dbprefix('products') .".sequence_code LIKE '%" . $term . "%' OR concat(" . $this->db->dbprefix('products') . ".name, ' (', code, ')') LIKE '%" . $term . "%') ")
+        $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name, ' . $this->db->dbprefix('products') . '.price as price, ' . $this->db->dbprefix('products') . '.sequence_code as sequence_code')
+            ->where('(' . $this->db->dbprefix('products') . ".name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR " . $this->db->dbprefix('products') . ".sequence_code LIKE '%" . $term . "%' OR concat(" . $this->db->dbprefix('products') . ".name, ' (', code, ')') LIKE '%" . $term . "%') ")
             ->limit($limit);
         $q = $this->db->get('products');
         if ($q->num_rows() > 0) {
@@ -630,7 +629,7 @@ class Products_model extends CI_Model
     public function getProductWithCategory($id)
     {
         $this->db->select($this->db->dbprefix('products') . '.*, ' . $this->db->dbprefix('categories') . '.name as category')
-        ->join('categories', 'categories.id=products.category_id', 'left');
+            ->join('categories', 'categories.id=products.category_id', 'left');
         $q = $this->db->get_where('products', ['products.id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -721,11 +720,20 @@ class Products_model extends CI_Model
 
     public function getStockCountProducts($warehouse_id, $type, $categories = null, $brands = null)
     {
-        $this->db->select("{$this->db->dbprefix('products')}.id as id, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.price as sale_price, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('warehouses_products')}.quantity as quantity, {$this->db->dbprefix('warehouses_products')}.batchno as batchno, {$this->db->dbprefix('warehouses_products')}.expiry as expiry, {$this->db->dbprefix('warehouses_products')}.purchase_cost")
-        ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
-        ->where('warehouses_products.warehouse_id', $warehouse_id)
-        ->where('products.type', 'standard')
-        ->order_by('products.code', 'asc');
+        $this->db->select("
+        {$this->db->dbprefix('products')}.id as id, 
+        {$this->db->dbprefix('products')}.code as code, 
+        {$this->db->dbprefix('products')}.cost as item_cost, 
+        {$this->db->dbprefix('products')}.price as sale_price, 
+        {$this->db->dbprefix('products')}.name as name, 
+        {$this->db->dbprefix('warehouses_products')}.quantity as quantity, 
+        {$this->db->dbprefix('warehouses_products')}.batchno as batchno, 
+        {$this->db->dbprefix('warehouses_products')}.expiry as expiry, 
+        {$this->db->dbprefix('warehouses_products')}.purchase_cost")
+            ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
+            ->where('warehouses_products.warehouse_id', $warehouse_id)
+            ->where('products.type', 'standard')
+            ->order_by('products.code', 'asc');
         if ($categories) {
             $r = 1;
             $this->db->group_start();
@@ -788,7 +796,7 @@ class Products_model extends CI_Model
     public function getSubCategories($parent_id)
     {
         $this->db->select('id as id, name as text')
-        ->where('parent_id', $parent_id)->order_by('name');
+            ->where('parent_id', $parent_id)->order_by('name');
         $q = $this->db->get('categories');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -898,7 +906,7 @@ class Products_model extends CI_Model
         if ($products = $this->getAdjustmentItems($id)) {
             foreach ($products as $adjustment) {
                 $clause = ['product_id' => $adjustment->product_id, 'warehouse_id' => $adjustment->warehouse_id, 'option_id' => $adjustment->option_id, 'status' => 'received'];
-                $qty    = $adjustment->type == 'subtraction' ? (0 + $adjustment->quantity) : (0 - $adjustment->quantity);
+                $qty = $adjustment->type == 'subtraction' ? (0 + $adjustment->quantity) : (0 - $adjustment->quantity);
                 $this->site->setPurchaseItem($clause, $qty);
                 $this->site->syncProductQty($adjustment->product_id, $adjustment->warehouse_id);
                 if ($adjustment->option_id) {
@@ -910,10 +918,10 @@ class Products_model extends CI_Model
 
     public function setAvgCost($id)
     {
-        $warehouses     = $this->db->select('id')->get('warehouses')->result();
+        $warehouses = $this->db->select('id')->get('warehouses')->result();
         $purchase_items = $this->db->select('base_unit_cost, unit_cost, quantity_balance, warehouse_id, option_id, product_unit_id')->get_where('purchase_items', ['product_id' => $id, 'quantity_balance >' => 0])->result();
         foreach ($warehouses as $warehouse) {
-            $total_cost     = 0;
+            $total_cost = 0;
             $total_quantity = 0;
             foreach ($purchase_items as $pi) {
                 if ($pi->warehouse_id == $warehouse->id) {
@@ -921,7 +929,7 @@ class Products_model extends CI_Model
                     if ($pi->base_unit_cost) {
                         $total_cost += $pi->base_unit_cost * $pi->quantity_balance;
                     } elseif ($pi->product_unit_id) {
-                        $unit      = $this->site->getUnitByID($pi->product_unit_id);
+                        $unit = $this->site->getUnitByID($pi->product_unit_id);
                         $base_cost = $this->site->convertToBase($unit, $pi->unit_cost);
                         $total_cost += $base_cost * $pi->quantity_balance;
                     } else {
@@ -948,9 +956,9 @@ class Products_model extends CI_Model
     {
         if (!empty($data)) {
             $clause = ['product_id' => $data['product_id'], 'unit_cost' => $data['unit_cost'], 'sale_price' => $data['sale_price'], 'vat' => $data['vat'], 'batchno' => $data['batchno'], 'expiry' => $data['expiry'], 'option_id' => $data['option_id'], 'warehouse_id' => $data['warehouse_id'], 'status' => 'received'];
-            $qty    = $data['type'] == 'subtraction' ? 0 - $data['quantity'] : 0 + $data['quantity'];
+            $qty = $data['type'] == 'subtraction' ? 0 - $data['quantity'] : 0 + $data['quantity'];
             $this->site->setAdjustmentPurchaseItem($clause, $qty);
-            
+
             $this->site->syncProductQty($data['product_id'], $data['warehouse_id'], $data['batchno']);
             if ($data['option_id']) {
                 $this->site->syncVariantQty($data['option_id'], $data['warehouse_id'], $data['product_id']);
@@ -961,7 +969,7 @@ class Products_model extends CI_Model
     public function syncVariantQty($option_id)
     {
         $wh_pr_vars = $this->getProductWarehouseOptions($option_id);
-        $qty        = 0;
+        $qty = 0;
         foreach ($wh_pr_vars as $row) {
             $qty += $row->quantity;
         }
@@ -1042,7 +1050,7 @@ class Products_model extends CI_Model
             if ($product_attributes) {
                 foreach ($product_attributes as $pr_attr) {
                     $pr_attr['product_id'] = $id;
-                    $variant_warehouse_id  = $pr_attr['warehouse_id'];
+                    $variant_warehouse_id = $pr_attr['warehouse_id'];
                     unset($pr_attr['warehouse_id']);
                     $this->db->insert('product_variants', $pr_attr);
                     $option_id = $this->db->insert_id();
@@ -1051,47 +1059,47 @@ class Products_model extends CI_Model
                         $this->db->insert('warehouses_products_variants', ['option_id' => $option_id, 'product_id' => $id, 'warehouse_id' => $variant_warehouse_id, 'quantity' => $pr_attr['quantity']]);
 
                         $tax_rate_id = $tax_rate ? $tax_rate->id : null;
-                        $tax         = $tax_rate ? (($tax_rate->type == 1) ? $tax_rate->rate . '%' : $tax_rate->rate) : null;
-                        $unit_cost   = $data['cost'];
+                        $tax = $tax_rate ? (($tax_rate->type == 1) ? $tax_rate->rate . '%' : $tax_rate->rate) : null;
+                        $unit_cost = $data['cost'];
                         if ($tax_rate) {
                             if ($tax_rate->type == 1 && $tax_rate->rate != 0) {
                                 if ($data['tax_method'] == '0') {
-                                    $pr_tax_val    = ($data['cost'] * $tax_rate->rate) / (100 + $tax_rate->rate);
+                                    $pr_tax_val = ($data['cost'] * $tax_rate->rate) / (100 + $tax_rate->rate);
                                     $net_item_cost = $data['cost'] - $pr_tax_val;
-                                    $item_tax      = $pr_tax_val * $pr_attr['quantity'];
+                                    $item_tax = $pr_tax_val * $pr_attr['quantity'];
                                 } else {
                                     $net_item_cost = $data['cost'];
-                                    $pr_tax_val    = ($data['cost'] * $tax_rate->rate) / 100;
-                                    $unit_cost     = $data['cost'] + $pr_tax_val;
-                                    $item_tax      = $pr_tax_val * $pr_attr['quantity'];
+                                    $pr_tax_val = ($data['cost'] * $tax_rate->rate) / 100;
+                                    $unit_cost = $data['cost'] + $pr_tax_val;
+                                    $item_tax = $pr_tax_val * $pr_attr['quantity'];
                                 }
                             } else {
                                 $net_item_cost = $data['cost'];
-                                $item_tax      = $tax_rate->rate;
+                                $item_tax = $tax_rate->rate;
                             }
                         } else {
                             $net_item_cost = $data['cost'];
-                            $item_tax      = 0;
+                            $item_tax = 0;
                         }
 
                         $subtotal = (($net_item_cost * $pr_attr['quantity']) + $item_tax);
-                        $item     = [
-                            'product_id'        => $id,
-                            'product_code'      => $data['code'],
-                            'product_name'      => $data['name'],
-                            'net_unit_cost'     => $net_item_cost,
-                            'unit_cost'         => $unit_cost,
-                            'quantity'          => $pr_attr['quantity'],
-                            'option_id'         => $option_id,
-                            'quantity_balance'  => $pr_attr['quantity'],
+                        $item = [
+                            'product_id' => $id,
+                            'product_code' => $data['code'],
+                            'product_name' => $data['name'],
+                            'net_unit_cost' => $net_item_cost,
+                            'unit_cost' => $unit_cost,
+                            'quantity' => $pr_attr['quantity'],
+                            'option_id' => $option_id,
+                            'quantity_balance' => $pr_attr['quantity'],
                             'quantity_received' => $pr_attr['quantity'],
-                            'item_tax'          => $item_tax,
-                            'tax_rate_id'       => $tax_rate_id,
-                            'tax'               => $tax,
-                            'subtotal'          => $subtotal,
-                            'warehouse_id'      => $variant_warehouse_id,
-                            'date'              => date('Y-m-d'),
-                            'status'            => 'received',
+                            'item_tax' => $item_tax,
+                            'tax_rate_id' => $tax_rate_id,
+                            'tax' => $tax,
+                            'subtotal' => $subtotal,
+                            'warehouse_id' => $variant_warehouse_id,
+                            'date' => date('Y-m-d'),
+                            'status' => 'received',
                         ];
                         $item['option_id'] = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                         $this->db->insert('purchase_items', $item);
