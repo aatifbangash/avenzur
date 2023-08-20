@@ -3603,7 +3603,7 @@ class Reports extends MY_Controller
         $warehouseId = $this->input->post('warehouse') ? $this->input->post('warehouse') : 0;
 
         $allProducts = $this->reports_model->getAllProducts();
-        $this->data['allProducts'] = $allProducts;
+        // $this->data['allProducts'] = $allProducts;
 
         $allWareHouses = $this->reports_model->getAllWareHouses();
         $this->data['allWareHouses'] = $allWareHouses;

@@ -4,9 +4,6 @@
 
         $("#warehouse").select2().select2('val', <?= $warehouse; ?>);
 		$('#warehouse').select2().trigger('change');
-        
-        $("#product").select2().select2('val', <?= $product; ?>);
-		$('#product').select2().trigger('change');
     });
 </script>
 <div class="box">
@@ -33,15 +30,16 @@
                     <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('Warehouse', 'warehouse'); ?>
-                                <?php echo form_dropdown('warehouse', $allWareHouses, set_value('warehouse',$warehouse),array('class' => 'form-control', 'id'=>'warehouse'));?>
+                                <?php echo form_dropdown('warehouse', $allWareHouses, set_value('warehouse',$_POST['warehouse']),array('class' => 'form-control', 'id'=>'warehouse'));?>
                                
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('Product', 'product'); ?>
-                                <?php echo form_dropdown('product', $allProducts, set_value('product',$product),array('class' => 'form-control', 'id'=>'product'));?>
-                                
+                                <?php // echo form_dropdown('product', $allProducts, set_value('product',$product),array('class' => 'form-control', 'id'=>'product'));?>
+                                <?php echo form_input('sgproduct', (isset($_POST['sgproduct']) ? $_POST['sgproduct'] : ''), 'class="form-control" id="suggest_product2" data-bv-notempty="true"'); ?>
+                                <input type="hidden" name="product" value="<?= isset($_POST['product']) ? $_POST['product'] : 0 ?>" id="report_product_id2"/>
                             </div>
                         </div>
                     </div>
