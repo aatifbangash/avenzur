@@ -579,6 +579,7 @@ $lang['add_return']             = 'Add Return';
 $lang['tax_report']             = 'Tax Report';
 $lang['vat_purchase_report']    = 'Vat Purchase Report';
 $lang['inventory_movement_report'] = 'Inventory Movement Report';
+$lang['item_movement_report']   = 'Item Movement Report';
 $lang['gst_no']                 = 'GST Number';
 $lang['no.']                    = 'No.';
 $lang['promos']                 = 'Promos';

@@ -63,7 +63,7 @@
                                 <th><?= lang('VAT No.'); ?></th>
                                 <th><?= lang('Purchases Type'); ?></th>
                                 <th><?= lang('Qty'); ?></th>
-                                <th><?= lang('Tax'); ?></th>
+                                <!-- <th><?= lang('Tax'); ?></th> -->
                                 <th><?= lang('Total Purchases Value'); ?></th>
                                 <th><?= lang('VAT on Purchases'); ?></th>
                                 <th><?= lang('Total with VAT'); ?></th>
@@ -85,14 +85,31 @@
                                             <tr>
                                                 <td><?= $count; ?></td>
                                                 <td><?= $data->date; ?></td>
-                                                <td><?= $data->invoice_number; ?></td>
-                                                <td><?= $data->transaction_id; ?></td>
+                                                <td><?php
+
+                                                if($data->type == 'Purchase'){
+                                                    echo $data->invoice_number;
+                                                }else{
+                                                    echo $data->number;
+                                                }
+                                                
+                                                ?></td>
+                                                <td>
+                                                <?php 
+                                                if($data->type == 'Purchase'){
+                                                    echo $data->purchase_sequence_code;
+                                                }else{
+                                                    echo $data->transaction_id;
+                                                }
+                                                ?>    
+                                                
+                                                </td>
                                                 <td><?= $data->supplier_code; ?></td>
                                                 <td><?= $data->supplier; ?></td>
                                                 <td><?= $data->vat_no; ?></td>
                                                 <td><?= $data->type; ?></td>
                                                 <td><?= $this->sma->formatQuantity($data->total_quantity); ?></td>
-                                                <td><?= $data->tax_name; ?></td>
+                                                <!-- <td><?= $data->tax_name; ?></td> -->
                                                 <td><?=  $this->sma->formatDecimal($data->total_with_vat - $data->total_tax); ?></td>
                                                 <td><?= $this->sma->formatDecimal($data->total_tax); ?></td>
                                                 <td><?= $this->sma->formatDecimal($data->total_with_vat); ?></td>
@@ -115,7 +132,7 @@
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
                                     <th class="text-center"><?= $this->sma->formatQuantity($totalQty); ?></th>
-                                    <th>&nbsp;</th>
+                                    <!-- <th>&nbsp;</th> -->
                                     <th class="text-center"><?= $this->sma->formatDecimal($totalWithoutTax); ?></th>
                                     <th class="text-center"><?= $this->sma->formatDecimal($totalTax); ?></th>
                                     <th class="text-center"><?= $this->sma->formatDecimal($totalWithTax); ?></th>
