@@ -1031,6 +1031,11 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('inventory_movement_report'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="reports_item_movement_report">
+                                        <a href="<?= admin_url('reports/item_movement_report') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('item_movement_report'); ?></span>
+                                        </a>
+                                    </li>
                                     <li id="reports_supplier_trial_balance_report">
                                         <a href="<?= admin_url('reports/suppliers_trial_balance') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('suppliers_trial_balance_report'); ?></span>
