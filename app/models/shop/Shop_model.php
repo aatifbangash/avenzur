@@ -166,7 +166,8 @@ class Shop_model extends CI_Model
             ->join('warehouses_products', 'warehouses_products.warehouse_id=warehouses.id', 'left')
             ->where('warehouses_products.product_id', $product_id)
             ->where('warehouses_products.warehouse_id', $warehouse_id)
-            ->group_by('warehouses.id');
+            ->group_by('warehouses.id')
+            ->order_by('warehouses_products.quantity', 'desc');
         return $this->db->get('warehouses')->row();
     }
 
