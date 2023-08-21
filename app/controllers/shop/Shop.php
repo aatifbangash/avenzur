@@ -352,11 +352,11 @@ class Shop extends MY_Shop_Controller
                 if ($sale_id = $this->shop_model->addSale($data, $products, $customer, $address)) {
                     
                    $this->aramexshipment($sale_id, $data, $products, $customer, $address,$pro_weight);
-                    // $email = $this->order_received($sale_id, $data['hash']);
+                   $email = $this->order_received($sale_id, $data['hash']);
                      
-                    //if (!$email['sent']) {
-                      //  $this->session->set_flashdata('error', $email['error']);
-                    //}
+                   if (!$email['sent']) {
+                      $this->session->set_flashdata('error', $email['error']);
+                   }
                    // $this->load->library('sms');
                    // $this->sms->newSale($sale_id);
                     $this->cart->destroy();
