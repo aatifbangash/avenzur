@@ -670,8 +670,8 @@ class Shop extends MY_Shop_Controller
         	
         	
      
-        	
-        	//print_r($params);
+        	echo '<pre>';
+        	print_r($params);exit;
         	
         	/*$url = "https://ws.sbx.aramex.net/ShippingAPI.V2/Shipping/Service_1_0.svc/json/CreateShipments";
         	$ch = curl_init( $url );
