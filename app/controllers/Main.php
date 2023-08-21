@@ -326,6 +326,7 @@ class Main extends MY_Shop_Controller
         }
 
         $this->data['featured_products'] = $this->shop_model->getFeaturedProducts();
+        $this->data['country']           = $this->site->getallCountry();
         $this->data['customer']          = $this->site->getCompanyByID($this->session->userdata('company_id'));
         $this->data['user']              = $this->site->getUser();
         $this->data['page_title']        = lang('profile');
