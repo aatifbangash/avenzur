@@ -661,7 +661,8 @@ class Shop extends MY_Shop_Controller
         										'Reference5'			=> '',									
         									),
         			'LabelInfo'				=> array(
-        										'ReportID' 				=> 9202,
+        										//'ReportID' 				=> 9202,
+                                                'ReportID'              => 9729,
         										'ReportType'			=> 'URL',
         			),
         	);
