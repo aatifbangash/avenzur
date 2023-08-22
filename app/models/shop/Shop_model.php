@@ -162,11 +162,11 @@ class Shop_model extends CI_Model
         if (!$warehouse_id) {
             $warehouse_id = $this->shop_settings->warehouse;
         }
-        $this->db->select('' . $this->db->dbprefix('warehouses') . '.*, ' . $this->db->dbprefix('warehouses_products') . '.quantity, ' . $this->db->dbprefix('warehouses_products') . '.rack')
+        $this->db->select('' . $this->db->dbprefix('warehouses') . '.*, SUM(' . $this->db->dbprefix('warehouses_products') . '.quantity) As quantity, ' . $this->db->dbprefix('warehouses_products') . '.rack')
             ->join('warehouses_products', 'warehouses_products.warehouse_id=warehouses.id', 'left')
             ->where('warehouses_products.product_id', $product_id)
             ->where('warehouses_products.warehouse_id', $warehouse_id)
-            ->group_by('warehouses.id');
+            ->group_by('warehouses_products.warehouse_id');
         return $this->db->get('warehouses')->row();
     }
 

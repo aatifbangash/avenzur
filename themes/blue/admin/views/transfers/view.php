@@ -80,7 +80,7 @@
                             <td style="width: 80px; text-align:center; vertical-align:middle;"><?= $row->hsn_code; ?></td>
                             <?php
                         } ?>
-                            <td style="text-align:center; width:80px; "><?= $this->sma->formatQuantity($row->unit_quantity) . ' ' . $row->product_unit_code; ?></td>
+                            <td style="text-align:center; width:80px; "><?= $this->sma->formatQuantity($row->unit_quantity); ?></td>
                             <td style="width: 100px; text-align:right; vertical-align:middle;"><?= $this->sma->formatMoney($row->net_unit_cost); ?></td>
                             <?php if ($Settings->tax1) {
                             echo '<td style="width: 80px; text-align:right; vertical-align:middle;">' . ($Settings->indian_gst ? '<small>(' . $row->tax . ')</small>' : '') . ' ' . $this->sma->formatMoney($row->item_tax) . '</td>';
