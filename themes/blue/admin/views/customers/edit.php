@@ -6,7 +6,7 @@
             </button>
             <h4 class="modal-title" id="myModalLabel"><?php echo lang('edit_customer'); ?></h4>
         </div>
-        <?php $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
+        <?php $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'id' => 'crud-customer-form'];
         echo admin_form_open_multipart('customers/edit/' . $customer->id, $attrib); ?>
         <div class="modal-body">
             <p><?= lang('enter_info'); ?></p>
@@ -14,7 +14,7 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                    <label class="control-label" for="customer_group"><?php echo $this->lang->line('customer_group'); ?></label>
+                        <label class="control-label" for="customer_group"><?php echo $this->lang->line('customer_group'); ?></label>
                         <?php
                         foreach ($customer_groups as $customer_group) {
                             $cgs[$customer_group->id] = $customer_group->name;
@@ -51,24 +51,23 @@
                         <?= lang('vat_no', 'vat_no'); ?>
                         <?php echo form_input('vat_no', $customer->vat_no, 'class="form-control" id="vat_no"'); ?>
                     </div>
-                    
+
                     <div class="form-group">
                         <?= lang('gst_no', 'gst_no'); ?>
                         <?php echo form_input('gst_no', $customer->gst_no, 'class="form-control" id="gst_no"'); ?>
                     </div>
                     <!--<div class="form-group company">
                     <?= lang('contact_person', 'contact_person'); ?>
-                    <?php //echo form_input('contact_person', $customer->contact_person, 'class="form-control" id="contact_person" required="required"');?>
+                    <?php //echo form_input('contact_person', $customer->contact_person, 'class="form-control" id="contact_person" required="required"');
+                    ?>
                 </div> -->
                     <div class="form-group">
                         <?= lang('email_address', 'email_address'); ?>
-                        <input type="email" name="email" class="form-control" required="required" id="email_address"
-                               value="<?= $customer->email ?>"/>
+                        <input type="email" name="email" class="form-control" required="required" id="email_address" value="<?= $customer->email ?>" />
                     </div>
                     <div class="form-group">
                         <?= lang('phone', 'phone'); ?>
-                        <input type="tel" name="phone" class="form-control" required="required" id="phone"
-                               value="<?= $customer->phone ?>"/>
+                        <input type="tel" name="phone" class="form-control" required="required" id="phone" value="<?= $customer->phone ?>" />
                     </div>
                     <div class="form-group">
                         <?= lang('address', 'address'); ?>
@@ -99,44 +98,44 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    
-                    <div class="form-group">
-                        <?= lang('Ledger Account', 'Ledger Account'); ?>
-                        <?php 
 
-                            echo form_dropdown('ledger_account', $LO,$customer->ledger_account, 'id="ledger_account" class="ledger-dropdown form-control" required="required"',$DIS);  
+                    <div class="form-group">
+                        <?= lang('Ledger Account', 'ledger_account'); ?>
+                        <?php
+
+                        echo form_dropdown('ledger_account', $LO, $customer->ledger_account, 'id="ledger_account" class="ledger-dropdown form-control" required="required"', $DIS);
                         ?>
                     </div>
 
                     <div class="form-group">
-                        <?= lang('Sales Account', 'Sales Account'); ?>
-                        <?php 
+                        <?= lang('Sales Account', 'sales_ledger'); ?>
+                        <?php
 
-                            echo form_dropdown('sales_ledger', $LO, $customer->sales_ledger , 'id="sales_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        echo form_dropdown('sales_ledger', $LO, $customer->sales_ledger, 'id="sales_ledger" class="ledger-dropdown form-control" required="required"', $DIS);
                         ?>
                     </div>
 
                     <div class="form-group">
-                        <?= lang('COGS Account', 'COGS Account'); ?>
-                        <?php 
+                        <?= lang('COGS Account', 'cogs_ledger'); ?>
+                        <?php
 
-                            echo form_dropdown('cogs_ledger', $LO,$customer->cogs_ledger, 'id="cogs_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        echo form_dropdown('cogs_ledger', $LO, $customer->cogs_ledger, 'id="cogs_ledger" class="ledger-dropdown form-control" required="required"', $DIS);
                         ?>
                     </div>
 
                     <div class="form-group">
-                        <?= lang('Discount Account', 'Discount Account'); ?>
-                        <?php 
+                        <?= lang('Discount Account', 'discount_ledger'); ?>
+                        <?php
 
-                            echo form_dropdown('discount_ledger', $LO,$customer->discount_ledger, 'id="discount_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        echo form_dropdown('discount_ledger', $LO, $customer->discount_ledger, 'id="discount_ledger" class="ledger-dropdown form-control" required="required"', $DIS);
                         ?>
                     </div>
 
                     <div class="form-group">
-                        <?= lang('Return Account', 'Return Account'); ?>
-                        <?php 
+                        <?= lang('Return Account', 'return_ledger'); ?>
+                        <?php
 
-                            echo form_dropdown('return_ledger', $LO, $customer->return_ledger, 'id="return_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        echo form_dropdown('return_ledger', $LO, $customer->return_ledger, 'id="return_ledger" class="ledger-dropdown form-control" required="required"', $DIS);
                         ?>
                     </div>
 
@@ -182,4 +181,102 @@
     </div>
     <?php echo form_close(); ?>
 </div>
-<?= $modal_js ?>
+<!-- <?= $modal_js ?> -->
+<script type="text/javascript">
+    $(document).ready(function(e) {
+        $('#crud-customer-form').bootstrapValidator({
+            feedbackIcons: {
+                valid: 'fa fa-check',
+                invalid: 'fa fa-times',
+                validating: 'fa fa-refresh'
+            },
+            excluded: [':disabled'],
+            fields: {
+                ledger_account: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please select a Ledger'
+                        },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value, validator) {
+                                return value !== '0';
+                            }
+                        }
+                    }
+                },
+                sales_ledger: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please select a Ledger'
+                        },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value, validator) {
+                                return value !== '0';
+                            }
+                        }
+                    }
+                },
+                cogs_ledger: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please select a Ledger'
+                        },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value, validator) {
+                                return value !== '0';
+                            }
+                        }
+                    }
+                },
+                discount_ledger: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please select a Ledger'
+                        },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value, validator) {
+                                return value !== '0';
+                            }
+                        }
+                    }
+                },
+                return_ledger: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please select a Ledger'
+                        },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value, validator) {
+                                return value !== '0';
+                            }
+                        }
+                    }
+                },
+            }
+        });
+        $('select.select').select2({
+            minimumResultsForSearch: 7
+        });
+        $('select.ledger-dropdown').select2({
+            minimumResultsForSearch: 7
+        });
+
+        fields = $('.modal-content').find('.form-control');
+        $.each(fields, function() {
+            var id = $(this).attr('id');
+            var iname = $(this).attr('name');
+            var iid = '#' + id;
+            if (!!$(this).attr('data-bv-notempty') || !!$(this).attr('required')) {
+                $("label[for='" + id + "']").append(' *');
+                $(document).on('change', iid, function() {
+                    $('form[data-toggle="validator"]').bootstrapValidator('revalidateField', iname);
+                });
+            }
+        });
+    });
+</script>

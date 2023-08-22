@@ -6,7 +6,7 @@
             </button>
             <h4 class="modal-title" id="myModalLabel"><?php echo lang('edit_supplier'); ?></h4>
         </div>
-        <?php $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
+        <?php $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'id' => 'crud-supplier-form'];
         echo admin_form_open_multipart('suppliers/edit/' . $supplier->id, $attrib); ?>
         <div class="modal-body">
             <p><?= lang('enter_info'); ?></p>
@@ -79,7 +79,7 @@
                     </div>
 
                     <div class="form-group">
-                        <?= lang('Ledger Account', 'Ledger Account'); ?>
+                        <?= lang('Ledger Account', 'ledger_account'); ?>
                         <?php 
 
                             echo form_dropdown('ledger_account', $LO,$supplier->ledger_account, 'id="ledger_account" class="ledger-dropdown form-control" required="required"',$DIS);  
@@ -124,4 +124,47 @@
     </div>
     <?php echo form_close(); ?>
 </div>
-<?= $modal_js ?>
+
+<!-- <?= $modal_js ?> -->
+<script type="text/javascript">
+    $(document).ready(function (e) {
+        $('#crud-supplier-form').bootstrapValidator({
+            feedbackIcons: {
+                valid: 'fa fa-check',
+                invalid: 'fa fa-times',
+                validating: 'fa fa-refresh'
+            }, excluded: [':disabled'],
+            fields:{
+                ledger_account: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please select a Ledger'
+                        },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value, validator) {
+                                return value !== '0';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        $('select.select').select2({minimumResultsForSearch: 7});
+        $('select.ledger-dropdown').select2({minimumResultsForSearch: 7});
+
+        fields = $('.modal-content').find('.form-control');
+        $.each(fields, function () {
+            var id = $(this).attr('id');
+            var iname = $(this).attr('name');
+            var iid = '#' + id;
+            if (!!$(this).attr('data-bv-notempty') || !!$(this).attr('required')) {
+                $("label[for='" + id + "']").append(' *');
+                $(document).on('change', iid, function () {
+                    $('form[data-toggle="validator"]').bootstrapValidator('revalidateField', iname);
+                });
+            }
+        });
+    });
+</script>
+
