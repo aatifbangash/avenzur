@@ -487,48 +487,77 @@ class Reports_model extends CI_Model
     public function getCustomersTrialBalance($start_date, $end_date){
 
         $response = array();
+        
 
-        $this->db
-                ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
-                ->from('companies')
-                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-                ->where('companies.group_name', 'customer')
-                ->where('sma_accounts_entries.date >=', $start_date)
-                ->where('sma_accounts_entries.date <=', $end_date)
-                ->group_by('companies.id, sma_accounts_entryitems.dc')
-                ->order_by('companies.company asc');
+        $q = $this->db->query("SELECT
+                                c.id,
+                                c.sequence_code,
+                                c.name,
+                                `company`,
+                                s.grand_total AS sale_total, 
+                                r.grand_total as return_total,
+                                m.payment_amount AS memo_total,
+                                p.amount AS payment_total
+                            FROM sma_companies as c
+                            LEFT JOIN (SELECT customer_id,SUM(grand_total) as grand_total FROM `sma_sales` WHERE date >='{$start_date}' AND date <='{$end_date}' GROUP BY customer_id) as s ON c.id=s.customer_id
+                            LEFT JOIN (SELECT customer_id,SUM(grand_total) as grand_total FROM `sma_returns` WHERE date >='{$start_date}' AND date <='{$end_date}' GROUP BY customer_id) as r ON c.id=r.customer_id
+                            LEFT JOIN (SELECT customer_id,SUM(payment_amount) as payment_amount FROM `sma_memo`  WHERE date >='{$start_date}' AND date <='{$end_date}' AND type='creditmemo' GROUP BY customer_id) as m ON c.id=m.customer_id
+                            LEFT JOIN(
+                                    SELECT s.customer_id ,SUM(p.amount) as amount
+                                        FROM sma_payments p
+                                        INNER JOIN sma_sales s ON s.id = p.sale_id
+                                        WHERE p.sale_id > 0 AND  p.date >='{$start_date}' AND p.date <='{$end_date}'
+                                        GROUP BY s.customer_id
+                            ) As p on c.id =p.customer_id
+                            WHERE c.group_name = 'customer' 
+                            GROUP BY
+                                c.id
+                            ORDER BY
+                                c.name ASC");
 
-            $q = $this->db->get();
-            if ($q->num_rows() > 0) {
-                foreach (($q->result()) as $row) {
-                    $data[] = $row;
-                }
-            } else {
-                $data = array();
-            }
+        $data = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }            
+        }       
 
         $response['trs'] = $data;
 
-        $this->db
-                ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
-                ->from('companies')
-                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-                ->where('companies.group_name', 'customer')
-                ->where('sma_accounts_entries.date <', $start_date)
-                ->group_by('companies.id, sma_accounts_entryitems.dc')
-                ->order_by('companies.company asc');
 
-            $q = $this->db->get();
-            if ($q->num_rows() > 0) {
-                foreach (($q->result()) as $row) {
-                    $data2[] = $row;
-                }
-            } else {
-                $data2 = array();
-            }
+        $q = $this->db->query("SELECT
+                                c.id,
+                                c.sequence_code,
+                                c.name,
+                                `company`,
+                                s.grand_total AS sale_total, 
+                                r.grand_total as return_total,
+                                m.payment_amount AS memo_total,
+                                p.amount AS payment_total
+                            FROM sma_companies as c
+                            LEFT JOIN (SELECT customer_id,SUM(grand_total) as grand_total FROM `sma_sales` WHERE date < '{$start_date}'  GROUP BY customer_id) as s ON c.id=s.customer_id
+                            LEFT JOIN (SELECT customer_id,SUM(grand_total) as grand_total FROM `sma_returns` WHERE date < '{$start_date}' GROUP BY customer_id) as r ON c.id=r.customer_id
+                            LEFT JOIN (SELECT customer_id,SUM(payment_amount) as payment_amount FROM `sma_memo`  WHERE date < '{$start_date}' AND type='creditmemo' GROUP BY customer_id) as m ON c.id=m.customer_id
+                            LEFT JOIN(
+                                    SELECT s.customer_id ,SUM(p.amount) as amount
+                                        FROM sma_payments p
+                                        INNER JOIN sma_sales s ON s.id = p.sale_id
+                                        WHERE p.sale_id > 0 AND  p.date < '{$start_date}' 
+                                        GROUP BY s.customer_id
+                            ) As p on c.id =p.customer_id
+                            WHERE c.group_name = 'customer' 
+                            GROUP BY
+                                c.id
+                            ORDER BY
+                                c.name ASC");
 
+
+        $data2 = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data2[] = $row;
+            }            
+        }         
         $response['ob'] = $data2;
 
         return $response;

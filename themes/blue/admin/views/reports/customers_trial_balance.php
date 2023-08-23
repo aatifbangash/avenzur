@@ -55,7 +55,9 @@
                             <thead>
                             <tr>
                                 <th>#</th>
+                                <th><?= lang('Sequence Code'); ?></th>
                                 <th><?= lang('name'); ?></th>
+                                <th><?= lang('Company'); ?></th>
                                 <th><?= lang('OB Debit'); ?></th>
                                 <th><?= lang('OB Credit'); ?></th>
                                 <th><?= lang('Trs Debit'); ?></th>
@@ -68,22 +70,37 @@
                                 <?php
                                     $count = 0;
                                     foreach ($trial_balance as $data){
-                                        $ob_debit = $data->ob_debit > $data->ob_credit ? $data->ob_debit - $data->ob_credit : 0;
-                                        $ob_credit = $data->ob_credit > $data->ob_debit ? $data->ob_credit - $data->ob_debit : 0;
+                                        //sale_total + payment_total
 
-                                        $eb_debit = $ob_debit - $data->trs_credit + $data->trs_debit;
-                                        $eb_credit = $ob_credit - $data->trs_debit + $data->trs_credit;
+                                        // $ob_debit = $data->ob_debit > $data->ob_credit ? $data->ob_debit - $data->ob_credit : 0;
+                                        // $ob_credit = $data->ob_credit > $data->ob_debit ? $data->ob_credit - $data->ob_debit : 0;
+
+                                        // $eb_debit = $ob_debit - $data->trs_credit + $data->trs_debit;
+                                         $eb_credit = $data['obCredit'] + $data['trsCredit'];
+                                         $eb_debit = $data['obDebit'] + $data['trsDebit'];
+
+                                         $finalEndDebit = "-";
+                                         $finalEndCredit = "-";
+                                         if( $eb_credit >= $eb_debit){
+                                            $finalEndCredit = $eb_credit - $eb_debit;
+                                         }else{
+                                            $finalEndDebit = $eb_debit - $eb_credit;
+                                         }
+
+
                                         $count++;
                                         ?>
                                             <tr>
                                                 <td><?= $count; ?></td>
-                                                <td><?= $data->name; ?></td>
-                                                <td><?= $ob_debit > 0 ? $this->sma->formatDecimal($ob_debit) : '-'; ?></td>
-                                                <td><?= $ob_credit > 0 ? $this->sma->formatDecimal($ob_credit) : '-'; ?></td>
-                                                <td><?= $data->trs_debit > 0 ? $this->sma->formatDecimal($data->trs_debit) : '-'; ?></td>
-                                                <td><?= $data->trs_credit >0 ? $this->sma->formatDecimal($data->trs_credit) : '-'; ?></td>
-                                                <td><?= $eb_debit > 0 ? $this->sma->formatDecimal($eb_debit) : '-'; ?></td>
-                                                <td><?= $eb_credit > 0 ? $this->sma->formatDecimal($eb_credit) : '-'; ?></td>
+                                                <td><?= $data['sequence_code']; ?></td>
+                                                <td><?= $data['name']; ?></td>
+                                                <td><?= $data['company']; ?></td>
+                                                <td><?= $data['obDebit'] > 0 ? $this->sma->formatDecimal($data['obDebit']) : '-'; ?></td>
+                                                <td><?= $data['obCredit'] > 0 ? $this->sma->formatDecimal($data['obCredit']) : '-'; ?></td>
+                                                <td><?= $data['trsDebit'] > 0 ? $this->sma->formatDecimal($data['trsDebit']) : '-'; ?></td>
+                                                <td><?= $data['trsCredit'] >0 ? $this->sma->formatDecimal($data['trsCredit']) : '-'; ?></td>
+                                                <td><?= $finalEndDebit > 0 ? $this->sma->formatDecimal($finalEndDebit) : '-'; ?></td>
+                                                <td><?= $finalEndCredit > 0 ? $this->sma->formatDecimal($finalEndCredit) : '-'; ?></td>
                                             </tr>
                                         <?php
                                     }

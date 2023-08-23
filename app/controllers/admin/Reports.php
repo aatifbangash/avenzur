@@ -3526,55 +3526,72 @@ class Reports extends MY_Controller
             $start_date = $this->sma->fld($from_date);
             $end_date   = $this->sma->fld($to_date);
             $trial_balance_array = $this->reports_model->getCustomersTrialBalance($start_date, $end_date);
+
+            $response_arr = array();
+            foreach($trial_balance_array['trs'] as $trans){
+                $response_arr[$trans->id]["name"] = $trans->name;
+                $response_arr[$trans->id]["company"] = $trans->company;
+                $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
+                $response_arr[$trans->id]["trsDebit"] = $trans->payment_total + $trans->sale_total;
+                $response_arr[$trans->id]["trsCredit"] = $trans->return_total + $trans->memo_total;
+            }
+            foreach($trial_balance_array['ob'] as $trans){
+                $response_arr[$trans->id]["obDebit"] = $trans->payment_total + $trans->sale_total;
+                $response_arr[$trans->id]["obCredit"] = $trans->return_total + $trans->memo_total;               
+
+            }
+            //dd($response_arr);
+
             
-            foreach($trial_balance_array['trs'] as $supplier_data){
+            // foreach($trial_balance_array['trs'] as $supplier_data){
 
-                $idExists = false;
-                foreach ($response_arr as $response_item) {
-                    if ($response_item->id == $supplier_data->id) {
-                        $idExists = true;
-                        if($supplier_data->dc == 'D'){
-                            $response_item->trs_debit = $response_item->trs_debit + $supplier_data->total_amount;
-                        }else if($supplier_data->dc == 'C'){
-                            $response_item->trs_credit = $response_item->trs_credit + $supplier_data->total_amount;
-                        }
-                        break;
-                    }
-                }
-                // check object exists or not
-                if(!$idExists){
-                    $obj = new stdClass();
-                    $obj->id = $supplier_data->id;
-                    $obj->name = $supplier_data->company;
-                    $obj->ledger_account = $supplier_data->ledger_account;
-                    $obj->trs_debit = 0;
-                    $obj->trs_credit = 0;
-                    $obj->ob_debit = 0;
-                    $obj->ob_credit = 0;
-                    if($supplier_data->dc == 'D'){
-                        $obj->trs_debit = $supplier_data->total_amount;
-                    }else if($supplier_data->dc == 'C'){
-                        $obj->trs_credit = $supplier_data->total_amount;
-                    }
-                    array_push($response_arr, $obj);  
-                }
-            }
+            //     $idExists = false;
+            //     foreach ($response_arr as $response_item) {
+            //         if ($response_item->id == $supplier_data->id) {
+            //             $idExists = true;
+            //             if($supplier_data->dc == 'D'){
+            //                 $response_item->trs_debit = $response_item->trs_debit + $supplier_data->total_amount;
+            //             }else if($supplier_data->dc == 'C'){
+            //                 $response_item->trs_credit = $response_item->trs_credit + $supplier_data->total_amount;
+            //             }
+            //             break;
+            //         }
+            //     }
+            //     // check object exists or not
+            //     if(!$idExists){
+            //         $obj = new stdClass();
+            //         $obj->id = $supplier_data->id;
+            //         $obj->name = $supplier_data->company;
+            //         $obj->ledger_account = $supplier_data->ledger_account;
+            //         $obj->trs_debit = 0;
+            //         $obj->trs_credit = 0;
+            //         $obj->ob_debit = 0;
+            //         $obj->ob_credit = 0;
+            //         if($supplier_data->dc == 'D'){
+            //             $obj->trs_debit = $supplier_data->total_amount;
+            //         }else if($supplier_data->dc == 'C'){
+            //             $obj->trs_credit = $supplier_data->total_amount;
+            //         }
+            //         array_push($response_arr, $obj);  
+            //     }
+            // }
 
-            foreach($trial_balance_array['ob'] as $supplier_data){
-                foreach ($response_arr as $response_item) {
-                    if ($response_item->id == $supplier_data->id) {
-                        if($supplier_data->dc == 'D'){
-                            $response_item->ob_debit = $supplier_data->total_amount;
-                        }else if($supplier_data->dc == 'C'){
-                            $response_item->ob_credit = $supplier_data->total_amount;
-                        }
+            // foreach($trial_balance_array['ob'] as $supplier_data){
+            //     foreach ($response_arr as $response_item) {
+            //         if ($response_item->id == $supplier_data->id) {
+            //             if($supplier_data->dc == 'D'){
+            //                 $response_item->ob_debit = $supplier_data->total_amount;
+            //             }else if($supplier_data->dc == 'C'){
+            //                 $response_item->ob_credit = $supplier_data->total_amount;
+            //             }
                         
-                    }
-                }
-            }
+            //         }
+            //     }
+            // }
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
+            $this->data['customer_data'] = $trial_balance_array;
             $this->data['trial_balance'] = $response_arr;
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_report')]];
             $meta = ['page_title' => lang('customers_report'), 'bc' => $bc];
