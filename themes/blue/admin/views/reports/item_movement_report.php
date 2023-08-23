@@ -27,13 +27,13 @@
                 <div class="row">
 
                     <div class="col-lg-12">
-                    <div class="col-md-6">
+                    <!-- <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('Warehouse', 'warehouse'); ?>
                                 <?php echo form_dropdown('warehouse', $allWareHouses, set_value('warehouse',$_POST['warehouse']),array('class' => 'form-control', 'id'=>'warehouse'));?>
                                
                             </div>
-                        </div>
+                        </div> -->
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('Product', 'product'); ?>
