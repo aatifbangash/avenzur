@@ -72,3 +72,11 @@ INSERT INTO sma_accounts_ledgers_cats(name) SELECT category FROM (
 # Transfer Sequence Code
 
 ALTER TABLE `sma_transfers` ADD `sequence_code` VARCHAR(255) NULL DEFAULT '' AFTER `type`;
+
+
+
+ALTER TABLE `sma_transfers` ADD `invoice_number` VARCHAR(255) NULL DEFAULT NULL AFTER `sequence_code`;
+
+ALTER TABLE `sma_sales` ADD `invoice_number` VARCHAR(255) NULL DEFAULT NULL AFTER `sequence_code`;
+
+ALTER TABLE `sma_returns` ADD `invoice_number` VARCHAR(255) NULL DEFAULT NULL AFTER `shipping`;

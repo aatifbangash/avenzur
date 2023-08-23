@@ -762,6 +762,7 @@ class Products_model extends CI_Model
         }
 
         $q = $this->db->get('products');
+
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;

@@ -6,7 +6,7 @@
             </button>
             <h4 class="modal-title" id="myModalLabel"><?php echo lang('add_customer'); ?></h4>
         </div>
-        <?php $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'id' => 'add-customer-form'];
+        <?php $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'id' => 'crud-customer-form'];
         echo admin_form_open_multipart('customers/add', $attrib); ?>
         <div class="modal-body">
             <p><?= lang('enter_info'); ?></p>
@@ -100,7 +100,7 @@
                 <div class="col-md-6">
                   
                     <div class="form-group">
-                        <?= lang('Ledger Account', 'Ledger Account'); ?>
+                        <?= lang('Ledger Account', 'ledger_account'); ?>
                         <?php 
 
                             echo form_dropdown('ledger_account', $LO,'', 'id="ledger_account" class="ledger-dropdown form-control" required="required"',$DIS);  
@@ -108,7 +108,7 @@
                     </div>
 
                     <div class="form-group">
-                        <?= lang('Sales Account', 'Sales Account'); ?>
+                        <?= lang('Sales Account', 'sales_ledger'); ?>
                         <?php 
 
                             echo form_dropdown('sales_ledger', $LO,'', 'id="sales_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
@@ -116,7 +116,7 @@
                     </div>
 
                     <div class="form-group">
-                        <?= lang('COGS Account', 'COGS Account'); ?>
+                        <?= lang('COGS Account', 'cogs_ledger'); ?>
                         <?php 
 
                             echo form_dropdown('cogs_ledger', $LO,'', 'id="cogs_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
@@ -124,7 +124,7 @@
                     </div>
 
                     <div class="form-group">
-                        <?= lang('Discount Account', 'Discount Account'); ?>
+                        <?= lang('Discount Account', 'discount_ledger'); ?>
                         <?php 
 
                             echo form_dropdown('discount_ledger', $LO,'', 'id="discount_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
@@ -132,7 +132,7 @@
                     </div>
 
                     <div class="form-group">
-                        <?= lang('Return Account', 'Return Account'); ?>
+                        <?= lang('Return Account', 'return_ledger'); ?>
                         <?php 
 
                             echo form_dropdown('return_ledger', $LO,'', 'id="return_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
@@ -180,16 +180,83 @@
 
 <script type="text/javascript">
     $(document).ready(function (e) {
-        $('#add-customer-form').bootstrapValidator({
+        $('#crud-customer-form').bootstrapValidator({
             feedbackIcons: {
                 valid: 'fa fa-check',
                 invalid: 'fa fa-times',
                 validating: 'fa fa-refresh'
-            }, excluded: [':disabled']
+            }, excluded: [':disabled'],
+            fields:{
+                ledger_account: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please select a Ledger'
+                        },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value, validator) {
+                                return value !== '0';
+                            }
+                        }
+                    }
+                },
+                sales_ledger: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please select a Ledger'
+                        },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value, validator) {
+                                return value !== '0';
+                            }
+                        }
+                    }
+                },
+                cogs_ledger: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please select a Ledger'
+                        },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value, validator) {
+                                return value !== '0';
+                            }
+                        }
+                    }
+                },
+                discount_ledger: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please select a Ledger'
+                        },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value, validator) {
+                                return value !== '0';
+                            }
+                        }
+                    }
+                },
+                return_ledger: {
+                    validators: {
+                        notEmpty: {
+                            message: 'Please select a Ledger'
+                        },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value, validator) {
+                                return value !== '0';
+                            }
+                        }
+                    }
+                },
+            }
         });
         $('select.select').select2({minimumResultsForSearch: 7});
         $('select.ledger-dropdown').select2({minimumResultsForSearch: 7});
-        
+
         fields = $('.modal-content').find('.form-control');
         $.each(fields, function () {
             var id = $(this).attr('id');

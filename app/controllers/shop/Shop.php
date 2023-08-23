@@ -351,12 +351,12 @@ class Shop extends MY_Shop_Controller
                    
                 if ($sale_id = $this->shop_model->addSale($data, $products, $customer, $address)) {
                     
-                   $this->aramexshipment($sale_id, $data, $products, $customer, $address,$pro_weight);
-                    // $email = $this->order_received($sale_id, $data['hash']);
+                   $added_record = $this->aramexshipment($sale_id, $data, $products, $customer, $address,$pro_weight);
+                   $email = $this->order_received($sale_id, $data['hash'], $added_record);
                      
-                    //if (!$email['sent']) {
-                      //  $this->session->set_flashdata('error', $email['error']);
-                    //}
+                   if (!$email['sent']) {
+                      $this->session->set_flashdata('error', $email['error']);
+                   }
                    // $this->load->library('sms');
                    // $this->sms->newSale($sale_id);
                     $this->cart->destroy();
@@ -661,16 +661,13 @@ class Shop extends MY_Shop_Controller
         										'Reference5'			=> '',									
         									),
         			'LabelInfo'				=> array(
-        										'ReportID' 				=> 9202,
+        										//'ReportID' 				=> 9202,
+                                                'ReportID'              => 9729,
         										'ReportType'			=> 'URL',
         			),
         	);
         	
         	
-        	
-     
-        	
-        	//print_r($params);
         	
         	/*$url = "https://ws.sbx.aramex.net/ShippingAPI.V2/Shipping/Service_1_0.svc/json/CreateShipments";
         	$ch = curl_init( $url );
@@ -722,7 +719,7 @@ class Shop extends MY_Shop_Controller
         		echo "Shipments Label URL: ".$data['Shipments']["ProcessedShipment"]["ShipmentLabel"]["LabelURL"]."<br>";
         		echo "Shipment Origin: ".$data['Shipments']["ProcessedShipment"]["ShipmentDetails"]["Origin"]."<br>";
         		echo "Shipment Destination: ".$data['Shipments']["ProcessedShipment"]["ShipmentDetails"]["Destination"]."<br>";*/
-        		
+        		return $record;
         	//	die();
         	} catch (SoapFault $fault) {
         		//die('Error : ' . $fault->faultstring);
@@ -730,7 +727,7 @@ class Shop extends MY_Shop_Controller
         	return;
     }
 
-    public function order_received($id = null, $hash = null)
+    public function order_received($id = null, $hash = null, $aramex_record)
     {
         if ($inv = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash])) {
             $user     = $inv->created_by ? $this->site->getUser($inv->created_by) : null;
@@ -741,7 +738,8 @@ class Shop extends MY_Shop_Controller
                 'reference_number' => $inv->reference_no,
                 'contact_person'   => $customer->name,
                 'company'          => $customer->company && $customer->company != '-' ? '(' . $customer->company . ')' : '',
-                'order_link'       => shop_url('orders/' . $id . '/' . ($this->loggedIn ? '' : $inv->hash)),
+                //'order_link'       => shop_url('orders/' . $id . '/' . ($this->loggedIn ? '' : $inv->hash)),
+                'order_link'       => $aramex_record['labelurl'],
                 'site_link'        => base_url(),
                 'site_name'        => $this->Settings->site_name,
                 'logo'             => '<img src="' . base_url() . 'assets/uploads/logos/' . $biller->logo . '" alt="' . ($biller->company && $biller->company != '-' ? $biller->company : $biller->name) . '"/>',

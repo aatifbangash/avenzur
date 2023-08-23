@@ -802,6 +802,8 @@ class Pos extends MY_Controller
             $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
+            $customer_name    = $this->input->post('customer_name');
+            $mobile_number    = $this->input->post('mobile_number');
             $sale_status      = 'completed';
             $payment_term     = 0;
             $due_date         = date('Y-m-d', strtotime('+' . $payment_term . ' days'));

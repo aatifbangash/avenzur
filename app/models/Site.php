@@ -476,6 +476,18 @@ class Site extends CI_Model
         return false;
     }
 
+public function getallCountry()
+{
+    $q = $this->db->get('countries');
+    if ($q->num_rows() > 0) {
+        foreach (($q->result()) as $row) {
+            $data[] = $row;
+        }
+        return $data;
+    }
+    return false;
+}
+
  public function getallWCountry()
     {
         $q = $this->db->get('warehouses_country');

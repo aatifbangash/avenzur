@@ -71,7 +71,7 @@ class Purchases_model extends CI_Model
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 $this->db->insert('purchase_items', $item);
                 if ($this->Settings->update_cost) {
-                    $this->db->update('products', ['cost' => $item['base_unit_cost']], ['id' => $item['product_id']]);
+                    //$this->db->update('products', ['cost' => $item['base_unit_cost']], ['id' => $item['product_id']]);
                     if ($item['option_id']) {
                         $this->db->update('product_variants', ['cost' => $item['base_unit_cost']], ['id' => $item['option_id'], 'product_id' => $item['product_id']]);
                     }

@@ -26,7 +26,7 @@
                 </div>
             </div>
         </div>
-
+        <input type="hidden" type="purchase_id" name="purchase_id" value="<?= $purchase_id; ?>" />
         <div class="modal-footer">
             <?php echo form_submit('add_stock', lang('Transfer Stock'), 'class="btn btn-primary"'); ?>
         </div>

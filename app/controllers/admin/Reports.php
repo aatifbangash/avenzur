@@ -3605,6 +3605,71 @@ class Reports extends MY_Controller
         
     }
 
+    public function item_movement_report(){
+
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $user = $this->site->getUser();
+        $defaultWareHouseId = ($user->warehouse_id ? $user->warehouse_id : $this->site->Settings->default_warehouse);
+    
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date   = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $productId = $this->input->post('product') ? $this->input->post('product') : 0;
+        $warehouseId = $this->input->post('warehouse') ? $this->input->post('warehouse') : 0;
+
+        $allProducts = $this->reports_model->getAllProducts();
+        // $this->data['allProducts'] = $allProducts;
+
+        $allWareHouses = $this->reports_model->getAllWareHouses();
+        $this->data['allWareHouses'] = $allWareHouses;
+
+        if ($productId && $from_date && $to_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+
+            /**
+             * $transferCase = Company   ==> No Effect
+             * $transferCase = WareHouse ==> Out
+             * $transferCase = Pharmacy  ==> In
+            */
+            $transferCase = 'Company';
+            // if(empty($warehouseId)){
+            //     $transferCase = 'Company';
+            // }
+            // if(!empty($warehouseId) && $warehouseId ==  $defaultWareHouseId){
+            //     $transferCase = 'WareHouse';
+            // }
+            // if(!empty($warehouseId) && $warehouseId !=  $defaultWareHouseId){
+            //     $transferCase = 'Pharmacy';
+            // }
+
+            $preItemQuantity = $this->reports_model->preItemQuantity($productId, $start_date, $transferCase, $warehouseId);
+           
+            $inventory_array = $this->reports_model->getItemMovementData($productId, $start_date, $end_date, $transferCase, $warehouseId);             
+            // echo '<pre>',print_r($inventory_array),'</pre>';
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['product'] = $productId;
+            $this->data['warehouse'] = $warehouseId;
+            $this->data['inventory_array'] = $inventory_array;
+            $this->data['preItemQuantity'] = $preItemQuantity;
+
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
+            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
+            $this->page_construct('reports/item_movement_report', $meta, $this->data);
+        }else{
+            
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
+            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
+            $this->page_construct('reports/item_movement_report', $meta, $this->data);
+        }
+    }
+
+
     public function inventory_movement(){
         $this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
@@ -3612,16 +3677,18 @@ class Reports extends MY_Controller
         $response_arr = array();
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date   = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date   = $this->sma->fld($to_date);
-            $inventory_array = $this->reports_model->getInventoryMovementReport($start_date, $end_date);            
-//            echo '<pre>';print_r($inventory_array);exit;
 
+            $inventory_array = $this->reports_model->getInventoryMovementReport($start_date, $end_date);         
+            // echo '<pre>';print_r($inventory_array); echo "</pre>";
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
             $this->data['vat_purchase'] = $inventory_array;
+
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_movement_report')]];
             $meta = ['page_title' => lang('inventory_movement_report'), 'bc' => $bc];
             $this->page_construct('reports/inventory_movement_report', $meta, $this->data);
