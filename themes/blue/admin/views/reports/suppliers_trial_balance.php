@@ -55,6 +55,7 @@
                             <thead>
                             <tr>
                                 <th>#</th>
+                                <th><?= lang('Code'); ?></th>
                                 <th><?= lang('name'); ?></th>
                                 <th><?= lang('OB Debit'); ?></th>
                                 <th><?= lang('OB Credit'); ?></th>
@@ -83,6 +84,7 @@
                                         ?>
                                             <tr>
                                                 <td><?= $count; ?></td>
+                                                <td><?= $data['sequence_code']; ?></td>
                                                 <td><?= $data['name']; ?></td>
                                                 <td><?= $data['obDebit'] > 0 ? $this->sma->formatDecimal($data['obDebit']) : '-'; ?></td>
                                                 <td><?= $data['obCredit'] > 0 ? $this->sma->formatDecimal($data['obCredit']) : '-'; ?></td>

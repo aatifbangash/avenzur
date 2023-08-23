@@ -441,6 +441,7 @@ class Reports_model extends CI_Model
 
         $q = $this->db->query("SELECT
                                 c.id,
+                                c.sequence_code,
                                 c.name,
                                 COALESCE(SUM(purchases.total), 0) AS totalPurchases,
                                 COALESCE(SUM(ret.total), 0) AS totalReturn,
@@ -494,6 +495,7 @@ class Reports_model extends CI_Model
 
         $q = $this->db->query("SELECT
                                 c.id,
+                                c.sequence_code,
                                 c.name,
                                 COALESCE(SUM(purchases.total), 0) AS totalPurchases,
                                 COALESCE(SUM(ret.total), 0) AS totalReturn,

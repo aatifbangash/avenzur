@@ -3358,6 +3358,7 @@ class Reports extends MY_Controller
             $response_arr = array();
             foreach($trial_balance_array['trs'] as $trans){
                 $response_arr[$trans->id]["id"] = $trans->id;
+                $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
                 $response_arr[$trans->id]["name"] = $trans->name;
                 $response_arr[$trans->id]["trsDebit"] = $trans->totalPurchases + $trans->totalMemo;
                 $response_arr[$trans->id]["trsCredit"] = $trans->totalPayment + $trans->totalReturn;
