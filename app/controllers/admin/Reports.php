@@ -3617,16 +3617,17 @@ class Reports extends MY_Controller
              * $transferCase = WareHouse ==> Out
              * $transferCase = Pharmacy  ==> In
             */
+            $transferCase = 'Company';
+            // if(empty($warehouseId)){
+            //     $transferCase = 'Company';
+            // }
+            // if(!empty($warehouseId) && $warehouseId ==  $defaultWareHouseId){
+            //     $transferCase = 'WareHouse';
+            // }
+            // if(!empty($warehouseId) && $warehouseId !=  $defaultWareHouseId){
+            //     $transferCase = 'Pharmacy';
+            // }
 
-            if(empty($warehouseId)){
-                $transferCase = 'Company';
-            }
-            if(!empty($warehouseId) && $warehouseId ==  $defaultWareHouseId){
-                $transferCase = 'WareHouse';
-            }
-            if(!empty($warehouseId) && $warehouseId !=  $defaultWareHouseId){
-                $transferCase = 'Pharmacy';
-            }
             $preItemQuantity = $this->reports_model->preItemQuantity($productId, $start_date, $transferCase, $warehouseId);
            
             $inventory_array = $this->reports_model->getItemMovementData($productId, $start_date, $end_date, $transferCase, $warehouseId);             
