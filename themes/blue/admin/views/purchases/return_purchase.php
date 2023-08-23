@@ -191,7 +191,7 @@
                 }
                 product_discount += formatDecimal((item_discount * item_qty), 4);
 
-                unit_cost = formatDecimal(unit_cost-item_discount);
+                unit_cost = formatDecimal(unit_cost);
                 var pr_tax = item.tax_rate;
                 var pr_tax_val = 0, pr_tax_rate = 0;
                 if (site.settings.tax1 == 1) {
@@ -216,7 +216,7 @@
                     }
                 }
                 item_cost = item_tax_method == 0 ? formatDecimal((unit_cost-pr_tax_val), 4) : formatDecimal(unit_cost);
-                unit_cost = formatDecimal((unit_cost+item_discount), 4);
+                //unit_cost = formatDecimal((unit_cost+item_discount), 4);
                 var sel_opt = '';
                 $.each(item.options, function () {
                     if(this.id == item_option) {
@@ -232,7 +232,7 @@
                 
 
                 tr_html += '<td><input class="form-control batch_no" name="batch_no[]" type="text" value="' + batch_no + '" data-id="' + row_no + '" data-item="' + item_id + '" id="batch_no' + row_no + '"></td>';
-
+                console.log('Item Expiry: '+item_expiry);
                 if (site.settings.product_expiry == 1) {
                     tr_html += '<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="' + item_expiry + '" data-id="' + row_no + '" data-item="' + item_id + '" id="expiry_' + row_no + '"></td>';
                 }

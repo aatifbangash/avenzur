@@ -625,6 +625,22 @@
                                         </div>
                                     </div>
                                     <div class="row">
+                                        <div class="col-sm-5">
+                                            <div class="form-group">
+                                                <?=lang('Customer Name', 'customer_name');?>
+                                                <input name="customer_name[]" type="text" id="customer_name"
+                                                       class="pa form-control customer_name"/>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-5 col-sm-offset-1">
+                                            <div class="form-group">
+                                                <?=lang('Mobile Number', 'mobile_number');?>
+                                                <input name="mobile_number[]" type="text" id="mobile_number"
+                                                       class="pa form-control mobile_number"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
                                         <div class="col-sm-11">
                                             <div class="form-group gc_1" style="display: none;">
                                                 <?=lang('gift_card_no', 'gift_card_no_1');?>
