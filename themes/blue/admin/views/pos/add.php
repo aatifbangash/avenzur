@@ -2096,6 +2096,12 @@ var lang = {
             } else {
                 $('#pos_note').val(localStorage.getItem('posnote'));
                 $('#staff_note').val(localStorage.getItem('staffnote'));
+                var customer_name = $('#customer_name').val();
+                var mobile_number = $('#mobile_number').val();
+                
+                $('#pos-sale-form').append('<input type="hidden" name="customer_name" value="' + customer_name + '">');
+                $('#pos-sale-form').append('<input type="hidden" name="mobile_number" value="' + mobile_number + '">');
+
                 $(this).text('<?=lang('loading');?>').attr('disabled', true);
                 $('#pos-sale-form').submit();
             }
