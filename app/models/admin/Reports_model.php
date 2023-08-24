@@ -473,7 +473,7 @@ class Reports_model extends CI_Model
                             LEFT JOIN (
                                 SELECT supplier_id, SUM(payment_amount) AS amount
                                 FROM sma_memo
-                                WHERE type='debitmemo'
+                                WHERE type='memo'
                                 AND date >='{$start_date}' AND date <='{$end_date}'
                                 GROUP BY supplier_id
                             ) memo ON c.id = memo.supplier_id
@@ -527,7 +527,7 @@ class Reports_model extends CI_Model
                             LEFT JOIN (
                                 SELECT supplier_id, SUM(payment_amount) AS amount
                                 FROM sma_memo
-                                WHERE type='debitmemo'
+                                WHERE type='memo'
                                 AND  date < '{$start_date}'
                                 GROUP BY supplier_id
                             ) memo ON c.id = memo.supplier_id
