@@ -232,7 +232,7 @@
                 
 
                 tr_html += '<td><input class="form-control batch_no" name="batch_no[]" type="text" value="' + batch_no + '" data-id="' + row_no + '" data-item="' + item_id + '" id="batch_no' + row_no + '"></td>';
-                console.log('Item Expiry: '+item_expiry);
+                
                 if (site.settings.product_expiry == 1) {
                     tr_html += '<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="' + item_expiry + '" data-id="' + row_no + '" data-item="' + item_id + '" id="expiry_' + row_no + '"></td>';
                 }

@@ -802,8 +802,6 @@ class Pos extends MY_Controller
             $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
-            $customer_name    = $this->input->post('customer_name');
-            $mobile_number    = $this->input->post('mobile_number');
             $sale_status      = 'completed';
             $payment_term     = 0;
             $due_date         = date('Y-m-d', strtotime('+' . $payment_term . ' days'));
@@ -814,6 +812,8 @@ class Pos extends MY_Controller
             $biller           = $biller_details->company && $biller_details->company != '-' ? $biller_details->company : $biller_details->name;
             $note             = $this->sma->clear_tags($this->input->post('pos_note'));
             $staff_note       = $this->sma->clear_tags($this->input->post('staff_note'));
+            $customer_name    = $this->sma->clear_tags($this->input->post('customer_name'));
+            $mobile_number    = $this->sma->clear_tags($this->input->post('mobile_number'));
 
             $total            = 0;
             $product_tax      = 0;
@@ -965,6 +965,14 @@ class Pos extends MY_Controller
                 'created_by'        => $this->session->userdata('user_id'),
                 'hash'              => hash('sha256', microtime() . mt_rand()),
             ];
+
+            if($mobile_number != ''){
+                $data['mobile_number'] = $mobile_number;
+            }
+
+            if($customer_name != ''){
+                $data['customer_name'] = $customer_name;
+            }
 
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;
