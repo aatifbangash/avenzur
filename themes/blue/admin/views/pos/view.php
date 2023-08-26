@@ -489,7 +489,7 @@
         function print_instructions(){ 
             var instructionsData = JSON.parse('<?php echo $inv->instructions; ?>');
 
-            var printWindow = window.open('', '_blank');
+            var printWindow = window.open('', 'Instructions', 'height=200,width=400');
             printWindow.document.write('<html><head><title>Instructions</title></head><body>');
 
             printWindow.document.write('<h1>Medication Instructions</h1>');
@@ -507,8 +507,9 @@
             
             // Add CSS styles for better formatting (optional)
             printWindow.document.write('<style>body{font-family: Arial, sans-serif;} table{border-collapse: collapse; width: 100%;} th, td{border: 1px solid #dddddd; text-align: left; padding: 8px;} th{background-color: #f2f2f2;}</style>');
-
-            printWindow.document.close();
+            printWindow.print();
+            printWindow.close();
+            return true;
         }
 
         <?php
