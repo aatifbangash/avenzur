@@ -2377,7 +2377,10 @@ class Purchases extends MY_Controller
                 $real_unit_cost     = $this->sma->formatDecimal($_POST['real_unit_cost'][$r]);
                 $unit_cost          = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
                 $item_unit_quantity = (0 - $_POST['quantity'][$r]);
-                $item_expiry        = $_POST['expiry'][$r]           ?? '';
+                //$item_expiry        = $_POST['expiry'][$r]           ?? '';
+
+                $item_expiry        = (isset($_POST['expiry'][$r]) && !empty($_POST['expiry'][$r])) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
+
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
                 $item_discount      = $_POST['discount1'][$r] ?? null;
                 $item_discount2      = $_POST['discount2'][$r] ?? null;
