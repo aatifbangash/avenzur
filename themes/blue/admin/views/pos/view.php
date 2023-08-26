@@ -385,7 +385,7 @@
                     </div>
                     <div class="btn-group" role="group">
                         <?php
-                            echo '<button onclick="print_instructions(\'' . addslashes($inv->instructions) . '\');" class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
+                            echo '<button onclick="print_instructions();" class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
                         ?>
                     </div>
                     <div class="btn-group" role="group">
@@ -410,7 +410,7 @@
                 </span>
                 <span class="pull-left col-xs-12">
                         <?php
-                            echo '<button onclick="print_instructions(' . json_encode($inv->instructions) . ');" class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
+                            echo '<button onclick="print_instructions();" class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
                         ?>
                 </span>
                 <span class="pull-left col-xs-12"><a class="btn btn-block btn-success" href="#" id="email"><?= lang('email'); ?></a></span>
@@ -486,8 +486,8 @@
             return true;
         }
 
-        function print_instructions(jsonData){ 
-            var instructionsData = JSON.parse(jsonData);
+        function print_instructions(){ 
+            var instructionsData = JSON.parse('<?php echo $inv->instructions; ?>');
 
             var printWindow = window.open('', '_blank');
             printWindow.document.write('<html><head><title>Instructions</title></head><body>');
