@@ -384,6 +384,11 @@
                         } ?>
                     </div>
                     <div class="btn-group" role="group">
+                        <?php
+                            echo '<button onclick="print_instructions(\'' . addslashes($inv->instructions) . '\');" class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
+                        ?>
+                    </div>
+                    <div class="btn-group" role="group">
                         <a class="btn btn-block btn-success" href="#" id="email"><?= lang('email'); ?></a>
                     </div>
                     <div class="btn-group" role="group">
@@ -474,6 +479,31 @@
             mywindow.print();
             mywindow.close();
             return true;
+        }
+
+        function print_instructions(jsonData){ 
+            var instructionsData = JSON.parse(jsonData);
+
+            var printWindow = window.open('', '_blank');
+            printWindow.document.write('<html><head><title>Instructions</title></head><body>');
+
+            printWindow.document.write('<h1>Medication Instructions</h1>');
+            printWindow.document.write('<table>');
+
+            for (var medication in instructionsData) {
+                if (instructionsData.hasOwnProperty(medication)) {
+                    var instruction = instructionsData[medication];
+                    printWindow.document.write('<tr><td>' + medication + '</td><td>' + instruction + '</td></tr>');
+                }
+            }
+
+            printWindow.document.write('</table>');
+            printWindow.document.write('</body></html>');
+            
+            // Add CSS styles for better formatting (optional)
+            printWindow.document.write('<style>body{font-family: Arial, sans-serif;} table{border-collapse: collapse; width: 100%;} th, td{border: 1px solid #dddddd; text-align: left; padding: 8px;} th{background-color: #f2f2f2;}</style>');
+
+            printWindow.document.close();
         }
 
         <?php
