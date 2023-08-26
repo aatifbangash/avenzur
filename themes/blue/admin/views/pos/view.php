@@ -486,25 +486,28 @@
             return true;
         }
 
-        function print_instructions(){ 
+        function print_instructions() {
             var instructionsData = JSON.parse('<?php echo $inv->instructions; ?>');
-
-            var printWindow = window.open('', 'Instructions', 'height=200,width=400');
-            printWindow.document.write('<html><head><title>Instructions</title></head><body>');
 
             for (var medication in instructionsData) {
                 if (instructionsData.hasOwnProperty(medication)) {
                     var instruction = instructionsData[medication];
-                    printWindow.document.write('<b>'+medication + '</b><br />' + instruction);
+                    
+                    var printWindow = window.open('', 'Instructions', 'height=200,width=400');
+                    printWindow.document.write('<html><head><title>Instructions</title></head><body>');
+
+                    printWindow.document.write('<b>' + medication + '</b><br /><br />' + instruction);
+
+                    printWindow.document.write('</body></html>');
+
+                    // Add CSS styles for better formatting (optional)
+                    printWindow.document.write('<style>body{font-family: Arial, sans-serif;} b{font-size: 18px;} </style>');
+                    
+                    printWindow.print();
+                    printWindow.close();
                 }
             }
 
-            printWindow.document.write('</body></html>');
-            
-            // Add CSS styles for better formatting (optional)
-            printWindow.document.write('<style>body{font-family: Arial, sans-serif;} table{border-collapse: collapse; width: 100%;} th, td{border: 1px solid #dddddd; text-align: left; padding: 8px;} th{background-color: #f2f2f2;}</style>');
-            printWindow.print();
-            printWindow.close();
             return true;
         }
 
