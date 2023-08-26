@@ -492,16 +492,13 @@
             var printWindow = window.open('', 'Instructions', 'height=200,width=400');
             printWindow.document.write('<html><head><title>Instructions</title></head><body>');
 
-            printWindow.document.write('<table>');
-
             for (var medication in instructionsData) {
                 if (instructionsData.hasOwnProperty(medication)) {
                     var instruction = instructionsData[medication];
-                    printWindow.document.write('<tr><td>' + medication + '</td><td>' + instruction + '</td></tr>');
+                    printWindow.document.write('<b>'+medication + '</b><br />' + instruction);
                 }
             }
 
-            printWindow.document.write('</table>');
             printWindow.document.write('</body></html>');
             
             // Add CSS styles for better formatting (optional)
