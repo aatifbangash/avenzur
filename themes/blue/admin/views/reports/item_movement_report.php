@@ -123,12 +123,13 @@
                                             $totalCost = $effectiveQuantity * $item['unitCost'];
                                         }
 
+                                        // No Effect
                                         if ($item['description'] == 'Transfer') {
-                                            if ($item['negate'] == true) {
-                                                $effectiveQuantity = $effectiveQuantity - $item['quantity'];
-                                            } else {
-                                                $effectiveQuantity = $effectiveQuantity + $item['quantity'];
-                                            }
+                                            // if ($item['negate'] == true) {
+                                            //     $effectiveQuantity = $effectiveQuantity - $item['quantity'];
+                                            // } else {
+                                            //     $effectiveQuantity = $effectiveQuantity + $item['quantity'];
+                                            // }
                                             $totalCost = $effectiveQuantity * $item['unitCost'];
                                         }
                                 ?>

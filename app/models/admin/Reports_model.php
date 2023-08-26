@@ -1024,7 +1024,7 @@ class Reports_model extends CI_Model
             $q = $this->db->get();
             if ($q->num_rows() > 0) {
                 foreach (($q->result()) as $row) {
-                    $response_array[strtotime($row->date)][$row->id] = [
+                    $response_array[strtotime($row->date)]['Sale - '.$row->id] = [
                             'date' => $row->date,
                             'documentNo' => $row->invoice_number,
                             'accountTransId' => $row->accountTransId,
@@ -1041,10 +1041,17 @@ class Reports_model extends CI_Model
             }
 
             // Get Purchase Data
-            $this->db->select('purcahse.id, purcahse.grand_total, ace.id as accountTransId, ace.number as accountTransNo, purcahse.supplier as NameOf, purcahse.invoice_number, purcahse.date, purchaseItem.product_id, purchaseItem.batchno, purchaseItem.expiry, purchaseItem.quantity, purchaseItem.sale_price, purchaseItem.real_unit_cost')
+            $this->db->select('purcahse.id, purcahse.grand_total, ace.id as accountTransId, ace.number as accountTransNo, purcahse.supplier as NameOf, purcahse.invoice_number, purcahse.date, purchaseItem.product_id, purchaseItem.batchno, purchaseItem.expiry, purchaseItem.quantity, purchaseItem.sale_price,      COALESCE(
+                CASE WHEN c.sale_price > 0 THEN c.sale_price ELSE pp.sale_price END,
+                purchaseItem.sale_price
+            ) AS final_sale_price')
                  ->from('sma_purchases as purcahse')
                  ->join('sma_purchase_items as purchaseItem','purchaseItem.purchase_id = purcahse.id','INNER')
                  ->join('sma_accounts_entries as ace','ace.pid = purcahse.id','LEFT')
+
+                 ->join('sma_purchase_items as c','purchaseItem.id = c.purchase_item_id AND c.sale_price > 0','LEFT')
+                 ->join('sma_purchase_items as pp','purchaseItem.purchase_item_id = pp.id','LEFT')
+
                  ->where('purchaseItem.product_id',$productId)
                  ->where('DATE(purcahse.date) >= ',$start_date)
                  ->where('DATE(purcahse.date) <= ',$end_date)
@@ -1061,7 +1068,7 @@ class Reports_model extends CI_Model
                     }else{
                         $purchaseType = 'Purchase';
                     }
-                    $response_array[strtotime($row->date)][$row->id] = [
+                    $response_array[strtotime($row->date)][$purchaseType.' - '.$row->id] = [
                             'date' => $row->date,
                             'documentNo' => $row->invoice_number,
                             'accountTransId' => $row->accountTransId,
@@ -1069,10 +1076,10 @@ class Reports_model extends CI_Model
                             'description' => $purchaseType,
                             'nameOf' => $row->NameOf,
                             'expiry' => $row->expiry,
-                            'batch' => $row->batch,
+                            'batch' => $row->batchno,
                             'quantity' => $row->quantity,
-                            'unitCost' => $row->real_unit_cost,
-                            'salePrice' => ($row->quantity * $row->real_unit_cost),
+                            'unitCost' => $row->final_sale_price,
+                            'salePrice' => ($row->quantity * $row->final_sale_price),
                     ];
                 }
             }
@@ -1090,7 +1097,7 @@ class Reports_model extends CI_Model
                 if ($q->num_rows() > 0) {
                     
                     foreach (($q->result()) as $row) {
-                        $response_array[strtotime($row->date)][$row->id] = [
+                        $response_array[strtotime($row->date)]['Return - '.$row->id] = [
                                 'date' => $row->date,
                                 'documentNo' => $row->invoice_number,
                                 'accountTransId' => $row->accountTransId,
@@ -1131,7 +1138,7 @@ class Reports_model extends CI_Model
             if ($q->num_rows() > 0) {
                 
                 foreach (($q->result()) as $row) {
-                    $response_array[strtotime($row->date)][$row->id] = [
+                    $response_array[strtotime($row->date)]['Transfer - '.$row->id] = [
                             'date' => $row->date,
                             'documentNo' => $row->invoice_number,
                             'accountTransId' => $row->accountTransId,
