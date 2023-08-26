@@ -1822,6 +1822,7 @@ class Pos extends MY_Controller
         $this->data['created_by']      = $this->site->getUser($inv->created_by);
         $this->data['printer']         = $this->pos_model->getPrinterByID($this->pos_settings->printer);
         $this->data['page_title']      = $this->lang->line('invoice');
+        echo '<pre>';
         print_r($this->data);exit;
         $this->load->view($this->theme . 'pos/view', $this->data);
     }
