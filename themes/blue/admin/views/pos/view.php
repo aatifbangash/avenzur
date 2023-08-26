@@ -408,6 +408,11 @@
                         echo '<button onclick="return openCashDrawer()" class="btn btn-block btn-default">' . lang('open_cash_drawer') . '</button>';
                     } ?>
                 </span>
+                <span class="pull-left col-xs-12">
+                        <?php
+                            echo '<button onclick="print_instructions(\'' . addslashes($inv->instructions) . '\');" class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
+                        ?>
+                </span>
                 <span class="pull-left col-xs-12"><a class="btn btn-block btn-success" href="#" id="email"><?= lang('email'); ?></a></span>
                 <span class="col-xs-12">
                     <a class="btn btn-block btn-warning" href="<?= admin_url('pos'); ?>"><?= lang('back_to_pos'); ?></a>
