@@ -492,7 +492,6 @@
             var printWindow = window.open('', 'Instructions', 'height=200,width=400');
             printWindow.document.write('<html><head><title>Instructions</title></head><body>');
 
-            printWindow.document.write('<h1>Medication Instructions</h1>');
             printWindow.document.write('<table>');
 
             for (var medication in instructionsData) {
