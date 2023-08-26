@@ -3127,7 +3127,6 @@ class Reports extends MY_Controller
                         } else if ($supplier_data->dc == 'C') {
                             $response_item->ob_credit = $this->sma->formatDecimal($supplier_data->total_amount);
                         }
-
                     }
                 }
             }
@@ -3190,13 +3189,11 @@ class Reports extends MY_Controller
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
             $meta = ['page_title' => lang('customer_statement'), 'bc' => $bc];
             $this->page_construct('reports/customers_statement', $meta, $this->data);
-
         } else {
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
             $meta = ['page_title' => lang('customer_statement'), 'bc' => $bc];
             $this->page_construct('reports/customers_statement', $meta, $this->data);
         }
-
     }
 
     public function general_ledger_statement()
@@ -3290,13 +3287,11 @@ class Reports extends MY_Controller
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
             $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
             $this->page_construct('reports/suppliers_statement', $meta, $this->data);
-
         } else {
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
             $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
             $this->page_construct('reports/suppliers_statement', $meta, $this->data);
         }
-
     }
 
     public function customer_aging()
@@ -3373,7 +3368,6 @@ class Reports extends MY_Controller
             foreach ($trial_balance_array['ob'] as $trans) {
                 $response_arr[$trans->id]["obDebit"] = $trans->totalPayment + $trans->totalReturn + $trans->totalMemo;
                 $response_arr[$trans->id]["obCredit"] = $trans->totalPurchases;
-
             }
 
             $this->data['start_date'] = $from_date;
@@ -3389,7 +3383,6 @@ class Reports extends MY_Controller
             $meta = ['page_title' => lang('suppliers_report'), 'bc' => $bc];
             $this->page_construct('reports/suppliers_trial_balance', $meta, $this->data);
         }
-
     }
 
     public function financial_position()
@@ -3517,7 +3510,6 @@ class Reports extends MY_Controller
             foreach ($trial_balance_array['ob'] as $trans) {
                 $response_arr[$trans->id]["obDebit"] = $trans->payment_total + $trans->sale_total;
                 $response_arr[$trans->id]["obCredit"] = $trans->return_total + $trans->memo_total;
-
             }
             //dd($response_arr);
 
@@ -3581,7 +3573,6 @@ class Reports extends MY_Controller
             $meta = ['page_title' => lang('customers_report'), 'bc' => $bc];
             $this->page_construct('reports/customers_trial_balance', $meta, $this->data);
         }
-
     }
 
     public function item_movement_report()
@@ -3648,6 +3639,48 @@ class Reports extends MY_Controller
             $this->page_construct('reports/item_movement_report', $meta, $this->data);
         }
     }
+
+    public function inventory_trial_balance()
+    {
+
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $inventryData = $this->reports_model->getInventoryTrialBalance('2023-07-25', '2023-08-20', null, null);
+
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['inventryData'] = $inventryData;
+        echo '<pre>',print_r($inventryData), '</pre>';
+
+
+        if ($from_date && $to_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $fromWarehouse = $this->input->post('fromWarehouse') ? $this->input->post('fromWarehouse') : 0;
+            $toWarehouse = $this->input->post('toWarehouse') ? $this->input->post('toWarehouse') : 0;
+
+            $inventryData = $this->reports_model->getInventoryTrialBalance($start_date, $end_date, $fromWarehouse, $toWarehouse);
+           
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['inventryData'] = $inventryData;
+
+
+
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
+            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
+            $this->page_construct('reports/inventory_trial_balance', $meta, $this->data);
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
+            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
+            $this->page_construct('reports/inventory_trial_balance', $meta, $this->data);
+        }
+    }
+
 
 
     public function inventory_movement()
@@ -3870,7 +3903,6 @@ class Reports extends MY_Controller
                 }
             }
             $this->data['products'] = $this->db->get()->result();
-
         }
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
@@ -3914,7 +3946,6 @@ class Reports extends MY_Controller
                 }
             }
             $this->data['products'] = $this->db->get()->result();
-
         }
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
@@ -3940,6 +3971,4 @@ class Reports extends MY_Controller
         $meta = ['page_title' => lang('reports'), 'bc' => $bc];
         $this->page_construct('reports/warehouse_stock', $meta, $this->data);
     }
-
-
 }

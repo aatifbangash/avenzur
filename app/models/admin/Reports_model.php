@@ -1160,6 +1160,213 @@ class Reports_model extends CI_Model
             return $response_array;
     }
 
+    public function getItemMovementIn($productId, $start_date, $end_date, $fromWarehouse, $toWarehouse)
+    {
+
+        $dataArr  = [];
+        // Get Purchase Data
+        $this->db->select('SUM(purchaseItem.quantity) as totalQuantity, purchaseItem.sale_price')
+            ->from('sma_purchases as purcahse')
+            ->join('sma_purchase_items as purchaseItem', 'purchaseItem.purchase_id = purcahse.id', 'INNER')
+            ->where('purchaseItem.product_id', $productId)
+            ->where('DATE(purcahse.date) >= ', $start_date)
+            ->where('DATE(purcahse.date) <= ', $end_date)
+            ->where("purcahse.invoice_number IS NOT NULL")
+            ->where('purcahse.return_id IS NULL')
+            ->where("purcahse.grand_total > 0")
+            ->order_by('purcahse.date ASC');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+
+                $dataArr[] = (object) [
+                    'quantity' => $row->totalQuantity,
+                    'net_unit_cost' => $row->sale_price,
+                ];
+            }
+        } else {
+            $dataArr = (object) [
+                'quantity' => 0,
+                'net_unit_cost' => 0.00,
+            ];
+        }
+
+        // Get Return Data
+        $this->db->select('SUM(rtnItem.unit_quantity) as totalQuantity, rtnItem.net_unit_price')
+            ->from('sma_returns as rtn')
+            ->join('sma_return_items as rtnItem', 'rtnItem.return_id = rtn.id', 'INNER')
+            ->join('sma_accounts_entries as ace', 'ace.rid = rtn.id', 'LEFT')
+            ->where('rtnItem.product_id', $productId)
+            ->where('DATE(rtn.date) >= ', $start_date)
+            ->where('DATE(rtn.date) <= ', $end_date)
+            ->order_by('rtn.date ASC');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $dataArr[] = (object) [
+                    'quantity' => $row->totalQuantity,
+                    'net_unit_cost' => $row->net_unit_price,
+                ];
+            }
+        } else {
+            $dataArr[] = (object) [
+                'quantity' => 0,
+                'net_unit_cost' => 0.00,
+            ];
+        }
+
+        if($fromWarehouse > 0|| $toWarehouse > 0){
+
+            $this->db->select('SUM(trnItem.quantity) as totalQuantity , trnItem.net_unit_cost')
+                ->from('sma_transfers as trn')
+                ->join('sma_transfer_items as trnItem', 'trnItem.transfer_id = trn.id', 'INNER')
+                ->join('sma_accounts_entries as ace', 'ace.tid = trn.id', 'LEFT')
+                ->where('trnItem.product_id', $productId)
+                ->where('DATE(trn.date) >= ', $start_date)
+                ->where('DATE(trn.date) <= ', $end_date)
+                ->where("trn.status <> 'completed'")
+                ->order_by('trn.date ASC');
+
+                if($fromWarehouse && $toWarehouse){
+                    $this->db->where("trn.from_warehouse_id = $fromWarehouse ");
+                    $this->db->where("trn.to_warehouse_id = $toWarehouse ");
+                }
+
+                $q = $this->db->get();
+                if ($q->num_rows() > 0) {
+                    foreach (($q->result()) as $row) {
+                        $dataArr[] = (object) [
+                            'quantity' => $row->totalQuantity,
+                            'net_unit_cost' => $row->net_unit_price,
+                        ];
+                    }
+                } else {
+                    $dataArr[] = (object) [
+                        'quantity' => 0,
+                        'net_unit_cost' => 0.00,
+                    ];
+                }
+
+        }
+
+        echo '<pre>', print_r($dataArr), '</pre>';
+    }
+
+    public function getItemMovementOut($productId, $start_date, $end_date, $fromWarehouse, $toWarehouse)
+    {
+    }
+
+    public function getItemOpenings($start_date, $fromWarehouse = 0, $toWarehouse = 0)
+    {
+
+        $this->db->select('SUM(purItem.quantity) as purchaseQuantity, sma_purchase_items.product_id')
+            ->from('sma_purchases as purchase')
+            ->join('sma_purchase_items as purItem', 'purItem.purchase_id = purchase.id', 'INNER')
+            ->where('DATE(purchase.date) < ', $start_date)
+            ->where('purchase.invoice_number IS NOT NULL')
+            ->where('purchase.grand_total > 0');
+        $purchaseQuantity = $this->db->get()->row()->purchaseQuantity;
+    }
+
+    private function getItemIDsByDateRange($start_date = null, $end_date = null, $fromWarehouse = 0, $toWarehouse = 0)
+    {
+        $productIDs = array();
+
+        // Fetch product IDs from sma_purchase_items
+        $this->db
+            ->select('DISTINCT (sma_purchase_items.product_id )')
+            ->from('sma_purchase_items')
+            ->join('sma_purchases', 'sma_purchases.id = sma_purchase_items.purchase_id')
+            ->where('sma_purchase_items.date >=', $start_date)
+            ->where('sma_purchase_items.date <=', $end_date)
+            ->where('sma_purchases.return_id IS NULL');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach ($q->result() as $row) {
+                $productIDs[] = $row->product_id;
+            }
+        }
+
+        // Fetch product IDs from sma_sale_items
+        $this->db
+            ->select('DISTINCT (sma_sale_items.product_id)')
+            ->from('sma_sale_items')
+            ->join('sma_sales', 'sma_sales.id = sma_sale_items.sale_id')
+            ->where('sma_sales.date >=', $start_date)
+            ->where('sma_sales.date <=', $end_date);
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach ($q->result() as $row) {
+                $productIDs[] = $row->product_id;
+            }
+        }
+
+        // Fetch product IDs from sma_return_items
+        $this->db
+            ->select('DISTINCT (sma_return_items.product_id)')
+            ->from('sma_return_items')
+            ->join('sma_returns', 'sma_returns.id = sma_return_items.return_id')
+            ->where('sma_returns.date >=', $start_date)
+            ->where('sma_returns.date <=', $end_date);
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach ($q->result() as $row) {
+                $productIDs[] = $row->product_id;
+            }
+        }
+
+        $this->db->select('DISTINCT (trnItm.product_id)')
+            ->from('sma_transfers as trn')
+            ->join('sma_transfer_items as trnItm', 'trnItm.transfer_id = trn.id', 'INNER')
+            ->where('DATE(trn.date) >=', $start_date)
+            ->where('DATE(trn.date) <=', $end_date)
+            ->where("trn.status <> 'completed'");
+        if ($fromWarehouse) {
+            $this->db->where("trn.from_warehouse_id = $fromWarehouse ");
+        }
+        if ($toWarehouse) {
+            $this->db->where("trn.to_warehouse_id = $toWarehouse ");
+        }
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach ($q->result() as $row) {
+                $productIDs[] = $row->product_id;
+            }
+        }
+        // Remove duplicates and return the array of unique product IDs
+        $uniqueProductIDs = array_unique($productIDs);
+
+        return $uniqueProductIDs;
+    }
+
+    public function getInventoryTrialBalance($start_date, $end_date, $fromWarehouse, $toWarehouse)
+    {
+
+        $itemIds = $this->getItemIDsByDateRange($start_date, $end_date);
+        // echo '<pre>', print_r($itemIds), '</pre>';
+        //$this->getItemOpenings($start_date, $fromWarehouse, $toWarehouse);
+
+        $data = array();
+        if (!empty($itemIds)) {
+            $this->db->select('id, code, name')
+                ->from('sma_products')
+                ->where_in('id', $itemIds)
+                ->order_by('id ASC');
+
+            $q = $this->db->get();
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+
+                    $movementIn = $this->getItemMovementIn($row->id, $start_date, $end_date, $fromWarehouse, $toWarehouse);
+                    $movementOut = $this->getItemMovementOut($row->id, $start_date, $end_date, $fromWarehouse, $toWarehouse);
+
+                    $data[] = $row;
+                }
+            }
+        }
+        return $data;
+    }
+
     //=== New Item Movement Report Ends ===//
 
     public function getInventoryMovementReport($start_date = null, $end_date = null){
