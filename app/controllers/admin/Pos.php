@@ -814,6 +814,14 @@ class Pos extends MY_Controller
             $staff_note       = $this->sma->clear_tags($this->input->post('staff_note'));
             $customer_name    = $this->sma->clear_tags($this->input->post('customer_name'));
             $mobile_number    = $this->sma->clear_tags($this->input->post('mobile_number'));
+            $instructions     = $this->input->post('instructions');
+            $medicinename     = $this->input->post('medicinename');
+            $instructionsArr = array();
+
+            for($i=0;$i<sizeOf($medicinename);$i++){
+                $instructionsArr[$medicinename[$i]] = $instructions[$i];
+            }
+            $instructions_json = json_encode($instructionsArr);
 
             $total            = 0;
             $product_tax      = 0;
@@ -972,6 +980,10 @@ class Pos extends MY_Controller
 
             if($customer_name != ''){
                 $data['customer_name'] = $customer_name;
+            }
+
+            if($instructions_json != ''){
+                $data['instructions'] = $instructions_json;
             }
 
             if ($this->Settings->indian_gst) {
