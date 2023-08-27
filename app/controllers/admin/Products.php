@@ -1965,6 +1965,20 @@ class Products extends MY_Controller
                 $quantity       = $_POST['quantity'][$m];
                 $product        = $this->products_model->getProductWithCategory($pid);
                 $product->price = $this->input->post('check_promo') ? ($product->promotion ? $product->promo_price : $product->price) : $product->price;
+                $pr_item_tax = 0;
+                
+                $item_tax_rate = $product->tax_rate;
+                if (isset($item_tax_rate) && $item_tax_rate != 0) {
+                    $tax_details = $this->site->getTaxRateByID($item_tax_rate);
+                    $ctax        = $this->site->calculateTax($product, $tax_details,$product->price);
+                    $item_tax    = $this->sma->formatDecimal($ctax['amount']);
+                    $tax         = $ctax['tax'];
+
+                    $pr_item_tax = $this->sma->formatDecimal(($product->price*($tax_details->rate/100)), 4);
+                }
+
+                $product->price = $product->price + $pr_item_tax;
+
                 if ($variants = $this->products_model->getProductOptions($pid)) {
                     foreach ($variants as $option) {
                         if ($this->input->post('vt_' . $product->id . '_' . $option->id)) {
