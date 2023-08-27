@@ -88,6 +88,45 @@ class Transfers_model extends CI_Model
             }
     }
 
+    public function transferPurchaseInvoice($data = [], $items = [], $attachments = []){
+        $this->db->trans_start();
+        $status = $data['status'];
+        if ($this->db->insert('transfers', $data)) {
+            $transfer_id = $this->db->insert_id();
+            if ($this->site->getReference('to') == $data['transfer_no']) {
+                $this->site->updateReference('to');
+            }
+
+            foreach ($items as $item) {
+                $item['transfer_id'] = $transfer_id;
+                $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
+                
+                $this->db->insert('transfer_items', $item);
+                $inserted_item_id = $this->db->insert_id();
+                
+                if (!empty($attachments)) {
+                    foreach ($attachments as $attachment) {
+                        $attachment['subject_id']   = $transfer_id;
+                        $attachment['subject_type'] = 'transfer';
+                        $this->db->insert('attachments', $attachment);
+                    }
+                }
+
+                if ($status == 'completed') {
+                    $this->syncTransderdItemFromInvoice($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'add');
+                }
+            }
+        }
+
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === false) {
+            log_message('error', 'An errors has been occurred while adding the sale (Add:Transfers_model.php)');
+        } else {
+            return true;
+        }
+        return false;
+    }
+
     public function addTransfer($data = [], $items = [], $attachments = [])
     {
         $this->db->trans_start();
@@ -426,6 +465,35 @@ class Transfers_model extends CI_Model
     public function syncTransderdSavedItems($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null, $status, $type){
         if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
             if(($status == "sent" && $type == 'edit')){
+                $balance_qty = $quantity;
+                foreach ($pis as $pi) {
+                    if ($balance_qty <= $quantity && $quantity > 0) {
+                        if ($pi->quantity_balance >= $quantity) {
+                            $balance_qty = $pi->quantity_balance - $quantity;
+                            $this->db->update('purchase_items', ['quantity_balance' => $balance_qty], ['id' => $pi->id]);
+                            $quantity = 0;
+                        } elseif ($quantity > 0) {
+                            $quantity    = $quantity - $pi->quantity_balance;
+                            $balance_qty = $quantity;
+                            $this->db->update('purchase_items', ['quantity_balance' => 0], ['id' => $pi->id]);
+                        }
+                    }
+                    if ($quantity == 0) {
+                        break;
+                    }
+                }
+            }
+            
+        } else {
+            $clause = ['purchase_id' => null, 'transfer_id' => null, 'product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batch_no, 'option_id' => $option_id];
+            $this->site->setPurchaseItem($clause, (0 - $quantity));
+        }
+        $this->site->syncQuantity(null, null, null, $product_id, $batch_no);
+    }
+
+    public function syncTransderdItemFromInvoice($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null, $status, $type){
+        if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
+            if(($status == "sent" && $type == 'add') || ($status == "completed" && $type == 'add')){
                 $balance_qty = $quantity;
                 foreach ($pis as $pi) {
                     if ($balance_qty <= $quantity && $quantity > 0) {

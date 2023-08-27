@@ -637,9 +637,9 @@ class Purchases extends MY_Controller
         $inv = $this->purchases_model->getPurchaseByID($id);
         
         if($inv->status == 'received'){
-            $this->session->set_flashdata('error', 'Cannot edit received orders');
+            //$this->session->set_flashdata('error', 'Cannot edit received orders');
 
-            admin_redirect('purchases');
+            //admin_redirect('purchases');
         }
 
         $supplier_purchase_discount =  $this->deals_model->getPurchaseDiscount($inv->supplier_id);
@@ -1756,12 +1756,20 @@ class Purchases extends MY_Controller
 
     public function transfer($id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        $this->sma->checkPermissions();
         $this->data['purchase_id'] = $id;
+        $this->data['inv']      = $this->purchases_model->getPurchaseByID($id);
+
+        if(empty($this->data['inv']->invoice_number) || $this->data['inv']->invoice_number == ''){
+            $this->session->set_flashdata('error', 'Cannot transfer orders that are not invoiced');
+            //return false;
+            //admin_redirect('purchases');
+        }
+
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['payments'] = $this->purchases_model->getPurchasePayments($id);
-        $this->data['inv']      = $this->purchases_model->getPurchaseByID($id);
         $this->load->view($this->theme . 'purchases/transfer', $this->data);
+        
     }
 
     public function transfer_stock(){
@@ -1771,7 +1779,7 @@ class Purchases extends MY_Controller
         $warehouse = $this->input->post('warehouse');
         $purchase_inovice = $this->purchases_model->getAllPurchaseItems($purchase_id);
         $purchase_detail = $this->purchases_model->getPurchaseByID($purchase_id);
-
+        
         $date = date('Y-m-d H:i:s');
         $transfer_no = $purchase_detail->reference_no;
 
@@ -1779,7 +1787,7 @@ class Purchases extends MY_Controller
         $from_warehouse         = $purchase_detail->warehouse_id;
         $note                   = $this->sma->clear_tags($purchase_detail->note);
         $shipping               = $purchase_detail->shipping;
-        $status                 = 'sent';
+        $status                 = 'completed';
         $from_warehouse_details = $this->site->getWarehouseByID($from_warehouse);
         $from_warehouse_code    = $from_warehouse_details->code;
         $from_warehouse_name    = $from_warehouse_details->name;
@@ -1802,13 +1810,13 @@ class Purchases extends MY_Controller
             $item_unit_quantity = $purchase_inovice[$i]->quantity;
             $item_tax_rate      = $purchase_inovice[$i]->tax_rate_id;
             $item_batchno       = $purchase_inovice[$i]->batchno;
-            $item_serial_no     = $purchase_inovice[$i]->serial_no;
+            $item_serial_no     = $purchase_inovice[$i]->serial_number;
             $item_expiry        = isset($purchase_inovice[$i]->expiry) ? $purchase_inovice[$i]->expiry : null;
             
             $item_option        = $purchase_inovice[$i]->option_id;
             $item_unit          = $purchase_inovice[$i]->product_unit_id;
             $item_quantity      = $purchase_inovice[$i]->quantity;
-
+            
             $unit_cost = $item_net_cost;
 
             if (isset($item_code) && isset($item_quantity)) {
@@ -1871,7 +1879,7 @@ class Purchases extends MY_Controller
                 ];
     
                 $products[] = ($product + $gst_data);
-                
+                $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
             }
 
         }
@@ -1906,6 +1914,7 @@ class Purchases extends MY_Controller
         $attachments        = $this->attachments->upload();
         $data['attachment'] = !empty($attachments);
 
+        //if ($this->transfers_model->transferPurchaseInvoice($data, $products, $attachments)) {
         if ($this->transfers_model->addTransfer($data, $products, $attachments)) {
             $this->session->set_flashdata('message', lang('transfer_added'));
             admin_redirect('transfers');
