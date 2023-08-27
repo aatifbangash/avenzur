@@ -637,9 +637,9 @@ class Purchases extends MY_Controller
         $inv = $this->purchases_model->getPurchaseByID($id);
         
         if($inv->status == 'received'){
-            //$this->session->set_flashdata('error', 'Cannot edit received orders');
+            $this->session->set_flashdata('error', 'Cannot edit received orders');
 
-            //admin_redirect('purchases');
+            admin_redirect('purchases');
         }
 
         $supplier_purchase_discount =  $this->deals_model->getPurchaseDiscount($inv->supplier_id);
