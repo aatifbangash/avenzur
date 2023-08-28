@@ -26,6 +26,9 @@
     if (localStorage.getItem('tostatus')) {
         localStorage.removeItem('tostatus');
     }
+    if (localStorage.getItem('currentstatus')) {
+        localStorage.removeItem('currentstatus');
+    }
     <?php $this->sma->unset_data('remove_tols');
 } ?>
     var count = 1, an = 1, product_variant = 0, shipping = 0,
