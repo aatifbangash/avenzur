@@ -660,7 +660,7 @@ function loadItems() {
 
 
             // Thi will override all the above checks
-            if(parseFloat(base_quantity) > parseFloat(item_batchQuantity) && (typeof currentstatus != 'undefined' && currentstatus != 'sent')){
+            if(parseFloat(base_quantity) > parseFloat(item_batchQuantity)){
                 $('#row_' + row_no).addClass('danger');
                 $('#add_transfer, #edit_transfer').attr('disabled', true);
             }
