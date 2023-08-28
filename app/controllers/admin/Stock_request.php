@@ -46,6 +46,21 @@ class stock_request extends MY_Controller
         $meta = ['page_title' => lang('Stock Requests'), 'bc' => $bc];
         $this->page_construct('stock_request/index', $meta, $this->data);
     }
+
+    public function stock_order(){
+        $this->sma->checkPermissions();
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $warehouse_id = $this->session->userdata('warehouse_id');
+        $stock_array = $this->stock_request_model->getStockForPharmacy($warehouse_id);
+
+        $this->data['stock_array'] = $stock_array;
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Stock Order Request')]];
+        $meta = ['page_title' => lang('Stock Order Request'), 'bc' => $bc];
+        $this->page_construct('stock_request/order', $meta, $this->data);
+    }
+
     public function incoming_requests()
     {
         //$this->sma->checkPermissions();

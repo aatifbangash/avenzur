@@ -409,6 +409,7 @@ function loadItems() {
         $('#toTable tbody').empty();
         $('#add_transfer, #edit_transfer').attr('disabled', false);
         toitems = JSON.parse(localStorage.getItem('toitems'));
+        tostatus = localStorage.getItem('tostatus');
         sortedItems =
             site.settings.item_addition == 1
                 ? _.sortBy(toitems, function (o) {

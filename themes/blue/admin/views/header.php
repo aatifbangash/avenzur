@@ -1671,6 +1671,11 @@
                                 </a>
                                 <ul>
                                     <li id="stock_requests_index">
+                                        <a class="submenu" href="<?= admin_url('stock_request/stock_order'); ?>">
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('Stock Order Request'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="stock_requests_index">
                                         <a class="submenu" href="<?= admin_url('stock_request'); ?>">
                                             <i class="fa fa-star-o"></i><span class="text"> <?= lang('Outgoing Stock Requests'); ?></span>
                                         </a>
