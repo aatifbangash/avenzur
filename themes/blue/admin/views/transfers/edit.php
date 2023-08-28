@@ -13,6 +13,7 @@
         localStorage.setItem('toref', '<?= $transfer->transfer_no ?>');
         localStorage.setItem('to_warehouse', '<?= $transfer->to_warehouse_id ?>');
         localStorage.setItem('tostatus', '<?= $transfer->status ?>');
+        localStorage.setItem('currentstatus', '<?= $transfer->status ?>');
         localStorage.setItem('tonote', '<?= $this->sma->decode_html($transfer->note); ?>');
         localStorage.setItem('toshipping', '<?= $transfer->shipping ?>');
         localStorage.setItem('toitems', JSON.stringify(<?= $transfer_items; ?>));
