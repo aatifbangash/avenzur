@@ -31,6 +31,9 @@
     }
     <?php $this->sma->unset_data('remove_tols');
 } ?>
+    if (localStorage.getItem('currentstatus')) {
+        localStorage.removeItem('currentstatus');
+    }
     var count = 1, an = 1, product_variant = 0, shipping = 0,
         product_tax = 0, total = 0,
         tax_rates = <?php echo json_encode($tax_rates); ?>, toitems = {},
