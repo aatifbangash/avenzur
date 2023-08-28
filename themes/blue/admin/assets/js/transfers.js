@@ -658,7 +658,7 @@ function loadItems() {
                 $('#add_transfer, #edit_transfer').attr('disabled', true);
             }*/
 
-
+            console.log('Current status: '+currentstatus);
             // Thi will override all the above checks
             if(parseFloat(base_quantity) > parseFloat(item_batchQuantity) && (currentstatus != 'sent')){
                 $('#row_' + row_no).addClass('danger');
