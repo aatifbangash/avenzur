@@ -3646,29 +3646,38 @@ class Reports extends MY_Controller
         $this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
-        $inventryData = $this->reports_model->getInventoryTrialBalance('2023-07-25', '2023-08-20', null, null);
+        $user = $this->site->getUser();
+        $defaultWareHouseId = ($user->warehouse_id ? $user->warehouse_id : $this->site->Settings->default_warehouse);
 
-        $this->data['start_date'] = $from_date;
-        $this->data['end_date'] = $to_date;
-        $this->data['inventryData'] = $inventryData;
-        echo '<pre>',print_r($inventryData), '</pre>';
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $from_warehouse_id = $this->input->post('from_warehouse_id') ? $this->input->post('from_warehouse_id') : 0;
+        $to_warehouse_id = $this->input->post('to_warehouse_id') ? $this->input->post('to_warehouse_id') : 0;
 
-
+        $allWareHouses = $this->site->getAllWarehouses();
+       $filteredWareHouses = [];
+        foreach($allWareHouses as $warehouse){
+                if($warehouse->goods_in_transit == 0){
+                    $filteredWareHouses[$warehouse->id] = $warehouse->name . ' (' . $warehouse->code . ')';
+                }
+        }
+        $this->data['warehouses']  = $filteredWareHouses;
+       
+    
         if ($from_date && $to_date) {
+          
+
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $fromWarehouse = $this->input->post('fromWarehouse') ? $this->input->post('fromWarehouse') : 0;
-            $toWarehouse = $this->input->post('toWarehouse') ? $this->input->post('toWarehouse') : 0;
-
-            $inventryData = $this->reports_model->getInventoryTrialBalance($start_date, $end_date, $fromWarehouse, $toWarehouse);
-           
-
+            $reportData = $this->reports_model->getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
+            
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
-            $this->data['inventryData'] = $inventryData;
-
-
-
+            $this->data['from_warehouse_id'] = $from_warehouse_id;
+            $this->data['to_warehouse_id'] = $to_warehouse_id;
+            $this->data['report_data'] = $reportData;
+           
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
             $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
