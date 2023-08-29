@@ -44,7 +44,7 @@ class Customers extends MY_Controller
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'PMC-'.$reference_no,
-            'date'         => date('Y-m-d'), 
+            'date'         => date('Y-m-d'),
             'dr_total'     => $payment_amount,
             'cr_total'     => $payment_amount,
             'notes'        => 'Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
@@ -132,7 +132,7 @@ class Customers extends MY_Controller
 
             $payment_detail  = $this->sales_model->getPaymentByID($payment_id);
             $sale_detail = $this->sales_model->getSaleByID($payment_detail->sale_id);
-            
+
             $old_amount = $payment_detail->amount;
 
             $difference = $amount - $old_amount;
@@ -198,7 +198,7 @@ class Customers extends MY_Controller
             if ($this->input->get('id')) {
                 $id = $this->input->get('id');
             }
-    
+
             $this->data['payment']  = $this->sales_model->getPaymentByID($id);
             $this->page_construct('customers/edit_payment', $meta, $this->data);
         }
@@ -233,7 +233,7 @@ class Customers extends MY_Controller
 
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
             $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
-            
+
             if($isDateValid){
                 $date = $date_fmt;
             }else{
@@ -270,7 +270,7 @@ class Customers extends MY_Controller
                 $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
                 redirect($_SERVER['HTTP_REFERER']);
             }
-            
+
         } else {
             $this->data['customers']  = $this->site->getAllCompanies('customer');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -301,7 +301,7 @@ class Customers extends MY_Controller
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'CM-'.$reference_no,
-            'date'         => date('Y-m-d'), 
+            'date'         => date('Y-m-d'),
             'dr_total'     => $payment_amount + $vat_charges,
             'cr_total'     => $payment_amount + $vat_charges,
             'notes'        => 'Credit Memo Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
@@ -396,7 +396,7 @@ class Customers extends MY_Controller
 
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
             $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
-            
+
             if($isDateValid){
                 $date = $date_fmt;
             }else{
@@ -407,13 +407,13 @@ class Customers extends MY_Controller
             if(array_sum($payments_array) == $payment_total){
                 if($request_type == 'update'){
                     $memo_id2 = $this->input->post('memo_id');
-                   
+
                     // Delete older data
                     $this->db->delete('sma_memo_entries', ['memo_id' => $memo_id2]);
                     $this->db->delete('sma_memo', ['id' => $memo_id2]);
                     $this->deleteFromAccounting($memo_id2);
                 }
-                
+
                 $memoData = array(
                     'supplier_id' => 0,
                     'customer_id' => $customer_id,
@@ -428,7 +428,7 @@ class Customers extends MY_Controller
 
                 $this->db->insert('sma_memo' ,$memoData);
                 $memo_id = $this->db->insert_id();
-                
+
                 for ($i = 0; $i < count($payments_array); $i++) {
                     $payment_amount = $payments_array[$i];
                     $description = $descriptions_array[$i];
@@ -474,7 +474,7 @@ class Customers extends MY_Controller
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'SI-'.$reference_no,
-            'date'         => date('Y-m-d'), 
+            'date'         => date('Y-m-d'),
             'dr_total'     => $payment_amount + $vat_charges,
             'cr_total'     => $payment_amount + $vat_charges,
             'notes'        => 'Service Invoice Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
@@ -526,7 +526,7 @@ class Customers extends MY_Controller
     public function list_service_invoice(){
         $this->data['service_invoices'] = $this->purchases_model->getCreditMemo('serviceinvoice');
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
-        $this->page_construct('customers/list_service_invoice', $meta, $this->data); 
+        $this->page_construct('customers/list_service_invoice', $meta, $this->data);
     }
 
     public function edit_service_invoice($id = null){
@@ -569,18 +569,18 @@ class Customers extends MY_Controller
 
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
             $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
-            
+
             if($isDateValid){
                 $date = $date_fmt;
             }else{
                 $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
                 $date = $formattedDate->format('Y-m-d');
             }
-            
+
             if($payment_total > 0){
                 if($request_type == 'update'){
                     $memo_id2 = $this->input->post('memo_id');
-                   
+
                     // Delete older data
                     $this->db->delete('sma_memo_entries', ['memo_id' => $memo_id2]);
                     $this->db->delete('sma_memo', ['id' => $memo_id2]);
@@ -608,7 +608,7 @@ class Customers extends MY_Controller
             $this->convert_service_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_total, $vat_charges, $reference_no, 'serviceinvoice');
             $this->session->set_flashdata('message', lang('Service Invoice added Successfully!'));
             admin_redirect('customers/list_service_invoice');
-           
+
         } else {
             $this->data['customers']  = $this->site->getAllCompanies('customer');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -634,6 +634,7 @@ class Customers extends MY_Controller
                 'customer_group_name' => $cg->name,
                 'price_group_id'      => $this->input->post('price_group') ? $this->input->post('price_group') : null,
                 'price_group_name'    => $this->input->post('price_group') ? $pg->name : null,
+                'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
                 'company'             => $this->input->post('company'),
                 'address'             => $this->input->post('address'),
                 'vat_no'              => $this->input->post('vat_no'),
@@ -1008,6 +1009,7 @@ class Customers extends MY_Controller
                 'customer_group_name' => $cg->name,
                 'price_group_id'      => $this->input->post('price_group') ? $this->input->post('price_group') : null,
                 'price_group_name'    => $this->input->post('price_group') ? $pg->name : null,
+                'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
                 'company'             => $this->input->post('company'),
                 'address'             => $this->input->post('address'),
                 'vat_no'              => $this->input->post('vat_no'),
