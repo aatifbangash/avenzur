@@ -1,19 +1,18 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <script type="text/javascript"></script>
 <?php if ($Owner || ($GP && $GP['bulk_actions'])) {
-    echo admin_form_open('transfers/transfer_actions', 'id="action-form"');
+    echo admin_form_open('stock_request/stock_order', 'id="action-form"');
 } ?>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-star-o"></i><?= lang('Stock Order Request'); ?></h2>
-
+        <h2 class="blue"><i class="fa-fw fa fa-star-o"></i><?= lang('Stock Order Request'); ?>
+    </h2>
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                         <i class="icon fa fa-tasks tip"  data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
-                    
              </li>
             </ul>
         </div>
@@ -22,8 +21,7 @@
         <div class="row">
             <div class="col-lg-12">
 
-                <p class="introtext"><?= lang('list_results'); ?></p>
-
+                <p class="introtext"><button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="add_request"><?= lang('Add Request') ?></button></p>
                 <div class="table-responsive">
                     <table id="TOData" cellpadding="0" cellspacing="0" border="0"
                            class="table table-bordered table-condensed table-hover table-striped">
@@ -52,10 +50,16 @@
                                                 <td class="dataTables_empty"><?= $count; ?></td>
                                                 <td class="dataTables_empty"><?= $stock->code; ?></td>
                                                 <td colspan="2" class="dataTables_empty"><?= $stock->name; ?></td>
-                                                <td class="dataTables_empty"><?= $stock->cost; ?></td>
-                                                <td class="dataTables_empty"><?= $stock->available_stock; ?></td>
-                                                <td class="dataTables_empty"><?= ($stock->avg_last_3_months_sales) / 3; ?></td>
-                                                <td colspan="2" class="dataTables_empty"><?= ($stock->avg_last_3_months_sales / 3) - $stock->available_stock; ?></td>
+                                                <td class="dataTables_empty"><?= number_format((float) $stock->cost, 2, '.', ''); ?></td>
+                                                <td class="dataTables_empty"><?= number_format((float) $stock->available_stock, 2, '.', ''); ?></td>
+                                                <td class="dataTables_empty"><?= number_format((float) ($stock->avg_last_3_months_sales) / 3, 2, '.', ''); ?></td>
+                                                <td colspan="2" class="dataTables_empty">
+                                                    <?php $required_stock = ($stock->avg_last_3_months_sales / 3) - $stock->available_stock > 0 ? number_format((float) ($stock->avg_last_3_months_sales / 3) - $stock->available_stock, 2, '.', '') : '0.00'; ?>
+                                                    <input name="required_stock[]" type="text" value="<?= $required_stock; ?>" class="rid" />
+                                                    <input type="hidden" name="product_id[]" value="<?= $stock->id; ?>" />
+                                                    <input type="hidden" name="available_stock[]" value="<?= $stock->available_stock; ?>" />
+                                                    <input type="hidden" name="avg_stock[]" value="<?= $stock->avg_last_3_months_sales; ?>" />
+                                                </td>
                                                 <td class="dataTables_empty">1 month</td>
                                             </tr>
                                         <?php
@@ -75,12 +79,5 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
-    ?>
-    <div style="display: none;">
-        <input type="hidden" name="form_action" value="" id="form_action"/>
-        <?= form_submit('performAction', 'performAction', 'id="action-form-submit"') ?>
-    </div>
-    <?= form_close() ?>
-    <?php
-} ?>
+<?php echo form_close(); ?>
+

@@ -36,7 +36,7 @@ class stock_request extends MY_Controller
         ]);
     }
     
-    public function index()
+    /*public function index()
     {
         //$this->sma->checkPermissions();
 
@@ -45,20 +45,108 @@ class stock_request extends MY_Controller
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Stock Requests')]];
         $meta = ['page_title' => lang('Stock Requests'), 'bc' => $bc];
         $this->page_construct('stock_request/index', $meta, $this->data);
-    }
+    }*/
 
-    public function stock_order(){
+    public function index()
+    {
         $this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $warehouse_id = $this->session->userdata('warehouse_id');
-        $stock_array = $this->stock_request_model->getStockForPharmacy($warehouse_id);
 
-        $this->data['stock_array'] = $stock_array;
+        $stock_requests_array = $this->stock_request_model->getStockRequests($warehouse_id);
 
-        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Stock Order Request')]];
-        $meta = ['page_title' => lang('Stock Order Request'), 'bc' => $bc];
-        $this->page_construct('stock_request/order', $meta, $this->data);
+        $this->data['stock_requests_array'] = $stock_requests_array;
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Stock Requests')]];
+        $meta = ['page_title' => lang('Stock Requests'), 'bc' => $bc];
+        $this->page_construct('stock_request/list_requests', $meta, $this->data);
+    }
+
+    public function edit($id = null){
+        $this->sma->checkPermissions();
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+    }
+
+    public function delete($id = null){
+        $this->sma->checkPermissions();
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        if($this->stock_request_model->delete($id)){
+            $this->session->set_flashdata('message', lang('stock_request_deleted'));
+            admin_redirect('stock_request/list_requests');
+        }else{
+            $this->session->set_flashdata('error', lang('Could not delete request'));
+            admin_redirect('stock_request/list_requests');
+        }
+    }
+
+    public function view($id = null){
+        $this->sma->checkPermissions();
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+    }
+
+    public function stock_order(){
+        $this->sma->checkPermissions();
+        //$this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
+
+        //$this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $warehouse_id = $this->session->userdata('warehouse_id');
+
+        if ($_POST) {
+            for($i=0;$i<sizeof($_POST['product_id']);$i++){
+                $product_id      = $_POST['product_id'][$i];
+                $available_stock      = $_POST['available_stock'][$i];
+                $avg_stock      = $_POST['avg_stock'][$i];
+                $required_stock      = $_POST['required_stock'][$i];
+
+                $item = [
+                    'product_id'        => $product_id,
+                    'available_stock'   => $available_stock,
+                    'avg_stock'         => $avg_stock,
+                    'required_stock'    => $required_stock
+                ];
+
+                $items[] = $item;
+            }
+        
+            if (empty($items)) {
+                $this->session->set_flashdata('error', $this->lang->line('Products not found'));
+                admin_redirect('stock_request/stock_order');
+            } else {
+                krsort($items);
+            }
+
+            $data = [
+                'warehouse_id' => $warehouse_id,
+                'status' => 'pending',
+                'date' => date('Y-m-d')
+            ];
+            
+        }
+        
+        if($_POST && $this->stock_request_model->addStockRequest($data, $items)){
+            $this->session->set_flashdata('message', $this->lang->line('Stock_request_added'));
+            admin_redirect('stock_request');
+        } else{
+            $stock_array = $this->stock_request_model->getStockForPharmacy($warehouse_id);
+            $this->data['stock_array'] = $stock_array;
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Stock Order Request')]];
+            $meta = ['page_title' => lang('Stock Order Request'), 'bc' => $bc];
+            $this->page_construct('stock_request/order', $meta, $this->data);
+        }   
     }
 
     public function incoming_requests()
@@ -223,7 +311,7 @@ class stock_request extends MY_Controller
           echo $html;
     }
     
-    public function delete($id = null)
+    /*public function delete($id = null)
     {
         //$this->sma->checkPermissions(null, true);
 
@@ -241,7 +329,7 @@ class stock_request extends MY_Controller
             $this->session->set_flashdata('message', lang('Request successfully deleted'));
             admin_redirect('welcome');
         }
-    }
+    }*/
     public function update_status($id)
     {
         $this->form_validation->set_rules('status', lang('status'), 'required');
@@ -287,7 +375,7 @@ class stock_request extends MY_Controller
         }
     }
     
-    public function view($transfer_id = null)
+    /*public function view($transfer_id = null)
     {
         //$this->sma->checkPermissions('index', true);
 
@@ -296,9 +384,7 @@ class stock_request extends MY_Controller
         }
         $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $transfer            = $this->transfers_model->getTransferByID($transfer_id);
-        /*if (!$this->session->userdata('view_right')) {
-            $this->sma->view_rights($transfer->created_by, true);
-        }*/
+        
         $this->data['rows']           = $this->transfers_model->getAllTransferItems($transfer_id, $transfer->status);
         $this->data['from_warehouse'] = $this->site->getWarehouseByID($transfer->from_warehouse_id);
         $this->data['to_warehouse']   = $this->site->getWarehouseByID($transfer->to_warehouse_id);
@@ -308,7 +394,7 @@ class stock_request extends MY_Controller
         $this->data['created_by']     = $this->site->getUser($transfer->created_by);
         // $this->data['updated_by']     = $this->site->getUser($transfer->updated_by);
         $this->load->view($this->theme . 'stock_request/view', $this->data);
-    }
+    }*/
     
      public function ajax_add()
     {

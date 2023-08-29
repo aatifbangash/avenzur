@@ -42,7 +42,7 @@
 <script>
     var invoiced = '<?= $inv->invoice_number; ?>';
     if(invoiced == ''){
-        window.location.href = 'http://localhost/avenzur/admin/purchases';
+        window.location.href = 'https://avenzur.com/admin/purchases';
     }
 </script>
 
