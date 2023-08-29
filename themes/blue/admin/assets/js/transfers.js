@@ -409,6 +409,7 @@ function loadItems() {
         $('#toTable tbody').empty();
         $('#add_transfer, #edit_transfer').attr('disabled', false);
         toitems = JSON.parse(localStorage.getItem('toitems'));
+        currentstatus = localStorage.getItem('currentstatus');
         sortedItems =
             site.settings.item_addition == 1
                 ? _.sortBy(toitems, function (o) {
@@ -657,9 +658,9 @@ function loadItems() {
                 $('#add_transfer, #edit_transfer').attr('disabled', true);
             }*/
 
-
+            console.log('Current status: '+currentstatus);
             // Thi will override all the above checks
-            if(parseFloat(base_quantity) > parseFloat(item_batchQuantity)){
+            if(parseFloat(base_quantity) > parseFloat(item_batchQuantity) && (currentstatus != 'sent')){
                 $('#row_' + row_no).addClass('danger');
                 $('#add_transfer, #edit_transfer').attr('disabled', true);
             }

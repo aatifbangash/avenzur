@@ -640,6 +640,9 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    <div id="instructions-area"></div>
+
                                     <div class="row">
                                         <div class="col-sm-11">
                                             <div class="form-group gc_1" style="display: none;">
@@ -1605,6 +1608,22 @@ var lang = {
                 <?php
             }
             ?>
+
+            var instructions_html = '';
+            var allItems = JSON.parse(localStorage.getItem('positems'));
+            $.each(sortedItems, function () {
+                var item = this;
+                var item_name = item.row.name;
+
+                instructions_html += '<div class="row"><div class="col-sm-11"><div class="form-group">';
+                instructions_html += item_name+' - (<?=lang('Instructions', 'instructions'); ?>)';
+                instructions_html += '<input type="hidden" class="medicinename" name="medicinename[]" value="' + item_name + '">';
+                instructions_html += '<textarea name="instructions[]" id="instructions" data-medicinename="'+item_name+'" class="pa form-control kb-text instructions"></textarea>';
+                instructions_html += '</div></div></div>';
+            });
+
+            $('#instructions-area').html(instructions_html);
+
             $('#item_count').text(count - 1);
             $('#paymentModal').appendTo("body").modal('show');
             $('#amount_1').focus();
@@ -2098,9 +2117,13 @@ var lang = {
                 $('#staff_note').val(localStorage.getItem('staffnote'));
                 var customer_name = $('#customer_name').val();
                 var mobile_number = $('#mobile_number').val();
-                
+
+                var instructionsArr = document.getElementsByClassName('instructions');
+                var medicineArr = document.getElementsByClassName('medicinename');
                 $('#pos-sale-form').append('<input type="hidden" name="customer_name" value="' + customer_name + '">');
                 $('#pos-sale-form').append('<input type="hidden" name="mobile_number" value="' + mobile_number + '">');
+                $('#pos-sale-form').append(instructionsArr);
+                $('#pos-sale-form').append(medicineArr);
 
                 $(this).text('<?=lang('loading');?>').attr('disabled', true);
                 $('#pos-sale-form').submit();

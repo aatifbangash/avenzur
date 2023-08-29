@@ -384,6 +384,11 @@
                         } ?>
                     </div>
                     <div class="btn-group" role="group">
+                        <?php
+                            echo '<button onclick="print_instructions();" class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
+                        ?>
+                    </div>
+                    <div class="btn-group" role="group">
                         <a class="btn btn-block btn-success" href="#" id="email"><?= lang('email'); ?></a>
                     </div>
                     <div class="btn-group" role="group">
@@ -402,6 +407,11 @@
                         echo '<button onclick="return printReceipt()" class="btn btn-block btn-primary">' . lang('print') . '</button>';
                         echo '<button onclick="return openCashDrawer()" class="btn btn-block btn-default">' . lang('open_cash_drawer') . '</button>';
                     } ?>
+                </span>
+                <span class="pull-left col-xs-12">
+                        <?php
+                            echo '<button onclick="print_instructions();" class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
+                        ?>
                 </span>
                 <span class="pull-left col-xs-12"><a class="btn btn-block btn-success" href="#" id="email"><?= lang('email'); ?></a></span>
                 <span class="col-xs-12">
@@ -473,6 +483,31 @@
             mywindow.document.write('</head><body>.</body></html>');
             mywindow.print();
             mywindow.close();
+            return true;
+        }
+
+        function print_instructions() {
+            var instructionsData = JSON.parse('<?php echo $inv->instructions; ?>');
+
+            for (var medication in instructionsData) {
+                if (instructionsData.hasOwnProperty(medication)) {
+                    var instruction = instructionsData[medication];
+                    
+                    var printWindow = window.open('', 'Instructions', 'height=200,width=400');
+                    printWindow.document.write('<html><head><title>Instructions</title></head><body>');
+
+                    printWindow.document.write('<b>' + medication + '</b><br /><br />' + instruction);
+
+                    printWindow.document.write('</body></html>');
+
+                    // Add CSS styles for better formatting (optional)
+                    printWindow.document.write('<style>body{font-family: Arial, sans-serif;} b{font-size: 18px;} </style>');
+                    
+                    printWindow.print();
+                    printWindow.close();
+                }
+            }
+
             return true;
         }
 
