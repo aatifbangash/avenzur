@@ -393,13 +393,28 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
 
                             </div>
                             </div>
-                            <?php  } ?> 
+                            <?php  } ?>
+
 
                         <div class="col-sm-4">
+
                             <div class="form-group">
-                                <?= lang('payment_term', 'slpayment_term'); ?>
-                                <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('payment_term_tip') . '" id="slpayment_term"'); ?>
+                                <?= lang('payment_term', 'payment_term'); ?>
+                                <?php
+                                $data[''] = '';
+                                $data['30'] = '30';
+                                $data['60'] = '60';
+                                $data['90'] = '90';
+                                $data['120'] = '120';
+                                $data['>120'] = '>120';
+
+                                echo form_dropdown('payment_term', $data, ($inv->payment_term ?? ''), 'id="payment_term" data-placeholder="' . lang('select') . ' ' . lang('payment_term') . '" class="form-control input-tip select" style="width:100%;"'); ?>
                             </div>
+<!--                            -->
+<!--                            <div class="form-group">-->
+<!--                                --><?//= lang('payment_term', 'slpayment_term'); ?>
+<!--                                --><?php //echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('payment_term_tip') . '" id="slpayment_term"'); ?>
+<!--                            </div>-->
                         </div>
                         
                         <?= form_hidden('payment_status', $inv->payment_status); ?>
