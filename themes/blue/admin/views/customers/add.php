@@ -95,6 +95,10 @@
                         <?= lang('country', 'country'); ?>
                         <?php echo form_input('country', '', 'class="form-control" id="country"'); ?>
                     </div>
+                    <div class="form-group">
+                        <?= lang('Credit_limit', 'credit_limit'); ?>
+                        <?php echo form_input('credit_limit', '', 'class="form-control" id="credit_limit"'); ?>
+                    </div>
 
                 </div>
                 <div class="col-md-6">

@@ -528,10 +528,17 @@ table#slTable td input.form-control {
                            
 
                         <div class="col-sm-4">
-                            <div class="form-group">
-                                <?= lang('payment_term', 'slpayment_term'); ?>
-                                <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('payment_term_tip') . '" id="slpayment_term"'); ?>
 
+                            <div class="form-group">
+                                <?= lang('payment_term', 'payment_term'); ?>
+                                <?php
+                                $data[''] = '';
+                                $data['30'] = '30';
+                                $data['60'] = '60';
+                                $data['90'] = '90';
+                                $data['120'] = '120';
+                                $data['>120'] = '>120';
+                                echo form_dropdown('payment_term', $data, '', 'id="payment_term" data-placeholder="' . lang('select') . ' ' . lang('payment_term') . '" class="form-control input-tip select" style="width:100%;"'); ?>
                             </div>
                         </div>
                         <?php if ($Owner || $Admin || $GP['sales-payments']) {
