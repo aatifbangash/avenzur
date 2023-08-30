@@ -78,7 +78,7 @@ class Companies_model extends CI_Model
     {
         $deposit = $this->getDepositByID($id);
         $company = $this->getCompanyByID($deposit->company_id);
-        $cdata   = [
+        $cdata = [
             'deposit_amount' => ($company->deposit_amount - $deposit->amount),
         ];
         if ($this->db->update('companies', $cdata, ['id' => $deposit->company_id]) && $this->db->delete('deposits', ['id' => $id])) {
@@ -249,6 +249,18 @@ class Companies_model extends CI_Model
 
             return $data;
         }
+    }
+
+    public function getPendingSalesByCustomer($customer_id)
+    {
+        $this->db->select('sum(grand_total) pendingSalesAmount');
+        $q = $this->db->get_where('sales', ['customer_id' => $customer_id, 'payment_status' => 'pending']);
+
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+
+        return 0;
     }
 
     // Zahoor's code

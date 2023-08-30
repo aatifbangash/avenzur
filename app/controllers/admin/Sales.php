@@ -19,6 +19,7 @@ class Sales extends MY_Controller
         $this->lang->admin_load('sales', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('sales_model');
+        $this->load->admin_model('companies_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path         = 'assets/uploads/';
         $this->thumbs_path         = 'assets/uploads/thumbs/';
@@ -47,6 +48,20 @@ class Sales extends MY_Controller
         $this->form_validation->set_rules('payment_status', lang('payment_status'), 'required');
 
         if ($this->form_validation->run() == true) {
+
+            $customerId = $this->input->post('customer');
+
+            $customer = $this->companies_model->getCompanyByID($customerId);
+            $customerCreditLimit = $customer->credit_limit;
+
+            // Check If customer pending sales exceeded the customer credit limit START
+            $pendingSales = $this->companies_model->getPendingSalesByCustomer($customerId);
+            if(!empty($pendingSales->pendingSalesAmount) && $pendingSales->pendingSalesAmount >= $customerCreditLimit) {
+                $this->session->set_flashdata('error', lang('Customer credit limit exceeded. '));
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+            // Check If customer pending sales exceeded the customer credit limit END
+
             $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('so');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
