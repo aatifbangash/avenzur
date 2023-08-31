@@ -944,6 +944,12 @@ $(document).ready(function (e) {
 //localStorage.clear();
 function loadItems() {
     if (localStorage.getItem('reitems')) {
+
+        grand_total_vat = 0;
+        grand_total_purchases = 0;
+        grand_total_sales = 0;
+
+
         total = 0;
         count = 1;
         an = 1;
@@ -1265,25 +1271,47 @@ function loadItems() {
                     discount1 +
                     '"></td>';*/
             
-                tr_html +=
-                    '<td class="text-right"><input class="form-control input-sm rdiscount1" name="dis1[]" type="text" id="discount_' +
-                    row_no +
-                    '" value="' +
-                    discount1 +
-                    '"><input class="form-control input-sm rdiscount" name="product_discount[]" type="hidden" id="discount_' +
-                    row_no +
-                    '" value="' +
-                    discount1 +
-                    '"></td>';
+                // tr_html +=
+                //     '<td class="text-right"><input class="form-control input-sm rdiscount1" name="dis1[]" type="text" id="discount_' +
+                //     row_no +
+                //     '" value="' +
+                //     discount1 +
+                //     '"><input class="form-control input-sm rdiscount" name="product_discount[]" type="hidden" id="discount_' +
+                //     row_no +
+                //     '" value="' +
+                //     discount1 +
+                //     '"></td>';
             
-                tr_html +=
-                    '<td class="text-right"><input class="form-control input-sm rdiscount2" name="dis2[]" type="text" id="discount2_' +
-                    row_no +
-                    '" value="' +
-                    discount2 +
-                    '"></td>';
-            
+                // tr_html +=
+                //     '<td class="text-right"><input class="form-control input-sm rdiscount2" name="dis2[]" type="text" id="discount2_' +
+                //     row_no +
+                //     '" value="' +
+                //     discount2 +
+                //     '"></td>';
 
+
+                    tr_html +=
+                    '<td><input class="form-control text-center rdiscount1" name="dis1[]" type="text" data-id="' +
+                    row_no +
+                    '" data-item="' +
+                    item_id +
+                    '" id="discount_' +
+                    row_no +
+                    '" value="'+formatDecimal(discount1)+'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
+                    formatMoney(total_after_dis1)
+                    '</span></td>';
+    
+                tr_html +=
+                    '<td><input class="form-control text-center rdiscount2" name="dis2[]" type="text" data-id="' +
+                    row_no +
+                    '" data-item="' +
+                    item_id +
+                    '" id="discount2_' +
+                    row_no +
+                    '" value="'+formatDecimal(item_dis2)+'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
+                    formatMoney(total_after_dis2)
+                    '</span></td>';
+    
             // <span class="text-right sdiscount text-danger" id="sdiscount_' +
             // row_no +
             // '">' +
@@ -1389,12 +1417,40 @@ function loadItems() {
                 '" title="Remove" style="cursor:pointer;"></i></td>';
             newTr.html(tr_html);
             newTr.appendTo('#reTable');
-            total += formatDecimal((parseFloat(item_price) + parseFloat(pr_tax_val)) * parseFloat(item_qty), 4);
+            /// total += formatDecimal((parseFloat(item_price) + parseFloat(pr_tax_val)) * parseFloat(item_qty), 4);
+
+            total += formatDecimal(main_net, 4);
+            grand_total_vat += formatDecimal(vat_15_a, 4);
+            grand_total_purchases += formatDecimal(total_purchases, 4);
+            grand_total_sales += formatDecimal(total_sales, 4);
+
             count += parseFloat(item_qty);
             an++;
         });
 
-        var col = 2;
+        // var col = 2;
+        // if (site.settings.product_serial == 1) {
+        //     col++;
+        // }
+        // var tfoot =
+        //     '<tr id="tfoot" class="tfoot active"><th colspan="' +
+        //     col +
+        //     '">Total</th><th class="text-center">' +
+        //     formatQty(parseFloat(count) - 1) +
+        //     '</th>';
+        // if ((site.settings.product_discount == 1 && allow_discount == 1) || product_discount) {
+        //     tfoot += '<th class="text-right">' + formatMoney(product_discount) + '</th>';
+        // }
+        // if (site.settings.tax1 == 1) {
+        //     tfoot += '<th class="text-right">' + formatMoney(product_tax) + '</th>';
+        // }
+        // tfoot +=
+        //     '<th class="text-right">' +
+        //     formatMoney(total) +
+        //     '</th><th class="text-center"><i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i></th></tr>';
+        // $('#reTable tfoot').html(tfoot);
+
+        var col = 7;
         if (site.settings.product_serial == 1) {
             col++;
         }
@@ -1402,18 +1458,17 @@ function loadItems() {
             '<tr id="tfoot" class="tfoot active"><th colspan="' +
             col +
             '">Total</th><th class="text-center">' +
-            formatQty(parseFloat(count) - 1) +
+            formatMoney(grand_total_vat) +
             '</th>';
-        if ((site.settings.product_discount == 1 && allow_discount == 1) || product_discount) {
-            tfoot += '<th class="text-right">' + formatMoney(product_discount) + '</th>';
-        }
-        if (site.settings.tax1 == 1) {
-            tfoot += '<th class="text-right">' + formatMoney(product_tax) + '</th>';
-        }
+
+        //tfoot += '<th class="text-right">' + formatMoney(grand_total_purchases) + '</th>';
+
+        tfoot += '<th class="text-right">' + formatMoney(grand_total_sales) + '</th>';
+    
         tfoot +=
             '<th class="text-right">' +
             formatMoney(total) +
-            '</th><th class="text-center"><i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i></th></tr>';
+            '</th><th class="text-center"></th></tr>';
         $('#reTable tfoot').html(tfoot);
 
         if ((rediscount = localStorage.getItem('rediscount'))) {
