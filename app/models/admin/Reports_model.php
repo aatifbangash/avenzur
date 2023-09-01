@@ -320,7 +320,7 @@ class Reports_model extends CI_Model
         }
 
         $this->db
-                ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code, sma_accounts_ledgers.name')
+                ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code, sma_accounts_ledgers.name, (select sum(amount) from sma_accounts_entryitems ei inner join sma_accounts_entries e on e.id =ei.entry_id where e.date < `sma_accounts_entries`.`date` and ei.ledger_id = ' . $ledger_account . ') as openingAmount,')
                 ->from('sma_accounts_entryitems')
                 ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
                 ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
@@ -330,6 +330,7 @@ class Reports_model extends CI_Model
                 ->order_by('sma_accounts_entries.date asc');
 
         $q = $this->db->get();
+
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -339,7 +340,7 @@ class Reports_model extends CI_Model
         }
 
         $response_array = array('ob' => $data_res, 'report' => $data);
-
+//dd($response_array);
         return $response_array;
     }
 
