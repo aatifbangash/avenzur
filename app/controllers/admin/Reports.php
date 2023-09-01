@@ -3271,7 +3271,7 @@ class Reports extends MY_Controller
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
             $ledger_account = $supplier_details->ledger_account;
             $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
-
+//dd($supplier_statement);
             $total_ob = 0;
             $total_ob_credit = 0;
             $total_ob_debit = 0;
