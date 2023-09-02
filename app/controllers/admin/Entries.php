@@ -106,6 +106,14 @@ class Entries extends MY_Controller
 		$this->load->admin_model('entry_model');
 
 		$this->data['entrytypeLabel'] = $entrytypeLabel;
+
+		$this->data['customers'] = $this->site->getAllCompanies('customer');
+		$this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+
+		$this->data['departments'] = $this->site->getAllDepartments();
+		$this->data['employees'] = $this->site->getAllEmployees();
+
+		
 		
 		// Select from entrytypes table in db where label = $entrytypeLabel
 		$entrytype = $this->db->query("SELECT * FROM ".$this->db->dbprefix('accounts_entrytypes')." WHERE label='$entrytypeLabel'");

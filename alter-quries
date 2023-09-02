@@ -85,3 +85,12 @@ ALTER TABLE `sma_returns` ADD `invoice_number` VARCHAR(255) NULL DEFAULT NULL AF
 ALTER TABLE `sma_sales` CHANGE `payment_term` `payment_term` VARCHAR(50) NULL DEFAULT NULL;
 ALTER TABLE `sma_companies` ADD `credit_limit` VARCHAR(255) NOT NULL DEFAULT '0' AFTER `return_ledger`;
 ============== 29/08/2023 END ===============
+
+
+============== 31/08/2023 START ===============
+
+CREATE TABLE `sma_departments` (`id` INT NOT NULL AUTO_INCREMENT , `parent_id` INT NULL DEFAULT NULL , `name` VARCHAR(255) NOT NULL , `code` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;
+
+CREATE TABLE `sma_employees` (`id` INT NOT NULL AUTO_INCREMENT , `parent_id` INT NULL DEFAULT NULL , `name` VARCHAR(255) NOT NULL , `code` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;
+
+============== 31/08/2023 END ===============

@@ -95,6 +95,18 @@ class SequenceCode
                 $this->_ci->db->select('MAX(sequence_code) as maxNumber');
                 $latestCode = $this->_ci->db->get('sma_transfers')->row_array();
                 break;
+
+                // Department Code
+            case 'DP':
+                $this->_ci->db->select('MAX(code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_departments')->row_array();
+                break;
+
+                // Employee Code
+            case 'EM':
+                $this->_ci->db->select('MAX(code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_employees')->row_array();
+                break;
         }
 
         if ($latestCode) {
