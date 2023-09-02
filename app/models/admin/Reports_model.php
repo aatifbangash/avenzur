@@ -9,11 +9,12 @@ class Reports_model extends CI_Model
         parent::__construct();
     }
 
-    public function getCompanyLedgers(){
+    public function getCompanyLedgers()
+    {
         $this->db
-                ->select('sma_accounts_ledgers.*')
-                ->from('sma_accounts_ledgers')
-                ->order_by('sma_accounts_ledgers.name asc');
+            ->select('sma_accounts_ledgers.*')
+            ->from('sma_accounts_ledgers')
+            ->order_by('sma_accounts_ledgers.name asc');
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -26,14 +27,15 @@ class Reports_model extends CI_Model
         return $data_res;
     }
 
-    public function getLedgerGroups(){
+    public function getLedgerGroups()
+    {
         $this->db
-                ->select('sma_accounts_groups.*')
-                ->from('sma_accounts_groups')
-                ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.group_id = sma_accounts_groups.id')
-                ->where('sma_accounts_groups.type1', 'B/S')
-                ->group_by('sma_accounts_groups.id')
-                ->order_by('sma_accounts_groups.id asc');
+            ->select('sma_accounts_groups.*')
+            ->from('sma_accounts_groups')
+            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.group_id = sma_accounts_groups.id')
+            ->where('sma_accounts_groups.type1', 'B/S')
+            ->group_by('sma_accounts_groups.id')
+            ->order_by('sma_accounts_groups.id asc');
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -46,14 +48,15 @@ class Reports_model extends CI_Model
         return $data_res;
     }
 
-    public function getPLLedgerGroups(){
+    public function getPLLedgerGroups()
+    {
         $this->db
-                ->select('sma_accounts_groups.*')
-                ->from('sma_accounts_groups')
-                ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.group_id = sma_accounts_groups.id')
-                ->where('sma_accounts_groups.type1', 'P/L')
-                ->group_by('sma_accounts_groups.id')
-                ->order_by('sma_accounts_groups.id asc');
+            ->select('sma_accounts_groups.*')
+            ->from('sma_accounts_groups')
+            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.group_id = sma_accounts_groups.id')
+            ->where('sma_accounts_groups.type1', 'P/L')
+            ->group_by('sma_accounts_groups.id')
+            ->order_by('sma_accounts_groups.id asc');
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -66,23 +69,24 @@ class Reports_model extends CI_Model
         return $data_res;
     }
 
-    public function getIncome($date){
+    public function getIncome($date)
+    {
         $response = array();
 
         $types = array('Revenue', 'Other Income');
 
         $this->db
-                ->select('sma_accounts_ledgers.id, sma_accounts_ledgers.group_id, sma_accounts_ledgers.name, sma_accounts_ledgers.category,
+            ->select('sma_accounts_ledgers.id, sma_accounts_ledgers.group_id, sma_accounts_ledgers.name, sma_accounts_ledgers.category,
                 SUM(CASE WHEN sma_accounts_entryitems.dc = "C" THEN sma_accounts_entryitems.amount ELSE 0 END) AS credit_sum,
                 SUM(CASE WHEN sma_accounts_entryitems.dc = "D" THEN sma_accounts_entryitems.amount ELSE 0 END) AS debit_sum')
-                ->from('sma_accounts_ledgers')
-                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id = sma_accounts_ledgers.id', 'left')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
-                ->where('sma_accounts_ledgers.type1', 'P/L')
-                ->where_in('sma_accounts_ledgers.type2', $types)
-                ->group_by('sma_accounts_ledgers.id');
+            ->from('sma_accounts_ledgers')
+            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id = sma_accounts_ledgers.id', 'left')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
+            ->where('sma_accounts_ledgers.type1', 'P/L')
+            ->where_in('sma_accounts_ledgers.type2', $types)
+            ->group_by('sma_accounts_ledgers.id');
         $q = $this->db->get();
-        if(!empty($q)){
+        if (!empty($q)) {
             if ($q->num_rows() > 0) {
                 foreach (($q->result()) as $row) {
                     $data_res[] = $row;
@@ -90,30 +94,31 @@ class Reports_model extends CI_Model
             } else {
                 $data_res = array();
             }
-        }else{
+        } else {
             $data_res = array();
         }
-        
+
         return $data_res;
     }
 
-    public function getExpense($date){
+    public function getExpense($date)
+    {
         $response = array();
 
         $types = array('Cost Of Sales', 'Operating Expenses', 'Other Expenses');
 
         $this->db
-                ->select('sma_accounts_ledgers.id, sma_accounts_ledgers.group_id, sma_accounts_ledgers.name, sma_accounts_ledgers.category,
+            ->select('sma_accounts_ledgers.id, sma_accounts_ledgers.group_id, sma_accounts_ledgers.name, sma_accounts_ledgers.category,
                 SUM(CASE WHEN sma_accounts_entryitems.dc = "C" THEN sma_accounts_entryitems.amount ELSE 0 END) AS credit_sum,
                 SUM(CASE WHEN sma_accounts_entryitems.dc = "D" THEN sma_accounts_entryitems.amount ELSE 0 END) AS debit_sum')
-                ->from('sma_accounts_ledgers')
-                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id = sma_accounts_ledgers.id', 'left')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
-                ->where('sma_accounts_ledgers.type1', 'P/L')
-                ->where_in('sma_accounts_ledgers.type2', $types)
-                ->group_by('sma_accounts_ledgers.id');
+            ->from('sma_accounts_ledgers')
+            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id = sma_accounts_ledgers.id', 'left')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
+            ->where('sma_accounts_ledgers.type1', 'P/L')
+            ->where_in('sma_accounts_ledgers.type2', $types)
+            ->group_by('sma_accounts_ledgers.id');
         $q = $this->db->get();
-        if(!empty($q)){
+        if (!empty($q)) {
             if ($q->num_rows() > 0) {
                 foreach (($q->result()) as $row) {
                     $data_res[] = $row;
@@ -121,28 +126,29 @@ class Reports_model extends CI_Model
             } else {
                 $data_res = array();
             }
-        }else{
+        } else {
             $data_res = array();
         }
-        
+
         return $data_res;
     }
 
-    public function getEquityBalance($date){
+    public function getEquityBalance($date)
+    {
         $response = array();
 
         $this->db
-                ->select('sma_accounts_ledgers.id, sma_accounts_ledgers.group_id, sma_accounts_ledgers.name, sma_accounts_ledgers.category,
+            ->select('sma_accounts_ledgers.id, sma_accounts_ledgers.group_id, sma_accounts_ledgers.name, sma_accounts_ledgers.category,
                 SUM(CASE WHEN sma_accounts_entryitems.dc = "C" THEN sma_accounts_entryitems.amount ELSE 0 END) AS credit_sum,
                 SUM(CASE WHEN sma_accounts_entryitems.dc = "D" THEN sma_accounts_entryitems.amount ELSE 0 END) AS debit_sum')
-                ->from('sma_accounts_ledgers')
-                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id = sma_accounts_ledgers.id', 'left')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
-                ->where('sma_accounts_ledgers.type1', 'B/S')
-                ->where('sma_accounts_ledgers.type2', 'Equity')
-                ->group_by('sma_accounts_ledgers.id');
+            ->from('sma_accounts_ledgers')
+            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id = sma_accounts_ledgers.id', 'left')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
+            ->where('sma_accounts_ledgers.type1', 'B/S')
+            ->where('sma_accounts_ledgers.type2', 'Equity')
+            ->group_by('sma_accounts_ledgers.id');
         $q = $this->db->get();
-        if(!empty($q)){
+        if (!empty($q)) {
             if ($q->num_rows() > 0) {
                 foreach (($q->result()) as $row) {
                     $data_res[] = $row;
@@ -150,28 +156,29 @@ class Reports_model extends CI_Model
             } else {
                 $data_res = array();
             }
-        }else{
+        } else {
             $data_res = array();
         }
-        
+
         return $data_res;
     }
 
-    public function getLiabilitiesBalance($date){
+    public function getLiabilitiesBalance($date)
+    {
         $response = array();
 
         $this->db
-                ->select('sma_accounts_ledgers.id, sma_accounts_ledgers.group_id, sma_accounts_ledgers.name, sma_accounts_ledgers.category,
+            ->select('sma_accounts_ledgers.id, sma_accounts_ledgers.group_id, sma_accounts_ledgers.name, sma_accounts_ledgers.category,
                 SUM(CASE WHEN sma_accounts_entryitems.dc = "C" THEN sma_accounts_entryitems.amount ELSE 0 END) AS credit_sum,
                 SUM(CASE WHEN sma_accounts_entryitems.dc = "D" THEN sma_accounts_entryitems.amount ELSE 0 END) AS debit_sum')
-                ->from('sma_accounts_ledgers')
-                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id = sma_accounts_ledgers.id', 'left')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
-                ->where('sma_accounts_ledgers.type1', 'B/S')
-                ->where('sma_accounts_ledgers.type2', 'Liabilities')
-                ->group_by('sma_accounts_ledgers.id');
+            ->from('sma_accounts_ledgers')
+            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id = sma_accounts_ledgers.id', 'left')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
+            ->where('sma_accounts_ledgers.type1', 'B/S')
+            ->where('sma_accounts_ledgers.type2', 'Liabilities')
+            ->group_by('sma_accounts_ledgers.id');
         $q = $this->db->get();
-        if(!empty($q)){
+        if (!empty($q)) {
             if ($q->num_rows() > 0) {
                 foreach (($q->result()) as $row) {
                     $data_res[] = $row;
@@ -179,27 +186,28 @@ class Reports_model extends CI_Model
             } else {
                 $data_res = array();
             }
-        }else{
+        } else {
             $data_res = array();
         }
-        
+
         return $data_res;
     }
 
-    public function getAssetsBalance($date){
+    public function getAssetsBalance($date)
+    {
         $response = array();
         $this->db
-                ->select('sma_accounts_ledgers.id, sma_accounts_ledgers.group_id, sma_accounts_ledgers.name, sma_accounts_ledgers.category,
+            ->select('sma_accounts_ledgers.id, sma_accounts_ledgers.group_id, sma_accounts_ledgers.name, sma_accounts_ledgers.category,
                 SUM(CASE WHEN sma_accounts_entryitems.dc = "C" THEN sma_accounts_entryitems.amount ELSE 0 END) AS credit_sum,
                 SUM(CASE WHEN sma_accounts_entryitems.dc = "D" THEN sma_accounts_entryitems.amount ELSE 0 END) AS debit_sum')
-                ->from('sma_accounts_ledgers')
-                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id = sma_accounts_ledgers.id', 'left')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
-                ->where('sma_accounts_ledgers.type1', 'B/S')
-                ->where('sma_accounts_ledgers.type2', 'Assets')
-                ->group_by('sma_accounts_ledgers.id');
+            ->from('sma_accounts_ledgers')
+            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id = sma_accounts_ledgers.id', 'left')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
+            ->where('sma_accounts_ledgers.type1', 'B/S')
+            ->where('sma_accounts_ledgers.type2', 'Assets')
+            ->group_by('sma_accounts_ledgers.id');
         $q = $this->db->get();
-        if(!empty($q)){
+        if (!empty($q)) {
             if ($q->num_rows() > 0) {
                 foreach (($q->result()) as $row) {
                     $data_res[] = $row;
@@ -207,26 +215,26 @@ class Reports_model extends CI_Model
             } else {
                 $data_res = array();
             }
-        }else{
+        } else {
             $data_res = array();
         }
-        
+
         return $data_res;
     }
 
 
-
-    public function getCustomerAging($duration){
+    public function getCustomerAging($duration)
+    {
         $response = array();
 
         $results = $this->db
-                ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date')
-                ->from('companies')
-                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-                ->where('companies.group_name', 'customer')
-                ->group_by('companies.id, sma_accounts_entryitems.dc')
-                ->order_by('
+            ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date')
+            ->from('companies')
+            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->where('companies.group_name', 'customer')
+            ->group_by('companies.id, sma_accounts_entryitems.dc')
+            ->order_by('
                     CASE
                         WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1
                         WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 60 DAY) THEN 2
@@ -234,9 +242,9 @@ class Reports_model extends CI_Model
                         ELSE 4
                     END
                 ')
-                ->order_by('companies.company asc')
-                ->get()
-                ->result();
+            ->order_by('companies.company asc')
+            ->get()
+            ->result();
 
         $organizedResults = array();
         foreach ($results as $result) {
@@ -247,17 +255,18 @@ class Reports_model extends CI_Model
         return $organizedResults;
     }
 
-    public function getSupplierAging($duration){
+    public function getSupplierAging($duration)
+    {
         $response = array();
 
         $results = $this->db
-                ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date')
-                ->from('companies')
-                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-                ->where('companies.group_name', 'supplier')
-                ->group_by('companies.id, sma_accounts_entryitems.dc')
-                ->order_by('
+            ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date')
+            ->from('companies')
+            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->where('companies.group_name', 'supplier')
+            ->group_by('companies.id, sma_accounts_entryitems.dc')
+            ->order_by('
                     CASE
                         WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1
                         WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 60 DAY) THEN 2
@@ -265,9 +274,9 @@ class Reports_model extends CI_Model
                         ELSE 4
                     END
                 ')
-                ->order_by('companies.company asc')
-                ->get()
-                ->result();
+            ->order_by('companies.company asc')
+            ->get()
+            ->result();
 
         $organizedResults = array();
         foreach ($results as $result) {
@@ -278,12 +287,13 @@ class Reports_model extends CI_Model
         return $organizedResults;
     }
 
-    public function getTimeRange($date) {
+    public function getTimeRange($date)
+    {
         $currentDate = new DateTime(); // Current date
         $entryDate = new DateTime($date); // Date of the entry
-    
+
         $interval = $entryDate->diff($currentDate); // Calculate the difference between the current date and entry date
-    
+
         if ($interval->days <= 30) {
             return 'Current';
         } elseif ($interval->days <= 60) {
@@ -299,17 +309,18 @@ class Reports_model extends CI_Model
         }
     }
 
-    public function getGeneralLedgerStatement($start_date, $end_date, $supplier_id, $ledger_account){
+    public function getGeneralLedgerStatement($start_date, $end_date, $supplier_id, $ledger_account)
+    {
         $response = array();
 
         $this->db
-                ->select('COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
-                ->from('sma_accounts_entryitems')
-                //->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
-                ->where('sma_accounts_entries.date <', $start_date);
-                //->group_by('sma_accounts_entryitems.dc');
+            ->select('COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+            ->from('sma_accounts_entryitems')
+            //->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->where('sma_accounts_entries.date <', $start_date);
+        //->group_by('sma_accounts_entryitems.dc');
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -320,16 +331,17 @@ class Reports_model extends CI_Model
         }
 
         $this->db
-                ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code, sma_accounts_ledgers.name')
-                ->from('sma_accounts_entryitems')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-                ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
-                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
-                ->where('sma_accounts_entries.date >=', $start_date)
-                ->where('sma_accounts_entries.date <=', $end_date)
-                ->order_by('sma_accounts_entries.date asc');
+            ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code, sma_accounts_ledgers.name, (select sum(amount) from sma_accounts_entryitems ei inner join sma_accounts_entries e on e.id =ei.entry_id where e.date < `sma_accounts_entries`.`date` and ei.ledger_id = ' . $ledger_account . ') as openingAmount,')
+            ->from('sma_accounts_entryitems')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
+            ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->where('sma_accounts_entries.date >=', $start_date)
+            ->where('sma_accounts_entries.date <=', $end_date)
+            ->order_by('sma_accounts_entries.date asc');
 
         $q = $this->db->get();
+
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -339,22 +351,25 @@ class Reports_model extends CI_Model
         }
 
         $response_array = array('ob' => $data_res, 'report' => $data);
-
+//dd($response_array);
         return $response_array;
     }
 
-    public function getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account){
+    public function getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account)
+    {
         $response = array();
 
         $this->db
-                ->select('COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
-                ->from('sma_accounts_entryitems')
-                //->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
-                ->where('sma_accounts_entries.date <', $start_date)
-                ->group_by('sma_accounts_entryitems.dc');
+            ->select('COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+            ->from('sma_accounts_entryitems')
+            //->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+//                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->where('sma_accounts_entries.sid', $supplier_id)
+            ->where('sma_accounts_entries.date <', $start_date)
+            ->group_by('sma_accounts_entryitems.dc');
         $q = $this->db->get();
+
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data_res[] = $row;
@@ -363,8 +378,7 @@ class Reports_model extends CI_Model
             $data_res = array();
         }
 
-        $this->db
-                ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code, companies.company')
+        $this->db->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code, companies.company')
                 ->from('sma_accounts_entryitems')
                 ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
                 ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
@@ -374,8 +388,8 @@ class Reports_model extends CI_Model
                 ->where('sma_accounts_entries.date <=', $end_date)
                 ->group_by('sma_accounts_entryitems.entry_id')
                 ->order_by('sma_accounts_entries.date asc');
-
         $q = $this->db->get();
+//        lq($this);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -385,57 +399,59 @@ class Reports_model extends CI_Model
         }
 
         $response_array = array('ob' => $data_res, 'report' => $data);
-
+//        dd($response_array);
         return $response_array;
     }
 
-    public function getGeneralLedgerTrialBalance($start_date, $end_date){
+    public function getGeneralLedgerTrialBalance($start_date, $end_date)
+    {
         $response = array();
 
         $this->db
-                ->select('accounts_ledgers.id, accounts_ledgers.name, accounts_ledgers.notes, accounts_ledgers.code, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
-                ->from('accounts_ledgers')
-                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=accounts_ledgers.id')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-                ->where('sma_accounts_entries.date >=', $start_date)
-                ->where('sma_accounts_entries.date <=', $end_date)
-                ->group_by('accounts_ledgers.id, sma_accounts_entryitems.dc')
-                ->order_by('accounts_ledgers.name asc');
-            $q = $this->db->get();
-                if ($q->num_rows() > 0) {
-                    foreach (($q->result()) as $row) {
-                        $data[] = $row;
-                    }
-                } else {
-                    $data = array();
-                }
-    
-            $response['trs'] = $data;
+            ->select('accounts_ledgers.id, accounts_ledgers.name, accounts_ledgers.notes, accounts_ledgers.code, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+            ->from('accounts_ledgers')
+            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=accounts_ledgers.id')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->where('sma_accounts_entries.date >=', $start_date)
+            ->where('sma_accounts_entries.date <=', $end_date)
+            ->group_by('accounts_ledgers.id, sma_accounts_entryitems.dc')
+            ->order_by('accounts_ledgers.name asc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        $response['trs'] = $data;
 
         $this->db
-                ->select('accounts_ledgers.id, accounts_ledgers.name, accounts_ledgers.notes, accounts_ledgers.code, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
-                ->from('accounts_ledgers')
-                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=accounts_ledgers.id')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-                ->where('sma_accounts_entries.date <', $start_date)
-                ->group_by('accounts_ledgers.id, sma_accounts_entryitems.dc')
-                ->order_by('accounts_ledgers.name asc');
+            ->select('accounts_ledgers.id, accounts_ledgers.name, accounts_ledgers.notes, accounts_ledgers.code, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+            ->from('accounts_ledgers')
+            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=accounts_ledgers.id')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->where('sma_accounts_entries.date <', $start_date)
+            ->group_by('accounts_ledgers.id, sma_accounts_entryitems.dc')
+            ->order_by('accounts_ledgers.name asc');
 
-            $q = $this->db->get();
-                if ($q->num_rows() > 0) {
-                    foreach (($q->result()) as $row) {
-                        $data2[] = $row;
-                    }
-                } else {
-                    $data2 = array();
-                }
-    
-            $response['ob'] = $data2;
-    
-            return $response;
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data2[] = $row;
+            }
+        } else {
+            $data2 = array();
+        }
+
+        $response['ob'] = $data2;
+
+        return $response;
     }
 
-    public function getSuppliersTrialBalance($start_date, $end_date){
+    public function getSuppliersTrialBalance($start_date, $end_date)
+    {
 
         $response = array();
 
@@ -550,10 +566,11 @@ class Reports_model extends CI_Model
         return $response;
     }
 
-    public function getCustomersTrialBalance($start_date, $end_date){
+    public function getCustomersTrialBalance($start_date, $end_date)
+    {
 
         $response = array();
-        
+
 
         $q = $this->db->query("SELECT
                                 c.id,
@@ -585,8 +602,8 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
-            }            
-        }       
+            }
+        }
 
         $response['trs'] = $data;
 
@@ -622,8 +639,8 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data2[] = $row;
-            }            
-        }         
+            }
+        }
         $response['ob'] = $data2;
 
         return $response;
@@ -709,7 +726,7 @@ class Reports_model extends CI_Model
 
         if ($warehouse_id) {
             $this->db->join('sales', 'sales.id=costing.sale_id')
-            ->where('sales.warehouse_id', $warehouse_id);
+                ->where('sales.warehouse_id', $warehouse_id);
         }
 
         $q = $this->db->get('costing');
@@ -911,11 +928,12 @@ class Reports_model extends CI_Model
     }
 
     //=== New Item Movement Report Starts ===//
-    public function getAllProducts(){
+    public function getAllProducts()
+    {
         $data[0] = "-- Select Product --";
         $this->db->select('id, code, name')
-        ->from('sma_products')
-        ->order_by('id asc')  ;
+            ->from('sma_products')
+            ->order_by('id asc');
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -925,12 +943,13 @@ class Reports_model extends CI_Model
         return $data;
     }
 
-    public function getAllWareHouses(){
+    public function getAllWareHouses()
+    {
         $data[0] = "-- As Company --";
         $this->db->select('id, code, name')
-        ->from('sma_warehouses')
-        ->where('goods_in_transit = 0')
-        ->order_by('id asc')  ;
+            ->from('sma_warehouses')
+            ->where('goods_in_transit = 0')
+            ->order_by('id asc');
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -940,23 +959,42 @@ class Reports_model extends CI_Model
         return $data;
     }
 
-    public function preItemQuantity($productId, $start_date, $transferCase = 'Company', $warehouseId = 0){
+    public function preItemQuantity($productId, $start_date, $transferCase = 'Company', $warehouseId = 0)
+    {
 
         $this->db->select('SUM(saleItem.quantity) as saleQuantity')
+<<<<<<< HEAD
                  ->from('sma_sales as sale')
                  ->join('sma_sale_items as saleItem','saleItem.sale_id = sale.id', 'INNER')
                  ->where('saleItem.product_id',$productId)
                  ->where('DATE(sale.date) < ',$start_date)
                  ->where('sale.sale_invoice =1');
+=======
+            ->from('sma_sales as sale')
+            ->join('sma_sale_items as saleItem', 'saleItem.sale_id = sale.id', 'INNER')
+            ->where('saleItem.product_id', $productId)
+            ->where('DATE(sale.date) < ', $start_date)
+            ->where('sale.sale_invoice =1');
+
+>>>>>>> 556c59fa272e5b16c6ad1c5701cff896558e6540
         $saleQuantity = $this->db->get()->row()->saleQuantity;
 
         $this->db->select('SUM(purItem.quantity) as purchaseQuantity')
+<<<<<<< HEAD
                 ->from('sma_purchases as purchase')
                 ->join('sma_purchase_items as purItem','purItem.purchase_id = purchase.id', 'INNER')
                 ->where('purItem.product_id',$productId)
                 ->where('DATE(purchase.date) < ',$start_date)
                 ->where('purchase.invoice_number IS NOT NULL')
                 ->where('purchase.grand_total > 0');
+=======
+            ->from('sma_purchases as purchase')
+            ->join('sma_purchase_items as purItem', 'purItem.purchase_id = purchase.id', 'INNER')
+            ->where('purItem.product_id', $productId)
+            ->where('DATE(purchase.date) < ', $start_date)
+            ->where('purchase.invoice_number IS NOT NULL');
+
+>>>>>>> 556c59fa272e5b16c6ad1c5701cff896558e6540
         $purchaseQuantity = $this->db->get()->row()->purchaseQuantity;
 
 
@@ -970,35 +1008,35 @@ class Reports_model extends CI_Model
         $returnSupplierQuantity = $this->db->get()->row()->returnSupplierQuantity;
 
         $this->db->select('SUM(rtnItem.quantity) as returnQuantity')
-                ->from('sma_returns as rtn')
-                ->join('sma_return_items as rtnItem','rtnItem.return_id = rtn.id', 'INNER')
-                ->where('rtnItem.product_id',$productId)
-                ->where('DATE(rtn.date) < ',$start_date);
-                
+            ->from('sma_returns as rtn')
+            ->join('sma_return_items as rtnItem', 'rtnItem.return_id = rtn.id', 'INNER')
+            ->where('rtnItem.product_id', $productId)
+            ->where('DATE(rtn.date) < ', $start_date);
+
         $returnQuantity = $this->db->get()->row()->returnQuantity;
 
         $transferQuantity = 0;
-        if($transferCase != 'Company' && $warehouseId > 0){
+        if ($transferCase != 'Company' && $warehouseId > 0) {
             $this->db->select('SUM(trnItm.quantity) as transferQuantity')
-                    ->from('sma_transfers as trn')
-                    ->join('sma_transfer_items as trnItm','trnItm.transfer_id = trn.id', 'INNER')
-                    ->where('trnItm.product_id',$productId)
-                    ->where('DATE(trn.date) < ',$start_date)
-                    ->where("trn.status <> 'completed'");
+                ->from('sma_transfers as trn')
+                ->join('sma_transfer_items as trnItm', 'trnItm.transfer_id = trn.id', 'INNER')
+                ->where('trnItm.product_id', $productId)
+                ->where('DATE(trn.date) < ', $start_date)
+                ->where("trn.status <> 'completed'");
 
-                    if($transferCase == 'Pharmacy'){
-                      $this->db->where("trn.to_warehouse_id = $warehouseId ");
-                    }
+            if ($transferCase == 'Pharmacy') {
+                $this->db->where("trn.to_warehouse_id = $warehouseId ");
+            }
 
-                    if($transferCase == 'WareHouse'){
-                        $this->db->where("trn.from_warehouse_id = $warehouseId ");
-                    }
-                    
+            if ($transferCase == 'WareHouse') {
+                $this->db->where("trn.from_warehouse_id = $warehouseId ");
+            }
+
             $transferQuantity = $this->db->get()->row()->transferQuantity;
-            if($transferCase == 'Pharmacy'){
+            if ($transferCase == 'Pharmacy') {
                 $transferQuantity = ($transferQuantity * 1);
             }
-            if($transferCase == 'WareHouse'){
+            if ($transferCase == 'WareHouse') {
                 $transferQuantity = ($transferQuantity * -1);
             }
         }
@@ -1007,13 +1045,15 @@ class Reports_model extends CI_Model
 
     }
 
-    public function getItemMovementData($productId, $start_date = null, $end_date = null, $transferCase = 'Company', $warehouseId = 0){
+    public function getItemMovementData($productId, $start_date = null, $end_date = null, $transferCase = 'Company', $warehouseId = 0)
+    {
         $response_array = array();
         // $this->db->select('id, code, name')->from('sma_products')->where('id',$productId);
         // $product = $this->db->get()->row();
         // echo "<pre>",print_r($product ), "</pre>";
         // Get Sales Data
         $this->db->select('sale.id, ace.id as accountTransId, ace.number as accountTransNo, sale.customer as NameOf, sale.reference_no, sale.date, saleItem.product_id, saleItem.batch_no, saleItem.expiry, saleItem.quantity, saleItem.net_unit_price, sale.invoice_number')
+<<<<<<< HEAD
                  ->from('sma_sales as sale')
                  ->join('sma_sale_items as saleItem','saleItem.sale_id = sale.id','INNER')
                  ->join('sma_accounts_entries as ace','ace.sid = sale.id','LEFT')
@@ -1039,8 +1079,36 @@ class Reports_model extends CI_Model
                             'salePrice' => ($row->quantity * $row->net_unit_price),
                     ];
                 }
+=======
+            ->from('sma_sales as sale')
+            ->join('sma_sale_items as saleItem', 'saleItem.sale_id = sale.id', 'INNER')
+            ->join('sma_accounts_entries as ace', 'ace.sid = sale.id', 'LEFT')
+            ->where('saleItem.product_id', $productId)
+            ->where('DATE(sale.date) >= ', $start_date)
+            ->where('DATE(sale.date) <= ', $end_date)
+            ->where("sale.sale_invoice =1")
+            ->order_by('sale.date ASC');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $response_array[strtotime($row->date)] = [
+                    'date' => $row->date,
+                    'documentNo' => $row->invoice_number,
+                    'accountTransId' => $row->accountTransId,
+                    'accountTransNo' => $row->accountTransNo,
+                    'description' => 'Sale',
+                    'nameOf' => $row->NameOf,
+                    'expiry' => $row->expiry,
+                    'batch' => $row->batch,
+                    'quantity' => $row->quantity,
+                    'unitCost' => $row->net_unit_price,
+                    'salePrice' => ($row->quantity * $row->net_unit_price),
+                ];
+>>>>>>> 556c59fa272e5b16c6ad1c5701cff896558e6540
             }
+        }
 
+<<<<<<< HEAD
             // Get Purchase Data
             $this->db->select('purcahse.id, purcahse.grand_total, ace.id as accountTransId, ace.number as accountTransNo, purcahse.supplier as NameOf, purcahse.invoice_number, purcahse.date, purchaseItem.product_id, purchaseItem.batchno, purchaseItem.expiry, purchaseItem.quantity, purchaseItem.sale_price,      COALESCE(
                 CASE WHEN c.sale_price > 0 THEN c.sale_price ELSE pp.sale_price END,
@@ -1113,24 +1181,85 @@ class Reports_model extends CI_Model
                         ];
                     }
                 }
+=======
+        // Get Purchase Data
+        $this->db->select('purcahse.id, ace.id as accountTransId, ace.number as accountTransNo, purcahse.supplier as NameOf, purcahse.invoice_number, purcahse.date, purchaseItem.product_id, purchaseItem.batchno, purchaseItem.expiry, purchaseItem.quantity, purchaseItem.sale_price')
+            ->from('sma_purchases as purcahse')
+            ->join('sma_purchase_items as purchaseItem', 'purchaseItem.purchase_id = purcahse.id', 'INNER')
+            ->join('sma_accounts_entries as ace', 'ace.pid = purcahse.id', 'LEFT')
+            ->where('purchaseItem.product_id', $productId)
+            ->where('DATE(purcahse.date) >= ', $start_date)
+            ->where('DATE(purcahse.date) <= ', $end_date)
+            ->where("purcahse.invoice_number IS NOT NULL")
+            ->order_by('purcahse.date ASC');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
 
-            $negate = false;
-            // Get Tranfer Data
-            $this->db->select('trn.id, ace.id as accountTransId, ace.number as accountTransNo, trn.to_warehouse_name as NameOf, trn.invoice_number, trn.date, trnItem.product_id, trnItem.batchno, trnItem.expiry, trnItem.quantity, trnItem.net_unit_cost')
-            ->from('sma_transfers as trn')
-            ->join('sma_transfer_items as trnItem','trnItem.transfer_id = trn.id','INNER')
-            ->join('sma_accounts_entries as ace','ace.tid = trn.id','LEFT')
-            ->where('trnItem.product_id',$productId)
-            ->where('DATE(trn.date) >= ',$start_date)
-            ->where('DATE(trn.date) <= ',$end_date)
-            ->where("trn.status <> 'completed'")
-            ->order_by('trn.date ASC') ;
-
-            if($transferCase == 'Pharmacy'){
-                $this->db->where("trn.to_warehouse_id = $warehouseId ");
-                $negate = false;
+            foreach (($q->result()) as $row) {
+                $response_array[strtotime($row->date)] = [
+                    'date' => $row->date,
+                    'documentNo' => $row->invoice_number,
+                    'accountTransId' => $row->accountTransId,
+                    'accountTransNo' => $row->accountTransNo,
+                    'description' => 'Purchase',
+                    'nameOf' => $row->NameOf,
+                    'expiry' => $row->expiry,
+                    'batch' => $row->batch,
+                    'quantity' => $row->quantity,
+                    'unitCost' => $row->sale_price,
+                    'salePrice' => ($row->quantity * $row->sale_price),
+                ];
             }
+        }
 
+        // Get Return Data
+        $this->db->select('rtn.id, ace.id as accountTransId, ace.number as accountTransNo, rtn.customer as NameOf, rtn.invoice_number, rtn.date, rtnItem.product_id, rtnItem.batch_no, rtnItem.expiry, rtnItem.unit_quantity as quantity, rtnItem.net_unit_price')
+            ->from('sma_returns as rtn')
+            ->join('sma_return_items as rtnItem', 'rtnItem.return_id = rtn.id', 'INNER')
+            ->join('sma_accounts_entries as ace', 'ace.rid = rtn.id', 'LEFT')
+            ->where('rtnItem.product_id', $productId)
+            ->where('DATE(rtn.date) >= ', $start_date)
+            ->where('DATE(rtn.date) <= ', $end_date)
+            ->order_by('rtn.date ASC');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+>>>>>>> 556c59fa272e5b16c6ad1c5701cff896558e6540
+
+            foreach (($q->result()) as $row) {
+                $response_array[strtotime($row->date)] = [
+                    'date' => $row->date,
+                    'documentNo' => $row->invoice_number,
+                    'accountTransId' => $row->accountTransId,
+                    'accountTransNo' => $row->accountTransNo,
+                    'description' => 'Return',
+                    'nameOf' => $row->NameOf,
+                    'expiry' => $row->expiry,
+                    'batch' => $row->batch_no,
+                    'quantity' => $row->quantity,
+                    'unitCost' => $row->net_unit_price,
+                    'salePrice' => ($row->quantity * $row->net_unit_price),
+                ];
+            }
+        }
+
+        $negate = false;
+        // Get Tranfer Data
+        $this->db->select('trn.id, ace.id as accountTransId, ace.number as accountTransNo, trn.to_warehouse_name as NameOf, trn.invoice_number, trn.date, trnItem.product_id, trnItem.batchno, trnItem.expiry, trnItem.quantity, trnItem.net_unit_cost')
+            ->from('sma_transfers as trn')
+            ->join('sma_transfer_items as trnItem', 'trnItem.transfer_id = trn.id', 'INNER')
+            ->join('sma_accounts_entries as ace', 'ace.tid = trn.id', 'LEFT')
+            ->where('trnItem.product_id', $productId)
+            ->where('DATE(trn.date) >= ', $start_date)
+            ->where('DATE(trn.date) <= ', $end_date)
+            ->where("trn.status <> 'completed'")
+            ->order_by('trn.date ASC');
+
+        if ($transferCase == 'Pharmacy') {
+            $this->db->where("trn.to_warehouse_id = $warehouseId ");
+            $negate = false;
+        }
+
+<<<<<<< HEAD
             if($transferCase == 'WareHouse'){
                 $this->db->where("trn.from_warehouse_id = $warehouseId ");
                 $negate = true;
@@ -1296,76 +1425,108 @@ class Reports_model extends CI_Model
         if ($query->num_rows() > 0) {
             return $query->result();
         } 
+=======
+        if ($transferCase == 'WareHouse') {
+            $this->db->where("trn.from_warehouse_id = $warehouseId ");
+            $negate = true;
+        }
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+
+            foreach (($q->result()) as $row) {
+                $response_array[strtotime($row->date)] = [
+                    'date' => $row->date,
+                    'documentNo' => $row->invoice_number,
+                    'accountTransId' => $row->accountTransId,
+                    'accountTransNo' => $row->accountTransNo,
+                    'description' => 'Transfer',
+                    'nameOf' => $row->NameOf,
+                    'expiry' => $row->expiry,
+                    'batch' => $row->batch_no,
+                    'quantity' => $row->quantity,
+                    'unitCost' => $row->net_unit_cost,
+                    'salePrice' => ($row->quantity * $row->net_unit_cost),
+                    'negate' => $negate
+                ];
+            }
+        }
+
+        // Sort Array on Date
+        ksort($response_array);
+        return $response_array;
+>>>>>>> 556c59fa272e5b16c6ad1c5701cff896558e6540
     }
 
     //=== New Item Movement Report Ends ===//
 
-    public function getInventoryMovementReport($start_date = null, $end_date = null){
+    public function getInventoryMovementReport($start_date = null, $end_date = null)
+    {
         $response_array = array();
         $productIDs = $this->getProductIDsByDateRange($start_date, $end_date);
         // Purchased Items
         $data = array();
-        if (!empty($productIDs)) {   
+        if (!empty($productIDs)) {
             $this->db->select('id, code, name')
-                    ->from('sma_products')
-                    ->where_in('id', $productIDs)
-                    ->order_by('id asc')        
-                    ->limit(500, 0);
+                ->from('sma_products')
+                ->where_in('id', $productIDs)
+                ->order_by('id asc')
+                ->limit(500, 0);
 
             $q = $this->db->get();
             if ($q->num_rows() > 0) {
                 foreach (($q->result()) as $row) {
 
-                    $itemPurchased = $this->itemPurchased($row->id, $start_date, $end_date);               
+                    $itemPurchased = $this->itemPurchased($row->id, $start_date, $end_date);
                     if ($itemPurchased) {
                         $row->item_purchased = $itemPurchased;
-                    }                
+                    }
 
                     $itemReturnedByCustomer = $this->itemReturnedByCustomer($row->id, $start_date, $end_date);
                     if ($itemReturnedByCustomer) {
                         $row->item_return_by_customer = $itemReturnedByCustomer;
 
-                    }                 
+                    }
 
                     $itemPurchasedOpeningBlance = $this->itemPurchasedOpeningBlance($row->id, $start_date);
                     if ($itemPurchasedOpeningBlance) {
-                        $row->item_purchased_opening_balance = $itemPurchasedOpeningBlance;                    
-                    } 
+                        $row->item_purchased_opening_balance = $itemPurchasedOpeningBlance;
+                    }
 
                     $itemSold = $this->itemSold($row->id, $start_date, $end_date);
                     if ($itemSold) {
-                        $row->item_sold = $itemSold;                  
-                    } 
+                        $row->item_sold = $itemSold;
+                    }
 
                     $itemReturnedToSupplier = $this->itemReturnedToSupplier($row->id, $start_date, $end_date);
                     if ($itemReturnedToSupplier) {
                         $row->item_returned_to_supplier = $itemReturnedToSupplier;
-                    }  
+                    }
 
                     $itemSoldOpeningBalance = $this->itemSoldOpeningBalance($row->id, $start_date, $end_date);
                     if ($itemSoldOpeningBalance) {
                         $row->item_sold_opening_balance = $itemSoldOpeningBalance;
-                    } 
+                    }
 
                     $itemReturnedByCustomerOpeningBlance = $this->itemReturnedByCustomerOpeningBlance($row->id, $start_date, $end_date);
                     if ($itemSoldOpeningBalance) {
                         $row->item_returned_by_customer_opening_blance = $itemReturnedByCustomerOpeningBlance;
-                    } 
+                    }
 
                     $data[] = $row;
-               }
+                }
             } else {
                 $data = array();
-            } 
+            }
         }
-        
+
         //  $sqlQuery = $this->db->last_query();
         //  echo "Generated SQL Query: " . $sqlQuery;exit;
 
         return $data;
     }
 
-    private function getProductIDsByDateRange($start_date = null, $end_date = null) {
+    private function getProductIDsByDateRange($start_date = null, $end_date = null)
+    {
         $productIDs = array();
 
         // Fetch product IDs from sma_purchase_items
@@ -1381,7 +1542,7 @@ class Reports_model extends CI_Model
             foreach ($q->result() as $row) {
                 $productIDs[] = $row->product_id;
             }
-        } 
+        }
 
         // Fetch product IDs from sma_sale_items
         $this->db
@@ -1418,184 +1579,190 @@ class Reports_model extends CI_Model
     }
 
 
-    private function itemPurchased($itemId, $start_date = null, $end_date = null){
+    private function itemPurchased($itemId, $start_date = null, $end_date = null)
+    {
         $this->db
-                ->select('SUM(sma_purchase_items.quantity) as quantity, sma_purchase_items.net_unit_cost')
-
-                ->from('sma_purchase_items')
-                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
-                ->where('sma_purchase_items.product_id', $itemId)
-                ->where('sma_purchase_items.date >=', $start_date)
-                ->where('sma_purchase_items.date <=', $end_date)
-                ->where('sma_purchases.return_id IS NULL')
-                ->group_by('sma_purchase_items.product_id');
-
-        $q = $this->db->get();
-
-        if ($q->num_rows() > 0) {           
-            return  $q->row(); // Return the single row
-        } else {
-            $notFoundObject = (object) [
-                            'quantity' => 0,          
-                            'net_unit_cost' => 0.00,
-                        ];
-            return $notFoundObject;
-        }
-    }
-    
-    private function itemReturnedByCustomer($itemId, $start_date = null, $end_date = null) {
-        $this->db
-                ->select('SUM(sma_return_items.quantity) as quantity, sma_return_items.net_unit_price')
-                ->from('sma_return_items')
-                ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
-                ->where('sma_return_items.product_id', $itemId)
-                ->where('sma_returns.date >=', $start_date)
-                ->where('sma_returns.date <=', $end_date)
-                ->group_by('sma_return_items.product_id');
+            ->select('SUM(sma_purchase_items.quantity) as quantity, sma_purchase_items.net_unit_cost')
+            ->from('sma_purchase_items')
+            ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+            ->where('sma_purchase_items.product_id', $itemId)
+            ->where('sma_purchase_items.date >=', $start_date)
+            ->where('sma_purchase_items.date <=', $end_date)
+            ->where('sma_purchases.return_id IS NULL')
+            ->group_by('sma_purchase_items.product_id');
 
         $q = $this->db->get();
 
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object) [
-                            'quantity' => 0,          
-                            'net_unit_price' => 0.00,
-                        ];
+            $notFoundObject = (object)[
+                'quantity' => 0,
+                'net_unit_cost' => 0.00,
+            ];
             return $notFoundObject;
         }
     }
-    
-    private function itemPurchasedOpeningBlance($itemId, $start_date = null) {
-        $this->db
-                ->select('SUM(sma_purchase_items.quantity) as quantity, sma_purchase_items.net_unit_cost')            
-                ->from('sma_purchase_items')
-                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
-                ->where ('sma_purchase_items.product_id',$itemId)
-                ->where('sma_purchase_items.date <', $start_date)
-                ->where('sma_purchases.return_id IS NULL')
-                ->group_by('sma_purchase_items.product_id');
 
-        $q = $this->db->get();
-        if ($q->num_rows() > 0) {
-            return $q->row(); // Return the single row
-        } else {
-            $notFoundObject = (object) [
-                            'quantity' => 0,          
-                            'net_unit_cost' => 0.00,
-                        ];
-            return $notFoundObject;
-        }
-    }
-    
-    private function itemSold($itemId, $start_date = null, $end_date = null) {
+    private function itemReturnedByCustomer($itemId, $start_date = null, $end_date = null)
+    {
         $this->db
-                ->select('SUM(sma_sale_items.quantity) as quantity, sma_sale_items.net_unit_price')
-                
-                ->from('sma_sale_items')
-                ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
-                ->where('sma_sale_items.product_id',$itemId)
-                ->where('sma_sales.date >=', $start_date)
-                ->where('sma_sales.date <=', $end_date)
-                //->where('sma_purchases.return_id IS NULL')
-                ->group_by('sma_sale_items.product_id');
-
-        $q = $this->db->get();
-        if ($q->num_rows() > 0) {
-            return $q->row(); // Return the single row
-        } else {
-            $notFoundObject = (object) [
-                            'quantity' => 0,          
-                            'net_unit_price' => 0.00,
-                        ];
-            return $notFoundObject;
-        }
-    }
-    private function itemReturnedToSupplier($itemId, $start_date = null, $end_date = null) {
-        $this->db
-                ->select('SUM(sma_purchase_items.quantity) as quantity, sma_purchase_items.net_unit_cost')
-                
-                ->from('sma_purchase_items')
-                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
-                ->where('sma_purchase_items.product_id', $itemId)
-                ->where('sma_purchase_items.date >=', $start_date)
-                ->where('sma_purchase_items.date <=', $end_date)
-                ->where('sma_purchases.return_id IS NOT NULL')
-                ->group_by('sma_purchase_items.product_id');
-
-        $q = $this->db->get();
-        if ($q->num_rows() > 0) {
-            return $q->row(); // Return the single row
-        } else {
-            $notFoundObject = (object) [
-                            'quantity' => 0,          
-                            'net_unit_cost' => 0.00,
-                        ];
-            return $notFoundObject;
-        }
-    }
-    
-    private function itemSoldOpeningBalance($itemId, $start_date = null){
-        $this->db
-                ->select('SUM(sma_sale_items.quantity) as quantity, sma_sale_items.net_unit_price')
-                ->from('sma_sale_items')
-                ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
-                ->where('sma_sale_items.product_id',$itemId)
-                ->where('sma_sales.date <', $start_date)
-                //->where('sma_sales.date <=', $end_date)
-                //->where('sma_purchases.return_id IS NULL')
-                ->group_by('sma_sale_items.product_id');
-
-        $q = $this->db->get();
-        if ($q->num_rows() > 0) {
-            return $q->row(); // Return the single row
-        } else {
-            $notFoundObject = (object) [
-                            'quantity' => 0,          
-                            'net_unit_price' => 0.00,
-                        ];
-            return $notFoundObject;
-        }
-    }
-    
-     private function itemReturnedByCustomerOpeningBlance($itemId, $start_date = null) {
-        $this->db
-                ->select('SUM(sma_return_items.quantity), sma_return_items.net_unit_price')
-                ->from('sma_return_items')
-                ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
-                ->where('sma_return_items.product_id', $itemId)
-                ->where('sma_returns.date <', $start_date)
-                ->group_by('sma_return_items.product_id');
+            ->select('SUM(sma_return_items.quantity) as quantity, sma_return_items.net_unit_price')
+            ->from('sma_return_items')
+            ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
+            ->where('sma_return_items.product_id', $itemId)
+            ->where('sma_returns.date >=', $start_date)
+            ->where('sma_returns.date <=', $end_date)
+            ->group_by('sma_return_items.product_id');
 
         $q = $this->db->get();
 
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-             $notFoundObject = (object) [
-                            'quantity' => 0,          
-                            'net_unit_price' => 0.00,
-                        ];
+            $notFoundObject = (object)[
+                'quantity' => 0,
+                'net_unit_price' => 0.00,
+            ];
             return $notFoundObject;
         }
     }
-    
-    public function getInventoryMovementReportBK($start_date = null, $end_date = null){
+
+    private function itemPurchasedOpeningBlance($itemId, $start_date = null)
+    {
+        $this->db
+            ->select('SUM(sma_purchase_items.quantity) as quantity, sma_purchase_items.net_unit_cost')
+            ->from('sma_purchase_items')
+            ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+            ->where('sma_purchase_items.product_id', $itemId)
+            ->where('sma_purchase_items.date <', $start_date)
+            ->where('sma_purchases.return_id IS NULL')
+            ->group_by('sma_purchase_items.product_id');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->row(); // Return the single row
+        } else {
+            $notFoundObject = (object)[
+                'quantity' => 0,
+                'net_unit_cost' => 0.00,
+            ];
+            return $notFoundObject;
+        }
+    }
+
+    private function itemSold($itemId, $start_date = null, $end_date = null)
+    {
+        $this->db
+            ->select('SUM(sma_sale_items.quantity) as quantity, sma_sale_items.net_unit_price')
+            ->from('sma_sale_items')
+            ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
+            ->where('sma_sale_items.product_id', $itemId)
+            ->where('sma_sales.date >=', $start_date)
+            ->where('sma_sales.date <=', $end_date)
+            //->where('sma_purchases.return_id IS NULL')
+            ->group_by('sma_sale_items.product_id');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->row(); // Return the single row
+        } else {
+            $notFoundObject = (object)[
+                'quantity' => 0,
+                'net_unit_price' => 0.00,
+            ];
+            return $notFoundObject;
+        }
+    }
+
+    private function itemReturnedToSupplier($itemId, $start_date = null, $end_date = null)
+    {
+        $this->db
+            ->select('SUM(sma_purchase_items.quantity) as quantity, sma_purchase_items.net_unit_cost')
+            ->from('sma_purchase_items')
+            ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+            ->where('sma_purchase_items.product_id', $itemId)
+            ->where('sma_purchase_items.date >=', $start_date)
+            ->where('sma_purchase_items.date <=', $end_date)
+            ->where('sma_purchases.return_id IS NOT NULL')
+            ->group_by('sma_purchase_items.product_id');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->row(); // Return the single row
+        } else {
+            $notFoundObject = (object)[
+                'quantity' => 0,
+                'net_unit_cost' => 0.00,
+            ];
+            return $notFoundObject;
+        }
+    }
+
+    private function itemSoldOpeningBalance($itemId, $start_date = null)
+    {
+        $this->db
+            ->select('SUM(sma_sale_items.quantity) as quantity, sma_sale_items.net_unit_price')
+            ->from('sma_sale_items')
+            ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
+            ->where('sma_sale_items.product_id', $itemId)
+            ->where('sma_sales.date <', $start_date)
+            //->where('sma_sales.date <=', $end_date)
+            //->where('sma_purchases.return_id IS NULL')
+            ->group_by('sma_sale_items.product_id');
+
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->row(); // Return the single row
+        } else {
+            $notFoundObject = (object)[
+                'quantity' => 0,
+                'net_unit_price' => 0.00,
+            ];
+            return $notFoundObject;
+        }
+    }
+
+    private function itemReturnedByCustomerOpeningBlance($itemId, $start_date = null)
+    {
+        $this->db
+            ->select('SUM(sma_return_items.quantity), sma_return_items.net_unit_price')
+            ->from('sma_return_items')
+            ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
+            ->where('sma_return_items.product_id', $itemId)
+            ->where('sma_returns.date <', $start_date)
+            ->group_by('sma_return_items.product_id');
+
+        $q = $this->db->get();
+
+        if ($q->num_rows() > 0) {
+            return $q->row(); // Return the single row
+        } else {
+            $notFoundObject = (object)[
+                'quantity' => 0,
+                'net_unit_price' => 0.00,
+            ];
+            return $notFoundObject;
+        }
+    }
+
+    public function getInventoryMovementReportBK($start_date = null, $end_date = null)
+    {
 
         $response_array = array();
-        
+
         // Purchased Items
         $data = array();
         $this->db
-                ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as purchased_items, sma_purchase_items.net_unit_cost')
-                ->from('sma_products')
-                ->join('sma_purchase_items', 'sma_purchase_items.product_id=sma_products.id')
-                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
-                ->where('sma_purchase_items.date >=', $start_date)
-                ->where('sma_purchase_items.date <=', $end_date)
-                ->where('sma_purchases.return_id IS NULL')
-                ->group_by('sma_products.id')
-                ->order_by('sma_products.id asc');
+            ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as purchased_items, sma_purchase_items.net_unit_cost')
+            ->from('sma_products')
+            ->join('sma_purchase_items', 'sma_purchase_items.product_id=sma_products.id')
+            ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+            ->where('sma_purchase_items.date >=', $start_date)
+            ->where('sma_purchase_items.date <=', $end_date)
+            ->where('sma_purchases.return_id IS NULL')
+            ->group_by('sma_products.id')
+            ->order_by('sma_products.id asc');
 
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
@@ -1611,15 +1778,15 @@ class Reports_model extends CI_Model
         // Sold Items
         $data = array();
         $this->db
-                ->select('sma_products.code, sma_products.name, SUM(sma_sale_items.quantity) as sale_items, sma_sale_items.net_unit_price')
-                ->from('sma_products')
-                ->join('sma_sale_items', 'sma_sale_items.product_id=sma_products.id')
-                ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
-                ->where('sma_sales.date >=', $start_date)
-                ->where('sma_sales.date <=', $end_date)
-                //->where('sma_purchases.return_id IS NULL')
-                ->group_by('sma_products.id')
-                ->order_by('sma_products.id asc');
+            ->select('sma_products.code, sma_products.name, SUM(sma_sale_items.quantity) as sale_items, sma_sale_items.net_unit_price')
+            ->from('sma_products')
+            ->join('sma_sale_items', 'sma_sale_items.product_id=sma_products.id')
+            ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
+            ->where('sma_sales.date >=', $start_date)
+            ->where('sma_sales.date <=', $end_date)
+            //->where('sma_purchases.return_id IS NULL')
+            ->group_by('sma_products.id')
+            ->order_by('sma_products.id asc');
 
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
@@ -1635,15 +1802,15 @@ class Reports_model extends CI_Model
         // Items returned to supplier
         $data = array();
         $this->db
-                ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as sreturn_items, sma_purchase_items.net_unit_cost')
-                ->from('sma_products')
-                ->join('sma_purchase_items', 'sma_purchase_items.product_id=sma_products.id')
-                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
-                ->where('sma_purchase_items.date >=', $start_date)
-                ->where('sma_purchase_items.date <=', $end_date)
-                ->where('sma_purchases.return_id IS NOT NULL')
-                ->group_by('sma_products.id')
-                ->order_by('sma_products.id asc');
+            ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as sreturn_items, sma_purchase_items.net_unit_cost')
+            ->from('sma_products')
+            ->join('sma_purchase_items', 'sma_purchase_items.product_id=sma_products.id')
+            ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+            ->where('sma_purchase_items.date >=', $start_date)
+            ->where('sma_purchase_items.date <=', $end_date)
+            ->where('sma_purchases.return_id IS NOT NULL')
+            ->group_by('sma_products.id')
+            ->order_by('sma_products.id asc');
 
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
@@ -1659,14 +1826,14 @@ class Reports_model extends CI_Model
         // Items returned By Customer
         $data = array();
         $this->db
-                ->select('sma_products.code, sma_products.name, SUM(sma_return_items.quantity) as creturn_items, sma_return_items.net_unit_price')
-                ->from('sma_products')
-                ->join('sma_return_items', 'sma_return_items.product_id=sma_products.id')
-                ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
-                ->where('sma_returns.date >=', $start_date)
-                ->where('sma_returns.date <=', $end_date)
-                ->group_by('sma_products.id')
-                ->order_by('sma_products.id asc');
+            ->select('sma_products.code, sma_products.name, SUM(sma_return_items.quantity) as creturn_items, sma_return_items.net_unit_price')
+            ->from('sma_products')
+            ->join('sma_return_items', 'sma_return_items.product_id=sma_products.id')
+            ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
+            ->where('sma_returns.date >=', $start_date)
+            ->where('sma_returns.date <=', $end_date)
+            ->group_by('sma_products.id')
+            ->order_by('sma_products.id asc');
 
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
@@ -1683,15 +1850,15 @@ class Reports_model extends CI_Model
         // Opening Balance Purchased Items
         $data = array();
         $this->db
-                ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as purchased_items, sma_purchase_items.net_unit_cost')
-                ->from('sma_products')
-                ->join('sma_purchase_items', 'sma_purchase_items.product_id=sma_products.id')
-                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
-                ->where('sma_purchase_items.date <', $start_date)
-                //->where('sma_purchase_items.date <=', $end_date)
-                ->where('sma_purchases.return_id IS NULL')
-                ->group_by('sma_products.id')
-                ->order_by('sma_products.id asc');
+            ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as purchased_items, sma_purchase_items.net_unit_cost')
+            ->from('sma_products')
+            ->join('sma_purchase_items', 'sma_purchase_items.product_id=sma_products.id')
+            ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+            ->where('sma_purchase_items.date <', $start_date)
+            //->where('sma_purchase_items.date <=', $end_date)
+            ->where('sma_purchases.return_id IS NULL')
+            ->group_by('sma_products.id')
+            ->order_by('sma_products.id asc');
 
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
@@ -1707,15 +1874,15 @@ class Reports_model extends CI_Model
         // Opening Balance Sold Items
         $data = array();
         $this->db
-                ->select('sma_products.code, sma_products.name, SUM(sma_sale_items.quantity) as sale_items, sma_sale_items.net_unit_price')
-                ->from('sma_products')
-                ->join('sma_sale_items', 'sma_sale_items.product_id=sma_products.id')
-                ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
-                ->where('sma_sales.date <', $start_date)
-                //->where('sma_sales.date <=', $end_date)
-                //->where('sma_purchases.return_id IS NULL')
-                ->group_by('sma_products.id')
-                ->order_by('sma_products.id asc');
+            ->select('sma_products.code, sma_products.name, SUM(sma_sale_items.quantity) as sale_items, sma_sale_items.net_unit_price')
+            ->from('sma_products')
+            ->join('sma_sale_items', 'sma_sale_items.product_id=sma_products.id')
+            ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
+            ->where('sma_sales.date <', $start_date)
+            //->where('sma_sales.date <=', $end_date)
+            //->where('sma_purchases.return_id IS NULL')
+            ->group_by('sma_products.id')
+            ->order_by('sma_products.id asc');
 
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
@@ -1731,15 +1898,15 @@ class Reports_model extends CI_Model
         // Opening Balance Items returned to supplier
         $data = array();
         $this->db
-                ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as sreturn_items, sma_purchase_items.net_unit_cost')
-                ->from('sma_products')
-                ->join('sma_purchase_items', 'sma_purchase_items.product_id=sma_products.id')
-                ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
-                ->where('sma_purchase_items.date <', $start_date)
-                //->where('sma_purchase_items.date <=', $end_date)
-                ->where('sma_purchases.return_id IS NOT NULL')
-                ->group_by('sma_products.id')
-                ->order_by('sma_products.id asc');
+            ->select('sma_products.code, sma_products.name, SUM(sma_purchase_items.quantity) as sreturn_items, sma_purchase_items.net_unit_cost')
+            ->from('sma_products')
+            ->join('sma_purchase_items', 'sma_purchase_items.product_id=sma_products.id')
+            ->join('sma_purchases', 'sma_purchases.id=sma_purchase_items.purchase_id')
+            ->where('sma_purchase_items.date <', $start_date)
+            //->where('sma_purchase_items.date <=', $end_date)
+            ->where('sma_purchases.return_id IS NOT NULL')
+            ->group_by('sma_products.id')
+            ->order_by('sma_products.id asc');
 
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
@@ -1755,14 +1922,14 @@ class Reports_model extends CI_Model
         // Opening Balance Items returned By Customer
         $data = array();
         $this->db
-                ->select('sma_products.code, sma_products.name, SUM(sma_return_items.quantity) as creturn_items, sma_return_items.net_unit_price')
-                ->from('sma_products')
-                ->join('sma_return_items', 'sma_return_items.product_id=sma_products.id')
-                ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
-                ->where('sma_returns.date <', $start_date)
-                //->where('sma_returns.date <=', $end_date)
-                ->group_by('sma_products.id')
-                ->order_by('sma_products.id asc');
+            ->select('sma_products.code, sma_products.name, SUM(sma_return_items.quantity) as creturn_items, sma_return_items.net_unit_price')
+            ->from('sma_products')
+            ->join('sma_return_items', 'sma_return_items.product_id=sma_products.id')
+            ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
+            ->where('sma_returns.date <', $start_date)
+            //->where('sma_returns.date <=', $end_date)
+            ->group_by('sma_products.id')
+            ->order_by('sma_products.id asc');
 
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
@@ -1778,30 +1945,31 @@ class Reports_model extends CI_Model
         return $response_array;
     }
 
-    public function getVatPurchaseLedgerReport($start_date = null, $end_date = null){
+    public function getVatPurchaseLedgerReport($start_date = null, $end_date = null)
+    {
 
         $this->db
-                ->select('sma_purchases.id as purchase_id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as purchase_sequence_code,sma_accounts_entries.id as transaction_id, sma_purchases.supplier, sma_accounts_entries.date, sma_purchases.invoice_number, sma_accounts_entries.number, sma_purchases.grand_total as total_with_vat, SUM(sma_accounts_entryitems.amount) as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
-                ->from('sma_accounts_ledgers')
-                ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
-                ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-                ->join('sma_purchases', 'sma_purchases.id=sma_accounts_entries.pid', 'left')
-                //->join('sma_tax_rates', 'sma_tax_rates.id=sma_purchases.order_tax_id', 'left')
-                ->join('sma_companies', 'sma_companies.id=sma_purchases.supplier_id', 'left')
-                ->join('sma_purchase_items', 'sma_purchase_items.purchase_id=sma_purchases.id', 'left')
-                ->where('sma_accounts_entries.date >=', $start_date)
-                ->where('sma_accounts_entries.date <=', $end_date)
-                ->where('sma_accounts_ledgers.name =', 'VAT on Purchases')
-                ->group_by('sma_accounts_entries.id')
-                //->having('SUM(sma_purchase_items.quantity) >=', 0)
-                ->order_by('sma_accounts_entries.date asc');
+            ->select('sma_purchases.id as purchase_id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as purchase_sequence_code,sma_accounts_entries.id as transaction_id, sma_purchases.supplier, sma_accounts_entries.date, sma_purchases.invoice_number, sma_accounts_entries.number, sma_purchases.grand_total as total_with_vat, SUM(sma_accounts_entryitems.amount) as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
+            ->from('sma_accounts_ledgers')
+            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->join('sma_purchases', 'sma_purchases.id=sma_accounts_entries.pid', 'left')
+            //->join('sma_tax_rates', 'sma_tax_rates.id=sma_purchases.order_tax_id', 'left')
+            ->join('sma_companies', 'sma_companies.id=sma_purchases.supplier_id', 'left')
+            ->join('sma_purchase_items', 'sma_purchase_items.purchase_id=sma_purchases.id', 'left')
+            ->where('sma_accounts_entries.date >=', $start_date)
+            ->where('sma_accounts_entries.date <=', $end_date)
+            ->where('sma_accounts_ledgers.name =', 'VAT on Purchases')
+            ->group_by('sma_accounts_entries.id')
+            //->having('SUM(sma_purchase_items.quantity) >=', 0)
+            ->order_by('sma_accounts_entries.date asc');
 
         $q = $this->db->get();
         $sqlQuery = $this->db->last_query();
         //echo "Generated SQL Query: " . $sqlQuery;exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
-                if($row->purchase_id == ''){
+                if ($row->purchase_id == '') {
                     $row->type = 'Manual';
                     $row->total_quantity = '0';
                     $row->supplier_code = '-';
@@ -1809,36 +1977,37 @@ class Reports_model extends CI_Model
                     $row->supplier = 'Manual Journal Entry';
                     $row->total_with_vat = $row->total_tax;
                     // $row->tax_name = '-';
-                }else{
+                } else {
                     $row->type = 'Purchase';
                 }
 
-                if($row->total_quantity >= 0 || $row->purchase_id == ''){
+                if ($row->total_quantity >= 0 || $row->purchase_id == '') {
                     $data[] = $row;
                 }
-                
+
             }
         } else {
             $data = array();
         }
-        
+
         return $data;
     }
 
-    public function getVatPurchaseReport($start_date = null, $end_date = null){
+    public function getVatPurchaseReport($start_date = null, $end_date = null)
+    {
 
         $this->db
-                ->select('sma_purchases.id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as transaction_id, sma_purchases.supplier, sma_purchases.date, sma_purchases.invoice_number, sma_purchases.grand_total as total_with_vat, sma_purchases.product_tax as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
-                ->from('sma_purchases')
-                ->join('sma_companies', 'sma_companies.id=sma_purchases.supplier_id')
-                ->join('sma_purchase_items', 'sma_purchase_items.purchase_id=sma_purchases.id')
-                //->join('sma_tax_rates', 'sma_tax_rates.id=sma_purchases.order_tax_id')
-                ->where('DATE(sma_purchases.date) >=', $start_date)
-                ->where('DATE(sma_purchases.date) <=', $end_date)
-                //->where('sma_purchases.return_id IS NULL')
-                ->group_by('sma_purchase_items.purchase_id')
-                ->having('SUM(sma_purchase_items.quantity) >=', 0)
-                ->order_by('sma_purchases.date asc');
+            ->select('sma_purchases.id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as transaction_id, sma_purchases.supplier, sma_purchases.date, sma_purchases.invoice_number, sma_purchases.grand_total as total_with_vat, sma_purchases.product_tax as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
+            ->from('sma_purchases')
+            ->join('sma_companies', 'sma_companies.id=sma_purchases.supplier_id')
+            ->join('sma_purchase_items', 'sma_purchase_items.purchase_id=sma_purchases.id')
+            //->join('sma_tax_rates', 'sma_tax_rates.id=sma_purchases.order_tax_id')
+            ->where('DATE(sma_purchases.date) >=', $start_date)
+            ->where('DATE(sma_purchases.date) <=', $end_date)
+            //->where('sma_purchases.return_id IS NULL')
+            ->group_by('sma_purchase_items.purchase_id')
+            ->having('SUM(sma_purchase_items.quantity) >=', 0)
+            ->order_by('sma_purchases.date asc');
 
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
@@ -1886,7 +2055,7 @@ class Reports_model extends CI_Model
         $sdate = $date . ' 00:00:00';
         $edate = $date . ' 23:59:59';
         $this->db->select('SUM( COALESCE( grand_total, 0 ) ) AS total', false)
-        ->where('sale_status', 'returned');
+            ->where('sale_status', 'returned');
         if ($date) {
             $this->db->where('date >=', $sdate)->where('date <=', $edate);
         } elseif ($month) {
@@ -2247,5 +2416,5 @@ class Reports_model extends CI_Model
         return false;
     }
 
-  
+
 }

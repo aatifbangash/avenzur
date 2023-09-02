@@ -3205,10 +3205,16 @@ class Reports extends MY_Controller
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
         $this->data['ledgers'] = $this->reports_model->getCompanyLedgers();
+
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
             $ledger_id = $this->input->post('ledger');
+
+            if (!$ledger_id) {
+                $this->session->set_flashdata('error', lang('No ledger is selected.'));
+                redirect($_SERVER['HTTP_REFERER']);
+            }
 
             $supplier_statement = $this->reports_model->getGeneralLedgerStatement($start_date, $end_date, '', $ledger_id);
 
@@ -3262,7 +3268,7 @@ class Reports extends MY_Controller
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
             $ledger_account = $supplier_details->ledger_account;
             $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
-
+//dd($supplier_statement);
             $total_ob = 0;
             $total_ob_credit = 0;
             $total_ob_debit = 0;
