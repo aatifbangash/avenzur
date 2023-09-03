@@ -806,7 +806,7 @@
                             <div class="form-group">';
                             echo lang('Items', 'items');
                             echo form_input('sgproduct', (isset($_POST['sgproduct']) ? $_POST['sgproduct'] : ''), 'class="form-control" id="suggest_product2" data-bv-notempty="true"');
-                            echo '<input type="hidden" name="product" value="' . (isset($_POST['product']) ? $_POST['product'] : 0) . '" id="report_product_id2" />';
+                            echo '<input type="hidden" name="product" value="' . (isset($_POST['product']) ? $_POST['product'] : 0) . '" id="product" />';
                             echo '</div>
                             </div></div>';
 
