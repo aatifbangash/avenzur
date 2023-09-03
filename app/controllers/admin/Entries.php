@@ -89,6 +89,22 @@ class Entries extends MY_Controller
 		echo $this->functionscore->ledgerList($entrytypeLabel, $searchTerm, $selectedLedgers);
 	}
 
+	public function at_least_one_selected($value){
+		// Check if at least one of the fields is provided
+		$product_id = $this->input->post('product_id');
+		$customer_id = $this->input->post('customer_id');
+		$supplier_id = $this->input->post('supplier_id');
+		$department_id = $this->input->post('department_id');
+		$employee_id = $this->input->post('employee_id');
+	
+		if (empty($product_id) && empty($customer_id) && empty($supplier_id) && empty($department_id) && empty($employee_id)) {
+			$this->form_validation->set_message('at_least_one_selected', 'At least one Dimensions (item, customer, supplier, department or employee) field must be selected.');
+			return false;
+		}
+	
+		return true;
+	}
+
 	/**
 	* add method
 	*
@@ -135,6 +151,13 @@ class Entries extends MY_Controller
 		$this->form_validation->set_rules('number', lang('entries_cntrler_add_form_validation_number_label'), 'is_numeric');
 		$this->form_validation->set_rules('date', lang('entries_cntrler_add_form_validation_date_label'), 'required');
 		$this->form_validation->set_rules('tag_id', lang('entries_cntrler_add_form_validation_tag_label'), 'required');
+
+		$this->form_validation->set_rules('product_id', 'Product ID', 'callback_at_least_one_selected');
+		$this->form_validation->set_rules('customer_id', 'Customer ID', 'callback_at_least_one_selected');
+		$this->form_validation->set_rules('supplier_id', 'Supplier ID', 'callback_at_least_one_selected');
+		$this->form_validation->set_rules('department_id', 'Department ID', 'callback_at_least_one_selected');
+		$this->form_validation->set_rules('employee_id', 'Employee ID', 'callback_at_least_one_selected');
+
 
 		$q = $this->db->get_where('sma_accounts_entries', array('number' => $this->input->post('number')));
 		if ($q->num_rows() > 0) {
@@ -387,6 +410,7 @@ class Entries extends MY_Controller
 		        $this->page_construct('accounts/entries_add2', $meta, $this->data);
 
 			}else{
+				$this->data['error']      = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
 				$bc  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('entries'), 'page' => lang('Entries')], ['link' => '#', 'page' => lang('Entries')]];
 		        $meta = ['page_title' => lang('Add Entry'), 'bc' => $bc];
 		        $this->page_construct('accounts/entries_add', $meta, $this->data);
@@ -476,6 +500,14 @@ class Entries extends MY_Controller
 				}
 			}
 
+			// Dimensions
+			$entrydata['Entry']['item_id'] = $this->input->post('product_id') ? $this->input->post('product_id') : 0;
+			$entrydata['Entry']['customer_id'] = $this->input->post('customer_id') ? $this->input->post('customer_id') : 0;
+			$entrydata['Entry']['supplier_id'] = $this->input->post('supplier_id') ? $this->input->post('supplier_id') : 0;
+			$entrydata['Entry']['department_id'] = $this->input->post('department_id') ? $this->input->post('department_id') : 0;
+			$entrydata['Entry']['employee_id'] = $this->input->post('employee_id') ? $this->input->post('employee_id') : 0;
+
+
 			/* insert entry data array to entries table - db */
 			$add  = $this->db->insert('sma_accounts_entries', $entrydata['Entry']);
 
@@ -545,6 +577,12 @@ class Entries extends MY_Controller
 
 		$this->data['entrytypeLabel'] = $entrytypeLabel;
 
+		$this->data['customers'] = $this->site->getAllCompanies('customer');
+		$this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+		$this->data['departments'] = $this->site->getAllDepartments();
+		$this->data['employees'] = $this->site->getAllEmployees();
+
+
 		// create entry type array where label = [$entrytypeLabel]
 		$entrytype = $this->db->query("SELECT * FROM ".$this->db->dbprefix('accounts_entrytypes')." WHERE label='$entrytypeLabel'")->row_array();
 
@@ -564,10 +602,17 @@ class Entries extends MY_Controller
 		$this->form_validation->set_rules('date', lang('entries_cntrler_edit_form_validarion_date'), 'required');
 		//$this->form_validation->set_rules('tag_id', lang('entries_cntrler_edit_form_validarion_tag'), 'required');
 
+		$this->form_validation->set_rules('product_id', 'Product ID', 'callback_at_least_one_selected');
+		$this->form_validation->set_rules('customer_id', 'Customer ID', 'callback_at_least_one_selected');
+		$this->form_validation->set_rules('supplier_id', 'Supplier ID', 'callback_at_least_one_selected');
+		$this->form_validation->set_rules('department_id', 'Department ID', 'callback_at_least_one_selected');
+		$this->form_validation->set_rules('employee_id', 'Employee ID', 'callback_at_least_one_selected');
+
 		$q = $this->db->get_where('sma_accounts_entries', array('id' => $id))->row();
 		if ($this->input->post('number') != $q->number) {
 			$this->form_validation->set_rules('number', lang('entries_cntrler_add_form_validation_number_label'), 'is_db1_unique[sma_accounts_entries.number]');
 			$this->form_validation->set_message('is_db1_unique', lang('form_validation_is_db_unique'));
+			
         }
 
 		$dc_valid = false; 	// valid Debit or Credit
@@ -899,6 +944,7 @@ class Entries extends MY_Controller
 		        $meta = ['page_title' => lang('Entries'), 'bc' => $bc];
 		        $this->page_construct('accounts/entries_edit2', $meta, $this->data);
 			}else{
+				$this->data['error']      = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
 				$bc  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('entries'), 'page' => lang('Entries')], ['link' => '#', 'page' => lang('Entries')]];
 		        $meta = ['page_title' => lang('Entries'), 'bc' => $bc];
 		        $this->page_construct('accounts/entries_edit', $meta, $this->data);
@@ -991,6 +1037,13 @@ class Entries extends MY_Controller
 					);
 				}
 			}
+
+			// Dimensions
+			$entrydata['Entry']['item_id'] = $this->input->post('product_id') ? $this->input->post('product_id') : 0;
+			$entrydata['Entry']['customer_id'] = $this->input->post('customer_id') ? $this->input->post('customer_id') : 0;
+			$entrydata['Entry']['supplier_id'] = $this->input->post('supplier_id') ? $this->input->post('supplier_id') : 0;
+			$entrydata['Entry']['department_id'] = $this->input->post('department_id') ? $this->input->post('department_id') : 0;
+			$entrydata['Entry']['employee_id'] = $this->input->post('employee_id') ? $this->input->post('employee_id') : 0;
 
 			// select where id from [entries] table equals passed id
 			$this->db->where('id', $id);

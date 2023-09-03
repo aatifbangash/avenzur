@@ -351,7 +351,7 @@
                 if (isNaN(curDr))
                     curDr = 0;
                 drTotal = jsFloatOps(drTotal, curDr, '+');
-                console.log($(this));
+                // console.log($(this));
                 // console.log(curDr);
                 // console.log(drTotal);
             });
@@ -579,6 +579,24 @@
             dateFormat: '<?= $this->mDateArray[1]; ?>',
             numberOfMonths: 1,
         });
+    
+
+        // $('#primary-button-submit').click(function(event) {
+           
+        //         var product_id = parseFloat($('#report_product_id2').val());
+        //         var customer_id = parseFloat($('#customer_id').val());
+        //         var supplier_id = parseFloat($('#supplier_id').val());
+        //         var department_id = parseFloat($('#department_id').val());
+        //         var employee_id = parseFloat($('#employee_id').val());
+
+        //         console.log(product_id+' | '+ customer_id+' | '+supplier_id +' | '+ department_id+' | '+employee_id)
+
+        //         // if (product_id <= 0 && (customer_id <= 0 || customer_id == 'NaN') && supplier_id <= 0 && department_id <= 0 && employee_id <= 0) {
+        //         //    // event.preventDefault();
+        //         //     alert('At least one Dimensions (item, customer, supplier, department or employee) field must be selected.');
+                    
+        //         // }
+        // });
 
 
     });
@@ -595,10 +613,10 @@
     <div class="box-content">
         <div class="row">
             <div class="col-xs-12">
-                <div class="box">
+               
 
                     <!-- /.box-header -->
-                    <div class="box-body">
+                   
                         <div class="entry add form">
                             <?php
                             if ($this->mSettings->drcr_toby == 'toby') {
@@ -613,7 +631,7 @@
                                 );
                             }
 
-                            echo admin_form_open_multipart('entries/add/journal', []);
+                            echo admin_form_open_multipart('entries/add/journal', ['role' => 'form', 'id' => 'add-entries-form']);
 
                             $prefixNumber = '';
                             $suffixNumber = '';
@@ -799,14 +817,12 @@
                             echo '<br />';
 
                             /*Dimensions*/
-                            
-                            
                             /* Items */
-                            echo '<div class="row"><div class="col-xs-12">
+                            echo '<div class="row"><div class="col-xs-10">
                             <div class="form-group">';
-                            echo lang('Items', 'items');
-                            echo form_input('sgproduct', (isset($_POST['sgproduct']) ? $_POST['sgproduct'] : ''), 'class="form-control" id="suggest_product2" data-bv-notempty="true"');
-                            echo '<input type="hidden" name="product" value="' . (isset($_POST['product']) ? $_POST['product'] : 0) . '" id="report_product_id2" />';
+                            echo lang('Items', 'product_id');
+                            echo form_input('sgproduct', (isset($_POST['sgproduct']) ? $_POST['sgproduct'] : ''), 'class="form-control" id="suggest_product2" ');
+                            echo '<input type="hidden" name="product_id" value="' . (isset($_POST['product_id']) ? $_POST['product_id'] : 0) . '" id="report_product_id2" />';
                             echo '</div>
                             </div></div>';
 
@@ -816,28 +832,28 @@
                             <div class="form-group">';
 
 
-                            echo lang('Customer', 'customer');
-                            $cuData = [];
-                            $cuData[] = "Select customer";
-                            foreach($customers as $customer){
-                                $cuData[$customer->id] = $customer->name;
+                            echo lang('Customer', 'customer_id');
+                            $cus[''] = '';
+                            $cus[] = "Select Customer";
+                            foreach ($customers as $customer) {
+                                $cus[$customer->id] = $customer->company. ' ('. $customer->name.')';
                             }
-                            echo form_dropdown('customer', $cuData, ($_POST['customer']), 'id="customer" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Customer') . '" "');
-                           
+                            echo form_dropdown('customer_id', $cus, ($_POST['customer_id'] ?? $_POST['customer_id']), 'id="customer_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" ');
+                          
                             echo '</div>
+                            
                             </div>';
-
-
+                            
                             echo '<div class="col-xs-6">
                             <div class="form-group">';
 
-                            echo lang('Supplier', 'supplier');
+                            echo lang('Supplier', 'supplier_id');
                             $suData = [];
                             $suData[] = "Select Supplier";
                             foreach($suppliers as $supplier){
                                 $suData[$supplier->id] = $supplier->name;
                             }
-                            echo form_dropdown('supplier', $suData, ($_POST['supplier']), 'id="supplier" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Supplier') . '" "');
+                            echo form_dropdown('supplier_id', $suData, ($_POST['supplier_id'] ?? $_POST['supplier_id']), 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Supplier') . '" "');
                            
 
                             echo '</div>
@@ -848,25 +864,25 @@
                             echo '<div class="row">
                             <div class="col-xs-6">
                             <div class="form-group">';
-                            echo lang('Departments', 'departments');
+                            echo lang('Departments', 'department_id');
                             $depthData = [];
                             $depthData[] = "Select department";
                             foreach($departments as $depart){
                                 $depthData[$depart->id] = $depart->name;
                             }
-                            echo form_dropdown('departments', $depthData, ($_POST['departments']), 'id="departments" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Departments') . '" "');
+                            echo form_dropdown('department_id', $depthData, ($_POST['department_id'] ?? $_POST['department_id']) , 'id="department_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Departments') . '" "');
                           
                             echo '</div>
                             </div>';
                             echo '<div class="col-xs-6">
                             <div class="form-group">';
-                            echo lang('Employees', 'employee');
+                            echo lang('Employees', 'employee_id');
                             $empData = [];
                             $empData[] = "Select employee";
                             foreach($employees as $emp){
                                 $empData[$emp->id] = $emp->name;
                             }
-                            echo form_dropdown('employee', $empData, ($_POST['employee']), 'id="employee" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Employee') . '" "');
+                            echo form_dropdown('employee_id', $empData, ($_POST['employee_id'] ?? $_POST['employee_id']), 'id="employee_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Employee') . '" "');
                            
                             echo '</div>
                             </div></div>';
@@ -891,7 +907,7 @@
                             echo "<textarea name='notes' class='form-control' rows='3'></textarea>";
                             echo "</div>";
                             echo '<div class="form-group">';
-                            echo form_submit('submit', lang('entries_views_add_label_submit_btn'), array('class' => 'btn btn-success'));
+                            echo form_submit('submit', lang('entries_views_add_label_submit_btn'), array('class' => 'btn btn-success','id'=>'primary-button-submit'));
                             echo '<span class="link-pad"></span>';
                             echo anchor('entries/index', lang('entries_views_add_label_cancel_btn'), array('class' => 'btn btn-default'));
                             echo '<a></span>';
@@ -899,10 +915,10 @@
                             echo form_close();
                             ?>
                         </div>
+
+
                     </div>
                 </div>
             </div>
 
-        </div>
-    </div>
 </div>
