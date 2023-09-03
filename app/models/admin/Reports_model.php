@@ -378,6 +378,7 @@ class Reports_model extends CI_Model
             $data_res = array();
         }
 
+
         $this->db
             ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code,(select sum(amount) from sma_accounts_entryitems ei inner join sma_accounts_entries e on e.id =ei.entry_id where e.date < `sma_accounts_entries`.`date` and e.sid = ' . $supplier_id . ') as openingAmount, companies.company')
             ->from('sma_accounts_entryitems')
