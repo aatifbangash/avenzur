@@ -40,20 +40,21 @@ class Entries extends MY_Controller
 		// 	$this->db->where($conditions);
 		// }
 
-		if ($start_date && $start_date != "0000-00-00 00:00:00") {
-			$this->db->where('date >=', $start_date);		
+		if ($start_date && $start_date != "0000-00-00") {
+            $this->db->where('date >=', $start_date);       
 
-			if ($end_date  && $end_date != "0000-00-00 00:00:00") {
-				$this->db->where('date <=', $end_date);
-			}
-		}
+            if ($end_date  && $end_date != "0000-00-00") {
+                $this->db->where('date <=', $end_date);
+            }
+        }
+
 
 		if(!empty($eid)){
-			$this->db->where('id =', $eid);	
+			$this->db->where("id LIKE '%$eid%'");	
 		}
 
 		if(!empty($tran_number)){
-			$this->db->where('number =', $tran_number);	
+			$this->db->where("number LIKE '%$tran_number%'");	
 		}
 
 		// select all entries

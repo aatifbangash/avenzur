@@ -54,14 +54,14 @@
                 <div class="col-sm-4">
                     <div class="form-group">
                         <label class="control-label" for="start_date"><?= lang('From Date'); ?></label>
-                        <?php echo form_input('start_date', (isset($_GET['start_date']) ? $_GET['start_date'] : ''), 'class="form-control datetime" id="start_date"'); ?>
+                        <?php echo form_input('start_date', (isset($_GET['start_date']) ? $_GET['start_date'] : ''), 'class="form-control date" id="start_date"'); ?>
                     </div>
                 </div>
 
                 <div class="col-sm-4">
                     <div class="form-group">
                     <label class="control-label" for="end_date"><?= lang('To Date'); ?></label>
-                        <?php echo form_input('end_date', (isset($_GET['end_date']) ? $_GET['end_date'] : ''), 'class="form-control datetime" id="end_date"'); ?>
+                        <?php echo form_input('end_date', (isset($_GET['end_date']) ? $_GET['end_date'] : ''), 'class="form-control date" id="end_date"'); ?>
                     </div>
                 </div>
             </div>
