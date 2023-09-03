@@ -3265,6 +3265,7 @@ class Reports extends MY_Controller
             $end_date = $this->sma->fld($to_date);
             $supplier_id = $this->input->post('supplier');
 
+
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
             $ledger_account = $supplier_details->ledger_account;
             $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
