@@ -109,7 +109,6 @@ class Entries extends MY_Controller
 
 		$this->data['customers'] = $this->site->getAllCompanies('customer');
 		$this->data['suppliers'] = $this->site->getAllCompanies('supplier');
-
 		$this->data['departments'] = $this->site->getAllDepartments();
 		$this->data['employees'] = $this->site->getAllEmployees();
 

@@ -802,11 +802,11 @@
                             
                             
                             /* Items */
-                            echo '<div class="row"><div class="col-xs-4">
+                            echo '<div class="row"><div class="col-xs-12">
                             <div class="form-group">';
                             echo lang('Items', 'items');
                             echo form_input('sgproduct', (isset($_POST['sgproduct']) ? $_POST['sgproduct'] : ''), 'class="form-control" id="suggest_product2" data-bv-notempty="true"');
-                            echo '<input type="hidden" name="product" value="' . (isset($_POST['product']) ? $_POST['product'] : 0) . '" id="product" />';
+                            echo '<input type="hidden" name="product" value="' . (isset($_POST['product']) ? $_POST['product'] : 0) . '" id="report_product_id2" />';
                             echo '</div>
                             </div></div>';
 
@@ -814,12 +814,15 @@
                               /* Supplier + Customers */
                             echo '<div class="row"><div class="col-xs-6">
                             <div class="form-group">';
-                            echo lang('Supplier', 'supplier');
-                            $suData = [];
-                            foreach($this->suppliers as $supplier){
-                                $suData[$supplier->id] = $supplier->name;
+
+
+                            echo lang('Customer', 'customer');
+                            $cuData = [];
+                            $cuData[] = "Select customer";
+                            foreach($customers as $customer){
+                                $cuData[$customer->id] = $customer->name;
                             }
-                            echo form_dropdown('supplier', $suData, ($_POST['supplier']), 'id="supplier" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Supplier') . '" "');
+                            echo form_dropdown('customer', $cuData, ($_POST['customer']), 'id="customer" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Customer') . '" "');
                            
                             echo '</div>
                             </div>';
@@ -827,13 +830,16 @@
 
                             echo '<div class="col-xs-6">
                             <div class="form-group">';
-                            echo lang('Customer', 'customer');
-                            $cuData = [];
-                            foreach($this->customers as $customer){
-                                $cuData[$customer->id] = $customer->name;
+
+                            echo lang('Supplier', 'supplier');
+                            $suData = [];
+                            $suData[] = "Select Supplier";
+                            foreach($suppliers as $supplier){
+                                $suData[$supplier->id] = $supplier->name;
                             }
-                            echo form_dropdown('customer', $cuData, ($_POST['customer']), 'id="customer" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Customer') . '" "');
+                            echo form_dropdown('supplier', $suData, ($_POST['supplier']), 'id="supplier" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Supplier') . '" "');
                            
+
                             echo '</div>
                             </div></div>';
 
@@ -844,21 +850,23 @@
                             <div class="form-group">';
                             echo lang('Departments', 'departments');
                             $depthData = [];
-                            foreach($this->departments as $depart){
+                            $depthData[] = "Select department";
+                            foreach($departments as $depart){
                                 $depthData[$depart->id] = $depart->name;
                             }
                             echo form_dropdown('departments', $depthData, ($_POST['departments']), 'id="departments" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Departments') . '" "');
-                           
+                          
                             echo '</div>
                             </div>';
                             echo '<div class="col-xs-6">
                             <div class="form-group">';
                             echo lang('Employees', 'employee');
                             $empData = [];
-                            foreach($this->employees as $emp){
+                            $empData[] = "Select employee";
+                            foreach($employees as $emp){
                                 $empData[$emp->id] = $emp->name;
                             }
-                            echo form_dropdown('employee', $cuData, ($_POST['employee']), 'id="employee" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Customer') . '" "');
+                            echo form_dropdown('employee', $empData, ($_POST['employee']), 'id="employee" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Employee') . '" "');
                            
                             echo '</div>
                             </div></div>';

@@ -158,8 +158,9 @@
 
                                     </tr>
                                 <?php
+                                 $count++;
                                 }
-                                $count++;
+                               
 
                                 ?>
                                 <tr>

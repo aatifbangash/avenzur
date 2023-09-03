@@ -1047,7 +1047,7 @@ class Reports_model extends CI_Model
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
-                $response_array[strtotime($row->date)] = [
+                $response_array[strtotime($row->date)]['sale'.$row->id] = [
                     'date' => $row->date,
                     'documentNo' => $row->invoice_number,
                     'accountTransId' => $row->accountTransId,
@@ -1064,7 +1064,7 @@ class Reports_model extends CI_Model
         }
 
         // Get Purchase Data
-        $this->db->select('purcahse.id, ace.id as accountTransId, ace.number as accountTransNo, purcahse.supplier as NameOf, purcahse.invoice_number, purcahse.date, purchaseItem.product_id, purchaseItem.batchno, purchaseItem.expiry, purchaseItem.quantity, purchaseItem.sale_price')
+        $this->db->select('purcahse.id, ace.id as accountTransId, ace.number as accountTransNo, purcahse.supplier as NameOf, purcahse.invoice_number, purcahse.date, purchaseItem.product_id, purchaseItem.batchno, purchaseItem.expiry, purchaseItem.quantity, purchaseItem.net_unit_cost')
             ->from('sma_purchases as purcahse')
             ->join('sma_purchase_items as purchaseItem', 'purchaseItem.purchase_id = purcahse.id', 'INNER')
             ->join('sma_accounts_entries as ace', 'ace.pid = purcahse.id', 'LEFT')
@@ -1077,7 +1077,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
 
             foreach (($q->result()) as $row) {
-                $response_array[strtotime($row->date)] = [
+                $response_array[strtotime($row->date)]['purchase'.$row->id] = [
                     'date' => $row->date,
                     'documentNo' => $row->invoice_number,
                     'accountTransId' => $row->accountTransId,
@@ -1087,8 +1087,8 @@ class Reports_model extends CI_Model
                     'expiry' => $row->expiry,
                     'batch' => $row->batch,
                     'quantity' => $row->quantity,
-                    'unitCost' => $row->sale_price,
-                    'salePrice' => ($row->quantity * $row->sale_price),
+                    'unitCost' => $row->net_unit_cost,
+                    'salePrice' => ($row->quantity * $row->net_unit_cost),
                 ];
             }
         }
@@ -1106,7 +1106,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
 
             foreach (($q->result()) as $row) {
-                $response_array[strtotime($row->date)] = [
+                $response_array[strtotime($row->date)]['return'.$row->id] = [
                     'date' => $row->date,
                     'documentNo' => $row->invoice_number,
                     'accountTransId' => $row->accountTransId,
@@ -1147,7 +1147,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
 
             foreach (($q->result()) as $row) {
-                $response_array[strtotime($row->date)] = [
+                $response_array[strtotime($row->date)]['transfer'.$row->id] = [
                     'date' => $row->date,
                     'documentNo' => $row->invoice_number,
                     'accountTransId' => $row->accountTransId,
@@ -1167,6 +1167,143 @@ class Reports_model extends CI_Model
         // Sort Array on Date
         ksort($response_array);
         return $response_array;
+    }
+
+    public function getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id = 0, $to_warehouse_id = 0)
+    { 
+        // Opening subquery
+        $openingSubquery = $this->db->select('PI.product_id AS product_id, SUM(PI.quantity) AS opening_quantity, AVG(PI.net_unit_cost) AS opening_cost')
+                                    ->from('sma_purchase_items PI')
+                                    ->join('sma_purchases AS p', 'p.id = PI.purchase_id', 'left')
+                                    ->where('(DATE(p.date) < "'.$start_date.'" OR DATE(PI.date) < "'.$start_date.'") AND p.return_id IS NULL')
+                                    ->group_by('PI.product_id', false)
+                                    ->get_compiled_select();
+
+        // Movement In subquery
+        $movementInSubquery = $this->db->select('product_id, SUM(movement_in_quantity) AS movement_in_quantity, AVG(movement_in_cost) AS movement_in_cost')
+        ->from('(SELECT
+                PI.product_id,
+                SUM(PI.quantity) AS movement_in_quantity,
+                AVG(PI.net_unit_cost) AS movement_in_cost
+            FROM
+                sma_purchase_items PI
+            LEFT JOIN sma_purchases AS p
+            ON
+                p.id = PI.purchase_id
+            WHERE
+                DATE(p.date) BETWEEN "'.$start_date.'" AND "'.$end_date.'" AND p.return_id IS NULL
+            GROUP BY
+                PI.product_id
+
+            UNION ALL
+
+                SELECT
+                ri.product_id,
+                SUM(ri.quantity) AS movement_in_quantity,
+                AVG(ri.real_unit_price) AS movement_in_cost
+        FROM
+                sma_return_items ri
+            LEFT JOIN sma_returns AS r
+            ON
+                r.id = ri.return_id
+            WHERE
+                DATE(r.date) BETWEEN "'.$start_date.'" AND "'.$end_date.'"
+            GROUP BY
+                ri.product_id
+
+            UNION ALL
+        
+                SELECT
+                ti.product_id,
+                SUM(ti.quantity) AS movement_in_quantity,
+                AVG(ti.unit_cost) AS movement_in_cost
+            FROM
+                sma_transfer_items ti
+            LEFT JOIN
+                sma_transfers t ON ti.transfer_id = t.id
+            WHERE
+                DATE(t.date) BETWEEN "'.$start_date.'" AND "'.$end_date.'" 
+                AND (t.to_warehouse_id = 0 OR t.to_warehouse_id = '.$from_warehouse_id.')
+            GROUP BY
+                ti.product_id
+
+
+        ) AS movement_in_combined')
+        ->group_by('product_id', false)
+        ->get_compiled_select();
+        echo '<br>';
+
+        // Movement Out subquery
+        $movementOutSubquery = $this->db->select('product_id, SUM(movement_out_quantity) AS movement_out_quantity, AVG(movement_out_cost) AS movement_out_cost')
+        ->from('(SELECT
+                product_id,
+                SUM(si.quantity) AS movement_out_quantity,
+                AVG(si.net_unit_price) AS movement_out_cost
+            FROM
+                sma_sale_items si
+            LEFT JOIN sma_sales AS s
+            ON
+                s.id = si.sale_id
+            WHERE
+                DATE(s.date) BETWEEN "'.$start_date.'" AND "'.$end_date.'" 
+            GROUP BY
+                si.product_id
+
+            UNION ALL
+
+            SELECT
+                PI.product_id,
+                SUM(PI.quantity) AS movement_out_quantity,
+                AVG(PI.net_unit_cost) AS movement_out_cost
+            FROM
+                sma_purchase_items PI
+            LEFT JOIN sma_purchases AS p
+            ON
+                p.id = PI.purchase_id
+            WHERE
+                DATE(p.date) BETWEEN "'.$start_date.'" AND "'.$end_date.'"  AND p.return_id IS NOT NULL
+            GROUP BY
+                PI.product_id
+
+            UNION ALL
+
+            SELECT
+                ti.product_id,
+                SUM(ti.quantity) AS movement_out_quantity,
+                AVG(ti.unit_cost) AS movement_out_cost
+            FROM
+                sma_transfer_items ti
+            LEFT JOIN
+                sma_transfers t ON ti.transfer_id = t.id
+            WHERE
+                DATE(t.date) BETWEEN "'.$start_date.'" AND "'.$end_date.'"  
+                AND ((t.from_warehouse_id = 0 OR t.from_warehouse_id =  '.$from_warehouse_id.') OR (t.to_warehouse_id = 0 OR t.to_warehouse_id =  '.$to_warehouse_id.'))
+            GROUP BY
+                ti.product_id
+                    
+            ) AS movement_out_combined')
+        ->group_by('product_id', false)
+        ->get_compiled_select();
+
+        $this->db->select('opening.product_id, prd.code, prd.name');
+        $this->db->select('IFNULL(opening.opening_quantity, 0) AS opening_quantity, IFNULL(opening.opening_cost, 0) AS opening_cost, (IFNULL(opening.opening_quantity, 0) * IFNULL(opening.opening_cost, 0)) AS opening_total');
+        $this->db->select('IFNULL(movement_in.movement_in_quantity, 0) AS movement_in_quantity, IFNULL(movement_in.movement_in_cost, 0) AS movement_in_cost, (IFNULL(movement_in.movement_in_quantity, 0) * IFNULL(movement_in.movement_in_cost, 0)) AS movement_in_total');
+        $this->db->select('IFNULL(movement_out.movement_out_quantity, 0) AS movement_out_quantity, IFNULL(movement_out.movement_out_cost, 0) AS movement_out_cost, (IFNULL(movement_out.movement_out_quantity, 0) * IFNULL(movement_out.movement_out_cost, 0)) AS movement_out_total');
+        $this->db->select('(IFNULL(opening.opening_quantity, 0) + IFNULL(movement_in.movement_in_quantity, 0) - IFNULL(movement_out.movement_out_quantity, 0)) AS closing_quantity');
+        $this->db->select('(IFNULL(opening.opening_cost, 0) + IFNULL(movement_in.movement_in_cost, 0) - IFNULL(movement_out.movement_out_cost, 0)) AS closing_cost');
+        $this->db->select('((IFNULL(opening.opening_quantity, 0) + IFNULL(movement_in.movement_in_quantity, 0) - IFNULL(movement_out.movement_out_quantity, 0)) * (IFNULL(opening.opening_cost, 0) + IFNULL(movement_in.movement_in_cost, 0) - IFNULL(movement_out.movement_out_cost, 0))) AS closing_total');
+        $this->db->from('sma_products AS prd');
+
+        $this->db->join('(' . $openingSubquery . ') AS opening', 'prd.id = opening.product_id', 'left');
+        $this->db->join('(' . $movementInSubquery . ') AS movement_in', 'opening.product_id = movement_in.product_id', 'left');
+        $this->db->join('(' . $movementOutSubquery . ') AS movement_out', 'opening.product_id = movement_out.product_id', 'left');
+
+        $query = $this->db->get();
+        // echo $this->db->last_query();
+        // echo "<br>";
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        } 
     }
 
     //=== New Item Movement Report Ends ===//
