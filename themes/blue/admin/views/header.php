@@ -1672,12 +1672,22 @@
                                 <ul>
                                     <li id="stock_requests_index">
                                         <a class="submenu" href="<?= admin_url('stock_request/stock_order'); ?>">
-                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('New Request'); ?></span>
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('New Stock Request'); ?></span>
                                         </a>
                                     </li>
                                     <li id="stock_requests_index">
                                         <a class="submenu" href="<?= admin_url('stock_request'); ?>">
-                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Requests'); ?></span>
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Stock Requests'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="stock_requests_index">
+                                        <a class="submenu" href="<?= admin_url('stock_request/current_pr'); ?>">
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('Opened PR'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="stock_requests_index">
+                                        <a class="submenu" href="<?= admin_url('stock_request/purchase_requests'); ?>">
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Purchase Requests'); ?></span>
                                         </a>
                                     </li>
                                     <!--<li id="stock_requests_index">

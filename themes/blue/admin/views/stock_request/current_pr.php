@@ -1,11 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <script type="text/javascript"></script>
 <?php if ($Owner || ($GP && $GP['bulk_actions'])) {
-    echo admin_form_open('stock_request/stock_order', 'id="action-form"');
+    echo admin_form_open('stock_request/current_pr', 'id="action-form"');
 } ?>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-star-o"></i><?= lang('Stock Order Request'); ?>
+        <h2 class="blue"><i class="fa-fw fa fa-star-o"></i><?= lang('Opened Purchase Request'); ?>
     </h2>
         <div class="box-icon">
             <ul class="btn-tasks">
@@ -22,13 +22,15 @@
             <div class="col-lg-12">
 
                 <p class="introtext">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <?= lang('Safety Stock', 'safety_stock'); ?>
+                            <?php echo form_input('safety_stock', ($_POST['safety_stock'] ?? '1'), 'class="form-control input-tip" id="slref"'); ?>
+                        </div>
+                    </div>
                     <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="add_request">
                         <?php 
-                            if(isset($request_id)){
-                                echo lang('Edit Request');
-                            }else{
-                                echo lang('Add Request');
-                            } 
+                                echo lang('Approve Purchase Request');
                         ?>
                     </button>
                 </p>
@@ -42,36 +44,29 @@
                             </th>
                             <th><?= lang('code'); ?></th>
                             <th colspan="2"><?= lang('name'); ?></th>
-                            <!--<th><?php //echo lang('cost'); ?></th>-->
+                            <th><?= lang('cost'); ?></th>
                             <th><?= lang('Available Quantity'); ?></th>
-                            <th><?= lang('Avg Sale'); ?></th>
-                            <th colspan="2"><?= lang('Required Stock'); ?></th>
-                            <th><?= lang('Months'); ?></th>
+                            <th><?= lang('Avg Consumption'); ?></th>
+                            <th colspan="2"><?= lang('Q req'); ?></th>
+                            <!--<th><?php //echo lang('Safety Stock'); ?></th>-->
                         </tr>
                         </thead>
                         <tbody>
                             <?php 
-                                if($stock_array){
+                                if($current_pr){
                                     $count = 0;
-                                    foreach($stock_array as $stock){
+                                    foreach($current_pr as $pr){
                                         $count++;
                                         ?>
                                             <tr>
                                                 <td class="dataTables_empty"><?= $count; ?></td>
-                                                <td class="dataTables_empty"><?= $stock->code; ?></td>
-                                                <td colspan="2" class="dataTables_empty"><?= $stock->name; ?></td>
-                                                <!--<td class="dataTables_empty"><?php //echo number_format((float) $stock->cost, 2, '.', ''); ?></td>-->
-                                                <td class="dataTables_empty"><?= number_format((float) $stock->available_stock, 2, '.', ''); ?></td>
-                                                <td class="dataTables_empty"><?= isset($stock->avg_stock) ? number_format((float) ($stock->avg_stock), 2, '.', '') : number_format((float) ($stock->avg_last_3_months_sales) / 3, 2, '.', ''); ?></td>
+                                                <td class="dataTables_empty"><?= $pr->code; ?></td>
+                                                <td colspan="2" class="dataTables_empty"><?= $pr->name; ?></td>
+                                                <td class="dataTables_empty"><?= number_format((float) $pr->cost, 2, '.', ''); ?></td>
+                                                <td class="dataTables_empty"><?= number_format((float) $pr->total_warehouses_quantity, 2, '.', ''); ?></td>
+                                                <td class="dataTables_empty"><?= isset($pr->total_avg_stock) ? number_format((float) ($pr->total_avg_stock), 2, '.', '') : '0.00'; ?></td>
                                                 <td colspan="2" class="dataTables_empty">
-                                                    <?php 
-                                                        if(isset($stock->required_stock)){
-                                                            $required_stock = $stock->required_stock;
-                                                        }else{
-                                                            $required_stock = ($stock->avg_last_3_months_sales / 3) - $stock->available_stock > 0 ? number_format((float) ($stock->avg_last_3_months_sales / 3) - $stock->available_stock, 2, '.', '') : '0.00';
-                                                        } 
-                                                    ?>
-                                                    <input name="required_stock[]" type="text" value="<?= $required_stock; ?>" class="rid" />
+                                                    <input name="required_stock[]" type="text" value="<?= $pr->qreq; ?>" class="rid" />
                                                     <input type="hidden" name="product_id[]" value="<?= $stock->id; ?>" />
                                                     <input type="hidden" name="available_stock[]" value="<?= $stock->available_stock; ?>" />
                                                     <?php 
@@ -87,7 +82,7 @@
                                                     ?>
                                                     
                                                 </td>
-                                                <td class="dataTables_empty">1 month</td>
+                                                <!--<td class="dataTables_empty"><input style="width:40%;" type="text" name="safety_stock" value="1" /> months</td>-->
                                             </tr>
                                         <?php
                                     }

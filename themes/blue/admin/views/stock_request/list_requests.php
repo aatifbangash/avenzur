@@ -19,7 +19,7 @@
                            class="table table-bordered table-condensed table-hover table-striped">
                         <thead>
                         <tr class="active">
-                            <th>#</th>
+                            <th style="width:2%;">#</th>
                             <th><?= lang('date'); ?></th>
                             <th><?= lang('warehouse'); ?></th>
                             <th><?= lang('total'); ?></th>
@@ -36,12 +36,12 @@
                                         ?>
                                             <tr>
                                                 <td class="dataTables_empty"><?= $count; ?></td>
-                                                <td class="dataTables_empty"><?= $stock_request->date; ?></td>
-                                                <td class="dataTables_empty"><?= $stock_request->warehouse; ?></td>
-                                                <td class="dataTables_empty"> <?= number_format((float) $stock_request->req_stock, 2, '.', ''); ?></td>
-                                                <td class="dataTables_empty"><?= $stock_request->status; ?></td>
-                                                <td>
-                                                    <a href="<?php echo admin_url('stock_request/view/' . $stock_request->id); ?>" class="tip" title="" data-original-title="View Request"><i class="fa fa-file-text-o"></i></a>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $stock_request->date; ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $stock_request->warehouse; ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;"> <?= number_format((float) $stock_request->req_stock, 2, '.', ''); ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $stock_request->status; ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;">
+                                                    <!--<a href="<?php //echo admin_url('stock_request/view/' . $stock_request->id); ?>" class="tip" title="" data-original-title="View Request"><i class="fa fa-file-text-o"></i></a>-->
                                                     <a href="<?php echo admin_url('stock_request/edit/' . $stock_request->id); ?>" class="tip" title="Edit Request"><i class="fa fa-edit"></i></a>
                                                     <a href="<?php echo admin_url('stock_request/delete/' . $stock_request->id); ?>" class="tip" title="" data-original-title="Delete Request"><i class="fa fa-trash-o"></i></a>
                                                 </td>
