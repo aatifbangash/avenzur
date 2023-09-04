@@ -69,6 +69,15 @@
                             <tbody style="text-align:center;">
                                 <?php
                                     $count = 0;
+
+                                    $totalObDebit = 0;
+                                    $totalObCredit = 0;
+                                    $totalTrsDebit = 0;
+                                    $totalTrsCredit = 0;
+                                    $totalFinalEndDebit = 0;
+                                    $totalFinalEndCredit = 0;
+
+
                                     foreach ($trial_balance as $data){
                                         //sale_total + payment_total
 
@@ -87,6 +96,12 @@
                                             $finalEndDebit = $eb_debit - $eb_credit;
                                          }
 
+                                         $totalObDebit += $data['obDebit'];
+                                         $totalObCredit += $data['obCredit'];
+                                         $totalTrsDebit += $data['trsDebit'];
+                                         $totalTrsCredit += $data['trsCredit'];
+                                         $totalFinalEndDebit += $finalEndDebit;
+                                         $totalFinalEndCredit += $finalEndCredit;
 
                                         $count++;
                                         ?>
@@ -107,7 +122,25 @@
                                 ?>
                                 
                             </tbody>
-                            <tfoot></tfoot>
+                            <tfoot>
+                                <tr>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
+
+                                 
+                                    <th class="text-center"><?=$this->sma->formatDecimal($totalObDebit)?></th>
+                                    <th class="text-center"><?=$this->sma->formatDecimal($totalObCredit)?></th>
+
+                                    <th class="text-center"><?=$this->sma->formatDecimal($totalTrsDebit)?></th>
+                                    <th class="text-center"><?=$this->sma->formatDecimal($totalTrsCredit)?></th>
+
+                                    <th class="text-center"><?=$this->sma->formatDecimal($totalFinalEndDebit)?></th>
+                                    <th class="text-center"><?= $this->sma->formatDecimal($totalFinalEndCredit); ?></th>
+
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 
