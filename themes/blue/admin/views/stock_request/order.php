@@ -42,7 +42,7 @@
                             </th>
                             <th><?= lang('code'); ?></th>
                             <th colspan="2"><?= lang('name'); ?></th>
-                            <th><?= lang('cost'); ?></th>
+                            <!--<th><?php echo lang('cost'); ?></th>-->
                             <th><?= lang('Available Quantity'); ?></th>
                             <th><?= lang('Avg Sale'); ?></th>
                             <th colspan="2"><?= lang('Required Stock'); ?></th>
@@ -60,7 +60,7 @@
                                                 <td class="dataTables_empty"><?= $count; ?></td>
                                                 <td class="dataTables_empty"><?= $stock->code; ?></td>
                                                 <td colspan="2" class="dataTables_empty"><?= $stock->name; ?></td>
-                                                <td class="dataTables_empty"><?= number_format((float) $stock->cost, 2, '.', ''); ?></td>
+                                                <!--<td class="dataTables_empty"><?php //echo number_format((float) $stock->cost, 2, '.', ''); ?></td>
                                                 <td class="dataTables_empty"><?= number_format((float) $stock->available_stock, 2, '.', ''); ?></td>
                                                 <td class="dataTables_empty"><?= isset($stock->avg_stock) ? number_format((float) ($stock->avg_stock), 2, '.', '') : number_format((float) ($stock->avg_last_3_months_sales) / 3, 2, '.', ''); ?></td>
                                                 <td colspan="2" class="dataTables_empty">
