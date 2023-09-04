@@ -42,7 +42,7 @@
                             </th>
                             <th><?= lang('code'); ?></th>
                             <th colspan="2"><?= lang('name'); ?></th>
-                            <!--<th><?php echo lang('cost'); ?></th>-->
+                            <!--<th><?php //echo lang('cost'); ?></th>-->
                             <th><?= lang('Available Quantity'); ?></th>
                             <th><?= lang('Avg Sale'); ?></th>
                             <th colspan="2"><?= lang('Required Stock'); ?></th>
