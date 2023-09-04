@@ -29,6 +29,31 @@ class Stock_request_model extends CI_Model
         return false;
     }
 
+    public function editStockRequest($req_id, $data, $items){
+        $this->db->trans_start();
+
+        $this->db->delete('sma_stock_requests', ['id' => $req_id]);
+
+        $this->db->delete('sma_stock_request_items', ['stock_request_id' => $req_id]);
+
+        if ($this->db->insert('stock_requests', $data)) {
+            $request_id = $this->db->insert_id();
+
+            foreach ($items as $item) {
+                $item['stock_request_id'] = $request_id;
+                $this->db->insert('stock_request_items', $item);
+            }
+        }
+
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === false) {
+            log_message('error', 'An errors has been occurred while edit the stock request (stock_request_model.php)');
+        } else {
+            return true;
+        }
+        return false;
+    }
+
     public function delete($request_id){
         $this->db->trans_start();
 
@@ -69,7 +94,61 @@ class Stock_request_model extends CI_Model
         
         return $data_res;
     }
+
+    public function getStockRequestItems($request_id){
+        $response = array();
+        $this->db
+                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, sma_stock_request_items.available_stock, sma_stock_request_items.avg_stock, sma_stock_request_items.required_stock')
+                ->from('sma_stock_request_items')
+                ->join('sma_products', 'sma_products.id = sma_stock_request_items.product_id', 'left')
+                ->where('sma_stock_request_items.stock_request_id',$request_id);
+        $q = $this->db->get();
+        if(!empty($q)){
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data_res[] = $row;
+                }
+            } else {
+                $data_res = array();
+            }
+        }else{
+            $data_res = array();
+        }
+        
+        return $data_res;
+    }
     
+    public function getCurrentPR(){
+        $response = array();
+        $this->db
+                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_stock_request_items.required_stock) As total_req_stock, SUM(sma_stock_request_items.avg_stock) As total_avg_stock')
+                ->select('(SELECT SUM(sma_warehouses_products.quantity)
+                         FROM sma_warehouses_products
+                         WHERE sma_warehouses_products.product_id = sma_products.id
+                         GROUP BY sma_warehouses_products.product_id
+                ) AS total_warehouses_quantity')
+                ->from('sma_stock_requests')
+                ->join('sma_stock_request_items', 'sma_stock_request_items.stock_request_id = sma_stock_requests.id')
+                ->join('sma_products', 'sma_products.id = sma_stock_request_items.product_id', 'left')
+                ->where('sma_stock_requests.status', 'pending')
+                ->group_by('sma_stock_request_items.product_id');
+        $q = $this->db->get();
+        if(!empty($q)){
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $row->qreq =  ($row->total_warehouses_quantity) - ($row->total_avg_stock * 1);
+                    $data_res[] = $row;
+                }
+            } else {
+                $data_res = array();
+            }
+        }else{
+            $data_res = array();
+        }
+        
+        return $data_res;
+    }
+
     public function getStockForPharmacy($warehouse_id){
         
         $response = array();
