@@ -149,10 +149,12 @@ class Stock_request_model extends CI_Model
         return $data_res;
     }
 
-    public function getStockForPharmacy($warehouse_id){
+    public function getStockForPharmacy($warehouse_id, $product_ids){
         
         $response = array();
-        $this->db
+
+        if(!$product_ids){
+            $this->db
                 ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_warehouses_products.quantity) As available_stock')
                 ->select('(SELECT SUM(sma_sale_items.quantity) 
                           FROM sma_sale_items
@@ -164,6 +166,22 @@ class Stock_request_model extends CI_Model
                 ->join('sma_products', 'sma_products.id = sma_warehouses_products.product_id', 'left')
                 ->where('sma_warehouses_products.warehouse_id', $warehouse_id)
                 ->group_by('sma_warehouses_products.product_id');
+        }else{
+            $this->db
+                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_warehouses_products.quantity) As available_stock')
+                ->select('(SELECT SUM(sma_sale_items.quantity) 
+                          FROM sma_sale_items
+                          INNER JOIN sma_sales ON sma_sale_items.sale_id = sma_sales.id
+                          WHERE sma_sale_items.product_id = sma_products.id
+                          AND sma_sale_items.warehouse_id = '.$warehouse_id.'
+                          AND sma_sales.date >= DATE_SUB(NOW(), INTERVAL 3 MONTH)) AS avg_last_3_months_sales', false)
+                ->from('sma_warehouses_products')
+                ->join('sma_products', 'sma_products.id = sma_warehouses_products.product_id', 'left')
+                ->where('sma_warehouses_products.warehouse_id', $warehouse_id)
+                ->where_in('sma_warehouses_products.product_id', $product_ids)
+                ->group_by('sma_warehouses_products.product_id');
+        }
+
         $q = $this->db->get();
         if(!empty($q)){
             if ($q->num_rows() > 0) {

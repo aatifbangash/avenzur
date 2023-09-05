@@ -137,8 +137,10 @@ class stock_request extends MY_Controller
 
         //$this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $warehouse_id = $this->session->userdata('warehouse_id');
+        $productId = $this->input->post('product') ? $this->input->post('product') : 0;
+        $product_ids = $this->input->post('product_ids') ? $this->input->post('product_ids') : 0;
 
-        if ($_POST) {
+        if ($_POST && !$_POST['search_product']) {
             for($i=0;$i<sizeof($_POST['product_id']);$i++){
                 $product_id      = $_POST['product_id'][$i];
                 $available_stock      = $_POST['available_stock'][$i];
@@ -170,7 +172,7 @@ class stock_request extends MY_Controller
             
         }
         
-        if($_POST){
+        if($_POST && !$_POST['search_product']){
             if(isset($_POST['request_id'])){
                 if($this->stock_request_model->editStockRequest($_POST['request_id'], $data, $items)){
                     $this->session->set_flashdata('message', $this->lang->line('Stock_request_edited'));
@@ -190,8 +192,11 @@ class stock_request extends MY_Controller
             }
             
         } else{
-            $stock_array = $this->stock_request_model->getStockForPharmacy($warehouse_id);
+            $stock_array = $this->stock_request_model->getStockForPharmacy($warehouse_id, $product_ids);
+            $products = $this->products_model->getAllProducts();
             $this->data['stock_array'] = $stock_array;
+            $this->data['product'] = $product_ids;
+            $this->data['products'] = $products;
 
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Stock Order Request')]];
             $meta = ['page_title' => lang('Stock Order Request'), 'bc' => $bc];

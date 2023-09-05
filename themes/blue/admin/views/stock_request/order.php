@@ -22,7 +22,26 @@
             <div class="col-lg-12">
 
                 <p class="introtext">
-                    <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="add_request">
+                    <?php 
+                        if(!isset($request_id)){
+                    ?>
+                        <div class="form-group">
+                            <?= lang('products', 'Products') ?>
+                            <select class="form-control" id="cf1" name="product_ids[]" multiple="multiple" >
+                                <option value="0">All</option>
+                                    <?php
+                                        foreach($products as $product)
+                                        {
+                                            echo '<option value="'.$product->id.'">'.$product->name.' ('.$product->code.')'.'</option>';
+                                        }
+                                    ?>                  
+                            </select>
+                            <input type="hidden" name="product" value="<?= isset($_POST['product']) ? $_POST['product'] : 0 ?>" id="report_product_id2" />
+                            <input type="submit" value="search" class="btn btn-primary" name="search_product" />
+                        </div>
+                    <?php } 
+                    ?>
+                    <button type="submit" class="btn btn-primary" id="add_request">
                         <?php 
                             if(isset($request_id)){
                                 echo lang('Edit Request');

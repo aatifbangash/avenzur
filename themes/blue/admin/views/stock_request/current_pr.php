@@ -25,7 +25,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <?= lang('Safety Stock', 'safety_stock'); ?>
-                            <?php echo form_input('safety_stock', ($_POST['safety_stock'] ?? '1'), 'class="form-control input-tip" id="slref"'); ?>
+                            <?php echo form_input('safety_stock', ($_POST['safety_stock'] ?? '1'), 'class="form-control input-tip" onchange="safety_stock_changed();" id="slref"'); ?>
                         </div>
                     </div>
                     <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="add_request">
