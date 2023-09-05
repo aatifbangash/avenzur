@@ -205,6 +205,7 @@ $lang['suppliers_trial_balance']          = 'Suppliers Trial Balance';
 $lang['suppliers_trial_balance_report']   = 'Suppliers TB Report';
 $lang['customers_trial_balance']          = 'Customers Trial Balance';
 $lang['customers_trial_balance_report']   = 'Customers TB Report';
+$lang['inventory_trial_balance']          = 'Inventory TB Report';
 $lang['general_ledger_trial_balance']          = 'General Ledger Trial Balance';
 $lang['general_ledger_trial_balance_report']   = 'General Ledger TB Report';
 $lang['supplier_statement_report']        = 'Supplier Statement Report';

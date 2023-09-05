@@ -38,7 +38,7 @@
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
                         <li>
                             <a href="<?=admin_url('employees/add')?>">
-                                <i class="fa fa-plus-circle"></i> <?=lang('Add Department')?>
+                                <i class="fa fa-plus-circle"></i> <?=lang('Add Employee')?>
                             </a>
                         </li>
                         
@@ -52,7 +52,7 @@
      	<div class="row">
             <div class="col-lg-12">
 
-                <p class="introtext"><?=lang('All Departments');?></p>
+                <p class="introtext"><?=lang('All Employees');?></p>
 
         <div class="table-responsive">
      		 <table id="POData" cellpadding="0" cellspacing="0" border="0"

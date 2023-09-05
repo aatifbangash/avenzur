@@ -527,6 +527,51 @@
                                 </ul>
                             </li>
 
+
+                            <li class="mm_departments">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-sitemap"></i>
+                                    <span class="text"> <?= lang('Departments'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="departments_index">
+                                        <a class="submenu" href="<?= admin_url('departments'); ?>">
+                                            <i class="fa fa-sitemap"></i>
+                                            <span class="text"> <?= lang('List Departments'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="departments_add">
+                                        <a class="submenu" href="<?= admin_url('departments/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('Add Departments'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="mm_employees">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-users"></i>
+                                    <span class="text"> <?= lang('Employees'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="employees_index">
+                                        <a class="submenu" href="<?= admin_url('employees'); ?>">
+                                            <i class="fa fa-users"></i>
+                                            <span class="text"> <?= lang('List Employees'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="employees_add">
+                                        <a class="submenu" href="<?= admin_url('employees/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('Add Employee'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
                             <li class="mm_purchases">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star"></i>
@@ -1034,6 +1079,11 @@
                                     <li id="reports_item_movement_report">
                                         <a href="<?= admin_url('reports/item_movement_report') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('item_movement_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_inventory_trial_balance_report">
+                                        <a href="<?= admin_url('reports/inventory_trial_balance') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('inventory_trial_balance'); ?></span>
                                         </a>
                                     </li>
                                     <li id="reports_supplier_trial_balance_report">
