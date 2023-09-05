@@ -1845,11 +1845,19 @@ class Reports_model extends CI_Model
     public function getVatPurchaseReport($start_date = null, $end_date = null)
     {
 
+       
         $this->db
-            ->select('sma_purchases.id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as transaction_id, sma_purchases.supplier, sma_purchases.date, sma_purchases.invoice_number, sma_purchases.grand_total as total_with_vat, sma_purchases.product_tax as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
+            ->select('sma_purchases.id,withT.subtotal as total_item_with_vat, withOutT.subtotal as total_item_with_zero_tax, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as transaction_id, sma_purchases.supplier, sma_purchases.date, sma_purchases.invoice_number, sma_purchases.total_discount,sma_purchases.grand_total as total_with_vat, sma_purchases.product_tax as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code, sma_accounts_entries.number as account_number')
             ->from('sma_purchases')
             ->join('sma_companies', 'sma_companies.id=sma_purchases.supplier_id')
             ->join('sma_purchase_items', 'sma_purchase_items.purchase_id=sma_purchases.id')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.pid=sma_purchases.id','left')
+
+            //->join('sma_purchase_items withT', 'withT.purchase_id=sma_purchases.id AND withT.tax > 0','left')
+            //->join('sma_purchase_items withOutT', 'withOutT.purchase_id=sma_purchases.id AND withOutT.tax = 0','left')
+            ->join('(SELECT purchase_id, SUM(subtotal) as subtotal FROM `sma_purchase_items` WHERE tax > 0 group by purchase_id ) withT', 'withT.purchase_id=sma_purchases.id','left')
+            ->join('(SELECT purchase_id, SUM(subtotal) as subtotal FROM `sma_purchase_items` WHERE tax=0 group by purchase_id ) withOutT', 'withOutT.purchase_id=sma_purchases.id','left')
+
             //->join('sma_tax_rates', 'sma_tax_rates.id=sma_purchases.order_tax_id')
             ->where('DATE(sma_purchases.date) >=', $start_date)
             ->where('DATE(sma_purchases.date) <=', $end_date)
@@ -1859,6 +1867,7 @@ class Reports_model extends CI_Model
             ->order_by('sma_purchases.date asc');
 
         $q = $this->db->get();
+        //echo $this->db->last_query();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;

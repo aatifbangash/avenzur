@@ -34,10 +34,10 @@ class Employees extends MY_Controller
     public function getEmployees()
     {
         $edit_link        = anchor('admin/employees/edit/$1', '<i class="fa fa-edit"></i> ' . lang('Edit Employee '));
-        $delete_link      = "<a href='#' class='po' title='<b>" . $this->lang->line('Delete Department') . "</b>' data-content=\"<p>"
+        $delete_link      = "<a href='#' class='po' title='<b>" . $this->lang->line('Delete Employee') . "</b>' data-content=\"<p>"
             . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('employees/delete/$1') . "'>"
             . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
-            . lang('Delete Dmployee') . '</a>';
+            . lang('Delete Employee') . '</a>';
         $action = '<div class="text-center"><div class="btn-group text-left">'
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>

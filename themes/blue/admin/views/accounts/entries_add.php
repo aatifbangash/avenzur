@@ -580,23 +580,40 @@
             numberOfMonths: 1,
         });
     
+        function checkIfAnyFieldSelected() {
+                var product_id = parseFloat($('#report_product_id2').val());
+                var customer_id = parseFloat($('#customer_id').val());
+                var supplier_id = parseFloat($('#supplier_id').val());
+                var department_id = parseFloat($('#department_id').val());
+                var employee_id = parseFloat($('#employee_id').val());
 
-        // $('#primary-button-submit').click(function(event) {
-           
-        //         var product_id = parseFloat($('#report_product_id2').val());
-        //         var customer_id = parseFloat($('#customer_id').val());
-        //         var supplier_id = parseFloat($('#supplier_id').val());
-        //         var department_id = parseFloat($('#department_id').val());
-        //         var employee_id = parseFloat($('#employee_id').val());
+                return (
+                   // product_id > 0 ||
+                    customer_id > 0 ||
+                    supplier_id > 0 ||
+                    department_id > 0 ||
+                    employee_id > 0
+                );
+            }
 
-        //         console.log(product_id+' | '+ customer_id+' | '+supplier_id +' | '+ department_id+' | '+employee_id)
+            // Enable or disable the submit button based on field selection
+            function enableSubmitButton() {
+                var submitBtn = $('#primary-button-submit');
 
-        //         // if (product_id <= 0 && (customer_id <= 0 || customer_id == 'NaN') && supplier_id <= 0 && department_id <= 0 && employee_id <= 0) {
-        //         //    // event.preventDefault();
-        //         //     alert('At least one Dimensions (item, customer, supplier, department or employee) field must be selected.');
-                    
-        //         // }
-        // });
+                if (checkIfAnyFieldSelected()) {
+                    submitBtn.prop('disabled', false);
+                } else {
+                    submitBtn.prop('disabled', true);
+                }
+            }
+
+            // Check form validity when any of the fields change
+            $('#product_id, #customer_id, #supplier_id, #department_id, #employee_id').on('change',function() {
+                enableSubmitButton();
+            });
+
+            // Initial check for the submit button
+            enableSubmitButton();
 
 
     });
@@ -818,13 +835,18 @@
 
                             /*Dimensions*/
                             /* Items */
-                            echo '<div class="row"><div class="col-xs-10">
+                            echo ' <div class="well well-sm no-print">';
+                            echo '<span class="introtext no-print">At least one Dimensions (item, customer, supplier, department or employee) field must be selected.</span><br>';
+                            echo '<div class="row">         
+                            <div class="col-xs-10">
                             <div class="form-group">';
                             echo lang('Items', 'product_id');
                             echo form_input('sgproduct', (isset($_POST['sgproduct']) ? $_POST['sgproduct'] : ''), 'class="form-control" id="suggest_product2" ');
                             echo '<input type="hidden" name="product_id" value="' . (isset($_POST['product_id']) ? $_POST['product_id'] : 0) . '" id="report_product_id2" />';
                             echo '</div>
-                            </div></div>';
+                            </div>
+                            
+                            </div>';
 
 
                               /* Supplier + Customers */
@@ -886,6 +908,7 @@
                            
                             echo '</div>
                             </div></div>';
+                            echo '</div>';
 
 
                            

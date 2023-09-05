@@ -1,6 +1,6 @@
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-barcode"></i><?= lang('Edit Department') ?>
+        <h2 class="blue"><i class="fa-fw fa fa-barcode"></i><?= lang('Edit Employee') ?>
         </h2>
 
         <div class="box-icon">
