@@ -43,8 +43,10 @@
                                                 <td class="dataTables_empty" style="text-align: center;">
                                                     <!--<a href="<?php //echo admin_url('stock_request/view/' . $stock_request->id); ?>" class="tip" title="" data-original-title="View Request"><i class="fa fa-file-text-o"></i></a>-->
                                                     <?php if($warehouse_id == $stock_request->warehouse_id){ ?>
-                                                    <a href="<?php echo admin_url('stock_request/edit/' . $stock_request->id); ?>" class="tip" title="Edit Request"><i class="fa fa-edit"></i></a>
-                                                    <a href="<?php echo admin_url('stock_request/delete/' . $stock_request->id); ?>" class="tip" title="" data-original-title="Delete Request"><i class="fa fa-trash-o"></i></a>
+                                                        <?php if($stock_request->status != 'deleted'){ ?>
+                                                            <a href="<?php echo admin_url('stock_request/edit/' . $stock_request->id); ?>" class="tip" title="Edit Request"><i class="fa fa-edit"></i></a>
+                                                        <?php } ?>
+                                                            <a href="<?php echo admin_url('stock_request/delete/' . $stock_request->id); ?>" class="tip" title="" data-original-title="Delete Request"><i class="fa fa-trash-o"></i></a>
                                                     <?php }else{
                                                         echo '-';
                                                     } ?>
