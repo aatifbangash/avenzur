@@ -22,15 +22,19 @@
             <div class="col-lg-12">
 
                 <p class="introtext">
-                    <div class="col-md-4">
+                    <!--<div class="col-md-4">
                         <div class="form-group">
-                            <?= lang('Safety Stock', 'safety_stock'); ?>
-                            <?php echo form_input('safety_stock', ($_POST['safety_stock'] ?? '1'), 'class="form-control input-tip" onchange="safety_stock_changed();" id="slref"'); ?>
+                            <?php //echo lang('Safety Stock', 'safety_stock'); ?>
+                            <?php //echo form_input('safety_stock', ($_POST['safety_stock'] ?? '1'), 'class="form-control input-tip" onchange="safety_stock_changed();" id="slref"'); ?>
                         </div>
-                    </div>
+                    </div>-->
                     <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="add_request">
                         <?php 
+                            if(isset($request_id)){
+                                echo lang('Edit Purchase Request');
+                            }else{
                                 echo lang('Approve Purchase Request');
+                            } 
                         ?>
                     </button>
                 </p>
@@ -48,7 +52,7 @@
                             <th><?= lang('Available Quantity'); ?></th>
                             <th><?= lang('Avg Consumption'); ?></th>
                             <th colspan="2"><?= lang('Q req'); ?></th>
-                            <!--<th><?php //echo lang('Safety Stock'); ?></th>-->
+                            <th><?= lang('Safety Stock'); ?></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -66,23 +70,23 @@
                                                 <td class="dataTables_empty"><?= number_format((float) $pr->total_warehouses_quantity, 2, '.', ''); ?></td>
                                                 <td class="dataTables_empty"><?= isset($pr->total_avg_stock) ? number_format((float) ($pr->total_avg_stock), 2, '.', '') : '0.00'; ?></td>
                                                 <td colspan="2" class="dataTables_empty">
-                                                    <input name="required_stock[]" type="text" value="<?= $pr->qreq; ?>" class="rid" />
-                                                    <input type="hidden" name="product_id[]" value="<?= $stock->id; ?>" />
-                                                    <input type="hidden" name="available_stock[]" value="<?= $stock->available_stock; ?>" />
+                                                    <input name="required_stock[]" id="required_stock_<?= $count; ?>" type="text" value="<?= $pr->qreq; ?>" class="rid" />
+                                                    <input type="hidden" name="product_id[]" value="<?= $pr->id; ?>" />
+                                                    <input type="hidden" name="available_stock[]" id="available_stock_<?= $count; ?>" value="<?= $pr->total_warehouses_quantity; ?>" />
                                                     <?php 
                                                         if(isset($request_id)){
                                                             ?>
-                                                                <input type="hidden" name="avg_stock[]" value="<?= ($stock->avg_stock); ?>" />
+                                                                <input type="hidden" id="avg_stock_<?= $count; ?>" name="avg_stock[]" value="<?= ($pr->total_avg_stock); ?>" />
                                                             <?php
                                                         }else{
                                                             ?>
-                                                                <input type="hidden" name="avg_stock[]" value="<?= ($stock->avg_last_3_months_sales / 3); ?>" />
+                                                                <input type="hidden" id="avg_stock_<?= $count; ?>" name="avg_stock[]" value="<?= ($pr->total_avg_stock); ?>" />
                                                             <?php
                                                         }
                                                     ?>
                                                     
                                                 </td>
-                                                <!--<td class="dataTables_empty"><input style="width:40%;" type="text" name="safety_stock" value="1" /> months</td>-->
+                                                <td class="dataTables_empty"><input style="width:40%;" type="text" name="safety_stock[]" value="1" onchange="changeSafetyStock(this, '<?= $count; ?>');" /> months</td>
                                             </tr>
                                         <?php
                                     }
@@ -108,5 +112,13 @@
         </div>
     </div>
 </div>
+<script type="text/javascript">
+    function changeSafetyStock(obj, count){
+        var available_stock = document.getElementById('available_stock_'+count).value;
+        var average_stock = document.getElementById('avg_stock_'+count).value;
+        var qreq = (average_stock*obj.value) - available_stock;
+        document.getElementById('required_stock_'+count).value = qreq;
+    }
+</script>
 <?php echo form_close(); ?>
 

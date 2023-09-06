@@ -297,7 +297,7 @@ $(document).ready(function() {
     $(document).ready(function () {
         
         
-        $('#subscribeModal').modal({backdrop: 'static', keyboard: false}) ; 
+        //$('#subscribeModal').modal({backdrop: 'static', keyboard: false}) ; 
         // $('#subscribeModal').modal('show');
         $(".selectcountry").on('click',function(){
             $('#subscribeModal').modal('show');

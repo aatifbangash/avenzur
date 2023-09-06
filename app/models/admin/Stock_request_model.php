@@ -9,6 +9,28 @@ class Stock_request_model extends CI_Model
         parent::__construct();
     }
 
+    public function addPurchaseRequest($data, $items){
+        $this->db->trans_start();
+        if ($this->db->insert('purchase_requests', $data)) {
+            $request_id = $this->db->insert_id();
+
+            foreach ($items as $item) {
+                $item['purchase_request_id'] = $request_id;
+                $this->db->insert('purchase_request_items', $item);
+            }
+
+            $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending']);
+        }
+        
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === false) {
+            log_message('error', 'An errors has been occurred while adding the purchase request (stock_request_model.php)');
+        } else {
+            return true;
+        }
+        return false;
+    }
+
     public function addStockRequest($data, $items){
         $this->db->trans_start();
         if ($this->db->insert('stock_requests', $data)) {
@@ -23,6 +45,33 @@ class Stock_request_model extends CI_Model
         $this->db->trans_complete();
         if ($this->db->trans_status() === false) {
             log_message('error', 'An errors has been occurred while adding the stock request (stock_request_model.php)');
+        } else {
+            return true;
+        }
+        return false;
+    }
+
+    public function editPurchaseRequest($req_id, $data, $items){
+        $this->db->trans_start();
+
+        $this->db->delete('sma_purchase_requests', ['id' => $req_id]);
+
+        $this->db->delete('sma_purchase_request_items', ['purchase_request_id' => $req_id]);
+
+        if ($this->db->insert('purchase_requests', $data)) {
+            $request_id = $this->db->insert_id();
+
+            foreach ($items as $item) {
+                $item['purchase_request_id'] = $request_id;
+                $this->db->insert('sma_purchase_request_items', $item);
+            }
+
+            $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['purchase_request_id' => $req_id]);
+        }
+
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === false) {
+            log_message('error', 'An errors has been occurred while edit the stock request (stock_request_model.php)');
         } else {
             return true;
         }
@@ -70,6 +119,30 @@ class Stock_request_model extends CI_Model
         return false;
     }
 
+    public function getPurchaseRequests(){
+        $response = array();
+        $this->db
+                ->select('sma_purchase_requests.id, sma_purchase_requests.status, sma_purchase_requests.date, SUM(sma_purchase_request_items.required_stock) AS req_stock')
+                ->from('sma_purchase_requests')
+                ->join('sma_purchase_request_items', 'sma_purchase_request_items.purchase_request_id = sma_purchase_requests.id', 'left')
+                ->group_by('sma_purchase_requests.id');
+
+        $q = $this->db->get();
+        if(!empty($q)){
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data_res[] = $row;
+                }
+            } else {
+                $data_res = array();
+            }
+        }else{
+            $data_res = array();
+        }
+        
+        return $data_res;
+    }
+
     public function getStockRequests($warehouse_id){
         $response = array();
         $this->db
@@ -79,6 +152,29 @@ class Stock_request_model extends CI_Model
                 ->join('sma_stock_request_items', 'sma_stock_request_items.stock_request_id = sma_stock_requests.id', 'left')
                 ->group_by('sma_stock_requests.id');
 
+        $q = $this->db->get();
+        if(!empty($q)){
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data_res[] = $row;
+                }
+            } else {
+                $data_res = array();
+            }
+        }else{
+            $data_res = array();
+        }
+        
+        return $data_res;
+    }
+
+    public function getPurchaseRequestItems($request_id){
+        $response = array();
+        $this->db
+                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, sma_purchase_request_items.available_stock as total_warehouses_quantity, sma_purchase_request_items.avg_stock as total_avg_stock, sma_purchase_request_items.required_stock as qreq, sma_purchase_request_items.months')
+                ->from('sma_purchase_request_items')
+                ->join('sma_products', 'sma_products.id = sma_purchase_request_items.product_id', 'left')
+                ->where('sma_purchase_request_items.purchase_request_id',$request_id);
         $q = $this->db->get();
         if(!empty($q)){
             if ($q->num_rows() > 0) {
@@ -136,7 +232,7 @@ class Stock_request_model extends CI_Model
         if(!empty($q)){
             if ($q->num_rows() > 0) {
                 foreach (($q->result()) as $row) {
-                    $row->qreq =  ($row->total_warehouses_quantity) - ($row->total_avg_stock * 1);
+                    $row->qreq =  ($row->total_avg_stock * 1) - ($row->total_warehouses_quantity);
                     $data_res[] = $row;
                 }
             } else {

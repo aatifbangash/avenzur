@@ -105,26 +105,94 @@ class stock_request extends MY_Controller
         $this->page_construct('stock_request/order', $meta, $this->data);
     }
 
+    public function edit_purchase($id = null){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $current_pr = $this->stock_request_model->getPurchaseRequestItems($id);
+        $this->data['current_pr'] = $current_pr;
+        $this->data['request_id'] = $id;
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Purchase Order Request')]];
+        $meta = ['page_title' => lang('Purchase Order Request'), 'bc' => $bc];
+        $this->page_construct('stock_request/current_pr', $meta, $this->data);
+    }
+
     public function purchase_requests(){
         $this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        $warehouse_id = $this->session->userdata('warehouse_id');
+        //$warehouse_id = $this->session->userdata('warehouse_id');
 
-        $stock_requests_array = $this->stock_request_model->getStockRequests($warehouse_id);
+        $purchase_requests_array = $this->stock_request_model->getPurchaseRequests();
 
-        $this->data['stock_requests_array'] = $stock_requests_array;
-        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Stock Requests')]];
-        $meta = ['page_title' => lang('Stock Requests'), 'bc' => $bc];
-        $this->page_construct('stock_request/list_requests', $meta, $this->data);
+        $this->data['purchase_requests_array'] = $purchase_requests_array;
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Purchase Requests')]];
+        $meta = ['page_title' => lang('Purchase Requests'), 'bc' => $bc];
+        $this->page_construct('stock_request/list_purchase_requests', $meta, $this->data);
     }
 
     public function current_pr(){
         $this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        $current_pr = $this->stock_request_model->getCurrentPR();
-        $this->data['current_pr'] = $current_pr;
+
+        if ($_POST) {
+            for($i=0;$i<sizeof($_POST['product_id']);$i++){
+                $product_id      = $_POST['product_id'][$i];
+                $available_stock      = $_POST['available_stock'][$i];
+                $avg_stock      = $_POST['avg_stock'][$i];
+                $required_stock      = $_POST['required_stock'][$i];
+                $safety_stock = $_POST['safety_stock'][$i];
+
+                $item = [
+                    'product_id'        => $product_id,
+                    'available_stock'   => $available_stock,
+                    'avg_stock'         => $avg_stock,
+                    'required_stock'    => $required_stock,
+                    'months'            => $safety_stock
+                ];
+
+                $items[] = $item;
+            }
+        
+            if (empty($items)) {
+                $this->session->set_flashdata('error', $this->lang->line('Products not found'));
+                admin_redirect('stock_request/purchase_requests');
+            } else {
+                krsort($items);
+            }
+            
+            $data = [
+                'date' => date('Y-m-d'),
+                'status' => 'completed',
+                'approved_by' => $this->session->userdata['user_id']
+            ];
+            
+            if(isset($_POST['request_id'])){
+                if($this->stock_request_model->editPurchaseRequest($_POST['request_id'], $data, $items)){
+                    $this->session->set_flashdata('message', $this->lang->line('Purchase_request_edited'));
+                    admin_redirect('stock_request/purchase_requests');
+                }else{
+                    $this->session->set_flashdata('error', $this->lang->line('Purchase request not edited'));
+                    admin_redirect('stock_request/purchase_requests');
+                }    
+            }else{
+                if($this->stock_request_model->addPurchaseRequest($data, $items)){
+                    $this->session->set_flashdata('message', $this->lang->line('Purchase_request_added'));
+                    admin_redirect('stock_request/purchase_requests');
+                }else{
+                    $this->session->set_flashdata('error', $this->lang->line('Purchase request not added'));
+                    admin_redirect('stock_request/purchase_requests');
+                }   
+            }
+            
+        }else{
+            $current_pr = $this->stock_request_model->getCurrentPR();
+            $this->data['current_pr'] = $current_pr;
+        }
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('opened Purchase Request')]];
         $meta = ['page_title' => lang('Opened Purchase Request'), 'bc' => $bc];
