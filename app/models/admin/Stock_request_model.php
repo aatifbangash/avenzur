@@ -163,12 +163,22 @@ class Stock_request_model extends CI_Model
 
     public function getStockRequests($warehouse_id){
         $response = array();
-        $this->db
+        if($this->Owner || $this->Admin){
+            $this->db
                 ->select('sma_stock_requests.id, sma_stock_requests.warehouse_id, sma_stock_requests.status, sma_stock_requests.date, sma_warehouses.name as warehouse, SUM(sma_stock_request_items.required_stock) AS req_stock')
                 ->from('sma_stock_requests')
                 ->join('sma_warehouses', 'sma_warehouses.id = sma_stock_requests.warehouse_id', 'left')
                 ->join('sma_stock_request_items', 'sma_stock_request_items.stock_request_id = sma_stock_requests.id', 'left')
                 ->group_by('sma_stock_requests.id');
+        }else{
+            $this->db
+                ->select('sma_stock_requests.id, sma_stock_requests.warehouse_id, sma_stock_requests.status, sma_stock_requests.date, sma_warehouses.name as warehouse, SUM(sma_stock_request_items.required_stock) AS req_stock')
+                ->from('sma_stock_requests')
+                ->join('sma_warehouses', 'sma_warehouses.id = sma_stock_requests.warehouse_id', 'left')
+                ->join('sma_stock_request_items', 'sma_stock_request_items.stock_request_id = sma_stock_requests.id', 'left')
+                ->where('sma_stock_requests.warehouse_id',$warehouse_id)
+                ->group_by('sma_stock_requests.id');
+        }
 
         $q = $this->db->get();
         if(!empty($q)){

@@ -57,6 +57,7 @@ class stock_request extends MY_Controller
         $stock_requests_array = $this->stock_request_model->getStockRequests($warehouse_id);
 
         $this->data['stock_requests_array'] = $stock_requests_array;
+        $this->data['warehouse_id'] = $warehouse_id;
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Stock Requests')]];
         $meta = ['page_title' => lang('Stock Requests'), 'bc' => $bc];
         $this->page_construct('stock_request/list_requests', $meta, $this->data);
