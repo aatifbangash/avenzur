@@ -1730,16 +1730,20 @@
                                             <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Stock Requests'); ?></span>
                                         </a>
                                     </li>
-                                    <li id="stock_requests_index">
-                                        <a class="submenu" href="<?= admin_url('stock_request/current_pr'); ?>">
-                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('Opened PR'); ?></span>
-                                        </a>
-                                    </li>
-                                    <li id="stock_requests_index">
-                                        <a class="submenu" href="<?= admin_url('stock_request/purchase_requests'); ?>">
-                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Purchase Requests'); ?></span>
-                                        </a>
-                                    </li>
+                                    <?php 
+                                        if($Owner || $Admin){
+                                    ?>
+                                        <li id="stock_requests_index">
+                                            <a class="submenu" href="<?= admin_url('stock_request/current_pr'); ?>">
+                                                <i class="fa fa-star-o"></i><span class="text"> <?= lang('Opened PR'); ?></span>
+                                            </a>
+                                        </li>
+                                        <li id="stock_requests_index">
+                                            <a class="submenu" href="<?= admin_url('stock_request/purchase_requests'); ?>">
+                                                <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Purchase Requests'); ?></span>
+                                            </a>
+                                        </li>
+                                    <?php } ?>
                                     <!--<li id="stock_requests_index">
                                         <a class="submenu" href="<?php //echo admin_url('stock_request'); ?>">
                                             <i class="fa fa-star-o"></i><span class="text"> <?php // echo lang('Outgoing Stock Requests'); ?></span>

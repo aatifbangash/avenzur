@@ -79,6 +79,21 @@ class stock_request extends MY_Controller
         }
     }
 
+    public function delete_purchase($id = null){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        if($this->stock_request_model->delete_purchase($id)){
+            $this->session->set_flashdata('message', lang('purchase_request_deleted'));
+            admin_redirect('stock_request/purchase_requests');
+        }else{
+            $this->session->set_flashdata('error', lang('Could not delete request'));
+            admin_redirect('stock_request/purchase_requests');
+        }
+    }
+
     public function view($id = null){
         $this->sma->checkPermissions();
 

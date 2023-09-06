@@ -103,6 +103,24 @@ class Stock_request_model extends CI_Model
         return false;
     }
 
+    public function delete_purchase($request_id){
+        $this->db->trans_start();
+
+        $this->db->delete('sma_purchase_requests', ['id' => $request_id]);
+
+        $this->db->delete('sma_purchase_request_items', ['purchase_request_id' => $request_id]);
+
+        $this->db->update('stock_requests', ['status' => 'deleted'], ['purchase_request_id' => $request_id]);
+
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === false) {
+            log_message('error', 'An errors has been occurred while deleting the stock request (stock_request_model.php)');
+        } else {
+            return true;
+        }
+        return false;
+    }
+
     public function delete($request_id){
         $this->db->trans_start();
 

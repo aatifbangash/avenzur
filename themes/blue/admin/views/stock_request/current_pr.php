@@ -61,6 +61,7 @@
                                     $count = 0;
                                     foreach($current_pr as $pr){
                                         $count++;
+                                        $months = isset($pr->months) ? $pr->months : 1;
                                         ?>
                                             <tr>
                                                 <td class="dataTables_empty"><?= $count; ?></td>
@@ -86,7 +87,7 @@
                                                     ?>
                                                     
                                                 </td>
-                                                <td class="dataTables_empty"><input style="width:40%;" type="text" name="safety_stock[]" value="1" onchange="changeSafetyStock(this, '<?= $count; ?>');" /> months</td>
+                                                <td class="dataTables_empty"><input style="width:40%;" type="text" name="safety_stock[]" value="<?= $months; ?>" onchange="changeSafetyStock(this, '<?= $count; ?>');" /> months</td>
                                             </tr>
                                         <?php
                                     }
