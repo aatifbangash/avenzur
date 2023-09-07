@@ -40,8 +40,17 @@
                                                 <td class="dataTables_empty" style="text-align: center;"><?= $purchase_request->status; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;">
                                                     <!--<a href="<?php //echo admin_url('stock_request/view/' . $stock_request->id); ?>" class="tip" title="" data-original-title="View Request"><i class="fa fa-file-text-o"></i></a>-->
-                                                    <a href="<?php echo admin_url('stock_request/edit_purchase/' . $purchase_request->id); ?>" class="tip" title="Edit Request"><i class="fa fa-edit"></i></a>
-                                                    <a href="<?php echo admin_url('stock_request/delete_purchase/' . $purchase_request->id); ?>" class="tip" title="" data-original-title="Delete Request"><i class="fa fa-trash-o"></i></a>
+                                                    <?php 
+                                                        if($purchase_request->status != 'completed' && $purchase_request->status != 'rejected'){
+                                                            ?>
+                                                                <a href="<?php echo admin_url('stock_request/edit_purchase/' . $purchase_request->id); ?>" class="tip" title="Edit Request"><i class="fa fa-edit"></i></a>
+                                                                <a href="<?php echo admin_url('stock_request/delete_purchase/' . $purchase_request->id); ?>" class="tip" title="" data-original-title="Delete Request"><i class="fa fa-trash-o"></i></a>
+                                                            <?php
+                                                        }else{
+                                                            echo '-';
+                                                        }
+                                                    ?>
+                                                    
                                                 </td>
                                             </tr>
                                             <?php

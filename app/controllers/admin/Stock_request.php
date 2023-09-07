@@ -156,6 +156,7 @@ class stock_request extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         if ($_POST) {
+            $status = $_POST['status'];
             for($i=0;$i<sizeof($_POST['product_id']);$i++){
                 $product_id      = $_POST['product_id'][$i];
                 $available_stock      = $_POST['available_stock'][$i];
@@ -183,7 +184,7 @@ class stock_request extends MY_Controller
             
             $data = [
                 'date' => date('Y-m-d'),
-                'status' => 'completed',
+                'status' => $status,
                 'approved_by' => $this->session->userdata['user_id']
             ];
             
@@ -225,6 +226,7 @@ class stock_request extends MY_Controller
         $product_ids = $this->input->post('product_ids') ? $this->input->post('product_ids') : 0;
 
         if ($_POST && !$_POST['search_product']) {
+            $status = $_POST['status'];
             for($i=0;$i<sizeof($_POST['product_id']);$i++){
                 $product_id      = $_POST['product_id'][$i];
                 $available_stock      = $_POST['available_stock'][$i];
@@ -250,7 +252,7 @@ class stock_request extends MY_Controller
 
             $data = [
                 'warehouse_id' => $warehouse_id,
-                'status' => 'pending',
+                'status' => $status,
                 'date' => date('Y-m-d')
             ];
             

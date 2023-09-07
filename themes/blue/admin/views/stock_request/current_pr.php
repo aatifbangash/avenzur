@@ -28,15 +28,22 @@
                             <?php //echo form_input('safety_stock', ($_POST['safety_stock'] ?? '1'), 'class="form-control input-tip" onchange="safety_stock_changed();" id="slref"'); ?>
                         </div>
                     </div>-->
-                    <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="add_request">
-                        <?php 
-                            if(isset($request_id)){
-                                echo lang('Edit Purchase Request');
-                            }else{
-                                echo lang('Approve Purchase Request');
-                            } 
-                        ?>
-                    </button>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <?= lang('Status', 'Status'); ?>
+                            <?php
+                            $statuses = array('completed' => 'completed', 'rejected' => 'Rejected');
+                            echo form_dropdown('status', $statuses, ($_POST['status'] ?? $Settings->default_warehouse), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('status') . '" required="required" style="width:100%;" '); 
+                            ?>
+                        
+                            <button type="submit" class="btn btn-primary" id="add_request">
+                            <?php 
+                                echo lang('Submit');
+                            ?>
+                            </button>
+                        </div>
+                    </div>
                 </p>
                 <div class="table-responsive">
                     <table id="TOData" cellpadding="0" cellspacing="0" border="0"
@@ -48,8 +55,8 @@
                             </th>
                             <th><?= lang('code'); ?></th>
                             <th colspan="2"><?= lang('name'); ?></th>
-                            <th><?= lang('cost'); ?></th>
                             <th><?= lang('Available Quantity'); ?></th>
+                            <th><?= lang('Q ord'); ?></th>
                             <th><?= lang('Avg Consumption'); ?></th>
                             <th colspan="2"><?= lang('Q req'); ?></th>
                             <th><?= lang('Safety Stock'); ?></th>
@@ -67,8 +74,8 @@
                                                 <td class="dataTables_empty"><?= $count; ?></td>
                                                 <td class="dataTables_empty"><?= $pr->code; ?></td>
                                                 <td colspan="2" class="dataTables_empty"><?= $pr->name; ?></td>
-                                                <td class="dataTables_empty"><?= number_format((float) $pr->cost, 2, '.', ''); ?></td>
                                                 <td class="dataTables_empty"><?= number_format((float) $pr->total_warehouses_quantity, 2, '.', ''); ?></td>
+                                                <td class="dataTables_empty"><?= $pr->total_req_stock; ?></td>
                                                 <td class="dataTables_empty"><?= isset($pr->total_avg_stock) ? number_format((float) ($pr->total_avg_stock), 2, '.', '') : '0.00'; ?></td>
                                                 <td colspan="2" class="dataTables_empty">
                                                     <input name="required_stock[]" id="required_stock_<?= $count; ?>" type="text" value="<?= $pr->qreq; ?>" class="rid" />
@@ -100,7 +107,7 @@
                                                     
                                 }else{
                             ?>
-                                <tr><td colspan="11" class="dataTables_empty"><?= lang('Could not load data'); ?></td></tr>
+                                <tr><td colspan="11" class="dataTables_empty"><?= lang('No rows found.'); ?></td></tr>
                             <?php
                                 }
                             ?>
