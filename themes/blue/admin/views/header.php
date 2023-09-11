@@ -769,11 +769,26 @@
                                     </li>
                                 </ul>
                             </li>
-                           <li class="mm_notifications">
-                                <a class="submenu" href="<?= admin_url('notifications'); ?>">
-                                    <i class="fa fa-info-circle"></i><span class="text"> <?= lang('notifications'); ?></span>
+
+                            <li class="mm_notifications">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-info-circle"></i><span class="text"> <?= lang('notifications'); ?> </span>
+                                    <span class="chevron closed"></span>
                                 </a>
+                                <ul>
+                                    <li id="system_notifications_index">
+                                        <a href="<?= admin_url('notifications') ?>">
+                                            <i class="fa fa-cog"></i><span class="text"> <?= lang('System Notifications'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="rasd_notifications">
+                                        <a href="<?= admin_url('notifications/rasd') ?>">
+                                            <i class="fa fa-file"></i><span class="text"> <?= lang('List Rasd Notifications'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
                             </li>
+
                             <li class="mm_calendar">
                                 <a class="submenu" href="<?= admin_url('calendar'); ?>">
                                     <i class="fa fa-calendar"></i><span class="text"> <?= lang('calendar'); ?></span>

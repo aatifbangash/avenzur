@@ -18,6 +18,33 @@ class Cmt_model extends CI_Model
         }
     }
 
+    public function addRasdNotification($data){
+        if ($this->db->insert('rasd_notifications', $data)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function deleteRasdNotification($id){
+        $notification = $this->db->get_where('rasd_notifications', ['id' => $id], 1);
+        if ($notification->num_rows() > 0) {
+            $notificationObj = $notification->row();
+            //echo $notificationObj->dispatch_id;exit;
+            $q = $this->db->get_where('sma_notification_serials', ['notification_id' => $notificationObj->dispatch_id], 1);
+            if ($q->num_rows() > 0) {
+                return false;
+            }else{
+                if ($this->db->delete('rasd_notifications', ['id' => $id])) {
+                    return true;
+                }
+                return false;
+            }  
+        }else{
+            return false;
+        }
+    }
+
     public function deleteComment($id)
     {
         if ($this->db->delete('notifications', ['id' => $id])) {
