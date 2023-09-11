@@ -927,7 +927,7 @@ class Purchases_model extends CI_Model
          $start_date = $this->sma->fld($start_date);
          $end_date   = $end_date ? $this->sma->fld($end_date) : date('Y-m-d');
          $pp .= " AND p.date >= '{$start_date}' AND p.date <= '{$end_date}' ";
-         $sp .= " s.date >= '{$start_date}' AND s.date <= '{$end_date}' ";
+         $sp .= " AND s.date >= '{$start_date}' AND s.date <= '{$end_date}' ";
          $pp .= ' GROUP BY pi.product_id ) PCosts';
          $sp .= ' GROUP BY si.product_id ) PSales';
          
@@ -943,7 +943,7 @@ class Purchases_model extends CI_Model
 
             if($q !== false)
             {
-                 return $this->db->get()->row()->sold;
+                 return $q->row()->sold;
 
             } else {
                 return 0;
