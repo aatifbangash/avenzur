@@ -960,6 +960,47 @@ class Reports_model extends CI_Model
         return $data;
     }
 
+
+    public function getItemOpeningBalance($productId, $start_date, $warehouseId = 0){
+
+        $q = $this->db->query("SELECT
+        COALESCE(purchaseQuantity, 0) - COALESCE(saleQuantity, 0) - COALESCE(returnSupplierQuantity, 0) + COALESCE(returnQuantity, 0) + COALESCE(transferInQuantity, 0) - COALESCE(-1 * transferOutQuantity, 0) AS openingBalance,
+        COALESCE(purchaseUnitPrice, 0) AS unitPrice
+        FROM
+        ( SELECT SUM(saleItem.quantity) AS saleQuantity FROM `sma_sales` AS `sale` 
+            INNER JOIN `sma_sale_items` AS `saleItem` ON `saleItem`.`sale_id` = `sale`.`id`
+            WHERE  `saleItem`.`product_id` = $productId AND DATE(sale.date) < '$start_date' AND `sale`.`sale_invoice`=1 ) AS sales, 
+        ( SELECT SUM(purItem.quantity) AS purchaseQuantity FROM `sma_purchases` AS `purchase` 
+          INNER JOIN `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id`=`purchase`.`id` 
+          WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0 ) AS purchases,
+        ( SELECT SUM(purItem.quantity) AS returnSupplierQuantity FROM `sma_purchases` AS `purchase`
+            INNER JOIN `sma_purchase_items` AS `purItem` ON  `purItem`.`purchase_id` = `purchase`.`id`
+            WHERE `purItem`.`product_id` = $productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total` < 0 ) AS returnSupplier, 
+        ( SELECT SUM(rtnItem.quantity) AS returnQuantity FROM `sma_returns` AS `rtn` 
+           INNER JOIN `sma_return_items` AS `rtnItem` ON `rtnItem`.`return_id`=`rtn`.`id` 
+           WHERE `rtnItem`.`product_id`=$productId AND DATE(rtn.date) < '$start_date' ) AS returns, 
+        ( SELECT trnf.id, IFNULL(SUM(titm.quantity), 0) + IFNULL(SUM(pitm.quantity), 0) AS transferInQuantity FROM `sma_transfers` AS `trnf` 
+          LEFT JOIN( SELECT transfer_id, SUM(quantity) AS quantity FROM sma_transfer_items WHERE `product_id`=$productId AND DATE(`date`) < '$start_date' AND warehouse_id=$warehouseId GROUP BY transfer_id ) AS titm ON titm.transfer_id=trnf.id 
+          LEFT JOIN( SELECT transfer_id, SUM(quantity) AS quantity FROM sma_purchase_items WHERE `product_id`=$productId AND DATE(`date`) < '$start_date' AND transfer_id IS NOT NULL GROUP BY warehouse_id ) AS pitm ON pitm.transfer_id=trnf.id 
+          WHERE DATE(`trnf`.`date`) < '$start_date' AND `trnf`.`to_warehouse_id`=$warehouseId ) AS tranferIn, 
+        ( SELECT trnf.id, IFNULL(SUM(titm.quantity), 0) + IFNULL(SUM(pitm.quantity), 0) AS transferOutQuantity FROM `sma_transfers` AS `trnf` 
+          LEFT JOIN( SELECT transfer_id, SUM(quantity) AS quantity FROM sma_transfer_items WHERE `product_id`=$productId AND DATE(`date`) < '$start_date' GROUP BY transfer_id ) AS titm ON titm.transfer_id=trnf.id 
+          LEFT JOIN( SELECT warehouse_id, SUM(quantity) AS quantity FROM sma_purchase_items WHERE `product_id`=$productId AND DATE(`date`) < '$start_date' AND transfer_id IS NULL AND purchase_id IS NULL AND quantity < 0 GROUP BY warehouse_id ) AS pitm ON pitm.warehouse_id=trnf.from_warehouse_id 
+          WHERE DATE(`trnf`.`date`) < '$start_date' AND `trnf`.`from_warehouse_id`=$warehouseId AND trnf.id IN( SELECT DISTINCT transfer_id FROM sma_transfer_items WHERE `product_id`=$productId ) AND trnf.from_warehouse_id IN( SELECT DISTINCT warehouse_id FROM sma_purchase_items WHERE `product_id`=$productId AND DATE(`date`) < '$start_date' AND transfer_id IS NULL AND purchase_id IS NULL AND quantity < 0 GROUP BY warehouse_id ) ) AS transferOut, 
+        ( SELECT MAX(purItem.net_unit_cost) AS purchaseUnitPrice FROM `sma_purchases` AS `purchase` 
+          INNER JOIN `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id`=`purchase`.`id` WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0
+         ) AS purchaseUnitPrice;");
+        // echo $this->db->last_query();
+        $response = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $response[] = $row;
+            }
+        }
+
+        return $response;
+    }
+
     public function preItemQuantity($productId, $start_date, $transferCase = 'Company', $warehouseId = 0)
     {
 

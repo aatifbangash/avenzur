@@ -27,13 +27,7 @@
                 <div class="row">
 
                     <div class="col-lg-12">
-                        <!-- <div class="col-md-6">
-                            <div class="form-group">
-                                <?= lang('Warehouse', 'warehouse'); ?>
-                                <?php echo form_dropdown('warehouse', $allWareHouses, set_value('warehouse', $_POST['warehouse']), array('class' => 'form-control', 'id' => 'warehouse')); ?>
-                               
-                            </div>
-                        </div> -->
+                       
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('Product', 'product'); ?>
@@ -43,6 +37,15 @@
                                 <input type="hidden" name="product" value="<?= isset($_POST['product']) ? $_POST['product'] : 0 ?>" id="report_product_id2" />
                             </div>
                         </div>
+
+                         <div class="col-md-6">
+                            <div class="form-group">
+                            <?= lang('Type', 'Type'); ?>
+                                <?php echo form_dropdown('filterOnType', $filterOnTypeArr, set_value('filterOnType', $_POST['filterOnType']), array('class' => 'form-control', 'data-placeholder'=>"-- Select Type --", 'id' => 'filterOnType')); ?>
+                               
+                            </div>
+                        </div>
+                        
                     </div>
 
                     <div class="col-lg-12">

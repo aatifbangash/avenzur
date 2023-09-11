@@ -3582,7 +3582,46 @@ class Reports extends MY_Controller
         }
     }
 
-    public function item_movement_report()
+    public function item_movement_report(){
+
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $filterOnTypeArr= [
+            "" => "-- Select Type --",
+            "purchases" => "Purchases",
+            "sales" => "Sales",
+            "returnCustomer"=>"Return Customer",
+            "returnSupplier"=>"Return Supplier",
+            "transfer" => "Transfer"
+        ];
+        $this->data['filterOnTypeArr'] = $filterOnTypeArr;
+        $user = $this->site->getUser();
+        $defaultWareHouseId = ($user->warehouse_id ? $user->warehouse_id : $this->site->Settings->default_warehouse);
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $productId = $this->input->post('product') ? $this->input->post('product') : 0;
+        $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
+
+        if ($productId && $from_date && $to_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+
+            $itemOpenings = $this->reports_model->getItemOpeningBalance($productId, $start_date, $defaultWareHouseId);
+            echo '<pre>', print_r( $itemOpenings ), '</pre>';
+
+
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
+            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
+            $this->page_construct('reports/item_movement_report', $meta, $this->data);
+        }
+    }
+
+    public function item_movement_reportA()
     {
 
         $this->sma->checkPermissions();
