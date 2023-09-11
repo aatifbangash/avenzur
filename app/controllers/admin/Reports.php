@@ -132,6 +132,40 @@ class Reports extends MY_Controller
         $this->page_construct('reports/customer_report', $meta, $this->data);
     }
 
+    public function stock() {
+//        $this->sma->checkPermissions('customers');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_report')]];
+        $meta = ['page_title' => lang('customers_report'), 'bc' => $bc];
+        $this->page_construct('reports/stock', $meta, $this->data);
+    }
+
+    public function getStock()
+    {
+//        $this->sma->checkPermissions('customers', true);
+
+        $this->load->library('datatables');
+        $this->datatables
+            ->select('p.`id` AS `id`,
+                        p.`code` AS `code`,
+                        p.`cost` AS `item_cost`,
+                        p.`price` AS `sale_price`,
+                        p.`name` AS `name`,
+                        wp.`quantity` AS `quantity`,
+                        wp.`batchno` AS `batchno`,
+                        wp.`expiry` AS `expiry`,
+                        wp.`purchase_cost`', false)
+            ->from('sma_products p')
+            ->join('sma_warehouses_products wp', ' wp.`product_id` = p.`id`', 'left')
+            ->where('wp.warehouse_id', 32)
+            ->where('p.`type`', 'standard');
+//            ->group_by('companies.id')
+//            ->add_column('Actions', "<div class='text-center'><a class=\"tip\" title='" . lang('view_report') . "' href='" . admin_url('reports/customer_report/$1') . "'><span class='label label-primary'>" . lang('view_report') . '</span></a></div>', 'id')
+//            ->unset_column('id');
+        echo $this->datatables->generate();
+    }
+
     public function customers()
     {
         $this->sma->checkPermissions('customers');
