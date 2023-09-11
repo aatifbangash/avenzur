@@ -116,6 +116,33 @@ class Sales_model extends CI_Model
             foreach ($items as $item) {
                 $item['sale_id'] = $sale_id;
                 $this->db->insert('sale_items', $item);
+
+                // Code for serials here
+                $serials_quantity = $item['quantity'];
+                $serials_gtin = $item['product_code'];
+                $serials_batch_no = $item['batch_no'];
+                
+                $this->db->select('sma_invoice_serials.*');
+                $this->db->from('sma_invoice_serials');
+                $this->db->join('sma_purchases', 'sma_invoice_serials.pid = sma_purchases.id');
+                $this->db->where('sma_invoice_serials.gtin', $serials_gtin);
+                $this->db->where('sma_invoice_serials.batch_no', $serials_batch_no);
+                $this->db->where('sma_invoice_serials.sid', 0);
+                $this->db->where('sma_invoice_serials.rsid', 0);
+                $this->db->where('sma_invoice_serials.tid', 0);
+                $this->db->where('sma_invoice_serials.pid !=', 0);
+                $this->db->where('sma_purchases.status', 'received');
+                $this->db->limit($serials_quantity);
+
+                $notification_serials = $this->db->get();
+                
+                if ($notification_serials->num_rows() > 0) {
+                    foreach (($notification_serials->result()) as $row) {
+                        $this->db->update('sma_invoice_serials', ['sid' => $sale_id], ['serial_number' => $row->serial_number, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
+                    }
+                }
+                // Code for serials end here
+
                 $sale_item_id = $this->db->insert_id();
                 if ($data['sale_status'] == 'completed' && empty($si_return)) {
                     $item_costs = $this->site->item_costing($item);
@@ -246,11 +273,15 @@ class Sales_model extends CI_Model
         $sale       = $this->getInvoiceByID($id);
         $sale_items = $this->resetSaleActions($id);
         $this->site->log('Sale', ['model' => $this->getInvoiceByID($id), 'items' => $sale_items]);
-        if ($this->db->delete('sale_items', ['sale_id' => $id]) && $this->db->delete('sales', ['id' => $id]) && $this->db->delete('costing', ['sale_id' => $id])) {
+        if ($this->db->delete('sale_items', ['sale_id' => $id]) && $this->db->delete('sales', ['id' => $id]) && $this->db->delete('costing', ['sale_id' => $id]) && $sale->sale_status != 'completed') {
             $this->syncSaleCustomerBalance($id, $sale->customer_id);
             $this->db->delete('sales', ['sale_id' => $id]);
             $this->db->delete('payments', ['sale_id' => $id]);
             $this->site->syncQuantity(null, null, $sale_items);
+
+            $this->db->update('sma_invoice_serials', ['sid' => 0], ['sid' => $id]);
+        }else{
+            return false;
         }
         $this->db->delete('attachments', ['subject_id' => $id, 'subject_type' => 'sale']);
         $this->db->trans_complete();

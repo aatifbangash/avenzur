@@ -145,7 +145,30 @@ class Pos_model extends CI_Model
 
                 $item['sale_id'] = $sale_id;
                 $this->db->insert('sale_items', $item);
+                // Code for serials here
+                $serials_quantity = $item['quantity'];
+                $serials_gtin = $item['product_code'];
+                
+                $this->db->select('sma_invoice_serials.*');
+                $this->db->from('sma_invoice_serials');
+                $this->db->join('sma_transfers', 'sma_invoice_serials.tid = sma_transfers.id');
+                $this->db->where('sma_invoice_serials.gtin', $serials_gtin);
+                $this->db->where('sma_invoice_serials.sid', 0);
+                $this->db->where('sma_invoice_serials.rsid', 0);
+                $this->db->where('sma_invoice_serials.pid !=', 0);
+                $this->db->where('sma_invoice_serials.tid !=', 0);
+                $this->db->where('sma_transfers.to_warehouse_id', $item['warehouse_id']);
+                $this->db->where('sma_transfers.status', 'completed');
+                $this->db->limit($serials_quantity);
 
+                $notification_serials = $this->db->get();
+                
+                if ($notification_serials->num_rows() > 0) {
+                    foreach (($notification_serials->result()) as $row) {
+                        $this->db->update('sma_invoice_serials', ['sid' => $sale_id], ['serial_number' => $row->serial_number, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
+                    }
+                }
+                // Code for serials end here
 
                 $rsd['OperationType'] = 'DISPATCH';
                 $rsd['TransactionNumber'] = 0;

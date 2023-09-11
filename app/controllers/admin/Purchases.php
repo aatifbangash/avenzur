@@ -584,6 +584,8 @@ class Purchases extends MY_Controller
             }
             $this->session->set_flashdata('message', lang('purchase_deleted'));
             admin_redirect('welcome');
+        }else{
+            $this->sma->send_json(['error' => 1, 'msg' => 'Cannot delete this purchase']);
         }
     }
 
