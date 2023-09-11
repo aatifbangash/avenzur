@@ -149,15 +149,6 @@ class Pos_model extends CI_Model
                 $serials_quantity = $item['quantity'];
                 $serials_gtin = $item['product_code'];
                 
-                /*$this->db->where('gtin', $serials_gtin);
-                $this->db->where('batch_no', $serials_batch_no);
-                $this->db->where('sid', 0);
-                $this->db->where('rsid', 0);
-                $this->db->where('pid !=', 0);
-                $this->db->where('tid !=', 0);
-                $this->db->limit($serials_quantity);
-
-                $notification_serials = $this->db->get('sma_invoice_serials');*/
                 $this->db->select('sma_invoice_serials.*');
                 $this->db->from('sma_invoice_serials');
                 $this->db->join('sma_transfers', 'sma_invoice_serials.tid = sma_transfers.id');
