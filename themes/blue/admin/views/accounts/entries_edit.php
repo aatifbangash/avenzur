@@ -594,6 +594,41 @@ $(document).ready(function() {
         },
         placeholder: '<?= lang('please_select_ledger'); ?>'
     });
+
+    function checkIfAnyFieldSelected() {
+                var product_id = parseFloat($('#report_product_id2').val());
+                var customer_id = parseFloat($('#customer_id').val());
+                var supplier_id = parseFloat($('#supplier_id').val());
+                var department_id = parseFloat($('#department_id').val());
+                var employee_id = parseFloat($('#employee_id').val());
+
+                return (
+                   // product_id > 0 ||
+                    customer_id > 0 ||
+                    supplier_id > 0 ||
+                    department_id > 0 ||
+                    employee_id > 0
+                );
+            }
+
+            // Enable or disable the submit button based on field selection
+            function enableSubmitButton() {
+                var submitBtn = $('#primary-button-submit');
+
+                if (checkIfAnyFieldSelected()) {
+                    submitBtn.prop('disabled', false);
+                } else {
+                    submitBtn.prop('disabled', true);
+                }
+            }
+
+            // Check form validity when any of the fields change
+            $('#product_id, #customer_id, #supplier_id, #department_id, #employee_id').on('change',function() {
+                enableSubmitButton();
+            });
+
+            // Initial check for the submit button
+            enableSubmitButton();
 });
 
 </script>
@@ -610,10 +645,7 @@ $(document).ready(function() {
     <div class="box-content">
      	<div class="row">
          <div class="col-xs-12">
-          <div class="box">
-            
-            <!-- /.box-header -->
-            <div class="box-body">
+      
                 <div class="entry edit form">
                 <?php
                     if ($this->mSettings->drcr_toby == 'toby') {
@@ -811,6 +843,87 @@ $(document).ready(function() {
                     echo '</table>';
 
                     echo '<br />';
+
+
+                     /*Dimensions*/
+                            /* Items */
+                            echo ' <div class="well well-sm no-print">';
+                            echo '<span class="introtext no-print">At least one Dimensions (item, customer, supplier, department or employee) field must be selected.</span><br>';
+                            
+                            echo '<div class="row"><div class="col-xs-10">
+                            <div class="form-group">';
+                            echo lang('Items', 'product_id');
+                            echo form_input('sgproduct', (isset($_POST['sgproduct']) ? $_POST['sgproduct'] : ''), 'class="form-control" id="suggest_product2" ');
+                            echo '<input type="hidden" name="product_id" value="' . ($entry['item_id']) . '" id="report_product_id2" />';
+                            echo '</div>
+                            </div></div>';
+
+
+                              /* Supplier + Customers */
+                            echo '<div class="row"><div class="col-xs-6">
+                            <div class="form-group">';
+
+
+                            echo lang('Customer', 'customer_id');
+                            $cus[''] = '';
+                            $cus[] = "Select Customer";
+                            foreach ($customers as $customer) {
+                                $cus[$customer->id] = $customer->company. ' ('. $customer->name.')';
+                            }
+                            echo form_dropdown('customer_id', $cus, ($entry['customer_id']), 'id="customer_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" ');
+                          
+                            echo '</div>
+                            
+                            </div>';
+                            
+                            echo '<div class="col-xs-6">
+                            <div class="form-group">';
+
+                            echo lang('Supplier', 'supplier_id');
+                            $suData = [];
+                            $suData[] = "Select Supplier";
+                            foreach($suppliers as $supplier){
+                                $suData[$supplier->id] = $supplier->name;
+                            }
+                            echo form_dropdown('supplier_id', $suData, ($entry['supplier_id']), 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Supplier') . '" "');
+                           
+
+                            echo '</div>
+                            </div></div>';
+
+
+                              /* Departments + Employees */
+                            echo '<div class="row">
+                            <div class="col-xs-6">
+                            <div class="form-group">';
+                            echo lang('Departments', 'department_id');
+                            $depthData = [];
+                            $depthData[] = "Select department";
+                            foreach($departments as $depart){
+                                $depthData[$depart->id] = $depart->name;
+                            }
+                            echo form_dropdown('department_id', $depthData, ($entry['department_id']) , 'id="department_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Departments') . '" "');
+                          
+                            echo '</div>
+                            </div>';
+                            echo '<div class="col-xs-6">
+                            <div class="form-group">';
+                            echo lang('Employees', 'employee_id');
+                            $empData = [];
+                            $empData[] = "Select employee";
+                            foreach($employees as $emp){
+                                $empData[$emp->id] = $emp->name;
+                            }
+                            echo form_dropdown('employee_id', $empData, ($entry['employee_id']), 'id="employee_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Employee') . '" "');
+                           
+                            echo '</div>
+                            </div></div>';
+                            echo '</div>';
+
+
+                            echo '<br />';
+
+
                     echo '<div class="row">';
                     echo '<div class="col-xs-4">
                             <div class="form-group">
@@ -836,8 +949,7 @@ $(document).ready(function() {
                     echo form_close();
                 ?>
                 </div>
-            </div>
-          </div>
+           
       </div>
      		
      	</div>

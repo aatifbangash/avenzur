@@ -3161,7 +3161,6 @@ class Reports extends MY_Controller
                         } else if ($supplier_data->dc == 'C') {
                             $response_item->ob_credit = $this->sma->formatDecimal($supplier_data->total_amount);
                         }
-
                     }
                 }
             }
@@ -3224,13 +3223,11 @@ class Reports extends MY_Controller
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
             $meta = ['page_title' => lang('customer_statement'), 'bc' => $bc];
             $this->page_construct('reports/customers_statement', $meta, $this->data);
-
         } else {
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
             $meta = ['page_title' => lang('customer_statement'), 'bc' => $bc];
             $this->page_construct('reports/customers_statement', $meta, $this->data);
         }
-
     }
 
     public function general_ledger_statement()
@@ -3331,13 +3328,11 @@ class Reports extends MY_Controller
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
             $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
             $this->page_construct('reports/suppliers_statement', $meta, $this->data);
-
         } else {
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
             $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
             $this->page_construct('reports/suppliers_statement', $meta, $this->data);
         }
-
     }
 
     public function customer_aging()
@@ -3414,7 +3409,6 @@ class Reports extends MY_Controller
             foreach ($trial_balance_array['ob'] as $trans) {
                 $response_arr[$trans->id]["obDebit"] = $trans->totalPayment + $trans->totalReturn + $trans->totalMemo;
                 $response_arr[$trans->id]["obCredit"] = $trans->totalPurchases;
-
             }
 
             $this->data['start_date'] = $from_date;
@@ -3430,7 +3424,6 @@ class Reports extends MY_Controller
             $meta = ['page_title' => lang('suppliers_report'), 'bc' => $bc];
             $this->page_construct('reports/suppliers_trial_balance', $meta, $this->data);
         }
-
     }
 
     public function financial_position()
@@ -3558,7 +3551,6 @@ class Reports extends MY_Controller
             foreach ($trial_balance_array['ob'] as $trans) {
                 $response_arr[$trans->id]["obDebit"] = $trans->payment_total + $trans->sale_total;
                 $response_arr[$trans->id]["obCredit"] = $trans->return_total + $trans->memo_total;
-
             }
             //dd($response_arr);
 
@@ -3622,10 +3614,48 @@ class Reports extends MY_Controller
             $meta = ['page_title' => lang('customers_report'), 'bc' => $bc];
             $this->page_construct('reports/customers_trial_balance', $meta, $this->data);
         }
-
     }
 
-    public function item_movement_report()
+    public function item_movement_report(){
+
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $filterOnTypeArr= [
+            "" => "-- Select Type --",
+            "purchases" => "Purchases",
+            "sales" => "Sales",
+            "returnCustomer"=>"Return Customer",
+            "returnSupplier"=>"Return Supplier",
+            "transfer" => "Transfer"
+        ];
+        $this->data['filterOnTypeArr'] = $filterOnTypeArr;
+        $user = $this->site->getUser();
+        $defaultWareHouseId = ($user->warehouse_id ? $user->warehouse_id : $this->site->Settings->default_warehouse);
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $productId = $this->input->post('product') ? $this->input->post('product') : 0;
+        $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
+
+        if ($productId && $from_date && $to_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+
+            $itemOpenings = $this->reports_model->getItemOpeningBalance($productId, $start_date, $defaultWareHouseId);
+            echo '<pre>', print_r( $itemOpenings ), '</pre>';
+
+
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
+            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
+            $this->page_construct('reports/item_movement_report', $meta, $this->data);
+        }
+    }
+
+    public function item_movement_reportA()
     {
 
         $this->sma->checkPermissions();
@@ -3640,7 +3670,7 @@ class Reports extends MY_Controller
         $productId = $this->input->post('product') ? $this->input->post('product') : 0;
         $warehouseId = $this->input->post('warehouse') ? $this->input->post('warehouse') : 0;
 
-        $allProducts = $this->reports_model->getAllProducts();
+        // $allProducts = $this->reports_model->getAllProducts();
         // $this->data['allProducts'] = $allProducts;
 
         $allWareHouses = $this->reports_model->getAllWareHouses();
@@ -3689,6 +3719,57 @@ class Reports extends MY_Controller
             $this->page_construct('reports/item_movement_report', $meta, $this->data);
         }
     }
+
+    public function inventory_trial_balance()
+    {
+
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $user = $this->site->getUser();
+        $defaultWareHouseId = ($user->warehouse_id ? $user->warehouse_id : $this->site->Settings->default_warehouse);
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $from_warehouse_id = $this->input->post('from_warehouse_id') ? $this->input->post('from_warehouse_id') : 0;
+        $to_warehouse_id = $this->input->post('to_warehouse_id') ? $this->input->post('to_warehouse_id') : 0;
+
+        $allWareHouses = $this->site->getAllWarehouses();
+       $filteredWareHouses = [];
+        foreach($allWareHouses as $warehouse){
+                if($warehouse->goods_in_transit == 0){
+                    $filteredWareHouses[$warehouse->id] = $warehouse->name . ' (' . $warehouse->code . ')';
+                }
+        }
+        $this->data['warehouses']  = $filteredWareHouses;
+       
+    
+        if ($from_date && $to_date) {
+          
+
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $reportData = $this->reports_model->getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
+            
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['from_warehouse_id'] = $from_warehouse_id;
+            $this->data['to_warehouse_id'] = $to_warehouse_id;
+            $this->data['report_data'] = $reportData;
+           
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
+            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
+            $this->page_construct('reports/inventory_trial_balance', $meta, $this->data);
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
+            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
+            $this->page_construct('reports/inventory_trial_balance', $meta, $this->data);
+        }
+    }
+
 
 
     public function inventory_movement()
@@ -3911,7 +3992,6 @@ class Reports extends MY_Controller
                 }
             }
             $this->data['products'] = $this->db->get()->result();
-
         }
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
@@ -3955,7 +4035,6 @@ class Reports extends MY_Controller
                 }
             }
             $this->data['products'] = $this->db->get()->result();
-
         }
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
@@ -3981,6 +4060,4 @@ class Reports extends MY_Controller
         $meta = ['page_title' => lang('reports'), 'bc' => $bc];
         $this->page_construct('reports/warehouse_stock', $meta, $this->data);
     }
-
-
 }

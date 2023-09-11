@@ -1873,7 +1873,7 @@ function loadItems() {
 
         });
 
-        var col = 8;
+        var col = 7;
         if (site.settings.product_serial == 1) {
             col++;
         }
@@ -1887,11 +1887,11 @@ function loadItems() {
         //tfoot += '<th class="text-right">' + formatMoney(grand_total_purchases) + '</th>';
 
         tfoot += '<th class="text-right">' + formatMoney(grand_total_sales) + '</th>';
-
+  
         tfoot +=
             '<th class="text-right">' +
             formatMoney(total) +
-            '</th></tr>';
+            '</th><th class="text-center"></th></tr>';
         $('#slTable tfoot').html(tfoot);
 
         // Order level discount calculations

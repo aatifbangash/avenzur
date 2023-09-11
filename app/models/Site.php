@@ -1615,4 +1615,28 @@ public function getallCountry()
         }
         return false;
     }
+
+    public function getAllDepartments()
+    {
+        $q = $this->db->get('departments');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+    public function getAllEmployees()
+    {
+        $q = $this->db->get('employees');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
 }

@@ -85,3 +85,20 @@ ALTER TABLE `sma_returns` ADD `invoice_number` VARCHAR(255) NULL DEFAULT NULL AF
 ALTER TABLE `sma_sales` CHANGE `payment_term` `payment_term` VARCHAR(50) NULL DEFAULT NULL;
 ALTER TABLE `sma_companies` ADD `credit_limit` VARCHAR(255) NOT NULL DEFAULT '0' AFTER `return_ledger`;
 ============== 29/08/2023 END ===============
+
+
+============== 31/08/2023 START ===============
+
+CREATE TABLE `sma_departments` (`id` INT NOT NULL AUTO_INCREMENT , `parent_id` INT NULL DEFAULT NULL , `name` VARCHAR(255) NOT NULL , `code` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;
+
+CREATE TABLE `sma_employees` (`id` INT NOT NULL AUTO_INCREMENT , `parent_id` INT NULL DEFAULT NULL , `name` VARCHAR(255) NOT NULL , `code` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;
+
+============== 31/08/2023 END ===============
+
+
+
+============== 03/09/2023 START ===============
+
+ALTER TABLE `sma_accounts_entries` ADD `item_id` INT NOT NULL DEFAULT '0' AFTER `entry_type`, ADD `customer_id` INT NOT NULL DEFAULT '0' AFTER `item_id`, ADD `supplier_id` INT NOT NULL DEFAULT '0' AFTER `customer_id`, ADD `department_id` INT NOT NULL DEFAULT '0' AFTER `supplier_id`, ADD `employee_id` INT NOT NULL DEFAULT '0' AFTER `department_id`;
+
+============== 03/09/2023 START ===============

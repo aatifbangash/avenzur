@@ -21,7 +21,46 @@
         <div class="row">
             <div class="col-lg-12">
 
-                <p class="introtext"><button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="add_request"><?= lang('Add Request') ?></button></p>
+                <p class="introtext">
+                    <?php 
+                        if(!isset($request_id)){
+                    ?>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <?= lang('products', 'Products') ?>
+                                <select class="form-control" id="cf1" name="product_ids[]" multiple="multiple" >
+                                    <option value="0">All</option>
+                                        <?php
+                                            foreach($products as $product)
+                                            {
+                                                echo '<option value="'.$product->id.'">'.$product->name.' ('.$product->code.')'.'</option>';
+                                            }
+                                        ?>                  
+                                </select><br /><br />
+                                <input type="hidden" name="product" value="<?= isset($_POST['product']) ? $_POST['product'] : 0 ?>" id="report_product_id2" />
+                                <input type="submit" value="search" class="btn btn-primary" name="search_product" />
+                                <button type="submit" class="btn btn-primary" id="add_request">
+                                <?php 
+                                    echo lang('Submit');
+                                ?>
+                                </button>
+                            </div>
+                        </div>
+
+                        <?php } ?>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <?= lang('Status', 'Status'); ?>
+                                <?php
+                                $statuses = array('saved' => 'Saved', 'pending' => 'Pending');
+                                echo form_dropdown('status', $statuses, ($_POST['status'] ?? $Settings->default_warehouse), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('status') . '" required="required" style="width:100%;" '); 
+                                ?>
+                            
+                            </div>
+                        </div>
+                    
+                </p>
                 <div class="table-responsive">
                     <table id="TOData" cellpadding="0" cellspacing="0" border="0"
                            class="table table-bordered table-condensed table-hover table-striped">
@@ -32,7 +71,7 @@
                             </th>
                             <th><?= lang('code'); ?></th>
                             <th colspan="2"><?= lang('name'); ?></th>
-                            <th><?= lang('cost'); ?></th>
+                            <!--<th><?php //echo lang('cost'); ?></th>-->
                             <th><?= lang('Available Quantity'); ?></th>
                             <th><?= lang('Avg Sale'); ?></th>
                             <th colspan="2"><?= lang('Required Stock'); ?></th>
@@ -50,20 +89,44 @@
                                                 <td class="dataTables_empty"><?= $count; ?></td>
                                                 <td class="dataTables_empty"><?= $stock->code; ?></td>
                                                 <td colspan="2" class="dataTables_empty"><?= $stock->name; ?></td>
-                                                <td class="dataTables_empty"><?= number_format((float) $stock->cost, 2, '.', ''); ?></td>
+                                                <!--<td class="dataTables_empty"><?php //echo number_format((float) $stock->cost, 2, '.', ''); ?></td>-->
                                                 <td class="dataTables_empty"><?= number_format((float) $stock->available_stock, 2, '.', ''); ?></td>
-                                                <td class="dataTables_empty"><?= number_format((float) ($stock->avg_last_3_months_sales) / 3, 2, '.', ''); ?></td>
+                                                <td class="dataTables_empty"><?= isset($stock->avg_stock) ? number_format((float) ($stock->avg_stock), 2, '.', '') : number_format((float) ($stock->avg_last_3_months_sales) / 3, 2, '.', ''); ?></td>
                                                 <td colspan="2" class="dataTables_empty">
-                                                    <?php $required_stock = ($stock->avg_last_3_months_sales / 3) - $stock->available_stock > 0 ? number_format((float) ($stock->avg_last_3_months_sales / 3) - $stock->available_stock, 2, '.', '') : '0.00'; ?>
+                                                    <?php 
+                                                        if(isset($stock->required_stock)){
+                                                            $required_stock = $stock->required_stock;
+                                                        }else{
+                                                            $required_stock = ($stock->avg_last_3_months_sales / 3) - $stock->available_stock > 0 ? number_format((float) ($stock->avg_last_3_months_sales / 3) - $stock->available_stock, 2, '.', '') : '0.00';
+                                                        } 
+                                                    ?>
                                                     <input name="required_stock[]" type="text" value="<?= $required_stock; ?>" class="rid" />
                                                     <input type="hidden" name="product_id[]" value="<?= $stock->id; ?>" />
                                                     <input type="hidden" name="available_stock[]" value="<?= $stock->available_stock; ?>" />
-                                                    <input type="hidden" name="avg_stock[]" value="<?= $stock->avg_last_3_months_sales; ?>" />
+                                                    <?php 
+                                                        if(isset($request_id)){
+                                                            ?>
+                                                                <input type="hidden" name="avg_stock[]" value="<?= ($stock->avg_stock); ?>" />
+                                                            <?php
+                                                        }else{
+                                                            ?>
+                                                                <input type="hidden" name="avg_stock[]" value="<?= ($stock->avg_last_3_months_sales / 3); ?>" />
+                                                            <?php
+                                                        }
+                                                    ?>
+                                                    
                                                 </td>
                                                 <td class="dataTables_empty">1 month</td>
                                             </tr>
                                         <?php
                                     }
+
+                                    if(isset($request_id)){
+                                        ?>
+                                            <input type="hidden" name="request_id" value="<?= $request_id; ?>" />
+                                        <?php
+                                    }
+                                                    
                                 }else{
                             ?>
                                 <tr><td colspan="11" class="dataTables_empty"><?= lang('Could not load data'); ?></td></tr>

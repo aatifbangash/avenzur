@@ -429,6 +429,8 @@ class Transfers extends MY_Controller
             }
             $this->session->set_flashdata('message', lang('transfer_deleted'));
             admin_redirect('welcome');
+        }else{
+            $this->sma->send_json(['error' => 1, 'msg' => 'Cannot delete this transfer']);
         }
     }
 

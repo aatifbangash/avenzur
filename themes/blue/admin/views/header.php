@@ -527,6 +527,51 @@
                                 </ul>
                             </li>
 
+
+                            <li class="mm_departments">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-sitemap"></i>
+                                    <span class="text"> <?= lang('Departments'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="departments_index">
+                                        <a class="submenu" href="<?= admin_url('departments'); ?>">
+                                            <i class="fa fa-sitemap"></i>
+                                            <span class="text"> <?= lang('List Departments'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="departments_add">
+                                        <a class="submenu" href="<?= admin_url('departments/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('Add Departments'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="mm_employees">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-users"></i>
+                                    <span class="text"> <?= lang('Employees'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="employees_index">
+                                        <a class="submenu" href="<?= admin_url('employees'); ?>">
+                                            <i class="fa fa-users"></i>
+                                            <span class="text"> <?= lang('List Employees'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="employees_add">
+                                        <a class="submenu" href="<?= admin_url('employees/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('Add Employee'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
                             <li class="mm_purchases">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star"></i>
@@ -724,11 +769,26 @@
                                     </li>
                                 </ul>
                             </li>
-                           <li class="mm_notifications">
-                                <a class="submenu" href="<?= admin_url('notifications'); ?>">
-                                    <i class="fa fa-info-circle"></i><span class="text"> <?= lang('notifications'); ?></span>
+
+                            <li class="mm_notifications">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-info-circle"></i><span class="text"> <?= lang('notifications'); ?> </span>
+                                    <span class="chevron closed"></span>
                                 </a>
+                                <ul>
+                                    <li id="system_notifications_index">
+                                        <a href="<?= admin_url('notifications') ?>">
+                                            <i class="fa fa-cog"></i><span class="text"> <?= lang('System Notifications'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="rasd_notifications">
+                                        <a href="<?= admin_url('notifications/rasd') ?>">
+                                            <i class="fa fa-file"></i><span class="text"> <?= lang('List Rasd Notifications'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
                             </li>
+
                             <li class="mm_calendar">
                                 <a class="submenu" href="<?= admin_url('calendar'); ?>">
                                     <i class="fa fa-calendar"></i><span class="text"> <?= lang('calendar'); ?></span>
@@ -1039,6 +1099,11 @@
                                     <li id="reports_item_movement_report">
                                         <a href="<?= admin_url('reports/item_movement_report') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('item_movement_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_inventory_trial_balance_report">
+                                        <a href="<?= admin_url('reports/inventory_trial_balance') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('inventory_trial_balance'); ?></span>
                                         </a>
                                     </li>
                                     <li id="reports_supplier_trial_balance_report">
@@ -1677,14 +1742,28 @@
                                 <ul>
                                     <li id="stock_requests_index">
                                         <a class="submenu" href="<?= admin_url('stock_request/stock_order'); ?>">
-                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('New Request'); ?></span>
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('New Stock Request'); ?></span>
                                         </a>
                                     </li>
                                     <li id="stock_requests_index">
                                         <a class="submenu" href="<?= admin_url('stock_request'); ?>">
-                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Requests'); ?></span>
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Stock Requests'); ?></span>
                                         </a>
                                     </li>
+                                    <?php 
+                                        if($Owner || $Admin){
+                                    ?>
+                                        <li id="stock_requests_index">
+                                            <a class="submenu" href="<?= admin_url('stock_request/current_pr'); ?>">
+                                                <i class="fa fa-star-o"></i><span class="text"> <?= lang('Opened PR'); ?></span>
+                                            </a>
+                                        </li>
+                                        <li id="stock_requests_index">
+                                            <a class="submenu" href="<?= admin_url('stock_request/purchase_requests'); ?>">
+                                                <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Purchase Requests'); ?></span>
+                                            </a>
+                                        </li>
+                                    <?php } ?>
                                     <!--<li id="stock_requests_index">
                                         <a class="submenu" href="<?php //echo admin_url('stock_request'); ?>">
                                             <i class="fa fa-star-o"></i><span class="text"> <?php // echo lang('Outgoing Stock Requests'); ?></span>
