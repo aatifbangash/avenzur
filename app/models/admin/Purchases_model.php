@@ -686,6 +686,17 @@ class Purchases_model extends CI_Model
         $oitems    = $this->getAllPurchaseItems($id);
         if ($this->db->update('purchases', $data, ['id' => $id]) && $this->db->delete('purchase_items', ['purchase_id' => $id])) {
             $purchase_id = $id;
+
+            // Code for serials start here
+            $notification_serials = $this->db->get_where('sma_invoice_serials', ['pid' => $id]);
+            if ($notification_serials->num_rows() > 0) {
+                foreach (($notification_serials->result()) as $row) {
+                    $this->db->update('sma_notification_serials', ['used' => 0], ['serial_no' => $row->serial_number, 'gtin' => $row->gtin, 'batch_no' => $row->batch_no]);
+                    $this->db->delete('sma_invoice_serials', ['id' => $row->id]);
+                }
+            }
+            // Code for serials end here
+
             foreach ($items as $item) {
                 $item['purchase_id'] = $id;
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
@@ -693,6 +704,27 @@ class Purchases_model extends CI_Model
                 if ($data['status'] == 'received' || $data['status'] == 'partial') {
                     $this->updateAVCO(['product_id' => $item['product_id'], 'batch' => $item['batchno'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'cost' => $item['real_unit_cost']]);
                 }
+
+                // Code for serials here
+                $serials_quantity = $item['quantity'];
+                $serials_gtin = $item['product_code'];
+                $serials_batch_no = $item['batchno'];
+                $notification_serials = $this->db->get_where('sma_notification_serials', ['gtin' => $serials_gtin, 'batch_no' => $serials_batch_no, 'used' => 0], $serials_quantity);
+                if ($notification_serials->num_rows() > 0) {
+                    foreach (($notification_serials->result()) as $row) {
+                        $serials_data[] = $row;
+                        $invoice_serials = array();
+                        $invoice_serials['serial_number'] = $row->serial_no;
+                        $invoice_serials['gtin'] = $row->gtin;
+                        $invoice_serials['batch_no'] = $row->batch_no;
+                        $invoice_serials['pid'] = $id;
+                        $invoice_serials['date'] = date('Y-m-d');
+
+                        $this->db->update('sma_notification_serials', ['used' => 1], ['serial_no' => $row->serial_no, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
+                        $this->db->insert('sma_invoice_serials', $invoice_serials);
+                    }
+                }
+                // Code for serials end here
             }
             $this->site->syncQuantity(null, null, $oitems);
 

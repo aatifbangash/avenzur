@@ -969,10 +969,38 @@ class Sales_model extends CI_Model
         // $this->sma->print_arrays($cost);
 
         if ($this->db->update('sales', $data, ['id' => $id]) && $this->db->delete('sale_items', ['sale_id' => $id]) && $this->db->delete('costing', ['sale_id' => $id])) {
+            $this->db->update('sma_invoice_serials', ['sid' => 0], ['sid' => $id]);
             foreach ($items as $item) {
                 $item['sale_id'] = $id;
                 $this->db->insert('sale_items', $item);
                 $sale_item_id = $this->db->insert_id();
+
+                // Code for serials here
+                $serials_quantity = $item['quantity'];
+                $serials_gtin = $item['product_code'];
+                $serials_batch_no = $item['batch_no'];
+                
+                $this->db->select('sma_invoice_serials.*');
+                $this->db->from('sma_invoice_serials');
+                $this->db->join('sma_purchases', 'sma_invoice_serials.pid = sma_purchases.id');
+                $this->db->where('sma_invoice_serials.gtin', $serials_gtin);
+                $this->db->where('sma_invoice_serials.batch_no', $serials_batch_no);
+                $this->db->where('sma_invoice_serials.sid', 0);
+                $this->db->where('sma_invoice_serials.rsid', 0);
+                $this->db->where('sma_invoice_serials.tid', 0);
+                $this->db->where('sma_invoice_serials.pid !=', 0);
+                $this->db->where('sma_purchases.status', 'received');
+                $this->db->limit($serials_quantity);
+
+                $notification_serials = $this->db->get();
+                
+                if ($notification_serials->num_rows() > 0) {
+                    foreach (($notification_serials->result()) as $row) {
+                        $this->db->update('sma_invoice_serials', ['sid' => $id], ['serial_number' => $row->serial_number, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
+                    }
+                }
+                // Code for serials end here
+
                 if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {

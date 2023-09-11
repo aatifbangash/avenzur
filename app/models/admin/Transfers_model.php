@@ -684,6 +684,10 @@ class Transfers_model extends CI_Model
             $tbl = $ostatus == 'completed' ? 'purchase_items' : 'transfer_items';
             $this->db->delete($tbl, ['transfer_id' => $id]);
 
+            // Code for serials starts here
+            $this->db->update('sma_invoice_serials', ['tid' => 0], ['tid' => $id]);
+            // Code for serials ends here
+
             foreach ($items as $item) {
                 $item['transfer_id'] = $id;
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
@@ -695,6 +699,31 @@ class Transfers_model extends CI_Model
                 } else {
                     $this->db->insert('transfer_items', $item);
                 }
+
+                // Code for serials here
+                $serials_quantity = $item['quantity'];
+                $serials_gtin = $item['product_code'];
+                $serials_batch_no = $item['batchno'];
+                
+                $this->db->select('sma_invoice_serials.*');
+                $this->db->from('sma_invoice_serials');
+                $this->db->join('sma_purchases', 'sma_invoice_serials.pid = sma_purchases.id');
+                $this->db->where('sma_invoice_serials.gtin', $serials_gtin);
+                $this->db->where('sma_invoice_serials.batch_no', $serials_batch_no);
+                $this->db->where('sma_invoice_serials.sid', 0);
+                $this->db->where('sma_invoice_serials.rsid', 0);
+                $this->db->where('sma_invoice_serials.tid', 0);
+                $this->db->where('sma_invoice_serials.pid !=', 0);
+                $this->db->where('sma_purchases.status', 'received');
+                $this->db->limit($serials_quantity);
+
+                $notification_serials = $this->db->get();
+                if ($notification_serials->num_rows() > 0) {
+                    foreach (($notification_serials->result()) as $row) {
+                        $this->db->update('sma_invoice_serials', ['tid' => $id], ['serial_number' => $row->serial_number, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
+                    }
+                }
+                // Code for serials end here
 
                 if($ostatus == 'save' && $data['status'] == 'sent'){
                     $this->syncTransderdSavedItems($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'edit');
