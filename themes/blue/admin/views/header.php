@@ -1031,6 +1031,11 @@
                                             <i class="fa fa-money"></i><span class="text"> <?= lang('payments_report'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="reports_stocks">
+                                        <a href="<?= admin_url('reports/stock') ?>">
+                                            <i class="fa fa-money"></i><span class="text"> <?= lang('Stock_report'); ?></span>
+                                        </a>
+                                    </li>
                                     <li id="reports_tax">
                                         <a href="<?= admin_url('reports/tax') ?>">
                                             <i class="fa fa-area-chart"></i><span class="text"> <?= lang('tax_report'); ?></span>

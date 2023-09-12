@@ -100,8 +100,14 @@
                                          $totalObCredit += $data['obCredit'];
                                          $totalTrsDebit += $data['trsDebit'];
                                          $totalTrsCredit += $data['trsCredit'];
-                                         $totalFinalEndDebit += $finalEndDebit;
-                                         $totalFinalEndCredit += $finalEndCredit;
+//                                         $totalFinalEndDebit += $finalEndDebit;
+//                                         $totalFinalEndCredit += $finalEndCredit;
+
+                                        if (gettype($finalEndDebit) != 'string')
+                                            $totalFinalEndDebit += $finalEndDebit;
+
+                                        if (gettype($finalEndCredit) != 'string')
+                                            $totalFinalEndCredit += $finalEndCredit;
 
                                         $count++;
                                         ?>

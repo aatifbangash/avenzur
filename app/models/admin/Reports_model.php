@@ -366,6 +366,7 @@ class Reports_model extends CI_Model
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
 //                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
             ->where('sma_accounts_entries.sid', $supplier_id)
+            // need to join with purchase and suppliers( company)
             ->where('sma_accounts_entries.date <', $start_date)
             ->group_by('sma_accounts_entryitems.dc');
         $q = $this->db->get();
@@ -470,14 +471,14 @@ class Reports_model extends CI_Model
                                     SELECT supplier_id, SUM(grand_total) AS total
                                     FROM sma_purchases
                                     WHERE grand_total > 0
-                                    AND date >='{$start_date}' AND date <='{$end_date}'
+                                    AND date(date) >='{$start_date}' AND date(date) <='{$end_date}'
                                     GROUP BY supplier_id
                                 ) purchases ON c.id = purchases.supplier_id
                             LEFT JOIN (
                                     SELECT supplier_id, SUM(abs(grand_total)) AS total
                                     FROM sma_purchases
                                     WHERE grand_total < 0
-                                    AND date >='{$start_date}' AND date <='{$end_date}'
+                                    AND date(date) >='{$start_date}' AND date(date) <='{$end_date}'
                                     GROUP BY supplier_id
                                 ) ret ON c.id = ret.supplier_id
                             LEFT JOIN (
@@ -485,14 +486,14 @@ class Reports_model extends CI_Model
                                     FROM sma_payments p
                                     INNER JOIN sma_purchases s ON s.id = p.purchase_id
                                     WHERE p.purchase_id > 0
-                                    AND p.date >='{$start_date}' AND p.date <='{$end_date}'
+                                    AND date(p.date) >='{$start_date}' AND date(p.date) <='{$end_date}'
                                     GROUP BY s.supplier_id
                             ) py ON c.id = py.supplier_id
                             LEFT JOIN (
                                 SELECT supplier_id, SUM(payment_amount) AS amount
                                 FROM sma_memo
                                 WHERE type='memo'
-                                AND date >='{$start_date}' AND date <='{$end_date}'
+                                AND date(date) >='{$start_date}' AND date(date) <='{$end_date}'
                                 GROUP BY supplier_id
                             ) memo ON c.id = memo.supplier_id
                             WHERE c.group_name = 'supplier' #and c.id = 101
@@ -524,14 +525,14 @@ class Reports_model extends CI_Model
                                     SELECT supplier_id, SUM(grand_total) AS total
                                     FROM sma_purchases
                                     WHERE grand_total > 0
-                                    AND  date < '{$start_date}'
+                                    AND  date(date) < '{$start_date}'
                                     GROUP BY supplier_id
                                 ) purchases ON c.id = purchases.supplier_id
                             LEFT JOIN (
                                     SELECT supplier_id, SUM(abs(grand_total)) AS total
                                     FROM sma_purchases
                                     WHERE grand_total < 0
-                                    AND  date < '{$start_date}'
+                                    AND  date(date) < '{$start_date}'
                                     GROUP BY supplier_id
                                 ) ret ON c.id = ret.supplier_id
                             LEFT JOIN (
@@ -539,14 +540,14 @@ class Reports_model extends CI_Model
                                     FROM sma_payments p
                                     INNER JOIN sma_purchases s ON s.id = p.purchase_id
                                     WHERE p.purchase_id > 0
-                                    AND p.date < '{$start_date}'
+                                    AND date(p.date) < '{$start_date}'
                                     GROUP BY s.supplier_id
                             ) py ON c.id = py.supplier_id
                             LEFT JOIN (
                                 SELECT supplier_id, SUM(payment_amount) AS amount
                                 FROM sma_memo
                                 WHERE type='memo'
-                                AND  date < '{$start_date}'
+                                AND  date(date) < '{$start_date}'
                                 GROUP BY supplier_id
                             ) memo ON c.id = memo.supplier_id
                             WHERE c.group_name = 'supplier' #and c.id = 101
@@ -583,14 +584,14 @@ class Reports_model extends CI_Model
                                 m.payment_amount AS memo_total,
                                 p.amount AS payment_total
                             FROM sma_companies as c
-                            LEFT JOIN (SELECT customer_id,SUM(grand_total) as grand_total FROM `sma_sales` WHERE date >='{$start_date}' AND date <='{$end_date}' GROUP BY customer_id) as s ON c.id=s.customer_id
-                            LEFT JOIN (SELECT customer_id,SUM(grand_total) as grand_total FROM `sma_returns` WHERE date >='{$start_date}' AND date <='{$end_date}' GROUP BY customer_id) as r ON c.id=r.customer_id
-                            LEFT JOIN (SELECT customer_id,SUM(payment_amount) as payment_amount FROM `sma_memo`  WHERE date >='{$start_date}' AND date <='{$end_date}' AND type='creditmemo' GROUP BY customer_id) as m ON c.id=m.customer_id
+                            LEFT JOIN (SELECT customer_id,SUM(grand_total) as grand_total FROM `sma_sales` WHERE date(date) >='{$start_date}' AND date(date) <='{$end_date}' GROUP BY customer_id) as s ON c.id=s.customer_id
+                            LEFT JOIN (SELECT customer_id,SUM(grand_total) as grand_total FROM `sma_returns` WHERE date(date) >='{$start_date}' AND date(date) <='{$end_date}' GROUP BY customer_id) as r ON c.id=r.customer_id
+                            LEFT JOIN (SELECT customer_id,SUM(payment_amount) as payment_amount FROM `sma_memo`  WHERE date(date) >='{$start_date}' AND date(date) <='{$end_date}' AND type='creditmemo' GROUP BY customer_id) as m ON c.id=m.customer_id
                             LEFT JOIN(
                                     SELECT s.customer_id ,SUM(p.amount) as amount
                                         FROM sma_payments p
                                         INNER JOIN sma_sales s ON s.id = p.sale_id
-                                        WHERE p.sale_id > 0 AND  p.date >='{$start_date}' AND p.date <='{$end_date}'
+                                        WHERE p.sale_id > 0 AND  date(p.date) >='{$start_date}' AND date(p.date) <='{$end_date}'
                                         GROUP BY s.customer_id
                             ) As p on c.id =p.customer_id
                             WHERE c.group_name = 'customer' 
@@ -619,14 +620,14 @@ class Reports_model extends CI_Model
                                 m.payment_amount AS memo_total,
                                 p.amount AS payment_total
                             FROM sma_companies as c
-                            LEFT JOIN (SELECT customer_id,SUM(grand_total) as grand_total FROM `sma_sales` WHERE date < '{$start_date}'  GROUP BY customer_id) as s ON c.id=s.customer_id
-                            LEFT JOIN (SELECT customer_id,SUM(grand_total) as grand_total FROM `sma_returns` WHERE date < '{$start_date}' GROUP BY customer_id) as r ON c.id=r.customer_id
-                            LEFT JOIN (SELECT customer_id,SUM(payment_amount) as payment_amount FROM `sma_memo`  WHERE date < '{$start_date}' AND type='creditmemo' GROUP BY customer_id) as m ON c.id=m.customer_id
+                            LEFT JOIN (SELECT customer_id,SUM(grand_total) as grand_total FROM `sma_sales` WHERE date(date) < '{$start_date}'  GROUP BY customer_id) as s ON c.id=s.customer_id
+                            LEFT JOIN (SELECT customer_id,SUM(grand_total) as grand_total FROM `sma_returns` WHERE date(date) < '{$start_date}' GROUP BY customer_id) as r ON c.id=r.customer_id
+                            LEFT JOIN (SELECT customer_id,SUM(payment_amount) as payment_amount FROM `sma_memo`  WHERE date(date) < '{$start_date}' AND type='creditmemo' GROUP BY customer_id) as m ON c.id=m.customer_id
                             LEFT JOIN(
                                     SELECT s.customer_id ,SUM(p.amount) as amount
                                         FROM sma_payments p
                                         INNER JOIN sma_sales s ON s.id = p.sale_id
-                                        WHERE p.sale_id > 0 AND  p.date < '{$start_date}' 
+                                        WHERE p.sale_id > 0 AND  date(p.date) < '{$start_date}' 
                                         GROUP BY s.customer_id
                             ) As p on c.id =p.customer_id
                             WHERE c.group_name = 'customer' 
