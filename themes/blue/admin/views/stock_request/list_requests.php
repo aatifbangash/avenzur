@@ -41,13 +41,11 @@
                                                 <td class="dataTables_empty" style="text-align: center;"> <?= number_format((float) $stock_request->req_stock, 2, '.', ''); ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;"><?= $stock_request->status == 'deleted' ? 'rejected' : $stock_request->status; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;">
-                                                    <!--<a href="<?php //echo admin_url('stock_request/view/' . $stock_request->id); ?>" class="tip" title="" data-original-title="View Request"><i class="fa fa-file-text-o"></i></a>-->
+                                                    <a href="<?php echo admin_url('stock_request/view/' . $stock_request->id); ?>" class="tip" title="" data-original-title="View Request"><i class="fa fa-file-text-o"></i></a>
                                                     <?php if($warehouse_id == $stock_request->warehouse_id && $stock_request->status == 'saved'){ ?>
                                                             <a href="<?php echo admin_url('stock_request/edit/' . $stock_request->id); ?>" class="tip" title="Edit Request"><i class="fa fa-edit"></i></a>
                                                             <a href="<?php echo admin_url('stock_request/delete/' . $stock_request->id); ?>" class="tip" title="" data-original-title="Delete Request"><i class="fa fa-trash-o"></i></a>
-                                                    <?php }else{
-                                                        echo '-';
-                                                    } ?>
+                                                    <?php } ?>
                                                 </td>
                                             </tr>
                                             <?php

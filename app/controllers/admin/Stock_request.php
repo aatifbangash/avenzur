@@ -95,13 +95,76 @@ class stock_request extends MY_Controller
         }
     }
 
-    public function view($id = null){
+    /*public function view($id = null){
         $this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
         }
+    }*/
+
+    public function view($id = null, $xls = null){
+        if($xls){
+            $stock_array = $this->stock_request_model->getStockRequestItems($id);
+            if($stock_array){
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('Stock Order'));
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('Available Quantity'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('Average Sale'));
+                $this->excel->getActiveSheet()->SetCellValue('E1', lang('Required Stock'));
+                $this->excel->getActiveSheet()->SetCellValue('F1', lang('Months'));
+
+                $row = 2;
+                foreach ($stock_array as $data_row) {
+                    $available_stock = number_format((float) $data_row->available_stock, 2, '.', '');
+                    $avg_stock = isset($data_row->avg_stock) ? number_format((float) ($data_row->avg_stock), 2, '.', '') : number_format((float) ($data_row->avg_last_3_months_sales) / 3, 2, '.', '');
+                    if(isset($data_row->required_stock)){
+                        $required_stock = $data_row->required_stock;
+                    }else{
+                        $required_stock = ($data_row->avg_last_3_months_sales / 3) - $data_row->available_stock > 0 ? number_format((float) ($data_row->avg_last_3_months_sales / 3) - $data_row->available_stock, 2, '.', '') : '0.00';
+                    } 
+
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $available_stock);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $avg_stock);
+                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $required_stock);
+                    $this->excel->getActiveSheet()->SetCellValue('F' . $row, '1 month');
+                    $row++;
+                }
+
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(35);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(35);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(25);
+
+                $filename = 'stock_request';
+                $this->load->helper('excel');
+                create_excel($this->excel, $filename);
+            }
+
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER['HTTP_REFERER']);
+        }else{
+            $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+            if ($this->input->get('id')) {
+                $id = $this->input->get('id');
+            }
+
+            $stock_array = $this->stock_request_model->getStockRequestItems($id);
+            $this->data['stock_array'] = $stock_array;
+            $this->data['request_id'] = $id;
+            
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Stock Order Request')]];
+            $meta = ['page_title' => lang('Stock Order Request'), 'bc' => $bc];
+            $this->page_construct('stock_request/view_order', $meta, $this->data);
+        } 
     }
 
     public function edit($id = null){
@@ -119,6 +182,64 @@ class stock_request extends MY_Controller
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Stock Order Request')]];
         $meta = ['page_title' => lang('Stock Order Request'), 'bc' => $bc];
         $this->page_construct('stock_request/order', $meta, $this->data);
+    }
+
+    public function view_purchase($id = null, $xls = null){
+        if($xls){
+            $pr_array = $this->stock_request_model->getPurchaseRequestItems($id);
+            if($pr_array){
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('Purchase Request'));
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('Available Quantity'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('Average Consumption'));
+                $this->excel->getActiveSheet()->SetCellValue('E1', lang('Quantity Required'));
+                $this->excel->getActiveSheet()->SetCellValue('F1', lang('Safety Stock'));
+
+                $row = 2;
+                foreach ($pr_array as $data_row) {
+                    $available_quantity = number_format((float) $data_row->total_warehouses_quantity, 2, '.', '');
+                    $total_avg_stock = isset($data_row->total_avg_stock) ? number_format((float) ($data_row->total_avg_stock), 2, '.', '') : '0.00';
+
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $available_quantity);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $total_avg_stock);
+                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, number_format((float) $data_row->qreq, 2, '.', ''));
+                    $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->months.' months');
+                    $row++;
+                }
+
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(35);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(35);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(25);
+                $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(25);
+
+                $filename = 'purchase_request';
+                $this->load->helper('excel');
+                create_excel($this->excel, $filename);
+            }
+
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER['HTTP_REFERER']);
+        }else{
+            $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+            if ($this->input->get('id')) {
+                $id = $this->input->get('id');
+            }
+
+            $current_pr = $this->stock_request_model->getPurchaseRequestItems($id);
+            $this->data['current_pr'] = $current_pr;
+            $this->data['request_id'] = $id;
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Purchase Order Request')]];
+            $meta = ['page_title' => lang('Purchase Order Request'), 'bc' => $bc];
+            $this->page_construct('stock_request/view_pr', $meta, $this->data);
+        }
     }
 
     public function edit_purchase($id = null){

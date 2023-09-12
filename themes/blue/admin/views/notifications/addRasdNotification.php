@@ -17,6 +17,12 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <?php echo lang('Invoice No.', 'invoice_no'); ?>
+                <div class="controls">
+                    <?php echo form_input('invoice_no', '', 'class="form-control" id="invoice_no" required="required"'); ?>
+                </div>
+            </div>
         </div>
         <div class="modal-footer">
             <?php echo form_submit('add_notification', lang('add_notification'), 'class="btn btn-primary"'); ?>
