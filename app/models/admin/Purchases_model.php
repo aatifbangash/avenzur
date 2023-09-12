@@ -714,24 +714,32 @@ class Purchases_model extends CI_Model
                 }
 
                 // Code for serials here
+                $serials_reference = $data['reference_no'];
                 $serials_quantity = $item['quantity'];
                 $serials_gtin = $item['product_code'];
                 $serials_batch_no = $item['batchno'];
-                $notification_serials = $this->db->get_where('sma_notification_serials', ['gtin' => $serials_gtin, 'batch_no' => $serials_batch_no, 'used' => 0], $serials_quantity);
-                if ($notification_serials->num_rows() > 0) {
-                    foreach (($notification_serials->result()) as $row) {
-                        $serials_data[] = $row;
-                        $invoice_serials = array();
-                        $invoice_serials['serial_number'] = $row->serial_no;
-                        $invoice_serials['gtin'] = $row->gtin;
-                        $invoice_serials['batch_no'] = $row->batch_no;
-                        $invoice_serials['pid'] = $id;
-                        $invoice_serials['date'] = date('Y-m-d');
+                $dispatch_array = $this->db->get_where('sma_rasd_notifications', ['invoice_no' => $serials_reference], 1);
+                if ($dispatch_array->num_rows() > 0) {
+                    foreach (($dispatch_array->result()) as $d_array) {
+                        $dispatch_id = $d_array->dispatch_id;
+                        $notification_serials = $this->db->get_where('sma_notification_serials', ['gtin' => $serials_gtin, 'dispatch_id' => $dispatch_id, 'batch_no' => $serials_batch_no, 'used' => 0], $serials_quantity);
+                        if ($notification_serials->num_rows() > 0) {
+                            foreach (($notification_serials->result()) as $row) {
+                                $serials_data[] = $row;
+                                $invoice_serials = array();
+                                $invoice_serials['serial_number'] = $row->serial_no;
+                                $invoice_serials['gtin'] = $row->gtin;
+                                $invoice_serials['batch_no'] = $row->batch_no;
+                                $invoice_serials['pid'] = $id;
+                                $invoice_serials['date'] = date('Y-m-d');
 
-                        $this->db->update('sma_notification_serials', ['used' => 1], ['serial_no' => $row->serial_no, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
-                        $this->db->insert('sma_invoice_serials', $invoice_serials);
+                                $this->db->update('sma_notification_serials', ['used' => 1], ['serial_no' => $row->serial_no, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
+                                $this->db->insert('sma_invoice_serials', $invoice_serials);
+                            }
+                        }
                     }
                 }
+
                 // Code for serials end here
             }
             $this->site->syncQuantity(null, null, $oitems);
