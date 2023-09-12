@@ -14,7 +14,7 @@
                 });
                 $.ajax({'dataType': 'json', 'type': 'POST', 'url': sSource, 'data': aoData, 'success': fnCallback});
             },
-            "aoColumns": [null, null, null, {"bSortable": false}]
+            "aoColumns": [null, null, null, null, {"bSortable": false}]
         });
     });
 </script>
@@ -42,6 +42,7 @@
                         <thead>
                         <tr>
                             <th style="width: 140px;"><?php echo $this->lang->line('Dispatch Id'); ?></th>
+                            <th style="width: 140px;">Invoice No.</th>
                             <th style="width: 140px;"><?php echo $this->lang->line('Status'); ?></th>
                             <th style="width: 140px;"><?php echo $this->lang->line('Date'); ?></th>
                             <th style="width:80px;"><?php echo $this->lang->line('actions'); ?></th>

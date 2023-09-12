@@ -27,6 +27,7 @@ class Notifications extends MY_Controller
         if ($this->form_validation->run() == true) {
             $data = [
                 'dispatch_id'   => $this->input->post('dispatch_id'),
+                'invoice_no'    => $this->input->post('invoice_no'),
                 'status' => 'pending',
                 'date' => date('Y-m-d')
             ];
@@ -162,7 +163,7 @@ class Notifications extends MY_Controller
     public function getRasdNotifications(){
         $this->load->library('datatables');
         $this->datatables
-            ->select('id, dispatch_id, status, date')
+            ->select('id, dispatch_id, invoice_no, status, date')
             ->from('rasd_notifications')
             //->where('notification', 1)
             ->add_column('Actions', "<div class=\"text-center\"><a href='#' class='tip po' title='<b>" . $this->lang->line('delete_notification') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('notifications/deleteRasdNotification/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');

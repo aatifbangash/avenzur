@@ -7,15 +7,15 @@
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-star-o"></i><?= lang('Stock Order Request'); ?>
     </h2>
-        <!--<div class="box-icon">
+        <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown">
-                    <a href="#" id="xls" class="tip" title="<?php //echo lang('download_xls'); ?>">
+                    <a href="#" id="xls" class="tip" title="<?php echo lang('download_xls'); ?>">
                         <i class="icon fa fa-file-excel-o"></i>
                     </a>
-             </li>
+                </li>
             </ul>
-        </div>-->
+        </div>
     </div>
     <div class="box-content">
         <div class="row">
@@ -48,17 +48,6 @@
                         </div>
 
                         <?php } ?>
-
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <?= lang('Status', 'Status'); ?>
-                                <?php
-                                $statuses = array('saved' => 'saved', 'pending' => 'pending');
-                                echo form_dropdown('status', $statuses, ($_POST['status'] == 'saved' ? 'saved' : 'pending'), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('status') . '" required="required" style="width:100%;" '); 
-                                ?>
-                            
-                            </div>
-                        </div>
                     
                 </p>
                 <div class="table-responsive">
@@ -99,20 +88,9 @@
                                                         }else{
                                                             $required_stock = ($stock->avg_last_3_months_sales / 3) - $stock->available_stock > 0 ? number_format((float) ($stock->avg_last_3_months_sales / 3) - $stock->available_stock, 2, '.', '') : '0.00';
                                                         } 
-                                                    ?>
-                                                    <input name="required_stock[]" type="text" value="<?= $required_stock; ?>" class="rid" />
-                                                    <input type="hidden" name="product_id[]" value="<?= $stock->id; ?>" />
-                                                    <input type="hidden" name="available_stock[]" value="<?= $stock->available_stock; ?>" />
-                                                    <?php 
-                                                        if(isset($request_id)){
-                                                            ?>
-                                                                <input type="hidden" name="avg_stock[]" value="<?= ($stock->avg_stock); ?>" />
-                                                            <?php
-                                                        }else{
-                                                            ?>
-                                                                <input type="hidden" name="avg_stock[]" value="<?= ($stock->avg_last_3_months_sales / 3); ?>" />
-                                                            <?php
-                                                        }
+
+                                                        echo $required_stock;
+
                                                     ?>
                                                     
                                                 </td>
@@ -143,4 +121,14 @@
     </div>
 </div>
 <?php echo form_close(); ?>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#xls').click(function (event) {
+            event.preventDefault();
+            window.location.href = "<?=admin_url('stock_request/view/'.$request_id.'/xls/?v=1')?>";
+            return false;
+        });
+    });
+</script>
 
