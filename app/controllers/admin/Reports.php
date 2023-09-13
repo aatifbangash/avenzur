@@ -3546,12 +3546,12 @@ class Reports extends MY_Controller
                 $response_arr[$trans->id]["name"] = $trans->name;
                 $response_arr[$trans->id]["company"] = $trans->company;
                 $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
-                $response_arr[$trans->id]["trsDebit"] = $trans->payment_total + $trans->sale_total;
-                $response_arr[$trans->id]["trsCredit"] = $trans->return_total + $trans->memo_total;
+                $response_arr[$trans->id]["trsDebit"] =  $trans->sale_total;
+                $response_arr[$trans->id]["trsCredit"] = $trans->payment_total + $trans->return_total + $trans->memo_total;
             }
             foreach ($trial_balance_array['ob'] as $trans) {
-                $response_arr[$trans->id]["obDebit"] = $trans->payment_total + $trans->sale_total;
-                $response_arr[$trans->id]["obCredit"] = $trans->return_total + $trans->memo_total;
+                $response_arr[$trans->id]["obDebit"] =  $trans->sale_total;
+                $response_arr[$trans->id]["obCredit"] = $trans->payment_total + $trans->return_total + $trans->memo_total;
             }
             //dd($response_arr);
 
