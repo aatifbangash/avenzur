@@ -1031,7 +1031,7 @@ class Reports_model extends CI_Model
                     
                 )
                  as data ON data.product_id = prd.id 
-                 WHERE prd.id = $productId ORDER BY entry_date ");
+                 WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date ");
 
             break;
 
@@ -1052,7 +1052,7 @@ class Reports_model extends CI_Model
                     WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '{$start_date}' AND DATE(sale.date) <= '{$end_date}'
                 )
                  AS data ON data.product_id = prd.id 
-                 WHERE prd.id = $productId ORDER BY entry_date");
+                 WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
 
             break;
 
@@ -1064,7 +1064,7 @@ class Reports_model extends CI_Model
                  
                     SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.invoice_number as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
                     ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_unit_price as unit_cost,
-                    NULL as system_serial, NULL as sale_price, NULL as return_price, ritem.product_id as product_id
+                    ritem.serial_no as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id as product_id
 
                     FROM sma_returns as rtn
 
@@ -1074,7 +1074,7 @@ class Reports_model extends CI_Model
 
                 )
                  AS data ON data.product_id = prd.id 
-                 WHERE prd.id = $productId ORDER BY entry_date");
+                 WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
 
             break;
 
@@ -1086,7 +1086,7 @@ class Reports_model extends CI_Model
 
                     SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.invoice_number as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
                     pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
-                    NULL as system_serial, pitem.sale_price as sale_price, NULL as purchase_price, pitem.product_id
+                    pitem.serial_number as system_serial, pitem.sale_price as sale_price, NULL as purchase_price, pitem.product_id
 
                     FROM sma_purchases as purchase
 
@@ -1096,7 +1096,7 @@ class Reports_model extends CI_Model
 
                 )
                 AS data ON data.product_id = prd.id 
-                WHERE prd.id = $productId ORDER BY entry_date");
+                WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
 
 
 
@@ -1193,7 +1193,7 @@ class Reports_model extends CI_Model
 
                 )
                 AS data ON data.product_id = prd.id 
-                WHERE prd.id = $productId ORDER BY entry_date");
+                WHERE prd.id = $productId  AND data.product_id IS NOT NULL ORDER BY entry_date");
      
 
             break;
@@ -1230,7 +1230,7 @@ class Reports_model extends CI_Model
 
                     SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.invoice_number as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
                     ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_unit_price as unit_cost,
-                    NULL as system_serial, NULL as sale_price, NULL as return_price, ritem.product_id
+                    ritem.serial_no as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id
 
                     FROM sma_returns as rtn
 
@@ -1242,7 +1242,7 @@ class Reports_model extends CI_Model
 
                     SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.invoice_number as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
                     pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
-                    NULL as system_serial, pitem.sale_price as sale_price, NULL as purchase_price, pitem.product_id
+                    pitem.serial_number as system_serial, pitem.sale_price as sale_price, NULL as purchase_price, pitem.product_id
 
                     FROM sma_purchases as purchase
 
@@ -1337,7 +1337,7 @@ class Reports_model extends CI_Model
                 
                 )
                 AS data ON data.product_id = prd.id 
-                WHERE prd.id = $productId ORDER BY entry_date");
+                WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
 
         }
 
