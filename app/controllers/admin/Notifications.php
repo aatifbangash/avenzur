@@ -209,13 +209,45 @@ class Notifications extends MY_Controller
     }
 
     public function sync_rasd_serials(){
+        $this->load->admin_model('purchases_model');
         $rasd_notifications = $this->cmt_model->getRasdNotifications();
         foreach ($rasd_notifications as $rasd_notification){
             $dispatch_id = $rasd_notification->dispatch_id;
-            $invoice_no = $rasd_notification->invoice_no;
+            $serial_reference = $rasd_notification->invoice_no;
 
-            echo $invoice_no;
+            $purchase_inv = $this->purchases_model->getPurchaseByReference($serial_reference);
+            if($purchase_inv){
+                $purchase_id = $purchase_inv->id;
+                $purchase_items = $this->purchases_model->getAllPurchaseItems($purchase_id);
+                foreach($purchase_items as $item){
+                    // Code for serials here
+                    $serials_quantity = $item->quantity;
+                    $serials_gtin = $item->product_code;
+                    $serials_batch_no = $item->batchno;
+        
+                    $notification_serials = $this->db->get_where('sma_notification_serials', ['gtin' => $serials_gtin, 'dispatch_id' => $dispatch_id, 'batch_no' => $serials_batch_no, 'used' => 0], $serials_quantity);
+                    
+                    if ($notification_serials->num_rows() > 0) {
+                        foreach (($notification_serials->result()) as $row) {
+                            $serials_data[] = $row;
+                            $invoice_serials = array();
+                            $invoice_serials['serial_number'] = $row->serial_no;
+                            $invoice_serials['gtin'] = $row->gtin;
+                            $invoice_serials['batch_no'] = $row->batch_no;
+                            $invoice_serials['pid'] = $purchase_id;
+                            $invoice_serials['date'] = date('Y-m-d');
+
+                            $this->db->update('sma_notification_serials', ['used' => 1], ['serial_no' => $row->serial_no, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
+                            $this->db->insert('sma_invoice_serials', $invoice_serials);
+                        }
+                    }
+                        
+                    // Code for serials end here
+                }
+                
+            }
         }
-        //print_r($rasd_notifications);exit;
+
+        echo 'Script has run successfully...';
     }
 }
