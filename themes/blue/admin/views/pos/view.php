@@ -514,7 +514,7 @@
                     printWindow.document.write('</body></html>');
 
                     // Add CSS styles for better formatting (optional)
-                    printWindow.document.write('<style>body{font-family: Arial, sans-serif;} b{font-size: 18px;} </style>');
+                    printWindow.document.write('<style>body{font-family: Arial, sans-serif;} b{font-size: 16px;} </style>');
                     
                     printWindow.print();
                     printWindow.close();
