@@ -487,7 +487,11 @@
         }
 
         function print_instructions() {
-            var instructionsData = JSON.parse('<?php echo $inv->instructions; ?>');
+            var instructionsData = JSON.parse('<?php echo $instructions; ?>');
+            var pharmacist_name = '<?php echo $pharmacist_name; ?>';
+            var pharmacy_name = '<?php echo $pharmacy_name; ?>';
+            var pharmacy_address = '<?php echo $pharmacy_address; ?>';
+            var printing_date = '<?php echo date('Y-m-d'); ?>';
 
             for (var medication in instructionsData) {
                 if (instructionsData.hasOwnProperty(medication)) {
@@ -495,8 +499,15 @@
                     
                     var printWindow = window.open('', 'Instructions', 'height=200,width=400');
                     printWindow.document.write('<html><head><title>Instructions</title></head><body>');
+                    var instrt = instruction.split(':');
+                    var html = '<b>' + medication + '</b><br /><br />';
+                    html += instrt[0]+'<br /><br />';
+                    html += pharmacy_name+','+pharmacy_address;
+                    html += pharmacist_name+'<br /><br />';
+                    html += 'Date. '+printing_date+'<br /><br />';
+                    html += 'Exp. '+instrt[1];
 
-                    printWindow.document.write('<b>' + medication + '</b><br /><br />' + instruction);
+                    printWindow.document.write(html);
 
                     printWindow.document.write('</body></html>');
 

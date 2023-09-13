@@ -1797,6 +1797,7 @@ class Pos extends MY_Controller
             $sale_id = $this->input->get('id');
         }
         $this->load->helper('pos');
+        $this->load->admin_model('settings_model');
         $this->data['error']   = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $this->data['message'] = $this->session->flashdata('message');
         $inv                   = $this->pos_model->getInvoiceByID($sale_id);
@@ -1822,6 +1823,24 @@ class Pos extends MY_Controller
         $this->data['created_by']      = $this->site->getUser($inv->created_by);
         $this->data['printer']         = $this->pos_model->getPrinterByID($this->pos_settings->printer);
         $this->data['page_title']      = $this->lang->line('invoice');
+        $this->data['pharmacist_name'] = $this->data['created_by']->first_name.' '.$this->data['created_by']->last_name;
+        $this->data['warehouse']       = $this->settings_model->getWarehouseByID($this->data['created_by']->warehouse_id);
+        $this->data['pharmacy_name']   = $this->data['warehouse']->name;
+        $this->data['pharmacy_address'] = $this->data['warehouse']->address;
+        $this->data['printing_date']   = $this->data['inv']->date;
+        $instructions                  = json_decode($this->data['inv']->instructions);
+        $items_array = array();
+
+        foreach ($instructions as $key => $value) {
+            array_push($items_array, $key);
+        }
+        
+        foreach ($this->data['rows'] as $row){
+            if(array_search($row->product_name,$items_array) > -1){
+                $instructions->{$row->product_name} = $instructions->{$row->product_name}.':'.$row->expiry;
+            }
+        }
+        $this->data['instructions']     = json_encode($instructions);
         $this->load->view($this->theme . 'pos/view', $this->data);
     }
 

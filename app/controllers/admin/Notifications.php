@@ -207,4 +207,9 @@ class Notifications extends MY_Controller
         $meta                = ['page_title' => lang('Rasd Notifications'), 'bc' => $bc];
         $this->page_construct('notifications/rasd', $meta, $this->data);
     }
+
+    public function sync_rasd_serials(){
+        $rasd_notifications = $this->cmt_model->getRasdNotifications();
+        print_r($rasd_notifications);exit;
+    }
 }

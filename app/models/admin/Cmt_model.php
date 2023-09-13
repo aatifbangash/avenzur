@@ -18,6 +18,20 @@ class Cmt_model extends CI_Model
         }
     }
 
+    public function getRasdNotifications(){
+        $this->db->where('status', 'pending');
+        $notifications = $this->db->get('sma_rasd_notifications');
+        if ($notifications->num_rows() > 0) {
+            foreach (($notifications->result()) as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }else{
+            return false;
+        }
+    }
+
     public function addRasdNotification($data){
         if ($this->db->insert('rasd_notifications', $data)) {
             return true;
