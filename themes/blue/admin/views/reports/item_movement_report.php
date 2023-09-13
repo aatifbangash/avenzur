@@ -96,7 +96,8 @@
                             <tbody style="text-align:center;">
                                 <tr>
                                     <td colspan="2">Oening Balance</td>
-                                    <td colspan="9">&nbsp;</td>
+                                    <td colspan="8">&nbsp;</td> 
+                                    <td><?php echo $this->sma->formatDecimal($itemOpenings->unitPrice);?></td>
                                     <td><?php echo $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00)); ?></td>
                                     <td><?php echo $this->sma->formatDecimal(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00)); ?></td>
 
@@ -104,10 +105,7 @@
 
                                 <?php
                                 $count = 1;
-                                $ttlBalanceQuantity = 0;
-                                $totalValue = 0;
                                 $balanceQantity = $itemOpenings->openingBalance;
-
 
                                 foreach ($reportData as $rp) {
 
@@ -117,9 +115,6 @@
                                     if (($rp->type == 'Sale' || $rp->type == 'Return-Supplier' || $rp->type == "Transfer-Out") && $balanceQantity > 0) {
                                         $balanceQantity -= $rp->quantity;
                                     }
-
-                                    $ttlBalanceQuantity+=$balanceQantity;
-                                    $totalValue+=($balanceQantity * $rp->unit_cost); 
 
                                 ?>
                                     <tr>
@@ -135,7 +130,7 @@
                                         <td><?= $this->sma->formatQuantity($rp->quantity ? $rp->quantity : 0.0); ?></td>
                                         <td><?= $this->sma->formatDecimal($rp->unit_cost ? $rp->unit_cost : 0.0); ?></td>
                                         <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
-                                        <td><?= $this->sma->formatDecimal($balanceQantity * $rp->unit_cost); ?></td>
+                                        <td><?= $this->sma->formatDecimal($balanceQantity * $itemOpenings->unitPrice); ?></td>
                                     </tr>
                                 <?php
                                     $count++;
@@ -145,10 +140,10 @@
                                 ?>
 
                                 <tr>
-                                    <td colspan="2">Total</td>
+                                    <td colspan="2">Closing</td>
                                     <td colspan="9">&nbsp;</td>
-                                    <td><?php echo $this->sma->formatQuantity($ttlBalanceQuantity); ?></td>
-                                    <td><?php echo $this->sma->formatDecimal($totalValue); ?></td>
+                                    <td><?php echo $this->sma->formatQuantity($balanceQantity); ?></td>
+                                    <td><?php echo $this->sma->formatDecimal($$balanceQantity * $itemOpenings->unitPrice); ?></td>
 
                                 </tr>
 
