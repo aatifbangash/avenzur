@@ -143,7 +143,7 @@
                                     <td colspan="2">Closing</td>
                                     <td colspan="9">&nbsp;</td>
                                     <td><?php echo $this->sma->formatQuantity($balanceQantity); ?></td>
-                                    <td><?php echo $this->sma->formatDecimal($$balanceQantity * $itemOpenings->unitPrice); ?></td>
+                                    <td><?php echo $this->sma->formatDecimal($balanceQantity * $itemOpenings->unitPrice); ?></td>
 
                                 </tr>
 
