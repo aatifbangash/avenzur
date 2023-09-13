@@ -39,11 +39,7 @@
                                 </select><br /><br />
                                 <input type="hidden" name="product" value="<?= isset($_POST['product']) ? $_POST['product'] : 0 ?>" id="report_product_id2" />
                                 <input type="submit" value="search" class="btn btn-primary" name="search_product" />
-                                <button type="submit" class="btn btn-primary" id="add_request">
-                                <?php 
-                                    echo lang('Submit');
-                                ?>
-                                </button>
+                                
                             </div>
                         </div>
 
@@ -53,10 +49,23 @@
                             <div class="form-group">
                                 <?= lang('Status', 'Status'); ?>
                                 <?php
-                                $statuses = array('saved' => 'saved', 'pending' => 'pending');
-                                echo form_dropdown('status', $statuses, ($_POST['status'] == 'saved' ? 'saved' : 'pending'), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('status') . '" required="required" style="width:100%;" '); 
+                                $statuses = array('saved', 'pending');
+                                //echo form_dropdown('status', $statuses, ($_POST['status'] == 'saved' ? 'saved' : 'pending'), 'id="status" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('status') . '" required="required" style="width:100%;" '); 
                                 ?>
-                            
+                                 <select class="form-control" id="status" name="status" >
+                                        <?php
+                                            foreach($statuses as $status)
+                                            {
+                                                echo '<option value="'.$status.'">'.$status.'</option>';
+                                            }
+                                        ?>                  
+                                </select>
+                                <br /><br />
+                                <button type="submit" class="btn btn-primary" id="add_request">
+                                <?php 
+                                    echo lang('Submit Order');
+                                ?>
+                                </button>
                             </div>
                         </div>
                     

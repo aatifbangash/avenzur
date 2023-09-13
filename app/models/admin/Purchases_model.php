@@ -529,6 +529,14 @@ class Purchases_model extends CI_Model
         return false;
     }
 
+    public function getPurchaseByReference($reference){
+        $q = $this->db->get_where('sma_purchases', ['reference_no' => $reference], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getPurcahseItemByID($id)
     {
         $q = $this->db->get_where('purchase_items', ['id' => $id], 1);

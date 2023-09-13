@@ -87,6 +87,7 @@
                                     <th><?= lang('System Serial'); ?></th>
                                     <th><?= lang('Sale Price'); ?></th>
                                     <th><?= lang('Purchase Price'); ?></th>
+                                    <th><?= lang('Quantity'); ?></th>
                                     <th><?= lang('Unit Cost'); ?></th>
                                     <th><?= lang('Item balance quantity'); ?></th>
                                     <th><?= lang('Value of item current balance'); ?></th>
@@ -95,7 +96,7 @@
                             <tbody style="text-align:center;">
                             <tr>
                                 <td colspan="2">Oening Balance</td>
-                                <td colspan="8">&nbsp;</td>
+                                <td colspan="9">&nbsp;</td>
                                 <td><?php echo $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00));?></td>
                                 <td><?php echo $this->sma->formatDecimal(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00));?></td>
 
@@ -109,10 +110,10 @@
 
                                 foreach ($reportData as $rp) {
 
-                                    if($rp->type == 'Purchase' || $rp->type == 'Return Customer'){
+                                    if($rp->type == 'Purchase' || $rp->type == 'Return-Customer' || $rp->type == "Transfer-In"){
                                         $balanceQantity+=$rp->quantity;
                                     }
-                                    if(($rp->type == 'Sale' || $rp->type == 'Return Supplier' )&& $balanceQantity > 0){
+                                    if(($rp->type == 'Sale' || $rp->type == 'Return-Supplier' || $rp->type == "Transfer-Out")&& $balanceQantity > 0){
                                         $balanceQantity-=$rp->quantity;
                                     }
 
@@ -127,6 +128,7 @@
                                             <td><?= $rp->system_serial; ?></td>
                                             <td><?= $this->sma->formatDecimal($rp->sale_price); ?></td>
                                             <td><?= $this->sma->formatDecimal($rp->purchase_price); ?></td>
+                                            <td><?= $this->sma->formatQuantity($rp->quantity); ?></td>
                                             <td><?= $this->sma->formatDecimal($rp->unit_cost); ?></td>
                                             <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
                                             <td><?= $this->sma->formatDecimal($balanceQantity * $rp->unit_cost); ?></td>

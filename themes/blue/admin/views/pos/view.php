@@ -487,22 +487,40 @@
         }
 
         function print_instructions() {
-            var instructionsData = JSON.parse('<?php echo $inv->instructions; ?>');
+            var instructionsData = JSON.parse('<?php echo $instructions; ?>');
+            var pharmacist_name = '<?php echo $pharmacist_name; ?>';
+            var pharmacy_name = '<?php echo $pharmacy_name; ?>';
+            var pharmacy_address = '<?php echo $pharmacy_address; ?>';
+            var printing_date = '<?php echo date('Y-m-d'); ?>';
 
             for (var medication in instructionsData) {
                 if (instructionsData.hasOwnProperty(medication)) {
                     var instruction = instructionsData[medication];
-                    
-                    var printWindow = window.open('', 'Instructions', 'height=200,width=400');
-                    printWindow.document.write('<html><head><title>Instructions</title></head><body>');
 
-                    printWindow.document.write('<b>' + medication + '</b><br /><br />' + instruction);
+                    var printWindow = window.open('', 'Instructions', 'height=200,width=400');
+                    printWindow.document.write('<html><head><title>Instructions</title>');
+                    printWindow.document.write('<style>');
+                    // Set the top margin to 0.5 inch (or adjust as needed)
+                    printWindow.document.write('@page { margin: 0.15in; }');
+                    printWindow.document.write('body { font-family: Arial, sans-serif; }');
+                    printWindow.document.write('b { font-size: 16px; }');
+                    printWindow.document.write('</style>');
+                    printWindow.document.write('</head><body>');
+
+                    var instrt = instruction.split(':');
+                    var html = '<b>' + medication + '</b><br />';
+                    html += instrt[0] + '<br />';
+                    html += pharmacy_name + '<br />';
+                    html += pharmacy_address + '<br />';
+                    html += pharmacist_name + '<br />';
+                    html += 'Date. ' + printing_date + '<br />';
+                    html += 'Exp. ' + instrt[1] + '<br />';
+                    html += 'اسم المريض';
+
+                    printWindow.document.write(html);
 
                     printWindow.document.write('</body></html>');
 
-                    // Add CSS styles for better formatting (optional)
-                    printWindow.document.write('<style>body{font-family: Arial, sans-serif;} b{font-size: 18px;} </style>');
-                    
                     printWindow.print();
                     printWindow.close();
                 }
