@@ -501,7 +501,7 @@
                     printWindow.document.write('<html><head><title>Instructions</title>');
                     printWindow.document.write('<style>');
                     // Set the top margin to 0.5 inch (or adjust as needed)
-                    printWindow.document.write('@page { margin: 0.5in; }');
+                    printWindow.document.write('@page { margin: 0.15in; }');
                     printWindow.document.write('body { font-family: Arial, sans-serif; }');
                     printWindow.document.write('b { font-size: 16px; }');
                     printWindow.document.write('</style>');

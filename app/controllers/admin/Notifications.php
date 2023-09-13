@@ -210,6 +210,12 @@ class Notifications extends MY_Controller
 
     public function sync_rasd_serials(){
         $rasd_notifications = $this->cmt_model->getRasdNotifications();
-        print_r($rasd_notifications);exit;
+        foreach ($rasd_notifications as $rasd_notification){
+            $dispatch_id = $rasd_notification->dispatch_id;
+            $invoice_no = $rasd_notification->invoice_no;
+
+            echo $invoice_no;
+        }
+        //print_r($rasd_notifications);exit;
     }
 }
