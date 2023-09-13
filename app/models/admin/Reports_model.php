@@ -995,10 +995,9 @@ class Reports_model extends CI_Model
         $response = array();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
-                $response[] = $row;
+                $response = $row;
             }
         }
-
         return $response;
     }
 

@@ -97,8 +97,8 @@
                             <tr>
                                 <td colspan="2">Oening Balance</td>
                                 <td colspan="9">&nbsp;</td>
-                                <td><?php  echo $itemOpenings->openingBalance, " || " ;echo ($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00);?></td>
-                                <td><?php echo ($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00);?></td>
+                                <td><?php echo $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00));?></td>
+                                <td><?php echo $this->sma->formatDecimal(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00));?></td>
 
                             </tr>
 
