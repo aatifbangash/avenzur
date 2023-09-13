@@ -502,10 +502,12 @@
                     var instrt = instruction.split(':');
                     var html = '<b>' + medication + '</b><br /><br />';
                     html += instrt[0]+'<br /><br />';
-                    html += pharmacy_name+','+pharmacy_address;
+                    html += pharmacy_name+'<br /><br />';
+                    html += pharmacy_address+'<br /><br />';
                     html += pharmacist_name+'<br /><br />';
                     html += 'Date. '+printing_date+'<br /><br />';
-                    html += 'Exp. '+instrt[1];
+                    html += 'Exp. '+instrt[1]+'<br /><br />';
+                    html += 'اسم المريض';
 
                     printWindow.document.write(html);
 
