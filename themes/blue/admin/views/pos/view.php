@@ -500,13 +500,13 @@
                     var printWindow = window.open('', 'Instructions', 'height=200,width=400');
                     printWindow.document.write('<html><head><title>Instructions</title></head><body>');
                     var instrt = instruction.split(':');
-                    var html = '<b>' + medication + '</b><br /><br />';
-                    html += instrt[0]+'<br /><br />';
-                    html += pharmacy_name+'<br /><br />';
-                    html += pharmacy_address+'<br /><br />';
-                    html += pharmacist_name+'<br /><br />';
-                    html += 'Date. '+printing_date+'<br /><br />';
-                    html += 'Exp. '+instrt[1]+'<br /><br />';
+                    var html = '<b>' + medication + '</b><br />';
+                    html += instrt[0]+'<br />';
+                    html += pharmacy_name+'<br />';
+                    html += pharmacy_address+'<br />';
+                    html += pharmacist_name+'<br />';
+                    html += 'Date. '+printing_date+'<br />';
+                    html += 'Exp. '+instrt[1]+'<br />';
                     html += 'اسم المريض';
 
                     printWindow.document.write(html);
