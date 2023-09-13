@@ -106,7 +106,7 @@
                                 $count = 1;
 
                                 $balanceQantity = $itemOpenings->openingBalance;
-                                // $valueOfBalance = $itemOpenings->openingBalance * $itemOpenings->unitPrice;
+                                
 
                                 foreach ($reportData as $rp) {
 
@@ -126,10 +126,10 @@
                                             <td><?= $rp->expiry_date; ?></td>
                                             <td><?= $rp->batch_no; ?></td>
                                             <td><?= $rp->system_serial; ?></td>
-                                            <td><?= $this->sma->formatDecimal($rp->sale_price); ?></td>
-                                            <td><?= $this->sma->formatDecimal($rp->purchase_price); ?></td>
-                                            <td><?= $this->sma->formatQuantity($rp->quantity); ?></td>
-                                            <td><?= $this->sma->formatDecimal($rp->unit_cost); ?></td>
+                                            <td><?= $this->sma->formatDecimal($rp->sale_price ? $rp->sale_price : 0.0); ?></td>
+                                            <td><?= $this->sma->formatDecimal($rp->purchase_price ? $rp->purchase_price : 0.0); ?></td>
+                                            <td><?= $this->sma->formatQuantity($rp->quantity ? $rp->quantity : 0.0); ?></td>
+                                            <td><?= $this->sma->formatDecimal($rp->unit_cost ? $rp->unit_cost : 0.0); ?></td>
                                             <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
                                             <td><?= $this->sma->formatDecimal($balanceQantity * $rp->unit_cost); ?></td>
                                         </tr>

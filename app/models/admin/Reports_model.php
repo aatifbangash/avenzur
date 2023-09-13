@@ -1015,7 +1015,8 @@ class Reports_model extends CI_Model
 
             case 'purchases':
 
-                $q =  $this->db->query("SELECT prd.id, prd.code, prd.name, data.*
+                $q =  $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
+                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost), data.product_id
                 FROM sma_products as prd        
                 LEFT JOIN ( 
                 
@@ -1037,13 +1038,14 @@ class Reports_model extends CI_Model
 
             case 'sales':
 
-                $q =  $this->db->query("SELECT prd.id, prd.code, prd.name, data.*
+                $q =  $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
+                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost), data.product_id
                 FROM sma_products as prd        
                 LEFT JOIN ( 
                     
                     SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.invoice_number as document_no, sale.customer as name_of, saleItem.batch_no as batch_no,
                     saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_unit_price as unit_cost,
-                    saleItem.serial_no as system_serial, NULL as sale_price, NULL as purchase_price, saleItem.product_id as product_id
+                    saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id as product_id
                 
                     FROM sma_sales as sale
                 
@@ -1058,8 +1060,9 @@ class Reports_model extends CI_Model
 
             case 'returnCustomer':
 
-                $q =  $this->db->query("SELECT prd.id, prd.code, prd.name, data.*
-                FROM sma_products as prd        
+                $q =  $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
+                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost), data.product_id
+                FROM sma_products as prd      
                 LEFT JOIN ( 
                  
                     SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.invoice_number as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
@@ -1080,8 +1083,9 @@ class Reports_model extends CI_Model
 
             case 'returnSupplier':
 
-                $q =  $this->db->query("SELECT prd.id, prd.code, prd.name, data.*
-                FROM sma_products as prd        
+                $q =  $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
+                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost), data.product_id
+                FROM sma_products as prd       
                 LEFT JOIN ( 
 
                     SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.invoice_number as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
@@ -1104,8 +1108,9 @@ class Reports_model extends CI_Model
 
             case 'transfer':
 
-                $q =   $this->db->query("SELECT prd.id, prd.code, prd.name, data.*
-                FROM sma_products as prd        
+                $q =   $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
+                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost), data.product_id
+                FROM sma_products as prd
                 LEFT JOIN ( 
                 
                     SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-In' as type,  trnf.invoice_number as document_no, CONCAT(trnf.from_warehouse_name,' - ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
@@ -1200,8 +1205,9 @@ class Reports_model extends CI_Model
 
             default;
 
-            $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.*
-                FROM sma_products as prd        
+            $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
+            IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost), data.product_id
+            FROM sma_products as prd        
                 LEFT JOIN ( 
             
                     SELECT purchase.id as entry_id, purchase.date as entry_date, 'Purchase' as type, purchase.invoice_number as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
@@ -1218,7 +1224,7 @@ class Reports_model extends CI_Model
 
                     SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.invoice_number as document_no, sale.customer as name_of, saleItem.batch_no as batch_no,
                     saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_unit_price as unit_cost,
-                    saleItem.serial_no as system_serial, NULL as sale_price, NULL as purchase_price, saleItem.product_id
+                    saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id
                 
                     FROM sma_sales as sale
                 
