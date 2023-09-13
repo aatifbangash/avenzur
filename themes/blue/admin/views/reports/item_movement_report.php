@@ -78,85 +78,64 @@
                         <table id="poTable" class="table items table-striped table-bordered table-condensed table-hover">
                             <thead>
                                 <tr>
+                                    <th><?= lang('SN'); ?></th>
                                     <th><?= lang('Date'); ?></th>
-                                    <th><?= lang('Invoice No.'); ?></th>
-                                    <th><?= lang('Transaction No.'); ?></th>
-                                    <th><?= lang('Description'); ?></th>
+                                    <th><?= lang('Document No'); ?></th>
                                     <th><?= lang('Name Of'); ?></th>
-                                    <th><?= lang('Expiry'); ?></th>
+                                    <th><?= lang('Expire Date'); ?></th>
                                     <th><?= lang('Batch No.'); ?></th>
-                                    <th><?= lang('Quantity'); ?></th>
-                                    <th><?= lang('Unit Price'); ?></th>
+                                    <th><?= lang('System Serial'); ?></th>
                                     <th><?= lang('Sale Price'); ?></th>
-                                    <th><?= lang('Current Stock'); ?></th>
-                                    <th><?= lang('Total Cost'); ?></th>
+                                    <th><?= lang('Purchase Price'); ?></th>
+                                    <th><?= lang('Unit Cost'); ?></th>
+                                    <th><?= lang('Item balance quantity'); ?></th>
+                                    <th><?= lang('Value of item current balance'); ?></th>
                                 </tr>
                             </thead>
                             <tbody style="text-align:center;">
+                            <tr>
+                                <td colspan="2">Oening Balance</td>
+                                <td colspan="8">&nbsp;</td>
+                                <td><?php echo $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00));?></td>
+                                <td><?php echo $this->sma->formatDecimal(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00));?></td>
+
+                            </tr>
+
                                 <?php
                                 $count = 1;
-                                $preItemQuantity = $preItemQuantity;
-                                $effectiveQuantity = 0;
-                                $totalCost = 0;
-                                foreach ($inventory_array as $idxData) {
 
-                                    foreach ($idxData as $item) {
+                                $balanceQantity = $itemOpenings->openingBalance;
+                                // $valueOfBalance = $itemOpenings->openingBalance * $itemOpenings->unitPrice;
 
-                                        if ($effectiveQuantity == 0) {
-                                            $effectiveQuantity = $preItemQuantity;
-                                        }
+                                foreach ($reportData as $rp) {
 
-                                        if ($item['description'] == 'Sale') {
-                                            $effectiveQuantity = $effectiveQuantity - $item['quantity'];
-                                            $totalCost = $effectiveQuantity * $item['unitCost'];
-                                        }
+                                    if($rp->type == 'Purchase' || $rp->type == 'Return Customer'){
+                                        $balanceQantity+=$rp->quantity;
+                                    }
+                                    if(($rp->type == 'Sale' || $rp->type == 'Return Supplier' )&& $balanceQantity > 0){
+                                        $balanceQantity-=$rp->quantity;
+                                    }
 
-                                        if ($item['description'] == 'Purchase') {
-                                            $effectiveQuantity = $effectiveQuantity + $item['quantity'];
-                                            $totalCost = $effectiveQuantity * $item['unitCost'];
-                                        }
-
-                                        if ($item['description'] == 'RT Supplier') {
-                                            $effectiveQuantity = $effectiveQuantity - (-1 * $item['quantity']);
-                                            $totalCost = $effectiveQuantity * $item['unitCost'];
-                                        }
-
-                                        if ($item['description'] == 'Return') {
-                                            $effectiveQuantity = $effectiveQuantity + $item['quantity'];
-                                            $totalCost = $effectiveQuantity * $item['unitCost'];
-                                        }
-
-                                        // No Effect
-                                        if ($item['description'] == 'Transfer') {
-                                            // if ($item['negate'] == true) {
-                                            //     $effectiveQuantity = $effectiveQuantity - $item['quantity'];
-                                            // } else {
-                                            //     $effectiveQuantity = $effectiveQuantity + $item['quantity'];
-                                            // }
-                                            $totalCost = $effectiveQuantity * $item['unitCost'];
-                                        }
                                 ?>
                                         <tr>
-                                            <td><?= $item['date']; ?></td>
-                                            <td><?= $item['documentNo']; ?></td>
-                                            <td><?= $item['accountTransId']; ?></td>
-                                            <td><?= $item['description']; ?></td>
-                                            <td><?= $item['nameOf']; ?></td>
-                                            <td><?= $item['expiry']; ?></td>
-                                            <td><?= $item['batch']; ?></td>
-                                            <td><?= $this->sma->formatQuantity($item['quantity']); ?></td>
-                                            <td><?= $this->sma->formatDecimal($item['unitCost']); ?></td>
-                                            <td><?= $this->sma->formatDecimal($item['salePrice']); ?></td>
-                                            <td><?= $this->sma->formatQuantity($effectiveQuantity); ?></td>
-                                            <td><?= $this->sma->formatDecimal($totalCost); ?></td>
-
-
+                                            <td><?= $count; ?></td>
+                                            <td><?= $rp->entry_date; ?></td>
+                                            <td><?= $rp->document_no; ?></td>
+                                            <td><?= $rp->name_of; ?></td>
+                                            <td><?= $rp->expiry_date; ?></td>
+                                            <td><?= $rp->batch_no; ?></td>
+                                            <td><?= $rp->system_serial; ?></td>
+                                            <td><?= $this->sma->formatDecimal($rp->sale_price); ?></td>
+                                            <td><?= $this->sma->formatDecimal($rp->purchase_price); ?></td>
+                                            <td><?= $this->sma->formatDecimal($rp->unit_cost); ?></td>
+                                            <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
+                                            <td><?= $this->sma->formatDecimal($balanceQantity * $rp->unit_cost); ?></td>
                                         </tr>
                                 <?php
-
+                                         $count++;
                                     }
-                                    $count++;
-                                }
+                                   
+                                
                                 ?>
 
                             </tbody>

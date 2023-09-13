@@ -111,9 +111,14 @@
                                     <td><?= $statement->dc == 'D' ? $statement->openingAmount : '-'; ?></td>
                                     <td><?= $statement->dc == 'C' ? $statement->openingAmount : '-'; ?></td>
                                     <td><?= $statement->dc == 'D' ? $statement->amount : '-';
-                                        $totalDebit = ($totalDebit + $statement->amount) ?></td>
+                                        $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
+
+                                    </td>
                                     <td><?php echo $statement->dc == 'C' ? $statement->amount : '-';
-                                        $totalCredit = $totalCredit + $statement->amount ?></td>
+                                    $statement->dc == 'C' ?
+                                        $totalCredit = $totalCredit + $statement->amount : null ?>
+
+                                    </td>
                                     <td><?php echo $balance;
                                         $totalBalance = $totalBalance + $balance;
                                         ?></td>
