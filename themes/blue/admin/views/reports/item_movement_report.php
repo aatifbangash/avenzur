@@ -81,10 +81,10 @@
                                     <th><?= lang('SN'); ?></th>
                                     <th><?= lang('Date'); ?></th>
                                     <th><?= lang('Document No'); ?></th>
+                                    <th><?= lang('Type'); ?></th>
                                     <th><?= lang('Name Of'); ?></th>
                                     <th><?= lang('Expire Date'); ?></th>
                                     <th><?= lang('Batch No.'); ?></th>
-                                    <th><?= lang('System Serial'); ?></th>
                                     <th><?= lang('Sale Price'); ?></th>
                                     <th><?= lang('Purchase Price'); ?></th>
                                     <th><?= lang('Quantity'); ?></th>
@@ -116,15 +116,21 @@
                                         $balanceQantity -= $rp->quantity;
                                     }
 
+                                    if($rp->type ==  'Transfer-Out' || $rp->type == "Transfer-In"){
+                                        $type = 'Transfer';
+                                    }else{
+                                        $type = $rp->type;
+                                    }
+
                                 ?>
                                     <tr>
                                         <td><?= $count; ?></td>
                                         <td><?= $rp->entry_date; ?></td>
                                         <td><?= $rp->document_no; ?></td>
+                                        <td><?= $type; ?></td>
                                         <td><?= $rp->name_of; ?></td>
                                         <td><?= $rp->expiry_date; ?></td>
                                         <td><?= $rp->batch_no; ?></td>
-                                        <td><?= $rp->system_serial; ?></td>
                                         <td><?= $this->sma->formatDecimal($rp->sale_price ? $rp->sale_price : 0.0); ?></td>
                                         <td><?= $this->sma->formatDecimal($rp->purchase_price ? $rp->purchase_price : 0.0); ?></td>
                                         <td><?= $this->sma->formatQuantity($rp->quantity ? $rp->quantity : 0.0); ?></td>

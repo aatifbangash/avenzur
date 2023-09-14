@@ -1022,7 +1022,7 @@ class Reports_model extends CI_Model
                 FROM sma_products as prd        
                 LEFT JOIN ( 
                 
-                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Purchase' as type, purchase.invoice_number as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
+                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Purchase' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
                     pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
                     pitem.serial_number as system_serial, pitem.sale_price as sale_price, pitem.unit_cost as purchase_price, pitem.product_id as product_id
 
@@ -1045,13 +1045,22 @@ class Reports_model extends CI_Model
                 FROM sma_products as prd        
                 LEFT JOIN ( 
                     
-                    SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.invoice_number as document_no, sale.customer as name_of, saleItem.batch_no as batch_no,
+                    SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.reference_no as document_no, 
+                    
+                    CASE WHEN sale.pos = 1 THEN 
+                    CONCAT('POS',' - ',wrs.name)
+                    ELSE
+                    sale.customer
+                    END AS name_of, 
+
+                    saleItem.batch_no as batch_no,
                     saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_unit_price as unit_cost,
                     saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id as product_id
                 
                     FROM sma_sales as sale
                 
                     LEFT JOIN sma_sale_items as saleItem ON saleItem.sale_id = sale.id
+                    LEFT JOIN sma_warehouses as wrs ON wrs.id = sale.warehouse_id
                 
                     WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '{$start_date}' AND DATE(sale.date) <= '{$end_date}'
                 )
@@ -1067,7 +1076,7 @@ class Reports_model extends CI_Model
                 FROM sma_products as prd      
                 LEFT JOIN ( 
                  
-                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.invoice_number as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
+                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.reference_no as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
                     ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_unit_price as unit_cost,
                     ritem.serial_no as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id as product_id
 
@@ -1090,7 +1099,7 @@ class Reports_model extends CI_Model
                 FROM sma_products as prd       
                 LEFT JOIN ( 
 
-                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.invoice_number as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
+                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
                     pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
                     pitem.serial_number as system_serial, pitem.sale_price as sale_price, NULL as purchase_price, pitem.product_id
 
@@ -1115,7 +1124,7 @@ class Reports_model extends CI_Model
                 FROM sma_products as prd
                 LEFT JOIN ( 
                 
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-In' as type,  trnf.invoice_number as document_no, CONCAT(trnf.from_warehouse_name,' - ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
+                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-In' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
                     titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
                     titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
 
@@ -1160,7 +1169,7 @@ class Reports_model extends CI_Model
                     UNION ALL
 
                     
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-Out' as type,  trnf.invoice_number as document_no, CONCAT(trnf.from_warehouse_name,' - ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
+                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-Out' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
                     titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
                     titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
 
@@ -1212,7 +1221,7 @@ class Reports_model extends CI_Model
             FROM sma_products as prd        
                 LEFT JOIN ( 
             
-                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Purchase' as type, purchase.invoice_number as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
+                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Purchase' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
                     pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
                     pitem.serial_number as system_serial, pitem.sale_price as sale_price, pitem.unit_cost as purchase_price, pitem.product_id
 
@@ -1224,19 +1233,28 @@ class Reports_model extends CI_Model
 
                     UNION ALL 
 
-                    SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.invoice_number as document_no, sale.customer as name_of, saleItem.batch_no as batch_no,
+                    SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.reference_no as document_no, 
+                    
+                    CASE WHEN sale.pos = 1 THEN 
+                    CONCAT('POS',' - ',wrs.name)
+                    ELSE
+                    sale.customer
+                    END AS name_of, 
+                    
+                     saleItem.batch_no as batch_no,
                     saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_unit_price as unit_cost,
                     saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id
                 
                     FROM sma_sales as sale
                 
                     LEFT JOIN sma_sale_items as saleItem ON saleItem.sale_id = sale.id
+                    LEFT JOIN sma_warehouses as wrs ON wrs.id = sale.warehouse_id
                 
                     WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '$start_date' AND DATE(sale.date) <= '$end_date'
 
                     UNION ALL 
 
-                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.invoice_number as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
+                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.reference_no as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
                     ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_unit_price as unit_cost,
                     ritem.serial_no as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id
 
@@ -1248,7 +1266,7 @@ class Reports_model extends CI_Model
 
                     UNION ALL 
 
-                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.invoice_number as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
+                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
                     pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
                     pitem.serial_number as system_serial, pitem.sale_price as sale_price, NULL as purchase_price, pitem.product_id
 
@@ -1261,7 +1279,7 @@ class Reports_model extends CI_Model
                     UNION ALL 
 
 
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-In' as type,  trnf.invoice_number as document_no, CONCAT(trnf.from_warehouse_name,' - ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
+                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-In' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
                     titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
                     titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
 
@@ -1306,7 +1324,7 @@ class Reports_model extends CI_Model
                     UNION ALL
 
                     
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-Out' as type,  trnf.invoice_number as document_no, CONCAT(trnf.from_warehouse_name,' - ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
+                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-Out' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
                     titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
                     titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
 
