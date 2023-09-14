@@ -1,8 +1,8 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <script type="text/javascript"></script>
-<?php if ($Owner || ($GP && $GP['stock_request_view'])) {
+<?php 
     echo admin_form_open('stock_request/stock_order', 'id="action-form"');
-} ?>
+ ?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-star-o"></i><?= lang('Stock Order Request'); ?>
