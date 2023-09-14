@@ -3415,7 +3415,6 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['customer_data'] = $trial_balance_array;
             $this->data['trial_balance'] = $response_arr;
-//            dd($response_arr);
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
             $meta = ['page_title' => lang('suppliers_report'), 'bc' => $bc];
             $this->page_construct('reports/suppliers_trial_balance', $meta, $this->data);
