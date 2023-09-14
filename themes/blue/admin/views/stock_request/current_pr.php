@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <script type="text/javascript"></script>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && $GP['stock_request_view'])) {
     echo admin_form_open('stock_request/current_pr', 'id="action-form"');
 } ?>
 <div class="box">
@@ -33,10 +33,19 @@
                         <div class="form-group">
                             <?= lang('Status', 'Status'); ?>
                             <?php
-                            $statuses = array('completed' => 'completed', 'rejected' => 'Rejected');
-                            echo form_dropdown('status', $statuses, ($_POST['status'] ?? $Settings->default_warehouse), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('status') . '" required="required" style="width:100%;" '); 
-                            ?>
-                        
+                            //$statuses = array('completed' => 'completed', 'rejected' => 'rejected');
+                            //echo form_dropdown('status', $statuses, '', 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('status') . '" required="required" style="width:100%;" '); 
+                            $statuses = array('completed', 'rejected');
+                           ?>
+                            <select class="form-control" id="status" name="status" >
+                                    <?php
+                                        foreach($statuses as $status)
+                                        {
+                                            echo '<option value="'.$status.'">'.$status.'</option>';
+                                        }
+                                    ?>                  
+                            </select>
+                            <br /><br />
                             <button type="submit" class="btn btn-primary" id="add_request">
                             <?php 
                                 echo lang('Submit');

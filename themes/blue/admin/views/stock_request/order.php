@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <script type="text/javascript"></script>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && $GP['stock_request_view'])) {
     echo admin_form_open('stock_request/stock_order', 'id="action-form"');
 } ?>
 <div class="box">
