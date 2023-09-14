@@ -3404,11 +3404,11 @@ class Reports extends MY_Controller
                 $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
                 $response_arr[$trans->id]["name"] = $trans->name;
                 $response_arr[$trans->id]["trsDebit"] = $trans->totalPayment + $trans->totalReturn + $trans->totalMemo;
-                $response_arr[$trans->id]["trsCredit"] = $trans->totalPurchases;
+                $response_arr[$trans->id]["trsCredit"] = $trans->totalPurchases + $trans->totalTaxes;
             }
             foreach ($trial_balance_array['ob'] as $trans) {
                 $response_arr[$trans->id]["obDebit"] = $trans->totalPayment + $trans->totalReturn + $trans->totalMemo;
-                $response_arr[$trans->id]["obCredit"] = $trans->totalPurchases;
+                $response_arr[$trans->id]["obCredit"] = $trans->totalPurchases + $trans->totalTaxes;
             }
 
             $this->data['start_date'] = $from_date;

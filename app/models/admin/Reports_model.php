@@ -463,19 +463,20 @@ class Reports_model extends CI_Model
                                 c.sequence_code,
                                 c.name,
                                 COALESCE(SUM(purchases.total), 0) AS totalPurchases,
+                                COALESCE(SUM(purchases.total_tax), 0) AS totalTaxes,
                                 COALESCE(SUM(ret.total), 0) AS totalReturn,
                                 COALESCE(SUM(py.amount), 0) AS totalPayment,
                                 COALESCE(SUM(memo.amount), 0) AS totalMemo
                             FROM sma_companies as c
                             LEFT JOIN (
-                                    SELECT supplier_id, SUM(grand_total) AS total
+                                    SELECT supplier_id, SUM(grand_total) AS total, SUM(product_tax) as total_tax
                                     FROM sma_purchases
                                     WHERE grand_total > 0
                                     AND date(date) >='{$start_date}' AND date(date) <='{$end_date}'
                                     GROUP BY supplier_id
                                 ) purchases ON c.id = purchases.supplier_id
                             LEFT JOIN (
-                                    SELECT supplier_id, SUM(abs(grand_total)) AS total
+                                    SELECT supplier_id, SUM(abs(grand_total)) AS total, SUM(abs(product_tax)) as total_tax
                                     FROM sma_purchases
                                     WHERE grand_total < 0
                                     AND date(date) >='{$start_date}' AND date(date) <='{$end_date}'
@@ -517,19 +518,20 @@ class Reports_model extends CI_Model
                                 c.sequence_code,
                                 c.name,
                                 COALESCE(SUM(purchases.total), 0) AS totalPurchases,
+                                COALESCE(SUM(purchases.total_tax), 0) AS totalTaxes,
                                 COALESCE(SUM(ret.total), 0) AS totalReturn,
                                 COALESCE(SUM(py.amount), 0) AS totalPayment,
                                 COALESCE(SUM(memo.amount), 0) AS totalMemo
                             FROM sma_companies as c
                             LEFT JOIN (
-                                    SELECT supplier_id, SUM(grand_total) AS total
+                                    SELECT supplier_id, SUM(grand_total) AS total, SUM(product_tax) as total_tax
                                     FROM sma_purchases
                                     WHERE grand_total > 0
                                     AND  date(date) < '{$start_date}'
                                     GROUP BY supplier_id
                                 ) purchases ON c.id = purchases.supplier_id
                             LEFT JOIN (
-                                    SELECT supplier_id, SUM(abs(grand_total)) AS total
+                                    SELECT supplier_id, SUM(abs(grand_total)) AS total, SUM(abs(product_tax)) as total_tax
                                     FROM sma_purchases
                                     WHERE grand_total < 0
                                     AND  date(date) < '{$start_date}'
