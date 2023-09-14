@@ -96,8 +96,8 @@
                             <tbody style="text-align:center;">
                                 <tr>
                                     <td colspan="2">Oening Balance</td>
-                                    <td colspan="8">&nbsp;</td> 
-                                    <td><?php echo $this->sma->formatDecimal($itemOpenings->unitPrice);?></td>
+                                    <td colspan="8">&nbsp;</td>
+                                    <td><?php echo $this->sma->formatDecimal($itemOpenings->unitPrice); ?></td>
                                     <td><?php echo $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00)); ?></td>
                                     <td><?php echo $this->sma->formatDecimal(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00)); ?></td>
 
@@ -108,7 +108,7 @@
                                 $balanceQantity = $itemOpenings->openingBalance;
 
                                 foreach ($reportData as $rp) {
-
+                                
                                     if ($rp->type == 'Purchase' || $rp->type == 'Return-Customer' || $rp->type == "Transfer-In") {
                                         $balanceQantity += $rp->quantity;
                                     }
@@ -116,9 +116,9 @@
                                         $balanceQantity -= $rp->quantity;
                                     }
 
-                                    if($rp->type ==  'Transfer-Out' || $rp->type == "Transfer-In"){
+                                    if ($rp->type ==  'Transfer-Out' || $rp->type == "Transfer-In") {
                                         $type = 'Transfer';
-                                    }else{
+                                    } else {
                                         $type = $rp->type;
                                     }
 
@@ -164,3 +164,37 @@
         </div>
         <?php echo form_close(); ?>
     </div>
+
+    <?php
+    echo $productId = ($_POST['product'] ? $_POST['product'] : 0);
+    echo $type = ($_POST['filterOnType'] ? $_POST['filterOnType'] : 'all');
+    echo $startDate = ($_POST['from_date'] ? trim($this->sma->fld($_POST['from_date'])) : null);
+    echo $endDate = ($_POST['to_date'] ? trim($this->sma->fld($_POST['to_date'])) : null);
+    ?>
+
+    <script type="text/javascript" src="<?= $assets ?>js/html2canvas.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#xls').click(function(event) {
+                var prod = $('#report_product_id2').val();
+                var fromdate = $('#fromdate').val();
+                var todate = $('#todate').val();
+                if (prod && fromdate && todate) {
+                    event.preventDefault();
+                    window.location.href = "<?= admin_url("reports/item_movement_report_xls/$productId/$type/$startDate/$endDate/xls") ?>";
+                    return false;
+                } else {
+                    return false;
+                }
+            });
+            $('#image').click(function(event) {
+                event.preventDefault();
+                html2canvas($('.box'), {
+                    onrendered: function(canvas) {
+                        openImg(canvas.toDataURL());
+                    }
+                });
+                return false;
+            });
+        });
+    </script>

@@ -3616,6 +3616,120 @@ class Reports extends MY_Controller
         }
     }
 
+    public function item_movement_report_xls($productId, $type, $startDate, $endDate, $xls){
+
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+
+        if ($productId && $startDate && $endDate) {
+            $start_date = $startDate;
+            $end_date = $endDate;
+
+            $user = $this->site->getUser();
+            $defaultWareHouseId = ($user->warehouse_id ? $user->warehouse_id : $this->site->Settings->default_warehouse);
+
+            $itemOpenings = $this->reports_model->getItemOpeningBalance($productId, $start_date, $defaultWareHouseId);
+            $reportData = $this->reports_model->getItemMovementRecords($productId, $start_date, $end_date, $defaultWareHouseId, $type);
+
+            // Expire Date	Batch No.	Sale Price	Purchase Price	Quantity	Unit Cost	Item balance quantity	Value of item current balance
+
+            if (!empty($reportData)) {
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('item_movement_report'));
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('Date'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('Document No'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('Type'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('Name Of'));
+                $this->excel->getActiveSheet()->SetCellValue('E1', lang('Expire Date'));
+                $this->excel->getActiveSheet()->SetCellValue('F1', lang('Batch No.'));
+                $this->excel->getActiveSheet()->SetCellValue('G1', lang('Sale Price'));
+                $this->excel->getActiveSheet()->SetCellValue('H1', lang('Purchase Price'));
+                $this->excel->getActiveSheet()->SetCellValue('I1', lang('Quantity'));
+                $this->excel->getActiveSheet()->SetCellValue('J1', lang('Unit Cost'));
+                $this->excel->getActiveSheet()->SetCellValue('K1', lang('Item balance quantity'));
+                $this->excel->getActiveSheet()->SetCellValue('L1', lang('Value of item current balance'));
+
+                $row = 2;
+                $this->excel->getActiveSheet()->SetCellValue('A' . $row, 'Opening Balance');
+                $this->excel->getActiveSheet()->SetCellValue('B' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('C' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('D' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('I' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatDecimal($itemOpenings->unitPrice));
+                $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00)));
+                $this->excel->getActiveSheet()->SetCellValue('L' . $row,  $this->sma->formatDecimal(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00)));
+
+
+                $balanceQantity = $itemOpenings->openingBalance;
+                $row = 3;
+                $name = null;
+                foreach ($reportData as $data_row) {
+
+                    $name = $data_row->id.'-'.$data_row->name.'('.$data_row->code.')';
+
+                    if ($data_row->type == 'Purchase' || $data_row->type == 'Return-Customer' || $data_row->type == "Transfer-In") {
+                        $balanceQantity += $data_row->quantity;
+                    }
+                    if (($data_row->type == 'Sale' || $data_row->type == 'Return-Supplier' || $data_row->type == "Transfer-Out") && $balanceQantity > 0) {
+                        $balanceQantity -= $data_row->quantity;
+                    }
+
+                    if ($data_rowrp->type ==  'Transfer-Out' || $data_row->type == "Transfer-In") {
+                        $type = 'Transfer';
+                    } else {
+                        $type = $data_row->type;
+                    }
+
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->entry_date);
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->document_no);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $type);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->name_of);
+                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->expiry_date);
+                    $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->batch_no);
+                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatDecimal($data_row->sale_price ? $data_row->sale_price : 0.0));
+                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->sma->formatDecimal($data_row->purchase_price ? $data_row->purchase_price : 0.0));
+                    $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->sma->formatQuantity($data_row->quantity ? $data_row->quantity : 0.0));
+                    $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatDecimal($data_row->unit_cost ? $data_row->unit_cost : 0.0));
+                    $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatQuantity($balanceQantity ? $balanceQantity : 0.0));
+                    $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatDecimal($balanceQantity * $itemOpenings->unitPrice));
+                    
+                    $row++;
+                }
+
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(25);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(25);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(35);
+                $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(25);
+                $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(25);
+                $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(25);
+                $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(25);
+                $this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(25);
+                $this->excel->getActiveSheet()->getColumnDimension('J')->setWidth(25);
+                $this->excel->getActiveSheet()->getColumnDimension('K')->setWidth(25);
+                $this->excel->getActiveSheet()->getColumnDimension('L')->setWidth(25);
+
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+                $filename = $name.'-'.date('Y-m-d').'-item_movement_report';
+                $this->load->helper('excel');
+                create_excel($this->excel, $filename);
+            }
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER['HTTP_REFERER']);
+
+        }else{
+            redirect($_SERVER['HTTP_REFERER']);
+            return null;
+        }
+        
+    }
+
     public function item_movement_report(){
 
         $this->sma->checkPermissions();
