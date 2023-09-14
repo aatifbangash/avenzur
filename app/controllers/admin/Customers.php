@@ -296,6 +296,7 @@ class Customers extends MY_Controller
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($customer_id);
 
+        $vat_charges = (float)$vat_charges;
         /*Accounts Entries*/
         $entry = array(
             'entrytype_id' => 4,
@@ -308,6 +309,8 @@ class Customers extends MY_Controller
             'pid'          =>  '',
             'memo_id'      => $memo_id
             );
+
+
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
 
