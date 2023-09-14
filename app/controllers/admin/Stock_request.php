@@ -258,7 +258,7 @@ class stock_request extends MY_Controller
     }
 
     public function purchase_requests(){
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         //$warehouse_id = $this->session->userdata('warehouse_id');
@@ -272,7 +272,7 @@ class stock_request extends MY_Controller
     }
 
     public function current_pr(){
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 

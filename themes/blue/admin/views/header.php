@@ -1732,7 +1732,7 @@
                                 </ul>
                             </li>
                             <?php } ?>
-                             <?php if ($Owner || $Admin || $GP['stock_request_view']) { ?>
+                             <?php //if ($Owner || $Admin || $GP['stock_request_view']) { ?>
                              <li class="mm_stock_requests">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star-o"></i>
@@ -1751,7 +1751,7 @@
                                         </a>
                                     </li>
                                     <?php 
-                                        if($Owner || $Admin){
+                                        if($GP['stock_request_view']){
                                     ?>
                                         <li id="stock_requests_index">
                                             <a class="submenu" href="<?= admin_url('stock_request/current_pr'); ?>">
@@ -1776,7 +1776,7 @@
                                     </li>-->
                                 </ul>
                              </li>
-                             <?php } ?>
+                             <?php //} ?>
 
                             <?php 
                              if (isset($GP) && $GP['accountant'] || ($Owner || $Admin) ) {
