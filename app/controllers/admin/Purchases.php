@@ -2311,7 +2311,7 @@ class Purchases extends MY_Controller
                         'dc' => 'C',
                         //'ledger_id' => $product->inventory_account,
                         'ledger_id' => $warehouse_ledgers->inventory_ledger,
-                        'amount' => -1*($item->subtotal),
+                        'amount' => -1*($item->main_net),
                         'narration' => 'Inventory'
                     )
                 );
@@ -2335,7 +2335,7 @@ class Purchases extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => 'D',
                 'ledger_id' => $supplier->ledger_account,
-                'amount' => -1*($inv->grand_total + $inv->product_tax),
+                'amount' => -1*($inv->grand_total),
                 'narration' => 'Accounts payable'
             )
         );
