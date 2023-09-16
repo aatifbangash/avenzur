@@ -79,6 +79,7 @@
 
 
                                     foreach ($trial_balance as $data){
+                                        if ($data['trsDebit'] == 0 && $data['trsCredit'] == 0 && $data['obDebit'] == 0 && $data['obCredit'] == 0) continue;
                                         //sale_total + payment_total
 
                                         // $ob_debit = $data->ob_debit > $data->ob_credit ? $data->ob_debit - $data->ob_credit : 0;

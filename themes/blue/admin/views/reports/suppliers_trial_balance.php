@@ -78,7 +78,7 @@
                             $totalFinalEndDebit = 0;
                             $totalFinalEndCredit = 0;
                             foreach ($trial_balance as $data) {
-
+                                if ($data['trsDebit'] == 0 && $data['trsCredit'] == 0 && $data['obDebit'] == 0 && $data['obCredit'] == 0) continue;
                                 $eb_credit = $data['obCredit'] + $data['trsCredit'];
                                 $eb_debit = $data['obDebit'] + $data['trsDebit'];
 
