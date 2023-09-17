@@ -2311,31 +2311,96 @@ class Reports_model extends CI_Model
         return $data;
     }
 
-    public function getVatPurchaseReport($start_date = null, $end_date = null)
+    public function getVatPurchaseReport($start_date = null, $end_date = null,  $warehouse_id = null, $filterOnType = null)
     {
 
 
-        $this->db
-            ->select('sma_purchases.id,withT.subtotal as total_item_with_vat, withOutT.subtotal as total_item_with_zero_tax, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as transaction_id, sma_purchases.supplier, sma_purchases.date, sma_purchases.invoice_number, sma_purchases.total_discount,sma_purchases.grand_total as total_with_vat, sma_purchases.product_tax as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code, sma_accounts_entries.number as account_number')
-            ->from('sma_purchases')
-            ->join('sma_companies', 'sma_companies.id=sma_purchases.supplier_id')
-            ->join('sma_purchase_items', 'sma_purchase_items.purchase_id=sma_purchases.id')
-            ->join('sma_accounts_entries', 'sma_accounts_entries.pid=sma_purchases.id', 'left')
+        // $this->db
+        //     ->select('sma_purchases.id,withT.subtotal as total_item_with_vat, withOutT.subtotal as total_item_with_zero_tax, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as transaction_id, sma_purchases.supplier, sma_purchases.date, sma_purchases.invoice_number, sma_purchases.total_discount,sma_purchases.grand_total as total_with_vat, sma_purchases.product_tax as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code, sma_accounts_entries.number as account_number')
+        //     ->from('sma_purchases')
+        //     ->join('sma_companies', 'sma_companies.id=sma_purchases.supplier_id')
+        //     ->join('sma_purchase_items', 'sma_purchase_items.purchase_id=sma_purchases.id')
+        //     ->join('sma_accounts_entries', 'sma_accounts_entries.pid=sma_purchases.id', 'left')
 
-            //->join('sma_purchase_items withT', 'withT.purchase_id=sma_purchases.id AND withT.tax > 0','left')
-            //->join('sma_purchase_items withOutT', 'withOutT.purchase_id=sma_purchases.id AND withOutT.tax = 0','left')
-            ->join('(SELECT purchase_id, SUM(subtotal) as subtotal FROM `sma_purchase_items` WHERE tax > 0 group by purchase_id ) withT', 'withT.purchase_id=sma_purchases.id', 'left')
-            ->join('(SELECT purchase_id, SUM(subtotal) as subtotal FROM `sma_purchase_items` WHERE tax=0 group by purchase_id ) withOutT', 'withOutT.purchase_id=sma_purchases.id', 'left')
+        //     //->join('sma_purchase_items withT', 'withT.purchase_id=sma_purchases.id AND withT.tax > 0','left')
+        //     //->join('sma_purchase_items withOutT', 'withOutT.purchase_id=sma_purchases.id AND withOutT.tax = 0','left')
+        //     ->join('(SELECT purchase_id, SUM(subtotal) as subtotal FROM `sma_purchase_items` WHERE tax > 0 group by purchase_id ) withT', 'withT.purchase_id=sma_purchases.id', 'left')
+        //     ->join('(SELECT purchase_id, SUM(subtotal) as subtotal FROM `sma_purchase_items` WHERE tax=0 group by purchase_id ) withOutT', 'withOutT.purchase_id=sma_purchases.id', 'left')
 
-            //->join('sma_tax_rates', 'sma_tax_rates.id=sma_purchases.order_tax_id')
-            ->where('DATE(sma_purchases.date) >=', $start_date)
-            ->where('DATE(sma_purchases.date) <=', $end_date)
-            //->where('sma_purchases.return_id IS NULL')
-            ->group_by('sma_purchase_items.purchase_id')
-            ->having('SUM(sma_purchase_items.quantity) >=', 0)
-            ->order_by('sma_purchases.date asc');
+        //     //->join('sma_tax_rates', 'sma_tax_rates.id=sma_purchases.order_tax_id')
+        //     ->where('DATE(sma_purchases.date) >=', $start_date)
+        //     ->where('DATE(sma_purchases.date) <=', $end_date)
+        //     //->where('sma_purchases.return_id IS NULL')
+        //     ->group_by('sma_purchase_items.purchase_id')
+        //     ->having('SUM(sma_purchase_items.quantity) >=', 0)
+        //     ->order_by('sma_purchases.date asc');
 
-        $q = $this->db->get();
+        // $q = $this->db->get();
+
+        $query = "SELECT * FROM(
+                                SELECT 
+                                    p.id as trans_ID,  
+                                    CASE WHEN p.status = 'returned' THEN 'returnSupplier' ELSE 'purchases' END AS trans_type,
+                                    w.name as warehouse,
+                                    p.date as trans_date,
+                                    p.invoice_number as trans_invoice_number,
+                                    SUM(pi.quantity) AS total_quantity,
+                                    p.warehouse_id,
+                                    p.reference_no,
+                                
+                                    p.supplier AS supplier_name,
+                                    c.vat_no AS supplier_vat_no,    
+                                    
+                                    abs(p.total_discount) as total_discount,
+                                    abs(p.grand_total) AS grand_total,
+                                    abs(p.product_tax) AS total_tax,
+                                    abs(withT.subtotal) AS total_item_with_vat,
+                                    abs(withOutT.subtotal) AS total_item_without_tax, 
+                                
+                                    ae.number AS ledger_entry_number
+                                FROM sma_purchases as p
+                                JOIN sma_companies as c ON c.id = p.supplier_id
+                                JOIN sma_purchase_items as pi ON pi.purchase_id = p.id
+                                LEFT JOIN sma_warehouses AS w on p.warehouse_id=w.id
+                                LEFT JOIN sma_accounts_entries as ae ON ae.pid = p.id
+                                LEFT JOIN(
+                                    SELECT
+                                        purchase_id,
+                                        SUM(subtotal) AS subtotal
+                                    FROM
+                                        sma_purchase_items
+                                    WHERE
+                                        tax > 0
+                                    GROUP BY
+                                        purchase_id
+                                ) withT ON withT.purchase_id = p.id
+                                
+                                LEFT JOIN(
+                                    SELECT
+                                        purchase_id,
+                                        SUM(subtotal) AS subtotal
+                                    FROM
+                                        sma_purchase_items
+                                    WHERE
+                                        tax = 0
+                                    GROUP BY
+                                        purchase_id
+                                ) withOutT ON withOutT.purchase_id = p.id
+                                
+                                GROUP BY
+                                    pi.purchase_id) AS a
+                    WHERE DATE(a.trans_date) >= '".$start_date."' AND DATE(a.trans_date) <= '".$end_date."'";
+
+                if ($warehouse_id) {
+                    $query .= " AND a.warehouse_id= '".$warehouse_id."'";
+                }
+
+                if ($filterOnType) {
+                    $query .= " AND a.trans_type= '".$filterOnType."'";
+                }
+                //echo $query;
+
+        $q = $this->db->query($query);
         //echo $this->db->last_query();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -2347,6 +2412,172 @@ class Reports_model extends CI_Model
 
         return $data;
     }
+
+
+    public function getVatSaleReport($start_date = null, $end_date = null,  $warehouse_id = null, $filterOnType = null)
+    {
+
+        $query = "SELECT * FROM(
+                             SELECT 
+                                s.id as trans_ID,  
+                                'sale' as trans_type,    
+                                s.date as trans_date, 
+
+                                s.warehouse_id,
+                                w.name as warehouse,
+                                s.reference_no,
+
+                                s.customer AS customer_name,
+                                c.vat_no AS customer_vat_no,    
+                                
+                                
+                                s.total_discount as total_discount,
+                                s.grand_total AS grand_total,
+                                s.product_tax AS total_tax,
+                                withT.subtotal AS total_item_with_vat,
+                                withOutT.subtotal AS total_item_without_tax,
+                                ae.number AS ledger_entry_number
+                            
+                            FROM sma_sales as s
+                            JOIN sma_sale_items as si ON si.sale_id = s.id
+                            JOIN sma_companies as c ON c.id = s.customer_id
+                            LEFT JOIN sma_accounts_entries as ae ON ae.sid = s.id
+                            LEFT JOIN sma_warehouses AS w on s.warehouse_id=w.id
+                            LEFT JOIN(
+                                SELECT
+                                    sale_id,
+                                    SUM(subtotal) AS subtotal
+                                FROM
+                                    sma_sale_items
+                                WHERE
+                                    tax != 0
+                                GROUP BY
+                                    sale_id
+                            ) withT ON withT.sale_id = s.id
+
+                            LEFT JOIN(
+                                SELECT
+                                    sale_id,
+                                    SUM(subtotal) AS subtotal
+                                FROM
+                                    sma_sale_items
+                                WHERE
+                                    tax = 0
+                                GROUP BY
+                                    sale_id
+                            ) withOutT ON withOutT.sale_id = s.id
+                            GROUP BY
+                                si.sale_id  
+
+                            UNION ALL
+
+                            SELECT 
+                                r.id as trans_ID,  
+                                'returnCustomer' as trans_type,    
+                                r.date as trans_date, 
+
+                                r.warehouse_id,
+                                w.name as warehouse,
+                                r.reference_no,
+
+                                r.customer AS customer_name,
+                                c.vat_no AS customer_vat_no,    
+                                
+                                
+                                r.total_discount as total_discount,
+                                r.grand_total AS grand_total,
+                                r.product_tax AS total_tax,
+                                withT.subtotal AS total_item_with_vat,
+                                withOutT.subtotal AS total_item_without_tax,
+                                ae.number AS ledger_entry_number
+                            
+                            FROM sma_returns as r
+                            JOIN sma_return_items as ri ON ri.return_id = r.id
+                            JOIN sma_companies as c ON c.id = r.customer_id
+                            LEFT JOIN sma_accounts_entries as ae ON ae.rid = r.id
+                            LEFT JOIN sma_warehouses AS w on r.warehouse_id=w.id
+                            LEFT JOIN(
+                                SELECT
+                                    return_id,
+                                    SUM(subtotal) AS subtotal
+                                FROM
+                                    sma_return_items
+                                WHERE
+                                    tax != 0
+                                GROUP BY
+                                    return_id
+                            ) withT ON withT.return_id = r.id
+
+                            LEFT JOIN(
+                                SELECT
+                                    return_id,
+                                    SUM(subtotal) AS subtotal
+                                FROM
+                                    sma_return_items
+                                WHERE
+                                    tax = 0
+                                GROUP BY
+                                    return_id
+                            ) withOutT ON withOutT.return_id = r.id
+                            GROUP BY
+                                ri.return_id 
+
+                            UNION ALL
+
+                            SELECT 
+                                m.id as trans_ID,  
+                                'serviceInvoice' as trans_type,    
+                                m.date as trans_date, 
+
+                                0  as warehouse_id,
+                                '-' as warehouse,
+                                m.reference_no,
+
+                                c.name AS customer_name,
+                                c.vat_no AS customer_vat_no,    
+                                
+                                
+                                0 as total_discount,
+                                m.payment_amount AS grand_total,
+                                m.bank_charges AS total_tax,
+                                0 AS total_item_with_vat,
+                                0 AS total_item_without_tax,
+                                ae.number AS ledger_entry_number
+
+
+                            FROM sma_memo m
+                            JOIN sma_companies as c ON c.id = m.customer_id
+                            LEFT JOIN sma_accounts_entries as ae ON ae.memo_id = m.id
+
+                            WHERE type = 'serviceinvoice'
+                                
+                                ) AS a ";
+
+                $query .= " WHERE DATE(a.trans_date) >= '".$start_date."' AND DATE(a.trans_date) <= '".$end_date."'";
+
+                if ($warehouse_id) {
+                    $query .= " AND a.warehouse_id= '".$warehouse_id."'";
+                }
+
+                if ($filterOnType) {
+                    $query .= " AND a.trans_type= '".$filterOnType."'";
+                }
+
+                $query .= " ORDER BY a.trans_date DESC";
+            
+                //echo $query;
+        $q = $this->db->query($query);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+
+        return $data;
+    }
+
 
     public function getPurchasesTax($start_date = null, $end_date = null)
     {
