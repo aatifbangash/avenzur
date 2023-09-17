@@ -27,6 +27,8 @@ class Reports extends MY_Controller
             'deposit' => lang('deposit'),
             'authorize' => lang('authorize'),
         ];
+
+        $this->load->admin_model('deals_model');
     }
 
     public function adjustments($warehouse_id = null)
@@ -134,11 +136,31 @@ class Reports extends MY_Controller
 
     public function stock()
     {
-        $this->data['stock_data'] = $this->reports_model->getStockData();
-        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
-        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('stock_report')]];
-        $meta = ['page_title' => lang('stock_report'), 'bc' => $bc];
+
+        $at_date = $this->input->post('at_date') ? $this->input->post('at_date') : null;
+        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : null;
+        $supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
+        $item_group = $this->input->post('item_group') ? $this->input->post('item_group') : null;
+        $item = $this->input->post('item') ? $this->input->post('item') : null;
+
+        $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $supplier, $item_group, $item);
+        $this->data['at_date'] = $at_date;
+//        $this->data['wh'] = $warehouse;
+
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['suppliers'] = $this->deals_model->getAllSuppliers();
+        $this->data['categories'] = $this->site->getAllCategories();
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => lang('stock_report')]
+        ];
+
+        $meta = [
+            'page_title' => lang('stock_report'),
+            'bc' => $bc
+        ];
         $this->page_construct('reports/stock', $meta, $this->data);
     }
 

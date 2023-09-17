@@ -1004,13 +1004,14 @@ class Reports_model extends CI_Model
         return $response;
     }
 
-    public function getStockData()
+    public function getStockData($at_date, $warehouse, $supplier, $item_group, $item)
     {
         $totalPurchases = [];
         $finalResponse = [];
 
+        if ($at_date) $at_date = $this->sma->fld($at_date);
         $totalPurchasesQuery = "SELECT 
-                                    #p.id, 
+                                    p.id, 
                                     p.code item_code, 
                                     p.name name, 
                                     pi.batchno batch_no, 
@@ -1021,36 +1022,155 @@ class Reports_model extends CI_Model
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
                                 INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id
-                                GROUP BY p.code, p.name, pi.expiry
+                                WHERE pc.grand_total >= 0 ";
+        if ($at_date) {
+            $totalPurchasesQuery .= "AND pc.date <= '{$at_date} 23:59:59' ";
+        }
+
+        if ($warehouse) {
+            $totalPurchasesQuery .= "AND pc.warehouse_id = {$warehouse} ";
+        }
+
+        if ($supplier) {
+            $totalPurchasesQuery .= "AND pc.supplier_id = {$supplier} ";
+        }
+
+        if ($item_group) {
+            $totalPurchasesQuery .= "AND p.category_id = '$item_group' ";
+        }
+
+        if ($item) {
+            $totalPurchasesQuery .= "AND p.code = '$item' ";
+        }
+
+        $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.batchno, pi.expiry
                                 ORDER BY p.id DESC";
 
         $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
         if ($totalPurchseResultSet->num_rows() > 0) {
             foreach ($totalPurchseResultSet->result() as $row) {
-//                $totalPurchases[$row->item_code][$row->name][$row->batch_no][$row->expiry][] = $row;
                 $totalPurchases[] = $row;
             }
-//array_map(function ($row){
-//$row->item_code = 'test';
-//}, $totalPurchases);
 
             //TODO sub sales from $totalPurchases
+            $totalSalesQuery = "SELECT
+                                    p.id,
+                                    p.code item_code,
+                                    p.name,
+                                    si.batch_no batch_no,
+                                    si.expiry expiry,
+                                    round(sum(si.quantity)) quantity
+                                FROM sma_products p 
+                                INNER JOIN sma_sale_items si ON p.id = si.product_id
+                                INNER JOIN sma_sales sl ON sl.id = si.sale_id 
+                                WHERE 1=1 ";
+            if ($at_date) {
+                $totalSalesQuery .= "AND sl.date <= '{$at_date} 23:59:59' ";
+            }
+
+            if ($item_group) {
+                $totalSalesQuery .= "AND p.category_id = '$item_group' ";
+            }
+
+            if ($item) {
+                $totalSalesQuery .= "AND p.code = '$item' ";
+            }
+
+            $totalSalesQuery .= "GROUP BY p.id, p.code, p.name, si.batch_no, si.expiry";
+
+            $totalSalesResultSet = $this->db->query($totalSalesQuery);
+            if ($totalSalesResultSet->num_rows() > 0) {
+                foreach ($totalSalesResultSet->result() as $sale) {
+                    array_map(function ($purchase) use ($sale) {
+                        if (
+                            $purchase->id == $sale->id
+                            && $purchase->item_code == $sale->item_code
+                            && $purchase->batch_no == $sale->batch_no
+                            && $purchase->expiry == $sale->expiry
+                        ) {
+                            $purchase->quantity -= (int)$sale->quantity;
+                        }
+                    }, $totalPurchases);
+                }
+            }
+
             //TODO sub return supplier from $totalPurchases
+            $totalReturnSupplerQuery = "SELECT
+                                        p.id,
+                                        p.code item_code,
+                                        p.name,
+                                        pi.batchno batch_no,
+                                        pi.expiry expiry,
+                                        round(sum(pi.quantity)) quantity
+                                FROM sma_products p
+                                INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
+                                INNER JOIN sma_purchases pc ON pi.purchase_id = pc.id
+                                WHERE pc.grand_total < 0 ";
+            if ($at_date) {
+                $totalReturnSupplerQuery .= "AND pc.date <= '{$at_date} 23:59:59' ";
+            }
+
+            if ($item_group) {
+                $totalReturnSupplerQuery .= "AND p.category_id = '$item_group' ";
+            }
+
+            if ($item) {
+                $totalReturnSupplerQuery .= "AND p.code = '$item' ";
+            }
+
+            $totalReturnSupplerQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno, pi.expiry";
+
+            $totalReturnSupplierResultSet = $this->db->query($totalReturnSupplerQuery);
+            if ($totalReturnSupplierResultSet->num_rows() > 0) {
+                foreach ($totalReturnSupplierResultSet->result() as $returnSupplier) {
+                    array_map(function ($purchase) use ($returnSupplier) {
+                        if (
+                            $purchase->id == $returnSupplier->id
+                            && $purchase->item_code == $returnSupplier->item_code
+                            && $purchase->batch_no == $returnSupplier->batch_no
+                            && $purchase->expiry == $returnSupplier->expiry
+                        ) {
+                            dd($returnSupplier);
+                            $purchase->quantity -= (int)abs($returnSupplier->quantity);
+                        }
+                    }, $totalPurchases);
+                }
+            }
+
             //TODO add return customer to $totalPurchases.
+            $totalReturnCustomerQuery = "select
+                                            p.id,
+                                            p.code item_code,
+                                            p.name,
+                                            rci.batch_no batch_no,
+                                            rci.expiry expiry,
+                                            round(sum(rci.quantity)) quantity
+                                        from sma_products p
+                                        inner join sma_return_items rci ON p.id = rci.product_id 
+                                        INNER JOIN sma_returns rt ON rci.return_id = rt.id ";
+            if ($at_date) {
+                $totalReturnCustomerQuery .= "WHERE rt.date <= '{$at_date} 23:59:59' ";
+            }
+            $totalReturnCustomerQuery .= "group by p.id, p.code, p.name, rci.batch_no, rci.expiry";
+
+            $totalReturnCustomerResultSet = $this->db->query($totalReturnCustomerQuery);
+            if ($totalReturnCustomerResultSet->num_rows() > 0) {
+                foreach ($totalReturnCustomerResultSet->result() as $returnCustomer) {
+                    array_map(function ($purchase) use ($returnCustomer) {
+                        if (
+                            $purchase->id == $returnCustomer->id
+                            && $purchase->item_code == $returnCustomer->item_code
+                            && $purchase->batch_no == $returnCustomer->batch_no
+                            && $purchase->expiry == $returnCustomer->expiry
+                        ) {
+                            dd($returnCustomer);
+                            $purchase->quantity += (int)abs($returnCustomer->quantity);
+                        }
+                    }, $totalPurchases);
+                }
+            }
         }
 
-//        if(!empty($totalPurchases)) {
-//            foreach ($totalPurchases as $itemCodeList) {
-//                foreach ($itemCodeList as $nameList){
-//                    foreach ($nameList as $batchList) {
-//                        foreach ($batchList as $expiryList) {
-//                            dd($expiryList);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        dd($totalPurchases);
         return $totalPurchases;
     }
 

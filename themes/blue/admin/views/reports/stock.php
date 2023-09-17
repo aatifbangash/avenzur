@@ -30,17 +30,66 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('At Date', 'at_date'); ?>
-                                <?php echo form_input('at_date', ($start_date ?? ''), 'class="form-control input-tip date" id="at_date"'); ?>
+                                <?php echo form_input('at_date', ($at_date ?? ''), 'class="form-control input-tip date" id="at_date"'); ?>
                             </div>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('Store', 'warehouse'); ?>
-                                <?php echo form_dropdown('filterOnType', ['name' => 'atif'], set_value('filterOnType', $_POST['filterOnType']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'filterOnType')); ?>
+                                <?php
+                                $optionsWarehouse[0] = 'Select';
+                                if (!empty($warehouses)) {
+                                    foreach ($warehouses as $warehouse) {
+                                        $optionsWarehouse[$warehouse->id] = $warehouse->name;
+                                    }
+                                }
+
+                                ?>
+                                <?php echo form_dropdown('warehouse', $optionsWarehouse, $_POST['warehouse'], array('class' => 'form-control', 'data-placeholder' => "-- Select --", 'id' => 'warehouse')); ?>
 
                             </div>
                         </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Supplier', 'supplier'); ?>
+                                <?php
+                                $optionsSuppliers[0] = 'Select';
+                                if (!empty($suppliers)) {
+                                    foreach ($suppliers as $sup) {
+                                        $optionsSuppliers[$sup->id] = $sup->name;
+                                    }
+                                }
+                                ?>
+                                <?php echo form_dropdown('supplier', $optionsSuppliers, set_value('supplier'), array('class' => 'form-control', 'data-placeholder' => "-- Select --", 'id' => 'supplier_field')); ?>
+
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Item Group', 'item_group'); ?>
+                                <?php
+                                $optionsCategories[0] = 'Select';
+                                if (!empty($categories)) {
+                                    foreach ($categories as $cat) {
+                                        $optionsCategories[$cat->id] = $cat->name;
+                                    }
+                                }
+                                ?>
+                                <?php echo form_dropdown('item_group', $optionsCategories, set_value('item_group'), array('class' => 'form-control', 'data-placeholder' => "-- Select --", 'id' => 'item_group')); ?>
+
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Item', 'item'); ?>
+                                <?php echo form_input('item', ($start_date ?? ''), 'class="form-control input-tip" id="item"'); ?>
+                            </div>
+                        </div>
+
+
                         <div class="col-md-12">
                             <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary"
