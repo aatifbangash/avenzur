@@ -1,5 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, { sheet: 'Sheet 1' });
+        XLSX.writeFile(wb, filename);
+    }
     $(document).ready(function () {
 
     });
@@ -10,10 +16,11 @@
 
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
+                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'stock.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
                                 class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i
-                                class="icon fa fa-file-picture-o"></i></a></li>
+                <!--                <li class="dropdown"><a href="#" id="image" class="tip" title="-->
+                <? //= lang('save_image') ?><!--"><i-->
+                <!--                                class="icon fa fa-file-picture-o"></i></a></li>-->
             </ul>
         </div>
     </div>
@@ -117,6 +124,11 @@
                             </thead>
                             <tbody style="text-align:center;">
                             <?php if (!empty($stock_data)): ?>
+                                <?php
+                                $totalQuantity = 0;
+                                $totalSalePrice = 0;
+                                $totalCostPrice = 0;
+                                ?>
                                 <?php foreach ($stock_data as $index => $row): ?>
                                     <tr>
                                         <td><?= $index + 1 ?></td>
@@ -124,9 +136,16 @@
                                         <td><?= $row->name ?></td>
                                         <td><?= $row->batch_no ?></td>
                                         <td><?= $row->expiry ?></td>
+
                                         <td><?= $row->quantity ?></td>
-                                        <td><?= $row->sale_price ?></td>
-                                        <td><?= $row->cost_price ?></td>
+                                        <?php $totalQuantity += $row->quantity; ?>
+
+                                        <td><?= number_format($row->sale_price, 2, '.', ',') ?></td>
+                                        <?php $totalSalePrice += $row->sale_price; ?>
+
+                                        <td><?= number_format($row->cost_price, 2, '.', ',') ?></td>
+                                        <?php $totalCostPrice += $row->cost_price; ?>
+
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -134,16 +153,14 @@
                             </tbody>
                             <tfoot>
                             <tr>
+                                <th>Total</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
+                                <th><?= $totalQuantity ?></th>
+                                <th><?= number_format($totalSalePrice, 2, '.', ',') ?></th>
+                                <th><?= number_format($totalCostPrice, 2, '.', ',') ?></th>
                             </tr>
                             </tfoot>
                         </table>
