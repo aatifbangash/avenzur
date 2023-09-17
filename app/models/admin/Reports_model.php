@@ -964,7 +964,8 @@ class Reports_model extends CI_Model
     }
 
 
-    public function getItemOpeningBalance($productId, $start_date, $warehouseId = 0){
+    public function getItemOpeningBalance($productId, $start_date, $warehouseId = 0)
+    {
 
         $q = $this->db->query("SELECT
         COALESCE(purchaseQuantity, 0) - COALESCE(saleQuantity, 0) - COALESCE(returnSupplierQuantity, 0) + COALESCE(returnQuantity, 0) + COALESCE(transferInQuantity, 0) - COALESCE(transferOutQuantity, 0) AS openingBalance,
@@ -1003,7 +1004,58 @@ class Reports_model extends CI_Model
         return $response;
     }
 
-    public function getItemMovementRecords($productId, $start_date, $end_date, $warehouseId, $filterOnType){
+    public function getStockData()
+    {
+        $totalPurchases = [];
+        $finalResponse = [];
+
+        $totalPurchasesQuery = "SELECT 
+                                    #p.id, 
+                                    p.code item_code, 
+                                    p.name name, 
+                                    pi.batchno batch_no, 
+                                    pi.expiry expiry, 
+                                    round(sum(pi.quantity)) quantity,
+                                    round(sum(pi.sale_price), 2) sale_price,
+                                    round(sum(pi.real_unit_cost), 2) cost_price
+                                FROM sma_products p
+                                INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
+                                INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id
+                                GROUP BY p.code, p.name, pi.expiry
+                                ORDER BY p.id DESC";
+
+        $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
+        if ($totalPurchseResultSet->num_rows() > 0) {
+            foreach ($totalPurchseResultSet->result() as $row) {
+//                $totalPurchases[$row->item_code][$row->name][$row->batch_no][$row->expiry][] = $row;
+                $totalPurchases[] = $row;
+            }
+//array_map(function ($row){
+//$row->item_code = 'test';
+//}, $totalPurchases);
+
+            //TODO sub sales from $totalPurchases
+            //TODO sub return supplier from $totalPurchases
+            //TODO add return customer to $totalPurchases.
+        }
+
+//        if(!empty($totalPurchases)) {
+//            foreach ($totalPurchases as $itemCodeList) {
+//                foreach ($itemCodeList as $nameList){
+//                    foreach ($nameList as $batchList) {
+//                        foreach ($batchList as $expiryList) {
+//                            dd($expiryList);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        dd($totalPurchases);
+        return $totalPurchases;
+    }
+
+    public function getItemMovementRecords($productId, $start_date, $end_date, $warehouseId, $filterOnType)
+    {
 
 
         /* "purchases" => "Purchases",
@@ -1013,16 +1065,16 @@ class Reports_model extends CI_Model
             "transfer" => "Transfer"
          */
 
-        switch($filterOnType){
+        switch ($filterOnType) {
 
             case 'purchases':
 
-                $q =  $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
+                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
                 IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
                 FROM sma_products as prd        
                 LEFT JOIN ( 
                 
-                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Purchase' as type, purchase.invoice_number as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
+                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Purchase' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
                     pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
                     pitem.serial_number as system_serial, pitem.sale_price as sale_price, pitem.unit_cost as purchase_price, pitem.product_id as product_id
 
@@ -1036,38 +1088,47 @@ class Reports_model extends CI_Model
                  as data ON data.product_id = prd.id 
                  WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date ");
 
-            break;
+                break;
 
             case 'sales':
 
-                $q =  $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
+                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
                 IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
                 FROM sma_products as prd        
                 LEFT JOIN ( 
                     
-                    SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.invoice_number as document_no, sale.customer as name_of, saleItem.batch_no as batch_no,
+                    SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.reference_no as document_no, 
+                    
+                    CASE WHEN sale.pos = 1 THEN 
+                    CONCAT('POS',' - ',wrs.name)
+                    ELSE
+                    sale.customer
+                    END AS name_of, 
+
+                    saleItem.batch_no as batch_no,
                     saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_unit_price as unit_cost,
                     saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id as product_id
                 
                     FROM sma_sales as sale
                 
                     LEFT JOIN sma_sale_items as saleItem ON saleItem.sale_id = sale.id
+                    LEFT JOIN sma_warehouses as wrs ON wrs.id = sale.warehouse_id
                 
                     WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '{$start_date}' AND DATE(sale.date) <= '{$end_date}'
                 )
                  AS data ON data.product_id = prd.id 
                  WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
 
-            break;
+                break;
 
             case 'returnCustomer':
 
-                $q =  $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
+                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
                 IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
                 FROM sma_products as prd      
                 LEFT JOIN ( 
                  
-                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.invoice_number as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
+                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.reference_no as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
                     ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_unit_price as unit_cost,
                     ritem.serial_no as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id as product_id
 
@@ -1081,16 +1142,16 @@ class Reports_model extends CI_Model
                  AS data ON data.product_id = prd.id 
                  WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
 
-            break;
+                break;
 
             case 'returnSupplier':
 
-                $q =  $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
+                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
                 IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
                 FROM sma_products as prd       
                 LEFT JOIN ( 
 
-                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.invoice_number as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
+                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
                     pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
                     pitem.serial_number as system_serial, pitem.sale_price as sale_price, NULL as purchase_price, pitem.product_id
 
@@ -1105,17 +1166,16 @@ class Reports_model extends CI_Model
                 WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
 
 
-
-            break;
+                break;
 
             case 'transfer':
 
-                $q =   $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
+                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
                 IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
                 FROM sma_products as prd
                 LEFT JOIN ( 
                 
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-In' as type,  trnf.invoice_number as document_no, CONCAT(trnf.from_warehouse_name,' - ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
+                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-In' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
                     titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
                     titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
 
@@ -1160,7 +1220,7 @@ class Reports_model extends CI_Model
                     UNION ALL
 
                     
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-Out' as type,  trnf.invoice_number as document_no, CONCAT(trnf.from_warehouse_name,' - ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
+                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-Out' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
                     titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
                     titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
 
@@ -1201,18 +1261,18 @@ class Reports_model extends CI_Model
                 )
                 AS data ON data.product_id = prd.id 
                 WHERE prd.id = $productId  AND data.product_id IS NOT NULL ORDER BY entry_date");
-     
 
-            break;
+
+                break;
 
             default;
 
-            $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
+                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
             IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
             FROM sma_products as prd        
                 LEFT JOIN ( 
             
-                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Purchase' as type, purchase.invoice_number as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
+                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Purchase' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
                     pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
                     pitem.serial_number as system_serial, pitem.sale_price as sale_price, pitem.unit_cost as purchase_price, pitem.product_id
 
@@ -1224,19 +1284,28 @@ class Reports_model extends CI_Model
 
                     UNION ALL 
 
-                    SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.invoice_number as document_no, sale.customer as name_of, saleItem.batch_no as batch_no,
+                    SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.reference_no as document_no, 
+                    
+                    CASE WHEN sale.pos = 1 THEN 
+                    CONCAT('POS',' - ',wrs.name)
+                    ELSE
+                    sale.customer
+                    END AS name_of, 
+                    
+                     saleItem.batch_no as batch_no,
                     saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_unit_price as unit_cost,
                     saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id
                 
                     FROM sma_sales as sale
                 
                     LEFT JOIN sma_sale_items as saleItem ON saleItem.sale_id = sale.id
+                    LEFT JOIN sma_warehouses as wrs ON wrs.id = sale.warehouse_id
                 
                     WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '$start_date' AND DATE(sale.date) <= '$end_date'
 
                     UNION ALL 
 
-                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.invoice_number as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
+                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.reference_no as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
                     ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_unit_price as unit_cost,
                     ritem.serial_no as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id
 
@@ -1248,7 +1317,7 @@ class Reports_model extends CI_Model
 
                     UNION ALL 
 
-                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.invoice_number as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
+                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
                     pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
                     pitem.serial_number as system_serial, pitem.sale_price as sale_price, NULL as purchase_price, pitem.product_id
 
@@ -1261,7 +1330,7 @@ class Reports_model extends CI_Model
                     UNION ALL 
 
 
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-In' as type,  trnf.invoice_number as document_no, CONCAT(trnf.from_warehouse_name,' - ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
+                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-In' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
                     titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
                     titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
 
@@ -1306,7 +1375,7 @@ class Reports_model extends CI_Model
                     UNION ALL
 
                     
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-Out' as type,  trnf.invoice_number as document_no, CONCAT(trnf.from_warehouse_name,' - ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
+                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-Out' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
                     titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
                     titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
 
@@ -1360,35 +1429,34 @@ class Reports_model extends CI_Model
     }
 
 
-
     public function preItemQuantity($productId, $start_date, $transferCase = 'Company', $warehouseId = 0)
     {
 
         $this->db->select('SUM(saleItem.quantity) as saleQuantity')
-                 ->from('sma_sales as sale')
-                 ->join('sma_sale_items as saleItem','saleItem.sale_id = sale.id', 'INNER')
-                 ->where('saleItem.product_id',$productId)
-                 ->where('DATE(sale.date) < ',$start_date)
-                 ->where('sale.sale_invoice =1');
+            ->from('sma_sales as sale')
+            ->join('sma_sale_items as saleItem', 'saleItem.sale_id = sale.id', 'INNER')
+            ->where('saleItem.product_id', $productId)
+            ->where('DATE(sale.date) < ', $start_date)
+            ->where('sale.sale_invoice =1');
         $saleQuantity = $this->db->get()->row()->saleQuantity;
 
         $this->db->select('SUM(purItem.quantity) as purchaseQuantity')
-                ->from('sma_purchases as purchase')
-                ->join('sma_purchase_items as purItem','purItem.purchase_id = purchase.id', 'INNER')
-                ->where('purItem.product_id',$productId)
-                ->where('DATE(purchase.date) < ',$start_date)
-                ->where('purchase.invoice_number IS NOT NULL')
-                ->where('purchase.grand_total > 0');
+            ->from('sma_purchases as purchase')
+            ->join('sma_purchase_items as purItem', 'purItem.purchase_id = purchase.id', 'INNER')
+            ->where('purItem.product_id', $productId)
+            ->where('DATE(purchase.date) < ', $start_date)
+            ->where('purchase.invoice_number IS NOT NULL')
+            ->where('purchase.grand_total > 0');
         $purchaseQuantity = $this->db->get()->row()->purchaseQuantity;
 
 
         $this->db->select('SUM(purItem.quantity) as returnSupplierQuantity')
-                ->from('sma_purchases as purchase')
-                ->join('sma_purchase_items as purItem','purItem.purchase_id = purchase.id', 'INNER')
-                ->where('purItem.product_id',$productId)
-                ->where('DATE(purchase.date) < ',$start_date)
-                ->where('purchase.invoice_number IS NOT NULL')
-                ->where('purchase.grand_total < 0');
+            ->from('sma_purchases as purchase')
+            ->join('sma_purchase_items as purItem', 'purItem.purchase_id = purchase.id', 'INNER')
+            ->where('purItem.product_id', $productId)
+            ->where('DATE(purchase.date) < ', $start_date)
+            ->where('purchase.invoice_number IS NOT NULL')
+            ->where('purchase.grand_total < 0');
         $returnSupplierQuantity = $this->db->get()->row()->returnSupplierQuantity;
 
         $this->db->select('SUM(rtnItem.quantity) as returnQuantity')
@@ -1448,7 +1516,7 @@ class Reports_model extends CI_Model
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
-                $response_array[strtotime($row->date)]['sale'.$row->id] = [
+                $response_array[strtotime($row->date)]['sale' . $row->id] = [
                     'date' => $row->date,
                     'documentNo' => $row->invoice_number,
                     'accountTransId' => $row->accountTransId,
@@ -1478,7 +1546,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
 
             foreach (($q->result()) as $row) {
-                $response_array[strtotime($row->date)]['purchase'.$row->id] = [
+                $response_array[strtotime($row->date)]['purchase' . $row->id] = [
                     'date' => $row->date,
                     'documentNo' => $row->invoice_number,
                     'accountTransId' => $row->accountTransId,
@@ -1507,7 +1575,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
 
             foreach (($q->result()) as $row) {
-                $response_array[strtotime($row->date)]['return'.$row->id] = [
+                $response_array[strtotime($row->date)]['return' . $row->id] = [
                     'date' => $row->date,
                     'documentNo' => $row->invoice_number,
                     'accountTransId' => $row->accountTransId,
@@ -1548,7 +1616,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
 
             foreach (($q->result()) as $row) {
-                $response_array[strtotime($row->date)]['transfer'.$row->id] = [
+                $response_array[strtotime($row->date)]['transfer' . $row->id] = [
                     'date' => $row->date,
                     'documentNo' => $row->invoice_number,
                     'accountTransId' => $row->accountTransId,
@@ -1571,18 +1639,18 @@ class Reports_model extends CI_Model
     }
 
     public function getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id = 0, $to_warehouse_id = 0)
-    { 
+    {
         // Opening subquery
         $openingSubquery = $this->db->select('PI.product_id AS product_id, SUM(PI.quantity) AS opening_quantity, AVG(PI.net_unit_cost) AS opening_cost')
-                                    ->from('sma_purchase_items PI')
-                                    ->join('sma_purchases AS p', 'p.id = PI.purchase_id', 'left')
-                                    ->where('(DATE(p.date) < "'.$start_date.'" OR DATE(PI.date) < "'.$start_date.'") AND p.return_id IS NULL')
-                                    ->group_by('PI.product_id', false)
-                                    ->get_compiled_select();
+            ->from('sma_purchase_items PI')
+            ->join('sma_purchases AS p', 'p.id = PI.purchase_id', 'left')
+            ->where('(DATE(p.date) < "' . $start_date . '" OR DATE(PI.date) < "' . $start_date . '") AND p.return_id IS NULL')
+            ->group_by('PI.product_id', false)
+            ->get_compiled_select();
 
         // Movement In subquery
         $movementInSubquery = $this->db->select('product_id, SUM(movement_in_quantity) AS movement_in_quantity, AVG(movement_in_cost) AS movement_in_cost')
-        ->from('(SELECT
+            ->from('(SELECT
                 PI.product_id,
                 SUM(PI.quantity) AS movement_in_quantity,
                 AVG(PI.net_unit_cost) AS movement_in_cost
@@ -1592,7 +1660,7 @@ class Reports_model extends CI_Model
             ON
                 p.id = PI.purchase_id
             WHERE
-                DATE(p.date) BETWEEN "'.$start_date.'" AND "'.$end_date.'" AND p.return_id IS NULL
+                DATE(p.date) BETWEEN "' . $start_date . '" AND "' . $end_date . '" AND p.return_id IS NULL
             GROUP BY
                 PI.product_id
 
@@ -1608,7 +1676,7 @@ class Reports_model extends CI_Model
             ON
                 r.id = ri.return_id
             WHERE
-                DATE(r.date) BETWEEN "'.$start_date.'" AND "'.$end_date.'"
+                DATE(r.date) BETWEEN "' . $start_date . '" AND "' . $end_date . '"
             GROUP BY
                 ri.product_id
 
@@ -1623,20 +1691,20 @@ class Reports_model extends CI_Model
             LEFT JOIN
                 sma_transfers t ON ti.transfer_id = t.id
             WHERE
-                DATE(t.date) BETWEEN "'.$start_date.'" AND "'.$end_date.'" 
-                AND (t.to_warehouse_id = 0 OR t.to_warehouse_id = '.$from_warehouse_id.')
+                DATE(t.date) BETWEEN "' . $start_date . '" AND "' . $end_date . '" 
+                AND (t.to_warehouse_id = 0 OR t.to_warehouse_id = ' . $from_warehouse_id . ')
             GROUP BY
                 ti.product_id
 
 
         ) AS movement_in_combined')
-        ->group_by('product_id', false)
-        ->get_compiled_select();
+            ->group_by('product_id', false)
+            ->get_compiled_select();
         echo '<br>';
 
         // Movement Out subquery
         $movementOutSubquery = $this->db->select('product_id, SUM(movement_out_quantity) AS movement_out_quantity, AVG(movement_out_cost) AS movement_out_cost')
-        ->from('(SELECT
+            ->from('(SELECT
                 product_id,
                 SUM(si.quantity) AS movement_out_quantity,
                 AVG(si.net_unit_price) AS movement_out_cost
@@ -1646,7 +1714,7 @@ class Reports_model extends CI_Model
             ON
                 s.id = si.sale_id
             WHERE
-                DATE(s.date) BETWEEN "'.$start_date.'" AND "'.$end_date.'" 
+                DATE(s.date) BETWEEN "' . $start_date . '" AND "' . $end_date . '" 
             GROUP BY
                 si.product_id
 
@@ -1662,7 +1730,7 @@ class Reports_model extends CI_Model
             ON
                 p.id = PI.purchase_id
             WHERE
-                DATE(p.date) BETWEEN "'.$start_date.'" AND "'.$end_date.'"  AND p.return_id IS NOT NULL
+                DATE(p.date) BETWEEN "' . $start_date . '" AND "' . $end_date . '"  AND p.return_id IS NOT NULL
             GROUP BY
                 PI.product_id
 
@@ -1677,14 +1745,14 @@ class Reports_model extends CI_Model
             LEFT JOIN
                 sma_transfers t ON ti.transfer_id = t.id
             WHERE
-                DATE(t.date) BETWEEN "'.$start_date.'" AND "'.$end_date.'"  
-                AND ((t.from_warehouse_id = 0 OR t.from_warehouse_id =  '.$from_warehouse_id.') OR (t.to_warehouse_id = 0 OR t.to_warehouse_id =  '.$to_warehouse_id.'))
+                DATE(t.date) BETWEEN "' . $start_date . '" AND "' . $end_date . '"  
+                AND ((t.from_warehouse_id = 0 OR t.from_warehouse_id =  ' . $from_warehouse_id . ') OR (t.to_warehouse_id = 0 OR t.to_warehouse_id =  ' . $to_warehouse_id . '))
             GROUP BY
                 ti.product_id
                     
             ) AS movement_out_combined')
-        ->group_by('product_id', false)
-        ->get_compiled_select();
+            ->group_by('product_id', false)
+            ->get_compiled_select();
 
         $this->db->select('opening.product_id, prd.code, prd.name');
         $this->db->select('IFNULL(opening.opening_quantity, 0) AS opening_quantity, IFNULL(opening.opening_cost, 0) AS opening_cost, (IFNULL(opening.opening_quantity, 0) * IFNULL(opening.opening_cost, 0)) AS opening_total');
@@ -1704,7 +1772,7 @@ class Reports_model extends CI_Model
         // echo "<br>";
         if ($query->num_rows() > 0) {
             return $query->result();
-        } 
+        }
     }
 
     //=== New Item Movement Report Ends ===//
@@ -2246,18 +2314,18 @@ class Reports_model extends CI_Model
     public function getVatPurchaseReport($start_date = null, $end_date = null)
     {
 
-       
+
         $this->db
             ->select('sma_purchases.id,withT.subtotal as total_item_with_vat, withOutT.subtotal as total_item_with_zero_tax, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as transaction_id, sma_purchases.supplier, sma_purchases.date, sma_purchases.invoice_number, sma_purchases.total_discount,sma_purchases.grand_total as total_with_vat, sma_purchases.product_tax as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code, sma_accounts_entries.number as account_number')
             ->from('sma_purchases')
             ->join('sma_companies', 'sma_companies.id=sma_purchases.supplier_id')
             ->join('sma_purchase_items', 'sma_purchase_items.purchase_id=sma_purchases.id')
-            ->join('sma_accounts_entries', 'sma_accounts_entries.pid=sma_purchases.id','left')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.pid=sma_purchases.id', 'left')
 
             //->join('sma_purchase_items withT', 'withT.purchase_id=sma_purchases.id AND withT.tax > 0','left')
             //->join('sma_purchase_items withOutT', 'withOutT.purchase_id=sma_purchases.id AND withOutT.tax = 0','left')
-            ->join('(SELECT purchase_id, SUM(subtotal) as subtotal FROM `sma_purchase_items` WHERE tax > 0 group by purchase_id ) withT', 'withT.purchase_id=sma_purchases.id','left')
-            ->join('(SELECT purchase_id, SUM(subtotal) as subtotal FROM `sma_purchase_items` WHERE tax=0 group by purchase_id ) withOutT', 'withOutT.purchase_id=sma_purchases.id','left')
+            ->join('(SELECT purchase_id, SUM(subtotal) as subtotal FROM `sma_purchase_items` WHERE tax > 0 group by purchase_id ) withT', 'withT.purchase_id=sma_purchases.id', 'left')
+            ->join('(SELECT purchase_id, SUM(subtotal) as subtotal FROM `sma_purchase_items` WHERE tax=0 group by purchase_id ) withOutT', 'withOutT.purchase_id=sma_purchases.id', 'left')
 
             //->join('sma_tax_rates', 'sma_tax_rates.id=sma_purchases.order_tax_id')
             ->where('DATE(sma_purchases.date) >=', $start_date)

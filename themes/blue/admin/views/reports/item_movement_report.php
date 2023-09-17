@@ -81,10 +81,10 @@
                                     <th><?= lang('SN'); ?></th>
                                     <th><?= lang('Date'); ?></th>
                                     <th><?= lang('Document No'); ?></th>
+                                    <th><?= lang('Type'); ?></th>
                                     <th><?= lang('Name Of'); ?></th>
                                     <th><?= lang('Expire Date'); ?></th>
                                     <th><?= lang('Batch No.'); ?></th>
-                                    <th><?= lang('System Serial'); ?></th>
                                     <th><?= lang('Sale Price'); ?></th>
                                     <th><?= lang('Purchase Price'); ?></th>
                                     <th><?= lang('Quantity'); ?></th>
@@ -96,8 +96,8 @@
                             <tbody style="text-align:center;">
                                 <tr>
                                     <td colspan="2">Oening Balance</td>
-                                    <td colspan="8">&nbsp;</td> 
-                                    <td><?php echo $this->sma->formatDecimal($itemOpenings->unitPrice);?></td>
+                                    <td colspan="8">&nbsp;</td>
+                                    <td><?php echo $this->sma->formatDecimal($itemOpenings->unitPrice); ?></td>
                                     <td><?php echo $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00)); ?></td>
                                     <td><?php echo $this->sma->formatDecimal(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00)); ?></td>
 
@@ -108,7 +108,7 @@
                                 $balanceQantity = $itemOpenings->openingBalance;
 
                                 foreach ($reportData as $rp) {
-
+                                
                                     if ($rp->type == 'Purchase' || $rp->type == 'Return-Customer' || $rp->type == "Transfer-In") {
                                         $balanceQantity += $rp->quantity;
                                     }
@@ -116,15 +116,21 @@
                                         $balanceQantity -= $rp->quantity;
                                     }
 
+                                    if ($rp->type ==  'Transfer-Out' || $rp->type == "Transfer-In") {
+                                        $type = 'Transfer';
+                                    } else {
+                                        $type = $rp->type;
+                                    }
+
                                 ?>
                                     <tr>
                                         <td><?= $count; ?></td>
                                         <td><?= $rp->entry_date; ?></td>
                                         <td><?= $rp->document_no; ?></td>
+                                        <td><?= $type; ?></td>
                                         <td><?= $rp->name_of; ?></td>
                                         <td><?= $rp->expiry_date; ?></td>
                                         <td><?= $rp->batch_no; ?></td>
-                                        <td><?= $rp->system_serial; ?></td>
                                         <td><?= $this->sma->formatDecimal($rp->sale_price ? $rp->sale_price : 0.0); ?></td>
                                         <td><?= $this->sma->formatDecimal($rp->purchase_price ? $rp->purchase_price : 0.0); ?></td>
                                         <td><?= $this->sma->formatQuantity($rp->quantity ? $rp->quantity : 0.0); ?></td>
@@ -158,3 +164,37 @@
         </div>
         <?php echo form_close(); ?>
     </div>
+
+    <?php
+    echo $productId = ($_POST['product'] ? $_POST['product'] : 0);
+    echo $type = ($_POST['filterOnType'] ? $_POST['filterOnType'] : 'all');
+    echo $startDate = ($_POST['from_date'] ? trim($this->sma->fld($_POST['from_date'])) : null);
+    echo $endDate = ($_POST['to_date'] ? trim($this->sma->fld($_POST['to_date'])) : null);
+    ?>
+
+    <script type="text/javascript" src="<?= $assets ?>js/html2canvas.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#xls').click(function(event) {
+                var prod = $('#report_product_id2').val();
+                var fromdate = $('#fromdate').val();
+                var todate = $('#todate').val();
+                if (prod && fromdate && todate) {
+                    event.preventDefault();
+                    window.location.href = "<?= admin_url("reports/item_movement_report_xls/$productId/$type/$startDate/$endDate/xls") ?>";
+                    return false;
+                } else {
+                    return false;
+                }
+            });
+            $('#image').click(function(event) {
+                event.preventDefault();
+                html2canvas($('.box'), {
+                    onrendered: function(canvas) {
+                        openImg(canvas.toDataURL());
+                    }
+                });
+                return false;
+            });
+        });
+    </script>

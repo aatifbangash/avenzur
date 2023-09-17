@@ -78,7 +78,7 @@
                             $totalFinalEndDebit = 0;
                             $totalFinalEndCredit = 0;
                             foreach ($trial_balance as $data) {
-
+                                if ($data['trsDebit'] == 0 && $data['trsCredit'] == 0 && $data['obDebit'] == 0 && $data['obCredit'] == 0) continue;
                                 $eb_credit = $data['obCredit'] + $data['trsCredit'];
                                 $eb_debit = $data['obDebit'] + $data['trsDebit'];
 
@@ -109,12 +109,12 @@
                                     <td><?= $count; ?></td>
                                     <td><?= $data['sequence_code']; ?></td>
                                     <td><?= $data['name']; ?></td>
-                                    <td><?= $data['obDebit'] > 0 ? $this->sma->formatDecimal($data['obDebit']) : '-'; ?></td>
-                                    <td><?= $data['obCredit'] > 0 ? $this->sma->formatDecimal($data['obCredit']) : '-'; ?></td>
-                                    <td><?= $data['trsDebit'] > 0 ? $this->sma->formatDecimal($data['trsDebit']) : '-'; ?></td>
-                                    <td><?= $data['trsCredit'] > 0 ? $this->sma->formatDecimal($data['trsCredit']) : '-'; ?></td>
-                                    <td><?= $finalEndDebit > 0 ? $this->sma->formatDecimal($finalEndDebit) : '-'; ?></td>
-                                    <td><?= $finalEndCredit > 0 ? $this->sma->formatDecimal($finalEndCredit) : '-'; ?></td>
+                                    <td><?= $data['obDebit'] > 0 ? number_format($data['obDebit'], 2, '.', ',') : '-'; ?></td>
+                                    <td><?= $data['obCredit'] > 0 ? number_format($data['obCredit'], 2, '.', ',') : '-'; ?></td>
+                                    <td><?= $data['trsDebit'] > 0 ? number_format($data['trsDebit'], 2, '.', ',') : '-'; ?></td>
+                                    <td><?= $data['trsCredit'] > 0 ? number_format($data['trsCredit'], 2, '.', ',') : '-'; ?></td>
+                                    <td><?= $finalEndDebit > 0 ? number_format($finalEndDebit, 2, '.', ',') : '-'; ?></td>
+                                    <td><?= $finalEndCredit > 0 ? number_format($finalEndCredit, 2, '.', ',') : '-'; ?></td>
                                 </tr>
                                 <?php
                             }
@@ -128,14 +128,14 @@
                                 <th>&nbsp;</th>
 
 
-                                <th class="text-center"><?= $this->sma->formatDecimal($totalObDebit) ?></th>
-                                <th class="text-center"><?= $this->sma->formatDecimal($totalObCredit) ?></th>
+                                <th class="text-center"><?= number_format($totalObDebit, 2, '.', ',') ?></th>
+                                <th class="text-center"><?= number_format($totalObCredit, 2, '.', ',') ?></th>
 
-                                <th class="text-center"><?= $this->sma->formatDecimal($totalTrsDebit) ?></th>
-                                <th class="text-center"><?= $this->sma->formatDecimal($totalTrsCredit) ?></th>
+                                <th class="text-center"><?= number_format($totalTrsDebit, 2, '.', ',') ?></th>
+                                <th class="text-center"><?= number_format($totalTrsCredit, 2, '.', ',') ?></th>
 
-                                <th class="text-center"><?= $this->sma->formatDecimal($totalFinalEndDebit) ?></th>
-                                <th class="text-center"><?= $this->sma->formatDecimal($totalFinalEndCredit); ?></th>
+                                <th class="text-center"><?= number_format($totalFinalEndDebit, 2, '.', ',') ?></th>
+                                <th class="text-center"><?= number_format($totalFinalEndCredit, 2, '.', ','); ?></th>
 
                             </tr>
                             </tfoot>
