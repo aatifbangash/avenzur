@@ -50,6 +50,18 @@
             f.parentNode.insertBefore(a,f)})(window,document,'script', 'https://invitejs.trustpilot.com/tp.min.js', 'tp');
             tp('register', 'Odd7uxAMlhQd3OTz');
 </script>
+
+<script> 
+	document.addEventListener('DOMContentLoaded', function() {
+		const trustpilot_invitation = {
+   			recipientEmail: 'john@gmail.com',
+   			recipientName: 'John',
+   			referenceId: 'Order_123',
+   			source: 'InvitationScript',
+  		};
+  		tp('createInvitation', trustpilot_invitation);
+	});
+</script>
 </head>
 <style>
 
