@@ -27,6 +27,8 @@ class Reports extends MY_Controller
             'deposit' => lang('deposit'),
             'authorize' => lang('authorize'),
         ];
+
+        $this->load->admin_model('deals_model');
     }
 
     public function adjustments($warehouse_id = null)
@@ -134,11 +136,31 @@ class Reports extends MY_Controller
 
     public function stock()
     {
-        $this->data['stock_data'] = $this->reports_model->getStockData();
-        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
-        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('stock_report')]];
-        $meta = ['page_title' => lang('stock_report'), 'bc' => $bc];
+
+        $at_date = $this->input->post('at_date') ? $this->input->post('at_date') : null;
+        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : null;
+        $supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
+        $item_group = $this->input->post('item_group') ? $this->input->post('item_group') : null;
+        $item = $this->input->post('item') ? $this->input->post('item') : null;
+
+        $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $supplier, $item_group, $item);
+        $this->data['at_date'] = $at_date;
+//        $this->data['wh'] = $warehouse;
+
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['suppliers'] = $this->deals_model->getAllSuppliers();
+        $this->data['categories'] = $this->site->getAllCategories();
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => lang('stock_report')]
+        ];
+
+        $meta = [
+            'page_title' => lang('stock_report'),
+            'bc' => $bc
+        ];
         $this->page_construct('reports/stock', $meta, $this->data);
     }
 
@@ -3980,13 +4002,34 @@ class Reports extends MY_Controller
         $this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
+
+        $filterOnTypeArr = [
+            "" => "-- Select Type --",
+            "purchases" => "Purchases",         
+            "returnSupplier" => "Return to Supplier"
+        ];
+        $this->data['filterOnTypeArr'] = $filterOnTypeArr;
+
+        $allWareHouses = $this->site->getAllWarehouses();
+        $filteredWareHouses = [];
+        $filteredWareHouses[] = '-- All --';
+        foreach ($allWareHouses as $warehouse) {
+            
+            $filteredWareHouses[$warehouse->id] = $warehouse->name . ' (' . $warehouse->code . ')';
+        
+        }
+        $this->data['warehouses'] = $filteredWareHouses;
+
         $response_arr = array();
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
-        if ($from_date) {
+        $warehouse_id = $this->input->post('warehouse_id') ? $this->input->post('warehouse_id') : null;
+        $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
+
+        if ($from_date && $to_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $vat_purchase_array = $this->reports_model->getVatPurchaseReport($start_date, $end_date);
+            $vat_purchase_array = $this->reports_model->getVatPurchaseReport($start_date, $end_date, $warehouse_id, $filterOnType);
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
@@ -4001,6 +4044,56 @@ class Reports extends MY_Controller
             $this->page_construct('reports/vat_purchase_report', $meta, $this->data);
         }
     }
+
+    public function vat_sale()
+    {
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+
+        $filterOnTypeArr = [
+            "" => "-- Select Type --",
+            "sale" => "Sale",         
+            "returnCustomer" => "Return From Customer",
+            "serviceInvoice" => "Service Invoice"
+        ];
+        $this->data['filterOnTypeArr'] = $filterOnTypeArr;
+
+        $allWareHouses = $this->site->getAllWarehouses();
+        $filteredWareHouses = [];
+        $filteredWareHouses[] = '-- All --';
+        foreach ($allWareHouses as $warehouse) {
+            
+            $filteredWareHouses[$warehouse->id] = $warehouse->name . ' (' . $warehouse->code . ')';
+        
+        }
+        $this->data['warehouses'] = $filteredWareHouses;
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse_id = $this->input->post('warehouse_id') ? $this->input->post('warehouse_id') : null;
+        $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
+
+        if ($from_date && $to_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $vat_purchase_array = $this->reports_model->getVatSaleReport($start_date, $end_date, $warehouse_id, $filterOnType);
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['vat_purchase'] = $vat_purchase_array;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
+            $meta = ['page_title' => lang('Vat Sale Report'), 'bc' => $bc];
+            $this->page_construct('reports/vat_sale_report', $meta, $this->data);
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
+            $meta = ['page_title' => lang('Vat Sale Report'), 'bc' => $bc];
+            $this->page_construct('reports/vat_sale_report', $meta, $this->data);
+        }
+    }
+
 
     public function vat_purchase_ledger()
     {
