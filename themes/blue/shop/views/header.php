@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="google-site-verification" content="UfVhqcmiHjWujvtylPvb9EH_m0yocS-R784juDf-Rcg" />
     <script type="text/javascript">if (parent.frames.length !== 0) { top.location = '<?= site_url(); ?>'; }</script>
     <title><?= $page_title; ?></title>
     <meta name="description" content="<?= $page_desc; ?>">
@@ -35,7 +36,32 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/intlTelInput.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/utils.min.js"></script>
+  <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-0GGN9ELJJG"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-0GGN9ELJJG'); </script>
+  <script type="text/javascript" src="https://cdn.weglot.com/weglot.min.js"></script>
+<script>
+    Weglot.initialize({
+        api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55'
+    });
+</script>
 
+<script>
+        (function(w,d,s,r,n){w.TrustpilotObject=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};
+            a=d.createElement(s);a.async=1;a.src=r;a.type='text/java'+s;f=d.getElementsByTagName(s)[0];
+            f.parentNode.insertBefore(a,f)})(window,document,'script', 'https://invitejs.trustpilot.com/tp.min.js', 'tp');
+            tp('register', 'Odd7uxAMlhQd3OTz');
+</script>
+
+<script> 
+	document.addEventListener('DOMContentLoaded', function() {
+		const trustpilot_invitation = {
+   			recipientEmail: 'john@gmail.com',
+   			recipientName: 'John',
+   			referenceId: 'Order_123',
+   			source: 'InvitationScript',
+  		};
+  		tp('createInvitation', trustpilot_invitation);
+	});
+</script>
 </head>
 <style>
 
