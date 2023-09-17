@@ -37,6 +37,14 @@
  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/intlTelInput.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/utils.min.js"></script>
   <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-0GGN9ELJJG"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-0GGN9ELJJG'); </script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@transifex/native/dist/browser.native.min.js"></script>
+  <script type="text/javascript">
+    const tx = Transifex.tx;
+    const t = Transifex.t;
+    tx.init({
+        token: '1/2e0c1acbd2ddf7184396cc2dbab403cb24663681',
+    });
+  </script>
 </head>
 <style>
 
