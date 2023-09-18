@@ -6,7 +6,7 @@
 </script>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('vat_purchase_report').' (Invoice)'; ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('Vat Sale Report').' (Invoice)'; ?></h2>
 
         <div class="box-icon">
             <ul class="btn-tasks">
@@ -19,7 +19,7 @@
         <div class="row">
         <?php
             $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            echo admin_form_open_multipart('reports/vat_purchase', $attrib)
+            echo admin_form_open_multipart('reports/vat_sale', $attrib)
         ?>
         <div class="col-lg-12">
                 <div class="row">
@@ -98,8 +98,8 @@
 
                                 <!-- <th><?= lang('Legal No.'); ?></th>
                                 <th><?= lang('Vendor Code'); ?></th> -->
-                                <th><?= lang('SUPPLIER NAME'); ?></th>
-                                <th><?= lang('SUPPLIER VAT NO.'); ?></th>
+                                <th><?= lang('CUSTOMER NAME'); ?></th>
+                                <th><?= lang('CUSTOMER VAT NO.'); ?></th>
                                 <th><?= lang('G/L NO.'); ?></th>
                                 
                                 <!-- <th><?= lang('Qty'); ?></th> -->
@@ -160,8 +160,8 @@
 
 
 
-                                                <td><?= $data->supplier_name; ?></td>
-                                                <td><?= $data->supplier_vat_no; ?></td>
+                                                <td><?= $data->customer_name; ?></td>
+                                                <td><?= $data->customer_vat_no; ?></td>
                                                 <td><?= $data->ledger_entry_number; ?></td>
                                                 
                                                 
