@@ -1130,7 +1130,6 @@ class Reports_model extends CI_Model
                             && $purchase->batch_no == $returnSupplier->batch_no
                             && $purchase->expiry == $returnSupplier->expiry
                         ) {
-                            dd($returnSupplier);
                             $purchase->quantity -= (int)abs($returnSupplier->quantity);
                         }
                     }, $totalPurchases);
@@ -1163,7 +1162,6 @@ class Reports_model extends CI_Model
                             && $purchase->batch_no == $returnCustomer->batch_no
                             && $purchase->expiry == $returnCustomer->expiry
                         ) {
-                            dd($returnCustomer);
                             $purchase->quantity += (int)abs($returnCustomer->quantity);
                         }
                     }, $totalPurchases);
