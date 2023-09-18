@@ -97,9 +97,9 @@
                                 <tr>
                                     <td colspan="2">Oening Balance</td>
                                     <td colspan="8">&nbsp;</td>
-                                    <td><?php echo $this->sma->formatDecimal($itemOpenings->unitPrice); ?></td>
+                                    <td><?php echo $this->sma->formatMoney($itemOpenings->unitPrice, 'none'); ?></td>
                                     <td><?php echo $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00)); ?></td>
-                                    <td><?php echo $this->sma->formatDecimal(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00)); ?></td>
+                                    <td><?php echo $this->sma->formatMoney(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00), 'none'); ?></td>
 
                                 </tr>
 
@@ -131,12 +131,12 @@
                                         <td><?= $rp->name_of; ?></td>
                                         <td><?= $rp->expiry_date; ?></td>
                                         <td><?= $rp->batch_no; ?></td>
-                                        <td><?= $this->sma->formatDecimal($rp->sale_price ? $rp->sale_price : 0.0); ?></td>
-                                        <td><?= $this->sma->formatDecimal($rp->purchase_price ? $rp->purchase_price : 0.0); ?></td>
+                                        <td><?= $this->sma->formatMoney(($rp->sale_price ? $rp->sale_price : 0.0), 'none'); ?></td>
+                                        <td><?= $this->sma->formatMoney(($rp->purchase_price ? $rp->purchase_price : 0.0), 'none'); ?></td>
                                         <td><?= $this->sma->formatQuantity($rp->quantity ? $rp->quantity : 0.0); ?></td>
-                                        <td><?= $this->sma->formatDecimal($rp->unit_cost ? $rp->unit_cost : 0.0); ?></td>
+                                        <td><?= $this->sma->formatMoney(($rp->unit_cost ? $rp->unit_cost : 0.0), 'none'); ?></td>
                                         <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
-                                        <td><?= $this->sma->formatDecimal($balanceQantity * $itemOpenings->unitPrice); ?></td>
+                                        <td><?= $this->sma->formatMoney(($balanceQantity * $itemOpenings->unitPrice), 'none'); ?></td>
                                     </tr>
                                 <?php
                                     $count++;
@@ -149,7 +149,7 @@
                                     <td colspan="2">Closing</td>
                                     <td colspan="9">&nbsp;</td>
                                     <td><?php echo $this->sma->formatQuantity($balanceQantity); ?></td>
-                                    <td><?php echo $this->sma->formatDecimal($balanceQantity * $itemOpenings->unitPrice); ?></td>
+                                    <td><?php echo $this->sma->formatMoney(($balanceQantity * $itemOpenings->unitPrice), 'none'); ?></td>
 
                                 </tr>
 
