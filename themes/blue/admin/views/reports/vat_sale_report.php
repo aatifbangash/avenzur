@@ -146,17 +146,17 @@
                                                 <td><?= $data->reference_no; ?></td>
                                                 <td><?= $data->trans_date; ?></td>
                                                 
-                                                <td><?= $this->sma->formatDecimal($data->grand_total-$data->total_discount); ?></td>
-                                                <td><?= $this->sma->formatDecimal($data->total_discount); ?></td>
-                                                <td><?= $this->sma->formatDecimal($data->grand_total); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->grand_total-$data->total_discount); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->total_discount); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->grand_total); ?></td>
 
-                                                <td><?= $this->sma->formatDecimal($data->total_item_with_vat); ?></td>
-                                                <td><?= $this->sma->formatDecimal($data->total_item_without_tax); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->total_item_with_vat); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->total_item_without_tax); ?></td>
 
 
-                                                <!-- <td><?= $this->sma->formatDecimal($data->grand_total - $data->total_tax); ?></td> -->
-                                                <td><?= $this->sma->formatDecimal($data->total_tax); ?></td>
-                                                <td><?= $this->sma->formatDecimal($data->grand_total); ?></td>
+                                                <!-- <td><?= $this->sma->formatMoney($data->grand_total - $data->total_tax); ?></td> -->
+                                                <td><?= $this->sma->formatMoney($data->total_tax); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->grand_total); ?></td>
 
 
 
@@ -180,17 +180,17 @@
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
 
-                                    <th class="text-center"><?=$this->sma->formatDecimal($totalTotalBeforeDiscount)?></th>
-                                    <th class="text-center"><?=$this->sma->formatDecimal($totalTotalDiscount)?></th>
-                                    <th class="text-center"><?=$this->sma->formatDecimal($totalTotalAfterDiscount)?></th>
+                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalBeforeDiscount)?></th>
+                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalDiscount)?></th>
+                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalAfterDiscount)?></th>
 
 
-                                    <th class="text-center"><?=$this->sma->formatDecimal($totalItemWithVAT)?></th>
-                                    <th class="text-center"><?=$this->sma->formatDecimal($totalItemWithOutVAT)?></th>
+                                    <th class="text-center"><?=$this->sma->formatMoney($totalItemWithVAT)?></th>
+                                    <th class="text-center"><?=$this->sma->formatMoney($totalItemWithOutVAT)?></th>
 
-                                    <!-- <th class="text-center"><?= $this->sma->formatDecimal($totalWithoutTax); ?></th> -->
-                                    <th class="text-center"><?= $this->sma->formatDecimal($totalTax); ?></th>
-                                    <th class="text-center"><?= $this->sma->formatDecimal($totalWithTax); ?></th>
+                                    <!-- <th class="text-center"><?= $this->sma->formatMoney($totalWithoutTax); ?></th> -->
+                                    <th class="text-center"><?= $this->sma->formatMoney($totalTax); ?></th>
+                                    <th class="text-center"><?= $this->sma->formatMoney($totalWithTax); ?></th>
 
 
 
