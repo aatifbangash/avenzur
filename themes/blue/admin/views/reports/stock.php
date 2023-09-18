@@ -92,7 +92,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('Item', 'item'); ?>
-                                <?php echo form_input('item', ($start_date ?? ''), 'class="form-control input-tip" id="item"'); ?>
+                                <?php echo form_input('item', set_value('item'), 'class="form-control input-tip" id="item"'); ?>
                             </div>
                         </div>
 
@@ -148,6 +148,10 @@
 
                                     </tr>
                                 <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <th colspan="8">No records found.</th>
+                                </tr>
                             <?php endif; ?>
 
                             </tbody>

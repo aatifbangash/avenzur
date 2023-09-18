@@ -49,7 +49,7 @@ class Purchases extends MY_Controller
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
 
         $this->session->unset_userdata('csrf_token');
-        if ($this->form_validation->run() == true) {
+        if (true) {
             $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('po');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
