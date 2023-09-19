@@ -1276,7 +1276,7 @@ class Reports_model extends CI_Model
                 LEFT JOIN ( 
 
                     SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
-                    pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
+                    pitem.expiry as expiry_date, abs(pitem.quantity) as quantity, pitem.net_unit_cost as unit_cost,
                     pitem.serial_number as system_serial, pitem.sale_price as sale_price, NULL as purchase_price, pitem.product_id
 
                     FROM sma_purchases as purchase
@@ -1442,7 +1442,7 @@ class Reports_model extends CI_Model
                     UNION ALL 
 
                     SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
-                    pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
+                    pitem.expiry as expiry_date, abs(pitem.quantity) as quantity, pitem.net_unit_cost as unit_cost,
                     pitem.serial_number as system_serial, pitem.sale_price as sale_price, NULL as purchase_price, pitem.product_id
 
                     FROM sma_purchases as purchase

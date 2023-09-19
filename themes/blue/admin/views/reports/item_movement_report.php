@@ -138,7 +138,7 @@
                                             <td><?= $this->sma->formatQuantity($rp->quantity ? $rp->quantity : 0.0); ?></td>
                                             <td><?= $this->sma->formatMoney(($rp->unit_cost ? $rp->unit_cost : 0.0), 'none'); ?></td>
                                             <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
-                                            <td><?= $this->sma->formatMoney(($balanceQantity * $itemOpenings->unitPrice), 'none'); ?></td>
+                                            <td><?= $this->sma->formatMoney(($balanceQantity * $rp->unit_cost), 'none'); ?></td>
                                         </tr>
                                     <?php
                                         $count++;
