@@ -40,9 +40,7 @@ $s2_file_date = $this->parser->parse_string($s2_lang_file, $s2_data, true);
 <?php } ?>
 <script type="text/javascript" src="<?= $assets ?>js/jquery.dataTables.dtFilter.min.js"></script>
 <?php if($m != 'entries'){ ?>
-<!--<script type="text/javascript" src="--><?//= $assets ?><!--js/select2.min.js"></script>-->
-<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.2/select2.min.css"  />-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/3.2/select2.min.js" ></script>
+<script type="text/javascript" src="<?= $assets ?>js/select2.min.js"></script>
 <?php } ?>
 <script type="text/javascript" src="<?= $assets ?>js/jquery-ui.min.js"></script>
 <script type="text/javascript" src="<?= $assets ?>js/bootstrapValidator.min.js"></script>

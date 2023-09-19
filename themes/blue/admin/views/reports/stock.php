@@ -51,7 +51,7 @@
                                 }
 
                                 ?>
-                                <?php echo form_dropdown('warehouse', $optionsWarehouse, $_POST['warehouse'], array('class' => 'form-control', 'data-placeholder' => "-- Select --", 'id' => 'warehouse')); ?>
+                                <?php echo form_dropdown('warehouse', $optionsWarehouse, set_value('warehouse'), array('class' => 'form-control', 'data-placeholder' => "-- Select --", 'id' => 'warehouse')); ?>
 
                             </div>
                         </div>
