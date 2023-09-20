@@ -136,7 +136,7 @@
                                         $totalWithoutTax += ($data->grand_total - $data->total_tax);
                                         $totalWithTax += $data->grand_total;
 
-                                        $totalTotalBeforeDiscount += $data->grand_total - $data->total_discount;;
+                                        $totalTotalBeforeDiscount += $data->grand_total + $data->total_discount;;
                                         $totalTotalDiscount += $data->total_discount;
                                         $totalTotalAfterDiscount += $data->grand_total;
 
@@ -152,7 +152,7 @@
                                                 <td><?= $data->reference_no; ?></td>
                                                 <td><?= $data->trans_date; ?></td>
                                                 
-                                                <td><?= $this->sma->formatMoney($data->grand_total-$data->total_discount,'none'); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->grand_total+$data->total_discount,'none'); ?></td>
                                                 <td><?= $this->sma->formatMoney($data->total_discount,'none'); ?></td>
                                                 <td><?= $this->sma->formatMoney($data->grand_total,'none'); ?></td>
 
