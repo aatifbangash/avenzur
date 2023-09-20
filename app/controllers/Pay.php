@@ -356,7 +356,9 @@ class Pay extends MY_Shop_Controller
         $access_token_obj = json_decode($access_token_json);
         $access_token = $access_token_obj->access_token;
 
-        $data = $orderId;
+        $data = array(
+            'orderId' => $orderId
+        );
 
         $ch = curl_init('https://api.tryoto.com/rest/v2/orderStatus');
         // Set cURL options
