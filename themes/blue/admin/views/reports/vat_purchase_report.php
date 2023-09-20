@@ -1,7 +1,13 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, { sheet: 'Sheet 1' });
+        XLSX.writeFile(wb, filename);
+    }
     $(document).ready(function () {
-        
+
     });
 </script>
 <div class="box">
@@ -10,9 +16,9 @@
 
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i class="icon fa fa-file-picture-o"></i></a></li>
-            </ul>
+            <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'vat_purchase.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
+                                class="icon fa fa-file-excel-o"></i></a></li>
+                            </ul>
         </div>
     </div>
     <div class="box-content">
@@ -146,17 +152,17 @@
                                                 <td><?= $data->reference_no; ?></td>
                                                 <td><?= $data->trans_date; ?></td>
                                                 
-                                                <td><?= $this->sma->formatDecimal($data->grand_total-$data->total_discount); ?></td>
-                                                <td><?= $this->sma->formatDecimal($data->total_discount); ?></td>
-                                                <td><?= $this->sma->formatDecimal($data->grand_total); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->grand_total-$data->total_discount,'none'); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->total_discount,'none'); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->grand_total,'none'); ?></td>
 
-                                                <td><?= $this->sma->formatDecimal($data->total_item_with_vat); ?></td>
-                                                <td><?= $this->sma->formatDecimal($data->total_item_without_tax); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->total_item_with_vat,'none'); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->total_item_without_tax,'none'); ?></td>
 
 
-                                                <!-- <td><?= $this->sma->formatDecimal($data->grand_total - $data->total_tax); ?></td> -->
-                                                <td><?= $this->sma->formatDecimal($data->total_tax); ?></td>
-                                                <td><?= $this->sma->formatDecimal($data->grand_total); ?></td>
+                                                <!-- <td><?= $this->sma->formatMoney($data->grand_total - $data->total_tax,'none'); ?></td> -->
+                                                <td><?= $this->sma->formatMoney($data->total_tax,'none'); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->grand_total,'none'); ?></td>
 
 
 
@@ -180,17 +186,17 @@
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
 
-                                    <th class="text-center"><?=$this->sma->formatDecimal($totalTotalBeforeDiscount)?></th>
-                                    <th class="text-center"><?=$this->sma->formatDecimal($totalTotalDiscount)?></th>
-                                    <th class="text-center"><?=$this->sma->formatDecimal($totalTotalAfterDiscount)?></th>
+                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalBeforeDiscount,'none')?></th>
+                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalDiscount,'none')?></th>
+                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalAfterDiscount,'none')?></th>
 
 
-                                    <th class="text-center"><?=$this->sma->formatDecimal($totalItemWithVAT)?></th>
-                                    <th class="text-center"><?=$this->sma->formatDecimal($totalItemWithOutVAT)?></th>
+                                    <th class="text-center"><?=$this->sma->formatMoney($totalItemWithVAT,'none')?></th>
+                                    <th class="text-center"><?=$this->sma->formatMoney($totalItemWithOutVAT,'none')?></th>
 
-                                    <!-- <th class="text-center"><?= $this->sma->formatDecimal($totalWithoutTax); ?></th> -->
-                                    <th class="text-center"><?= $this->sma->formatDecimal($totalTax); ?></th>
-                                    <th class="text-center"><?= $this->sma->formatDecimal($totalWithTax); ?></th>
+                                    <!-- <th class="text-center"><?= $this->sma->formatMoney($totalWithoutTax,'none'); ?></th> -->
+                                    <th class="text-center"><?= $this->sma->formatMoney($totalTax,'none'); ?></th>
+                                    <th class="text-center"><?= $this->sma->formatMoney($totalWithTax,'none'); ?></th>
 
 
 

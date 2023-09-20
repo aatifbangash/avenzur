@@ -33,14 +33,12 @@
             <div class="col-lg-12">
                 <div class="row">
                     <div class="col-lg-12">
-
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('At Date', 'at_date'); ?>
                                 <?php echo form_input('at_date', ($at_date ?? ''), 'class="form-control input-tip date" id="at_date"'); ?>
                             </div>
                         </div>
-
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('Store', 'warehouse'); ?>
@@ -53,7 +51,7 @@
                                 }
 
                                 ?>
-                                <?php echo form_dropdown('warehouse', $optionsWarehouse, $_POST['warehouse'], array('class' => 'form-control', 'data-placeholder' => "-- Select --", 'id' => 'warehouse')); ?>
+                                <?php echo form_dropdown('warehouse', $optionsWarehouse, set_value('warehouse'), array('class' => 'form-control', 'data-placeholder' => "-- Select --", 'id' => 'warehouse')); ?>
 
                             </div>
                         </div>
@@ -72,36 +70,36 @@
 
                             </div>
                         </div>
-
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <?= lang('Item Group', 'item_group'); ?>
-                                <?php
-                                $optionsCategories[0] = 'Select';
-                                if (!empty($categories)) {
-                                    foreach ($categories as $cat) {
-                                        $optionsCategories[$cat->id] = $cat->name;
-                                    }
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4" style="margin-left: 15px; width: 32.6%">
+                        <div class="form-group">
+                            <?= lang('Item Group', 'item_group'); ?>
+                            <?php
+                            $optionsCategories[0] = 'Select';
+                            if (!empty($categories)) {
+                                foreach ($categories as $cat) {
+                                    $optionsCategories[$cat->id] = $cat->name;
                                 }
-                                ?>
-                                <?php echo form_dropdown('item_group', $optionsCategories, set_value('item_group'), array('class' => 'form-control', 'data-placeholder' => "-- Select --", 'id' => 'item_group')); ?>
+                            }
+                            ?>
+                            <?php echo form_dropdown('item_group', $optionsCategories, set_value('item_group'), array('class' => 'form-control', 'data-placeholder' => "-- Select --", 'id' => 'item_group')); ?>
 
-                            </div>
                         </div>
-
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <?= lang('Item', 'item'); ?>
-                                <?php echo form_input('item', ($start_date ?? ''), 'class="form-control input-tip" id="item"'); ?>
-                            </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <?= lang('Item', 'item'); ?>
+                            <?php echo form_input('item', set_value('item'), 'class="form-control input-tip" id="item"'); ?>
                         </div>
-
-
-                        <div class="col-md-12">
-                            <div class="from-group">
-                                <button type="submit" style="margin-top: 28px;" class="btn btn-primary"
-                                        id="load_report"><?= lang('Load Report') ?></button>
-                            </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="from-group">
+                            <button type="submit" style="margin-top: 28px;" class="btn btn-primary"
+                                    id="load_report"><?= lang('Load Report') ?></button>
                         </div>
                     </div>
                 </div>
@@ -148,6 +146,10 @@
 
                                     </tr>
                                 <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <th colspan="8">No records found.</th>
+                                </tr>
                             <?php endif; ?>
 
                             </tbody>

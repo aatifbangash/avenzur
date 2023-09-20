@@ -102,3 +102,7 @@ CREATE TABLE `sma_employees` (`id` INT NOT NULL AUTO_INCREMENT , `parent_id` INT
 ALTER TABLE `sma_accounts_entries` ADD `item_id` INT NOT NULL DEFAULT '0' AFTER `entry_type`, ADD `customer_id` INT NOT NULL DEFAULT '0' AFTER `item_id`, ADD `supplier_id` INT NOT NULL DEFAULT '0' AFTER `customer_id`, ADD `department_id` INT NOT NULL DEFAULT '0' AFTER `supplier_id`, ADD `employee_id` INT NOT NULL DEFAULT '0' AFTER `department_id`;
 
 ============== 03/09/2023 START ===============
+
+
+============== 18/09/2023 START ===============
+ALTER TABLE `sma_rasd_notifications` ADD `invoice_no` VARCHAR(255) NULL AFTER `date`;

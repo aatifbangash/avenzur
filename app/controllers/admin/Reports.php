@@ -3568,12 +3568,14 @@ class Reports extends MY_Controller
                 $response_arr[$trans->id]["name"] = $trans->name;
                 $response_arr[$trans->id]["company"] = $trans->company;
                 $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
-                $response_arr[$trans->id]["trsDebit"] = $trans->sale_total;
-                $response_arr[$trans->id]["trsCredit"] = $trans->payment_total + $trans->return_total + $trans->memo_total;
+                $response_arr[$trans->id]["trsDebit"] = $trans->payment_total + $trans->sale_total;
+                $response_arr[$trans->id]["trsCredit"] =  $trans->return_total + $trans->memo_total;
             }
+
+
             foreach ($trial_balance_array['ob'] as $trans) {
-                $response_arr[$trans->id]["obDebit"] = $trans->sale_total;
-                $response_arr[$trans->id]["obCredit"] = $trans->payment_total + $trans->return_total + $trans->memo_total;
+                $response_arr[$trans->id]["obDebit"] = $trans->payment_total + $trans->sale_total;
+                $response_arr[$trans->id]["obCredit"] =  $trans->return_total + $trans->memo_total;
             }
             //dd($response_arr);
 
@@ -3685,9 +3687,9 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('G' . $row, '');
                 $this->excel->getActiveSheet()->SetCellValue('H' . $row, '');
                 $this->excel->getActiveSheet()->SetCellValue('I' . $row, '');
-                $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatDecimal($itemOpenings->unitPrice));
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney($itemOpenings->unitPrice,'none'));
                 $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00)));
-                $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatDecimal(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice : 0.00)));
+                $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice : 0.00),'none'));
 
 
                 $balanceQantity = $itemOpenings->openingBalance;
@@ -3716,15 +3718,30 @@ class Reports extends MY_Controller
                     $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->name_of);
                     $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->expiry_date);
                     $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->batch_no);
-                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatDecimal($data_row->sale_price ? $data_row->sale_price : 0.0));
-                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->sma->formatDecimal($data_row->purchase_price ? $data_row->purchase_price : 0.0));
+                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatMoney(($data_row->sale_price ? $data_row->sale_price : 0.0),'none'));
+                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->sma->formatMoney(($data_row->purchase_price ? $data_row->purchase_price : 0.0),'none'));
                     $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->sma->formatQuantity($data_row->quantity ? $data_row->quantity : 0.0));
-                    $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatDecimal($data_row->unit_cost ? $data_row->unit_cost : 0.0));
+                    $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney(($data_row->unit_cost ? $data_row->unit_cost : 0.0),'none'));
                     $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatQuantity($balanceQantity ? $balanceQantity : 0.0));
-                    $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatDecimal($balanceQantity * $itemOpenings->unitPrice));
+                    $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney(($balanceQantity * $data_row->unit_cost),'none'));
 
                     $row++;
                 }
+
+                $this->excel->getActiveSheet()->SetCellValue('A' . $row, 'Closing Balance');
+                $this->excel->getActiveSheet()->SetCellValue('B' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('C' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('D' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('I' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, '');
+                $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatQuantity($balanceQantity));
+                $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney($balanceQantity * $itemOpenings->unitPrice,'none'));
+
+
 
                 $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(25);
