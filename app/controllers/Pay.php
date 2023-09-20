@@ -463,7 +463,7 @@ class Pay extends MY_Shop_Controller
                     $order = array(
                         'orderId' => $inv->id,
                         'ref1' => $reference,
-                        'createShipment' => true,
+                        'createShipment' => false,
                         'payment_method' => 'paid',
                         'amount' => $amount,
                         'amount_due' => 0,
