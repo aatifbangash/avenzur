@@ -38,7 +38,7 @@
                                     $wh[$warehouse->id] = $warehouse->name;
                                 }
                                 echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $Settings->default_warehouse), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
-                            
+                            <br /><br />
                             <input type="submit" value="search" class="btn btn-primary" name="search_product" />    
                     </div>
                     </div>
