@@ -432,8 +432,6 @@ class Pay extends MY_Shop_Controller
                     $ipnstatus = true;
                     $sale_items = $this->pay_model->getSaleItems($invoice_no);
 
-                    print_r($sale_items);exit;
-
                     /* OTO Order Generation Starts */
                     $customer_data = array('name' => $customer->name,
                                         'email' => $customer->email,
@@ -450,16 +448,18 @@ class Pay extends MY_Shop_Controller
                     );
 
                     $items_data = array();
-                    $items_data[] = array('productId' => 112,
-                                        'name' => 'Test Product',
-                                        'price' => 100,
-                                        'rowTotal' => 100,
-                                        'taxAmount' => 15,
-                                        'quantity' => 1,
-                                        'serialnumber' => 'ASD12312121333',
-                                        'sku' => 'test-product',
-                                        'image' => 'http://....'
-                    );
+                    foreach ($sale_items as $sale_item){
+                        $items_data[] = array('productId' => $sale_item->product_id,
+                                        'name' => $sale_item->product_name,
+                                        'price' => $sale_item->net_unit_price,
+                                        'rowTotal' => $sale_item->subtotal,
+                                        'taxAmount' => $sale_item->item_tax,
+                                        'quantity' => $sale_item->quantity,
+                                        'serialnumber' => '',
+                                        'sku' => $sale_item->product_code,
+                                        'image' => get_instance()->config->site_url('assets/uploads/').$sale_item->image
+                        );
+                    }
 
                     $order = array(
                         'orderId' => $inv->id,
