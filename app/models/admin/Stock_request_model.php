@@ -20,7 +20,7 @@ class Stock_request_model extends CI_Model
             }
 
             if($warehouse_id == null){
-                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending', 'warehouse_id' => $warehouse_id]);
+                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending']);
             }else{
                 $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending', 'warehouse_id' => $warehouse_id]);
             }
@@ -70,7 +70,12 @@ class Stock_request_model extends CI_Model
                 $this->db->insert('sma_purchase_request_items', $item);
             }
 
-            $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['purchase_request_id' => $req_id, 'warehouse_id' => $warehouse_id]);
+            if($warehouse_id == null){
+                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['purchase_request_id' => $req_id]);
+            }else{
+                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['purchase_request_id' => $req_id, 'warehouse_id' => $warehouse_id]);
+            }
+            
         }
 
         $this->db->trans_complete();
