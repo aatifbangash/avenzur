@@ -1024,7 +1024,8 @@ class Reports_model extends CI_Model
                                     pi.expiry expiry, 
                                     round(sum(pi.quantity)) quantity,
                                     round(sum(pi.sale_price), 2) sale_price,
-                                    round(sum(pi.real_unit_cost), 2) cost_price
+                                    round(sum(p.cost), 2) cost_price,
+                                    round(sum(pi.real_unit_cost), 2) purchase_price
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
                                 INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id
@@ -1046,7 +1047,7 @@ class Reports_model extends CI_Model
         }
 
         if ($item) {
-            $totalPurchasesQuery .= "AND p.code = '$item' ";
+            $totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
         }
 
         $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.batchno, pi.expiry
@@ -1079,7 +1080,7 @@ class Reports_model extends CI_Model
             }
 
             if ($item) {
-                $totalSalesQuery .= "AND p.code = '$item' ";
+                $totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
             $totalSalesQuery .= "GROUP BY p.id, p.code, p.name, si.batch_no, si.expiry";
@@ -1121,7 +1122,7 @@ class Reports_model extends CI_Model
             }
 
             if ($item) {
-                $totalReturnSupplerQuery .= "AND p.code = '$item' ";
+                $totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
             $totalReturnSupplerQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno, pi.expiry";
