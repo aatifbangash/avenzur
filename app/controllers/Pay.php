@@ -369,7 +369,8 @@ class Pay extends MY_Shop_Controller
         // Set HTTP headers
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Accept: application/json',
-            'Content-Type: application/json'
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $access_token
         ));
 
         // Execute the cURL session and store the response in $response
