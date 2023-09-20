@@ -277,7 +277,7 @@ class stock_request extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['warehouses']   = $this->site->getAllWarehouses();
 
-        if ($_POST) {
+        if ($_POST && !$_POST['search_product']) {
             $status = $_POST['status'];
             for($i=0;$i<sizeof($_POST['product_id']);$i++){
                 $product_id      = $_POST['product_id'][$i];
@@ -310,6 +310,9 @@ class stock_request extends MY_Controller
                 'approved_by' => $this->session->userdata['user_id']
             ];
             
+        }
+
+        if($_POST && !$_POST['search_product']){
             if(isset($_POST['request_id'])){
                 if($this->stock_request_model->editPurchaseRequest($_POST['request_id'], $data, $items)){
                     $this->session->set_flashdata('message', $this->lang->line('Purchase_request_edited'));
@@ -327,15 +330,14 @@ class stock_request extends MY_Controller
                     admin_redirect('stock_request/purchase_requests');
                 }   
             }
-            
         }else{
             $current_pr = $this->stock_request_model->getCurrentPR();
             $this->data['current_pr'] = $current_pr;
-        }
 
-        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('opened Purchase Request')]];
-        $meta = ['page_title' => lang('Opened Purchase Request'), 'bc' => $bc];
-        $this->page_construct('stock_request/current_pr', $meta, $this->data);
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('opened Purchase Request')]];
+            $meta = ['page_title' => lang('Opened Purchase Request'), 'bc' => $bc];
+            $this->page_construct('stock_request/current_pr', $meta, $this->data);
+        }
     }
 
     public function stock_order(){
