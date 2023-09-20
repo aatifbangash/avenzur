@@ -344,7 +344,6 @@ class Pay extends MY_Shop_Controller
         }
 
         curl_close($ch);
-        echo $response;
     }
 
     public function oto_generate_token(){
@@ -384,7 +383,7 @@ class Pay extends MY_Shop_Controller
         curl_close($ch);
 
         // Output the API response
-        echo $response;
+        return $response;
     }
     
     public function RedirectPaymentResponsePage()
