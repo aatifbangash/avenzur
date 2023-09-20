@@ -275,6 +275,7 @@ class stock_request extends MY_Controller
         //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['warehouses']   = $this->site->getAllWarehouses();
 
         if ($_POST) {
             $status = $_POST['status'];
