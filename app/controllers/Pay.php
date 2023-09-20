@@ -430,8 +430,9 @@ class Pay extends MY_Shop_Controller
                     $address = $this->pay_model->getCompanyAddress($customer->id);
                     $this->pay_model->updateStatus($inv->id, 'completed');
                     $ipnstatus = true;
+                    $sale_items = $this->pay_model->getSaleItems($invoice_no);
 
-                    print_r($inv);exit;
+                    print_r($sale_items);exit;
 
                     /* OTO Order Generation Starts */
                     $customer_data = array('name' => $customer->name,
@@ -461,11 +462,13 @@ class Pay extends MY_Shop_Controller
                     );
 
                     $order = array(
-                        'orderId' => '1234',
+                        'orderId' => $inv->id,
+                        'ref1' => $reference,
                         'createShipment' => false,
                         'payment_method' => 'paid',
-                        'amount' => 100,
+                        'amount' => $amount,
                         'amount_due' => 0,
+                        'shippingAmount' => $inv->shipping,
                         'currency' => 'SAR',
                         'orderDate' => date('d/m/Y H:i'), // Use the current date and time
                         'customer' => $customer_data,
