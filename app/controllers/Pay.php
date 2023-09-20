@@ -427,24 +427,25 @@ class Pay extends MY_Shop_Controller
                 ];
                 if ($this->pay_model->addPayment($payment)) {
                     $customer = $this->pay_model->getCompanyByID($inv->customer_id);
+                    $address = $this->pay_model->getCompanyAddress($customer->id);
                     $this->pay_model->updateStatus($inv->id, 'completed');
                     $ipnstatus = true;
 
-                    print_r($customer);exit;
+                    print_r($inv);exit;
 
                     /* OTO Order Generation Starts */
-                    $customer_data = array('name' => 'عبدالله الغامدي',
-                                        'email' => 'test@test.com',
-                                        'mobile' => '546607389',
-                                        'address' => '6832, Abruq AR Rughamah District, Jeddah 22272 3330, Saudi Arabia',
+                    $customer_data = array('name' => $customer->name,
+                                        'email' => $customer->email,
+                                        'mobile' => $customer->phone,
+                                        'address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
                                         'district' => '',
-                                        'city' => 'Jeddah',
-                                        'country' => 'SA',
-                                        'postcode' => '12345',
-                                        'lat' => '40.706333',
-                                        'long' => '29.888211',
-                                        'refID' => '1000012',
-                                        'W3WAddress' => 'alarmed.cards.stuffy'
+                                        'city' => $address->city,
+                                        'country' => $customer->country,
+                                        'postcode' => $address->postal_code,
+                                        'lat' => '',
+                                        'long' => '',
+                                        'refID' => '',
+                                        'W3WAddress' => ''
                     );
 
                     $items_data = array();
