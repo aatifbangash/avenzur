@@ -242,9 +242,10 @@ class Stock_request_model extends CI_Model
         return $data_res;
     }
     
-    public function getCurrentPR(){
+    public function getCurrentPR($warehouse_id){
         $response = array();
-        $this->db
+        if($warehouse_id == null){
+            $this->db
                 ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_stock_request_items.required_stock) As total_req_stock, SUM(sma_stock_request_items.avg_stock) As total_avg_stock')
                 ->select('(SELECT SUM(sma_warehouses_products.quantity)
                          FROM sma_warehouses_products
@@ -256,6 +257,22 @@ class Stock_request_model extends CI_Model
                 ->join('sma_products', 'sma_products.id = sma_stock_request_items.product_id', 'left')
                 ->where('sma_stock_requests.status', 'pending')
                 ->group_by('sma_stock_request_items.product_id');
+        }else{
+            $this->db
+                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_stock_request_items.required_stock) As total_req_stock, SUM(sma_stock_request_items.avg_stock) As total_avg_stock')
+                ->select('(SELECT SUM(sma_warehouses_products.quantity)
+                         FROM sma_warehouses_products
+                         WHERE sma_warehouses_products.product_id = sma_products.id
+                         GROUP BY sma_warehouses_products.product_id
+                ) AS total_warehouses_quantity')
+                ->from('sma_stock_requests')
+                ->join('sma_stock_request_items', 'sma_stock_request_items.stock_request_id = sma_stock_requests.id')
+                ->join('sma_products', 'sma_products.id = sma_stock_request_items.product_id', 'left')
+                ->where('sma_stock_requests.status', 'pending')
+                ->where('sma_stock_requests.warehouse_id', $warehouse_id)
+                ->group_by('sma_stock_request_items.product_id');
+        }
+        
         $q = $this->db->get();
         if(!empty($q)){
             if ($q->num_rows() > 0) {

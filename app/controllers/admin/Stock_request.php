@@ -331,8 +331,10 @@ class stock_request extends MY_Controller
                 }   
             }
         }else{
-            $current_pr = $this->stock_request_model->getCurrentPR();
+            $warehouse = isset($_POST['warehouse']) ? $_POST['warehouse'] : null;
+            $current_pr = $this->stock_request_model->getCurrentPR($warehouse);
             $this->data['current_pr'] = $current_pr;
+            $this->data['warehouse'] = $warehouse;
 
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('opened Purchase Request')]];
             $meta = ['page_title' => lang('Opened Purchase Request'), 'bc' => $bc];
