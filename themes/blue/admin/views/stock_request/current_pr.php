@@ -29,22 +29,17 @@
                         </div>
                     </div>-->
 
-                    <?php if (!empty($warehouses)) {
-                        ?>
-                        <li class="dropdown">
-                            <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip" data-placement="left" title="<?=lang('warehouses')?>"></i></a>
-                            <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                                <li><a href="<?=admin_url('purchases')?>"><i class="fa fa-building-o"></i> <?=lang('all_warehouses')?></a></li>
-                                <li class="divider"></li>
-                                <?php
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <?= lang('warehouse', 'powarehouse'); ?>
+                            <?php
+                                $wh[''] = '';
                                 foreach ($warehouses as $warehouse) {
-                                    echo '<li ' . ($warehouse_id && $warehouse_id == $warehouse->id ? 'class="active"' : '') . '><a href="' . admin_url('purchases/' . $warehouse->id) . '"><i class="fa fa-building"></i>' . $warehouse->name . '</a></li>';
-                                } ?>
-                            </ul>
-                        </li>
-                        <?php
-                    }
-                    ?>
+                                    $wh[$warehouse->id] = $warehouse->name;
+                                }
+                                echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $Settings->default_warehouse), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
+                        </div>
+                    </div>
 
                     <div class="col-md-4">
                         <div class="form-group">
