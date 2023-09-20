@@ -318,9 +318,76 @@ class Pay extends MY_Shop_Controller
         //redirect('/');
     }
     
+    public function create_oto_order($order){
+        $access_token = $this->oto_generate_token();
+        //$access_token = 'eyJhbGciOiJSUzI1NiIsImtpZCI6ImFhMDhlN2M3ODNkYjhjOGFjNGNhNzJhZjdmOWRkN2JiMzk4ZjE2ZGMiLCJ0eXAiOiJKV1QifQ.eyJjb21wYW55SWQiOiIyNDY3MiIsImNsaWVudFR5cGUiOiJGcmVlUGFja2FnZSIsIm1hcmtldFBsYWNlTmFtZSI6Im90b2FwaSIsInVzYWdlTW9kZSI6InJlYWwiLCJzdG9yZU5hbWUiOiJBdmVuenVyIiwidXNlclR5cGUiOiJzYWxlc0NoYW5uZWwiLCJ1c2VySWQiOiIzMTQ4OCIsInNjY0lkIjoiNzkxNyIsImVtYWlsIjoiMjQ2NzItNzkxNy1vdG9hcGlAdHJ5b3RvLmNvbSIsImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS9vdG8tcmVzdC1hcGkiLCJhdWQiOiJvdG8tcmVzdC1hcGkiLCJhdXRoX3RpbWUiOjE2OTUwNDQxNzksInVzZXJfaWQiOiJNN05TeTlBNE4yWldXbVM5S0dHVUN3WlJiRzAzIiwic3ViIjoiTTdOU3k5QTROMlpXV21TOUtHR1VDd1pSYkcwMyIsImlhdCI6MTY5NTExNTIyNywiZXhwIjoxNjk1MTE4ODI3LCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsiMjQ2NzItNzkxNy1vdG9hcGlAdHJ5b3RvLmNvbSJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.YePIt-p_eT5lYtC19EKBRjAvOPkbMR7zW-MajM87pqQEqS3KZDOWoHiXrzfDMgoGOZPvOhBzJkvTqmIL19iG0L_mFKs4Poa1Dq9kXp7-mUVlTbMqG29dKJpkYbQIeXskHT3YVQDI0eI9nzDXYQCCnwbMhKi4UFsuPsndijPmC7T-pU-qIACENTqvgsFkuFM8QLIqjjhAA_mid5_EjfDqF1abi_LtJXhi57VDPs9YO-B-lkxhNPGojiMrw3lub1Fnhn03lXK9_YKL5mVfpGwyS7nGRauHx_bgqzCFqO5Z-S_XTMR_HkP3wo29nMU5YEreU75jAHp9MPP0-Ai5Xs-7xQ","refresh_token":"AMf-vBzJfXBOY4h5wotuOhzNC3eA4loOURyIMTH4LDV3M58nk7S38qZdYsG5v9FoLstJmHidWbDt6lkFVo7-ATfWrGgxJPUXud3rV0lphpMTdeEenuM_9g0NaywT1DqUss5CcL4Z_LASOb3JrELy0cFmX20AVlJxVCy6JepF2tBxjNLYqnJwLaXxVk01HoPIeVb8e-HRDkeK_C8CTfAFEtHyNeHSRRWq2Q';
+
+        $order_json = json_encode($order);
+        // Initialize cURL session
+        $ch = curl_init('https://api.tryoto.com/rest/v2/createOrder');
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Return response as a string
+        curl_setopt($ch, CURLOPT_POST, true); // Set the request method to POST
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $order_json); // Send data as JSON
+
+        // Set HTTP headers
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Accept: application/json',
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $access_token // Include your access token here
+        ));
+
+        $response = curl_exec($ch);
+        if(curl_errno($ch)) {
+            echo 'cURL Error: ' . curl_error($ch);
+        }
+
+        curl_close($ch);
+        echo $response;
+    }
+
+    public function oto_generate_token(){
+        // API endpoint URL
+        $apiUrl = 'https://api.tryoto.com/rest/v2/refreshToken';
+
+        // Your refresh token
+        $refreshToken = '_refresh_token_';
+
+        // Data to be sent in the request
+        $data = array(
+            'refresh_token' => 'AMf-vBzJfXBOY4h5wotuOhzNC3eA4loOURyIMTH4LDV3M58nk7S38qZdYsG5v9FoLstJmHidWbDt6lkFVo7-ATfWrGgxJPUXud3rV0lphpMTdeEenuM_9g0NaywT1DqUss5CcL4Z_LASOb3JrELy0cFmX20AVlJxVCy6JepF2tBxjNLYqnJwLaXxVk01HoPIeVb8e-HRDkeK_C8CTfAFEtHyNeHSRRWq2Q'
+        );
+
+        // Initialize cURL session
+        $ch = curl_init($apiUrl);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Return response as a string
+        curl_setopt($ch, CURLOPT_POST, true); // Set the request method to POST
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data)); // Send data as JSON
+
+        // Set HTTP headers
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json',
+        ));
+
+        // Execute the cURL session and store the response in $response
+        $response = curl_exec($ch);
+
+        // Check for cURL errors
+        if(curl_errno($ch)) {
+            echo 'cURL Error: ' . curl_error($ch);
+        }
+
+        // Close cURL session
+        curl_close($ch);
+
+        // Output the API response
+        echo $response;
+    }
     
-    
-     public function RedirectPaymentResponsePage()
+    public function RedirectPaymentResponsePage()
     {
         $paypal = $this->pay_model->getPaypalSettings();
         $this->sma->log_payment('INFO', 'DirectPay Payment URLL Called');
@@ -348,25 +415,70 @@ class Pay extends MY_Shop_Controller
                         }
               */          
             if ($inv = $this->pay_model->getSaleByID($invoice_no)) {
-                            $payment = [
-                                'date'           => date('Y-m-d H:i:s'),
-                                'sale_id'        => $invoice_no,
-                                'reference_no'   => $this->site->getReference('pay'),
-                                'amount'         => $amount,
-                                'paid_by'        => 'DirectPay',
-                                'transaction_id' => $_POST['Response_TransactionID'],
-                                'type'           => 'received',
-                                'note'           => $_POST['Response_CurrencyISOCode'] . ' ' . $_POST['Response_Amount'] . ' had been paid for the Sale Reference No ' . $inv->reference_no,
-                            ];
-                            if ($this->pay_model->addPayment($payment)) {
-                                $customer = $this->pay_model->getCompanyByID($inv->customer_id);
-                                $this->pay_model->updateStatus($inv->id, 'completed');
-                                $ipnstatus = true;
-                                $email = $this->order_received($invoice_no);
-                                $this->sma->log_payment('SUCCESS', 'Payment has been made for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));
-                                $this->session->set_flashdata('message', lang('payment_added'));
-                                
-                            }
+                $payment = [
+                    'date'           => date('Y-m-d H:i:s'),
+                    'sale_id'        => $invoice_no,
+                    'reference_no'   => $this->site->getReference('pay'),
+                    'amount'         => $amount,
+                    'paid_by'        => 'DirectPay',
+                    'transaction_id' => $_POST['Response_TransactionID'],
+                    'type'           => 'received',
+                    'note'           => $_POST['Response_CurrencyISOCode'] . ' ' . $_POST['Response_Amount'] . ' had been paid for the Sale Reference No ' . $inv->reference_no,
+                ];
+                if ($this->pay_model->addPayment($payment)) {
+                    $customer = $this->pay_model->getCompanyByID($inv->customer_id);
+                    $this->pay_model->updateStatus($inv->id, 'completed');
+                    $ipnstatus = true;
+
+                    print_r($customer);exit;
+
+                    /* OTO Order Generation Starts */
+                    $customer_data = array('name' => 'عبدالله الغامدي',
+                                        'email' => 'test@test.com',
+                                        'mobile' => '546607389',
+                                        'address' => '6832, Abruq AR Rughamah District, Jeddah 22272 3330, Saudi Arabia',
+                                        'district' => '',
+                                        'city' => 'Jeddah',
+                                        'country' => 'SA',
+                                        'postcode' => '12345',
+                                        'lat' => '40.706333',
+                                        'long' => '29.888211',
+                                        'refID' => '1000012',
+                                        'W3WAddress' => 'alarmed.cards.stuffy'
+                    );
+
+                    $items_data = array();
+                    $items_data[] = array('productId' => 112,
+                                        'name' => 'Test Product',
+                                        'price' => 100,
+                                        'rowTotal' => 100,
+                                        'taxAmount' => 15,
+                                        'quantity' => 1,
+                                        'serialnumber' => 'ASD12312121333',
+                                        'sku' => 'test-product',
+                                        'image' => 'http://....'
+                    );
+
+                    $order = array(
+                        'orderId' => '1234',
+                        'createShipment' => false,
+                        'payment_method' => 'paid',
+                        'amount' => 100,
+                        'amount_due' => 0,
+                        'currency' => 'SAR',
+                        'orderDate' => date('d/m/Y H:i'), // Use the current date and time
+                        'customer' => $customer_data,
+                        'items' => $items_data
+                    );
+
+                    $this->create_oto_order($order);
+                    /* OTO Order Generation Ends */
+
+                    $email = $this->order_received($invoice_no);
+                    $this->sma->log_payment('SUCCESS', 'Payment has been made for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));
+                    $this->session->set_flashdata('message', lang('payment_added'));
+                    
+                }
             }
         }else {
                 $this->sma->log_payment('ERROR', 'Payment failed for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));

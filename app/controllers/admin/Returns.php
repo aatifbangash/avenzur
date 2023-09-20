@@ -277,10 +277,13 @@ class Returns extends MY_Controller
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
+                $totalbeforevat = $_POST['totalbeforevat'][$r];
+
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details  = $item_type != 'manual' ? $this->site->getProductByCode($item_code) : null;
                     $pr_discount      = $this->site->calculateDiscount($item_discount, $unit_price);
                     $unit_price       = $this->sma->formatDecimal($unit_price - $pr_discount);
+                    $item_net_price   = $unit_price;
                     //$item_net_price   = $unit_price;
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
                     $product_discount += $pr_item_discount;
@@ -293,8 +296,8 @@ class Returns extends MY_Controller
                         $item_tax    = $this->sma->formatDecimal($ctax['amount']);
                         $tax         = $ctax['tax'];
                         if (!$product_details || (!empty($product_details) && $product_details->tax_method != 1)) {
-                            //$item_net_price = $unit_price - $item_tax;
-                            $item_net_price = $item_net_price - $item_tax;
+                            $item_net_price = $unit_price - $item_tax;
+                            //$item_net_price = $item_net_price - $item_tax;
                         }
                         $pr_item_tax = $this->sma->formatDecimal(($item_tax * $item_unit_quantity), 4);
                         if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($biller_details->state == $customer_details->state), $tax_details)) {
