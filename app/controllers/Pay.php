@@ -349,6 +349,43 @@ class Pay extends MY_Shop_Controller
         echo $response;
     }
     
+    public function get_order_tracking_status(){
+        $orderId = '12';
+
+        $access_token_json = $this->oto_generate_token();
+        $access_token_obj = json_decode($access_token_json);
+        $access_token = $access_token_obj->access_token;
+
+        $data = $orderId;
+
+        $ch = curl_init('https://api.tryoto.com/rest/v2/orderStatus');
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Return response as a string
+        curl_setopt($ch, CURLOPT_POST, true); // Set the request method to POST
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data)); // Send data as JSON
+
+        // Set HTTP headers
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Accept: application/json',
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $access_token
+        ));
+
+        // Execute the cURL session and store the response in $response
+        $response = curl_exec($ch);
+
+        // Check for cURL errors
+        if (curl_errno($ch)) {
+            echo 'cURL Error: ' . curl_error($ch);
+        }
+
+        // Close cURL session
+        curl_close($ch);
+
+        // Output the API response
+        echo $response; 
+    }
+
     public function get_tracking_history(){
         $orderId = '12';
 
