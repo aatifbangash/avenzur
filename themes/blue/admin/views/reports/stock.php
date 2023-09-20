@@ -51,7 +51,7 @@
                                 }
 
                                 ?>
-                                <?php echo form_dropdown('warehouse', $optionsWarehouse, set_value('warehouse'), array('class' => 'form-control', 'data-placeholder' => "-- Select --", 'id' => 'warehouse')); ?>
+                                <?php echo form_dropdown('warehouse', $optionsWarehouse, $_POST['warehouse'], array('class' => 'form-control disable-select')); ?>
 
                             </div>
                         </div>
@@ -66,7 +66,7 @@
                                     }
                                 }
                                 ?>
-                                <?php echo form_dropdown('supplier', $optionsSuppliers, set_value('supplier'), array('class' => 'form-control', 'data-placeholder' => "-- Select --", 'id' => 'supplier_field')); ?>
+                                <?php echo form_dropdown('supplier', $optionsSuppliers, ($_POST['supplier'] ?: ''), array('class' => 'form-control disable-select')); ?>
 
                             </div>
                         </div>
@@ -84,7 +84,7 @@
                                 }
                             }
                             ?>
-                            <?php echo form_dropdown('item_group', $optionsCategories, set_value('item_group'), array('class' => 'form-control', 'data-placeholder' => "-- Select --", 'id' => 'item_group')); ?>
+                            <?php echo form_dropdown('item_group', $optionsCategories, ($_POST['item_group'] ?: ''), array('class' => 'form-control disable-select')); ?>
 
                         </div>
                     </div>
