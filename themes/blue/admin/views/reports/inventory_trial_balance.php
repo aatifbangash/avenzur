@@ -28,14 +28,14 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('From Warehouse', 'from_warehouse_id'); ?>
-                                <?php echo form_dropdown('from_warehouse_id', $warehouses, set_value('from_warehouse_id', $_POST['from_warehouse_id']), array('class' => 'form-control', 'id' => 'from_warehouse_id')); ?>
+                                <?php echo form_dropdown('from_warehouse_id', $warehouses, set_value('from_warehouse_id', $_POST['from_warehouse_id']), array('class' => 'form-control', 'id' => 'from_warehouse_id'), array('none')); ?>
 
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('To Warehouse', 'to_warehouse_id'); ?>
-                                <?php echo form_dropdown('to_warehouse_id', $warehouses, set_value('to_warehouse_id', $_POST['to_warehouse_id']), array('class' => 'form-control', 'id' => 'to_warehouse_id')); ?>
+                                <?php echo form_dropdown('to_warehouse_id', $warehouses, set_value('to_warehouse_id', $_POST['to_warehouse_id']), array('class' => 'form-control', 'id' => 'to_warehouse_id'), array('none')); ?>
 
                             </div>
                         </div>
