@@ -25,7 +25,7 @@ class refund_model extends CI_Model
       ->from('sma_refund')
       ->join('sma_users', 'sma_refund.user_id = sma_users.id')
       ->join('sma_companies', 'sma_users.company_id = sma_companies.id')
-      ->join('sma_sales', 'sma_companies.company_id = sma_sales.customer_id');
+      ->join('sma_sales', 'sma_companies.id = sma_sales.customer_id');
 
       $query = $this->db->get();
       return $query->result();  
