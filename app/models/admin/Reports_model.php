@@ -967,6 +967,11 @@ class Reports_model extends CI_Model
     public function getItemOpeningBalance($productId, $start_date, $warehouseId = 0)
     {
 
+        /*
+        * SELECT AVG(purItem.net_unit_cost) AS purchaseUnitPrice FROM `sma_purchases` AS `purchase` 
+        *  INNER JOIN `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id`=`purchase`.`id` WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0
+        */
+
         $q = $this->db->query("SELECT
         COALESCE(purchaseQuantity, 0) - COALESCE(saleQuantity, 0) - COALESCE(returnSupplierQuantity, 0) + COALESCE(returnQuantity, 0) + COALESCE(transferInQuantity, 0) - COALESCE(transferOutQuantity, 0) AS openingBalance,
         COALESCE(purchaseUnitPrice, 0) AS unitPrice
@@ -991,8 +996,9 @@ class Reports_model extends CI_Model
           LEFT JOIN( SELECT transfer_id, SUM(quantity) AS quantity FROM sma_transfer_items WHERE `product_id`=$productId AND DATE(`date`) < '$start_date' GROUP BY transfer_id ) AS titm ON titm.transfer_id=trnf.id 
           LEFT JOIN( SELECT warehouse_id, SUM(abs(quantity)) AS quantity FROM sma_purchase_items WHERE `product_id`=$productId AND DATE(`date`) < '$start_date' AND transfer_id IS NULL AND purchase_id IS NULL AND quantity < 0 GROUP BY warehouse_id ) AS pitm ON pitm.warehouse_id=trnf.from_warehouse_id 
           WHERE DATE(`trnf`.`date`) < '$start_date' AND `trnf`.`from_warehouse_id`=$warehouseId AND trnf.id IN( SELECT DISTINCT transfer_id FROM sma_transfer_items WHERE `product_id`=$productId ) AND trnf.from_warehouse_id IN( SELECT DISTINCT warehouse_id FROM sma_purchase_items WHERE `product_id`=$productId AND DATE(`date`) < '$start_date' AND transfer_id IS NULL AND purchase_id IS NULL AND quantity < 0 GROUP BY warehouse_id ) ) AS transferOut, 
-        ( SELECT AVG(purItem.net_unit_cost) AS purchaseUnitPrice FROM `sma_purchases` AS `purchase` 
-          INNER JOIN `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id`=`purchase`.`id` WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0
+        (   SELECT IFNULL(purItemA.net_unit_cost, p.cost) AS purchaseUnitPrice  FROM sma_products AS p
+            LEFT JOIN ( SELECT AVG(purItem.net_unit_cost) AS net_unit_cost, purItem.product_id FROM `sma_purchases` AS `purchase`
+            INNER JOIN `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id`=`purchase`.`id` WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0 GROUP BY  purItem.product_id ) as purItemA ON purItemA.product_id = p.id WHERE p.id = $productId
          ) AS purchaseUnitPrice;");
         // echo $this->db->last_query();
         $response = array();
@@ -1018,7 +1024,8 @@ class Reports_model extends CI_Model
                                     pi.expiry expiry, 
                                     round(sum(pi.quantity)) quantity,
                                     round(sum(pi.sale_price), 2) sale_price,
-                                    round(sum(pi.real_unit_cost), 2) cost_price
+                                    round(sum(p.cost), 2) cost_price,
+                                    round(sum(pi.real_unit_cost), 2) purchase_price
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
                                 INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id
@@ -1040,7 +1047,7 @@ class Reports_model extends CI_Model
         }
 
         if ($item) {
-            $totalPurchasesQuery .= "AND p.code = '$item' ";
+            $totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
         }
 
         $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.batchno, pi.expiry
@@ -1073,7 +1080,7 @@ class Reports_model extends CI_Model
             }
 
             if ($item) {
-                $totalSalesQuery .= "AND p.code = '$item' ";
+                $totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
             $totalSalesQuery .= "GROUP BY p.id, p.code, p.name, si.batch_no, si.expiry";
@@ -1115,7 +1122,7 @@ class Reports_model extends CI_Model
             }
 
             if ($item) {
-                $totalReturnSupplerQuery .= "AND p.code = '$item' ";
+                $totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
             $totalReturnSupplerQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno, pi.expiry";
@@ -1270,7 +1277,7 @@ class Reports_model extends CI_Model
                 LEFT JOIN ( 
 
                     SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
-                    pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
+                    pitem.expiry as expiry_date, abs(pitem.quantity) as quantity, pitem.net_unit_cost as unit_cost,
                     pitem.serial_number as system_serial, pitem.sale_price as sale_price, NULL as purchase_price, pitem.product_id
 
                     FROM sma_purchases as purchase
@@ -1436,7 +1443,7 @@ class Reports_model extends CI_Model
                     UNION ALL 
 
                     SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
-                    pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
+                    pitem.expiry as expiry_date, abs(pitem.quantity) as quantity, pitem.net_unit_cost as unit_cost,
                     pitem.serial_number as system_serial, pitem.sale_price as sale_price, NULL as purchase_price, pitem.product_id
 
                     FROM sma_purchases as purchase

@@ -31,6 +31,20 @@
 
                     <div class="col-md-4">
                         <div class="form-group">
+                            <?= lang('warehouse', 'powarehouse'); ?>
+                            <?php
+                                $wh[''] = '';
+                                foreach ($warehouses as $warehouse) {
+                                    $wh[$warehouse->id] = $warehouse->name;
+                                }
+                                echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $Settings->default_warehouse), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
+                            <br /><br />
+                            <input type="submit" value="search" class="btn btn-primary" name="search_product" />    
+                    </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
                             <?= lang('Status', 'Status'); ?>
                             <?php
                             //$statuses = array('completed' => 'completed', 'rejected' => 'rejected');

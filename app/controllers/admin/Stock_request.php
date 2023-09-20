@@ -275,8 +275,9 @@ class stock_request extends MY_Controller
         //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['warehouses']   = $this->site->getAllWarehouses();
 
-        if ($_POST) {
+        if ($_POST && !$_POST['search_product']) {
             $status = $_POST['status'];
             for($i=0;$i<sizeof($_POST['product_id']);$i++){
                 $product_id      = $_POST['product_id'][$i];
@@ -309,8 +310,12 @@ class stock_request extends MY_Controller
                 'approved_by' => $this->session->userdata['user_id']
             ];
             
+        }
+
+        if($_POST && !$_POST['search_product']){
+            $warehouse = isset($_POST['warehouse']) ? $_POST['warehouse'] : null;
             if(isset($_POST['request_id'])){
-                if($this->stock_request_model->editPurchaseRequest($_POST['request_id'], $data, $items)){
+                if($this->stock_request_model->editPurchaseRequest($_POST['request_id'], $data, $items, $warehouse)){
                     $this->session->set_flashdata('message', $this->lang->line('Purchase_request_edited'));
                     admin_redirect('stock_request/purchase_requests');
                 }else{
@@ -318,7 +323,7 @@ class stock_request extends MY_Controller
                     admin_redirect('stock_request/purchase_requests');
                 }    
             }else{
-                if($this->stock_request_model->addPurchaseRequest($data, $items)){
+                if($this->stock_request_model->addPurchaseRequest($data, $items, $warehouse)){
                     $this->session->set_flashdata('message', $this->lang->line('Purchase_request_added'));
                     admin_redirect('stock_request/purchase_requests');
                 }else{
@@ -326,15 +331,16 @@ class stock_request extends MY_Controller
                     admin_redirect('stock_request/purchase_requests');
                 }   
             }
-            
         }else{
-            $current_pr = $this->stock_request_model->getCurrentPR();
+            $warehouse = isset($_POST['warehouse']) ? $_POST['warehouse'] : null;
+            $current_pr = $this->stock_request_model->getCurrentPR($warehouse);
             $this->data['current_pr'] = $current_pr;
-        }
+            $this->data['warehouse'] = $warehouse;
 
-        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('opened Purchase Request')]];
-        $meta = ['page_title' => lang('Opened Purchase Request'), 'bc' => $bc];
-        $this->page_construct('stock_request/current_pr', $meta, $this->data);
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('opened Purchase Request')]];
+            $meta = ['page_title' => lang('Opened Purchase Request'), 'bc' => $bc];
+            $this->page_construct('stock_request/current_pr', $meta, $this->data);
+        }
     }
 
     public function stock_order(){

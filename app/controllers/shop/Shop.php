@@ -351,8 +351,8 @@ class Shop extends MY_Shop_Controller
                    
                 if ($sale_id = $this->shop_model->addSale($data, $products, $customer, $address)) {
                     
-                   $added_record = $this->aramexshipment($sale_id, $data, $products, $customer, $address,$pro_weight);
-                   $email = $this->order_received($sale_id, $data['hash'], $added_record);
+                   //$added_record = $this->aramexshipment($sale_id, $data, $products, $customer, $address,$pro_weight);
+                   //$email = $this->order_received($sale_id, $data['hash'], $added_record);
                      
                    if (!$email['sent']) {
                       $this->session->set_flashdata('error', $email['error']);

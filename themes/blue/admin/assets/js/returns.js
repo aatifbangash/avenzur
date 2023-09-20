@@ -990,7 +990,7 @@ function loadItems() {
                 combo_items = item.combo_items,
                 item_price = item.row.price,
                 item_cost = item.row.cost_price,
-                item_sale_price = item.row.base_unit_price,
+                item_sale_price = item.row.price,
                 item_qty = item.row.qty,
                 item_aqty = item.row.quantity,
                 item_tax_method = item.row.tax_method,
@@ -1062,10 +1062,10 @@ function loadItems() {
                 if (pr_tax !== false && pr_tax != 0) {
                     if (pr_tax.type == 1) {
                         if (item_tax_method == '0') {
-                            pr_tax_val = formatDecimal((unit_price * parseFloat(pr_tax.rate)) / (100 + parseFloat(pr_tax.rate)), 4);
+                            pr_tax_val = formatDecimal((item_sale_price * parseFloat(pr_tax.rate)) / (100 + parseFloat(pr_tax.rate)), 4);
                             pr_tax_rate = formatDecimal(pr_tax.rate) + '%';
                         } else {
-                            pr_tax_val = formatDecimal((unit_price * parseFloat(pr_tax.rate)) / 100, 4);
+                            pr_tax_val = formatDecimal((item_sale_price * parseFloat(pr_tax.rate)) / 100, 4);
                             pr_tax_rate = formatDecimal(pr_tax.rate) + '%';
                         }
                     } else if (pr_tax.type == 2) {
@@ -1097,7 +1097,7 @@ function loadItems() {
 
             var main_net = 0.0;
 
-            var total_before_dis_vat = (parseFloat(item_price)) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty); 
+            var total_before_dis_vat = (parseFloat(item_sale_price)) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty); 
 
             dis1_a = total_before_dis_vat * parseFloat((item_dis1 / 100));
             total_after_dis1 =  total_before_dis_vat - dis1_a;
@@ -1254,7 +1254,7 @@ function loadItems() {
                 product_unit +
                 '"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' +
                 base_quantity +
-                '"><span style="font-size:10px;margin-top:5px;" class="batchQuantity">'+item_batchQuantity+'</span></td>';
+                '"></td>';
 
                 /*tr_html +=
                 '<td class="text-right"><input class="form-control input-sm text-right rbonus" name="bonus[]" type="text" id="bonus_' +
@@ -1318,9 +1318,16 @@ function loadItems() {
             // formatMoney(0 - item_discount * item_qty) +
             // '</span>
 
+            tr_html +=
+                '<td class="text-right"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' +
+                    row_no +
+                    '" value="' +
+                    pr_tax.id +
+                    '"><span class="text-right rvat15" id="vat15_' +
+                row_no +
+                '">'+formatMoney(vat_15_a)+'</span></td>';
 
-
-            if (site.settings.tax1 == 1) {
+            /*if (site.settings.tax1 == 1) {
                 tr_html +=
                     '<td class="text-right"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' +
                     row_no +
@@ -1333,7 +1340,7 @@ function loadItems() {
                     ' ' +
                     formatMoney(pr_tax_val * item_qty) +
                     '</span></td>';
-            }
+            }*/
 
             /*tr_html +=
             '<td class="text-right"><input class="form-control input-sm text-right rprice" name="cost_price[]" type="hidden" id="cost_price_' +

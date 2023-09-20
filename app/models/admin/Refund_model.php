@@ -13,18 +13,23 @@ class refund_model extends CI_Model
     }
 
 
- public function display_data()
-    {
-        $this->db->select('*')
+  public function display_data()
+  {
+     /*$this->db->select('*')
      ->from('sales')
-     ->join('refund', 'sales.customer_id = refund.user_id') ;
-     //->where('refund.id ', $id);
+     ->join('sma_users', 'sales.customer_id = sma_users.id')
+     ->join('refund', 'sma_users.id = refund.user_id')
+     ->where('refund.id ', $id);*/
 
-$query = $this->db->get();
-          // $query = $this->db->get('refund');
-        return $query->result();
-        
-    }
+      $this->db->select('sma_sales.*, sma_refund.user_id')
+      ->from('sma_refund')
+      ->join('sma_users', 'sma_refund.user_id = sma_users.id')
+      ->join('sma_companies', 'sma_users.company_id = sma_companies.id')
+      ->join('sma_sales', 'sma_companies.id = sma_sales.customer_id');
+
+      $query = $this->db->get();
+      return $query->result();  
+  }
       public function deleteRefund($id){
           if ($this->db->delete('refund', ['id' => $id])) {
             return true;

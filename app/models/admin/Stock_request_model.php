@@ -9,7 +9,7 @@ class Stock_request_model extends CI_Model
         parent::__construct();
     }
 
-    public function addPurchaseRequest($data, $items){
+    public function addPurchaseRequest($data, $items, $warehouse_id){
         $this->db->trans_start();
         if ($this->db->insert('purchase_requests', $data)) {
             $request_id = $this->db->insert_id();
@@ -19,7 +19,11 @@ class Stock_request_model extends CI_Model
                 $this->db->insert('purchase_request_items', $item);
             }
 
-            $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending']);
+            if($warehouse_id == null){
+                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending']);
+            }else{
+                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending', 'warehouse_id' => $warehouse_id]);
+            }
         }
         
         $this->db->trans_complete();
@@ -51,7 +55,7 @@ class Stock_request_model extends CI_Model
         return false;
     }
 
-    public function editPurchaseRequest($req_id, $data, $items){
+    public function editPurchaseRequest($req_id, $data, $items, $warehouse_id){
         $this->db->trans_start();
 
         $this->db->delete('sma_purchase_requests', ['id' => $req_id]);
@@ -66,7 +70,12 @@ class Stock_request_model extends CI_Model
                 $this->db->insert('sma_purchase_request_items', $item);
             }
 
-            $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['purchase_request_id' => $req_id]);
+            if($warehouse_id == null){
+                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['purchase_request_id' => $req_id]);
+            }else{
+                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['purchase_request_id' => $req_id, 'warehouse_id' => $warehouse_id]);
+            }
+            
         }
 
         $this->db->trans_complete();
@@ -242,9 +251,10 @@ class Stock_request_model extends CI_Model
         return $data_res;
     }
     
-    public function getCurrentPR(){
+    public function getCurrentPR($warehouse_id){
         $response = array();
-        $this->db
+        if($warehouse_id == null){
+            $this->db
                 ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_stock_request_items.required_stock) As total_req_stock, SUM(sma_stock_request_items.avg_stock) As total_avg_stock')
                 ->select('(SELECT SUM(sma_warehouses_products.quantity)
                          FROM sma_warehouses_products
@@ -256,6 +266,22 @@ class Stock_request_model extends CI_Model
                 ->join('sma_products', 'sma_products.id = sma_stock_request_items.product_id', 'left')
                 ->where('sma_stock_requests.status', 'pending')
                 ->group_by('sma_stock_request_items.product_id');
+        }else{
+            $this->db
+                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_stock_request_items.required_stock) As total_req_stock, SUM(sma_stock_request_items.avg_stock) As total_avg_stock')
+                ->select('(SELECT SUM(sma_warehouses_products.quantity)
+                         FROM sma_warehouses_products
+                         WHERE sma_warehouses_products.product_id = sma_products.id
+                         GROUP BY sma_warehouses_products.product_id
+                ) AS total_warehouses_quantity')
+                ->from('sma_stock_requests')
+                ->join('sma_stock_request_items', 'sma_stock_request_items.stock_request_id = sma_stock_requests.id')
+                ->join('sma_products', 'sma_products.id = sma_stock_request_items.product_id', 'left')
+                ->where('sma_stock_requests.status', 'pending')
+                ->where('sma_stock_requests.warehouse_id', $warehouse_id)
+                ->group_by('sma_stock_request_items.product_id');
+        }
+        
         $q = $this->db->get();
         if(!empty($q)){
             if ($q->num_rows() > 0) {
