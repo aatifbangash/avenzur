@@ -9,7 +9,7 @@ class Stock_request_model extends CI_Model
         parent::__construct();
     }
 
-    public function addPurchaseRequest($data, $items){
+    public function addPurchaseRequest($data, $items, $warehouse_id){
         $this->db->trans_start();
         if ($this->db->insert('purchase_requests', $data)) {
             $request_id = $this->db->insert_id();
@@ -19,7 +19,11 @@ class Stock_request_model extends CI_Model
                 $this->db->insert('purchase_request_items', $item);
             }
 
-            $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending']);
+            if($warehouse_id == null){
+                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending', 'warehouse_id' => $warehouse_id]);
+            }else{
+                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending', 'warehouse_id' => $warehouse_id]);
+            }
         }
         
         $this->db->trans_complete();
@@ -51,7 +55,7 @@ class Stock_request_model extends CI_Model
         return false;
     }
 
-    public function editPurchaseRequest($req_id, $data, $items){
+    public function editPurchaseRequest($req_id, $data, $items, $warehouse_id){
         $this->db->trans_start();
 
         $this->db->delete('sma_purchase_requests', ['id' => $req_id]);
@@ -66,7 +70,7 @@ class Stock_request_model extends CI_Model
                 $this->db->insert('sma_purchase_request_items', $item);
             }
 
-            $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['purchase_request_id' => $req_id]);
+            $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['purchase_request_id' => $req_id, 'warehouse_id' => $warehouse_id]);
         }
 
         $this->db->trans_complete();
