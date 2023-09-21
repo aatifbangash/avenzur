@@ -41,7 +41,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('Type', 'Type'); ?>
-                                <?php echo form_dropdown('filterOnType', $filterOnTypeArr, set_value('filterOnType', $_POST['filterOnType']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'filterOnType')); ?>
+                                <?php echo form_dropdown('filterOnType', $filterOnTypeArr, set_value('filterOnType', $_POST['filterOnType']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'filterOnType'),  array('none')); ?>
 
                             </div>
                         </div>
@@ -99,7 +99,7 @@
                                     <tr>
                                         <td colspan="2">Oening Balance</td>
                                         <td colspan="8">&nbsp;</td>
-                                        <td><?php echo $this->sma->formatMoney($itemOpenings->unitPrice, 'none'); ?></td>
+                                        <td><?php echo $this->sma->formatMoney(($itemOpenings->openingBalance > 0 ? $itemOpenings->unitPrice : 0.0), 'none'); ?></td>
                                         <td><?php echo $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00)); ?></td>
                                         <td><?php echo $this->sma->formatMoney(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00), 'none'); ?></td>
 

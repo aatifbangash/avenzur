@@ -250,6 +250,7 @@ class Returns extends MY_Controller
             $total            = 0;
             $product_tax      = 0;
             $product_discount = 0;
+            $total_product_discount = 0;
             $gst_data         = [];
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             $i                = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
@@ -287,6 +288,21 @@ class Returns extends MY_Controller
                     //$item_net_price   = $unit_price;
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
                     $product_discount += $pr_item_discount;
+
+                    //Discount calculation---------------------------------- 
+                    //The above will be deleted later becasue order discount is not in use                  
+                    $product_discount1      = $this->site->calculateDiscount($item_dis1.'%', $unit_price);
+                    $amount_after_discount1 = $unit_price - $product_discount1;
+                    $product_discount2      = $this->site->calculateDiscount($item_dis2.'%', $amount_after_discount1);
+
+                   
+                    $product_item_discount1 = $this->sma->formatDecimal($product_discount1 * $item_unit_quantity);
+                    $product_item_discount2 = $this->sma->formatDecimal($product_discount2 * $item_unit_quantity);
+                    
+                    $product_item_discount = ($product_item_discount1 + $product_item_discount2);
+                    $total_product_discount += $product_item_discount;
+                    //Discount calculation----------------------------------
+
                     $pr_item_tax = $item_tax = 0;
                     $tax         = '';
 
@@ -308,7 +324,7 @@ class Returns extends MY_Controller
                     }
 
                     $product_tax += $pr_item_tax;
-                    $subtotal = (($item_net_price * $item_unit_quantity) + $pr_item_tax);
+                    $subtotal = (($item_net_price * $item_unit_quantity) + $pr_item_tax-$product_item_discount);
                     $unit     = $this->site->getUnitByID($item_unit);
 
                     $product = [
@@ -329,7 +345,7 @@ class Returns extends MY_Controller
                         'tax_rate_id'       => $item_tax_rate,
                         'tax'               => $tax,
                         'discount'          => $item_discount,
-                        'item_discount'     => $pr_item_discount,
+                        'item_discount'     => $product_item_discount,
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'serial_no'         => $item_serial,
                         'expiry'            => $item_expiry,
@@ -356,7 +372,14 @@ class Returns extends MY_Controller
             $total_discount = $this->sma->formatDecimal(($order_discount + $product_discount), 4);
             $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
             $total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
-            $grand_total    = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            
+            //Discount calculation
+            // total discount must be deducted from  grandtotal
+            //$grand_total    = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            
+            $grand_total    = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($total_product_discount)), 4);
+            //Discount calculation
+
             $data           = [
                 'date'              => $date,
                 'reference_no'      => $reference,
@@ -368,10 +391,10 @@ class Returns extends MY_Controller
                 'note'              => $note,
                 'staff_note'        => $staff_note,
                 'total'             => $total,
-                'product_discount'  => $product_discount,
+                'product_discount'  => $total_product_discount,
                 'order_discount_id' => $this->input->post('order_discount'),
                 'order_discount'    => $order_discount,
-                'total_discount'    => $total_discount,
+                'total_discount'    => $total_product_discount,
                 'product_tax'       => $product_tax,
                 'order_tax_id'      => $this->input->post('order_tax'),
                 'order_tax'         => $order_tax,
@@ -610,6 +633,7 @@ class Returns extends MY_Controller
             $total            = 0;
             $product_tax      = 0;
             $product_discount = 0;
+            $total_product_discount = 0;
             $gst_data         = [];
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             $i                = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
@@ -642,6 +666,21 @@ class Returns extends MY_Controller
                     $item_net_price   = $unit_price;
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
                     $product_discount += $pr_item_discount;
+
+                    //Discount calculation---------------------------------- 
+                    //The above will be deleted later becasue order discount is not in use                  
+                    $product_discount1      = $this->site->calculateDiscount($item_dis1.'%', $unit_price);
+                    $amount_after_discount1 = $unit_price - $product_discount1;
+                    $product_discount2      = $this->site->calculateDiscount($item_dis2.'%', $amount_after_discount1);
+
+                   
+                    $product_item_discount1 = $this->sma->formatDecimal($product_discount1 * $item_unit_quantity);
+                    $product_item_discount2 = $this->sma->formatDecimal($product_discount2 * $item_unit_quantity);
+                    
+                    $product_item_discount = ($product_item_discount1 + $product_item_discount2);
+                    $total_product_discount += $product_item_discount;
+                    //Discount calculation----------------------------------
+
                     $pr_item_tax = $item_tax = 0;
                     $tax         = '';
 
@@ -662,7 +701,7 @@ class Returns extends MY_Controller
                     }
 
                     $product_tax += $pr_item_tax;
-                    $subtotal = (($item_net_price * $item_unit_quantity) + $pr_item_tax);
+                    $subtotal = (($item_net_price * $item_unit_quantity) + $pr_item_tax - $product_item_discount);
                     $unit     = $this->site->getUnitByID($item_unit);
 
                     $product = [
@@ -684,7 +723,7 @@ class Returns extends MY_Controller
                         'tax_rate_id'       => $item_tax_rate,
                         'tax'               => $tax,
                         'discount'          => $item_discount,
-                        'item_discount'     => $pr_item_discount,
+                        'item_discount'     => $product_item_discount,
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'serial_no'         => $item_serial,
                         'batch_no'          => $item_batchno,
@@ -711,7 +750,15 @@ class Returns extends MY_Controller
             $total_discount = $this->sma->formatDecimal(($order_discount + $product_discount), 4);
             $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
             $total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
-            $grand_total    = $this->sma->formatDecimal(($total + $total_tax + $shipping - $order_discount), 4);
+
+
+            //Discount calculation
+            // total discount must be deducted from  grandtotal
+            //$grand_total    = $this->sma->formatDecimal(($total + $total_tax + $shipping - $order_discount), 4);
+
+            $grand_total    = $this->sma->formatDecimal(($total + $total_tax + $shipping - $total_product_discount), 4);
+            //Discount calculation
+            
             $data           = [
                 'date'              => $date,
                 'reference_no'      => $reference,
@@ -723,10 +770,10 @@ class Returns extends MY_Controller
                 'note'              => $note,
                 'staff_note'        => $staff_note,
                 'total'             => $total,
-                'product_discount'  => $product_discount,
+                'product_discount'  => $total_product_discount,
                 'order_discount_id' => $this->input->post('order_discount'),
                 'order_discount'    => $order_discount,
-                'total_discount'    => $total_discount,
+                'total_discount'    => $total_product_discount,
                 'product_tax'       => $product_tax,
                 'order_tax_id'      => $this->input->post('order_tax'),
                 'order_tax'         => $order_tax,

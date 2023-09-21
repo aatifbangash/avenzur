@@ -3,9 +3,10 @@
 <script>
     function exportTableToExcel(tableId, filename = 'table.xlsx') {
         const table = document.getElementById(tableId);
-        const wb = XLSX.utils.table_to_book(table, { sheet: 'Sheet 1' });
+        const wb = XLSX.utils.table_to_book(table, {sheet: 'Sheet 1'});
         XLSX.writeFile(wb, filename);
     }
+
     $(document).ready(function () {
 
     });
@@ -16,7 +17,8 @@
 
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'stock.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
+                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'stock.xlsx')"
+                                        id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
                                 class="icon fa fa-file-excel-o"></i></a></li>
                 <!--                <li class="dropdown"><a href="#" id="image" class="tip" title="-->
                 <? //= lang('save_image') ?><!--"><i-->
@@ -51,7 +53,7 @@
                                 }
 
                                 ?>
-                                <?php echo form_dropdown('warehouse', $optionsWarehouse, $_POST['warehouse'], array('class' => 'form-control disable-select')); ?>
+                                <?php echo form_dropdown('warehouse', $optionsWarehouse, set_value('warehouse'), array('class' => 'form-control disable-select'), array('none')); ?>
 
                             </div>
                         </div>
@@ -66,7 +68,7 @@
                                     }
                                 }
                                 ?>
-                                <?php echo form_dropdown('supplier', $optionsSuppliers, ($_POST['supplier'] ?: ''), array('class' => 'form-control disable-select')); ?>
+                                <?php echo form_dropdown('supplier', $optionsSuppliers, set_value('supplier'), array('class' => 'form-control disable-select'), array('none')); ?>
 
                             </div>
                         </div>
@@ -84,7 +86,7 @@
                                 }
                             }
                             ?>
-                            <?php echo form_dropdown('item_group', $optionsCategories, ($_POST['item_group'] ?: ''), array('class' => 'form-control disable-select')); ?>
+                            <?php echo form_dropdown('item_group', $optionsCategories, set_value('item_group'), array('class' => 'form-control disable-select'), array('none')); ?>
 
                         </div>
                     </div>
@@ -117,7 +119,11 @@
                                 <th><?= lang('Expiry'); ?></th>
                                 <th><?= lang('Quantity Balance'); ?></th>
                                 <th><?= lang('Sale Price'); ?></th>
+                                <th><?= lang('Total Sale Price'); ?></th>
+                                <th><?= lang('Purchase Price'); ?></th>
+                                <th><?= lang('Total Purchase Price'); ?></th>
                                 <th><?= lang('Cost Price'); ?></th>
+                                <th><?= lang('Total Cost Price'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
@@ -125,7 +131,11 @@
                                 <?php
                                 $totalQuantity = 0;
                                 $totalSalePrice = 0;
+                                $grandTotalSalePrice = 0;
+                                $totalPurchasePrice = 0;
+                                $grandTotalPurchasePrice = 0;
                                 $totalCostPrice = 0;
+                                $grandTotalCostPrice = 0;
                                 ?>
                                 <?php foreach ($stock_data as $index => $row): ?>
                                     <tr>
@@ -141,14 +151,24 @@
                                         <td><?= number_format($row->sale_price, 2, '.', ',') ?></td>
                                         <?php $totalSalePrice += $row->sale_price; ?>
 
+                                        <td><?= number_format($row->sale_price * $row->quantity, 2, '.', ',') ?></td>
+                                        <?php $grandTotalSalePrice += $row->sale_price * $row->quantity; ?>
+
+                                        <td><?= number_format($row->purchase_price, 2, '.', ',') ?></td>
+                                        <?php $totalPurchasePrice += $row->purchase_price; ?>
+
+                                        <td><?= number_format($row->purchase_price * $row->quantity, 2, '.', ',') ?></td>
+                                        <?php $grandTotalPurchasePrice += $row->purchase_price * $row->quantity; ?>
+
                                         <td><?= number_format($row->cost_price, 2, '.', ',') ?></td>
                                         <?php $totalCostPrice += $row->cost_price; ?>
-
+                                        <td><?= number_format($row->cost_price * $row->quantity, 2, '.', ',') ?></td>
+                                        <?php $grandTotalCostPrice += $row->cost_price * $row->quantity; ?>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <th colspan="8">No records found.</th>
+                                    <th colspan="12">No records found.</th>
                                 </tr>
                             <?php endif; ?>
 
@@ -162,7 +182,11 @@
                                 <th>&nbsp;</th>
                                 <th><?= $totalQuantity ?></th>
                                 <th><?= number_format($totalSalePrice, 2, '.', ',') ?></th>
+                                <th><?= number_format($grandTotalSalePrice, 2, '.', ',') ?></th>
+                                <th><?= number_format($totalPurchasePrice, 2, '.', ',') ?></th>
+                                <th><?= number_format($grandTotalPurchasePrice, 2, '.', ',') ?></th>
                                 <th><?= number_format($totalCostPrice, 2, '.', ',') ?></th>
+                                <th><?= number_format($grandTotalCostPrice, 2, '.', ',') ?></th>
                             </tr>
                             </tfoot>
                         </table>

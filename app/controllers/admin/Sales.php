@@ -129,6 +129,25 @@ class Sales extends MY_Controller
                     $item_net_price   = $unit_price;
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
                     $product_discount += $pr_item_discount;
+
+
+                    //Discount calculation---------------------------------- 
+                    //The above will be deleted later becasue order discount is not in use                  
+                    $pr_discount      = $this->site->calculateDiscount($item_dis1.'%', $real_unit_price);
+                    $amount_after_dis1 = $real_unit_price - $pr_discount;
+                    $pr_discount2      = $this->site->calculateDiscount($item_dis2.'%', $amount_after_dis1);
+
+                   
+                    $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
+                    $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $item_unit_quantity);
+                    $prroduct_item_discount = ($pr_item_discount + $pr_item_discount2);
+                    $product_discount += $prroduct_item_discount;
+                    //Discount calculation----------------------------------
+
+
+
+
+
                     $pr_item_tax = $item_tax = 0;
                     $tax         = '';
 
@@ -174,7 +193,7 @@ class Sales extends MY_Controller
                         'tax_rate_id'       => $item_tax_rate,
                         'tax'               => $tax,
                         'discount'          => $item_discount,
-                        'item_discount'     => $pr_item_discount,
+                        'item_discount'     => $prroduct_item_discount,
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'serial_no'         => $item_serial,
                         'serial_number'     => $item_serial_no,
@@ -940,6 +959,7 @@ class Sales extends MY_Controller
             $total            = 0;
             $product_tax      = 0;
             $product_discount = 0;
+            $total_product_discount = 0;
             $gst_data         = [];
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             $i                = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
@@ -1001,6 +1021,21 @@ class Sales extends MY_Controller
                     $item_net_price   = $unit_price;
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
                     $product_discount += $pr_item_discount;
+
+                    //Discount calculation---------------------------------- 
+                    //The above will be deleted later becasue order discount is not in use                  
+                    $product_discount1      = $this->site->calculateDiscount($item_dis1.'%', $unit_price);
+                    $amount_after_discount1 = $unit_price - $product_discount1;
+                    $product_discount2      = $this->site->calculateDiscount($item_dis2.'%', $amount_after_discount1);
+
+                   
+                    $product_item_discount1 = $this->sma->formatDecimal($product_discount1 * $item_unit_quantity);
+                    $product_item_discount2 = $this->sma->formatDecimal($product_discount2 * $item_unit_quantity);
+                    
+                    $product_item_discount = ($product_item_discount1 + $product_item_discount2);
+                    $total_product_discount += $product_item_discount;
+                    //Discount calculation----------------------------------
+
                     $pr_item_tax = $item_tax = 0;
                     $tax         = '';
 
@@ -1044,7 +1079,7 @@ class Sales extends MY_Controller
                         'tax_rate_id'       => $item_tax_rate,
                         'tax'               => $tax,
                         'discount'          => $item_discount,
-                        'item_discount'     => $pr_item_discount,
+                        'item_discount'     => $product_item_discount,
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'serial_no'         => $item_serial,
                         'expiry'            => $item_expiry,
@@ -1087,10 +1122,10 @@ class Sales extends MY_Controller
                 'note'              => $note,
                 'staff_note'        => $staff_note,
                 'total'             => $total,
-                'product_discount'  => $product_discount,
+                'product_discount'  => $total_product_discount,
                 'order_discount_id' => $this->input->post('order_discount'),
                 'order_discount'    => $order_discount,
-                'total_discount'    => $total_discount,
+                'total_discount'    => $total_product_discount,
                 'product_tax'       => $product_tax,
                 'order_tax_id'      => $this->input->post('order_tax'),
                 'order_tax'         => $order_tax,
@@ -1166,7 +1201,14 @@ class Sales extends MY_Controller
                 $row->discount        = $item->discount ? $item->discount : '0';
                 $row->item_tax        = $item->item_tax      > 0 ? $item->item_tax      / $item->quantity : 0;
                 $row->item_discount   = $item->item_discount > 0 ? $item->item_discount / $item->quantity : 0;
-                $row->price           = $this->sma->formatDecimal($item->net_unit_price + $this->sma->formatDecimal($row->item_discount));
+
+                //Discount calculation----------------------------------
+                // this row is deleted becasue of discount must not be added in sale price 
+                //$row->price           = $this->sma->formatDecimal($item->net_unit_price + $this->sma->formatDecimal($row->item_discount));
+                
+                $row->price           = $this->sma->formatDecimal($item->net_unit_price);
+                //Discount calculation----------------------------------
+
                 $row->unit_price      = $row->tax_method ? $item->unit_price + $this->sma->formatDecimal($row->item_discount) + $this->sma->formatDecimal($row->item_tax) : $item->unit_price + ($row->item_discount);
                 $row->real_unit_price = $item->real_unit_price;
                 $row->tax_rate        = $item->tax_rate_id;

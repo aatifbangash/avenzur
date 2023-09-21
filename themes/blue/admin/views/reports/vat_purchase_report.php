@@ -37,7 +37,7 @@
                                
                             <div class="form-group">
                                 <?= lang('Warehouse', 'warehouse_id'); ?>
-                                <?php echo form_dropdown('warehouse_id', $warehouses, set_value('warehouse_id', $_POST['warehouse_id']), array('class' => 'form-control', 'id' => 'warehouse_id')); ?>
+                                <?php echo form_dropdown('warehouse_id', $warehouses, set_value('warehouse_id', $_POST['warehouse_id']), array('class' => 'form-control', 'id' => 'warehouse_id'),array('none')); ?>
 
                             </div>
                         </div>
@@ -46,7 +46,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('Type', 'Type'); ?>
-                                <?php echo form_dropdown('filterOnType', $filterOnTypeArr, set_value('filterOnType', $_POST['filterOnType']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'filterOnType')); ?>
+                                <?php echo form_dropdown('filterOnType', $filterOnTypeArr, set_value('filterOnType', $_POST['filterOnType']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'filterOnType'),array('none')); ?>
 
                             </div>
                         </div>
@@ -136,7 +136,7 @@
                                         $totalWithoutTax += ($data->grand_total - $data->total_tax);
                                         $totalWithTax += $data->grand_total;
 
-                                        $totalTotalBeforeDiscount += $data->grand_total - $data->total_discount;;
+                                        $totalTotalBeforeDiscount += $data->grand_total + $data->total_discount;;
                                         $totalTotalDiscount += $data->total_discount;
                                         $totalTotalAfterDiscount += $data->grand_total;
 
@@ -152,7 +152,7 @@
                                                 <td><?= $data->reference_no; ?></td>
                                                 <td><?= $data->trans_date; ?></td>
                                                 
-                                                <td><?= $this->sma->formatMoney($data->grand_total-$data->total_discount,'none'); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->grand_total+$data->total_discount,'none'); ?></td>
                                                 <td><?= $this->sma->formatMoney($data->total_discount,'none'); ?></td>
                                                 <td><?= $this->sma->formatMoney($data->grand_total,'none'); ?></td>
 
