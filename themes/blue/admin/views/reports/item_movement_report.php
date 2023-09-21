@@ -137,6 +137,9 @@
                                             $showQty = -$rp->quantity;
                                             $totalValueOfItem-= ($rp->quantity * $rp->unit_cost);
                                         }
+                                        if($rp->type == "Transfer-Out" || $rp->type == "Transfer-In"){
+                                            $showQty = $rp->quantity;
+                                        }
 
                                         if ($rp->type ==  'Transfer-Out' || $rp->type == "Transfer-In") {
                                             $type = 'Transfer';
