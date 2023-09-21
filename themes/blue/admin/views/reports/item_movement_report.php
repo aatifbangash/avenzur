@@ -120,14 +120,22 @@
                                     <?php
                                     $count = 1;
                                     $balanceQantity = $itemOpenings->openingBalance;
+                                    $totalValueOfItem  = 0.00;
 
                                     foreach ($reportData as $rp) {
 
-                                        if ($rp->type == 'Purchase' || $rp->type == 'Return-Customer' || $rp->type == "Transfer-In") {
+                                        $showQty = 0.00;
+                                        // || $rp->type == "Transfer-In"
+                                        if ($rp->type == 'Purchase' || $rp->type == 'Return-Customer' ) {
                                             $balanceQantity += $rp->quantity;
+                                            $showQty = $rp->quantity;
+                                            $totalValueOfItem+= ($balanceQantity * $rp->unit_cost);
                                         }
-                                        if (($rp->type == 'Sale' || $rp->type == 'Return-Supplier' || $rp->type == "Transfer-Out") && $balanceQantity > 0) {
+                                        //  || $rp->type == "Transfer-Out"
+                                        if (($rp->type == 'Sale' || $rp->type == 'Return-Supplier' ) && $balanceQantity > 0) {
                                             $balanceQantity -= $rp->quantity;
+                                            $showQty = -$rp->quantity;
+                                            $totalValueOfItem-= ($balanceQantity * $rp->unit_cost);
                                         }
 
                                         if ($rp->type ==  'Transfer-Out' || $rp->type == "Transfer-In") {
@@ -147,10 +155,10 @@
                                             <td><?= $rp->batch_no; ?></td>
                                             <td><?= $this->sma->formatMoney(($rp->sale_price ? $rp->sale_price : 0.0), 'none'); ?></td>
                                             <td><?= $this->sma->formatMoney(($rp->purchase_price ? $rp->purchase_price : 0.0), 'none'); ?></td>
-                                            <td><?= $this->sma->formatQuantity($rp->quantity ? $rp->quantity : 0.0); ?></td>
+                                            <td><?= $this->sma->formatQuantity($showQty); ?></td>
                                             <td><?= $this->sma->formatMoney(($rp->unit_cost ? $rp->unit_cost : 0.0), 'none'); ?></td>
                                             <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
-                                            <td><?= $this->sma->formatMoney(($balanceQantity * $rp->unit_cost), 'none'); ?></td>
+                                            <td><?= $this->sma->formatMoney(($totalValueOfItem), 'none'); ?></td>
                                         </tr>
                                     <?php
                                         $count++;
@@ -163,7 +171,7 @@
                                         <td colspan="2">Closing</td>
                                         <td colspan="9">&nbsp;</td>
                                         <td><?php echo $this->sma->formatQuantity($balanceQantity); ?></td>
-                                        <td><?php echo $this->sma->formatMoney(($balanceQantity * $itemOpenings->unitPrice), 'none'); ?></td>
+                                        <td><?php echo $this->sma->formatMoney($totalValueOfItem, 'none'); ?></td>
 
                                     </tr>
 
