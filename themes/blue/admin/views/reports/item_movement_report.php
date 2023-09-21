@@ -121,12 +121,14 @@
                                     $count = 1;
                                     $balanceQantity = $itemOpenings->openingBalance;
                                     $totalValueOfItem  = 0.00;
+                                    $initialQty = 0;
 
                                     foreach ($reportData as $rp) {
 
                                         $showQty = 0.00;
                                         // || $rp->type == "Transfer-In"
                                         if ($rp->type == 'Purchase' || $rp->type == 'Return-Customer' ) {
+                                            $initialQty = $rp->quantity;
                                             $balanceQantity += $rp->quantity;
                                             $showQty = $rp->quantity;
                                             $totalValueOfItem+= ($rp->quantity * $rp->unit_cost);
@@ -135,6 +137,9 @@
                                         if (($rp->type == 'Sale' || $rp->type == 'Return-Supplier' ) && $balanceQantity > 0) {
                                             $balanceQantity -= $rp->quantity;
                                             $showQty = -$rp->quantity;
+                                            if($initialQty == 0){
+                                                $totalValueOfItem = $balanceQantity;
+                                            }
                                             $totalValueOfItem-= ($rp->quantity * $rp->unit_cost);
                                         }
                                         if($rp->type == "Transfer-Out" || $rp->type == "Transfer-In"){
