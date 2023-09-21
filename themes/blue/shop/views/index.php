@@ -80,7 +80,7 @@
                                                     </div>
                                                 </div>
                                                     <div class="product-desc homeprod">
-                                                          <div class="product_name" style="font-size: 12px !important;font-weight: normal !important;">
+                                                          <div class="product_name" style="font-size: 12px !important;font-weight: normal !important;display:block;text-align:center;">
                                                             <a href="<?= site_url('product/' . $fp->slug); ?>"><?= $fp->name; ?></a><br>
                                                         </div>
                                                         <div class="pro-cat">
