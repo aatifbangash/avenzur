@@ -119,26 +119,55 @@
 
                                     <?php
                                     $count = 1;
-                                    $balanceQantity = $itemOpenings->openingBalance;
-                                    $totalValueOfItem  = 0.00;
+                                    $balanceQantity = 0;
+                                    $totalValueOfItem  = 0;
+                                    $openingTotal = ($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00);
 
                                     foreach ($reportData as $rp) {
 
                                         $showQty = 0.00;
                                         // || $rp->type == "Transfer-In"
                                         if ($rp->type == 'Purchase' || $rp->type == 'Return-Customer' ) {
-                                            $balanceQantity += $rp->quantity;
+
+                                            if($balanceQantity == 0 && $itemOpenings->openingBalance > 0){
+                                                $balanceQantity = $itemOpenings->openingBalance + $rp->quantity;
+                                            }else{
+                                                $balanceQantity += $rp->quantity;
+                                            }
+
+                                            if($openingTotal > 0 && $totalValueOfItem ==0){
+                                                $totalValueOfItem = $openingTotal + ($rp->quantity * $rp->unit_cost);
+                                            }else{
+                                                $totalValueOfItem+= ($rp->quantity * $rp->unit_cost);
+                                            }
+
                                             $showQty = $rp->quantity;
-                                            $totalValueOfItem+= ($rp->quantity * $rp->unit_cost);
+                                           
                                         }
                                         //  || $rp->type == "Transfer-Out"
-                                        if (($rp->type == 'Sale' || $rp->type == 'Return-Supplier' ) && $balanceQantity > 0) {
-                                            $balanceQantity -= $rp->quantity;
+                                        if (($rp->type == 'Sale' || $rp->type == 'Return-Supplier' )) {
+
+                                            if($balanceQantity == 0 && $itemOpenings->openingBalance > 0){
+                                                $balanceQantity = $itemOpenings->openingBalance;
+                                            }else{
+                                                $balanceQantity -= $rp->quantity;
+                                            }
+
+                                            if($openingTotal > 0 && $totalValueOfItem ==0){
+                                                $totalValueOfItem = $openingTotal - ($rp->quantity * $rp->unit_cost);
+                                            }else{
+                                                $totalValueOfItem-= ($rp->quantity * $rp->unit_cost);
+                                            }
                                             $showQty = -$rp->quantity;
-                                            $totalValueOfItem-= ($rp->quantity * $rp->unit_cost);
                                         }
                                         if($rp->type == "Transfer-Out" || $rp->type == "Transfer-In"){
                                             $showQty = $rp->quantity;
+                                            if($balanceQantity == 0 && $itemOpenings->openingBalance > 0){
+                                                $balanceQantity = $itemOpenings->openingBalance;
+                                            }
+                                            if($openingTotal > 0 && $totalValueOfItem ==0){
+                                                $totalValueOfItem = $openingTotal;
+                                            }
                                         }
 
                                         if ($rp->type ==  'Transfer-Out' || $rp->type == "Transfer-In") {

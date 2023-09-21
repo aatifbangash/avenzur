@@ -978,27 +978,27 @@ class Reports_model extends CI_Model
         FROM
         ( SELECT SUM(saleItem.quantity) AS saleQuantity FROM `sma_sales` AS `sale` 
             INNER JOIN `sma_sale_items` AS `saleItem` ON `saleItem`.`sale_id` = `sale`.`id`
-            WHERE  `saleItem`.`product_id` = $productId AND DATE(sale.date) <= '$start_date' AND `sale`.`sale_invoice`=1 ) AS sales, 
+            WHERE  `saleItem`.`product_id` = $productId AND DATE(sale.date) < '$start_date' AND `sale`.`sale_invoice`=1 ) AS sales, 
         ( SELECT SUM(purItem.quantity) AS purchaseQuantity FROM `sma_purchases` AS `purchase` 
           INNER JOIN `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id`=`purchase`.`id` 
-          WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) <= '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0 ) AS purchases,
+          WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0 ) AS purchases,
         ( SELECT SUM(abs(purItem.quantity)) AS returnSupplierQuantity FROM `sma_purchases` AS `purchase`
             INNER JOIN `sma_purchase_items` AS `purItem` ON  `purItem`.`purchase_id` = `purchase`.`id`
-            WHERE `purItem`.`product_id` = $productId AND DATE(purchase.date) <= '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total` < 0 ) AS returnSupplier, 
+            WHERE `purItem`.`product_id` = $productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total` < 0 ) AS returnSupplier, 
         ( SELECT SUM(rtnItem.quantity) AS returnQuantity FROM `sma_returns` AS `rtn` 
            INNER JOIN `sma_return_items` AS `rtnItem` ON `rtnItem`.`return_id`=`rtn`.`id` 
-           WHERE `rtnItem`.`product_id`=$productId AND DATE(rtn.date) <= '$start_date' ) AS returns, 
+           WHERE `rtnItem`.`product_id`=$productId AND DATE(rtn.date) < '$start_date' ) AS returns, 
         ( SELECT trnf.id, IFNULL(SUM(titm.quantity), 0) + IFNULL(SUM(pitm.quantity), 0) AS transferInQuantity FROM `sma_transfers` AS `trnf` 
-          LEFT JOIN( SELECT transfer_id, SUM(quantity) AS quantity FROM sma_transfer_items WHERE `product_id`=$productId AND DATE(`date`) <= '$start_date' AND warehouse_id=$warehouseId GROUP BY transfer_id ) AS titm ON titm.transfer_id=trnf.id 
-          LEFT JOIN( SELECT transfer_id, SUM(quantity) AS quantity FROM sma_purchase_items WHERE `product_id`=$productId AND DATE(`date`) <= '$start_date' AND transfer_id IS NOT NULL GROUP BY warehouse_id ) AS pitm ON pitm.transfer_id=trnf.id 
+          LEFT JOIN( SELECT transfer_id, SUM(quantity) AS quantity FROM sma_transfer_items WHERE `product_id`=$productId AND DATE(`date`) < '$start_date' AND warehouse_id=$warehouseId GROUP BY transfer_id ) AS titm ON titm.transfer_id=trnf.id 
+          LEFT JOIN( SELECT transfer_id, SUM(quantity) AS quantity FROM sma_purchase_items WHERE `product_id`=$productId AND DATE(`date`) < '$start_date' AND transfer_id IS NOT NULL GROUP BY warehouse_id ) AS pitm ON pitm.transfer_id=trnf.id 
           WHERE DATE(`trnf`.`date`) < '$start_date' AND `trnf`.`to_warehouse_id`=$warehouseId ) AS tranferIn, 
         ( SELECT trnf.id, IFNULL(SUM(titm.quantity), 0) + IFNULL(SUM(pitm.quantity), 0) AS transferOutQuantity FROM `sma_transfers` AS `trnf` 
-          LEFT JOIN( SELECT transfer_id, SUM(quantity) AS quantity FROM sma_transfer_items WHERE `product_id`=$productId AND DATE(`date`) <= '$start_date' GROUP BY transfer_id ) AS titm ON titm.transfer_id=trnf.id 
-          LEFT JOIN( SELECT warehouse_id, SUM(abs(quantity)) AS quantity FROM sma_purchase_items WHERE `product_id`=$productId AND DATE(`date`) <= '$start_date' AND transfer_id IS NULL AND purchase_id IS NULL AND quantity < 0 GROUP BY warehouse_id ) AS pitm ON pitm.warehouse_id=trnf.from_warehouse_id 
-          WHERE DATE(`trnf`.`date`) < '$start_date' AND `trnf`.`from_warehouse_id`=$warehouseId AND trnf.id IN( SELECT DISTINCT transfer_id FROM sma_transfer_items WHERE `product_id`=$productId ) AND trnf.from_warehouse_id IN( SELECT DISTINCT warehouse_id FROM sma_purchase_items WHERE `product_id`=$productId AND DATE(`date`) <= '$start_date' AND transfer_id IS NULL AND purchase_id IS NULL AND quantity < 0 GROUP BY warehouse_id ) ) AS transferOut, 
+          LEFT JOIN( SELECT transfer_id, SUM(quantity) AS quantity FROM sma_transfer_items WHERE `product_id`=$productId AND DATE(`date`) < '$start_date' GROUP BY transfer_id ) AS titm ON titm.transfer_id=trnf.id 
+          LEFT JOIN( SELECT warehouse_id, SUM(abs(quantity)) AS quantity FROM sma_purchase_items WHERE `product_id`=$productId AND DATE(`date`) < '$start_date' AND transfer_id IS NULL AND purchase_id IS NULL AND quantity < 0 GROUP BY warehouse_id ) AS pitm ON pitm.warehouse_id=trnf.from_warehouse_id 
+          WHERE DATE(`trnf`.`date`) < '$start_date' AND `trnf`.`from_warehouse_id`=$warehouseId AND trnf.id IN( SELECT DISTINCT transfer_id FROM sma_transfer_items WHERE `product_id`=$productId ) AND trnf.from_warehouse_id IN( SELECT DISTINCT warehouse_id FROM sma_purchase_items WHERE `product_id`=$productId AND DATE(`date`) < '$start_date' AND transfer_id IS NULL AND purchase_id IS NULL AND quantity < 0 GROUP BY warehouse_id ) ) AS transferOut, 
         (   SELECT IFNULL(purItemA.net_unit_cost, p.cost) AS purchaseUnitPrice  FROM sma_products AS p
             LEFT JOIN ( SELECT AVG(purItem.net_unit_cost) AS net_unit_cost, purItem.product_id FROM `sma_purchases` AS `purchase`
-            INNER JOIN `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id`=`purchase`.`id` WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) <= '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0 GROUP BY  purItem.product_id ) as purItemA ON purItemA.product_id = p.id WHERE p.id = $productId
+            INNER JOIN `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id`=`purchase`.`id` WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0 GROUP BY  purItem.product_id ) as purItemA ON purItemA.product_id = p.id WHERE p.id = $productId
          ) AS purchaseUnitPrice;");
         // echo $this->db->last_query();
         $response = array();
@@ -1582,7 +1582,7 @@ class Reports_model extends CI_Model
             INNER JOIN
             sma_products AS p ON p.id = purItem.product_id
             WHERE
-            DATE(purchase.date) <= '$start_date'
+            DATE(purchase.date) < '$start_date'
             AND `purchase`.`grand_total` > 0
             GROUP BY
             purItem.product_id
@@ -1601,7 +1601,7 @@ class Reports_model extends CI_Model
             INNER JOIN 
             `sma_return_items` AS `rtnItem` ON `rtnItem`.`return_id` = `rtn`.`id` 
             WHERE 
-            DATE(rtn.date) <= '$start_date'
+            DATE(rtn.date) < '$start_date'
             GROUP BY
             product_id
     
@@ -1625,7 +1625,7 @@ class Reports_model extends CI_Model
             FROM 
                 sma_transfer_items 
             WHERE 
-                DATE(`date`) <= '$start_date' 
+                DATE(`date`) < '$start_date' 
             GROUP BY 
                 transfer_id
             ) AS titm ON titm.transfer_id = trnf.id 
@@ -1638,7 +1638,7 @@ class Reports_model extends CI_Model
             FROM 
                 sma_purchase_items 
             WHERE 
-                DATE(`date`) <= '$start_date' 
+                DATE(`date`) < '$start_date' 
                 AND transfer_id IS NOT NULL 
             GROUP BY 
                 warehouse_id
@@ -1662,7 +1662,7 @@ class Reports_model extends CI_Model
             INNER JOIN
             `sma_sale_items` AS `saleItem` ON `saleItem`.`sale_id` = `sale`.`id`
             WHERE
-            DATE(sale.date) <= '$start_date'
+            DATE(sale.date) < '$start_date'
             GROUP BY
             saleItem.product_id
     
@@ -1679,7 +1679,7 @@ class Reports_model extends CI_Model
             INNER JOIN
             `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id` = `purchase`.`id`
             WHERE
-            DATE(purchase.date) <= '$start_date'
+            DATE(purchase.date) < '$start_date'
             AND `purchase`.`grand_total` < 0
             GROUP BY
             purItem.product_id
@@ -1700,7 +1700,7 @@ class Reports_model extends CI_Model
                 (
                         SELECT product_id, transfer_id, SUM(quantity) AS quantity
                         FROM sma_transfer_items
-                        WHERE DATE(`date`) <= '$start_date'
+                        WHERE DATE(`date`) < '$start_date'
                         GROUP BY product_id
                 ) AS titm ON titm.transfer_id = trnf.id
                 WHERE DATE(trnf.`date`) < '$start_date' AND titm.transfer_id IS NOT NULL
@@ -1714,10 +1714,10 @@ class Reports_model extends CI_Model
                         SELECT pit.transfer_id, po.warehouse_id as warehouse_out, SUM(pit.quantity) AS qty, pit.product_id
                         FROM sma_purchase_items as pit
                         INNER JOIN sma_purchase_items as po ON po.product_id = pit.product_id AND po.warehouse_id = $from_warehouse_id AND po.quantity < 0
-                        WHERE DATE(pit.`date`) <= '$start_date' AND pit.transfer_id IS NOT NULL
+                        WHERE DATE(pit.`date`) < '$start_date' AND pit.transfer_id IS NOT NULL
                         GROUP BY pit.product_id
                 ) AS pitm ON pitm.warehouse_out = trnf.from_warehouse_id AND pitm.transfer_id = trnf.id
-                WHERE DATE(trnf.`date`) <= '$start_date' AND pitm.transfer_id IS NOT NULL
+                WHERE DATE(trnf.`date`) < '$start_date' AND pitm.transfer_id IS NOT NULL
             ) AS combined_product_ids
             GROUP BY product_id
     
