@@ -31,7 +31,7 @@
             <div class="col-lg-12">
                 <div class="row">
 
-                    <div class="col-lg-12">
+                    <!-- <div class="col-lg-12">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('From Warehouse', 'from_warehouse_id'); ?>
@@ -46,7 +46,7 @@
 
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                     <div class="col-lg-12">
                         <div class="col-md-4">

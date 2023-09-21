@@ -3863,6 +3863,7 @@ class Reports extends MY_Controller
             $productInOutData = $this->reports_model->getInventoryTrialBalanceData($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
             foreach($productInOutData as $prdId => $row){
 
+                $multiplier = 1;
                 if(count($productOpeningsData) > 0&& array_key_exists($prdId, $productOpeningsData)){
 
                     $productOpenQty      = $productOpeningsData[$prdId]['total_opening_qty'];
@@ -3873,6 +3874,12 @@ class Reports extends MY_Controller
                     $productOpenQty      = 0.00;
                     $productOpenUnitCost = 0.00;
                     $productOpenValue    = 0.00;
+                }
+                
+                if($productOpenUnitCost){
+                    $multiplier = $productOpenUnitCost;
+                }else{
+                    $multiplier = $row->movement_in_cost;
                 }
 
                 $inventryReportData[] = [
@@ -3891,7 +3898,7 @@ class Reports extends MY_Controller
 
                     'closing_qty'        =>  ($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity,
                     'closing_cost'       =>  $productOpenUnitCost,
-                    'closing_ttl'        =>  (($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity) * $productOpenUnitCost
+                    'closing_ttl'        =>  (($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity) * $multiplier
                     
                 ];
             }
