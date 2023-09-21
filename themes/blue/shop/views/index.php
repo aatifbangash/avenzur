@@ -58,7 +58,7 @@
     <div class="container">
         <div class="row" style="padding:40px 40px !important;">
             <div class="col-md-12">
-                <img src="<?= base_url('assets/images/SD-Italy.svg') ?>" style="margin: 0 auto; display: block;" class="img-responsive icon" > 
+                <!--<img src="<?php //echo base_url('assets/images/SD-Italy.svg') ?>" style="margin: 0 auto; display: block;" class="img-responsive icon" > -->
                 <h2 style="text-align:center !important;   " class="select-head"> Featured Categories</h2>
                         <?php
                         $r = 0;
