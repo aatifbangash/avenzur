@@ -1707,7 +1707,7 @@ class Reports_model extends CI_Model
                 (
                         SELECT pit.transfer_id, po.warehouse_id as warehouse_out, SUM(pit.quantity) AS qty, pit.product_id
                         FROM sma_purchase_items as pit
-                        INNER JOIN sma_purchase_items as po ON po.product_id = pit.product_id AND po.date = pit.date AND po.warehouse_id = $from_warehouse_id AND po.quantity < 0
+                        INNER JOIN sma_purchase_items as po ON po.product_id = pit.product_id AND po.warehouse_id = $from_warehouse_id AND po.quantity < 0
                         WHERE DATE(pit.`date`) < '$start_date' AND pit.transfer_id IS NOT NULL
                         GROUP BY pit.product_id
                 ) AS pitm ON pitm.warehouse_out = trnf.from_warehouse_id AND pitm.transfer_id = trnf.id
@@ -1806,7 +1806,7 @@ class Reports_model extends CI_Model
                     (
                         SELECT pit.transfer_id, po.warehouse_id as warehouse_out_id, SUM(pit.quantity) AS quantity, pit.product_id, pit.net_unit_cost
                         FROM sma_purchase_items as pit
-                        INNER JOIN sma_purchase_items as po ON po.product_id = pit.product_id AND po.date = pit.date AND po.warehouse_id = $from_warehouse_id AND po.quantity < 0
+                        INNER JOIN sma_purchase_items as po ON po.product_id = pit.product_id AND po.warehouse_id = $from_warehouse_id AND po.quantity < 0
                         WHERE DATE(pit.`date`) BETWEEN '$start_date' AND '$end_date' AND pit.transfer_id IS NOT NULL
                         GROUP BY pit.product_id
                     ) AS pitm ON pitm.warehouse_out_id = trnf.from_warehouse_id AND pitm.transfer_id = trnf.id
