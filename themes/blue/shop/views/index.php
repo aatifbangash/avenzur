@@ -69,7 +69,7 @@
                                         <?php
                                         foreach ($fps as $fp) {
                                             ?>
-                                        <div class="col-sm-6 col-md-3" id="select-prod">
+                                        <div class="col-sm-6 col-md-2" id="select-prod" style="padding: 0px !important;">
                                                 <div class="product alt ">
         
                                                     <div class="product-top">
@@ -80,7 +80,7 @@
                                                     </div>
                                                 </div>
                                                     <div class="product-desc homeprod">
-                                                          <div class="product_name">
+                                                          <div class="product_name" style="font-size: 12px !important;font-weight: normal !important;">
                                                             <a href="<?= site_url('product/' . $fp->slug); ?>"><?= $fp->name; ?></a><br>
                                                         </div>
                                                         <div class="pro-cat">
