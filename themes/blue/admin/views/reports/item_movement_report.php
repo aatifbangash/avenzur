@@ -129,13 +129,13 @@
                                         if ($rp->type == 'Purchase' || $rp->type == 'Return-Customer' ) {
                                             $balanceQantity += $rp->quantity;
                                             $showQty = $rp->quantity;
-                                            $totalValueOfItem+= ($balanceQantity * $rp->unit_cost);
+                                            $totalValueOfItem+= ($rp->quantity * $rp->unit_cost);
                                         }
                                         //  || $rp->type == "Transfer-Out"
                                         if (($rp->type == 'Sale' || $rp->type == 'Return-Supplier' ) && $balanceQantity > 0) {
                                             $balanceQantity -= $rp->quantity;
                                             $showQty = -$rp->quantity;
-                                            $totalValueOfItem-= ($balanceQantity * $rp->unit_cost);
+                                            $totalValueOfItem-= ($rp->quantity * $rp->unit_cost);
                                         }
 
                                         if ($rp->type ==  'Transfer-Out' || $rp->type == "Transfer-In") {
