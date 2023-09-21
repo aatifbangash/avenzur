@@ -1,4 +1,17 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+<script>
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, {
+            sheet: 'Sheet 1'
+        });
+        XLSX.writeFile(wb, filename);
+    }
+    $(document).ready(function() {
+
+    });
+</script>
 <script>
     $(document).ready(function() {
 
@@ -12,8 +25,7 @@
 
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i class="icon fa fa-file-picture-o"></i></a></li>
+                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'item_movement_report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
             </ul>
         </div>
     </div>
@@ -97,7 +109,7 @@
                             <?php if ($reportData) { ?>
                                 <tbody style="text-align:center;">
                                     <tr>
-                                        <td colspan="2">Oening Balance</td>
+                                        <td colspan="2">Opening Balance</td>
                                         <td colspan="8">&nbsp;</td>
                                         <td><?php echo $this->sma->formatMoney(($itemOpenings->openingBalance > 0 ? $itemOpenings->unitPrice : 0.0), 'none'); ?></td>
                                         <td><?php echo $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00)); ?></td>
@@ -169,35 +181,36 @@
     </div>
 
     <?php
-    $productId = ($_POST['product'] ? $_POST['product'] : 0);
-    $type = ($_POST['filterOnType'] ? $_POST['filterOnType'] : 'all');
-    $startDate = ($_POST['from_date'] ? trim($this->sma->fld($_POST['from_date'])) : null);
-    $endDate = ($_POST['to_date'] ? trim($this->sma->fld($_POST['to_date'])) : null);
+    // $productId = ($_POST['product'] ? $_POST['product'] : 0);
+    // $type = ($_POST['filterOnType'] ? $_POST['filterOnType'] : 'all');
+    // $startDate = ($_POST['from_date'] ? trim($this->sma->fld($_POST['from_date'])) : null);
+    // $endDate = ($_POST['to_date'] ? trim($this->sma->fld($_POST['to_date'])) : null);
+    // 
     ?>
 
     <script type="text/javascript" src="<?= $assets ?>js/html2canvas.min.js"></script>
     <script type="text/javascript">
-        $(document).ready(function() {
-            $('#xls').click(function(event) {
-                var prod = $('#report_product_id2').val();
-                var fromdate = $('#fromdate').val();
-                var todate = $('#todate').val();
-                if (prod && fromdate && todate) {
-                    event.preventDefault();
-                    window.location.href = "<?= admin_url("reports/item_movement_report_xls/$productId/$type/$startDate/$endDate/xls") ?>";
-                    return false;
-                } else {
-                    return false;
-                }
-            });
-            $('#image').click(function(event) {
-                event.preventDefault();
-                html2canvas($('.box'), {
-                    onrendered: function(canvas) {
-                        openImg(canvas.toDataURL());
-                    }
-                });
-                return false;
-            });
-        });
+        // $(document).ready(function() {
+        //     $('#xls').click(function(event) {
+        //         var prod = $('#report_product_id2').val();
+        //         var fromdate = $('#fromdate').val();
+        //         var todate = $('#todate').val();
+        //         if (prod && fromdate && todate) {
+        //             event.preventDefault();
+        //             window.location.href = "<?= admin_url("reports/item_movement_report_xls/$productId/$type/$startDate/$endDate/xls") ?>";
+        //             return false;
+        //         } else {
+        //             return false;
+        //         }
+        //     });
+        //     $('#image').click(function(event) {
+        //         event.preventDefault();
+        //         html2canvas($('.box'), {
+        //             onrendered: function(canvas) {
+        //                 openImg(canvas.toDataURL());
+        //             }
+        //         });
+        //         return false;
+        //     });
+        // });
     </script>
