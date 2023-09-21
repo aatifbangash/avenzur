@@ -94,17 +94,18 @@
                                                         } ?>
                                                         </div>
                                                     </div>
-                                                        <div class="product-bottom">
-                                                             <div class="product-price">
-                                
-                                                                 <?php
-                                                            if ($fp->promotion) {
-                                                                echo '<del class="text-red">' . $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price) . '</del>&nbsp;';
-                                                                echo $this->sma->convertMoney($fp->promo_price);
-                                                            } else {
-                                                                echo $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price);
-                                                            } ?>
-                                                         </div>
+
+                                                    <div class="product-bottom">
+                                                        <!--<div class="product-price">
+                            
+                                                                <?php
+                                                        if ($fp->promotion) {
+                                                           // echo '<del class="text-red">' . $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price) . '</del>&nbsp;';
+                                                            //echo $this->sma->convertMoney($fp->promo_price);
+                                                        } else {
+                                                            //echo $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price);
+                                                        } ?>
+                                                        </div>-->
                                           
                                                 <!--<div class="details" style="transition: all 100ms ease-out 0s;">-->
 
