@@ -26,7 +26,7 @@
             if (!empty($slide->link)) {
                 echo '<a href="' . $slide->link . '">';
             }
-            echo '<img src="' .base_url('assets/uploads/' . $slide->image) . '" alt="" style="max-height:600px;object-fit:cover;">';
+            echo '<img src="' .base_url('assets/uploads/' . $slide->image) . '" alt="" style="max-height:600px;">';
             if (!empty($slide->caption)) {
                 echo '<div class="carousel-caption">' . $slide->caption . '</div>';
             }
