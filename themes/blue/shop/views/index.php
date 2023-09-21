@@ -108,7 +108,7 @@
                                           
                                                 <!--<div class="details" style="transition: all 100ms ease-out 0s;">-->
 
-                                                    <div class="clearfix"></div>
+                                                <!--<div class="clearfix"></div>
                                                   
                                                 
                                                 <div class="row">
@@ -126,7 +126,6 @@
                                                                 </div>
                                                     </div>
                                                     <div class="col-md-5 col-xs-6" id="cart-button">
-                                                          <!--<div class="clearfix"></div>-->
                                                                 <div class="product-cart">
                                                                 <div class="btn-group" role="group" aria-label="...">
                                                                 <button class="btn btn-info add-to-wishlist" data-id="13"><i class="fa fa-heart-o"></i></button>
@@ -137,7 +136,8 @@
                                                                 </div>
 
                                                     </div>
-                                                </div>
+                                                </div>-->
+
                                                 </div> 
                                             
                                                               
