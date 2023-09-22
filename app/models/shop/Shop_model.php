@@ -238,6 +238,13 @@ class Shop_model extends CI_Model
         return $this->db->count_all_results('sales');
     }
 
+    public function getFeaturedCategories($limit = 16, $promo = true){
+
+        $this->db->select("{$this->db->dbprefix('categories')}.id as id, {$this->db->dbprefix('categories')}.name as name, {$this->db->dbprefix('categories')}.code as code, {$this->db->dbprefix('categories')}.image as image")
+        ->limit($limit);
+        return $this->db->get('categories')->result();
+    }
+
     public function getFeaturedProducts($limit = 16, $promo = true)
     {
         $countryId = get_cookie('shop_country', true);//$this->session->userdata('country');

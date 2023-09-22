@@ -3778,7 +3778,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $filterOnTypeArr = [
-            "" => "-- Select Type --",
+            "" => "-- ALL --",
             "purchases" => "Purchases",
             "sales" => "Sales",
             "returnCustomer" => "Return Customer",
@@ -3822,71 +3822,6 @@ class Reports extends MY_Controller
         }
     }
 
-    public function item_movement_reportA()
-    {
-
-        $this->sma->checkPermissions();
-        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-
-        $user = $this->site->getUser();
-        $defaultWareHouseId = ($user->warehouse_id ? $user->warehouse_id : $this->site->Settings->default_warehouse);
-
-        $response_arr = array();
-        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
-        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
-        $productId = $this->input->post('product') ? $this->input->post('product') : 0;
-        $warehouseId = $this->input->post('warehouse') ? $this->input->post('warehouse') : 0;
-
-        // $allProducts = $this->reports_model->getAllProducts();
-        // $this->data['allProducts'] = $allProducts;
-
-        $allWareHouses = $this->reports_model->getAllWareHouses();
-        $this->data['allWareHouses'] = $allWareHouses;
-
-        if ($productId && $from_date && $to_date) {
-            $start_date = $this->sma->fld($from_date);
-            $end_date = $this->sma->fld($to_date);
-
-            /**
-             * $transferCase = Company   ==> No Effect
-             * $transferCase = WareHouse ==> Out
-             * $transferCase = Pharmacy  ==> In
-             */
-            $transferCase = 'Company';
-            // if(empty($warehouseId)){
-            //     $transferCase = 'Company';
-            // }
-            // if(!empty($warehouseId) && $warehouseId ==  $defaultWareHouseId){
-            //     $transferCase = 'WareHouse';
-            // }
-            // if(!empty($warehouseId) && $warehouseId !=  $defaultWareHouseId){
-            //     $transferCase = 'Pharmacy';
-            // }
-
-            $preItemQuantity = $this->reports_model->preItemQuantity($productId, $start_date, $transferCase, $warehouseId);
-
-            $inventory_array = $this->reports_model->getItemMovementData($productId, $start_date, $end_date, $transferCase, $warehouseId);
-            // echo '<pre>',print_r($inventory_array),'</pre>';
-
-            $this->data['start_date'] = $from_date;
-            $this->data['end_date'] = $to_date;
-            $this->data['product'] = $productId;
-            $this->data['warehouse'] = $warehouseId;
-            $this->data['inventory_array'] = $inventory_array;
-            $this->data['preItemQuantity'] = $preItemQuantity;
-
-
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
-            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
-            $this->page_construct('reports/item_movement_report', $meta, $this->data);
-        } else {
-
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
-            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
-            $this->page_construct('reports/item_movement_report', $meta, $this->data);
-        }
-    }
-
     public function inventory_trial_balance()
     {
 
@@ -3903,7 +3838,7 @@ class Reports extends MY_Controller
         $to_warehouse_id = $this->input->post('to_warehouse_id') ? $this->input->post('to_warehouse_id') : 0;
 
         $allWareHouses = $this->site->getAllWarehouses();
-        $filteredWareHouses = [];
+        $filteredWareHouses = ["-- ALL --"];
         foreach ($allWareHouses as $warehouse) {
             if ($warehouse->goods_in_transit == 0) {
                 $filteredWareHouses[$warehouse->id] = $warehouse->name . ' (' . $warehouse->code . ')';
@@ -3917,21 +3852,73 @@ class Reports extends MY_Controller
 
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $reportData = $this->reports_model->getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
+
+            if($from_warehouse_id == 0){
+                $from_warehouse_id =  $defaultWareHouseId; 
+            }
+
+            $inventryReportData = [];
+            $productOpeningsData = $this->reports_model->getProductsQuantityUnitCost($start_date,$from_warehouse_id);
+
+            $productInOutData = $this->reports_model->getInventoryTrialBalanceData($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
+            foreach($productInOutData as $prdId => $row){
+
+                $productCost = 1;
+                if(count($productOpeningsData) > 0&& array_key_exists($prdId, $productOpeningsData)){
+
+                    $productOpenQty      = $productOpeningsData[$prdId]['total_opening_qty'];
+                    $productOpenUnitCost = $productOpeningsData[$prdId]['avg_unit_cost'];
+                    $productOpenValue    = $productOpenQty * $productOpenUnitCost;
+                }else{
+
+                    $productOpenQty      = 0.00;
+                    $productOpenUnitCost = 0.00;
+                    $productOpenValue    = 0.00;
+                }
+
+                if($productOpenUnitCost){
+                    $productCost = $productOpenUnitCost;
+                }else{
+                    $productCost = $row->movement_in_cost;
+                }
+
+                $inventryReportData[] = [
+                    'product_id'          =>  $row->product_id,
+                    'product_name'        =>  $row->product_name,
+                    'product_code'        =>  $row->product_code,
+                    'openning_qty'        =>  $productOpenQty,
+                    'openning_cost'       =>  $productOpenUnitCost,
+                    'openning_ttl'        =>  $productOpenValue,
+                    'movement_in_qty'     =>  $row->movement_in_quantity,
+                    'movement_in_cost'    =>  $row->movement_in_cost,
+                    'movement_in_ttl'     =>  $row->movement_in_quantity * $row->movement_in_cost,
+                    'movement_out_qty'    =>  $row->movement_out_quantity,
+                    'movement_out_cost'   =>  $row->movement_out_cost,
+                    'movement_out_ttl'    =>  $row->movement_out_quantity * $row->movement_out_cost,
+
+                    'closing_qty'        =>  ($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity,
+                    'closing_cost'       =>  $productCost,
+                    'closing_ttl'        =>  (($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity) * $productCost
+                    
+                ];
+            }
+            
+            // echo '<pre>', print_r($inventryReportData), '</pre>';
+            // $reportData = $this->reports_model->getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
             $this->data['from_warehouse_id'] = $from_warehouse_id;
             $this->data['to_warehouse_id'] = $to_warehouse_id;
-            $this->data['report_data'] = $reportData;
+            $this->data['inventryReportData'] = $inventryReportData;
 
 
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
-            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_trial_balance')]];
+            $meta = ['page_title' => lang('inventory_trial_balance'), 'bc' => $bc];
             $this->page_construct('reports/inventory_trial_balance', $meta, $this->data);
         } else {
 
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_trial_balance')]];
             $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
             $this->page_construct('reports/inventory_trial_balance', $meta, $this->data);
         }

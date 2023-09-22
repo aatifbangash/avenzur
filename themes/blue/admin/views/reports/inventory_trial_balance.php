@@ -1,5 +1,13 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, {
+            sheet: 'Sheet 1'
+        });
+        XLSX.writeFile(wb, filename);
+    }
     $(document).ready(function() {
 
     });
@@ -10,8 +18,7 @@
 
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i class="icon fa fa-file-picture-o"></i></a></li>
+                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'inventry_trail_balance_report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
             </ul>
         </div>
     </div>
@@ -24,22 +31,22 @@
             <div class="col-lg-12">
                 <div class="row">
 
-                    <div class="col-lg-12">
+                    <!-- <div class="col-lg-12">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('From Warehouse', 'from_warehouse_id'); ?>
-                                <?php echo form_dropdown('from_warehouse_id', $warehouses, set_value('from_warehouse_id', $_POST['from_warehouse_id']), array('class' => 'form-control', 'id' => 'from_warehouse_id')); ?>
+                                <?php echo form_dropdown('from_warehouse_id', $warehouses, set_value('from_warehouse_id', $_POST['from_warehouse_id']), array('class' => 'form-control', 'id' => 'from_warehouse_id'), array('none')); ?>
 
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('To Warehouse', 'to_warehouse_id'); ?>
-                                <?php echo form_dropdown('to_warehouse_id', $warehouses, set_value('to_warehouse_id', $_POST['to_warehouse_id']), array('class' => 'form-control', 'id' => 'to_warehouse_id')); ?>
+                                <?php echo form_dropdown('to_warehouse_id', $warehouses, set_value('to_warehouse_id', $_POST['to_warehouse_id']), array('class' => 'form-control', 'id' => 'to_warehouse_id'), array('none')); ?>
 
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                     <div class="col-lg-12">
                         <div class="col-md-4">
@@ -118,68 +125,68 @@
                                 $cbTotalTotals = 0;
 
 
-                                foreach ($report_data as $item) {
+                                foreach ($inventryReportData as $item) {
 
-                                    $openQtyTotal += $item->opening_quantity;
-                                    $openTotalTotals += $item->opening_total;
+                                    $openQtyTotal += $item['openning_qty'];
+                                    $openTotalTotals += $item['openning_ttl'];
 
-                                    $mvInQtyTotal += $item->movement_in_quantity;
-                                    $mvInTotalTotals += $item->movement_in_total;
+                                    $mvInQtyTotal += $item['movement_in_qty'];
+                                    $mvInTotalTotals += $item['movement_in_ttl'];
 
-                                    $mvOutQtyTotal += $item->movement_out_quantity;
-                                    $mvOutTotalTotals += $item->movement_out_total;
+                                    $mvOutQtyTotal += $item['movement_out_qty'];
+                                    $mvOutTotalTotals += $item['movement_out_ttl'];
 
-                                    $cbQtyTotal += $item->closing_quantity;
-                                    $cbTotalTotals += $item->closing_total;
+                                    $cbQtyTotal += $item['closing_qty'];;
+                                    $cbTotalTotals += $item['closing_ttl'];
 
 
                                 ?>
                                     <tr>
                                         <td><?= $count; ?></td>
-                                        <td><?= $item->product_id; ?></td>
-                                        <td><?= $item->code; ?></td>
-                                        <td><?= $item->name; ?></td>
+                                        <td><?= $item['product_id']; ?></td>
+                                        <td><?= $item['product_code']; ?></td>
+                                        <td><?= $item['product_name']; ?></td>
 
-                                        <td><?= $this->sma->formatQuantity($item->opening_quantity); ?></td>
-                                        <td><?= $this->sma->formatDecimal($item->opening_cost); ?></td>
-                                        <td><?= $this->sma->formatDecimal($item->opening_total); ?></td>
+                                        <td><?= $this->sma->formatQuantity($item['openning_qty']); ?></td>
+                                        <td><?= $this->sma->formatMoney($item['openning_cost'], 'none'); ?></td>
+                                        <td><?= $this->sma->formatMoney($item['openning_ttl'], 'none'); ?></td>
 
-                                        <td><?= $this->sma->formatQuantity($item->movement_in_quantity); ?></td>
-                                        <td><?= $this->sma->formatDecimal($item->movement_in_cost); ?></td>
-                                        <td><?= $this->sma->formatDecimal($item->movement_in_total); ?></td>
+                                        <td><?= $this->sma->formatQuantity($item['movement_in_qty']); ?></td>
+                                        <td><?= $this->sma->formatMoney($item['movement_in_cost'], 'none'); ?></td>
+                                        <td><?= $this->sma->formatMoney($item['movement_in_ttl'], 'none'); ?></td>
 
-                                        <td><?= $this->sma->formatQuantity($item->movement_out_quantity); ?></td>
-                                        <td><?= $this->sma->formatDecimal($item->movement_out_cost); ?></td>
-                                        <td><?= $this->sma->formatDecimal($item->movement_out_total); ?></td>
+                                        <td><?= $this->sma->formatQuantity($item['movement_out_qty']); ?></td>
+                                        <td><?= $this->sma->formatMoney($item['movement_out_cost'], 'none'); ?></td>
+                                        <td><?= $this->sma->formatMoney($item['movement_out_ttl'], 'none'); ?></td>
 
-                                        <td><?= $this->sma->formatQuantity($item->closing_quantity); ?> </td>
-                                        <td><?= $this->sma->formatDecimal($item->closing_cost); ?> </td>
-                                        <td><?= $this->sma->formatDecimal($item->closing_total); ?> </td>
+                                        <td><?= $this->sma->formatQuantity($item['closing_qty']); ?> </td>
+                                        <td><?= $this->sma->formatMoney($item['closing_cost'], 'none'); ?> </td>
+                                        <td><?= $this->sma->formatMoney($item['closing_ttl'], 'none'); ?> </td>
 
                                     </tr>
                                 <?php
-                                 $count++;
+                                    $count++;
                                 }
-                               
+
 
                                 ?>
                                 <tr>
                                     <td colspan=4><strong>Totals</strong></td>
                                     <td><?= $this->sma->formatQuantity($openQtyTotal) ?></td>
                                     <td></td>
-                                    <td><?= $this->sma->formatDecimal($openTotalTotals) ?></td>
+                                    <td><?= $this->sma->formatMoney($openTotalTotals, 'none') ?></td>
 
                                     <td><?= $this->sma->formatQuantity($mvInQtyTotal) ?></td>
                                     <td></td>
-                                    <td><?= $this->sma->formatDecimal($mvInTotalTotals) ?></td>
+                                    <td><?= $this->sma->formatMoney($mvInTotalTotals, 'none') ?></td>
 
                                     <td><?= $this->sma->formatQuantity($mvOutQtyTotal) ?></td>
                                     <td></td>
-                                    <td><?= $this->sma->formatDecimal($mvOutTotalTotals) ?></td>
+                                    <td><?= $this->sma->formatMoney($mvOutTotalTotals, 'none') ?></td>
 
                                     <td><?= $this->sma->formatQuantity($cbQtyTotal) ?></td>
                                     <td></td>
-                                    <td><?= $this->sma->formatDecimal($cbTotalTotals) ?></td>
+                                    <td><?= $this->sma->formatMoney($cbTotalTotals, 'none') ?></td>
                                 </tr>
 
                             </tbody>

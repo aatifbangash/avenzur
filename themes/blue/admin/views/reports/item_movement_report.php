@@ -1,4 +1,17 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+<script>
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, {
+            sheet: 'Sheet 1'
+        });
+        XLSX.writeFile(wb, filename);
+    }
+    $(document).ready(function() {
+
+    });
+</script>
 <script>
     $(document).ready(function() {
 
@@ -12,8 +25,7 @@
 
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i class="icon fa fa-file-picture-o"></i></a></li>
+                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'item_movement_report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
             </ul>
         </div>
     </div>
@@ -41,7 +53,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('Type', 'Type'); ?>
-                                <?php echo form_dropdown('filterOnType', $filterOnTypeArr, set_value('filterOnType', $_POST['filterOnType']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'filterOnType')); ?>
+                                <?php echo form_dropdown('filterOnType', $filterOnTypeArr, set_value('filterOnType', $_POST['filterOnType']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'filterOnType'),  array('none')); ?>
 
                             </div>
                         </div>
@@ -97,9 +109,9 @@
                             <?php if ($reportData) { ?>
                                 <tbody style="text-align:center;">
                                     <tr>
-                                        <td colspan="2">Oening Balance</td>
+                                        <td colspan="2">Opening Balance</td>
                                         <td colspan="8">&nbsp;</td>
-                                        <td><?php echo $this->sma->formatMoney($itemOpenings->unitPrice, 'none'); ?></td>
+                                        <td><?php echo $this->sma->formatMoney(($itemOpenings->openingBalance > 0 ? $itemOpenings->unitPrice : 0.0), 'none'); ?></td>
                                         <td><?php echo $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00)); ?></td>
                                         <td><?php echo $this->sma->formatMoney(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00), 'none'); ?></td>
 
@@ -107,15 +119,55 @@
 
                                     <?php
                                     $count = 1;
-                                    $balanceQantity = $itemOpenings->openingBalance;
+                                    $balanceQantity = 0;
+                                    $totalValueOfItem  = 0;
+                                    $openingTotal = ($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00);
 
                                     foreach ($reportData as $rp) {
 
-                                        if ($rp->type == 'Purchase' || $rp->type == 'Return-Customer' || $rp->type == "Transfer-In") {
-                                            $balanceQantity += $rp->quantity;
+                                        $showQty = 0.00;
+                                        // || $rp->type == "Transfer-In"
+                                        if ($rp->type == 'Purchase' || $rp->type == 'Return-Customer' ) {
+
+                                            if($balanceQantity == 0 && $itemOpenings->openingBalance > 0){
+                                                $balanceQantity = $itemOpenings->openingBalance + $rp->quantity;
+                                            }else{
+                                                $balanceQantity += $rp->quantity;
+                                            }
+
+                                            if($openingTotal > 0 && $totalValueOfItem ==0){
+                                                $totalValueOfItem = $openingTotal + ($rp->quantity * $rp->unit_cost);
+                                            }else{
+                                                $totalValueOfItem+= ($rp->quantity * $rp->unit_cost);
+                                            }
+
+                                            $showQty = $rp->quantity;
+                                           
                                         }
-                                        if (($rp->type == 'Sale' || $rp->type == 'Return-Supplier' || $rp->type == "Transfer-Out") && $balanceQantity > 0) {
-                                            $balanceQantity -= $rp->quantity;
+                                        //  || $rp->type == "Transfer-Out"
+                                        if (($rp->type == 'Sale' || $rp->type == 'Return-Supplier' )) {
+
+                                            if($balanceQantity == 0 && $itemOpenings->openingBalance > 0){
+                                                $balanceQantity = $itemOpenings->openingBalance;
+                                            }else{
+                                                $balanceQantity -= $rp->quantity;
+                                            }
+
+                                            if($openingTotal > 0 && $totalValueOfItem ==0){
+                                                $totalValueOfItem = $openingTotal - ($rp->quantity * $rp->unit_cost);
+                                            }else{
+                                                $totalValueOfItem-= ($rp->quantity * $rp->unit_cost);
+                                            }
+                                            $showQty = -$rp->quantity;
+                                        }
+                                        if($rp->type == "Transfer-Out" || $rp->type == "Transfer-In"){
+                                            $showQty = $rp->quantity;
+                                            if($balanceQantity == 0 && $itemOpenings->openingBalance > 0){
+                                                $balanceQantity = $itemOpenings->openingBalance;
+                                            }
+                                            if($openingTotal > 0 && $totalValueOfItem ==0){
+                                                $totalValueOfItem = $openingTotal;
+                                            }
                                         }
 
                                         if ($rp->type ==  'Transfer-Out' || $rp->type == "Transfer-In") {
@@ -135,10 +187,10 @@
                                             <td><?= $rp->batch_no; ?></td>
                                             <td><?= $this->sma->formatMoney(($rp->sale_price ? $rp->sale_price : 0.0), 'none'); ?></td>
                                             <td><?= $this->sma->formatMoney(($rp->purchase_price ? $rp->purchase_price : 0.0), 'none'); ?></td>
-                                            <td><?= $this->sma->formatQuantity($rp->quantity ? $rp->quantity : 0.0); ?></td>
+                                            <td><?= $this->sma->formatQuantity($showQty); ?></td>
                                             <td><?= $this->sma->formatMoney(($rp->unit_cost ? $rp->unit_cost : 0.0), 'none'); ?></td>
                                             <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
-                                            <td><?= $this->sma->formatMoney(($balanceQantity * $rp->unit_cost), 'none'); ?></td>
+                                            <td><?= $this->sma->formatMoney(($totalValueOfItem), 'none'); ?></td>
                                         </tr>
                                     <?php
                                         $count++;
@@ -151,7 +203,7 @@
                                         <td colspan="2">Closing</td>
                                         <td colspan="9">&nbsp;</td>
                                         <td><?php echo $this->sma->formatQuantity($balanceQantity); ?></td>
-                                        <td><?php echo $this->sma->formatMoney(($balanceQantity * $itemOpenings->unitPrice), 'none'); ?></td>
+                                        <td><?php echo $this->sma->formatMoney($totalValueOfItem, 'none'); ?></td>
 
                                     </tr>
 
@@ -169,35 +221,36 @@
     </div>
 
     <?php
-    $productId = ($_POST['product'] ? $_POST['product'] : 0);
-    $type = ($_POST['filterOnType'] ? $_POST['filterOnType'] : 'all');
-    $startDate = ($_POST['from_date'] ? trim($this->sma->fld($_POST['from_date'])) : null);
-    $endDate = ($_POST['to_date'] ? trim($this->sma->fld($_POST['to_date'])) : null);
+    // $productId = ($_POST['product'] ? $_POST['product'] : 0);
+    // $type = ($_POST['filterOnType'] ? $_POST['filterOnType'] : 'all');
+    // $startDate = ($_POST['from_date'] ? trim($this->sma->fld($_POST['from_date'])) : null);
+    // $endDate = ($_POST['to_date'] ? trim($this->sma->fld($_POST['to_date'])) : null);
+    // 
     ?>
 
     <script type="text/javascript" src="<?= $assets ?>js/html2canvas.min.js"></script>
     <script type="text/javascript">
-        $(document).ready(function() {
-            $('#xls').click(function(event) {
-                var prod = $('#report_product_id2').val();
-                var fromdate = $('#fromdate').val();
-                var todate = $('#todate').val();
-                if (prod && fromdate && todate) {
-                    event.preventDefault();
-                    window.location.href = "<?= admin_url("reports/item_movement_report_xls/$productId/$type/$startDate/$endDate/xls") ?>";
-                    return false;
-                } else {
-                    return false;
-                }
-            });
-            $('#image').click(function(event) {
-                event.preventDefault();
-                html2canvas($('.box'), {
-                    onrendered: function(canvas) {
-                        openImg(canvas.toDataURL());
-                    }
-                });
-                return false;
-            });
-        });
+        // $(document).ready(function() {
+        //     $('#xls').click(function(event) {
+        //         var prod = $('#report_product_id2').val();
+        //         var fromdate = $('#fromdate').val();
+        //         var todate = $('#todate').val();
+        //         if (prod && fromdate && todate) {
+        //             event.preventDefault();
+        //             window.location.href = "<?= admin_url("reports/item_movement_report_xls/$productId/$type/$startDate/$endDate/xls") ?>";
+        //             return false;
+        //         } else {
+        //             return false;
+        //         }
+        //     });
+        //     $('#image').click(function(event) {
+        //         event.preventDefault();
+        //         html2canvas($('.box'), {
+        //             onrendered: function(canvas) {
+        //                 openImg(canvas.toDataURL());
+        //             }
+        //         });
+        //         return false;
+        //     });
+        // });
     </script>
