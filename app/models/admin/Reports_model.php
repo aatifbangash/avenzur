@@ -1016,6 +1016,8 @@ class Reports_model extends CI_Model
         $finalResponse = [];
 
         if ($at_date) $at_date = $this->sma->fld($at_date);
+
+        if ($supplier) $supplierJoin = " INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id ";
         $totalPurchasesQuery = "SELECT 
                                     p.id, 
                                     p.code item_code, 
@@ -1023,22 +1025,22 @@ class Reports_model extends CI_Model
                                     pi.batchno batch_no, 
                                     pi.expiry expiry, 
                                     round(sum(pi.quantity)) quantity,
-                                    round(sum(pi.sale_price), 2) sale_price,
-                                    round(sum(p.cost), 2) cost_price,
+                                    round(p.price, 2) sale_price,
+                                    round(p.cost, 2) cost_price,
                                     round(sum(pi.real_unit_cost), 2) purchase_price
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
-                                INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id
-                                WHERE pc.grand_total >= 0 ";
+                                {$supplierJoin}
+                                WHERE pi.purchase_item_id IS NULL ";
         if ($at_date) {
-            $totalPurchasesQuery .= "AND pc.date <= '{$at_date} 23:59:59' ";
+            $totalPurchasesQuery .= "AND pi.date <= '{$at_date}' ";
         }
 
         if ($warehouse) {
-            $totalPurchasesQuery .= "AND pc.warehouse_id = {$warehouse} ";
+            $totalPurchasesQuery .= "AND pi.warehouse_id = {$warehouse} ";
         }
 
-        if ($supplier) {
+        if ($supplier) { //TODO: will be checked
             $totalPurchasesQuery .= "AND pc.supplier_id = {$supplier} ";
         }
 
@@ -1075,12 +1077,16 @@ class Reports_model extends CI_Model
                 $totalSalesQuery .= "AND sl.date <= '{$at_date} 23:59:59' ";
             }
 
+            if ($warehouse) {
+                $totalSalesQuery .= "AND si.warehouse_id = {$warehouse} ";
+            }
+
             if ($item_group) {
                 $totalSalesQuery .= "AND p.category_id = '$item_group' ";
             }
 
             if ($item) {
-                $totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+                $totalSalesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
             $totalSalesQuery .= "GROUP BY p.id, p.code, p.name, si.batch_no, si.expiry";
@@ -1111,10 +1117,13 @@ class Reports_model extends CI_Model
                                         round(sum(pi.quantity)) quantity
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
-                                INNER JOIN sma_purchases pc ON pi.purchase_id = pc.id
-                                WHERE pc.grand_total < 0 ";
+                                WHERE pi.purchase_item_id IS NOT NULL ";
             if ($at_date) {
-                $totalReturnSupplerQuery .= "AND pc.date <= '{$at_date} 23:59:59' ";
+                $totalReturnSupplerQuery .= "AND pi.date <= '{$at_date}' ";
+            }
+
+            if ($warehouse) {
+                $totalReturnSupplerQuery .= "AND pi.warehouse_id = {$warehouse} ";
             }
 
             if ($item_group) {
@@ -1122,7 +1131,7 @@ class Reports_model extends CI_Model
             }
 
             if ($item) {
-                $totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+                $totalReturnSupplerQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
             $totalReturnSupplerQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno, pi.expiry";
@@ -1154,9 +1163,11 @@ class Reports_model extends CI_Model
                                         from sma_products p
                                         inner join sma_return_items rci ON p.id = rci.product_id 
                                         INNER JOIN sma_returns rt ON rci.return_id = rt.id ";
+
             if ($at_date) {
                 $totalReturnCustomerQuery .= "WHERE rt.date <= '{$at_date} 23:59:59' ";
             }
+
             $totalReturnCustomerQuery .= "group by p.id, p.code, p.name, rci.batch_no, rci.expiry";
 
             $totalReturnCustomerResultSet = $this->db->query($totalReturnCustomerQuery);
@@ -1170,6 +1181,51 @@ class Reports_model extends CI_Model
                             && $purchase->expiry == $returnCustomer->expiry
                         ) {
                             $purchase->quantity += (int)abs($returnCustomer->quantity);
+                        }
+                    }, $totalPurchases);
+                }
+            }
+
+            //TODO transfer
+            $totalTransferQuery = "SELECT
+                                        p.id,
+                                        p.code item_code,
+                                        p.name,
+                                        pi.batchno batch_no,
+                                        pi.expiry expiry,
+                                        round(sum(pi.quantity)) quantity
+                                FROM sma_products p
+                                INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
+                                WHERE pi.purchase_id IS NULL ";
+            if ($at_date) {
+                $totalTransferQuery .= "AND pi.date <= '{$at_date}' ";
+            }
+
+            if ($warehouse) {
+                $totalTransferQuery .= "AND pi.warehouse_id <> {$warehouse} ";
+            }
+
+            if ($item_group) {
+                $totalTransferQuery .= "AND p.category_id = '$item_group' ";
+            }
+
+            if ($item) {
+                $totalTransferQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+            }
+
+            $totalTransferQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno, pi.expiry";
+
+            $totalTransferResultSet = $this->db->query($totalTransferQuery);
+            if ($totalTransferResultSet->num_rows() > 0) {
+                foreach ($totalTransferResultSet->result() as $transfer) {
+                    array_map(function ($purchase) use ($transfer) {
+                        if (
+                            $purchase->id == $transfer->id
+                            && $purchase->item_code == $transfer->item_code
+                            && $purchase->batch_no == $transfer->batch_no
+                            && $purchase->expiry == $transfer->expiry
+                        ) {
+                            $purchase->quantity -= (int)abs($transfer->quantity);
                         }
                     }, $totalPurchases);
                 }
@@ -2436,7 +2492,7 @@ class Reports_model extends CI_Model
         return $data;
     }
 
-    public function getVatPurchaseReport($start_date = null, $end_date = null,  $warehouse_id = null, $filterOnType = null)
+    public function getVatPurchaseReport($start_date = null, $end_date = null, $warehouse_id = null, $filterOnType = null)
     {
 
 
@@ -2514,16 +2570,16 @@ class Reports_model extends CI_Model
                                 
                                 GROUP BY
                                     pi.purchase_id) AS a
-                    WHERE DATE(a.trans_date) >= '".$start_date."' AND DATE(a.trans_date) <= '".$end_date."'";
+                    WHERE DATE(a.trans_date) >= '" . $start_date . "' AND DATE(a.trans_date) <= '" . $end_date . "'";
 
-                if ($warehouse_id) {
-                    $query .= " AND a.warehouse_id= '".$warehouse_id."'";
-                }
+        if ($warehouse_id) {
+            $query .= " AND a.warehouse_id= '" . $warehouse_id . "'";
+        }
 
-                if ($filterOnType) {
-                    $query .= " AND a.trans_type= '".$filterOnType."'";
-                }
-                //echo $query;
+        if ($filterOnType) {
+            $query .= " AND a.trans_type= '" . $filterOnType . "'";
+        }
+        //echo $query;
 
         $q = $this->db->query($query);
         //echo $this->db->last_query();
@@ -2539,7 +2595,7 @@ class Reports_model extends CI_Model
     }
 
 
-    public function getVatSaleReport($start_date = null, $end_date = null,  $warehouse_id = null, $filterOnType = null)
+    public function getVatSaleReport($start_date = null, $end_date = null, $warehouse_id = null, $filterOnType = null)
     {
 
         $query = "SELECT * FROM(
@@ -2678,19 +2734,19 @@ class Reports_model extends CI_Model
                                 
                                 ) AS a ";
 
-                $query .= " WHERE DATE(a.trans_date) >= '".$start_date."' AND DATE(a.trans_date) <= '".$end_date."'";
+        $query .= " WHERE DATE(a.trans_date) >= '" . $start_date . "' AND DATE(a.trans_date) <= '" . $end_date . "'";
 
-                if ($warehouse_id) {
-                    $query .= " AND a.warehouse_id= '".$warehouse_id."'";
-                }
+        if ($warehouse_id) {
+            $query .= " AND a.warehouse_id= '" . $warehouse_id . "'";
+        }
 
-                if ($filterOnType) {
-                    $query .= " AND a.trans_type= '".$filterOnType."'";
-                }
+        if ($filterOnType) {
+            $query .= " AND a.trans_type= '" . $filterOnType . "'";
+        }
 
-                $query .= " ORDER BY a.trans_date DESC";
-            
-                //echo $query;
+        $query .= " ORDER BY a.trans_date DESC";
+
+        //echo $query;
         $q = $this->db->query($query);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {

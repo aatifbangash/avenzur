@@ -10,6 +10,20 @@ class Deals_model extends CI_Model
         return $this->db->insert('sma_deals', $data);
     }
 
+    public function getAllSuppliersList()
+    {
+        $q = $this->db->get_where('companies', ['group_name' => 'supplier']);
+
+
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getAllSuppliers()
     {
     	$sups = $this->db->select('supplier_id')

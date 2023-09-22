@@ -149,7 +149,7 @@ class Reports extends MY_Controller
 //        $this->data['wh'] = $warehouse;
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        $this->data['suppliers'] = $this->deals_model->getAllSuppliers();
+        $this->data['suppliers'] = $this->deals_model->getAllSuppliersList();
         $this->data['categories'] = $this->site->getAllCategories();
         $bc = [
             ['link' => base_url(), 'page' => lang('home')],
