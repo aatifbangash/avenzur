@@ -26,7 +26,7 @@
             if (!empty($slide->link)) {
                 echo '<a href="' . $slide->link . '">';
             }
-            echo '<img src="' .base_url('assets/uploads/' . $slide->image) . '" alt="" style="max-height:600px;object-fit:cover;">';
+            echo '<img src="' .base_url('assets/uploads/' . $slide->image) . '" alt="" style="max-height:600px;">';
             if (!empty($slide->caption)) {
                 echo '<div class="carousel-caption">' . $slide->caption . '</div>';
             }
@@ -58,19 +58,19 @@
     <div class="container">
         <div class="row" style="padding:40px 40px !important;">
             <div class="col-md-12">
-                <img src="<?= base_url('assets/images/SD-Italy.svg') ?>" style="margin: 0 auto; display: block;" class="img-responsive icon" > 
-              <h2 style="text-align:center !important;   " class="select-head"> Selected products for you</h2>
+                <!--<img src="<?php //echo base_url('assets/images/SD-Italy.svg') ?>" style="margin: 0 auto; display: block;" class="img-responsive icon" > -->
+                <h2 style="text-align:center !important;   " class="select-head"> Featured Categories</h2>
                         <?php
                         $r = 0;
-                        foreach (array_chunk($featured_products, 8) as $fps) {
+                        foreach (array_chunk($all_categories, 8) as $fps) {
                             ?>
                             <div class="item row <?= empty($r) ? 'active' : ''; ?>">
                                 <div class="selected-products">
                                         <?php
                                         foreach ($fps as $fp) {
                                             ?>
-                                        <div class="col-sm-6 col-md-3" id="select-prod">
-                                                <div class="product alt ">
+                                        <div class="col-sm-6 col-md-2" id="select-prod" style="padding: 0px !important;">
+                                                <div class="product alt " style="border-radius: 0px !important;border: 0px !important;padding: 35px !important;">
         
                                                     <div class="product-top">
                                                         <div class="image">
@@ -80,7 +80,7 @@
                                                     </div>
                                                 </div>
                                                     <div class="product-desc homeprod">
-                                                          <div class="product_name">
+                                                          <div class="product_name" style="font-size: 12px !important;font-weight: normal !important;display:block;text-align:center;">
                                                             <a href="<?= site_url('product/' . $fp->slug); ?>"><?= $fp->name; ?></a><br>
                                                         </div>
                                                         <div class="pro-cat">
@@ -94,21 +94,23 @@
                                                         } ?>
                                                         </div>
                                                     </div>
-                                                        <div class="product-bottom">
-                                                             <div class="product-price">
-                                
-                                                                 <?php
-                                                            if ($fp->promotion) {
-                                                                echo '<del class="text-red">' . $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price) . '</del>&nbsp;';
-                                                                echo $this->sma->convertMoney($fp->promo_price);
-                                                            } else {
-                                                                echo $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price);
-                                                            } ?>
-                                                         </div>
+
+                                                    <div class="product-bottom">
+                                                        <!--<div class="product-price">
+                            
+                                                        <?php
+                                                        //if ($fp->promotion) {
+                                                           // echo '<del class="text-red">' . $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price) . '</del>&nbsp;';
+                                                            //echo $this->sma->convertMoney($fp->promo_price);
+                                                        //} else {
+                                                            //echo $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price);
+                                                        //} 
+                                                        ?>
+                                                        </div>-->
                                           
                                                 <!--<div class="details" style="transition: all 100ms ease-out 0s;">-->
 
-                                                    <div class="clearfix"></div>
+                                                <!--<div class="clearfix"></div>
                                                   
                                                 
                                                 <div class="row">
@@ -126,18 +128,18 @@
                                                                 </div>
                                                     </div>
                                                     <div class="col-md-5 col-xs-6" id="cart-button">
-                                                          <!--<div class="clearfix"></div>-->
                                                                 <div class="product-cart">
                                                                 <div class="btn-group" role="group" aria-label="...">
                                                                 <button class="btn btn-info add-to-wishlist" data-id="13"><i class="fa fa-heart-o"></i></button>
-                                                                 <div class="btn btn-theme add-to-cart" data-id="<?= $fp->id; ?>"><i class="fa fa-shopping-cart"></i> <?= lang('add_to_cart'); ?></div>
+                                                                 <div class="btn btn-theme add-to-cart" data-id="<?php //echo $fp->id; ?>"><i class="fa fa-shopping-cart"></i> <?= lang('add_to_cart'); ?></div>
                                                                <div class="clearfix"></div>
 
                                                                 </div>
                                                                 </div>
 
                                                     </div>
-                                                </div>
+                                                </div>-->
+
                                                 </div> 
                                             
                                                               
