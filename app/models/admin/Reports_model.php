@@ -1027,7 +1027,7 @@ class Reports_model extends CI_Model
                                     round(sum(pi.quantity)) quantity,
                                     round(p.price, 2) sale_price,
                                     round(p.cost, 2) cost_price,
-                                    round(sum(pi.real_unit_cost), 2) purchase_price
+                                    round(pi.real_unit_cost, 2) purchase_price
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
                                 {$supplierJoin}
@@ -1168,6 +1168,18 @@ class Reports_model extends CI_Model
                 $totalReturnCustomerQuery .= "WHERE rt.date <= '{$at_date} 23:59:59' ";
             }
 
+            if ($warehouse) {
+                $totalReturnCustomerQuery .= "AND rci.warehouse_id = {$warehouse} ";
+            }
+
+            if ($item_group) {
+                $totalReturnSupplerQuery .= "AND p.category_id = '$item_group' ";
+            }
+
+            if ($item) {
+                $totalReturnSupplerQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+            }
+
             $totalReturnCustomerQuery .= "group by p.id, p.code, p.name, rci.batch_no, rci.expiry";
 
             $totalReturnCustomerResultSet = $this->db->query($totalReturnCustomerQuery);
@@ -1196,7 +1208,7 @@ class Reports_model extends CI_Model
                                         round(sum(pi.quantity)) quantity
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
-                                WHERE pi.purchase_id IS NULL ";
+                                WHERE pi.transfer_id IS NOT NULL ";
             if ($at_date) {
                 $totalTransferQuery .= "AND pi.date <= '{$at_date}' ";
             }
