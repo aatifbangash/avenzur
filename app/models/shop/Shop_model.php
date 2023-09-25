@@ -828,7 +828,6 @@ class Shop_model extends CI_Model
                 $this->db->select('products.*, categories.id as category_id, categories.name as category_name', false)
                    // ->join($wp, 'FWP.product_id=products.id', 'left')
                     // ->join('warehouses_products FWP', 'FWP.product_id=products.id', 'left')
-                    ->join('brands', 'brands.id=products.brand', 'left')
                     ->join('categories', 'categories.id=products.category_id', 'left')
                     ->group_by('products.id');
                    
@@ -839,7 +838,7 @@ class Shop_model extends CI_Model
                    $searchquery = explode(' ',$booksearch);
                     foreach($searchquery  as $booksearch){ 
                             if(!empty(trim($booksearch))){ 
-                                $wheres[]= "( {$this->db->dbprefix('products')}.name LIKE '%".$booksearch."%' OR  {$this->db->dbprefix('products')}.code LIKE '%".$booksearch."%' OR {$this->db->dbprefix('brands')}.name LIKE '%".$booksearch."%')";
+                                $wheres[]= "( {$this->db->dbprefix('products')}.name LIKE '%".$booksearch."%' OR  {$this->db->dbprefix('products')}.code LIKE '%".$booksearch."%')";
                             }
                         }
                         if(!empty($wheres)){
