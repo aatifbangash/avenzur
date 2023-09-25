@@ -315,6 +315,7 @@ class stock_request extends MY_Controller
         if($_POST && !$_POST['search_product']){
             $warehouse = isset($_POST['warehouse']) ? $_POST['warehouse'] : null;
             if(isset($_POST['request_id'])){
+                echo 'here in edit...';exit;
                 if($this->stock_request_model->editPurchaseRequest($_POST['request_id'], $data, $items, $warehouse)){
                     $this->session->set_flashdata('message', $this->lang->line('Purchase_request_edited'));
                     admin_redirect('stock_request/purchase_requests');
@@ -323,6 +324,7 @@ class stock_request extends MY_Controller
                     admin_redirect('stock_request/purchase_requests');
                 }    
             }else{
+                echo 'here in add...';exit;
                 if($this->stock_request_model->addPurchaseRequest($data, $items, $warehouse)){
                     $this->session->set_flashdata('message', $this->lang->line('Purchase_request_added'));
                     admin_redirect('stock_request/purchase_requests');
