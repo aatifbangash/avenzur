@@ -821,7 +821,7 @@
             </div>
 
             <div class="col-md-12">
-                <div class="cart-section-wrap" style="position: relative;overflow:hidden;">
+                <div class="cart-section-wrap" style="position: relative;overflow:hidden;min-height: 800px;">
                     <div class="cart-section-left col-md-6">
                         <img id="Untitled-1" src="<?= base_url('assets/images/Untitled-1.jpeg') ?>" srcset="<?= base_url('assets/images/Untitled-1.jpeg') ?> 1x, <?= base_url('assets/images/Untitled-1@2x.jpeg') ?> 2x">
                         <img id="Untitled-1_u" src="<?= base_url('assets/images/Untitled-1_u.jpeg') ?>" srcset="<?= base_url('assets/images/Untitled-1_u.jpeg') ?> 1x, <?= base_url('assets/images/Untitled-1_u@2x.jpeg') ?> 2x">
