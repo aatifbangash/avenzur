@@ -201,41 +201,41 @@
          <div class="row" style="padding:40px 15px !important;">
              <div class="col-md-12">
              <div id="carousel1" class='outerWrapper'>
-                <div class="carousel-item">
-                    <div>1</div>
+             <div class="carousel-item">
+                    <div><img src="<?= base_url('assets/images/9b0ec372041c805dada856cd0ba83438.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div>2</div>
+                    <div><img src="<?= base_url('assets/images/2e2b4769f47726f01ee1ec487b5d5206.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div>3</div>
+                    <div><img src="<?= base_url('assets/images/a67dd40afc0aeef53a1222cb80c01b27.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div>4</div>
+                    <div><img src="<?= base_url('assets/images/9b0ec372041c805dada856cd0ba83438.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div>5</div>
+                    <div><img src="<?= base_url('assets/images/2e2b4769f47726f01ee1ec487b5d5206.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div>6</div>
+                    <div><img src="<?= base_url('assets/images/a67dd40afc0aeef53a1222cb80c01b27.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div>7</div>
+                    <div><img src="<?= base_url('assets/images/9b0ec372041c805dada856cd0ba83438.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div>8</div>
+                    <div><img src="<?= base_url('assets/images/2e2b4769f47726f01ee1ec487b5d5206.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div>9</div>
+                    <div><img src="<?= base_url('assets/images/a67dd40afc0aeef53a1222cb80c01b27.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div>10</div>
+                    <div><img src="<?= base_url('assets/images/9b0ec372041c805dada856cd0ba83438.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div>11</div>
+                    <div><img src="<?= base_url('assets/images/2e2b4769f47726f01ee1ec487b5d5206.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div>12</div>
+                    <div><img src="<?= base_url('assets/images/a67dd40afc0aeef53a1222cb80c01b27.jpeg') ?>"></div>
                 </div>
             </div>
 
