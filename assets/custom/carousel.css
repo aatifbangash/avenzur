@@ -11,15 +11,13 @@
 	float:left;
 	margin-right:48px;
 	width:162px;
-	padding:20px;
+	padding:0px;
 	height:162px;
-	border:1px solid #b3b3b3;
 	background-color:#fff;
 	border-radius:5px;
 }
 
 .carousel-item div {
-	background:#ddd;
 	width:99%;
 	height:99%;
 	color:white;
@@ -27,8 +25,6 @@
 	text-align:center;
 	line-height: 162px;
 	font-size:60px;
-	border-radius:5px;
-	border:1px solid #b3b3b3;
 }
 
 .left-nav-btn, .right-nav-btn {
