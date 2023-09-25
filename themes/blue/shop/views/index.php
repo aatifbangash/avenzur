@@ -454,6 +454,110 @@
 		font-size: 21px;
 		color: rgba(255,35,35,1);
 	}
+    #Group_3209 {
+		position: absolute;
+		width: 454px;
+		height: 549px;
+		left: 661px;
+		top: 1347px;
+		overflow: visible;
+	}
+    #Specification {
+		left: 0px;
+		top: 311px;
+		position: absolute;
+		overflow: visible;
+		width: 117px;
+		white-space: nowrap;
+		text-align: left;
+		font-family: Segoe UI;
+		font-style: normal;
+		font-weight: bold;
+		font-size: 20px;
+		color: rgba(0,0,0,1);
+	}
+	#Sulfad_is_a_product_used_to_pr {
+		left: 1px;
+		top: 64px;
+		position: absolute;
+		overflow: visible;
+		width: 454px;
+		height: 212px;
+		line-height: 25px;
+		margin-top: -4.5px;
+		text-align: left;
+		font-family: Segoe UI;
+		font-style: normal;
+		font-weight: normal;
+		font-size: 16px;
+		color: rgba(0,0,0,1);
+	}
+	#Line_3 {
+		fill: transparent;
+		stroke: rgba(112,112,112,1);
+		stroke-width: 1px;
+		stroke-linejoin: miter;
+		stroke-linecap: butt;
+		stroke-miterlimit: 4;
+		shape-rendering: auto;
+	}
+	.Line_3 {
+		overflow: visible;
+		position: absolute;
+		width: 453.5px;
+		height: 1px;
+		left: 0.5px;
+		top: 358.5px;
+		transform: matrix(1,0,0,1,0,0);
+	}
+	#Manufacturer_Pharma_Product_fo {
+		left: 1px;
+		top: 378px;
+		position: absolute;
+		overflow: visible;
+		width: 454px;
+		height: 171px;
+		line-height: 25px;
+		margin-top: -4.5px;
+		text-align: left;
+		font-family: Segoe UI;
+		font-style: normal;
+		font-weight: normal;
+		font-size: 16px;
+		color: rgba(0,0,0,1);
+	}
+	#Description {
+		left: 0px;
+		top: 0px;
+		position: absolute;
+		overflow: visible;
+		width: 105px;
+		white-space: nowrap;
+		text-align: left;
+		font-family: Segoe UI;
+		font-style: normal;
+		font-weight: bold;
+		font-size: 20px;
+		color: rgba(0,0,0,1);
+	}
+	#Line_4 {
+		fill: transparent;
+		stroke: rgba(112,112,112,1);
+		stroke-width: 1px;
+		stroke-linejoin: miter;
+		stroke-linecap: butt;
+		stroke-miterlimit: 4;
+		shape-rendering: auto;
+	}
+	.Line_4 {
+		overflow: visible;
+		position: absolute;
+		width: 453.5px;
+		height: 1px;
+		left: 0.5px;
+		top: 47.5px;
+		transform: matrix(1,0,0,1,0,0);
+	}
 </style>
  <!-- Welcome <?php // echo $this->session->userdata('country'); ?> -->
 <?php if (!empty($slider) && !empty($slider[0]->image) && !empty($slider[0]->link)) {
