@@ -201,40 +201,40 @@
          <div class="row" style="padding:40px 15px !important;">
              <div class="col-md-12">
              <div id="carousel1" class='outerWrapper'>
-                <div class="item">
+                <div class="carousel-item">
                     <div>1</div>
                 </div>
-                <div class="item">
+                <div class="carousel-item">
                     <div>2</div>
                 </div>
-                <div class="item">
+                <div class="carousel-item">
                     <div>3</div>
                 </div>
-                <div class="item">
+                <div class="carousel-item">
                     <div>4</div>
                 </div>
-                <div class="item">
+                <div class="carousel-item">
                     <div>5</div>
                 </div>
-                <div class="item">
+                <div class="carousel-item">
                     <div>6</div>
                 </div>
-                <div class="item">
+                <div class="carousel-item">
                     <div>7</div>
                 </div>
-                <div class="item">
+                <div class="carousel-item">
                     <div>8</div>
                 </div>
-                <div class="item">
+                <div class="carousel-item">
                     <div>9</div>
                 </div>
-                <div class="item">
+                <div class="carousel-item">
                     <div>10</div>
                 </div>
-                <div class="item">
+                <div class="carousel-item">
                     <div>11</div>
                 </div>
-                <div class="item">
+                <div class="carousel-item">
                     <div>12</div>
                 </div>
             </div>
