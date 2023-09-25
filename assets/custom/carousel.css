@@ -66,7 +66,7 @@
 	height:456px;
 }
 
-.vert .item {
+.vert .carousel-item {
 	float:left;
 	margin-bottom:48px;
 	width:162px;
@@ -106,7 +106,7 @@
 	text-align:center;
 }
 
-.outerWrapper2 .item {
+.outerWrapper2 .carousel-item {
 	margin-right:50px;
 	width:110px;
 	padding:20px;
