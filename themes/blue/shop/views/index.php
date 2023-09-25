@@ -248,7 +248,7 @@
                     <img style="max-width: 100%;max-height: 100%;" src="<?= base_url('assets/images/banner-1-1000x150.jpg') ?>" />
                 </div>
 
-                <div class="twinbanners" style="margin-top: 60px;margin-bottom: 40px;">
+                <div class="twinbanners" style="display: flex;justify-content: center;align-items: center;margin-top: 60px;margin-bottom: 40px;">
                     <div class="col-md-6">
                         <div class="banner2">
                             <img alt="Banner2" src="<?= base_url('assets/images/banner-2-500x150.webp') ?>" />
