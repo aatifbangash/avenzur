@@ -2,6 +2,22 @@
 <link href="<?= base_url('assets/custom/carousel.css') ?>" rel="stylesheet"/>
 <script src="<?= base_url('assets/custom/waltzerjs.min.js') ?>"></script>
 <style>
+    #Untitled-1 {
+		position: absolute;
+		width: 530.383px;
+		height: 452.602px;
+		left: 10.275px;
+		top: 745.699px;
+		overflow: visible;
+	}
+	#Untitled-1_u {
+		position: absolute;
+		width: 492px;
+		height: 452px;
+		left: 27px;
+		top: 1198px;
+		overflow: visible;
+	}
     #SAR_200_v {
 		left: 651px;
 		top: 1048px;
@@ -701,6 +717,9 @@
             </div>
 
             <div class="col-md-12">
+                <img id="Untitled-1" src="<?= base_url('assets/images/Untitled-1.jpeg') ?>" srcset="Untitled-1.jpeg 1x, Untitled-1@2x.jpeg 2x">
+                <img id="Untitled-1_u" src="<?= base_url('assets/images/Untitled-1_u.jpeg') ?>" srcset="Untitled-1_u.jpeg 1x, Untitled-1_u@2x.jpeg 2x">
+
                 <div id="SAR_200_v">
                     <span>SAR</span><span style="font-size:45px;"> </span><span style="font-size:50px;">200</span>
                 </div>
