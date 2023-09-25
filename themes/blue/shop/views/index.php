@@ -248,15 +248,15 @@
                     <img src="<?= base_url('assets/images/banner-1-1000x150.jpg') ?>" />
                 </div>
 
-                <div class="twinbanners">
+                <div class="twinbanners" style="margin-top: 20px;">
                     <div class="col-md-6">
-                        <div class="banner1">
-                            <img src="<?= base_url('assets/images/banner-1-1000x150.jpg') ?>" />
+                        <div class="banner2">
+                            <img alt="Banner2" />
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="banner2">
-                            <img src="<?= base_url('assets/images/banner-1-1000x150.jpg') ?>" />
+                        <div class="banner3">
+                            <img alt="Banner3" ?>" />
                         </div>
                     </div>
                 </div>
