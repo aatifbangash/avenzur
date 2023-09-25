@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <link href="<?= base_url('assets/custom/carousel.css') ?>" rel="stylesheet"/>
-
+<script src="<?= base_url('assets/custom/waltzerjs.min') ?>"></script>
  <!-- Welcome <?php // echo $this->session->userdata('country'); ?> -->
 <?php if (!empty($slider) && !empty($slider[0]->image) && !empty($slider[0]->link)) {
     ?>

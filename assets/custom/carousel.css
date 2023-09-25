@@ -7,7 +7,7 @@
 	width:960px;
 }
 
-.item {
+.carousel-item {
 	float:left;
 	margin-right:48px;
 	width:162px;
@@ -18,7 +18,7 @@
 	border-radius:5px;
 }
 
-.item div {
+.carousel-item div {
 	background:#ddd;
 	width:99%;
 	height:99%;
