@@ -172,7 +172,7 @@
 <section class="page-dataa">
         <div class="container">    
 
-    <div class="row" id="back-img" style="padding:40px 40px !important;  ">
+    <div class="row" id="back-img" style="padding:0px 40px !important;  ">
             <div class="col-md-6">
 
                   <img   title="B1" class="img-responsive" src="<?= base_url('assets/images/bg1.jpg'); ?>" >
