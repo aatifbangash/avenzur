@@ -313,9 +313,9 @@ class stock_request extends MY_Controller
         }
 
         if($_POST && !$_POST['search_product']){
-            $warehouse = isset($_POST['warehouse']) ? $_POST['warehouse'] : null;
+            $warehouse_id = isset($_POST['warehouse']) ? $_POST['warehouse'] : null;
             if(isset($_POST['request_id'])){
-                if($this->stock_request_model->editPurchaseRequest($_POST['request_id'], $data, $items, $warehouse)){
+                if($this->stock_request_model->editPurchaseRequest($_POST['request_id'], $data, $items, $warehouse_id)){
                     $this->session->set_flashdata('message', $this->lang->line('Purchase_request_edited'));
                     admin_redirect('stock_request/purchase_requests');
                 }else{
@@ -332,10 +332,10 @@ class stock_request extends MY_Controller
                 }   
             }
         }else{
-            $warehouse = isset($_POST['warehouse']) ? $_POST['warehouse'] : null;
-            $current_pr = $this->stock_request_model->getCurrentPR($warehouse);
+            $warehouse_id = isset($_POST['warehouse']) ? $_POST['warehouse'] : null;
+            $current_pr = $this->stock_request_model->getCurrentPR($warehouse_id);
             $this->data['current_pr'] = $current_pr;
-            $this->data['warehouse'] = $warehouse;
+            $this->data['warehouse'] = $warehouse_id;
 
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('opened Purchase Request')]];
             $meta = ['page_title' => lang('Opened Purchase Request'), 'bc' => $bc];
