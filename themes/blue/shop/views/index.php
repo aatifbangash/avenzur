@@ -718,12 +718,12 @@
 
             <div class="col-md-12">
                 <div class="cart-section-wrap" style="position: relative;overflow:hidden;">
-                    <div class="cart-section-left" style="float:left;">
+                    <div class="cart-section-left col-md-6">
                         <img id="Untitled-1" src="<?= base_url('assets/images/Untitled-1.jpeg') ?>" srcset="<?= base_url('assets/images/Untitled-1.jpeg') ?> 1x, <?= base_url('assets/images/Untitled-1@2x.jpeg') ?> 2x">
                         <img id="Untitled-1_u" src="<?= base_url('assets/images/Untitled-1_u.jpeg') ?>" srcset="<?= base_url('assets/images/Untitled-1_u.jpeg') ?> 1x, <?= base_url('assets/images/Untitled-1_u@2x.jpeg') ?> 2x">
                     </div>
 
-                    <div class="cart-section-right" style="float:left;">
+                    <div class="cart-section-right col-md-6">
                         <div id="SAR_200_v">
                             <span>SAR</span><span style="font-size:45px;"> </span><span style="font-size:50px;">200</span>
                         </div>
