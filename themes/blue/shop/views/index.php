@@ -60,16 +60,6 @@
     <div class="container">
         <div class="row" style="padding:40px 40px !important;">
             <div class="col-md-12">
-                <img src="<?= base_url('assets/images/banner-1-1000x150.jpg') ?>" />
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="page-contents" style="background:#FFFFFF !important;">
-    <div class="container">
-        <div class="row" style="padding:40px 40px !important;">
-            <div class="col-md-12">
                 <!--<img src="<?php //echo base_url('assets/images/SD-Italy.svg') ?>" style="margin: 0 auto; display: block;" class="img-responsive icon" > -->
                 <h2 style="text-align:center !important;   " class="select-head"> Featured Categories</h2>
                         <?php
@@ -251,6 +241,12 @@
 
             <script>$('#carousel1').waltzer({scroll:1});</script>
              </div>
+
+            
+            <div class="col-md-12">
+                <img src="<?= base_url('assets/images/banner-1-1000x150.jpg') ?>" />
+            </div>
+        
              <div class="col-md-12">
               
                         <?php
