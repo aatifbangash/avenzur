@@ -33,6 +33,7 @@
                         <div class="form-group">
                             <?= lang('warehouse', 'powarehouse'); ?>
                             <?php
+                                print_r($_POST['warehouse']);
                                 $wh[''] = '';
                                 foreach ($warehouses as $warehouse) {
                                     $wh[$warehouse->id] = $warehouse->name;
