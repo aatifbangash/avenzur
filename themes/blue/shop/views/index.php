@@ -244,7 +244,22 @@
 
             
             <div class="col-md-12">
-                <img src="<?= base_url('assets/images/banner-1-1000x150.jpg') ?>" />
+                <div class="banner1">
+                    <img src="<?= base_url('assets/images/banner-1-1000x150.jpg') ?>" />
+                </div>
+
+                <div class="twinbanners">
+                    <div class="col-md-6">
+                        <div class="banner1">
+                            <img src="<?= base_url('assets/images/banner-1-1000x150.jpg') ?>" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="banner2">
+                            <img src="<?= base_url('assets/images/banner-1-1000x150.jpg') ?>" />
+                        </div>
+                    </div>
+                </div>
             </div>
         
              <div class="col-md-12">
