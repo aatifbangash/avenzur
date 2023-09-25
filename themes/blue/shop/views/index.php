@@ -275,75 +275,68 @@
                                             ?>
                                         <div class="col-sm-6 col-md-3">
                                                 <div class="product alt ">
-        
                                                     <div class="product-top">
                                                         <div class="image">
-                                                        
-                                                        <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" alt="" class="img-responsive">
-                                                     
+                                                            <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" alt="" class="img-responsive">
+                                                        </div>
                                                     </div>
-                                                </div>
                                                     <div class="product-desc homeprod">
-                                                          <div class="product_name">
+                                                        <div class="product_name">
                                                             <a href="<?= site_url('product/' . $fp->slug); ?>"><?= $fp->name; ?></a>
                                                         </div>
-                                                         <div class="pro-cat">
-                                                        <a href="<?= site_url('category/' . $fp->category_slug); ?>" class="link"><?= $fp->category_name; ?></a>
-                                                        <?php
-                                                        if ($fp->brand_name) {
-                                                            ?>
-                                                            <span class="link">-</span>
-                                                            <a href="<?= site_url('brand/' . $fp->brand_slug); ?>" class="link"><?= $fp->brand_name; ?></a>
+                                                        <div class="pro-cat">
+                                                            <a href="<?= site_url('category/' . $fp->category_slug); ?>" class="link"><?= $fp->category_name; ?></a>
                                                             <?php
-                                                        } ?>
+                                                            if ($fp->brand_name) {
+                                                                ?>
+                                                                <span class="link">-</span>
+                                                                <a href="<?= site_url('brand/' . $fp->brand_slug); ?>" class="link"><?= $fp->brand_name; ?></a>
+                                                                <?php
+                                                            } ?>
                                                         </div>
                                                     </div>
-                                                        <div class="product-bottom">
-                                                             <div class="product-price">
-                                
-                                                             <?php
-                                                                                        if ($fp->promotion) {
-                                                                                            echo '<del class="text-red">' . $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price) . '</del><br>';
-                                                                                            echo $this->sma->convertMoney($fp->promo_price);
-                                                                                        } else {
-                                                                                            echo $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price);
-                                                                                        } ?>
-                                          </div>
+                                                    <div class="product-bottom">
+                                                        <div class="product-price">
+                                                        <?php
+                                                            if ($fp->promotion) {
+                                                                echo '<del class="text-red">' . $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price) . '</del><br>';
+                                                                echo $this->sma->convertMoney($fp->promo_price);
+                                                            } else {
+                                                                echo $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price);
+                                                            } ?>
+                                                        </div>
                                           
-                                                <!--<div class="details" style="transition: all 100ms ease-out 0s;">-->
+                                                        <!--<div class="details" style="transition: all 100ms ease-out 0s;">-->
 
-                                                    <div class="clearfix"></div>
+                                                        <div class="clearfix"></div>
                                                 
-                                                
-                                                          <div class="row">
+                                                        <div class="row">
                                                     
-                                                    
-                                                    <div class="col-md-7 col-xs-6">
+                                                        <div class="col-md-7 col-xs-6">
                                                             <div class="product-quantity">
                                                                 <div class="form-group" style="margin-bottom:0;">
-                                                                <div class="input-group">
-                                                                <span class="input-group-addon pointer btn-minus"><span class="fa fa-minus"></span></span>
-                                                                <input type="text" name="quantity" class="form-control text-center quantity-input prod_quant" value="1" required="required">
-                                                                <span class="input-group-addon pointer btn-plus"><span class="fa fa-plus"></span></span>
+                                                                    <div class="input-group">
+                                                                        <span class="input-group-addon pointer btn-minus"><span class="fa fa-minus"></span></span>
+                                                                        <input type="text" name="quantity" class="form-control text-center quantity-input prod_quant" value="1" required="required">
+                                                                        <span class="input-group-addon pointer btn-plus"><span class="fa fa-plus"></span></span>
+                                                                    </div>
                                                                 </div>
-                                                                </div>
-                                                                </div>
-                                                    </div>
-                                                    <div class="col-md-5 col-xs-6">
-                                                          <div class="clearfix"></div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-5 col-xs-6">
+                                                            <div class="clearfix"></div>
                                                                 <div class="product-cart">
-                                                                <div class="btn-group" role="group" aria-label="...">
-                                                                <button class="btn btn-info add-to-wishlist" data-id="13"><i class="fa fa-heart-o"></i></button>
-                                                                 <div class="btn btn-theme add-to-cart" data-id="<?= $fp->id; ?>"><i class="fa fa-shopping-cart"></i> <?= lang('add_to_cart'); ?></div>
-                                                               <div class="clearfix"></div>
-
-                                                                </div>
-                                                                </div>
-
+                                                                    <div class="btn-group" role="group" aria-label="...">
+                                                                        <button class="btn btn-info add-to-wishlist" data-id="13"><i class="fa fa-heart-o"></i></button>
+                                                                        <div class="btn btn-theme add-to-cart" data-id="<?= $fp->id; ?>"><i class="fa fa-shopping-cart"></i> <?= lang('add_to_cart'); ?>
+                                                                    </div>
+                                                                <div class="clearfix"></div>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>  </div> 
-                                            
-                                                              
+                                                </div>  
+                                            </div>                
                                         </div>
                                 </div>
                                         <?php
