@@ -268,7 +268,7 @@
                         $r = 0;
                         foreach (array_chunk($featured_products, 4) as $fps) {
                             ?>
-                            <div class="item row <?= empty($r) ? 'active' : ''; ?>">
+                            <div class="item row <?= empty($r) ? 'active' : ''; ?>" style="margin-top: 80px;">
                                 <div class="selected-products">
                                         <?php
                                         foreach ($fps as $fp) {
