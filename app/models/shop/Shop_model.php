@@ -819,6 +819,50 @@ class Shop_model extends CI_Model
         $views = is_numeric($views) ? ($views + 1) : 1;
         return $this->db->update('products', ['views' => $views], ['id' => $id]);
     }
+
+    public function getProductBrandsByName($term){
+        $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
+
+        $this->db->distinct();
+        $this->db->select('brands.*, categories.id as category_id, categories.name as category_name', false)
+            // ->join($wp, 'FWP.product_id=products.id', 'left')
+            // ->join('warehouses_products FWP', 'FWP.product_id=products.id', 'left')
+            ->join('categories', 'categories.id=products.category_id', 'left')
+            ->group_by('products.id');
+            
+
+            $booksearch=strtolower($term);
+            $wheres = array();
+            $searchquery = explode(' ',$booksearch);
+            foreach($searchquery  as $booksearch){ 
+                if(!empty(trim($booksearch))){ 
+                    $wheres[]= "( {$this->db->dbprefix('products')}.name LIKE '%".$booksearch."%' OR  {$this->db->dbprefix('products')}.code LIKE '%".$booksearch."%')";
+                }
+            }
+
+            if(!empty($wheres)){
+                $this->db->or_where("(".implode(' AND ',$wheres).")");
+            }
+
+            if ($category_id != null && $category_id != 0) {
+                $this->db->where('products.category_id', $category_id);
+            }
+            if ($pos) {
+                $this->db->where('hide_pos !=', 1);
+            }
+            //$this->db->limit($limit);
+            $q = $this->db->get('products');
+            $checkCounter = 1;
+            $oneString = '';
+            if($q !== FALSE && $q->num_rows() > 0){
+                foreach (($q->result()) as $row) 
+                {
+
+                    $data[] = $row;
+                }
+                return $data;
+            }
+    }
     
     public function getProductNames($term, $warehouse_id, $category_id , $pos = false,  $limit = 20)
     {

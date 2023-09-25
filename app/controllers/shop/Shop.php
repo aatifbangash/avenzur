@@ -1208,48 +1208,7 @@ class Shop extends MY_Shop_Controller
                 }
                 if ($this->sma->isPromo($row)) {
                     $row->price = $row->promo_price;
-                } /*elseif ($customer->price_group_id) {
-                    if ($pr_group_price = $this->site->getProductGroupPrice($row->id, $customer->price_group_id)) {
-                        $row->price = $pr_group_price->price;
-                    }
-                } elseif ($warehouse->price_group_id) {
-                    if ($pr_group_price = $this->site->getProductGroupPrice($row->id, $warehouse->price_group_id)) {
-                        $row->price = $pr_group_price->price;
-                    }
-                }*/
-               
-                /*else if($customer_group->name == "Wholesale")
-                {
-                    
-                    if($row->Price_in_Dollar!=3)
-                        $row->price = ($row->price - (($row->price * $row->whole_sale_price) / 100))*$dcurrRate;
-                    else
-                        $row->price = $row->whole_sale_price;
-                    
-                }
-                else if($customer_group->name=="Library")
-                {
-                    $productprice         = $this->sales_model->getUserProductPrice($row->id, $warehouse_id,$customer_id); 
-                     
-                    $row->productprice = $productprice;
-                    if($productprice){
-                        $row->oldprice = $row->price;
-                        $row->price = $productprice->unit_price;
-                        $row->lib_price = $productprice->unit_price;
-                    }
-                    
-                    if($row->Price_in_Dollar!=3)
-                        $row->price  = ($row->price - (($row->price * $row->lib_price) / 100))*$dcurrRate;
-                    else
-                        $row->price = $row->lib_price;
-                     
-                }else{
-                    $productprice         = $this->sales_model->getUserProductPrice($row->id, $warehouse_id,$customer_id); 
-                    if($productprice){
-                        $row->oldprice = $row->price;
-                        $row->price = $productprice->unit_price;
-                    }
-                }*/
+                } 
                 
                 $row->real_unit_price = $row->price;
                 $row->base_quantity   = 1;
@@ -1274,8 +1233,13 @@ class Shop extends MY_Shop_Controller
             $this->sma->send_json($pr);
             
         } else {
+            /*$rows = $this->shop_model->getProductBrandsByName($sr);
+            if($rows){
+                $this->sma->send_json([['id' => 0, 'label' => lang('no_match_found'), 'value' => $term]]);
+            }else{
+                $this->sma->send_json([['id' => 0, 'label' => lang('no_match_found'), 'value' => $term]]);
+            }*/
             $this->sma->send_json([['id' => 0, 'label' => lang('no_match_found'), 'value' => $term]]);
-          // $this->sma->send_json([['id' => 0, 'value' => $term]]);
         }
     }
     
