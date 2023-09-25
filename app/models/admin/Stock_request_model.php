@@ -18,7 +18,7 @@ class Stock_request_model extends CI_Model
                 $item['purchase_request_id'] = $request_id;
                 $this->db->insert('purchase_request_items', $item);
             }
-
+            echo 'WarehouseId: '.$warehouse_id;exit;
             if($warehouse_id == null){
                 $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending']);
             }else{
