@@ -1,6 +1,41 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <link href="<?= base_url('assets/custom/carousel.css') ?>" rel="stylesheet"/>
 <script src="<?= base_url('assets/custom/waltzerjs.min.js') ?>"></script>
+<style>
+    #Component_49__1 {
+		position: absolute;
+		width: 90px;
+		height: 43px;
+		left: 648px;
+		top: 717px;
+		overflow: visible;
+	}
+    #Rectangle_797 {
+		fill: rgba(221,215,215,1);
+	}
+	.Rectangle_797 {
+		position: absolute;
+		overflow: visible;
+		width: 90px;
+		height: 43px;
+		left: 0px;
+		top: 0px;
+	}
+    #n_5_off {
+		left: 12px;
+		top: 10px;
+		position: absolute;
+		overflow: visible;
+		width: 68px;
+		white-space: nowrap;
+		text-align: left;
+		font-family: Proxima Nova;
+		font-style: normal;
+		font-weight: bold;
+		font-size: 21px;
+		color: rgba(255,35,35,1);
+	}
+</style>
  <!-- Welcome <?php // echo $this->session->userdata('country'); ?> -->
 <?php if (!empty($slider) && !empty($slider[0]->image) && !empty($slider[0]->link)) {
     ?>
@@ -259,6 +294,40 @@
                             <img alt="Banner3" src="<?= base_url('assets/images/banner-3-500x150.webp') ?>" />
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="col-md-12">
+                <div id="Component_49__1" class="Component_49___1">
+                    <svg class="Rectangle_797">
+                        <rect id="Rectangle_797" rx="0" ry="0" x="0" y="0" width="90" height="43">
+                        </rect>
+                    </svg>
+                    <div id="n_5_off">
+                        <span>15% off</span>
+                    </div>
+                </div>
+                <div id="Group_3209">
+                    <div id="Specification">
+                        <span>Specification</span>
+                    </div>
+                    <div id="Sulfad_is_a_product_used_to_pr">
+                        <span>Sulfad is a product used to protect and enhance liver functions, used for people susceptible to fatty liver like overweight.<br/><br/>Once daily<br/>Keep out of reach of children<br/>Active compound of Cynera extract,Turmeric, Liqurace extract and Milkethistle extract.</span>
+                    </div>
+                    <svg class="Line_3" viewBox="0 0 453.5 1">
+                        <path id="Line_3" d="M 0 0 L 453.5 0">
+                        </path>
+                    </svg>
+                    <div id="Manufacturer_Pharma_Product_fo">
+                        <span>Manufacturer: Pharma<br/>Product form: Tablets<br/>Ingredients: Milk Thistle, Artichoke Extract, Liquorice Extract<br/>Product function: Antioxidant, Liver Health, Men's Health, Women's Health<br/></span><br/>
+                    </div>
+                    <div id="Description">
+                        <span>Description</span>
+                    </div>
+                    <svg class="Line_4" viewBox="0 0 453.5 1">
+                        <path id="Line_4" d="M 0 0 L 453.5 0">
+                        </path>
+                    </svg>
                 </div>
             </div>
         
