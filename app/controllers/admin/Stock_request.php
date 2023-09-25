@@ -323,7 +323,7 @@ class stock_request extends MY_Controller
                     admin_redirect('stock_request/purchase_requests');
                 }    
             }else{
-                if($this->stock_request_model->addPurchaseRequest($data, $items, $warehouse)){
+                if($this->stock_request_model->addPurchaseRequest($data, $items, $warehouse_id)){
                     $this->session->set_flashdata('message', $this->lang->line('Purchase_request_added'));
                     admin_redirect('stock_request/purchase_requests');
                 }else{
@@ -335,7 +335,7 @@ class stock_request extends MY_Controller
             $warehouse_id = isset($_POST['warehouse']) ? $_POST['warehouse'] : null;
             $current_pr = $this->stock_request_model->getCurrentPR($warehouse_id);
             $this->data['current_pr'] = $current_pr;
-            $this->data['warehouse'] = $warehouse_id;
+            $this->data['warehouse_id'] = $warehouse_id;
 
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('opened Purchase Request')]];
             $meta = ['page_title' => lang('Opened Purchase Request'), 'bc' => $bc];
