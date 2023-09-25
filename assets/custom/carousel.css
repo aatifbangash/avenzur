@@ -4,17 +4,18 @@
 	text-align: left;
 	position:relative;
 	margin:60px auto 60px auto;
-	width:960px;
+	width: 100%;
 }
 
 .carousel-item {
 	float:left;
-	margin-right:48px;
+	margin-right:5px;
 	width:162px;
 	padding:0px;
 	height:162px;
 	background-color:#fff;
 	border-radius:5px;
+	border: 1px solid #f6f2f2;
 }
 
 .carousel-item div {
@@ -133,14 +134,4 @@
 
 .pager > span > span {
 	display: none;
-}
-
-/* Counter (See Example 7) */
-
-#counter {
-	margin-top:-30px;
-	font-weight: bold;
-	font-size: 18px;
-	text-align: center;
-	padding-bottom: 20px;
 }
