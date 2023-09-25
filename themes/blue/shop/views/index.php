@@ -1,4 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<link href="<?= base_url('assets/custom/carousel.css') ?>" rel="stylesheet"/>
+<script src="<?= base_url('assets/custom/waltzerjs.min') ?>"></script>
  <!-- Welcome <?php // echo $this->session->userdata('country'); ?> -->
 <?php if (!empty($slider) && !empty($slider[0]->image) && !empty($slider[0]->link)) {
     ?>
@@ -183,42 +185,62 @@
             <p style="padding:40px 0px !important;font-size:20px !important; ">
                 Discover our specially formulated products that helps you shine from inside out.
             </p>
-<?php             if (isset($fp)) {
-    
-     ?>
+        <?php             
+        if (isset($fp)) {
+        ?>
              <a href="<?= site_url('category/' . $fp->category_slug); ?>"  ><button type="button" class="btn btn-success" style="padding: 20px 40px !important;">DISCOVER</button></a>
-      <?php } ?>
-        </div>
-        
+        <?php 
+        } 
+        ?>
+        </div>  
     </div>
  </div>   
 </section>
 <section class="data-above-footer" style="background:#FFFFFF;">
     <div class="container">
          <div class="row" style="padding:40px 15px !important;">
-            <div class="col-xs-12">
-
-                <div class="row">
-                    <div class="col-xs-9">
-                        <!--<h3 class="margin-top-no text-size-lg">-->
-                        <!--    <?= lang('featured_products'); ?>-->
-                        <!--</h3>-->
-                    </div>
-                    <?php
-                    if (count($featured_products) > 8) {
-                        ?>
-                        <!--<div class="col-xs-3">-->
-                        <!--    <div class="controls pull-right hidden-xs">-->
-                        <!--        <a class="left fa fa-chevron-left btn btn-xs btn-default" href="#carousel-example"-->
-                        <!--        data-slide="prev"></a>-->
-                        <!--        <a class="right fa fa-chevron-right btn btn-xs btn-default" href="#carousel-example"-->
-                        <!--        data-slide="next"></a>-->
-                        <!--    </div>-->
-                        <!--</div>-->
-                        <?php
-                    }
-                    ?>
+             <div class="col-md-12">
+             <div id="carousel1" class='outerWrapper'>
+                <div class="item">
+                    <div>1</div>
                 </div>
+                <div class="item">
+                    <div>2</div>
+                </div>
+                <div class="item">
+                    <div>3</div>
+                </div>
+                <div class="item">
+                    <div>4</div>
+                </div>
+                <div class="item">
+                    <div>5</div>
+                </div>
+                <div class="item">
+                    <div>6</div>
+                </div>
+                <div class="item">
+                    <div>7</div>
+                </div>
+                <div class="item">
+                    <div>8</div>
+                </div>
+                <div class="item">
+                    <div>9</div>
+                </div>
+                <div class="item">
+                    <div>10</div>
+                </div>
+                <div class="item">
+                    <div>11</div>
+                </div>
+                <div class="item">
+                    <div>12</div>
+                </div>
+            </div>
+
+            <script>$('#carousel1').waltzer({scroll:1});</script>
+             </div>
              <div class="col-md-12">
               
                         <?php
