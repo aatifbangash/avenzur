@@ -173,7 +173,7 @@
     <div class="row" id="back-img" style="padding:40px 40px !important;  ">
             <div class="col-md-6">
 
-                  <img   title="B1" class="img-responsive" src="<?= base_url('assets/images/B1-1200x1274.jpg'); ?>" >
+                  <img   title="B1" class="img-responsive" src="<?= base_url('assets/images/bg1.jpg'); ?>" >
             
             </div>
         <div class="col-md-6" id="sect-2">
