@@ -60,7 +60,7 @@
     <div class="container">
         <div class="row" style="padding:40px 40px !important;">
             <div class="col-md-12">
-                <img src="<?= base_url('assets/assets/banner-1-1000x150.jpg') ?>" />
+                <img src="<?= base_url('assets/images/banner-1-1000x150.jpg') ?>" />
             </div>
         </div>
     </div>
