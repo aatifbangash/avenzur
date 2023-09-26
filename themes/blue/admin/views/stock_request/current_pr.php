@@ -31,6 +31,20 @@
 
                     <div class="col-md-4">
                         <div class="form-group">
+                            <?= lang('fromdate', 'fromdate'); ?>
+                            <?php echo form_input('fromdate', ($_POST['fromdate'] ?? ''), 'class="form-control input-tip date" id="fromdate" required="required"'); ?>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <?= lang('todate', 'todate'); ?>
+                            <?php echo form_input('todate', ($_POST['todate'] ?? ''), 'class="form-control input-tip date" id="todate" required="required"'); ?>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
                             <?php
                                 echo lang('warehouse', 'powarehouse');
                                 /*echo lang('warehouse', 'powarehouse');;
