@@ -313,7 +313,7 @@ class stock_request extends MY_Controller
         }
 
         if($_POST && !$_POST['search_product']){
-            $warehouse_id = isset($_POST['warehouse']) ? $_POST['warehouse'] : null;
+            $warehouse_id = isset($_POST['warehouse']) ? $_POST['warehouse'] : $_POST['warehouse_id'];
             if(isset($_POST['request_id'])){
                 if($this->stock_request_model->editPurchaseRequest($_POST['request_id'], $data, $items, $warehouse_id)){
                     $this->session->set_flashdata('message', $this->lang->line('Purchase_request_edited'));
@@ -334,7 +334,6 @@ class stock_request extends MY_Controller
             }
         }else{
             $warehouse_id = isset($_POST['warehouse']) ? $_POST['warehouse'] : $_POST['warehouse_id'];
-            echo 'WarehouseId: '.$warehouse_id;
             $current_pr = $this->stock_request_model->getCurrentPR($warehouse_id);
             $this->data['current_pr'] = $current_pr;
             $this->data['warehouse_id'] = $warehouse_id;
