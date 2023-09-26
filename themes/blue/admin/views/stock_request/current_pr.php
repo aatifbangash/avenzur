@@ -60,11 +60,8 @@
                                     ?>                  
                             </select>
                             <br /><br />
-                            <button type="submit" class="btn btn-primary" id="add_request">
-                            <?php 
-                                echo lang('Submit');
-                            ?>
-                            </button>
+                            <input type="submit" class="btn btn-primary" name="submit" id="add_request" value="<?= lang('Submit'); ?>">
+                            
                         </div>
                     </div>
                 </p>
