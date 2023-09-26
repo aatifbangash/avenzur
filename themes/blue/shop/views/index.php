@@ -359,31 +359,31 @@
                     <h2 style="text-align:center !important;" class="select-head"> Special Offers</h2>
                     <?php
                         $r = 0;
-                        foreach (array_chunk($special_offers, 4) as $special_offer){
+                        foreach (array_chunk($special_offers, 4) as $sps){
                             ?>
                             <div class="item row <?= empty($r) ? 'active' : ''; ?>" style="margin-top: 40px;">
                                 <div class="selected-products">
                                         <?php
-                                        foreach ($fps as $fp) {
+                                        foreach ($sps as $sp) {
                                             ?>
                                         <div class="col-sm-6 col-md-3">
                                                 <div class="product alt ">
                                                     <div class="product-top">
                                                         <div class="image">
-                                                            <img src="<?= base_url('assets/uploads/' . $special_offer->image); ?>" alt="" class="img-responsive">
+                                                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" alt="" class="img-responsive">
                                                         </div>
                                                     </div>
                                                     <div class="product-desc homeprod">
                                                         <div class="product_name">
-                                                            <a href="<?= site_url('product/' . $special_offer->slug); ?>"><?= $special_offer->name; ?></a>
+                                                            <a href="<?= site_url('product/' . $sp->slug); ?>"><?= $sp->name; ?></a>
                                                         </div>
                                                         <div class="pro-cat">
-                                                            <a href="<?= site_url('category/' . $special_offer->category_slug); ?>" class="link"><?= $special_offer->category_name; ?></a>
+                                                            <a href="<?= site_url('category/' . $sp->category_slug); ?>" class="link"><?= $sp->category_name; ?></a>
                                                             <?php
-                                                            if ($special_offer->brand_name) {
+                                                            if ($sp->brand_name) {
                                                                 ?>
                                                                 <span class="link">-</span>
-                                                                <a href="<?= site_url('brand/' . $special_offer->brand_slug); ?>" class="link"><?= $special_offer->brand_name; ?></a>
+                                                                <a href="<?= site_url('brand/' . $sp->brand_slug); ?>" class="link"><?= $sp->brand_name; ?></a>
                                                                 <?php
                                                             } ?>
                                                         </div>
@@ -391,11 +391,11 @@
                                                     <div class="product-bottom">
                                                         <div class="product-price">
                                                         <?php
-                                                            if ($special_offer->promotion) {
-                                                                echo '<del class="text-red">' . $this->sma->convertMoney(isset($special_offer->special_price) && !empty(isset($special_offer->special_price)) ? $special_offer->special_price : $special_offer->price) . '</del><br>';
-                                                                echo $this->sma->convertMoney($special_offer->promo_price);
+                                                            if ($sp->promotion) {
+                                                                echo '<del class="text-red">' . $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price) . '</del><br>';
+                                                                echo $this->sma->convertMoney($sp->promo_price);
                                                             } else {
-                                                                echo $this->sma->convertMoney(isset($special_offer->special_price) && !empty(isset($special_offer->special_price)) ? $special_offer->special_price : $special_offer->price);
+                                                                echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
                                                             } ?>
                                                         </div>
                                           
@@ -422,7 +422,7 @@
                                                                 <div class="product-cart">
                                                                     <div class="btn-group" role="group" aria-label="...">
                                                                         <button class="btn btn-info add-to-wishlist" data-id="13"><i class="fa fa-heart-o"></i></button>
-                                                                        <div class="btn btn-theme add-to-cart" data-id="<?= $special_offer->id; ?>"><i class="fa fa-shopping-cart"></i> <?= lang('add_to_cart'); ?>
+                                                                        <div class="btn btn-theme add-to-cart" data-id="<?= $sp->id; ?>"><i class="fa fa-shopping-cart"></i> <?= lang('add_to_cart'); ?>
                                                                     </div>
                                                                 <div class="clearfix"></div>
                                                             </div>
