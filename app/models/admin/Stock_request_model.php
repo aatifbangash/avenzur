@@ -253,7 +253,7 @@ class Stock_request_model extends CI_Model
     
     public function getCurrentPR($warehouse_id){
         $response = array();
-        if($warehouse_id == null){
+        if($warehouse_id == null || $warehouse_id == 'null'){
             $this->db
                 ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_stock_request_items.required_stock) As total_req_stock, SUM(sma_stock_request_items.avg_stock) As total_avg_stock')
                 ->select('(SELECT SUM(sma_warehouses_products.quantity)
