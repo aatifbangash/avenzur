@@ -131,7 +131,7 @@
                             <?php
                                 }
                             ?>
-                            <input type="hidden" name="warehouse_id" value="<?= $_POST['warehouse_id']; ?>" />
+                            <input type="hidden" name="warehouse_id" value="<?= isset($_POST['warehouse']) ? $_POST['warehouse'] : $_POST['warehouse_id']; ?>" />
                         </tbody>
                         
                     </table>
