@@ -20,7 +20,7 @@
             <div class="col-md-6 col-sm-12">
                 <!--<div class="title-footer"><span><?= lang('about_us'); ?></span></div>-->
                 <a href="<?= site_url(); ?>">
-                                <img  style= " height: 35px !important; width: 150px !important;margin-bottom: 50px;" alt="<?= $shop_settings->shop_name; ?>" src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" class="img-responsive" />
+                    <img  style= " height: 30px !important; width: 150px !important;margin-bottom: 50px;" alt="<?= $shop_settings->shop_name; ?>" src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" class="img-responsive" />
                 </a>
                 <p style="margin-bottom: 50px !important;">
                     CR: T234567 <br />
