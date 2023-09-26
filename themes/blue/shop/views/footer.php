@@ -42,7 +42,7 @@
 
             <div class="clearfix visible-sm-block"></div>
             <div class="col-md-3 col-sm-6" style="padding: 75px;">
-                <ul>
+                <ul style="font-family: 'Montserrat';font-size: 13px;">
                     <li>Store Policy</li>
                     <li>About</li>
                     <li><a href="<?= site_url('shop/page/' . $shop_settings->privacy_link); ?>"><?= lang('privacy_policy'); ?></a></li>
@@ -53,7 +53,7 @@
             </div>
 
             <div class="col-md-3 col-sm-6" style="padding: 75px;">
-                <ul>
+                <ul style="font-family: 'Montserrat';font-size: 13px;">
                     <li>My Account</li>
                     <li>Order Track</li>
                 </ul>      
