@@ -252,8 +252,12 @@ class Stock_request_model extends CI_Model
     }
     
     public function getCurrentPR($warehouse_id, $fromdate, $todate){
-        $fromdate = date("Y-m-d", strtotime(str_replace("/", "-", $fromdate)));
-        $todate = date("Y-m-d", strtotime(str_replace("/", "-", $todate)));
+        if(!empty($fromdate)){
+            $fromdate = date("Y-m-d", strtotime(str_replace("/", "-", $fromdate)));
+        }
+        if(!empty($todate)){
+            $todate = date("Y-m-d", strtotime(str_replace("/", "-", $todate)));
+        }
         $response = array();
         if($warehouse_id == null || $warehouse_id == 'null'){
             $this->db
