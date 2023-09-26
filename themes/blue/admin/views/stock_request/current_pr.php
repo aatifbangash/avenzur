@@ -70,26 +70,28 @@
                     </div>
                 </p>
                 <hr />
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <?= lang('Status', 'Status'); ?>
-                        <?php
-                        //$statuses = array('completed' => 'completed', 'rejected' => 'rejected');
-                        //echo form_dropdown('status', $statuses, '', 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('status') . '" required="required" style="width:100%;" '); 
-                        $statuses = array('completed', 'rejected');
-                        ?>
-                        <select class="form-control" id="status" name="status" >
-                                <?php
-                                    foreach($statuses as $status)
-                                    {
-                                        echo '<option value="'.$status.'">'.$status.'</option>';
-                                    }
-                                ?>                  
-                        </select>
-                        <br /><br />
-                        <input type="submit" class="btn btn-primary" name="submit" id="add_request" value="<?= lang('Submit'); ?>" />
-                        
+                
+                <div class="col-md-12">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <?= lang('Status', 'Status'); ?>
+                            <?php
+                            //$statuses = array('completed' => 'completed', 'rejected' => 'rejected');
+                            //echo form_dropdown('status', $statuses, '', 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('status') . '" required="required" style="width:100%;" '); 
+                            $statuses = array('completed', 'rejected');
+                            ?>
+                            <select class="form-control" id="status" name="status" >
+                                    <?php
+                                        foreach($statuses as $status)
+                                        {
+                                            echo '<option value="'.$status.'">'.$status.'</option>';
+                                        }
+                                    ?>                  
+                            </select>
+                            <br /><br />
+                            <input type="submit" class="btn btn-primary" name="submit" id="add_request" value="<?= lang('Submit'); ?>" />
+                            
+                        </div>
                     </div>
                 </div>
 
