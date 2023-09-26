@@ -16,7 +16,7 @@
 					</div>				
 							
 				</div>
-              <img src="<?= base_url('assets/uploads/thumbs/' . $featureImage->image); ?>" style="max-width:100%;width:100%;padding:20px 0px 20px 0px; ">
+                <!--<img src="<?= base_url('assets/uploads/thumbs/' . $featureImage->image); ?>" style="max-width:100%;width:100%;padding:20px 0px 20px 0px; ">-->
             </div>
         </div>
         
