@@ -155,7 +155,7 @@
         document.getElementById('form_action').value = buttonClicked;
         
         // Submit the form
-        document.getElementById('myForm').submit();
+        document.getElementById('action-form').submit();
     }
 </script>
 <?php echo form_close(); ?>
