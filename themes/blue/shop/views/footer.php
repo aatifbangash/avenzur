@@ -25,7 +25,8 @@
                 <p style="margin-bottom: 50px !important;">
                     CR: T234567 <br />
                     Pharma. M <br />
-                    KSA ,Riyadh ,Olaya main road ,Mousa bin nosair street , Silicon building no.1 , Office 7 <br />
+                    KSA ,Riyadh ,Olaya main road ,Mousa bin nosair street ,<br /> 
+                    Silicon building no.1 , Office 7 <br />
                     Phone No. <?= $shop_settings->phone; ?> <br />
                     Email <?= $shop_settings->email; ?>
                 </p>
