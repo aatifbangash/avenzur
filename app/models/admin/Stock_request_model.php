@@ -300,7 +300,7 @@ class Stock_request_model extends CI_Model
                 }
 
                 if(!empty($todate)){
-                    $this->db->where('sma_stock_requests.date >=', $todate);
+                    $this->db->where('sma_stock_requests.date <=', $todate);
                 }
 
                 $this->db->group_by('sma_stock_request_items.product_id');
