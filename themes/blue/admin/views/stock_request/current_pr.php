@@ -41,6 +41,7 @@
                                 echo form_dropdown('warehouse', $wh, ($_POST['warehouse_id'] ?? $_POST['warehouse_id']), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" ');*/ 
                             ?>
                             <select class="form-control" id="powarehouse" name="warehouse" >
+                                <option value="null">Select Warehouse</option>
                                 <?php
                                     foreach($warehouses as $warehouse)
                                     {
