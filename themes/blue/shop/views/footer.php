@@ -23,9 +23,11 @@
                                 <img  style= " height: 35px !important; width: 150px !important;margin-bottom: 50px;" alt="<?= $shop_settings->shop_name; ?>" src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" class="img-responsive" />
                 </a>
                 <p style="margin-bottom: 50px !important;">
-                CR: T234567 <br />
-                Pharma. M <br />
-                KSA ,Riyadh ,Olaya main road ,Mousa bin nosair street , Silicon building no.1 , Office 7
+                    CR: T234567 <br />
+                    Pharma. M <br />
+                    KSA ,Riyadh ,Olaya main road ,Mousa bin nosair street , Silicon building no.1 , Office 7 <br />
+                    Phone No. <?= $shop_settings->phone; ?> <br />
+                    Email <?= $shop_settings->email; ?>
                 </p>
                 <!--<p style="margin-bottom: 50px !important;">
                     Copyright 2022 © Avenzur *Disclaimer: Statements made, or products sold through this website,
@@ -33,39 +35,31 @@
                     They are not intended to diagnose, treat, cure or prevent any disease.
                    
                 </p>-->
-                <p>
-                    <!--<i class="fa fa-phone"></i> <span class="margin-left-md"><?= $shop_settings->phone; ?></span>-->
-                    <!--<i class="fa fa-envelope margin-left-xl"></i> <span class="margin-left-md"><?= $shop_settings->email; ?></span>-->
-                </p>
-             <?php if (!empty($pages)) {
-                            echo '<ul class="list-inline">';
-                             foreach ($pages as $page) {
-                                 echo '<li><a href="' . site_url('shop/page/' . $page->slug) . '">' . $page->name . '</a></li>';
-                                //   echo '<li><a href="' . site_url('shop/page/' . $page->slug) . '">' . $page->name . '</a></li>';
-                                    
-                            }
-                           echo '</ul>';
-                        }?>
+
+                <!--<div class="title-footer"><span><?= lang('payment_methods'); ?></span></div>-->
+                <img class="img-responsive" src="<?= $assets; ?>/images/payment-methods.png" alt="Payment Methods">
+            </div>
+
+            <div class="clearfix visible-sm-block"></div>
+            <div class="col-md-3 col-sm-6"></div>
+
+            <div class="col-md-3 col-sm-6">
+                <?php if (!empty($pages)) {
+                    echo '<ul class="list-inline">';
+                        foreach ($pages as $page) {
+                            echo '<li><a href="' . site_url('shop/page/' . $page->slug) . '">' . $page->name . '</a></li>';
+                        //   echo '<li><a href="' . site_url('shop/page/' . $page->slug) . '">' . $page->name . '</a></li>';
+                            
+                    }
+                    echo '</ul>';
+                }?>
                 <!--<ul class="list-inline">-->
                     
                 <!--    <li><a href="<?= site_url('shop/page/' . $shop_settings->privacy_link); ?>"><?= lang('privacy_policy'); ?></a></li>-->
                 <!--     <li>    <a href="<?= site_url('shop/page/' . $shop_settings->terms_link); ?>"><?= lang('terms_conditions'); ?></a></li>-->
                 <!--     <li>  <a href="<?= site_url('shop/page/not-healthcare-advice'); ?>"><?= lang('Not_Healthcare_Advice'); ?></a></li>-->
                 <!--     <li>  <a href="<?= site_url('shop/blog'); ?>"><?= lang('Blog'); ?></a>  </li>-->
-                <!--</ul>-->
-            </div>
-
-            <div class="clearfix visible-sm-block"></div>
-            <div class="col-md-3 col-sm-6">
-                
-            </div>
-
-            <div class="col-md-3 col-sm-6">
-                
-                <!--<div class="title-footer"><span><?= lang('payment_methods'); ?></span></div>-->
-             
-                <img class="img-responsive" src="<?= $assets; ?>/images/payment-methods.png" alt="Payment Methods">
-                
+                <!--</ul>-->            
             </div>
 
         </div>
