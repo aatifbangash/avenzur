@@ -251,7 +251,7 @@ class Stock_request_model extends CI_Model
         return $data_res;
     }
     
-    public function getCurrentPR($warehouse_id){
+    public function getCurrentPR($warehouse_id, $fromdate, $todate){
         $response = array();
         if($warehouse_id == null || $warehouse_id == 'null'){
             $this->db
@@ -264,8 +264,17 @@ class Stock_request_model extends CI_Model
                 ->from('sma_stock_requests')
                 ->join('sma_stock_request_items', 'sma_stock_request_items.stock_request_id = sma_stock_requests.id')
                 ->join('sma_products', 'sma_products.id = sma_stock_request_items.product_id', 'left')
-                ->where('sma_stock_requests.status', 'pending')
-                ->group_by('sma_stock_request_items.product_id');
+                ->where('sma_stock_requests.status', 'pending');
+
+                if(!empty($fromdate)){
+                    $this->db->where('sma_stock_requests.date >=', $fromdate);
+                }
+
+                if(!empty($todate)){
+                    $this->db->where('sma_stock_requests.date >=', $todate);
+                }
+
+                $this->db->group_by('sma_stock_request_items.product_id');
         }else{
             $this->db
                 ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_stock_request_items.required_stock) As total_req_stock, SUM(sma_stock_request_items.avg_stock) As total_avg_stock')
@@ -278,8 +287,17 @@ class Stock_request_model extends CI_Model
                 ->join('sma_stock_request_items', 'sma_stock_request_items.stock_request_id = sma_stock_requests.id')
                 ->join('sma_products', 'sma_products.id = sma_stock_request_items.product_id', 'left')
                 ->where('sma_stock_requests.status', 'pending')
-                ->where('sma_stock_requests.warehouse_id', $warehouse_id)
-                ->group_by('sma_stock_request_items.product_id');
+                ->where('sma_stock_requests.warehouse_id', $warehouse_id);
+
+                if(!empty($fromdate)){
+                    $this->db->where('sma_stock_requests.date >=', $fromdate);
+                }
+
+                if(!empty($todate)){
+                    $this->db->where('sma_stock_requests.date >=', $todate);
+                }
+
+                $this->db->group_by('sma_stock_request_items.product_id');
         }
         
         $q = $this->db->get();

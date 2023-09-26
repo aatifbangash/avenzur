@@ -333,8 +333,10 @@ class stock_request extends MY_Controller
             }
         }else{
             $warehouse_id = isset($_POST['warehouse']) ? $_POST['warehouse'] : $_POST['warehouse_id'];
+            $fromdate = $_POST['fromdate'];
+            $todate = $_POST['todate'];
            
-            $current_pr = $this->stock_request_model->getCurrentPR($warehouse_id);
+            $current_pr = $this->stock_request_model->getCurrentPR($warehouse_id, $fromdate, $todate);
             $this->data['current_pr'] = $current_pr;
             $this->data['warehouse_id'] = $warehouse_id;
 
