@@ -41,7 +41,7 @@
             </div>
 
             <div class="clearfix visible-sm-block"></div>
-            <div class="col-md-3 col-sm-6">
+            <div class="col-md-3 col-sm-6" style="padding: 75px;">
                 <ul>
                     <li>Store Policy</li>
                     <li>About</li>
@@ -52,7 +52,7 @@
                 </ul>
             </div>
 
-            <div class="col-md-3 col-sm-6">
+            <div class="col-md-3 col-sm-6" style="padding: 75px;">
                 <ul>
                     <li>My Account</li>
                     <li>Order Track</li>
