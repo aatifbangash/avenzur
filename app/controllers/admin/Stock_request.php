@@ -323,7 +323,6 @@ class stock_request extends MY_Controller
                     admin_redirect('stock_request/purchase_requests');
                 }    
             }else{
-                print_r($_POST);exit;
                 if($this->stock_request_model->addPurchaseRequest($data, $items, $warehouse_id)){
                     $this->session->set_flashdata('message', $this->lang->line('Purchase_request_added'));
                     admin_redirect('stock_request/purchase_requests');
