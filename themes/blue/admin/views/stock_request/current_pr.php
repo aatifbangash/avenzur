@@ -39,7 +39,7 @@
                                 }
                                 echo form_dropdown('warehouse', $wh, ($_POST['warehouse_id'] ?? $_POST['warehouse_id']), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
                             <br /><br />
-                            <input type="submit" value="search" class="btn btn-primary" name="search_product" />    
+                            <input type="submit" value="search" class="btn btn-primary" name="search_product" onclick="submitForm('search')" />    
                     </div>
                     </div>
 
@@ -60,7 +60,7 @@
                                     ?>                  
                             </select>
                             <br /><br />
-                            <input type="submit" class="btn btn-primary" name="submit" id="add_request" value="<?= lang('Submit'); ?>" />
+                            <input type="submit" class="btn btn-primary" name="submit" onclick="submitForm('data')" id="add_request" value="<?= lang('Submit'); ?>" />
                             
                         </div>
                     </div>
@@ -131,6 +131,7 @@
                             <?php
                                 }
                             ?>
+                            <input type="hidden" id="form_action" name="form_action" value="">
                             <input type="hidden" name="warehouse_id" value="<?= isset($_POST['warehouse']) ? $_POST['warehouse'] : $_POST['warehouse_id']; ?>" />
                         </tbody>
                         
@@ -146,6 +147,15 @@
         var average_stock = document.getElementById('avg_stock_'+count).value;
         var qreq = (average_stock*obj.value) - available_stock;
         document.getElementById('required_stock_'+count).value = qreq;
+    }
+
+    function submitForm(buttonClicked) {
+        // Determine which button was clicked and set a hidden input field
+        // with the corresponding value
+        document.getElementById('form_action').value = buttonClicked;
+        
+        // Submit the form
+        document.getElementById('myForm').submit();
     }
 </script>
 <?php echo form_close(); ?>
