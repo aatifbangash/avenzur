@@ -71,7 +71,7 @@
                 </p>
                 <hr />
                 
-                <div class="col-md-12">
+                <div class="col-md-12" style="padding: 0px;">
                     <div class="col-md-4">
                         <div class="form-group">
                             <?= lang('Status', 'Status'); ?>
