@@ -252,7 +252,7 @@ class Stock_request_model extends CI_Model
     }
     
     public function getCurrentPR($warehouse_id, $fromdate, $todate){
-        echo $fromdate.' - '.$todate;exit;
+        echo 'Dates: '.$fromdate.' - '.$todate;
         $response = array();
         if($warehouse_id == null || $warehouse_id == 'null'){
             $this->db
