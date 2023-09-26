@@ -32,6 +32,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <?php
+                                echo lang('warehouse', 'powarehouse');
                                 /*echo lang('warehouse', 'powarehouse');;
                                 $wh[''] = '';
                                 foreach ($warehouses as $warehouse) {
@@ -43,7 +44,8 @@
                                 <?php
                                     foreach($warehouses as $warehouse)
                                     {
-                                        echo '<option value="'.$warehouse->id.'">'.$warehouse->name.'</option>';
+                                        $selected = ($warehouse->id == $warehouse_id) ? 'selected' : ''; // Check if it's the selected warehouse
+                                        echo '<option value="' . $warehouse->id . '" ' . $selected . '>' . $warehouse->name . '</option>';
                                     }
                                 ?>                  
                             </select>
