@@ -252,6 +252,7 @@ class Stock_request_model extends CI_Model
     }
     
     public function getCurrentPR($warehouse_id, $fromdate, $todate){
+        echo $fromdate.' - '.$todate;exit;
         $response = array();
         if($warehouse_id == null || $warehouse_id == 'null'){
             $this->db
@@ -271,7 +272,7 @@ class Stock_request_model extends CI_Model
                 }
 
                 if(!empty($todate)){
-                    $this->db->where('sma_stock_requests.date >=', $todate);
+                    $this->db->where('sma_stock_requests.date <=', $todate);
                 }
 
                 $this->db->group_by('sma_stock_request_items.product_id');
