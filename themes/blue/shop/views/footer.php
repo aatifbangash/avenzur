@@ -20,14 +20,19 @@
             <div class="col-md-6 col-sm-12">
                 <!--<div class="title-footer"><span><?= lang('about_us'); ?></span></div>-->
                 <a href="<?= site_url(); ?>">
-                                <img  style= " height: 58px !important; width: 283px !important;    margin-bottom: 50px;" alt="<?= $shop_settings->shop_name; ?>" src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" class="img-responsive" />
-                 </a>
+                                <img  style= " height: 35px !important; width: 150px !important;margin-bottom: 50px;" alt="<?= $shop_settings->shop_name; ?>" src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" class="img-responsive" />
+                </a>
                 <p style="margin-bottom: 50px !important;">
+                CR: T234567 <br />
+                Pharma. M <br />
+                KSA ,Riyadh ,Olaya main road ,Mousa bin nosair street , Silicon building no.1 , Office 7
+                </p>
+                <!--<p style="margin-bottom: 50px !important;">
                     Copyright 2022 © Avenzur *Disclaimer: Statements made, or products sold through this website,
                     have not been evaluated by the United States Food and Drug Administration (FDA).
                     They are not intended to diagnose, treat, cure or prevent any disease.
                    
-                </p>
+                </p>-->
                 <p>
                     <!--<i class="fa fa-phone"></i> <span class="margin-left-md"><?= $shop_settings->phone; ?></span>-->
                     <!--<i class="fa fa-envelope margin-left-xl"></i> <span class="margin-left-md"><?= $shop_settings->email; ?></span>-->
@@ -65,17 +70,6 @@
 
         </div>
     </div>
-
-    <!--  <div class="underfoteer" style="background: #F2F3F5 !important;">-->
-    <!--  <div class="row">-->
-    
-    <!--<div class="col-md-12">-->
-    <!--      <ul class="list-inline nav center " style="line-height: 0.7 !important;text-align: center !important;">-->
-                                <?php
-                               // if (DEMO) {
-                                    
-                               // }
-                                ?>
                                
                                 <!--<li class="dropdown">-->
                                 <!--    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">-->
