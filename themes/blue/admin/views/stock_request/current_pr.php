@@ -32,7 +32,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <?= lang('fromdate', 'fromdate'); ?>
-                            <?php echo form_input('fromdate', ($_POST['fromdate'] ?? ''), 'class="form-control input-tip date" id="fromdate" required="required"'); ?>
+                            <?php echo form_input('fromdate', ($_POST['fromdate'] ?? ''), 'class="form-control input-tip date" id="fromdate"'); ?>
                             <br /><br />
                             <input type="submit" value="search" class="btn btn-primary" name="search_product" />    
                         </div>
@@ -41,7 +41,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <?= lang('todate', 'todate'); ?>
-                            <?php echo form_input('todate', ($_POST['todate'] ?? ''), 'class="form-control input-tip date" id="todate" required="required"'); ?>
+                            <?php echo form_input('todate', ($_POST['todate'] ?? ''), 'class="form-control input-tip date" id="todate"'); ?>
                         </div>
                     </div>
 
