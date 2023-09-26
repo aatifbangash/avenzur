@@ -42,14 +42,14 @@
 
             <div class="clearfix visible-sm-block"></div>
             <div class="col-md-3 col-sm-6">
-                
+                <ul>
                     <li>Store Policy</li>
                     <li>About</li>
                     <li><a href="<?= site_url('shop/page/' . $shop_settings->privacy_link); ?>"><?= lang('privacy_policy'); ?></a></li>
                     <li><a href="<?= site_url('shop/page/' . $shop_settings->terms_link); ?>"><?= lang('terms_conditions'); ?></a></li>
                     <li>Track Order</li>
                     <li>Refund & Return</li>
-                
+                </ul>
             </div>
 
             <div class="col-md-3 col-sm-6">
