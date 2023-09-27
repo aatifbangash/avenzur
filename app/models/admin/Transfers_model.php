@@ -498,9 +498,8 @@ class Transfers_model extends CI_Model
         if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
             if(($status == "sent" && $type == 'edit')){
                 $balance_qty = $quantity;
-                echo '<pre>';
                 foreach ($pis as $pi) {
-                    print_r($pi);
+                    echo $balance_qty.' - '.$quantity;
                     if ($balance_qty <= $quantity && $quantity > 0) {
                         if ($pi->quantity_balance >= $quantity) {
                             $balance_qty = $pi->quantity_balance - $quantity;
