@@ -200,8 +200,6 @@ class Stock_request_model extends CI_Model
         $user_group_obj = $this->db->select('*')->from('sma_groups')->where('id', $user_group_id)->limit(1);
         $user_group_arr = array();
 
-        print_r($user_group_obj);
-
         if ($user_group_obj->num_rows() > 0) {
             foreach (($user_group_obj->result()) as $row) {
                 $user_group_arr[] = $row;
