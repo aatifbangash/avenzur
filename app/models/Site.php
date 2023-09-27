@@ -1410,6 +1410,7 @@ public function getallCountry()
                 }
             }
         } elseif ($product_id) {
+            echo 'here in last...';
             $warehouses = $this->getAllWarehouses();
             foreach ($warehouses as $warehouse) {
                 $this->syncProductQty($product_id, $warehouse->id, $batch_no);
@@ -1434,6 +1435,7 @@ public function getallCountry()
                 }
             }
         }
+        exit;
     }
 
     public function syncSalePayments($id)

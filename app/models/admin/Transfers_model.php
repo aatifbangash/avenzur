@@ -499,7 +499,6 @@ class Transfers_model extends CI_Model
             if(($status == "sent" && $type == 'edit')){
                 $balance_qty = $quantity;
                 foreach ($pis as $pi) {
-                    echo $balance_qty.' - '.$quantity;
                     if ($balance_qty <= $quantity && $quantity > 0) {
                         if ($pi->quantity_balance >= $quantity) {
                             $balance_qty = $pi->quantity_balance - $quantity;
@@ -521,7 +520,6 @@ class Transfers_model extends CI_Model
             $clause = ['purchase_id' => null, 'transfer_id' => null, 'product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batch_no, 'option_id' => $option_id];
             $this->site->setPurchaseItem($clause, (0 - $quantity));
         }
-        exit;
         $this->site->syncQuantity(null, null, null, $product_id, $batch_no);
     }
 
