@@ -55,7 +55,15 @@
 
             <div class="col-md-3 col-sm-6" style="padding: 75px;">
                 <ul style="font-family: 'Montserrat';font-size: 13px;">
-                    <li><a href="<?= site_url('profile'); ?>">My Account</a></li>
+                    <?php 
+                        
+                        if ($loggedIn) {
+                            $my_account_link = 'profile';
+                        }else{
+                            $my_account_link = 'login';
+                        }
+                    ?>
+                    <li><a href="<?= site_url($my_account_link); ?>">My Account</a></li>
                     <li>Order Track</li>
                 </ul>      
 
