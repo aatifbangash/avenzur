@@ -1,6 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <link href="<?= base_url('assets/custom/carousel.css') ?>" rel="stylesheet"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="<?= base_url('assets/custom/waltzerjs.min.js') ?>"></script>
 <style>
 .fa {
