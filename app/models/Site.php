@@ -1254,6 +1254,7 @@ public function getallCountry()
 
         if ($this->db->update('products', ['quantity' => $balance_qty], ['id' => $product_id])) {
             if ($this->getWarehouseProducts($product_id, $batchno, $warehouse_id)) {
+                echo 'warehouseid: '.$warehouse_id.' - batchno: '.$batchno.' - productid: '.$product_id;
                 $this->db->update('warehouses_products', ['quantity' => $wh_balance_qty], ['product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno]);
             } else {
                 if (!$wh_balance_qty) {
@@ -1571,7 +1572,6 @@ public function getallCountry()
         }
         $this->db->group_start()->where('status', 'received')->or_where('status', 'partial')->group_end();
         $q = $this->db->get('purchase_items');
-        echo $this->db->last_query();
         if ($q->num_rows() > 0) {
             $data = $q->row();
             return $data->stock;
