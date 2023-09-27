@@ -1252,6 +1252,7 @@ public function getallCountry()
         //$wh_balance_qty = $wh_old_balance_qty - $wh_sale_qty + $wh_return_qty;
         $wh_balance_qty = $wh_old_balance_qty;
 
+        echo 'Warehouse Balance: '.$wh_balance_qty;exit;
         if ($this->db->update('products', ['quantity' => $balance_qty], ['id' => $product_id])) {
             if ($this->getWarehouseProducts($product_id, $batchno, $warehouse_id)) {
                 $this->db->update('warehouses_products', ['quantity' => $wh_balance_qty], ['product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno]);
@@ -1410,7 +1411,6 @@ public function getallCountry()
                 }
             }
         } elseif ($product_id) {
-            echo 'here in last...';
             $warehouses = $this->getAllWarehouses();
             foreach ($warehouses as $warehouse) {
                 $this->syncProductQty($product_id, $warehouse->id, $batch_no);
