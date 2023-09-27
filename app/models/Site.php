@@ -1434,7 +1434,6 @@ public function getallCountry()
                 }
             }
         }
-        exit;
     }
 
     public function syncSalePayments($id)
@@ -1571,8 +1570,6 @@ public function getallCountry()
         }
         $this->db->group_start()->where('status', 'received')->or_where('status', 'partial')->group_end();
         $q = $this->db->get('purchase_items');
-        echo $this->db->last_query();
-        echo '<pre>';print_r($q);
         if ($q->num_rows() > 0) {
             $data = $q->row();
             return $data->stock;
