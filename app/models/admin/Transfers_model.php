@@ -516,7 +516,9 @@ class Transfers_model extends CI_Model
                 }
             }
             
-        } 
+        } else{
+            return false;
+        }
         /* This block seems with no real use */
         /*else {
             $clause = ['purchase_id' => null, 'transfer_id' => null, 'product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batch_no, 'option_id' => $option_id];
@@ -577,10 +579,14 @@ class Transfers_model extends CI_Model
                 }
             }
             
-        } else {
+        } else{
+            return false;
+        }
+        /* This block seems useless with no valid use case */
+        /*else {
             $clause = ['purchase_id' => null, 'transfer_id' => null, 'product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batch_no, 'option_id' => $option_id];
             $this->site->setPurchaseItem($clause, (0 - $quantity));
-        }
+        }*/
         $this->site->syncQuantity(null, null, null, $product_id, $batch_no);
     }
 
