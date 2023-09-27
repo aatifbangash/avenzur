@@ -496,6 +496,7 @@ class Transfers_model extends CI_Model
 
     public function syncTransderdSavedItems($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null, $status, $type){
         if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
+            echo 'Here in PIS: ';exit;
             if(($status == "sent" && $type == 'edit')){
                 $balance_qty = $quantity;
                 foreach ($pis as $pi) {
@@ -517,6 +518,7 @@ class Transfers_model extends CI_Model
             }
             
         } else {
+            echo 'No PIS: ';exit;
             $clause = ['purchase_id' => null, 'transfer_id' => null, 'product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batch_no, 'option_id' => $option_id];
             $this->site->setPurchaseItem($clause, (0 - $quantity));
         }
