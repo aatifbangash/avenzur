@@ -57,29 +57,7 @@
                 <ul style="font-family: 'Montserrat';font-size: 13px;">
                     <li>My Account</li>
                     <li>Order Track</li>
-                </ul>    
-                
-                <a href="#" class="fa fa-facebook" style="width: 30px !important;padding: 8px !important;font-size: 12px !important;"></a>
-                <a href="#" class="fa fa-twitter" style="width: 30px !important;padding: 8px !important;font-size: 12px !important;"></a>
-                <a href="#" class="fa fa-instagram" style="width: 30px !important;padding: 8px !important;font-size: 12px !important;"></a>
-                <a href="#" class="fa fa-linkedin" style="width: 30px !important;padding: 8px !important;font-size: 12px !important;"></a>
-                <a href="#" class="fa fa-youtube" style="width: 30px !important;padding: 8px !important;font-size: 12px !important;"></a>
-                <a href="#" class="fa fa-skype" style="width: 30px !important;padding: 8px !important;font-size: 12px !important;"></a>
-
-                <!--<a href="#" class="fa fa-android"></a>
-                <a href="#" class="fa fa-pinterest"></a>
-                <a href="#" class="fa fa-snapchat-ghost"></a>
-                <a href="#" class="fa fa-dribbble"></a>
-                <a href="#" class="fa fa-vimeo"></a>
-                <a href="#" class="fa fa-tumblr"></a>
-                <a href="#" class="fa fa-vine"></a>
-                <a href="#" class="fa fa-foursquare"></a>
-                <a href="#" class="fa fa-stumbleupon"></a>
-                <a href="#" class="fa fa-flickr"></a>
-                <a href="#" class="fa fa-yahoo"></a>
-                <a href="#" class="fa fa-reddit"></a>
-                <a href="#" class="fa fa-google" style="width: 30px !important;padding: 8px !important;font-size: 12px !important;"></a>
-                <a href="#" class="fa fa-rss"></a>-->
+                </ul>      
             </div>
 
         </div>
