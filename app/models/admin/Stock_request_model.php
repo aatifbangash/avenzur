@@ -7,6 +7,7 @@ class Stock_request_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->library('ion_auth');
     }
 
     public function addPurchaseRequest($data, $items, $warehouse_id, $fromdate, $todate){
