@@ -55,9 +55,24 @@
 
             <div class="col-md-3 col-sm-6" style="padding: 75px;">
                 <ul style="font-family: 'Montserrat';font-size: 13px;">
-                    <li>My Account</li>
+                    <?php 
+                        
+                        if ($loggedIn) {
+                            $my_account_link = 'profile';
+                        }else{
+                            $my_account_link = 'login';
+                        }
+                    ?>
+                    <li><a href="<?= site_url($my_account_link); ?>">My Account</a></li>
                     <li>Order Track</li>
                 </ul>      
+
+                <a href="#" class="fa fa-facebook" style="width: 30px !important;padding: 8px !important;font-size: 15px !important;"></a>
+                <a href="#" class="fa fa-twitter" style="width: 30px !important;padding: 8px !important;font-size: 15px !important;"></a>
+                <a href="#" class="fa fa-instagram" style="width: 30px !important;padding: 8px !important;font-size: 15px !important;"></a>
+                <a href="#" class="fa fa-linkedin" style="width: 30px !important;padding: 8px !important;font-size: 15px !important;"></a>
+                <a href="#" class="fa fa-youtube" style="width: 30px !important;padding: 8px !important;font-size: 15px !important;"></a>
+                <a href="#" class="fa fa-skype" style="width: 30px !important;padding: 8px !important;font-size: 15px !important;"></a>
             </div>
 
         </div>

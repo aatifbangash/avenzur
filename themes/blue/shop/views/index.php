@@ -76,7 +76,7 @@
         
                                                     <div class="product-top">
                                                         <div class="image">
-                                                        
+                                                        <a href="<?= site_url('category/'.$fp->slug) ?>">
                                                         <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" alt=""  class="img-responsive">
                                                         </a>
                                                     </div>
@@ -277,7 +277,9 @@
                                                 <div class="product alt ">
                                                     <div class="product-top">
                                                         <div class="image">
-                                                            <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" alt="" class="img-responsive">
+                                                            <a href="<?= site_url('product/' . $fp->slug); ?>">
+                                                                <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" alt="" class="img-responsive">
+                                                            </a>
                                                         </div>
                                                     </div>
                                                     <div class="product-desc homeprod">
@@ -370,7 +372,9 @@
                                                 <div class="product alt ">
                                                     <div class="product-top">
                                                         <div class="image">
-                                                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" alt="" class="img-responsive">
+                                                            <a href="<?= site_url('product/' . $fp->slug); ?>">
+                                                                <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" alt="" class="img-responsive">
+                                                            </a>
                                                         </div>
                                                     </div>
                                                     <div class="product-desc homeprod">

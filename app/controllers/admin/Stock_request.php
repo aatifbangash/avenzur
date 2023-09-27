@@ -314,8 +314,11 @@ class stock_request extends MY_Controller
 
         if($_POST && !$_POST['search_product']){
             $warehouse_id = isset($_POST['warehouse']) ? $_POST['warehouse'] : $_POST['warehouse_id'];
+            $fromdate = $_POST['fromdate'];
+            $todate = $_POST['todate'];
+            // Resume work here on dates check, to update only those warehouses which fall in date range
             if(isset($_POST['request_id'])){
-                if($this->stock_request_model->editPurchaseRequest($_POST['request_id'], $data, $items, $warehouse_id)){
+                if($this->stock_request_model->editPurchaseRequest($_POST['request_id'], $data, $items, $warehouse_id, $fromdate, $todate)){
                     $this->session->set_flashdata('message', $this->lang->line('Purchase_request_edited'));
                     admin_redirect('stock_request/purchase_requests');
                 }else{
@@ -323,7 +326,7 @@ class stock_request extends MY_Controller
                     admin_redirect('stock_request/purchase_requests');
                 }    
             }else{
-                if($this->stock_request_model->addPurchaseRequest($data, $items, $warehouse_id)){
+                if($this->stock_request_model->addPurchaseRequest($data, $items, $warehouse_id, $fromdate, $todate)){
                     $this->session->set_flashdata('message', $this->lang->line('Purchase_request_added'));
                     admin_redirect('stock_request/purchase_requests');
                 }else{
