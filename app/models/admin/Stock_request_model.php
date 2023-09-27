@@ -9,7 +9,13 @@ class Stock_request_model extends CI_Model
         parent::__construct();
     }
 
-    public function addPurchaseRequest($data, $items, $warehouse_id){
+    public function addPurchaseRequest($data, $items, $warehouse_id, $fromdate, $todate){
+        if(!empty($fromdate)){
+            $fromdate = date("Y-m-d", strtotime(str_replace("/", "-", $fromdate)));
+        }
+        if(!empty($todate)){
+            $todate = date("Y-m-d", strtotime(str_replace("/", "-", $todate)));
+        }
         $this->db->trans_start();
         if ($this->db->insert('purchase_requests', $data)) {
             $request_id = $this->db->insert_id();
@@ -20,9 +26,26 @@ class Stock_request_model extends CI_Model
             }
             
             if($warehouse_id == null || $warehouse_id == 'null'){
-                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending']);
+                $this->db->where('status', 'pending');
+                if(!empty($fromdate)){
+                    $this->db->where('date >=', $fromdate);
+                }
+                if(!empty($todate)){
+                    $this->db->where('date <=', $todate);
+                }
+                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed']);
+                //$this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending']);
             }else{
-                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending', 'warehouse_id' => $warehouse_id]);
+                $this->db->where('status', 'pending');
+                $this->db->where('warehouse_id', $warehouse_id);
+                if(!empty($fromdate)){
+                    $this->db->where('date >=', $fromdate);
+                }
+                if(!empty($todate)){
+                    $this->db->where('date <=', $todate);
+                }
+                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed']);
+                //$this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending', 'warehouse_id' => $warehouse_id]);
             }
         }
         
@@ -55,7 +78,7 @@ class Stock_request_model extends CI_Model
         return false;
     }
 
-    public function editPurchaseRequest($req_id, $data, $items, $warehouse_id){
+    public function editPurchaseRequest($req_id, $data, $items, $warehouse_id, $fromdate, $todate){
         $this->db->trans_start();
 
         $this->db->delete('sma_purchase_requests', ['id' => $req_id]);
