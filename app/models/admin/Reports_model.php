@@ -2758,7 +2758,42 @@ class Reports_model extends CI_Model
                                 ) withOutT ON withOutT.purchase_id = p.id
                                 
                                 GROUP BY
-                                    pi.purchase_id) AS a
+                                    pi.purchase_id
+                                    
+                                    UNION ALL
+
+                                    SELECT 
+                                        m.id as trans_ID,  
+                                        'serviceInvoice' as trans_type,   
+                                        '-' as warehouse, 
+                                        m.date as trans_date, 
+                                       
+                                        
+                                        m.reference_no as trans_invoice_number,
+                                        0 as total_quantity,
+                                        0  as warehouse_id,
+
+                                        m.reference_no,
+
+                                        c.company AS supplier_name,
+                                        c.vat_no AS supplier_vat_no,  
+                                       
+                                        
+                                        0 as total_discount,
+                                        m.payment_amount AS grand_total,
+                                        m.bank_charges AS total_tax,
+                                        0 AS total_item_with_vat,
+                                        0 AS total_item_without_tax,
+                                        ae.number AS ledger_entry_number
+
+
+                                    FROM sma_memo m
+                                    JOIN sma_companies as c ON c.id = m.supplier_id
+                                    LEFT JOIN sma_accounts_entries as ae ON ae.memo_id = m.id
+
+                                    WHERE type = 'serviceinvoicesupplier'
+
+                                    ) AS a
                     WHERE DATE(a.trans_date) >= '" . $start_date . "' AND DATE(a.trans_date) <= '" . $end_date . "'";
 
         if ($warehouse_id) {
