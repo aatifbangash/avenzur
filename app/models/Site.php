@@ -1577,6 +1577,7 @@ public function getallCountry()
         $q = $this->db->get('purchase_items');
         if ($q->num_rows() > 0) {
             $data = $q->row();
+            print_r($data);
             return $data->stock;
         }
         return 0;
