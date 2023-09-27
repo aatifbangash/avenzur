@@ -495,11 +495,12 @@ class Transfers_model extends CI_Model
     }
 
     public function syncTransderdSavedItems($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null, $status, $type){
-        echo 'Here in saved items block...';exit;
         if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
             if(($status == "sent" && $type == 'edit')){
                 $balance_qty = $quantity;
+                echo '<pre>';
                 foreach ($pis as $pi) {
+                    print_r($pi);
                     if ($balance_qty <= $quantity && $quantity > 0) {
                         if ($pi->quantity_balance >= $quantity) {
                             $balance_qty = $pi->quantity_balance - $quantity;
@@ -521,6 +522,7 @@ class Transfers_model extends CI_Model
             $clause = ['purchase_id' => null, 'transfer_id' => null, 'product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batch_no, 'option_id' => $option_id];
             $this->site->setPurchaseItem($clause, (0 - $quantity));
         }
+        exit;
         $this->site->syncQuantity(null, null, null, $product_id, $batch_no);
     }
 
@@ -555,7 +557,6 @@ class Transfers_model extends CI_Model
 
     public function syncTransderdItem($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null, $status, $type)
     {
-        echo 'Here in transferred items block';exit;
         if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
             if(($status == "sent" && $type == 'add') || ($status == "completed" && $type == 'add')){
                 $balance_qty = $quantity;
