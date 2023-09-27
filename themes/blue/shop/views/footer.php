@@ -55,7 +55,7 @@
 
             <div class="col-md-3 col-sm-6" style="padding: 75px;">
                 <ul style="font-family: 'Montserrat';font-size: 13px;">
-                    <li>My Account</li>
+                    <li><a href="<?= site_url('profile'); ?>">My Account</a></li>
                     <li>Order Track</li>
                 </ul>      
 
