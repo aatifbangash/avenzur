@@ -314,6 +314,7 @@ class stock_request extends MY_Controller
 
         if($_POST && !$_POST['search_product']){
             $warehouse_id = isset($_POST['warehouse']) ? $_POST['warehouse'] : $_POST['warehouse_id'];
+            // Resume work here on dates check, to update only those warehouses which fall in date range
             if(isset($_POST['request_id'])){
                 if($this->stock_request_model->editPurchaseRequest($_POST['request_id'], $data, $items, $warehouse_id)){
                     $this->session->set_flashdata('message', $this->lang->line('Purchase_request_edited'));
