@@ -137,9 +137,6 @@ class Transfers_model extends CI_Model
                 $this->site->updateReference('to');
             }
             foreach ($items as $item) {
-                echo '<pre>';
-                print_r($item);
-                exit;
                 $item['transfer_id'] = $transfer_id;
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 if ($status == 'completed') {
@@ -498,6 +495,7 @@ class Transfers_model extends CI_Model
     }
 
     public function syncTransderdSavedItems($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null, $status, $type){
+        echo 'Here in saved items block...';exit;
         if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
             if(($status == "sent" && $type == 'edit')){
                 $balance_qty = $quantity;
@@ -557,6 +555,7 @@ class Transfers_model extends CI_Model
 
     public function syncTransderdItem($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null, $status, $type)
     {
+        echo 'Here in transferred items block';exit;
         if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
             if(($status == "sent" && $type == 'add') || ($status == "completed" && $type == 'add')){
                 $balance_qty = $quantity;
