@@ -495,6 +495,7 @@ class Transfers_model extends CI_Model
     }
 
     public function syncTransderdSavedItems($product_id, $warehouse_id, $batch_no, $quantity, $option_id = null, $status, $type){
+        echo 'ProductId: '.$product_id.' - WarehouseId: '.$warehouse_id.' - BatchNo: '.$batch_no;
         if ($pis = $this->site->getPurchasedItemsWithBatch($product_id, $warehouse_id, $batch_no, $option_id)) {
             echo 'Here in PIS: ';exit;
             if(($status == "sent" && $type == 'edit')){
