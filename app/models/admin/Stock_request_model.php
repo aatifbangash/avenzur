@@ -196,6 +196,8 @@ class Stock_request_model extends CI_Model
 
     public function getStockRequests($warehouse_id){
         $response = array();
+        echo $user = $this->ion_auth->user()->row();
+        exit;
         if($this->ion_auth->in_group(['purchasemanager'])){
             $this->db
                 ->select('sma_stock_requests.id, sma_stock_requests.warehouse_id, sma_stock_requests.status, sma_stock_requests.date, sma_warehouses.name as warehouse, SUM(sma_stock_request_items.required_stock) AS req_stock')
