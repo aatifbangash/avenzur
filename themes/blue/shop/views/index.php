@@ -76,7 +76,7 @@
         
                                                     <div class="product-top">
                                                         <div class="image">
-                                                        
+                                                        <a href="<?= site_url('category/'.$fp->slug) ?>">
                                                         <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" alt=""  class="img-responsive">
                                                         </a>
                                                     </div>
