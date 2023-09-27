@@ -59,16 +59,17 @@
                     <li>Order Track</li>
                 </ul>    
                 
-                <a href="#" class="fa fa-facebook"></a>
-                <a href="#" class="fa fa-twitter"></a>
-                <a href="#" class="fa fa-google"></a>
-                <a href="#" class="fa fa-linkedin"></a>
-                <a href="#" class="fa fa-youtube"></a>
-                <a href="#" class="fa fa-instagram"></a>
+                <a href="#" class="fa fa-facebook" style="padding: 2px !important;font-size: 12px !important;"></a>
+                <a href="#" class="fa fa-twitter" style="padding: 2px !important;font-size: 12px !important;"></a>
+                <a href="#" class="fa fa-google" style="padding: 2px !important;font-size: 12px !important;"></a>
+                <a href="#" class="fa fa-linkedin" style="padding: 2px !important;font-size: 12px !important;"></a>
+                <a href="#" class="fa fa-youtube" style="padding: 2px !important;font-size: 12px !important;"></a>
+                <a href="#" class="fa fa-instagram" style="padding: 2px !important;font-size: 12px !important;"></a>
+                <a href="#" class="fa fa-skype" style="padding: 2px !important;font-size: 12px !important;"></a>
+
+                <!--<a href="#" class="fa fa-android"></a>
                 <a href="#" class="fa fa-pinterest"></a>
                 <a href="#" class="fa fa-snapchat-ghost"></a>
-                <a href="#" class="fa fa-skype"></a>
-                <a href="#" class="fa fa-android"></a>
                 <a href="#" class="fa fa-dribbble"></a>
                 <a href="#" class="fa fa-vimeo"></a>
                 <a href="#" class="fa fa-tumblr"></a>
@@ -78,7 +79,7 @@
                 <a href="#" class="fa fa-flickr"></a>
                 <a href="#" class="fa fa-yahoo"></a>
                 <a href="#" class="fa fa-reddit"></a>
-                <a href="#" class="fa fa-rss"></a>
+                <a href="#" class="fa fa-rss"></a>-->
             </div>
 
         </div>
