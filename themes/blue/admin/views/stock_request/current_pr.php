@@ -111,6 +111,7 @@
                             <th><?= lang('Avg Consumption'); ?></th>
                             <th colspan="2"><?= lang('Q req'); ?></th>
                             <th><?= lang('Safety Stock'); ?></th>
+                            <th><?= lang('Actions'); ?></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -146,6 +147,9 @@
                                                     
                                                 </td>
                                                 <td class="dataTables_empty"><input style="width:40%;" type="text" name="safety_stock[]" value="<?= $months; ?>" onchange="changeSafetyStock(this, '<?= $count; ?>');" /> months</td>
+                                                <td class="dataTables_empty">
+                                                    <input type="button" value="Remove" onclick="removeRow(this);">
+                                                </td>
                                             </tr>
                                         <?php
                                     }
@@ -177,6 +181,12 @@
         var average_stock = document.getElementById('avg_stock_'+count).value;
         var qreq = (average_stock*obj.value) - available_stock;
         document.getElementById('required_stock_'+count).value = qreq;
+    }
+
+    function removeRow(button) {
+        // Find the parent row (tr) of the clicked button and remove it
+        var row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
     }
 </script>
 <?php echo form_close(); ?>
