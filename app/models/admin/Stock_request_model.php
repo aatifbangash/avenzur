@@ -200,17 +200,13 @@ class Stock_request_model extends CI_Model
         $user_group_obj = $this->db->select('*')->from('sma_groups')->where('id', $user_group_id)->limit(1)->get();
         $user_group_arr = array();
 
-        print_r($user_group_obj);
-
         if ($user_group_obj->num_rows() > 0) {
             foreach (($user_group_obj->result()) as $row) {
                 $user_group_arr[] = $row;
             }
         }
 
-        print_r($user_group_arr);exit;
-
-        if($this->ion_auth->in_group(['purchasemanager'])){
+        if($user_group_arr[0]->name == 'purchasemanager'){
             $this->db
                 ->select('sma_stock_requests.id, sma_stock_requests.warehouse_id, sma_stock_requests.status, sma_stock_requests.date, sma_warehouses.name as warehouse, SUM(sma_stock_request_items.required_stock) AS req_stock')
                 ->from('sma_stock_requests')
