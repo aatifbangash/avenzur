@@ -58,6 +58,13 @@
                     <li>My Account</li>
                     <li>Order Track</li>
                 </ul>      
+
+                <a href="#" class="fa fa-facebook" style="width: 30px !important;padding: 8px !important;font-size: 12px !important;"></a>
+                <a href="#" class="fa fa-twitter" style="width: 30px !important;padding: 8px !important;font-size: 12px !important;"></a>
+                <a href="#" class="fa fa-instagram" style="width: 30px !important;padding: 8px !important;font-size: 12px !important;"></a>
+                <a href="#" class="fa fa-linkedin" style="width: 30px !important;padding: 8px !important;font-size: 12px !important;"></a>
+                <a href="#" class="fa fa-youtube" style="width: 30px !important;padding: 8px !important;font-size: 12px !important;"></a>
+                <a href="#" class="fa fa-skype" style="width: 30px !important;padding: 8px !important;font-size: 12px !important;"></a>
             </div>
 
         </div>
