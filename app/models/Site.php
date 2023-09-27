@@ -1249,6 +1249,7 @@ public function getallCountry()
         //$wh_sale_qty = $this->getSaleQuantity($product_id, $warehouse_id);
         //$wh_return_qty = $this->getCustomerReturnsQuantity($product_id, $warehouse_id);
         echo $this->db->last_query().'<br />';
+        echo 'Warehouse Quantity: '.$wh_balance_qty.'<br />';
         //$wh_balance_qty = $wh_old_balance_qty - $wh_sale_qty + $wh_return_qty;
         $wh_balance_qty = $wh_old_balance_qty;
 
