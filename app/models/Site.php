@@ -1248,16 +1248,12 @@ public function getallCountry()
         $wh_old_balance_qty = $this->getBalanceQuantity($product_id, $batchno, $warehouse_id);
         //$wh_sale_qty = $this->getSaleQuantity($product_id, $warehouse_id);
         //$wh_return_qty = $this->getCustomerReturnsQuantity($product_id, $warehouse_id);
-        echo $this->db->last_query().'<br />';
-        echo 'Warehouse Quantity: '.$wh_balance_qty.'<br />';
+        
         //$wh_balance_qty = $wh_old_balance_qty - $wh_sale_qty + $wh_return_qty;
         $wh_balance_qty = $wh_old_balance_qty;
 
-        echo 'Warehouse Quantity: '.$wh_balance_qty.'<br />';
-
         if ($this->db->update('products', ['quantity' => $balance_qty], ['id' => $product_id])) {
             if ($this->getWarehouseProducts($product_id, $batchno, $warehouse_id)) {
-                echo 'warehouseid: '.$warehouse_id.' - batchno: '.$batchno.' - productid: '.$product_id.' - Qty: '.$wh_balance_qty.'<br />';
                 $this->db->update('warehouses_products', ['quantity' => $wh_balance_qty], ['product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno]);
             } else {
                 if (!$wh_balance_qty) {
@@ -1575,9 +1571,10 @@ public function getallCountry()
         }
         $this->db->group_start()->where('status', 'received')->or_where('status', 'partial')->group_end();
         $q = $this->db->get('purchase_items');
+        echo $this->db->last_query();
+        echo '<pre>';print_r($q);
         if ($q->num_rows() > 0) {
             $data = $q->row();
-            print_r($data);
             return $data->stock;
         }
         return 0;
