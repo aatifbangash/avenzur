@@ -137,6 +137,9 @@ class Transfers_model extends CI_Model
                 $this->site->updateReference('to');
             }
             foreach ($items as $item) {
+                echo '<pre>';
+                print_r($item);
+                exit;
                 $item['transfer_id'] = $transfer_id;
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 if ($status == 'completed') {
