@@ -1254,7 +1254,7 @@ public function getallCountry()
 
         if ($this->db->update('products', ['quantity' => $balance_qty], ['id' => $product_id])) {
             if ($this->getWarehouseProducts($product_id, $batchno, $warehouse_id)) {
-                echo 'warehouseid: '.$warehouse_id.' - batchno: '.$batchno.' - productid: '.$product_id;
+                echo 'warehouseid: '.$warehouse_id.' - batchno: '.$batchno.' - productid: '.$product_id.' - Qty: '.$wh_balance_qty;
                 $this->db->update('warehouses_products', ['quantity' => $wh_balance_qty], ['product_id' => $product_id, 'warehouse_id' => $warehouse_id, 'batchno' => $batchno]);
             } else {
                 if (!$wh_balance_qty) {
