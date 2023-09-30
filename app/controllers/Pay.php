@@ -208,6 +208,12 @@ class Pay extends MY_Shop_Controller
 
     public function directpay($id)
     {
+        if ($this->loggedIn) {
+            echo 'Logged In till Here';
+        }else{
+            echo 'Logged Out Now';
+        }
+        exit;
         $dp = $this->pay_model->getDirectPaySettings();
 
             if($dp->activation == 1)
