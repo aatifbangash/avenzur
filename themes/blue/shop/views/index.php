@@ -257,12 +257,12 @@
                 </div>
 
                 <div class="twinbanners" style="display: flex;justify-content: center;align-items: center;margin-top: 60px;margin-bottom: 40px;">
-                    <div class="col-md-6">
+                    <div class="col-md-6" style="padding-left: 0px;">
                         <div class="banner2">
                             <img alt="Banner2" src="<?= base_url('assets/images/710-x-300-(1).jpg') ?>" />
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6" style="padding-left: 0px;">
                         <div class="banner3">
                             <img alt="Banner3" src="<?= base_url('assets/images/710-x-300-(2).jpg') ?>" />
                         </div>
