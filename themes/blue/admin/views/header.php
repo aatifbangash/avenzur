@@ -1923,6 +1923,19 @@
                                         </a>
                                     </li>
                                     <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/service_invoice'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Supplier Service Invoice'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/list_service_invoice'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Supplier Service Invoice'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li id="quotes_index">
                                         <a class="submenu" href="<?= admin_url('customers/payment_from_customer'); ?>">
                                             <i class="fa fa-money"></i>
                                             <span class="text"> <?= lang('Add Customer Payment'); ?></span>

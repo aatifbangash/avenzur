@@ -4010,7 +4010,8 @@ class Reports extends MY_Controller
         $filterOnTypeArr = [
             "" => "-- Select Type --",
             "purchases" => "Purchases",         
-            "returnSupplier" => "Return to Supplier"
+            "returnSupplier" => "Return to Supplier",
+            "serviceInvoice" => "Service Invoice"
         ];
         $this->data['filterOnTypeArr'] = $filterOnTypeArr;
 
