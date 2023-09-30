@@ -67,7 +67,7 @@
                         foreach (array_chunk($all_categories, 8) as $fps) {
                             ?>
                             <div class="item row <?= empty($r) ? 'active' : ''; ?>">
-                                <div class="selected-products">
+                                
                                         <?php
                                         foreach ($fps as $fp) {
                                             ?>
@@ -149,7 +149,7 @@
                                 </div>
                                         <?php
                                     } ?>
-                            </div>
+                            
                             </div>
                         
                          
