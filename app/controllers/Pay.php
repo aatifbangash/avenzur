@@ -632,7 +632,7 @@ class Pay extends MY_Shop_Controller
             if (!empty($this->shop_settings->bank_details)) {
                 $btn_code .= '<div style="width:100%;">' . $this->shop_settings->bank_details . '</div><hr class="divider or">';
             }
-            if ($paypal->active == '1' && $inv->grand_total != '0.00') {
+            if (!empty($paypal) && $paypal->active == '1' && $inv->grand_total != '0.00') {
                 if (trim(strtolower($customer->country)) == $biller->country) {
                     $paypal_fee = $paypal->fixed_charges + ($inv->grand_total * $paypal->extra_charges_my / 100);
                 } else {
@@ -640,7 +640,7 @@ class Pay extends MY_Shop_Controller
                 }
                 $btn_code .= '<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=' . $paypal->account_email . '&item_name=' . $inv->reference_no . '&item_number=' . $inv->id . '&image_url=' . base_url() . 'assets/uploads/logos/' . $this->Settings->logo . '&amount=' . (($inv->grand_total - $inv->paid) + $paypal_fee) . '&no_shipping=1&no_note=1&currency_code=' . $this->default_currency->code . '&bn=BuyNow&rm=2&return=' . admin_url('sales/view/' . $inv->id) . '&cancel_return=' . admin_url('sales/view/' . $inv->id) . '&notify_url=' . admin_url('payments/paypalipn') . '&custom=' . $inv->reference_no . '__' . ($inv->grand_total - $inv->paid) . '__' . $paypal_fee . '"><img src="' . base_url('assets/images/btn-paypal.png') . '" alt="Pay by PayPal"></a> ';
             }
-            if ($skrill->active == '1' && $inv->grand_total != '0.00') {
+            if (!empty($skrill) && $skrill->active == '1' && $inv->grand_total != '0.00') {
                 if (trim(strtolower($customer->country)) == $biller->country) {
                     $skrill_fee = $skrill->fixed_charges + ($inv->grand_total * $skrill->extra_charges_my / 100);
                 } else {
@@ -674,6 +674,79 @@ class Pay extends MY_Shop_Controller
                 $error = $e->getMessage();
             }
             return ['sent' => $sent, 'error' => $error];
+        }
+    }
+
+    // Customer order/orders page
+    public function orders($id = null, $hash = null, $pdf = null, $buffer_save = null)
+    {
+        $hash = $hash ? $hash : $this->input->get('hash', true);
+        if (!$this->loggedIn && !$hash) {
+            redirect('login');
+        }
+        if ($this->Staff) {
+            admin_redirect('sales');
+        }
+        if ($id && !$pdf) {
+            if ($order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash])) {
+                $this->load->library('inv_qrcode');
+                $this->data['inv']         = $order;
+                $this->data['rows']        = $this->shop_model->getOrderItems($id);
+                $this->data['customer']    = $this->site->getCompanyByID($order->customer_id);
+                $this->data['biller']      = $this->site->getCompanyByID($order->biller_id);
+                $this->data['address']     = $this->shop_model->getAddressByID($order->address_id);
+                $this->data['return_sale'] = $order->return_id ? $this->shop_model->getOrder(['id' => $id]) : null;
+                $this->data['return_rows'] = $order->return_id ? $this->shop_model->getOrderItems($order->return_id) : null;
+                $this->data['paypal']      = $this->shop_model->getPaypalSettings();
+                $this->data['skrill']      = $this->shop_model->getSkrillSettings();
+                $this->data['page_title']  = lang('view_order');
+                $this->data['page_desc']   = '';
+
+                $this->config->load('payment_gateways');
+                $this->data['stripe_secret_key']      = $this->config->item('stripe_secret_key');
+                $this->data['stripe_publishable_key'] = $this->config->item('stripe_publishable_key');
+                $this->page_construct('pages/view_order', $this->data);
+            } else {
+                $this->session->set_flashdata('error', lang('access_denied'));
+                redirect('/');
+            }
+        } elseif ($pdf || $this->input->get('download')) {
+            $id                          = $pdf ? $id : $this->input->get('download', true);
+            $hash                        = $hash ? $hash : $this->input->get('hash', true);
+            $order                       = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash]);
+            $this->data['inv']           = $order;
+            $this->data['rows']          = $this->shop_model->getOrderItems($id);
+            $this->data['customer']      = $this->site->getCompanyByID($order->customer_id);
+            $this->data['biller']        = $this->site->getCompanyByID($order->biller_id);
+            $this->data['address']       = $this->shop_model->getAddressByID($order->address_id);
+            $this->data['return_sale']   = $order->return_id ? $this->shop_model->getOrder(['id' => $id]) : null;
+            $this->data['return_rows']   = $order->return_id ? $this->shop_model->getOrderItems($order->return_id) : null;
+            $this->data['Settings']      = $this->Settings;
+            $this->data['shop_settings'] = $this->shop_settings;
+            $html                        = $this->load->view($this->Settings->theme . '/shop/views/pages/pdf_invoice', $this->data, true);
+            if ($this->input->get('view')) {
+                echo $html;
+                exit;
+            }
+            $name = lang('invoice') . '_' . str_replace('/', '_', $order->reference_no) . '.pdf';
+            if ($buffer_save) {
+                return $this->sma->generate_pdf($html, $name, $buffer_save, $this->data['biller']->invoice_footer);
+            }
+            $this->sma->generate_pdf($html, $name, false, $this->data['biller']->invoice_footer);
+        } elseif (!$id) {
+            $page   = $this->input->get('page') ? $this->input->get('page', true) : 1;
+            $limit  = 10;
+            $offset = ($page * $limit) - $limit;
+            $this->load->helper('pagination');
+            $total_rows = $this->shop_model->getOrdersCount();
+            $this->session->set_userdata('requested_page', $this->uri->uri_string());
+            $this->data['error']      = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+            $this->data['orders']     = $this->shop_model->getOrders($limit, $offset);
+            $this->data['pagination'] = pagination('shop/orders', $total_rows, $limit);
+            $this->data['page_info']  = ['page' => $page, 'total' => ceil($total_rows / $limit)];
+            $this->data['page_title'] = lang('my_orders');
+            $this->data['page_desc']  = '';
+            $this->page_construct('pages/orders', $this->data);
         }
     }
 

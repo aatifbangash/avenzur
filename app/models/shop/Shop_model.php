@@ -321,6 +321,10 @@ class Shop_model extends CI_Model
             return ($sale->customer_id == $this->session->userdata('company_id')) ? $sale : false;
         } elseif (!empty($clause['hash'])) {
             return $this->db->get_where('sales', $clause, 1)->row();
+        }else{
+            $this->db->order_by('id desc');
+            $sale = $this->db->get_where('sales', ['id' => $clause['id']], 1)->row();
+            return $sale;
         }
         return false;
     }
