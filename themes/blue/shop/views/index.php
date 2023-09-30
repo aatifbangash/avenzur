@@ -244,15 +244,15 @@
 
             
             <div class="col-md-12">
-                <div class="banner1" style="display: flex;justify-content: center;align-items: center;">
+                <div class="banner1" style="display: flex;justify-content: center;align-items: center;margin-bottom: 15px;">
                     <img style="max-width: 100%;max-height: 100%;" src="<?= base_url('assets/images/1440-x-300.jpg') ?>" />
                 </div>
 
-                <div class="banner11" style="display: flex;justify-content: center;align-items: center;">
+                <div class="banner11" style="display: flex;justify-content: center;align-items: center;margin-bottom: 15px;">
                     <img style="max-width: 100%;max-height: 100%;" src="<?= base_url('assets/images/1440-x-300-(2).jpg') ?>" />
                 </div>
 
-                <div class="banner111" style="display: flex;justify-content: center;align-items: center;">
+                <div class="banner111" style="display: flex;justify-content: center;align-items: center;margin-bottom: 15px;">
                     <img style="max-width: 100%;max-height: 100%;" src="<?= base_url('assets/images/1440-x-300-(3).jpg') ?>" />
                 </div>
 
