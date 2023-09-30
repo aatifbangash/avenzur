@@ -674,7 +674,6 @@ class Pay extends MY_Shop_Controller
             } catch (Exception $e) {
                 $error = $e->getMessage();
             }
-            echo 'Email Sent....';exit;
             return ['sent' => $sent, 'error' => $error];
         }
     }
