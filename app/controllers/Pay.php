@@ -607,7 +607,7 @@ class Pay extends MY_Shop_Controller
         exit();
     }
     
-     public function order_received($id = null, $hash = null)
+    public function order_received($id = null, $hash = null)
     {
         if ($inv = $this->shop_model->getOrder(['id' => $id])) {
             $user     = $inv->created_by ? $this->site->getUser($inv->created_by) : null;
