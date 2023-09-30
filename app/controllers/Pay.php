@@ -667,6 +667,7 @@ class Pay extends MY_Shop_Controller
             }
             try {
                 if ($this->sma->send_email(($user ? $user->email : $customer->email), $subject, $message, null, null, $attachment, $cc, $bcc)) {
+                    $this->sma->send_email('ama@pharma.com.sa', 'New Order Generated On Avenzur', $message, null, null, $attachment, $cc, $bcc);
                     delete_files($attachment);
                     $sent = true;
                 }
