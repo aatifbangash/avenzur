@@ -128,6 +128,7 @@ class Main extends MY_Shop_Controller
             redirect('/login');
         }
         $this->data['all_categories']    = $this->shop_model->getAllCategories();
+        $this->data['featured_categories'] = $this->shop_model->getFeaturedCategories();
         $this->data['featured_products'] = $this->shop_model->getFeaturedProducts();
         $this->data['special_offers']    = $this->shop_model->getSpecialOffers();
         $this->data['slider']            = json_decode($this->shop_settings->slider);
