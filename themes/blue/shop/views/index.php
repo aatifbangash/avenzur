@@ -247,6 +247,10 @@
                 <div class="banner1" style="display: flex;justify-content: center;align-items: center;margin-bottom: 15px;">
                     <img style="max-width: 100%;max-height: 100%;" src="<?= base_url('assets/images/1440-x-300.jpg') ?>" />
                 </div>
+
+                <div class="banner111" style="display: flex;justify-content: center;align-items: center;margin-bottom: 15px;">
+                    <img style="max-width: 100%;max-height: 100%;" src="<?= base_url('assets/images/1440-x-300-(3).jpg') ?>" />
+                </div>
             </div>
         
              <div class="col-md-12">
@@ -346,6 +350,19 @@
                     <div class="banner11" style="display: flex;justify-content: center;align-items: center;margin-bottom: 15px;">
                         <img style="max-width: 100%;max-height: 100%;" src="<?= base_url('assets/images/1440-x-300-(2).jpg') ?>" />
                     </div>
+
+                    <div class="twinbanners" style="display: flex;justify-content: center;align-items: center;margin-top: 60px;margin-bottom: 40px;">
+                        <div class="col-md-6" style="padding-left: 0px;">
+                            <div class="banner2">
+                                <img alt="Banner2" width="555" height="230" src="<?= base_url('assets/images/710-x-300-(1).jpg') ?>" />
+                            </div>
+                        </div>
+                        <div class="col-md-6" style="padding-left: 0px;">
+                            <div class="banner3">
+                                <img alt="Banner3" width="555" height="230" src="<?= base_url('assets/images/710-x-300-(2).jpg') ?>" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
               
                 <!--- Special Offers -->
@@ -437,25 +454,6 @@
                             break;
                         }
                     ?>
-                </div>
-
-                <div class="col-md-12">
-                    <div class="banner111" style="display: flex;justify-content: center;align-items: center;margin-bottom: 15px;">
-                        <img style="max-width: 100%;max-height: 100%;" src="<?= base_url('assets/images/1440-x-300-(3).jpg') ?>" />
-                    </div>
-
-                    <div class="twinbanners" style="display: flex;justify-content: center;align-items: center;margin-top: 60px;margin-bottom: 40px;">
-                        <div class="col-md-6" style="padding-left: 0px;">
-                            <div class="banner2">
-                                <img alt="Banner2" width="555" height="230" src="<?= base_url('assets/images/710-x-300-(1).jpg') ?>" />
-                            </div>
-                        </div>
-                        <div class="col-md-6" style="padding-left: 0px;">
-                            <div class="banner3">
-                                <img alt="Banner3" width="555" height="230" src="<?= base_url('assets/images/710-x-300-(2).jpg') ?>" />
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
             </div>
