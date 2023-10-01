@@ -145,10 +145,8 @@ class Reports extends MY_Controller
         $item = $this->input->post('item') ? $this->input->post('item') : null;
 
         if(isset($_POST['submit'])){
-            echo 'here1';exit;
             $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $supplier, $item_group, $item);
         }else{
-            echo 'here2';exit;
             $this->data['stock_data'] = [];
         }
         
