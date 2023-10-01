@@ -5,8 +5,9 @@
 <?php if (!empty($slider) && !empty($slider[0]->image) && !empty($slider[0]->link)) {
     ?>
 <style>
-    #select-prod:hover{
-        border: none;
+    div#select-prod:hover{
+        border: none !important;
+        background: none !important;
     }
 </style>
 <section class="slider-container">
