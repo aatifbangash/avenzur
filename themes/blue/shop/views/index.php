@@ -203,40 +203,40 @@
              <div class="col-md-12">
              <div id="carousel1" class='outerWrapper'>
              <div class="carousel-item">
-                    <div><img width="155" height="172" src="<?= base_url('assets/images/9b0ec372041c805dada856cd0ba83438.jpeg') ?>"></div>
+                    <div><img width="223" height="240" src="<?= base_url('assets/images/9b0ec372041c805dada856cd0ba83438.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div><img width="155" height="172" src="<?= base_url('assets/images/2e2b4769f47726f01ee1ec487b5d5206.jpeg') ?>"></div>
+                    <div><img width="223" height="240" src="<?= base_url('assets/images/2e2b4769f47726f01ee1ec487b5d5206.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div><img width="155" height="172" src="<?= base_url('assets/images/a67dd40afc0aeef53a1222cb80c01b27.jpeg') ?>"></div>
+                    <div><img width="223" height="240" src="<?= base_url('assets/images/a67dd40afc0aeef53a1222cb80c01b27.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div><img width="155" height="172" src="<?= base_url('assets/images/9b0ec372041c805dada856cd0ba83438.jpeg') ?>"></div>
+                    <div><img width="223" height="240" src="<?= base_url('assets/images/9b0ec372041c805dada856cd0ba83438.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div><img width="155" height="172" src="<?= base_url('assets/images/2e2b4769f47726f01ee1ec487b5d5206.jpeg') ?>"></div>
+                    <div><img width="223" height="240" src="<?= base_url('assets/images/2e2b4769f47726f01ee1ec487b5d5206.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div><img width="155" height="172" src="<?= base_url('assets/images/a67dd40afc0aeef53a1222cb80c01b27.jpeg') ?>"></div>
+                    <div><img width="223" height="240" src="<?= base_url('assets/images/a67dd40afc0aeef53a1222cb80c01b27.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div><img width="155" height="172" src="<?= base_url('assets/images/9b0ec372041c805dada856cd0ba83438.jpeg') ?>"></div>
+                    <div><img width="223" height="240" src="<?= base_url('assets/images/9b0ec372041c805dada856cd0ba83438.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div><img width="155" height="172" src="<?= base_url('assets/images/2e2b4769f47726f01ee1ec487b5d5206.jpeg') ?>"></div>
+                    <div><img width="223" height="240" src="<?= base_url('assets/images/2e2b4769f47726f01ee1ec487b5d5206.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div><img width="155" height="172" src="<?= base_url('assets/images/a67dd40afc0aeef53a1222cb80c01b27.jpeg') ?>"></div>
+                    <div><img width="223" height="240" src="<?= base_url('assets/images/a67dd40afc0aeef53a1222cb80c01b27.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div><img width="155" height="172" src="<?= base_url('assets/images/9b0ec372041c805dada856cd0ba83438.jpeg') ?>"></div>
+                    <div><img width="223" height="240" src="<?= base_url('assets/images/9b0ec372041c805dada856cd0ba83438.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div><img width="155" height="172" src="<?= base_url('assets/images/2e2b4769f47726f01ee1ec487b5d5206.jpeg') ?>"></div>
+                    <div><img width="223" height="240" src="<?= base_url('assets/images/2e2b4769f47726f01ee1ec487b5d5206.jpeg') ?>"></div>
                 </div>
                 <div class="carousel-item">
-                    <div><img width="155" height="172" src="<?= base_url('assets/images/a67dd40afc0aeef53a1222cb80c01b27.jpeg') ?>"></div>
+                    <div><img width="223" height="240" src="<?= base_url('assets/images/a67dd40afc0aeef53a1222cb80c01b27.jpeg') ?>"></div>
                 </div>
             </div>
 

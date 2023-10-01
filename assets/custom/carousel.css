@@ -10,9 +10,9 @@
 .carousel-item {
 	float:left;
 	margin-right:5px;
-	width:162px;
+	width:230px;
 	padding:0px;
-	height:162px;
+	height:230px;
 	background-color:#fff;
 	border-radius:5px;
 	border: 1px solid #f6f2f2;
@@ -24,7 +24,7 @@
 	color:white;
 	color:#b3b3b3;
 	text-align:center;
-	line-height: 162px;
+	line-height: 230px;
 	font-size:60px;
 }
 
@@ -66,7 +66,7 @@
 .vert .carousel-item {
 	float:left;
 	margin-bottom:48px;
-	width:162px;
+	width:230px;
 }
 
 .vert .left-nav-btn, .vert .right-nav-btn {
