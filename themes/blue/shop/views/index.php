@@ -253,7 +253,7 @@
                 </div>
             </div>
         
-             <div class="col-md-12">
+             <div class="col-md-12" style="margin-top: 25px;margin-bottom: 30px;">
                         <h2 style="text-align:center !important;" class="select-head"> Featured Products</h2>
                         <?php
                         $r = 0;
