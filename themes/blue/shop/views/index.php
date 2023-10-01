@@ -4,6 +4,11 @@
  <!-- Welcome <?php // echo $this->session->userdata('country'); ?> -->
 <?php if (!empty($slider) && !empty($slider[0]->image) && !empty($slider[0]->link)) {
     ?>
+<style>
+    #select-prod:hover{
+        border: none;
+    }
+</style>
 <section class="slider-container">
     <div class="container">
         <div class="row">
