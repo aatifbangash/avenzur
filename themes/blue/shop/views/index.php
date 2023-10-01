@@ -71,7 +71,7 @@
                                         <?php
                                         foreach ($fps as $fp) {
                                             ?>
-                                        <div class="col-sm-2" id="select-prod" style="padding: 0px !important;">
+                                        <div class="col-sm-2" id="select-prod" style="padding: 0px !important;pointer-events: none;">
                                                 <div class="product alt " style="border-radius: 0px !important;border: 0px !important;padding: 25px !important;">
         
                                                     <div class="product-top">
