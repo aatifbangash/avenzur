@@ -168,7 +168,7 @@
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <th colspan="12">No records found.</th>
+                                    <th colspan="12">No records to show.</th>
                                 </tr>
                             <?php endif; ?>
 
