@@ -25,6 +25,13 @@ class Products extends MY_Controller
         $this->popup_attributes    = ['width' => '900', 'height' => '600', 'window_name' => 'sma_popup', 'menubar' => 'yes', 'scrollbars' => 'yes', 'status' => 'no', 'resizable' => 'yes', 'screenx' => '0', 'screeny' => '0'];
     }
 
+    public function setProductImages(){
+        $images = "111001040, 111001419, 111003816, 111004028, 111004213, 111004378, 111004380, 111004401, 111004402, 111004450, 121004766, 121005288, 121005959, 121015629, 121016350, 121016545, 121017300, 121017353, 121017354, 121017711, 121017723, 121018789, 121018815, 121020669, 121020670, 121020673, 121020919, 121020921, 131000224, 142000018, 142000026, 143000301, 143000349";
+        $imgArr = explode(",",$images);
+
+        $this->products_model->updateProductImages($imgArr);
+    }
+
     /* ------------------------------------------------------- */
     public function add($id = null)
     {
