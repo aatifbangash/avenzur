@@ -1052,7 +1052,7 @@ class Reports_model extends CI_Model
             $totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
         }
 
-        $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.batchno, pi.expiry
+        $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.batchno
                                 ORDER BY p.id DESC";
 
         $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
@@ -1089,7 +1089,7 @@ class Reports_model extends CI_Model
                 $totalSalesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
-            $totalSalesQuery .= "GROUP BY p.id, p.code, p.name, si.batch_no, si.expiry";
+            $totalSalesQuery .= "GROUP BY p.id, p.code, p.name, si.batch_no";
 
             $totalSalesResultSet = $this->db->query($totalSalesQuery);
             if ($totalSalesResultSet->num_rows() > 0) {
@@ -1099,7 +1099,7 @@ class Reports_model extends CI_Model
                             $purchase->id == $sale->id
                             && $purchase->item_code == $sale->item_code
                             && $purchase->batch_no == $sale->batch_no
-                            && $purchase->expiry == $sale->expiry
+                            //&& $purchase->expiry == $sale->expiry
                         ) {
                             $purchase->quantity -= (int)$sale->quantity;
                         }
@@ -1134,7 +1134,7 @@ class Reports_model extends CI_Model
                 $totalReturnSupplerQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
-            $totalReturnSupplerQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno, pi.expiry";
+            $totalReturnSupplerQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno";
 
             $totalReturnSupplierResultSet = $this->db->query($totalReturnSupplerQuery);
             if ($totalReturnSupplierResultSet->num_rows() > 0) {
@@ -1144,7 +1144,7 @@ class Reports_model extends CI_Model
                             $purchase->id == $returnSupplier->id
                             && $purchase->item_code == $returnSupplier->item_code
                             && $purchase->batch_no == $returnSupplier->batch_no
-                            && $purchase->expiry == $returnSupplier->expiry
+                            //&& $purchase->expiry == $returnSupplier->expiry
                         ) {
                             $purchase->quantity -= (int)abs($returnSupplier->quantity);
                         }
@@ -1180,7 +1180,7 @@ class Reports_model extends CI_Model
                 $totalReturnSupplerQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
-            $totalReturnCustomerQuery .= "group by p.id, p.code, p.name, rci.batch_no, rci.expiry";
+            $totalReturnCustomerQuery .= "group by p.id, p.code, p.name, rci.batch_no";
 
             $totalReturnCustomerResultSet = $this->db->query($totalReturnCustomerQuery);
             if ($totalReturnCustomerResultSet->num_rows() > 0) {
@@ -1190,7 +1190,7 @@ class Reports_model extends CI_Model
                             $purchase->id == $returnCustomer->id
                             && $purchase->item_code == $returnCustomer->item_code
                             && $purchase->batch_no == $returnCustomer->batch_no
-                            && $purchase->expiry == $returnCustomer->expiry
+                            //&& $purchase->expiry == $returnCustomer->expiry
                         ) {
                             $purchase->quantity += (int)abs($returnCustomer->quantity);
                         }
@@ -1225,7 +1225,7 @@ class Reports_model extends CI_Model
                 $totalTransferQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
-            $totalTransferQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno, pi.expiry";
+            $totalTransferQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno";
 
             $totalTransferResultSet = $this->db->query($totalTransferQuery);
             if ($totalTransferResultSet->num_rows() > 0) {
@@ -1235,7 +1235,7 @@ class Reports_model extends CI_Model
                             $purchase->id == $transfer->id
                             && $purchase->item_code == $transfer->item_code
                             && $purchase->batch_no == $transfer->batch_no
-                            && $purchase->expiry == $transfer->expiry
+                            //&& $purchase->expiry == $transfer->expiry
                         ) {
                             $purchase->quantity -= (int)abs($transfer->quantity);
                         }

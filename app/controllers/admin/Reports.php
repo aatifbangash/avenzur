@@ -144,9 +144,13 @@ class Reports extends MY_Controller
         $item_group = $this->input->post('item_group') ? $this->input->post('item_group') : null;
         $item = $this->input->post('item') ? $this->input->post('item') : null;
 
-        $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $supplier, $item_group, $item);
+        if(isset($_POST)){
+            $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $supplier, $item_group, $item);
+        }else{
+            $this->data['stock_data'] = [];
+        }
+        
         $this->data['at_date'] = $at_date;
-//        $this->data['wh'] = $warehouse;
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['suppliers'] = $this->deals_model->getAllSuppliersList();
