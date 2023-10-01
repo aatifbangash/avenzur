@@ -362,7 +362,7 @@
                         <div class="col-md-6" style="padding-left: 0px;">
                             <div class="banner2">
                                 <a href="<?= site_url('category/mombaby'); ?>"  >
-                                    <img alt="Banner2" width="555" height="230" src="<?= base_url('assets/images/710-x-300-(1).jpg') ?>" />
+                                    <img alt="Banner2" width="547" height="230" src="<?= base_url('assets/images/710-x-300-(1).jpg') ?>" />
                                 </a>
                             </div>
                         </div>
