@@ -10,7 +10,7 @@
         background: none !important;
     }
 
-    div.product:hover{
+    .product:hover{
         border: none !important;
     }
 </style>
@@ -276,10 +276,10 @@
                                             </div>
                                         </div>
                                         <div class="product-desc homeprod" style="height: 52%;">
-                                            <div class="product_name" style="overflow: inherit;display: inherit;font-size: 16px;">
+                                            <div class="product_name" style="overflow: inherit;display: inherit;font-size: 16px;text-align: left;">
                                                 <a style="cursor: pointer;" href="<?= site_url('product/' . $fp->slug); ?>"><?= $fp->name; ?></a>
                                             </div>
-                                            <div class="pro-cat" style="font-size: 14px;">
+                                            <div class="pro-cat" style="font-size: 14px;text-align: left;">
                                                 <a href="<?= site_url('category/' . $fp->category_slug); ?>" class="link"><?= $fp->category_name; ?></a>
                                                 <?php
                                                     if ($fp->brand_name) {
