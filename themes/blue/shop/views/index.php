@@ -263,7 +263,7 @@
                     $r = 0;
                     foreach ($featured_products as $fp) { ?>
                         <div class="carousel-item" style="height: 400px;">
-                                    <div class="product alt " style="height: 58%;font-size: 16px;">
+                                    <div class="product alt " style="height: 58%;font-size: 16px;border: none;">
                                         <div class="product-top">
                                             <div class="image">
                                                 <a href="<?= site_url('product/' . $fp->slug); ?>">
@@ -275,7 +275,7 @@
                                             <div class="product_name" style="overflow: inherit;display: inherit;font-size: 16px;">
                                                 <a style="cursor: pointer;" href="<?= site_url('product/' . $fp->slug); ?>"><?= $fp->name; ?></a>
                                             </div>
-                                            <div class="pro-cat" style="font-size: 16px;">
+                                            <div class="pro-cat" style="font-size: 14px;">
                                                 <a href="<?= site_url('category/' . $fp->category_slug); ?>" class="link"><?= $fp->category_name; ?></a>
                                                 <?php
                                                     if ($fp->brand_name) {
