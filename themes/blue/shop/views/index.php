@@ -265,7 +265,7 @@
                         foreach ($featured_products as $fp) {
                             //echo '<pre>';print_r($fps);
                             ?>
-                            <div class="item row <?= empty($r) ? 'active' : ''; ?>" style="margin-top: 40px;">
+                            <div class="item row active" style="margin-top: 40px;">
                                 <div class="selected-products">
                                         <?php
                                         //foreach ($fps as $fp) {
