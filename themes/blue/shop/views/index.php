@@ -262,13 +262,13 @@
                         <h2 style="text-align:center !important;" class="select-head"> Featured Products</h2>
                         <?php
                         $r = 0;
-                        foreach ($featured_products as $fps) {
-                            echo '<pre>';print_r($fps);
+                        foreach ($featured_products as $fp) {
+                            //echo '<pre>';print_r($fps);
                             ?>
                             <div class="item row <?= empty($r) ? 'active' : ''; ?>" style="margin-top: 40px;">
                                 <div class="selected-products">
                                         <?php
-                                        foreach ($fps as $fp) {
+                                        //foreach ($fps as $fp) {
                                             ?>
                                         <div class="col-sm-6 col-md-3">
                                                 <div class="product alt ">
@@ -339,7 +339,7 @@
                                         </div>
                                 </div>
                                         <?php
-                                    } ?>
+                                    //} ?>
                             </div>
                             </div>
                         
