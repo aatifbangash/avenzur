@@ -263,6 +263,7 @@
                         <?php
                         $r = 0;
                         foreach ($featured_products as $fps) {
+                            echo '<pre>';print_r($fps);
                             ?>
                             <div class="item row <?= empty($r) ? 'active' : ''; ?>" style="margin-top: 40px;">
                                 <div class="selected-products">
