@@ -5,6 +5,15 @@
 <link href="<?= base_url('assets/custom/owl.carousel.css') ?>" rel="stylesheet"/>
 <link href="<?= base_url('assets/custom/owl.theme.css') ?>" rel="stylesheet"/>
 <script src="<?= base_url('assets/custom/owl.carousel.js') ?>"></script>
+<style>
+    #owl-demo .item{
+        margin: 3px;
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+    
+</style>
  <!-- Welcome <?php // echo $this->session->userdata('country'); ?> -->
 <?php if (!empty($slider) && !empty($slider[0]->image) && !empty($slider[0]->link)) {
     ?>
