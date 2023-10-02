@@ -262,8 +262,8 @@
                 <?php
                     $r = 0;
                     foreach ($featured_products as $fp) { ?>
-                        <div class="carousel-item">
-                                    <div class="product alt ">
+                        <div class="carousel-item" style="height: 400px;">
+                                    <div class="product alt " style="height: 58%;font-size: 16px;">
                                         <div class="product-top">
                                             <div class="image">
                                                 <a href="<?= site_url('product/' . $fp->slug); ?>">
