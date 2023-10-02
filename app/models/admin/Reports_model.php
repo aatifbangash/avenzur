@@ -1025,9 +1025,9 @@ class Reports_model extends CI_Model
                                     pi.batchno batch_no, 
                                     pi.expiry expiry, 
                                     round(sum(pi.quantity)) quantity,
-                                    round(sum(pi.sale_price), 2) sale_price,
-                                    round(sum(pi.net_unit_cost), 2) cost_price,
-                                    round(sum(pi.unit_cost), 2) purchase_price
+                                    round(avg(pi.sale_price), 2) sale_price,
+                                    round(avg(pi.net_unit_cost), 2) cost_price,
+                                    round(avg(pi.unit_cost), 2) purchase_price
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
                                 {$supplierJoin}
