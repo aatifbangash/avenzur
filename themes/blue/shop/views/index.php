@@ -4,6 +4,7 @@
 
 <link href="<?= base_url('assets/custom/owl.carousel.css') ?>" rel="stylesheet"/>
 <link href="<?= base_url('assets/custom/owl.theme.css') ?>" rel="stylesheet"/>
+<script src="<?= base_url('assets/custom/jquery-1.9.1.min.js') ?>"></script>
 <script src="<?= base_url('assets/custom/owl.carousel.js') ?>"></script>
 <style>
     #owl-demo .item{
