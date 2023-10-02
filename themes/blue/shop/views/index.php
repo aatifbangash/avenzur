@@ -334,7 +334,7 @@
                     }
                     ?>
                     </div>
-                    <script>$('#carousel2').waltzer({scroll:1, auto:true, autoPause : 2000});</script>
+                    <script>$('#carousel2').waltzer({scroll:1, auto:true, autoPause : 7000});</script>
                 </div>
                     
                 <div class="col-md-12">
