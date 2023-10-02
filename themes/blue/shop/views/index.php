@@ -271,7 +271,7 @@
                                                 </a>
                                             </div>
                                         </div>
-                                        <div class="product-desc homeprod">
+                                        <div class="product-desc homeprod" style="height: 52%;">
                                             <div class="product_name">
                                                 <a href="<?= site_url('product/' . $fp->slug); ?>"><?= $fp->name; ?></a>
                                             </div>
