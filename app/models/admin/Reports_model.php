@@ -1031,7 +1031,7 @@ class Reports_model extends CI_Model
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
                                 {$supplierJoin}
-                                WHERE pi.purchase_item_id IS NULL ";
+                                WHERE pi.purchase_item_id IS NULL AND status = received";
         if ($at_date) {
             $totalPurchasesQuery .= "AND pi.date <= '{$at_date}' ";
         }
@@ -1072,7 +1072,7 @@ class Reports_model extends CI_Model
                                 FROM sma_products p 
                                 INNER JOIN sma_sale_items si ON p.id = si.product_id
                                 INNER JOIN sma_sales sl ON sl.id = si.sale_id 
-                                WHERE 1=1 ";
+                                WHERE sale_status = 'completed' ";
             if ($at_date) {
                 $totalSalesQuery .= "AND sl.date <= '{$at_date} 23:59:59' ";
             }
