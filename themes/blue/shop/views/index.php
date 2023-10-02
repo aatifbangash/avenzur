@@ -262,7 +262,7 @@
                         <h2 style="text-align:center !important;" class="select-head"> Featured Products</h2>
                         <?php
                         $r = 0;
-                        foreach ($featured_products as $fps) {
+                        foreach (array_chunk($featured_products, 4) as $fps) {
                             ?>
                             <div class="item row <?= empty($r) ? 'active' : ''; ?>" style="margin-top: 40px;">
                                 <div class="selected-products">
