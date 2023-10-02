@@ -280,16 +280,6 @@
                                             <div class="product_name" style="overflow: inherit;display: inherit;font-size: 16px;text-align: left;">
                                                 <a style="cursor: pointer;" href="<?= site_url('product/' . $fp->slug); ?>"><?= $fp->name; ?></a>
                                             </div>
-                                            <div class="pro-cat" style="font-size: 14px;text-align: left;">
-                                                <a href="<?= site_url('category/' . $fp->category_slug); ?>" class="link"><?= $fp->category_name; ?></a>
-                                                <?php
-                                                    if ($fp->brand_name) {
-                                                        ?>
-                                                        <span class="link">-</span>
-                                                        <a href="<?= site_url('brand/' . $fp->brand_slug); ?>" class="link"><?= $fp->brand_name; ?></a>
-                                                        <?php
-                                                    } ?>
-                                            </div>
                                         </div>
                                         <div class="product-bottom">
                                             <div class="product-price">
