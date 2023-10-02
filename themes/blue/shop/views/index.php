@@ -272,7 +272,7 @@
                                             </div>
                                         </div>
                                         <div class="product-desc homeprod" style="height: 52%;">
-                                            <div class="product_name">
+                                            <div class="product_name" style="overflow: inherit;display: inherit;">
                                                 <a href="<?= site_url('product/' . $fp->slug); ?>"><?= $fp->name; ?></a>
                                             </div>
                                             <div class="pro-cat" style="font-size: 16px;">
