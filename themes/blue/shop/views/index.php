@@ -275,8 +275,8 @@
                                             <div class="product_name">
                                                 <a href="<?= site_url('product/' . $fp->slug); ?>"><?= $fp->name; ?></a>
                                             </div>
-                                            <div class="pro-cat">
-                                                <a style="font-size: 16px;" href="<?= site_url('category/' . $fp->category_slug); ?>" class="link"><?= $fp->category_name; ?></a>
+                                            <div class="pro-cat" style="font-size: 16px;">
+                                                <a href="<?= site_url('category/' . $fp->category_slug); ?>" class="link"><?= $fp->category_name; ?></a>
                                                 <?php
                                                     if ($fp->brand_name) {
                                                         ?>
