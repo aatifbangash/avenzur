@@ -12,6 +12,7 @@
 
     .product:hover{
         border: none !important;
+        box-shadow: none;
     }
 </style>
 <section class="slider-container">
