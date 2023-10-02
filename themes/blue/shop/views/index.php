@@ -1,6 +1,10 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <link href="<?= base_url('assets/custom/carousel.css') ?>" rel="stylesheet"/>
 <script src="<?= base_url('assets/custom/waltzerjs.min.js') ?>"></script>
+
+<link href="<?= base_url('assets/custom/owl.carousel.css') ?>" rel="stylesheet"/>
+<link href="<?= base_url('assets/custom/owl.theme.css') ?>" rel="stylesheet"/>
+<script src="<?= base_url('assets/custom/owl.carousel.js') ?>"></script>
  <!-- Welcome <?php // echo $this->session->userdata('country'); ?> -->
 <?php if (!empty($slider) && !empty($slider[0]->image) && !empty($slider[0]->link)) {
     ?>
@@ -258,11 +262,11 @@
         
             <div class="col-md-12" style="margin-top: 25px;margin-bottom: 30px;">
                 <h2 style="text-align:center !important;" class="select-head"> Featured Products</h2>
-                <div id="carousel2" class='outerWrapper'>
+                <div id="owl-example" class="owl-carousel">
                 <?php
                     $r = 0;
                     foreach ($featured_products as $fp) { ?>
-                        <div class="carousel-item">
+                        <div>
                                     <div class="product alt ">
                                         <div class="product-top">
                                             <div class="image">
@@ -453,3 +457,11 @@
         
     </div>
 </section>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+    
+    $("#owl-example").owlCarousel();
+
+    });
+</script>
