@@ -262,7 +262,7 @@
         
             <div class="col-md-12" style="margin-top: 25px;margin-bottom: 30px;">
                 <h2 style="text-align:center !important;" class="select-head"> Featured Products</h2>
-                <div id="owl-example" class="owl-carousel">
+                <div id="owl-demo" class="owl-carousel">
                 <?php
                     $r = 0;
                     foreach ($featured_products as $fp) { ?>
@@ -460,7 +460,7 @@
 <script type="text/javascript">
     $(document).ready(function() {
     
-    $("#owl-example").owlCarousel();
+    $("#owl-demo").owlCarousel();
 
     });
 </script>
