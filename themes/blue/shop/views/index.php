@@ -1,20 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <link href="<?= base_url('assets/custom/carousel.css') ?>" rel="stylesheet"/>
 <script src="<?= base_url('assets/custom/waltzerjs.min.js') ?>"></script>
-
-<link href="<?= base_url('assets/custom/owl.carousel.css') ?>" rel="stylesheet"/>
-<link href="<?= base_url('assets/custom/owl.theme.css') ?>" rel="stylesheet"/>
-<script src="<?= base_url('assets/custom/jquery-1.9.1.min.js') ?>"></script>
-<script src="<?= base_url('assets/custom/owl.carousel.js') ?>"></script>
-<style>
-    #owl-demo .item{
-        margin: 3px;
-        display: block;
-        width: 100%;
-        height: auto;
-    }
-    
-</style>
  <!-- Welcome <?php // echo $this->session->userdata('country'); ?> -->
 <?php if (!empty($slider) && !empty($slider[0]->image) && !empty($slider[0]->link)) {
     ?>
@@ -272,11 +258,11 @@
         
             <div class="col-md-12" style="margin-top: 25px;margin-bottom: 30px;">
                 <h2 style="text-align:center !important;" class="select-head"> Featured Products</h2>
-                <div id="owl-demo" class="owl-carousel">
+                <div id="carousel2" class='outerWrapper'>
                 <?php
                     $r = 0;
                     foreach ($featured_products as $fp) { ?>
-                        <div class="item">
+                        <div class="carousel-item">
                                     <div class="product alt ">
                                         <div class="product-top">
                                             <div class="image">
@@ -343,6 +329,7 @@
                     }
                     ?>
                     </div>
+                    <script>$('#carousel2').waltzer({scroll:1});</script>
                 </div>
                     
                 <div class="col-md-12">
@@ -466,11 +453,3 @@
         
     </div>
 </section>
-
-<script type="text/javascript">
-    $(document).ready(function() {
-    
-    $("#owl-demo").owlCarousel();
-
-    });
-</script>
