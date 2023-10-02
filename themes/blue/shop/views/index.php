@@ -266,7 +266,7 @@
                 <?php
                     $r = 0;
                     foreach ($featured_products as $fp) { ?>
-                        <div>
+                        <div class="item">
                                     <div class="product alt ">
                                         <div class="product-top">
                                             <div class="image">
