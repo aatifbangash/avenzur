@@ -258,10 +258,11 @@
         
             <div class="col-md-12" style="margin-top: 25px;margin-bottom: 30px;">
                 <h2 style="text-align:center !important;" class="select-head"> Featured Products</h2>
+                <div id="carousel2" class='outerWrapper'>
                 <?php
                     $r = 0;
                     foreach ($featured_products as $fp) { ?>
-                        
+                        <div class="carousel-item">
                                     <div class="product alt ">
                                         <div class="product-top">
                                             <div class="image">
@@ -323,10 +324,12 @@
                                             </div>  
                                         </div> 
                                     </div>
-                                
+                        </div>        
                     <?php
                     }
                     ?>
+                    </div>
+                    <script>$('#carousel2').waltzer({scroll:1});</script>
                 </div>
                     
                 <div class="col-md-12">
