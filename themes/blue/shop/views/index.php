@@ -9,6 +9,10 @@
         border: none !important;
         background: none !important;
     }
+
+    div.product:hover{
+        border: none !important;
+    }
 </style>
 <section class="slider-container">
     <div class="container">
