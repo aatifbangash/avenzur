@@ -991,7 +991,7 @@ class Shop extends MY_Shop_Controller
                 echo "Test";
                 
             }
-        $this->page_construct('pages/products', $this->data);
+        $this->page_construct('pages/featured_products', $this->data);
     }
 
     // Products,  categories and brands page
