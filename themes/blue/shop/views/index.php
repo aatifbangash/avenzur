@@ -303,18 +303,15 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div class="col-md-5 col-xs-6">
-                                                    <div class="clearfix"></div>
-                                                        <div class="product-cart">
-                                                            <div class="btn-group" role="group" aria-label="...">
-                                                                <button class="btn btn-info add-to-wishlist" data-id="13"><i class="fa fa-heart-o"></i></button>
-                                                                <div class="btn btn-theme add-to-cart" data-id="<?= $fp->id; ?>"><i class="fa fa-shopping-cart"></i> <?= lang('add_to_cart'); ?>
-                                                            </div>
-                                                            <div class="clearfix"></div>
+                                                    <div class="product-cart">
+                                                        <div class="btn-group" role="group" aria-label="...">
+                                                            <button class="btn btn-info add-to-wishlist" data-id="13"><i class="fa fa-heart-o"></i></button>
+                                                            <div class="btn btn-theme add-to-cart" data-id="<?= $fp->id; ?>"><i class="fa fa-shopping-cart"></i> <?= lang('add_to_cart'); ?>
                                                         </div>
+                                                        <div class="clearfix"></div>
                                                     </div>
                                                 </div>
+                                                
                                             </div>  
                                         </div> 
                                     </div>
