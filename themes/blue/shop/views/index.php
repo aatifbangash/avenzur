@@ -293,7 +293,7 @@
                                                 ?>
                                             </div>
                                             <div class="row">
-                                                <div class="col-md-7 col-xs-6">
+                                                <div class="col-md-7 col-xs-6" style="height: 18%;">
                                                     <div class="product-quantity" style="height: 18%;">
                                                         <div class="form-group" style="margin-bottom:0;">
                                                             <div class="input-group">
@@ -308,7 +308,7 @@
                                                         <div class="product-cart">
                                                             <div class="btn-group" role="group" aria-label="...">
                                                                 <button class="btn btn-info add-to-wishlist" data-id="13"><i class="fa fa-heart-o"></i></button>
-                                                                <div class="btn btn-theme add-to-cart" style="font-size: 15px;height: 16%;padding-left: 8px;margin-left: 38px;margin-top: 10px;" data-id="<?= $fp->id; ?>"><i class="fa fa-shopping-cart"></i> <?= lang('add_to_cart'); ?>
+                                                                <div class="btn btn-theme add-to-cart" style="font-size: 14px;height: 16%;padding: 6px;margin-left: 38px;margin-top: 10px;" data-id="<?= $fp->id; ?>"><i class="fa fa-shopping-cart"></i> <?= lang('add_to_cart'); ?>
                                                             </div>
                                                             <div class="clearfix"></div>
                                                         </div>
