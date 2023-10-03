@@ -296,7 +296,7 @@
                                                 <div class="col-md-7 col-xs-6" style="height: 18%;">
                                                     <div class="product-quantity" style="height: 18%;">
                                                         <div class="form-group" style="margin-bottom:0;">
-                                                            <div class="input-group">
+                                                            <div class="input-group" style="width: 115px;">
                                                                 <span class="input-group-addon pointer btn-minus"><span class="fa fa-minus"></span></span>
                                                                 <input type="text" name="quantity" class="form-control text-center quantity-input prod_quant" value="1" required="required">
                                                                 <span class="input-group-addon pointer btn-plus"><span class="fa fa-plus"></span></span>
