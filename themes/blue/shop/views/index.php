@@ -261,71 +261,94 @@
                 </div>
             </div>
         
-            <div class="col-md-12" style="margin-top: 25px;margin-bottom: 30px;">
-                <h2 style="text-align:center !important;" class="select-head"> Featured Products</h2>
-                <div id="carousel2" class='outerWrapper'>
-                <?php
-                    $r = 0;
-                    foreach ($featured_products as $fp) { ?>
-                        <div class="carousel-item" style="height: 400px;">
-                                    <div class="product alt " style="height: 58%;font-size: 16px;border: none;">
-                                        <div class="product-top">
-                                            <div class="image">
-                                                <a href="<?= site_url('product/' . $fp->slug); ?>">
-                                                    <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" alt="" class="img-responsive">
-                                                </a>
-                                            </div>
-                                        </div>
-                                        <div class="product-desc homeprod" style="height: 2%;">
-                                            <div class="product_name" style="overflow: inherit;display: inherit;font-size: 16px;text-align: left;">
-                                                <a style="cursor: pointer;" href="<?= site_url('product/' . $fp->slug); ?>"><?= $fp->name; ?></a>
-                                            </div>
-                                        </div>
-                                        <div class="product-bottom">
-                                            <div class="product-price" style="height: 25%;">
-                                                <?php
-                                                    if ($fp->promotion) {
-                                                        echo '<del class="text-red">' . $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price) . '</del><br>';
-                                                        echo $this->sma->convertMoney($fp->promo_price);
-                                                    } else {
-                                                        echo $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price);
-                                                    } 
-                                                ?>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-7 col-xs-6" style="height: 18%;">
-                                                    <div class="product-quantity" style="height: 18%;">
-                                                        <div class="form-group" style="margin-bottom:0;">
-                                                            <div class="input-group">
-                                                                <span class="input-group-addon pointer btn-minus"><span class="fa fa-minus"></span></span>
-                                                                <input type="text" name="quantity" class="form-control text-center quantity-input prod_quant" value="1" required="required">
-                                                                <span class="input-group-addon pointer btn-plus"><span class="fa fa-plus"></span></span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-5 col-xs-6">
-                                                        <div class="product-cart">
-                                                            <div class="btn-group" role="group" aria-label="...">
-                                                                <button class="btn btn-info add-to-wishlist" data-id="13"><i class="fa fa-heart-o"></i></button>
-                                                                <div class="btn btn-theme add-to-cart" style="width: 166px;font-size: 14px;height: 16%;padding: 6px;margin-left: 38px;margin-top: 10px;" data-id="<?= $fp->id; ?>"><i class="fa fa-shopping-cart"></i> <?= lang('add_to_cart'); ?>
-                                                            </div>
-                                                            <div class="clearfix"></div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>  
-                                        </div> 
-                                    </div>
-                        </div>        
+            <div class="col-md-12">
+                    <h2 style="text-align:center !important;" class="select-head"> Featured Products</h2>
                     <?php
-                    }
+                        $r = 0;
+                        foreach (array_chunk($featured_products, 4) as $sps){
+                            ?>
+                            <div class="item row <?= empty($r) ? 'active' : ''; ?>" style="margin-top: 40px;">
+                                <div class="selected-products">
+                                        <?php
+                                        foreach ($sps as $sp) {
+                                            ?>
+                                        <div class="col-sm-6 col-md-3">
+                                                <div class="product alt ">
+                                                    <div class="product-top">
+                                                        <div class="image">
+                                                            <a href="<?= site_url('product/' . $fp->slug); ?>">
+                                                                <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" alt="" class="img-responsive">
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="product-desc homeprod">
+                                                        <div class="product_name">
+                                                            <a href="<?= site_url('product/' . $sp->slug); ?>"><?= $sp->name; ?></a>
+                                                        </div>
+                                                        <div class="pro-cat">
+                                                            <a href="<?= site_url('category/' . $sp->category_slug); ?>" class="link"><?= $sp->category_name; ?></a>
+                                                            <?php
+                                                            if ($sp->brand_name) {
+                                                                ?>
+                                                                <span class="link">-</span>
+                                                                <a href="<?= site_url('brand/' . $sp->brand_slug); ?>" class="link"><?= $sp->brand_name; ?></a>
+                                                                <?php
+                                                            } ?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="product-bottom">
+                                                        <div class="product-price">
+                                                        <?php
+                                                            if ($sp->promotion) {
+                                                                echo '<del class="text-red">' . $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price) . '</del><br>';
+                                                                echo $this->sma->convertMoney($sp->promo_price);
+                                                            } else {
+                                                                echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
+                                                            } ?>
+                                                        </div>
+                                          
+                                                        <!--<div class="details" style="transition: all 100ms ease-out 0s;">-->
+
+                                                        <div class="clearfix"></div>
+                                                
+                                                        <div class="row">
+                                                    
+                                                        <div class="col-md-7 col-xs-6">
+                                                            <div class="product-quantity">
+                                                                <div class="form-group" style="margin-bottom:0;">
+                                                                    <div class="input-group">
+                                                                        <span class="input-group-addon pointer btn-minus"><span class="fa fa-minus"></span></span>
+                                                                        <input type="text" name="quantity" class="form-control text-center quantity-input prod_quant" value="1" required="required">
+                                                                        <span class="input-group-addon pointer btn-plus"><span class="fa fa-plus"></span></span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-5 col-xs-6">
+                                                            <div class="clearfix"></div>
+                                                                <div class="product-cart">
+                                                                    <div class="btn-group" role="group" aria-label="...">
+                                                                        <button class="btn btn-info add-to-wishlist" data-id="13"><i class="fa fa-heart-o"></i></button>
+                                                                        <div class="btn btn-theme add-to-cart" data-id="<?= $sp->id; ?>"><i class="fa fa-shopping-cart"></i> <?= lang('add_to_cart'); ?>
+                                                                    </div>
+                                                                <div class="clearfix"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>  
+                                            </div>                
+                                        </div>
+                                </div>
+                                        <?php
+                                    } ?>
+                            </div>
+                            </div>
+                            <?php
+                            $r++;
+                            break;
+                        }
                     ?>
-                    </div>
-                    <script>
-                        //$('#carousel2').waltzer({scroll:1, auto:true, autoPause : 7000});
-                        $('#carousel2').waltzer({scroll:1});
-                    </script>
                 </div>
                     
                 <div class="col-md-12">
