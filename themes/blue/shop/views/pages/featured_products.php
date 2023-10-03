@@ -241,3 +241,13 @@
         </div>
     </div>
 </section>
+<script type="text/javascript">
+    $("#product-search-form").submit(function(t){
+        console.log('Here we are....');
+        return t.preventDefault(),filters.query=$("#product-search").val(),filters.page=1,searchProducts(),!1
+    });
+    
+    $("#product-search").blur(function(t){
+        return t.preventDefault(),filters.query=$(this).val(),filters.page=1,searchProducts(),!1
+    });
+</script>
