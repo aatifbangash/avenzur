@@ -1030,7 +1030,7 @@ class Reports_model extends CI_Model
                                     round(avg(pi.unit_cost), 2) purchase_price
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
-                                {$supplierJoin}
+                                INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id
                                 WHERE pi.purchase_item_id IS NULL AND pc.status = 'received'";
         if ($at_date) {
             $totalPurchasesQuery .= "AND pi.date <= '{$at_date}' ";
