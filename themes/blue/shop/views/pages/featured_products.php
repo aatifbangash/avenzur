@@ -151,33 +151,6 @@
 
                             <?php
                                     } ?>
-
-                            <?php /*
-                            <div class="margin-bottom-xl">
-                            <div class="title"><span>Brand & Categories</span></div>
-                            <?php
-                            $fbs[''] = lang('brands');
-                            foreach($brands as $fb) {
-                                $fbs[$fb->id] = $fb->name;
-                            }
-                            ?>
-                            <?= form_dropdown('brands', $fbs, set_value('brands'), 'class="form-control selectpicker mobile-device" style="width:100%;"'); ?>
-                            <div class="margin-top-md">
-                                <?php
-                                $fcs[''] = lang('categories');
-                                foreach($categories as $fc) {
-                                    $fcs[$fc->id] = $fc->name;
-                                    if ($fc->subcategories) {
-                                        foreach($fc->subcategories as $fsc) {
-                                            $fcs[$fsc->id] = $fsc->name;
-                                        }
-                                    }
-                                }
-                                ?>
-                                <?= form_dropdown('categories', $fcs, set_value('categories'), 'class="form-control selectpicker mobile-device" style="width:100%;"'); ?>
-                            </div>
-                        </div>
-                        */ ?>
                         
                         <?php
                         
