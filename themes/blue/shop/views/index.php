@@ -262,7 +262,7 @@
             </div>
         
             <div class="col-md-12">
-                    <h2 style="text-align:center !important;" class="select-head"> Featured Products <span style="float: right;font-size: 16px;color: #FFA41C;text-decoration: underline;"><a href="<?= base_url('shop/featured_products') ?>">View All</a></span></h2>
+                    <h2 style="text-align:center !important;" class="select-head"> Featured Products <span style="float: right;font-size: 16px;color: #FFA41C;text-decoration: underline;"><a style="color: #FFA41C;" href="<?= base_url('shop/featured_products') ?>">View All</a></span></h2>
                     <?php
                         $r = 0;
                         foreach (array_chunk($featured_products, 4) as $sps){
