@@ -282,7 +282,7 @@
                                             </div>
                                         </div>
                                         <div class="product-bottom">
-                                            <div class="product-price">
+                                            <div class="product-price" style="height: 25%;">
                                                 <?php
                                                     if ($fp->promotion) {
                                                         echo '<del class="text-red">' . $this->sma->convertMoney(isset($fp->special_price) && !empty(isset($fp->special_price)) ? $fp->special_price : $fp->price) . '</del><br>';
@@ -292,7 +292,6 @@
                                                     } 
                                                 ?>
                                             </div>
-                                            <div class="clearfix"></div>
                                             <div class="row">
                                                 <div class="col-md-7 col-xs-6">
                                                     <div class="product-quantity">
