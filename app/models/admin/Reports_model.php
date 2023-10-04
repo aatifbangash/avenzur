@@ -1207,8 +1207,6 @@ class Reports_model extends CI_Model
                                         pi.transfer_id
                                         pi.batchno batch_no,
                                         pi.expiry expiry,
-                                        t.from_warehouse_id,
-                                        t.to_warehouse_id,
                                         round(sum(pi.quantity)) quantity
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
@@ -1220,7 +1218,7 @@ class Reports_model extends CI_Model
 
             if ($warehouse) {
                 //$totalTransferQuery .= "AND pi.warehouse_id <> {$warehouse} ";
-                $totalTransferQuery .= "AND pi.warehouse_id = {$warehouse} ";
+                //$totalTransferQuery .= "AND pi.warehouse_id = {$warehouse} ";
             }
 
             if ($item_group) {
