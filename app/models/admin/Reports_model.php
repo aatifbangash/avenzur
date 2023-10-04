@@ -1109,7 +1109,7 @@ class Reports_model extends CI_Model
             }
 
             //TODO sub return supplier from $totalPurchases
-            /*$totalReturnSupplerQuery = "SELECT
+            $totalReturnSupplerQuery = "SELECT
                                         p.id,
                                         p.code item_code,
                                         p.name,
@@ -1242,7 +1242,7 @@ class Reports_model extends CI_Model
                         }
                     }, $totalPurchases);
                 }
-            }*/
+            }
         }
 
         return $totalPurchases;
