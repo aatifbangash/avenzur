@@ -1107,6 +1107,9 @@ class Reports_model extends CI_Model
                 }
             }
 
+            echo '<pre>';
+            print_r($totalSalesResultSet);exit;
+
             //TODO sub return supplier from $totalPurchases
             $totalReturnSupplerQuery = "SELECT
                                         p.id,
