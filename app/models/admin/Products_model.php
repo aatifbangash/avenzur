@@ -948,7 +948,7 @@ class Products_model extends CI_Model
     public function updateProductImages($imgArr){
         foreach ($imgArr as $img){
             echo 'Upading Code: '.$img.'<br />';
-            $this->db->update('sma_products', ['image' => $img.'.jpg'], ['code' => $img]);
+            $this->db->update('sma_products', ['image' => trim($img).'.jpg'], ['code' => trim($img)]);
         }
     }
 
