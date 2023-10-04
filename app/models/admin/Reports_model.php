@@ -1056,11 +1056,13 @@ class Reports_model extends CI_Model
                                 ORDER BY p.id DESC";
 
         $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
+        
         if ($totalPurchseResultSet->num_rows() > 0) {
             foreach ($totalPurchseResultSet->result() as $row) {
                 $totalPurchases[] = $row;
             }
 
+            print_r($totalPurchases);exit;
             //TODO sub sales from $totalPurchases
             $totalSalesQuery = "SELECT
                                     p.id,
