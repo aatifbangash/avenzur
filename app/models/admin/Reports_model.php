@@ -1204,18 +1204,23 @@ class Reports_model extends CI_Model
                                         p.id,
                                         p.code item_code,
                                         p.name,
+                                        pi.transfer_id
                                         pi.batchno batch_no,
                                         pi.expiry expiry,
+                                        t.from_warehouse_id
+                                        t.to_warehouse_id
                                         round(sum(pi.quantity)) quantity
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
+                                INNER JOIN sma_transfers t ON t.id = pi.transfer_id 
                                 WHERE pi.transfer_id IS NOT NULL ";
             if ($at_date) {
                 $totalTransferQuery .= "AND pi.date <= '{$at_date}' ";
             }
 
             if ($warehouse) {
-                $totalTransferQuery .= "AND pi.warehouse_id <> {$warehouse} ";
+                //$totalTransferQuery .= "AND pi.warehouse_id <> {$warehouse} ";
+                $totalTransferQuery .= "AND pi.warehouse_id = {$warehouse} ";
             }
 
             if ($item_group) {
@@ -1239,7 +1244,7 @@ class Reports_model extends CI_Model
                             && $warehouse
                             //&& $purchase->expiry == $transfer->expiry
                         ) {
-                            $purchase->quantity -= (int)abs($transfer->quantity);
+                            $purchase->quantity += (int)abs($transfer->quantity);
                         }
                     }, $totalPurchases);
                 }
