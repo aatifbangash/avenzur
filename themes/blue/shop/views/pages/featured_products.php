@@ -7,7 +7,7 @@
             <h2 style="text-align:center !important;" class="select-head"> Featured Products </h2>
             <?php
                 $r = 0;
-                foreach (array_chunk($featured_products, 4) as $sps){
+                foreach (array_chunk($featured_products, sizeOf($featured_products)) as $sps){
                     ?>
                     <div class="item row <?= empty($r) ? 'active' : ''; ?>" style="margin-top: 40px;margin-bottom: 40px;">
                         <div class="selected-products">
