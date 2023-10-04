@@ -1091,6 +1091,8 @@ class Reports_model extends CI_Model
 
             $totalSalesQuery .= "GROUP BY p.id, p.code, p.name, si.batch_no";
 
+            echo $totalSalesQuery;exit;
+
             $totalSalesResultSet = $this->db->query($totalSalesQuery);
             if ($totalSalesResultSet->num_rows() > 0) {
                 foreach ($totalSalesResultSet->result() as $sale) {
@@ -1106,9 +1108,6 @@ class Reports_model extends CI_Model
                     }, $totalPurchases);
                 }
             }
-
-            echo '<pre>';
-            print_r($totalSalesResultSet);exit;
 
             //TODO sub return supplier from $totalPurchases
             $totalReturnSupplerQuery = "SELECT
