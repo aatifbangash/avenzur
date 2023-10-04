@@ -1062,7 +1062,6 @@ class Reports_model extends CI_Model
                 $totalPurchases[] = $row;
             }
 
-            print_r($totalPurchases);exit;
             //TODO sub sales from $totalPurchases
             $totalSalesQuery = "SELECT
                                     p.id,
