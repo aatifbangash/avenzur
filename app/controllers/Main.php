@@ -348,6 +348,7 @@ class Main extends MY_Shop_Controller
         $this->form_validation->set_rules('username', lang('username'), 'required|is_unique[users.username]');
         $this->form_validation->set_rules('password', lang('password'), 'required|min_length[8]|max_length[20]|matches[password_confirm]');
         $this->form_validation->set_rules('password_confirm', lang('confirm_password'), 'required');
+        $this->form_validation->set_rules('country', lang('country'), 'required');
 
         if ($this->form_validation->run('') == true) {
             $email    = strtolower($this->input->post('email'));
