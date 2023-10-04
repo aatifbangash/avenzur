@@ -1210,7 +1210,6 @@ class Reports_model extends CI_Model
                                         round(sum(pi.quantity)) quantity
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
-                                INNER JOIN sma_transfers t ON t.id = pi.transfer_id 
                                 WHERE pi.transfer_id IS NOT NULL ";
             if ($at_date) {
                 $totalTransferQuery .= "AND pi.date <= '{$at_date}' ";
