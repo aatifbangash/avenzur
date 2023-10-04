@@ -38,30 +38,6 @@
                         }
                             
                         ?>
-
-                        <div id="sticky-con">
-                            <?php
-                            if (isset($filters['brand']) && !empty($filters['brand'])) {
-                                ?>
-                                <li class="list-group-item">
-                                    <span class="close reset_filters_brand">&times;</span>
-                                    <?= $filters['brand']->name; ?>
-                                </li>
-                                <?php
-                            }
-                            ?>
-                            
-                            <?php if ($isPromo) {
-                                        ?>
-                            <div class="margin-bottom-xl">
-                                <h5 class="title text-bold"><span><?= lang('promotions'); ?></span></h5>
-                                <div class="checkbox"><label><input type="checkbox" id="promotions"<?= $this->input->get('promo') == 'yes' ? ' checked' : ''; ?>><span> <?= lang('promotions'); ?></span></label></div>
-                            </div>
-                            <?php
-                            } ?>
-                            
-
-                        </div>
                     </div>
 
                     <!-- categories section end -->
