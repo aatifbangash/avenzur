@@ -979,6 +979,7 @@ class Shop extends MY_Shop_Controller
             'in_stock'    => $reset ? null : $this->input->get('in_stock'),
             'page'        => $this->input->get('page') ? $this->input->get('page', true) : 1,
         ];
+        $this->data['featured_products'] = $this->shop_model->getFeaturedProducts();
         $this->data['filtered_subcategories'] = $category_slug ? $this->shop_model->getSubCategories($filters['category']->id) : null;
         $this->data['filters']    = $filters;
         $this->data['all_categories']    = $this->shop_model->getAllCategories();
