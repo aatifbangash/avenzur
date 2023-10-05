@@ -106,6 +106,11 @@
                             </ul>
         
     </div>
+
+    <div class="col-md-12">
+        <span>All Rights Reserved Avenzur.com By Pharma Medcial Company</span>
+    </div>
+
     </div>
 
 </div>
