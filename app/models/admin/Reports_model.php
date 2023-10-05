@@ -1236,6 +1236,7 @@ class Reports_model extends CI_Model
                             $purchase->id == $transfer->id
                             && $purchase->item_code == $transfer->item_code
                             && $purchase->batch_no == $transfer->batch_no
+                            && $warehouse
                             //&& $purchase->expiry == $transfer->expiry
                         ) {
                             $purchase->quantity -= (int)abs($transfer->quantity);

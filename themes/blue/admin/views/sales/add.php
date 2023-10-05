@@ -1006,7 +1006,7 @@ table#slTable td input.form-control {
                     return {
                         term: term,
                         limit: 10
-                    };
+                    };http://www.avenzur-pharma.com/admin/sales/edit/18
                 },
                 results: function (data, page) {
                     if (data.results != null) {
