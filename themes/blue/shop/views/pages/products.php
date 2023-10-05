@@ -2,25 +2,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <section class="page-contents">
     <div class="container">
-        <?php if(isset($featureImage)){
-         
-        
-        ?>
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="fusion-title-sc-wrapper" style="background-color: #848280;  ">
-														
-					<div class="fusion-title title fusion-title-2 fusion-sep-none fusion-title-text fusion-title-size-two" style="font-size:60px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;">
-							<h2 class="title-heading-left fusion-responsive-typography-calculated" style="margin: 0px; font-size: 1em; line-height: 1.33; --fontSize:60; --typography_sensitivity:1.3; color:white !important;" data-fontsize="60" data-lineheight="79.8px">
-							<?php echo $featureImage->name; ?></h2>
-					</div>				
-							
-				</div>
-                <!--<img src="<?= base_url('assets/uploads/thumbs/' . $featureImage->image); ?>" style="max-width:100%;width:100%;padding:20px 0px 20px 0px; ">-->
-            </div>
-        </div>
-        
-        <?php } ?>
         <div class="row">
             <div class="col-xs-12">
 
