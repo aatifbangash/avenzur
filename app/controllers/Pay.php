@@ -657,14 +657,14 @@ class Pay extends MY_Shop_Controller
             $error      = false;
             $cc         = [];
             $bcc        = [];
-            if ($user) {
+            /*if ($user) {
                 $cc[] = $customer->email;
             }
-            $cc[]      = $biller->email;
+            $cc[]      = $biller->email;*/
             $warehouse = $this->site->getWarehouseByID($inv->warehouse_id);
-            if ($warehouse->email) {
+            /*if ($warehouse->email) {
                 $cc[] = $warehouse->email;
-            }
+            }*/
             try {
                 if ($this->sma->send_email(($customer ? $customer->email : $user->email), $subject, $message, null, null, $attachment, $cc, $bcc)) {
                     $this->sma->send_email('ama@pharma.com.sa', 'New Order Generated On Avenzur', $message, null, null, $attachment, $cc, $bcc);
