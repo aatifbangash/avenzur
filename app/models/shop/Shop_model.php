@@ -256,10 +256,10 @@ class Shop_model extends CI_Model
         //->where('products.cf1', $countryId)
         ->limit($limit);
         
-        if($countryId != '0')
+        /*if($countryId != '0')
         {
            $this->db->where('products.cf1', $countryId);
-        }
+        }*/
         
         $sp = $this->getSpecialPrice();
         if ($sp->cgp) {
