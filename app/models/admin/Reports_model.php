@@ -1207,9 +1207,12 @@ class Reports_model extends CI_Model
                                         pi.batchno batch_no,
                                         pi.expiry expiry,
                                         pi.warehouse_id,
-                                        round(sum(pi.quantity)) quantity
+                                        round(sum(pi.quantity)) quantity,
+                                        t.from_warehouse_id,
+                                        t.to_warehouse_id
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
+                                INNER JOIN sma_transfers t ON pi.transfer_id = t.id
                                 WHERE pi.transfer_id IS NOT NULL ";
             if ($at_date) {
                 $totalTransferQuery .= "AND pi.date <= '{$at_date}' ";
@@ -1237,10 +1240,17 @@ class Reports_model extends CI_Model
                             $purchase->id == $transfer->id
                             && $purchase->item_code == $transfer->item_code
                             && $purchase->batch_no == $transfer->batch_no
-                            && $warehouse == $transfer->warehouse_id
+                            && $warehouse == $transfer->to_warehouse_id
                             //&& $purchase->expiry == $transfer->expiry
                         ) {
                             $purchase->quantity = $purchase->quantity + (int)abs($transfer->quantity);
+                        }else if(
+                            $purchase->id == $transfer->id
+                            && $purchase->item_code == $transfer->item_code
+                            && $purchase->batch_no == $transfer->batch_no
+                            && $warehouse == $transfer->from_warehouse_id
+                        ){
+                            $purchase->quantity = $purchase->quantity - (int)abs($transfer->quantity);
                         }
                     }, $totalPurchases);
                 }
