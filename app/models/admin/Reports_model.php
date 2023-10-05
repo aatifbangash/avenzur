@@ -1321,6 +1321,9 @@ class Reports_model extends CI_Model
                                         pi.expiry expiry,
                                         pi.warehouse_id,
                                         round(sum(pi.quantity)) quantity,
+                                        round(avg(pi.sale_price), 2) sale_price,
+                                        round(avg(pi.net_unit_cost), 2) cost_price,
+                                        round(avg(pi.unit_cost), 2) purchase_price
                                         t.from_warehouse_id,
                                         t.to_warehouse_id
                                 FROM sma_products p
