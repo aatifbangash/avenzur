@@ -186,7 +186,7 @@
     <div class="row" id="back-img" style="padding:0px 40px !important;  ">
 
         <div class="col-md-12">
-            <div class="banner11" style="display: flex;justify-content: center;align-items: center;margin-bottom: 15px;margin-top: 30px;">
+            <div class="banner11" style="display: flex;justify-content: center;align-items: center;margin-bottom: 80px;margin-top: 0px;">
                 <a href="<?= site_url('category/skn'); ?>"  >
                     <img style="max-width: 100%;max-height: 100%;" src="<?= base_url('assets/images/side-banner.jpg') ?>" />
                 </a>
