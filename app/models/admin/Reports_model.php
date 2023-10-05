@@ -1231,7 +1231,7 @@ class Reports_model extends CI_Model
             }
 
             $totalTransferQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno";
-            
+            echo $totalTransferQuery;exit;
             $totalTransferResultSet = $this->db->query($totalTransferQuery);
             if ($totalTransferResultSet->num_rows() > 0) {
                 foreach ($totalTransferResultSet->result() as $transfer) {
