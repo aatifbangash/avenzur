@@ -1216,7 +1216,7 @@ class Reports_model extends CI_Model
             }
 
             if ($warehouse) {
-                //$totalTransferQuery .= "AND pi.warehouse_id = {$warehouse} ";
+                $totalTransferQuery .= "AND pi.warehouse_id = {$warehouse} ";
             }
 
             if ($item_group) {
@@ -1228,8 +1228,7 @@ class Reports_model extends CI_Model
             }
 
             $totalTransferQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno";
-            echo $totalTransferQuery;exit;
-
+            
             $totalTransferResultSet = $this->db->query($totalTransferQuery);
             if ($totalTransferResultSet->num_rows() > 0) {
                 foreach ($totalTransferResultSet->result() as $transfer) {
@@ -1238,7 +1237,7 @@ class Reports_model extends CI_Model
                             $purchase->id == $transfer->id
                             && $purchase->item_code == $transfer->item_code
                             && $purchase->batch_no == $transfer->batch_no
-                            && $warehouse == $purchase->warehouse_id
+                            && $warehouse == $transfer->warehouse_id
                             //&& $purchase->expiry == $transfer->expiry
                         ) {
                             $purchase->quantity = $purchase->quantity + (int)abs($transfer->quantity);
