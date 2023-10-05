@@ -1206,6 +1206,7 @@ class Reports_model extends CI_Model
                                         p.name,
                                         pi.batchno batch_no,
                                         pi.expiry expiry,
+                                        pi.warehouse_id
                                         round(sum(pi.quantity)) quantity
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
@@ -1215,7 +1216,7 @@ class Reports_model extends CI_Model
             }
 
             if ($warehouse) {
-                $totalTransferQuery .= "AND pi.warehouse_id = {$warehouse} ";
+                //$totalTransferQuery .= "AND pi.warehouse_id = {$warehouse} ";
             }
 
             if ($item_group) {
@@ -1231,12 +1232,12 @@ class Reports_model extends CI_Model
             $totalTransferResultSet = $this->db->query($totalTransferQuery);
             if ($totalTransferResultSet->num_rows() > 0) {
                 foreach ($totalTransferResultSet->result() as $transfer) {
-                    array_map(function ($purchase) use ($transfer) {
+                    array_map(function ($purchase) use ($transfer, $warehouse) {
                         if (
                             $purchase->id == $transfer->id
                             && $purchase->item_code == $transfer->item_code
                             && $purchase->batch_no == $transfer->batch_no
-                            && $warehouse
+                            && $warehouse == $purchase->warehouse_id
                             //&& $purchase->expiry == $transfer->expiry
                         ) {
                             $purchase->quantity = $purchase->quantity + (int)abs($transfer->quantity);
