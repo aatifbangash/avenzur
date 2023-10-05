@@ -1310,6 +1310,48 @@ class Reports_model extends CI_Model
                     }, $totalPurchases);
                 }
             }
+        }else{
+            $totalPurchases = [];
+
+            $totalTransferQuery = "SELECT
+                                        p.id,
+                                        p.code item_code,
+                                        p.name,
+                                        pi.batchno batch_no,
+                                        pi.expiry expiry,
+                                        pi.warehouse_id,
+                                        round(sum(pi.quantity)) quantity,
+                                        t.from_warehouse_id,
+                                        t.to_warehouse_id
+                                FROM sma_products p
+                                INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
+                                INNER JOIN sma_transfers t ON pi.transfer_id = t.id
+                                WHERE pi.transfer_id IS NOT NULL ";
+            if ($at_date) {
+                $totalTransferQuery .= "AND pi.date <= '{$at_date}' ";
+            }
+
+            if ($warehouse) {
+                $totalTransferQuery .= "AND pi.warehouse_id = {$warehouse} ";
+            }
+
+            if ($item_group) {
+                $totalTransferQuery .= "AND p.category_id = '$item_group' ";
+            }
+
+            if ($item) {
+                $totalTransferQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+            }
+
+            $totalTransferQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno";
+            $totalTransferResultSet = $this->db->query($totalTransferQuery);
+            if ($totalTransferResultSet->num_rows() > 0) {
+
+                foreach ($totalTransferResultSet->result() as $row) {
+                    $totalPurchases[] = $row;
+                }
+            }
+
         }
 
         return $totalPurchases;
