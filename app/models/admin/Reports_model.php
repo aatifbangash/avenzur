@@ -1206,7 +1206,7 @@ class Reports_model extends CI_Model
                                         p.name,
                                         pi.batchno batch_no,
                                         pi.expiry expiry,
-                                        pi.warehouse_id
+                                        pi.warehouse_id,
                                         round(sum(pi.quantity)) quantity
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
