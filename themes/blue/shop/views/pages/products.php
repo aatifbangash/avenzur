@@ -30,7 +30,7 @@
 
                     <div class="col-sm-3 col-md-2">
                         <h4>Categories</h4>
-                        <ul style="list-style-type: none;">
+                        <ul style="list-style-type: none;padding: 0px;">
                         <?php
                         foreach($categories as $cat)
                         {
