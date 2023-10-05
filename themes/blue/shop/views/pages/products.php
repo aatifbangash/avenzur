@@ -33,7 +33,7 @@
                         <?php
                         foreach($categories as $cat)
                         {
-                                echo '<li class="category-side"><a href="' . site_url('category/' . $cat->slug . '/' . $cat->slug) . '">' . $cat->name . '</a></li>';
+                                echo '<li class="category-side"><a href="' . site_url('category/' . $cat->slug) . '">' . ucfirst($cat->name) . '</a></li>';
                         //   echo  '<li>' .'<a>'.$cat->name.'</a>'.'</li>'.'<br>';
                         }
                             
