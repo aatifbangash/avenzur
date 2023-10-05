@@ -107,9 +107,9 @@
         
     </div>
 
-    <div class="col-md-12" style="text-align:center;">
+    <div class="col-md-12" style="text-align:center;padding: 12px;">
         <hr />
-        <span style="font-size: 14px;font-family: inherit;color: #8b8b8b;text-align: center;">All Rights Reserved Avenzur.com By Pharma Medcial Company</span>
+        <span style="font-size: 14px;font-family: 'Montserrat';color: #8b8b8b;text-align: center;">All Rights Reserved Avenzur.com By Pharma Medcial Company</span>
     </div>
 
     </div>
