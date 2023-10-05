@@ -5,6 +5,46 @@
         tax_rates = <?php echo json_encode($tax_rates); ?>;
 
     $(document).ready(function () {
+
+        if (localStorage.getItem('remove_rlls')) {
+            if (localStorage.getItem('reitems')) {
+                localStorage.removeItem('reitems');
+            }
+
+            if (localStorage.getItem('rediscount')) {
+                    localStorage.removeItem('rediscount');
+                }
+                if (localStorage.getItem('reshipping')) {
+                    localStorage.removeItem('reshipping');
+                }
+                if (localStorage.getItem('retax2')) {
+                    localStorage.removeItem('retax2');
+                }
+                if (localStorage.getItem('reref')) {
+                    localStorage.removeItem('reref');
+                }
+                if (localStorage.getItem('rewarehouse')) {
+                    localStorage.removeItem('rewarehouse');
+                }
+                if (localStorage.getItem('renote')) {
+                    localStorage.removeItem('renote');
+                }
+                if (localStorage.getItem('reinnote')) {
+                    localStorage.removeItem('reinnote');
+                }
+                if (localStorage.getItem('recustomer')) {
+                    localStorage.removeItem('recustomer');
+                }
+                if (localStorage.getItem('redate')) {
+                    localStorage.removeItem('redate');
+                }
+                if (localStorage.getItem('rebiller')) {
+                    localStorage.removeItem('rebiller');
+                }
+                
+            localStorage.removeItem('remove_rlls');
+        }
+
         ItemnTotals();
         $('.bootbox').on('hidden.bs.modal', function (e) {
             $('#add_item').focus();

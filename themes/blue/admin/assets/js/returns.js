@@ -201,12 +201,39 @@ $(document).ready(function (e) {
     if ((rediscount = localStorage.getItem('rediscount'))) {
         $('#rediscount').val(rediscount);
     }
-    $('#reshipping').change(function (e) {
-        localStorage.setItem('reshipping', $(this).val());
-    });
+   
+    // $('#reshipping').change(function (e) {
+    //     localStorage.setItem('reshipping', $(this).val());
+    // });
+    // if ((reshipping = localStorage.getItem('reshipping'))) {
+    //     $('#reshipping').val(reshipping);
+    // }
+
+    var old_shipping;
+    $('#reshipping')
+        .focus(function () {
+            old_shipping = $(this).val();
+        })
+        .change(function () {
+            var slsh = $(this).val() ? $(this).val() : 0;
+            if (!is_numeric(slsh)) {
+                $(this).val(old_shipping);
+                bootbox.alert(lang.unexpected_value);
+                return;
+            }
+            shipping = parseFloat(slsh);
+            localStorage.setItem('reshipping', shipping);
+        });
     if ((reshipping = localStorage.getItem('reshipping'))) {
-        $('#reshipping').val(reshipping);
+        shipping = parseFloat(reshipping);
+        $('#reshipping').val(shipping);
+    } else {
+        shipping = 0;
+        $('#reshipping').val(shipping);
+        localStorage.setItem('reshipping', shipping);
     }
+
+
 
     $('#renote').redactor('destroy');
     $('#renote').redactor({
