@@ -1215,7 +1215,7 @@ class Reports_model extends CI_Model
             }
 
             if ($warehouse) {
-                $totalTransferQuery .= "AND pi.warehouse_id <> {$warehouse} ";
+                $totalTransferQuery .= "AND pi.warehouse_id = {$warehouse} ";
             }
 
             if ($item_group) {
@@ -1239,7 +1239,7 @@ class Reports_model extends CI_Model
                             && $warehouse
                             //&& $purchase->expiry == $transfer->expiry
                         ) {
-                            $purchase->quantity -= (int)abs($transfer->quantity);
+                            $purchase->quantity = $purchase->quantity + (int)abs($transfer->quantity);
                         }
                     }, $totalPurchases);
                 }
