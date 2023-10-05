@@ -214,7 +214,7 @@
                 </div>
             </div>
 
-             <div class="col-md-12">
+             <!--<div class="col-md-12">
                 <div id="carousel1" class='outerWrapper'>
                     <div class="carousel-item">
                         <div><img width="223" height="240" src="<?= base_url('assets/images/9b0ec372041c805dada856cd0ba83438.jpeg') ?>"></div>
@@ -254,7 +254,7 @@
                     </div>
                 </div>
                 <script>$('#carousel1').waltzer({scroll:1});</script>
-            </div>
+            </div>-->
             
             <div class="col-md-12">
                 <div class="banner1" style="display: flex;justify-content: center;align-items: center;margin-bottom: 15px;">
