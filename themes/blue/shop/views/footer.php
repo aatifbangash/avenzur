@@ -155,23 +155,22 @@
 </section>
 
 <?php if (!get_cookie('shop_use_cookie') && get_cookie('shop_use_cookie') != 'accepted' && !empty($shop_settings->cookie_message)) {
-        ?>
-<div class="cookie-warning">
-    <div class="bounceInLeft alert alert-info">
-        <!-- <a href="<?= site_url('main/cookie/accepted'); ?>" class="close">&times;</a> -->
-        <a href="<?= site_url('main/cookie/accepted'); ?>" class="btn btn-sm btn-primary" style="float: right;"><?= lang('i_accept'); ?></a>
-        <p>
-            <?= $shop_settings->cookie_message; ?>
-            <?php if (!empty($shop_settings->cookie_link)) {
-            ?>
-            <a href="<?= site_url('page/' . $shop_settings->cookie_link); ?>"><?= lang('read_more'); ?></a>
-            <?php
-        } ?>
-        </p>
-    </div>
-</div>
+    ?>
+    <!--<div class="cookie-warning">
+        <div class="bounceInLeft alert alert-info">
+            <a href="<?= site_url('main/cookie/accepted'); ?>" class="btn btn-sm btn-primary" style="float: right;"><?= lang('i_accept'); ?></a>
+            <p>
+                <?php //echo $shop_settings->cookie_message; ?>
+                <?php //if (!empty($shop_settings->cookie_link)) {
+                ?>
+                <a href="<?php //echo site_url('page/' . $shop_settings->cookie_link); ?>"><?php //echo lang('read_more'); ?></a>
+                <?php
+                //} ?>
+            </p>
+        </div>
+    </div>-->
 <?php
-    } ?>
+} ?>
     
 <script src="<?= $assets; ?>js/libs.min.js"></script>
 <script src="<?= $assets; ?>js/scripts.min.js"></script>
