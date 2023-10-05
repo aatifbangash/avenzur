@@ -183,7 +183,7 @@
 <section class="page-dataa">
         <div class="container">    
 
-    <div class="row" id="back-img" style="padding:0px 40px !important;  ">
+    <div class="row" id="back-img" style="padding:0px 40px !important;margin-bottom: 45px;">
 
         <div class="col-md-12">
             <div class="banner11" style="display: flex;justify-content: center;align-items: center;margin-bottom: 80px;margin-top: 0px;">
