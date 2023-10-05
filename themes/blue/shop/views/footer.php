@@ -23,8 +23,8 @@
                     <img  style= " height: 30px !important; width: 150px !important;margin-bottom: 50px;" alt="<?= $shop_settings->shop_name; ?>" src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" class="img-responsive" />
                 </a>
                 <p style="margin-bottom: 50px !important;">
-                    CR: T234567 <br />
-                    Pharma. M <br />
+                    CR: 1010160412 <br />
+                    Pharma Medical Company <br />
                     KSA ,Riyadh ,Olaya main road ,Mousa bin nosair street ,<br /> 
                     Silicon building no.1 , Office 7 <br />
                     Phone No. <?= $shop_settings->phone; ?> <br />
