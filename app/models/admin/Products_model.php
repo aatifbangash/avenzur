@@ -945,6 +945,13 @@ class Products_model extends CI_Model
         }
     }
 
+    public function updateProductImages($imgArr){
+        foreach ($imgArr as $img){
+            echo 'Upading Code: '.$img.'<br />';
+            $this->db->update('sma_products', ['image' => trim($img).'.jpg'], ['code' => trim($img)]);
+        }
+    }
+
     public function setRack($data)
     {
         if ($this->db->update('warehouses_products', ['rack' => $data['rack']], ['product_id' => $data['product_id'], 'warehouse_id' => $data['warehouse_id']])) {

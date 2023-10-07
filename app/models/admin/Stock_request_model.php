@@ -7,9 +7,16 @@ class Stock_request_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->library('ion_auth');
     }
 
-    public function addPurchaseRequest($data, $items, $warehouse_id){
+    public function addPurchaseRequest($data, $items, $warehouse_id, $fromdate, $todate){
+        if(!empty($fromdate)){
+            $fromdate = date("Y-m-d", strtotime(str_replace("/", "-", $fromdate)));
+        }
+        if(!empty($todate)){
+            $todate = date("Y-m-d", strtotime(str_replace("/", "-", $todate)));
+        }
         $this->db->trans_start();
         if ($this->db->insert('purchase_requests', $data)) {
             $request_id = $this->db->insert_id();
@@ -18,11 +25,28 @@ class Stock_request_model extends CI_Model
                 $item['purchase_request_id'] = $request_id;
                 $this->db->insert('purchase_request_items', $item);
             }
-
-            if($warehouse_id == null){
-                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending']);
+            
+            if($warehouse_id == null || $warehouse_id == 'null'){
+                $this->db->where('status', 'pending');
+                if(!empty($fromdate)){
+                    $this->db->where('date >=', $fromdate);
+                }
+                if(!empty($todate)){
+                    $this->db->where('date <=', $todate);
+                }
+                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed']);
+                //$this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending']);
             }else{
-                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending', 'warehouse_id' => $warehouse_id]);
+                $this->db->where('status', 'pending');
+                $this->db->where('warehouse_id', $warehouse_id);
+                if(!empty($fromdate)){
+                    $this->db->where('date >=', $fromdate);
+                }
+                if(!empty($todate)){
+                    $this->db->where('date <=', $todate);
+                }
+                $this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed']);
+                //$this->db->update('stock_requests', ['purchase_request_id' => $request_id, 'status' => 'completed'], ['status' => 'pending', 'warehouse_id' => $warehouse_id]);
             }
         }
         
@@ -55,7 +79,7 @@ class Stock_request_model extends CI_Model
         return false;
     }
 
-    public function editPurchaseRequest($req_id, $data, $items, $warehouse_id){
+    public function editPurchaseRequest($req_id, $data, $items, $warehouse_id, $fromdate, $todate){
         $this->db->trans_start();
 
         $this->db->delete('sma_purchase_requests', ['id' => $req_id]);
@@ -172,7 +196,17 @@ class Stock_request_model extends CI_Model
 
     public function getStockRequests($warehouse_id){
         $response = array();
-        if($this->Owner || $this->Admin){
+        $user_group_id = $this->ion_auth->user()->row()->group_id;
+        $user_group_obj = $this->db->select('*')->from('sma_groups')->where('id', $user_group_id)->limit(1)->get();
+        $user_group_arr = array();
+
+        if ($user_group_obj->num_rows() > 0) {
+            foreach (($user_group_obj->result()) as $row) {
+                $user_group_arr[] = $row;
+            }
+        }
+
+        if($user_group_arr[0]->name == 'purchasemanager'){
             $this->db
                 ->select('sma_stock_requests.id, sma_stock_requests.warehouse_id, sma_stock_requests.status, sma_stock_requests.date, sma_warehouses.name as warehouse, SUM(sma_stock_request_items.required_stock) AS req_stock')
                 ->from('sma_stock_requests')
@@ -251,9 +285,15 @@ class Stock_request_model extends CI_Model
         return $data_res;
     }
     
-    public function getCurrentPR($warehouse_id){
+    public function getCurrentPR($warehouse_id, $fromdate, $todate){
+        if(!empty($fromdate)){
+            $fromdate = date("Y-m-d", strtotime(str_replace("/", "-", $fromdate)));
+        }
+        if(!empty($todate)){
+            $todate = date("Y-m-d", strtotime(str_replace("/", "-", $todate)));
+        }
         $response = array();
-        if($warehouse_id == null){
+        if($warehouse_id == null || $warehouse_id == 'null'){
             $this->db
                 ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_stock_request_items.required_stock) As total_req_stock, SUM(sma_stock_request_items.avg_stock) As total_avg_stock')
                 ->select('(SELECT SUM(sma_warehouses_products.quantity)
@@ -264,8 +304,17 @@ class Stock_request_model extends CI_Model
                 ->from('sma_stock_requests')
                 ->join('sma_stock_request_items', 'sma_stock_request_items.stock_request_id = sma_stock_requests.id')
                 ->join('sma_products', 'sma_products.id = sma_stock_request_items.product_id', 'left')
-                ->where('sma_stock_requests.status', 'pending')
-                ->group_by('sma_stock_request_items.product_id');
+                ->where('sma_stock_requests.status', 'pending');
+
+                if(!empty($fromdate)){
+                    $this->db->where('sma_stock_requests.date >=', $fromdate);
+                }
+
+                if(!empty($todate)){
+                    $this->db->where('sma_stock_requests.date <=', $todate);
+                }
+
+                $this->db->group_by('sma_stock_request_items.product_id');
         }else{
             $this->db
                 ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_stock_request_items.required_stock) As total_req_stock, SUM(sma_stock_request_items.avg_stock) As total_avg_stock')
@@ -278,8 +327,17 @@ class Stock_request_model extends CI_Model
                 ->join('sma_stock_request_items', 'sma_stock_request_items.stock_request_id = sma_stock_requests.id')
                 ->join('sma_products', 'sma_products.id = sma_stock_request_items.product_id', 'left')
                 ->where('sma_stock_requests.status', 'pending')
-                ->where('sma_stock_requests.warehouse_id', $warehouse_id)
-                ->group_by('sma_stock_request_items.product_id');
+                ->where('sma_stock_requests.warehouse_id', $warehouse_id);
+
+                if(!empty($fromdate)){
+                    $this->db->where('sma_stock_requests.date >=', $fromdate);
+                }
+
+                if(!empty($todate)){
+                    $this->db->where('sma_stock_requests.date <=', $todate);
+                }
+
+                $this->db->group_by('sma_stock_request_items.product_id');
         }
         
         $q = $this->db->get();

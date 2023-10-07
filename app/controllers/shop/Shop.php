@@ -946,6 +946,55 @@ class Shop extends MY_Shop_Controller
         $this->page_construct('pages/view_product', $this->data);
     }
 
+    // Featured Products
+    public function featured_products($category_slug = null, $subcategory_slug = null, $brand_slug = null, $promo = null)
+    {
+         
+          
+        $this->session->set_userdata('requested_page', $this->uri->uri_string());
+        if ($this->input->get('category')) {
+            $category_slug = $this->input->get('category', true);
+           
+        }
+        if ($this->input->get('brand')) {
+            $brand_slug = $this->input->get('brand', true);
+        }
+        if ($this->input->get('promo') && $this->input->get('promo') == 'yes') {
+            $promo = true;
+        }
+        
+        if($category_slug != null)
+        { $this->data['featureImage'] = $this->shop_model->getCategoryBySlug($category_slug); }
+        $reset = $category_slug || $subcategory_slug || $brand_slug ? true : false;
+
+        $filters = [
+            'query'       => $this->input->post('query'),
+            'category'    => $category_slug ? $this->shop_model->getCategoryBySlug($category_slug) : null,
+            'subcategory' => $subcategory_slug ? $this->shop_model->getCategoryBySlug($subcategory_slug) : null,
+            'brand'       => $brand_slug ? $this->shop_model->getBrandBySlug($brand_slug) : null,
+            'promo'       => $promo,
+            'sorting'     => $reset ? null : $this->input->get('sorting'),
+            'min_price'   => $reset ? null : $this->input->get('min_price'),
+            'max_price'   => $reset ? null : $this->input->get('max_price'),
+            'in_stock'    => $reset ? null : $this->input->get('in_stock'),
+            'page'        => $this->input->get('page') ? $this->input->get('page', true) : 1,
+        ];
+        $this->data['featured_products'] = $this->shop_model->getFeaturedProducts();
+        $this->data['filtered_subcategories'] = $category_slug ? $this->shop_model->getSubCategories($filters['category']->id) : null;
+        $this->data['filters']    = $filters;
+        $this->data['all_categories']    = $this->shop_model->getAllCategories();
+        $this->data['error']      = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['page_title'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products'))) . ' - ' . $this->shop_settings->shop_name;
+        $this->data['page_title2'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products'))) ;
+        $this->data['page_desc']  = !empty($filters['category']) ? $filters['category']->description : (!empty($filters['brand']) ? $filters['brand']->description : $this->shop_settings->products_description);
+           $this->data['location']    = $this->shop_model->getProductLocation();
+           if($this->data=='Saudi Arabia'){
+                echo "Test";
+                
+            }
+        $this->page_construct('pages/featured_products', $this->data);
+    }
+
     // Products,  categories and brands page
     public function products($category_slug = null, $subcategory_slug = null, $brand_slug = null, $promo = null)
     {
@@ -1208,48 +1257,7 @@ class Shop extends MY_Shop_Controller
                 }
                 if ($this->sma->isPromo($row)) {
                     $row->price = $row->promo_price;
-                } /*elseif ($customer->price_group_id) {
-                    if ($pr_group_price = $this->site->getProductGroupPrice($row->id, $customer->price_group_id)) {
-                        $row->price = $pr_group_price->price;
-                    }
-                } elseif ($warehouse->price_group_id) {
-                    if ($pr_group_price = $this->site->getProductGroupPrice($row->id, $warehouse->price_group_id)) {
-                        $row->price = $pr_group_price->price;
-                    }
-                }*/
-               
-                /*else if($customer_group->name == "Wholesale")
-                {
-                    
-                    if($row->Price_in_Dollar!=3)
-                        $row->price = ($row->price - (($row->price * $row->whole_sale_price) / 100))*$dcurrRate;
-                    else
-                        $row->price = $row->whole_sale_price;
-                    
-                }
-                else if($customer_group->name=="Library")
-                {
-                    $productprice         = $this->sales_model->getUserProductPrice($row->id, $warehouse_id,$customer_id); 
-                     
-                    $row->productprice = $productprice;
-                    if($productprice){
-                        $row->oldprice = $row->price;
-                        $row->price = $productprice->unit_price;
-                        $row->lib_price = $productprice->unit_price;
-                    }
-                    
-                    if($row->Price_in_Dollar!=3)
-                        $row->price  = ($row->price - (($row->price * $row->lib_price) / 100))*$dcurrRate;
-                    else
-                        $row->price = $row->lib_price;
-                     
-                }else{
-                    $productprice         = $this->sales_model->getUserProductPrice($row->id, $warehouse_id,$customer_id); 
-                    if($productprice){
-                        $row->oldprice = $row->price;
-                        $row->price = $productprice->unit_price;
-                    }
-                }*/
+                } 
                 
                 $row->real_unit_price = $row->price;
                 $row->base_quantity   = 1;
@@ -1274,8 +1282,13 @@ class Shop extends MY_Shop_Controller
             $this->sma->send_json($pr);
             
         } else {
+            /*$rows = $this->shop_model->getProductBrandsByName($sr);
+            if($rows){
+                $this->sma->send_json([['id' => 0, 'label' => lang('no_match_found'), 'value' => $term]]);
+            }else{
+                $this->sma->send_json([['id' => 0, 'label' => lang('no_match_found'), 'value' => $term]]);
+            }*/
             $this->sma->send_json([['id' => 0, 'label' => lang('no_match_found'), 'value' => $term]]);
-          // $this->sma->send_json([['id' => 0, 'value' => $term]]);
         }
     }
     

@@ -74,6 +74,14 @@
                 }
             }
         });
+
+        $(window).bind('beforeunload', function (e) {
+            localStorage.setItem('remove_rlls', true);
+            if (count > 1) {
+                var message = "You will loss data!";
+                return message;
+            }
+        });
     });
 </script>
 

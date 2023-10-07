@@ -25,6 +25,13 @@ class Products extends MY_Controller
         $this->popup_attributes    = ['width' => '900', 'height' => '600', 'window_name' => 'sma_popup', 'menubar' => 'yes', 'scrollbars' => 'yes', 'status' => 'no', 'resizable' => 'yes', 'screenx' => '0', 'screeny' => '0'];
     }
 
+    public function setProductImages(){
+        $images = "111002372, 111002659, 111003308, 111003332, 111003744, 111003893, 111004003, 111004028, 111004177, 111004178, 111004390, 111004398, 111004444, 121001580, 121002526, 121002546, 121004780, 121004824, 121011051, 121011052, 121014081, 121014092, 121014960--5C, 121014960, 121017310---703, 121017310, 121018751, 121019155, 121019741, 121020002, 121020809, 121020834, 121020835, 121020910, 121021005, 121021035, 121021087, 121021088";
+        $imgArr = explode(",",$images);
+
+        $this->products_model->updateProductImages($imgArr);
+    }
+
     /* ------------------------------------------------------- */
     public function add($id = null)
     {
@@ -106,6 +113,7 @@ class Products extends MY_Controller
                 'slug'              => $this->input->post('slug'),
                 'weight'            => $this->input->post('weight'),
                 'featured'          => $this->input->post('featured'),
+                'special_offer'     => $this->input->post('special_offer'),
                 'hsn_code'          => $this->input->post('hsn_code'),
                 'hide'              => $this->input->post('hide') ? $this->input->post('hide') : 0,
                 'second_name'       => $this->input->post('second_name'),
@@ -1008,6 +1016,7 @@ class Products extends MY_Controller
                 'slug'              => $this->input->post('slug'),
                 'weight'            => $this->input->post('weight'),
                 'featured'          => $this->input->post('featured'),
+                'special_offer'     => $this->input->post('special_offer'),
                 'hsn_code'          => $this->input->post('hsn_code'),
                 'hide'              => $this->input->post('hide') ? $this->input->post('hide') : 0,
                 'hide_pos'          => $this->input->post('hide_pos') ? $this->input->post('hide_pos') : 0,

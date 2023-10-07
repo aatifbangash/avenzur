@@ -1046,4 +1046,169 @@ class Suppliers extends MY_Controller
         $this->data['supplier'] = $this->companies_model->getCompanyByID($id);
         $this->load->view($this->theme . 'suppliers/view', $this->data);
     }
+
+    public function list_service_invoice(){
+        $this->data['service_invoices'] = $this->purchases_model->getDebitMemo('serviceinvoicesupplier');
+        //$this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->page_construct('suppliers/list_service_invoice', $meta, $this->data);
+    }
+
+    public function edit_service_invoice($id = null){
+        $this->sma->checkPermissions(false, true);
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $service_invoice_data = $this->purchases_model->getDebitMemoData($id);
+        $service_invoice_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
+
+        $data = [];
+        $this->data['memo_data'] = $service_invoice_data;
+
+        $this->data['memo_entries_data'] = $service_invoice_entries_data;
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->page_construct('suppliers/service_invoice', $meta, $this->data);
+    }
+
+    public function service_invoice(){
+        $this->sma->checkPermissions(false, true);
+        $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
+
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Service Invoice')]];
+        $meta = ['page_title' => lang('Service Invoice'), 'bc' => $bc];
+        if ($this->form_validation->run() == true) {
+            $request_type = $this->input->post('request_type');
+            $supplier_id      = $this->input->post('supplier');
+            //$payments_array      = $this->input->post('payment_amount');
+            $descriptions_array      = $this->input->post('description');
+            $item_ids = $this->input->post('item_id');
+            $reference_no = $this->input->post('reference_no');
+            $payment_total = $this->input->post('payment_total');
+            $ledger_account = $this->input->post('ledger_account');
+            $vat_account = $this->input->post('vat_account');
+            $vat_charges = $this->input->post('vat_charges');
+            $date_fmt = $this->input->post('date');
+
+            $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
+            $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
+
+            if($isDateValid){
+                $date = $date_fmt;
+            }else{
+                $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
+                $date = $formattedDate->format('Y-m-d');
+            }
+
+            if($payment_total > 0){
+                if($request_type == 'update'){
+                    $memo_id2 = $this->input->post('memo_id');
+
+                    // Delete older data
+                    $this->db->delete('sma_memo_entries', ['memo_id' => $memo_id2]);
+                    $this->db->delete('sma_memo', ['id' => $memo_id2]);
+                    $this->deleteFromAccounting($memo_id2);
+                }
+
+                $memoData = array(
+                    'supplier_id' => 0,
+                    'supplier_id' => $supplier_id,
+                    'reference_no' => $reference_no,
+                    'payment_amount' => $payment_total,
+                    'bank_charges' => $vat_charges,
+                    'ledger_account' => $ledger_account,
+                    'bank_charges_account' => $vat_account,
+                    'type' => 'serviceinvoicesupplier',
+                    'date' => $date
+                );
+
+                $this->db->insert('sma_memo' ,$memoData);
+                $memo_id = $this->db->insert_id();
+
+                $this->add_service_invoice($memo_id, $supplier_id, $reference_no, $description, $payment_total, $date);
+            }
+
+            $this->convert_service_invoice($memo_id, $supplier_id, $ledger_account, $vat_account, $payment_total, $vat_charges, $reference_no, 'serviceinvoice');
+            $this->session->set_flashdata('message', lang('Service Invoice added Successfully!'));
+            admin_redirect('suppliers/list_service_invoice');
+
+        } else {
+            $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+            //$this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->page_construct('suppliers/service_invoice', $meta, $this->data);
+        }
+    }
+
+    public function add_service_invoice($memo_id, $supplier_id, $reference_no, $description, $payment_amount, $date){
+        $memoData = array(
+            'memo_id' => $memo_id,
+            'supplier_id' => $supplier_id,
+            'reference_no' => $reference_no,
+            'description' => $description,
+            'payment_amount' => $payment_amount,
+            'type' => 'serviceinvoice',
+            'date' => $date
+        );
+        $this->db->insert('sma_memo_entries' ,$memoData);
+    }
+
+    public function convert_service_invoice($memo_id, $supplier_id, $ledger_account, $vat_account, $payment_amount, $vat_charges, $reference_no, $type){
+        $this->load->admin_model('companies_model');
+        $supplier = $this->companies_model->getCompanyByID($supplier_id);
+
+        /*Accounts Entries*/
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => $type,
+            'number'       => 'SIS-'.$reference_no,
+            'date'         => date('Y-m-d'),
+            'dr_total'     => $payment_amount + $vat_charges,
+            'cr_total'     => $payment_amount + $vat_charges,
+            'notes'        => 'Service Invoice Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
+            'pid'          =>  '',
+            'memo_id'      => $memo_id
+            );
+        $add  = $this->db->insert('sma_accounts_entries', $entry);
+        $insert_id = $this->db->insert_id();
+
+        //Supplier
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $supplier->ledger_account,
+                'amount' => $payment_amount + $vat_charges,
+                'narration' => ''
+            )
+        );
+
+        //vat charges
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $vat_account,
+                'amount' => $vat_charges,
+                'narration' => ''
+            )
+        );
+
+        //transfer legdger
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $ledger_account,
+                'amount' => $payment_amount,
+                'narration' => ''
+            )
+        );
+
+        foreach ($entryitemdata as $row => $itemdata)
+        {
+            $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
+        }
+    }
+
 }

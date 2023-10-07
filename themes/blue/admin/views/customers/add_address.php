@@ -38,7 +38,7 @@
 
             <div class="form-group">
                 <?= lang('phone', 'phone'); ?>
-                <?= form_input('phone', '', 'class="form-control" id="phone"'); ?>
+                <?= form_input('phone', '', 'class="form-control" id="phone" required="required"'); ?>
             </div>
 
         </div>

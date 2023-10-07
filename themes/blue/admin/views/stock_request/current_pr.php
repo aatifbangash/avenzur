@@ -31,18 +31,47 @@
 
                     <div class="col-md-4">
                         <div class="form-group">
-                            <?= lang('warehouse', 'powarehouse'); ?>
+                            <?= lang('fromdate', 'fromdate'); ?>
+                            <?php echo form_input('fromdate', ($_POST['fromdate'] ?? ''), 'class="form-control input-tip date" id="fromdate"'); ?>
+                            <br /><br />
+                            <input type="submit" value="search" class="btn btn-primary" name="search_product" />    
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <?= lang('todate', 'todate'); ?>
+                            <?php echo form_input('todate', ($_POST['todate'] ?? ''), 'class="form-control input-tip date" id="todate"'); ?>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
                             <?php
+                                echo lang('warehouse', 'powarehouse');
+                                /*echo lang('warehouse', 'powarehouse');;
                                 $wh[''] = '';
                                 foreach ($warehouses as $warehouse) {
                                     $wh[$warehouse->id] = $warehouse->name;
                                 }
-                                echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $Settings->default_warehouse), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
-                            <br /><br />
-                            <input type="submit" value="search" class="btn btn-primary" name="search_product" />    
+                                echo form_dropdown('warehouse', $wh, ($_POST['warehouse_id'] ?? $_POST['warehouse_id']), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" ');*/ 
+                            ?>
+                            <select class="form-control" id="powarehouse" name="warehouse" >
+                                <option value="null">Select Warehouse</option>
+                                <?php
+                                    foreach($warehouses as $warehouse)
+                                    {
+                                        $selected = ($warehouse->id == $warehouse_id) ? 'selected' : ''; // Check if it's the selected warehouse
+                                        echo '<option value="' . $warehouse->id . '" ' . $selected . '>' . $warehouse->name . '</option>';
+                                    }
+                                ?>                  
+                            </select>
                     </div>
                     </div>
-
+                </p>
+                <hr />
+                
+                <div class="col-md-12" style="padding: 0px;">
                     <div class="col-md-4">
                         <div class="form-group">
                             <?= lang('Status', 'Status'); ?>
@@ -50,7 +79,7 @@
                             //$statuses = array('completed' => 'completed', 'rejected' => 'rejected');
                             //echo form_dropdown('status', $statuses, '', 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('status') . '" required="required" style="width:100%;" '); 
                             $statuses = array('completed', 'rejected');
-                           ?>
+                            ?>
                             <select class="form-control" id="status" name="status" >
                                     <?php
                                         foreach($statuses as $status)
@@ -60,15 +89,14 @@
                                     ?>                  
                             </select>
                             <br /><br />
-                            <button type="submit" class="btn btn-primary" id="add_request">
-                            <?php 
-                                echo lang('Submit');
-                            ?>
-                            </button>
+                            <input type="submit" class="btn btn-primary" name="submit" id="add_request" value="<?= lang('Submit'); ?>" />
+                            
                         </div>
                     </div>
-                </p>
+                </div>
+
                 <div class="table-responsive">
+                    
                     <table id="TOData" cellpadding="0" cellspacing="0" border="0"
                            class="table table-bordered table-condensed table-hover table-striped">
                         <thead>
@@ -83,6 +111,7 @@
                             <th><?= lang('Avg Consumption'); ?></th>
                             <th colspan="2"><?= lang('Q req'); ?></th>
                             <th><?= lang('Safety Stock'); ?></th>
+                            <th><?= lang('Actions'); ?></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -118,6 +147,9 @@
                                                     
                                                 </td>
                                                 <td class="dataTables_empty"><input style="width:40%;" type="text" name="safety_stock[]" value="<?= $months; ?>" onchange="changeSafetyStock(this, '<?= $count; ?>');" /> months</td>
+                                                <td class="dataTables_empty">
+                                                    <input type="button" value="Remove" onclick="removeRow(this);">
+                                                </td>
                                             </tr>
                                         <?php
                                     }
@@ -134,7 +166,7 @@
                             <?php
                                 }
                             ?>
-                            
+                            <input type="hidden" name="warehouse_id" value="<?= isset($_POST['warehouse']) ? $_POST['warehouse'] : $_POST['warehouse_id']; ?>" />
                         </tbody>
                         
                     </table>
@@ -149,6 +181,12 @@
         var average_stock = document.getElementById('avg_stock_'+count).value;
         var qreq = (average_stock*obj.value) - available_stock;
         document.getElementById('required_stock_'+count).value = qreq;
+    }
+
+    function removeRow(button) {
+        // Find the parent row (tr) of the clicked button and remove it
+        var row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
     }
 </script>
 <?php echo form_close(); ?>

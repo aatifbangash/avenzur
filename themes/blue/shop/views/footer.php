@@ -20,62 +20,63 @@
             <div class="col-md-6 col-sm-12">
                 <!--<div class="title-footer"><span><?= lang('about_us'); ?></span></div>-->
                 <a href="<?= site_url(); ?>">
-                                <img  style= " height: 58px !important; width: 283px !important;    margin-bottom: 50px;" alt="<?= $shop_settings->shop_name; ?>" src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" class="img-responsive" />
-                 </a>
+                    <img  style= " height: 30px !important; width: 150px !important;margin-bottom: 50px;" alt="<?= $shop_settings->shop_name; ?>" src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" class="img-responsive" />
+                </a>
                 <p style="margin-bottom: 50px !important;">
+                    CR: 1010160412 <br />
+                    Pharma Medical Company <br />
+                    KSA ,Riyadh ,Olaya main road ,Mousa bin nosair street ,<br /> 
+                    Silicon building no.1 , Office 7 <br />
+                    Phone No. <?= $shop_settings->phone; ?> <br />
+                    Email <?= $shop_settings->email; ?>
+                </p>
+                <!--<p style="margin-bottom: 50px !important;">
                     Copyright 2022 © Avenzur *Disclaimer: Statements made, or products sold through this website,
                     have not been evaluated by the United States Food and Drug Administration (FDA).
                     They are not intended to diagnose, treat, cure or prevent any disease.
                    
-                </p>
-                <p>
-                    <!--<i class="fa fa-phone"></i> <span class="margin-left-md"><?= $shop_settings->phone; ?></span>-->
-                    <!--<i class="fa fa-envelope margin-left-xl"></i> <span class="margin-left-md"><?= $shop_settings->email; ?></span>-->
-                </p>
-             <?php if (!empty($pages)) {
-                            echo '<ul class="list-inline">';
-                             foreach ($pages as $page) {
-                                 echo '<li><a href="' . site_url('shop/page/' . $page->slug) . '">' . $page->name . '</a></li>';
-                                //   echo '<li><a href="' . site_url('shop/page/' . $page->slug) . '">' . $page->name . '</a></li>';
-                                    
-                            }
-                           echo '</ul>';
-                        }?>
-                <!--<ul class="list-inline">-->
-                    
-                <!--    <li><a href="<?= site_url('shop/page/' . $shop_settings->privacy_link); ?>"><?= lang('privacy_policy'); ?></a></li>-->
-                <!--     <li>    <a href="<?= site_url('shop/page/' . $shop_settings->terms_link); ?>"><?= lang('terms_conditions'); ?></a></li>-->
-                <!--     <li>  <a href="<?= site_url('shop/page/not-healthcare-advice'); ?>"><?= lang('Not_Healthcare_Advice'); ?></a></li>-->
-                <!--     <li>  <a href="<?= site_url('shop/blog'); ?>"><?= lang('Blog'); ?></a>  </li>-->
-                <!--</ul>-->
+                </p>-->
+
+                <!--<div class="title-footer"><span><?= lang('payment_methods'); ?></span></div>-->
+                <img class="img-responsive" style="width:50%;" src="<?= $assets; ?>/images/payment-methods.png" alt="Payment Methods">
             </div>
 
             <div class="clearfix visible-sm-block"></div>
-            <div class="col-md-3 col-sm-6">
-                
+            <div class="col-md-3 col-sm-6" style="padding: 75px;">
+                <ul style="font-family: 'Montserrat';font-size: 13px;">
+                    <li>Store Policy</li>
+                    <li>About</li>
+                    <li><a href="<?= site_url('shop/page/' . $shop_settings->privacy_link); ?>"><?= lang('privacy_policy'); ?></a></li>
+                    <li><a href="<?= site_url('shop/page/' . $shop_settings->terms_link); ?>"><?= lang('terms_conditions'); ?></a></li>
+                    <li>Track Order</li>
+                    <li><a href="<?= site_url('shop/page/exchange-return-policy'); ?>">Refund & Return</a></li>
+                </ul>
             </div>
 
-            <div class="col-md-3 col-sm-6">
-                
-                <!--<div class="title-footer"><span><?= lang('payment_methods'); ?></span></div>-->
-             
-                <img class="img-responsive" src="<?= $assets; ?>/images/payment-methods.png" alt="Payment Methods">
-                
+            <div class="col-md-3 col-sm-6" style="padding: 75px;">
+                <ul style="font-family: 'Montserrat';font-size: 13px;">
+                    <?php 
+                        
+                        if ($loggedIn) {
+                            $my_account_link = 'profile';
+                        }else{
+                            $my_account_link = 'login';
+                        }
+                    ?>
+                    <li><a href="<?= site_url($my_account_link); ?>">My Account</a></li>
+                    <li>Order Track</li>
+                </ul>      
+
+                <a href="#" class="fa fa-facebook" style="width: 30px !important;padding: 8px !important;font-size: 15px !important;"></a>
+                <a href="#" class="fa fa-twitter" style="width: 30px !important;padding: 8px !important;font-size: 15px !important;"></a>
+                <a href="#" class="fa fa-instagram" style="width: 30px !important;padding: 8px !important;font-size: 15px !important;"></a>
+                <a href="#" class="fa fa-linkedin" style="width: 30px !important;padding: 8px !important;font-size: 15px !important;"></a>
+                <a href="#" class="fa fa-youtube" style="width: 30px !important;padding: 8px !important;font-size: 15px !important;"></a>
+                <a href="#" class="fa fa-skype" style="width: 30px !important;padding: 8px !important;font-size: 15px !important;"></a>
             </div>
 
         </div>
     </div>
-
-    <!--  <div class="underfoteer" style="background: #F2F3F5 !important;">-->
-    <!--  <div class="row">-->
-    
-    <!--<div class="col-md-12">-->
-    <!--      <ul class="list-inline nav center " style="line-height: 0.7 !important;text-align: center !important;">-->
-                                <?php
-                               // if (DEMO) {
-                                    
-                               // }
-                                ?>
                                
                                 <!--<li class="dropdown">-->
                                 <!--    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">-->
@@ -105,6 +106,12 @@
                             </ul>
         
     </div>
+
+    <div class="col-md-12" style="text-align:center;padding: 12px;">
+        <hr />
+        <span style="font-size: 14px;font-family: 'Montserrat';color: #8b8b8b;text-align: center;">All Rights Reserved Avenzur.com By Pharma Medcial Company</span>
+    </div>
+
     </div>
 
 </div>
@@ -154,23 +161,22 @@
 </section>
 
 <?php if (!get_cookie('shop_use_cookie') && get_cookie('shop_use_cookie') != 'accepted' && !empty($shop_settings->cookie_message)) {
-        ?>
-<div class="cookie-warning">
-    <div class="bounceInLeft alert alert-info">
-        <!-- <a href="<?= site_url('main/cookie/accepted'); ?>" class="close">&times;</a> -->
-        <a href="<?= site_url('main/cookie/accepted'); ?>" class="btn btn-sm btn-primary" style="float: right;"><?= lang('i_accept'); ?></a>
-        <p>
-            <?= $shop_settings->cookie_message; ?>
-            <?php if (!empty($shop_settings->cookie_link)) {
-            ?>
-            <a href="<?= site_url('page/' . $shop_settings->cookie_link); ?>"><?= lang('read_more'); ?></a>
-            <?php
-        } ?>
-        </p>
-    </div>
-</div>
+    ?>
+    <!--<div class="cookie-warning">
+        <div class="bounceInLeft alert alert-info">
+            <a href="<?= site_url('main/cookie/accepted'); ?>" class="btn btn-sm btn-primary" style="float: right;"><?= lang('i_accept'); ?></a>
+            <p>
+                <?php //echo $shop_settings->cookie_message; ?>
+                <?php //if (!empty($shop_settings->cookie_link)) {
+                ?>
+                <a href="<?php //echo site_url('page/' . $shop_settings->cookie_link); ?>"><?php //echo lang('read_more'); ?></a>
+                <?php
+                //} ?>
+            </p>
+        </div>
+    </div>-->
 <?php
-    } ?>
+} ?>
     
 <script src="<?= $assets; ?>js/libs.min.js"></script>
 <script src="<?= $assets; ?>js/scripts.min.js"></script>

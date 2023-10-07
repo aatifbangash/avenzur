@@ -1026,13 +1026,13 @@ class Reports_model extends CI_Model
                                     pi.batchno batch_no, 
                                     pi.expiry expiry, 
                                     round(sum(pi.quantity)) quantity,
-                                    round(p.price, 2) sale_price,
-                                    round(p.cost, 2) cost_price,
-                                    round(pi.real_unit_cost, 2) purchase_price
+                                    round(avg(pi.sale_price), 2) sale_price,
+                                    round(avg(pi.net_unit_cost), 2) cost_price,
+                                    round(avg(pi.unit_cost), 2) purchase_price
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
-                                {$supplierJoin}
-                                WHERE pi.purchase_item_id IS NULL ";
+                                INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id
+                                WHERE pi.purchase_item_id IS NULL AND pc.status = 'received'";
         if ($at_date) {
             $totalPurchasesQuery .= "AND pi.date <= '{$at_date}' ";
         }
@@ -1053,10 +1053,11 @@ class Reports_model extends CI_Model
             $totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
         }
 
-        $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.batchno, pi.expiry
+        $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.batchno
                                 ORDER BY p.id DESC";
 
         $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
+        
         if ($totalPurchseResultSet->num_rows() > 0) {
             foreach ($totalPurchseResultSet->result() as $row) {
                 $totalPurchases[] = $row;
@@ -1073,7 +1074,7 @@ class Reports_model extends CI_Model
                                 FROM sma_products p 
                                 INNER JOIN sma_sale_items si ON p.id = si.product_id
                                 INNER JOIN sma_sales sl ON sl.id = si.sale_id 
-                                WHERE 1=1 ";
+                                WHERE sl.sale_status = 'completed' ";
             if ($at_date) {
                 $totalSalesQuery .= "AND sl.date <= '{$at_date} 23:59:59' ";
             }
@@ -1090,7 +1091,7 @@ class Reports_model extends CI_Model
                 $totalSalesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
-            $totalSalesQuery .= "GROUP BY p.id, p.code, p.name, si.batch_no, si.expiry";
+            $totalSalesQuery .= "GROUP BY p.id, p.code, p.name, si.batch_no";
 
             $totalSalesResultSet = $this->db->query($totalSalesQuery);
             if ($totalSalesResultSet->num_rows() > 0) {
@@ -1100,7 +1101,7 @@ class Reports_model extends CI_Model
                             $purchase->id == $sale->id
                             && $purchase->item_code == $sale->item_code
                             && $purchase->batch_no == $sale->batch_no
-                            && $purchase->expiry == $sale->expiry
+                            //&& $purchase->expiry == $sale->expiry
                         ) {
                             $purchase->quantity -= (int)$sale->quantity;
                         }
@@ -1135,7 +1136,7 @@ class Reports_model extends CI_Model
                 $totalReturnSupplerQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
-            $totalReturnSupplerQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno, pi.expiry";
+            $totalReturnSupplerQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno";
 
             $totalReturnSupplierResultSet = $this->db->query($totalReturnSupplerQuery);
             if ($totalReturnSupplierResultSet->num_rows() > 0) {
@@ -1145,7 +1146,7 @@ class Reports_model extends CI_Model
                             $purchase->id == $returnSupplier->id
                             && $purchase->item_code == $returnSupplier->item_code
                             && $purchase->batch_no == $returnSupplier->batch_no
-                            && $purchase->expiry == $returnSupplier->expiry
+                            //&& $purchase->expiry == $returnSupplier->expiry
                         ) {
                             $purchase->quantity -= (int)abs($returnSupplier->quantity);
                         }
@@ -1181,7 +1182,7 @@ class Reports_model extends CI_Model
                 $totalReturnSupplerQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
-            $totalReturnCustomerQuery .= "group by p.id, p.code, p.name, rci.batch_no, rci.expiry";
+            $totalReturnCustomerQuery .= "group by p.id, p.code, p.name, rci.batch_no";
 
             $totalReturnCustomerResultSet = $this->db->query($totalReturnCustomerQuery);
             if ($totalReturnCustomerResultSet->num_rows() > 0) {
@@ -1191,7 +1192,7 @@ class Reports_model extends CI_Model
                             $purchase->id == $returnCustomer->id
                             && $purchase->item_code == $returnCustomer->item_code
                             && $purchase->batch_no == $returnCustomer->batch_no
-                            && $purchase->expiry == $returnCustomer->expiry
+                            //&& $purchase->expiry == $returnCustomer->expiry
                         ) {
                             $purchase->quantity += (int)abs($returnCustomer->quantity);
                         }
@@ -1199,23 +1200,27 @@ class Reports_model extends CI_Model
                 }
             }
 
-            //TODO transfer
+            //TODO transfer To warehouse
             $totalTransferQuery = "SELECT
                                         p.id,
                                         p.code item_code,
                                         p.name,
                                         pi.batchno batch_no,
                                         pi.expiry expiry,
-                                        round(sum(pi.quantity)) quantity
+                                        pi.warehouse_id,
+                                        round(sum(pi.quantity)) quantity,
+                                        t.from_warehouse_id,
+                                        t.to_warehouse_id
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
+                                INNER JOIN sma_transfers t ON pi.transfer_id = t.id
                                 WHERE pi.transfer_id IS NOT NULL ";
             if ($at_date) {
                 $totalTransferQuery .= "AND pi.date <= '{$at_date}' ";
             }
 
             if ($warehouse) {
-                $totalTransferQuery .= "AND pi.warehouse_id <> {$warehouse} ";
+                $totalTransferQuery .= "AND pi.warehouse_id = {$warehouse} ";
             }
 
             if ($item_group) {
@@ -1226,23 +1231,131 @@ class Reports_model extends CI_Model
                 $totalTransferQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
-            $totalTransferQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno, pi.expiry";
-
+            $totalTransferQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno";
             $totalTransferResultSet = $this->db->query($totalTransferQuery);
             if ($totalTransferResultSet->num_rows() > 0) {
                 foreach ($totalTransferResultSet->result() as $transfer) {
-                    array_map(function ($purchase) use ($transfer) {
+                    array_map(function ($purchase) use ($transfer, $warehouse) {
                         if (
                             $purchase->id == $transfer->id
                             && $purchase->item_code == $transfer->item_code
                             && $purchase->batch_no == $transfer->batch_no
-                            && $purchase->expiry == $transfer->expiry
+                            && $warehouse == $transfer->to_warehouse_id
+                            //&& $purchase->expiry == $transfer->expiry
                         ) {
-                            $purchase->quantity -= (int)abs($transfer->quantity);
+                            $purchase->quantity = $purchase->quantity + (int)abs($transfer->quantity);
+                        }else if(
+                            $purchase->id == $transfer->id
+                            && $purchase->item_code == $transfer->item_code
+                            && $purchase->batch_no == $transfer->batch_no
+                            && $warehouse == $transfer->from_warehouse_id
+                        ){
+                            $purchase->quantity = $purchase->quantity - (int)abs($transfer->quantity);
                         }
                     }, $totalPurchases);
                 }
             }
+
+            //TODO transfer FROm warehouse
+            $totalTransferQuery = "SELECT
+                                        p.id,
+                                        p.code item_code,
+                                        p.name,
+                                        pi.batchno batch_no,
+                                        pi.expiry expiry,
+                                        pi.warehouse_id,
+                                        round(sum(pi.quantity)) quantity,
+                                        t.from_warehouse_id,
+                                        t.to_warehouse_id
+                                FROM sma_products p
+                                INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
+                                INNER JOIN sma_transfers t ON pi.transfer_id = t.id
+                                WHERE pi.transfer_id IS NOT NULL ";
+            if ($at_date) {
+                $totalTransferQuery .= "AND pi.date <= '{$at_date}' ";
+            }
+
+            if ($warehouse) {
+                $totalTransferQuery .= "AND t.from_warehouse_id = {$warehouse} ";
+            }
+
+            if ($item_group) {
+                $totalTransferQuery .= "AND p.category_id = '$item_group' ";
+            }
+
+            if ($item) {
+                $totalTransferQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+            }
+
+            $totalTransferQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno";
+            $totalTransferResultSet = $this->db->query($totalTransferQuery);
+            if ($totalTransferResultSet->num_rows() > 0) {
+                foreach ($totalTransferResultSet->result() as $transfer) {
+                    array_map(function ($purchase) use ($transfer, $warehouse) {
+                        if (
+                            $purchase->id == $transfer->id
+                            && $purchase->item_code == $transfer->item_code
+                            && $purchase->batch_no == $transfer->batch_no
+                            && $warehouse == $transfer->to_warehouse_id
+                            //&& $purchase->expiry == $transfer->expiry
+                        ) {
+                            $purchase->quantity = $purchase->quantity + (int)abs($transfer->quantity);
+                        }else if(
+                            $purchase->id == $transfer->id
+                            && $purchase->item_code == $transfer->item_code
+                            && $purchase->batch_no == $transfer->batch_no
+                            && $warehouse == $transfer->from_warehouse_id
+                        ){
+                            $purchase->quantity = $purchase->quantity - (int)abs($transfer->quantity);
+                        }
+                    }, $totalPurchases);
+                }
+            }
+        }else{
+            $totalPurchases = [];
+
+            $totalTransferQuery = "SELECT
+                                        p.id,
+                                        p.code item_code,
+                                        p.name,
+                                        pi.batchno batch_no,
+                                        pi.expiry expiry,
+                                        pi.warehouse_id,
+                                        round(sum(pi.quantity)) quantity,
+                                        round(avg(pi.sale_price), 2) sale_price,
+                                        round(avg(pi.net_unit_cost), 2) cost_price,
+                                        round(avg(pi.unit_cost), 2) purchase_price,
+                                        t.from_warehouse_id,
+                                        t.to_warehouse_id
+                                FROM sma_products p
+                                INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
+                                INNER JOIN sma_transfers t ON pi.transfer_id = t.id
+                                WHERE pi.transfer_id IS NOT NULL ";
+            if ($at_date) {
+                $totalTransferQuery .= "AND pi.date <= '{$at_date}' ";
+            }
+
+            if ($warehouse) {
+                $totalTransferQuery .= "AND pi.warehouse_id = {$warehouse} ";
+            }
+
+            if ($item_group) {
+                $totalTransferQuery .= "AND p.category_id = '$item_group' ";
+            }
+
+            if ($item) {
+                $totalTransferQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+            }
+
+            $totalTransferQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno";
+            $totalTransferResultSet = $this->db->query($totalTransferQuery);
+            if ($totalTransferResultSet->num_rows() > 0) {
+
+                foreach ($totalTransferResultSet->result() as $row) {
+                    $totalPurchases[] = $row;
+                }
+            }
+
         }
 
         return $totalPurchases;
@@ -2759,7 +2872,42 @@ class Reports_model extends CI_Model
                                 ) withOutT ON withOutT.purchase_id = p.id
                                 
                                 GROUP BY
-                                    pi.purchase_id) AS a
+                                    pi.purchase_id
+                                    
+                                    UNION ALL
+
+                                    SELECT 
+                                        m.id as trans_ID,  
+                                        'serviceInvoice' as trans_type,   
+                                        '-' as warehouse, 
+                                        m.date as trans_date, 
+                                       
+                                        
+                                        m.reference_no as trans_invoice_number,
+                                        0 as total_quantity,
+                                        0  as warehouse_id,
+
+                                        m.reference_no,
+
+                                        c.company AS supplier_name,
+                                        c.vat_no AS supplier_vat_no,  
+                                       
+                                        
+                                        0 as total_discount,
+                                        m.payment_amount AS grand_total,
+                                        m.bank_charges AS total_tax,
+                                        0 AS total_item_with_vat,
+                                        0 AS total_item_without_tax,
+                                        ae.number AS ledger_entry_number
+
+
+                                    FROM sma_memo m
+                                    JOIN sma_companies as c ON c.id = m.supplier_id
+                                    LEFT JOIN sma_accounts_entries as ae ON ae.memo_id = m.id
+
+                                    WHERE type = 'serviceinvoicesupplier'
+
+                                    ) AS a
                     WHERE DATE(a.trans_date) >= '" . $start_date . "' AND DATE(a.trans_date) <= '" . $end_date . "'";
 
         if ($warehouse_id) {

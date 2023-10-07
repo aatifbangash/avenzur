@@ -100,7 +100,7 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="from-group">
-                            <button type="submit" style="margin-top: 28px;" class="btn btn-primary"
+                            <button type="submit" name="submit" style="margin-top: 28px;" class="btn btn-primary"
                                     id="load_report"><?= lang('Load Report') ?></button>
                         </div>
                     </div>
@@ -168,7 +168,7 @@
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <th colspan="12">No records found.</th>
+                                    <th colspan="12">No records to show.</th>
                                 </tr>
                             <?php endif; ?>
 
