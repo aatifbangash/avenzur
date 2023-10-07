@@ -1018,6 +1018,7 @@ class Reports_model extends CI_Model
         if ($at_date) $at_date = $this->sma->fld($at_date);
 
         if ($supplier) $supplierJoin = " INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id ";
+
         $totalPurchasesQuery = "SELECT 
                                     p.id, 
                                     p.code item_code, 
