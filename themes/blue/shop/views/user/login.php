@@ -91,7 +91,7 @@
                                         <div class="form-group">
                                             <?= lang('phone ', 'phone '); ?>
                                             <div class="controls">
-                                                  <input type="tel" id="phone" name="phone" class="form-control" />
+                                                  <input type="tel" id="phone" name="phone" class="form-control iti__selected-flag" data-country="sa" />
                                                 <!--<?= form_input('phone', '', 'class="form-control" id="phone" '); ?>-->
                                             </div>
                                         </div>
@@ -261,16 +261,10 @@ function registerBtn(){
 
 
     $(document).ready(function() {
-        var sCountryCode = '355';
-        $('#phone').val("");
-        $('#phone').val("+"+sCountryCode+" "+ $('#phone').val());
-
         $('.iti__flag-container').click(function() { 
           var countryCode = $('.iti__selected-flag').attr('title');
-          var countryCode = countryCode.replace(/[^0-9]/g,'');
+          var countryCode = countryCode.replace(/[^0-9]/g,'')
           $('#phone').val("");
-          console.log(countryCode);
-          console.log($('#phone').val(""));
           $('#phone').val("+"+countryCode+" "+ $('#phone').val());
        });
  
