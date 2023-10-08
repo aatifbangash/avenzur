@@ -261,6 +261,10 @@ function registerBtn(){
 
 
     $(document).ready(function() {
+        var sCountryCode = '355';
+        $('#phone').val("");
+        $('#phone').val("+"+countryCode+" "+ $('#phone').val());
+
         $('.iti__flag-container').click(function() { 
           var countryCode = $('.iti__selected-flag').attr('title');
           var countryCode = countryCode.replace(/[^0-9]/g,'');
