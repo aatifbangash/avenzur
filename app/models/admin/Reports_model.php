@@ -1092,8 +1092,6 @@ class Reports_model extends CI_Model
 
             $totalSalesQuery .= "GROUP BY p.id, p.code, p.name, si.batch_no";
 
-            echo $totalSalesQuery;exit;
-
             $totalSalesResultSet = $this->db->query($totalSalesQuery);
             if ($totalSalesResultSet->num_rows() > 0) {
                 foreach ($totalSalesResultSet->result() as $sale) {
@@ -1109,8 +1107,6 @@ class Reports_model extends CI_Model
                     }, $totalPurchases);
                 }
             }
-            
-            print_r($totalPurchases);exit;
 
             //TODO sub return supplier from $totalPurchases
             $totalReturnSupplerQuery = "SELECT
@@ -1392,7 +1388,7 @@ class Reports_model extends CI_Model
 
                     LEFT JOIN sma_purchase_items as pitem ON pitem.purchase_id = purchase.id
 
-                    WHERE pitem.product_id = $productId AND DATE(purchase.date) >= '{$start_date}' AND DATE(purchase.date) <= '{$end_date}'  AND purchase.grand_total > 0 
+                    WHERE pitem.product_id = $productId AND DATE(purchase.date) >= '{$start_date}' AND DATE(purchase.date) <= '{$end_date}'  AND purchase.grand_total > 0 AND purchase.status = 'received'
                     
                 )
                  as data ON data.product_id = prd.id 
@@ -1424,7 +1420,7 @@ class Reports_model extends CI_Model
                     LEFT JOIN sma_sale_items as saleItem ON saleItem.sale_id = sale.id
                     LEFT JOIN sma_warehouses as wrs ON wrs.id = sale.warehouse_id
                 
-                    WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '{$start_date}' AND DATE(sale.date) <= '{$end_date}'
+                    WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '{$start_date}' AND DATE(sale.date) <= '{$end_date}' AND sale.sale_status = 'completed' AND saleItem.batch_no <> ''
                 )
                  AS data ON data.product_id = prd.id 
                  WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
