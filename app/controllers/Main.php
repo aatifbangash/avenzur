@@ -341,6 +341,9 @@ class Main extends MY_Shop_Controller
         if ($this->shop_settings->private) {
             redirect('/login');
         }
+
+        echo 'Here in registration controller....';exit;
+
         $this->form_validation->set_rules('first_name', lang('first_name'), 'required');
         $this->form_validation->set_rules('last_name', lang('last_name'), 'required');
         $this->form_validation->set_rules('phone', lang('phone'), 'required');
