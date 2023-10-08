@@ -1062,8 +1062,6 @@ class Reports_model extends CI_Model
                 $totalPurchases[] = $row;
             }
 
-            echo '<pre>';print_r($totalPurchases);
-
             //TODO sub sales from $totalPurchases
             $totalSalesQuery = "SELECT
                                     p.id,
@@ -1093,6 +1091,8 @@ class Reports_model extends CI_Model
             }
 
             $totalSalesQuery .= "GROUP BY p.id, p.code, p.name, si.batch_no";
+
+            echo $totalSalesQuery;exit;
 
             $totalSalesResultSet = $this->db->query($totalSalesQuery);
             if ($totalSalesResultSet->num_rows() > 0) {
