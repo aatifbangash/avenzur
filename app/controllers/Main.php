@@ -151,7 +151,7 @@ class Main extends MY_Shop_Controller
         $data = array();
         // Get the visitor's IP address
         $ip = $_SERVER['REMOTE_ADDR'];
-
+        echo $ip;exit;
         // Create a cURL request to fetch geolocation data
         $ch = curl_init("https://ipinfo.io/{$ip}/country");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
