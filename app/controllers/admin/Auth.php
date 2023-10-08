@@ -613,7 +613,7 @@ class Auth extends MY_Controller
             $this->session->set_flashdata('error', lang('registration_is_disabled'));
             admin_redirect('login');
         }
-
+        echo 'khwatay ke da gheeen';exit;
         $this->form_validation->set_message('is_unique', lang('account_exists'));
         $this->form_validation->set_rules('first_name', lang('first_name'), 'required');
         $this->form_validation->set_rules('last_name', lang('last_name'), 'required');
