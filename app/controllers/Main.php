@@ -157,29 +157,19 @@ class Main extends MY_Shop_Controller
 
         // Execute the cURL request and get the response
         $response = curl_exec($ch);
-        // Check for errors
-        if (curl_errno($ch)) {
-            echo 'Error: ' . curl_error($ch);
-        } else {
-            // Parse the response as JSON
-            $data = json_decode($response, true);
-        }
-        echo 'Response: '.$data;exit;
+        
         // Close the cURL session
         curl_close($ch);
 
-        return $data;
+        return $response;
     }
 
     public function login($m = null)
     {
-        $country_arr = $this->get_country_by_ip();
-        print_r($country_arr);
+        $country_code = $this->get_country_by_ip();
         // Check if the response contains the country code
-        if (isset($country_arr['country'])) {
-            $countryCode = $data['country'];
-            echo "Visitor's IP Address: " . $ip . "<br>";
-            echo "Country Code: " . $countryCode;
+        if (isset($country_code) && !empty($country_code)) {
+            echo "Country Code: " . $country_code;
         } else {
             echo "Country code not found.";
         }
