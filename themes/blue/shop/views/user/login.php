@@ -78,7 +78,7 @@
                                             foreach($country as $country)
                                             {
                                                 echo $country->code.' ---- '.$country_code;
-                                                $selected = ($country->code == $country_code) ? 'selected' : '';
+                                                $selected = (trim($country->code) == trim($country_code)) ? 'selected' : '';
                                                 echo 'Selected is: '.$selected;
                                                 //echo '<option value="'.$country->code.'"' . $selected . '>'.$country->name.'</option>';
                                             }
