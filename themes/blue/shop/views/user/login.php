@@ -4,7 +4,6 @@
 <section class="page-contents">
     <div class="container">
         <div class="row">
-            Peenga Khwataaa....
             <div class="col-xs-12">
                 
                     <div class="row">
