@@ -69,27 +69,19 @@
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="form-group">
-                                            <?= lang('Country', 'Country'); ?>
-                                            <select class="form-control" id="country" name="country" >
+                                        <?= lang('Country', 'Country'); ?>
+                                        <select class="form-control" id="country" name="country" >
                                        
                                          <!--<option value="AE">AE</option>-->
                                        <option value="">Select Country</option>
-                                            <?php
-                                                 foreach($country as $country)
-                                                         {
-                                                          echo '<option value="'.$country->code.'">'.$country->name.'</option>';
-                                                           
-                                                         
-                                                         
-                                                          }
-                                                        
-                                                              
-                                                         
-                                                          
-                                            ?>
-                                                        
-                                                        
-                            </select>
+                                        <?php
+                                            foreach($country as $country)
+                                            {
+                                                $selected = ($country->code == $country_code) ? 'selected' : '';
+                                                echo '<option value="'.$country->code.'"' . $selected . '>'.$country->name.'</option>';
+                                            }
+                                        ?>                    
+                                        </select>
                             
 
                                         </div>
