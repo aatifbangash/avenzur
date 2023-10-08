@@ -1592,7 +1592,7 @@ class Reports_model extends CI_Model
 
                     LEFT JOIN sma_purchase_items as pitem ON pitem.purchase_id = purchase.id
 
-                    WHERE pitem.product_id = $productId AND DATE(purchase.date) >= '$start_date' AND DATE(purchase.date) <= '$end_date'  AND purchase.grand_total > 0 
+                    WHERE pitem.product_id = $productId AND DATE(purchase.date) >= '$start_date' AND DATE(purchase.date) <= '$end_date'  AND purchase.grand_total > 0 AND purchase.status = 'received'
 
                     UNION ALL 
 
@@ -1613,7 +1613,7 @@ class Reports_model extends CI_Model
                     LEFT JOIN sma_sale_items as saleItem ON saleItem.sale_id = sale.id
                     LEFT JOIN sma_warehouses as wrs ON wrs.id = sale.warehouse_id
                 
-                    WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '$start_date' AND DATE(sale.date) <= '$end_date'
+                    WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '$start_date' AND DATE(sale.date) <= '$end_date' AND sale.sale_status = 'completed' AND saleItem.batch_no <> ''
 
                     UNION ALL 
 
