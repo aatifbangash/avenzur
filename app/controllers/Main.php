@@ -176,6 +176,7 @@ class Main extends MY_Shop_Controller
     public function login($m = null)
     {
         $country_arr = $this->get_country_by_ip();
+        print_r($country_arr);
         // Check if the response contains the country code
         if (isset($country_arr['country'])) {
             $countryCode = $data['country'];
