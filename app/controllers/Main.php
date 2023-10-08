@@ -149,6 +149,7 @@ class Main extends MY_Shop_Controller
 
     public function login($m = null)
     {
+        echo 'Kwas ke da khraa khwata owayum...';exit;
         if (!SHOP || $this->Settings->mmode) {
             redirect('admin/login');
         }
