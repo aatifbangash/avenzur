@@ -265,7 +265,8 @@ function registerBtn(){
           var countryCode = $('.iti__selected-flag').attr('title');
           var countryCode = countryCode.replace(/[^0-9]/g,'');
           $('#phone').val("");
-          console.log(countryCode+' -- '+$('#phone').val(""));
+          console.log(countryCode);
+          console.log($('#phone').val(""));
           $('#phone').val("+"+countryCode+" "+ $('#phone').val());
        });
  
