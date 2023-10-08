@@ -1062,7 +1062,7 @@ class Reports_model extends CI_Model
                 $totalPurchases[] = $row;
             }
 
-            echo '<pre>';print_r($totalPurchases);exit;
+            echo '<pre>';print_r($totalPurchases);
 
             //TODO sub sales from $totalPurchases
             $totalSalesQuery = "SELECT
@@ -1109,6 +1109,8 @@ class Reports_model extends CI_Model
                     }, $totalPurchases);
                 }
             }
+            
+            print_r($totalPurchases);exit;
 
             //TODO sub return supplier from $totalPurchases
             $totalReturnSupplerQuery = "SELECT
