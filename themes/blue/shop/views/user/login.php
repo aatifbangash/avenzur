@@ -70,20 +70,18 @@
                                     <div class="col-sm-6">
                                         <div class="form-group">
                                         <?= lang('Country', 'Country'); ?>
-                                        <!--<select class="form-control" id="country" name="country" >-->
+                                        <select class="form-control" id="country" name="country" >
                                        
-                                         <!--<option value="AE">AE</option>-->
-                                       <!--<option value="">Select Country</option>-->
+                                        <option value="AE">AE</option>
+                                        <option value="">Select Country</option>
                                         <?php
                                             foreach($country as $country)
                                             {
-                                                echo $country->code.' ---- '.$country_code;
                                                 $selected = (trim($country->code) == trim($country_code)) ? 'selected' : '';
-                                                echo 'Selected is: '.$selected;
-                                                //echo '<option value="'.$country->code.'"' . $selected . '>'.$country->name.'</option>';
+                                                echo '<option value="'.$country->code.'"' . $selected . '>'.$country->name.'</option>';
                                             }
                                         ?>                    
-                                        <!--</select>-->
+                                        </select>
                             
 
                                         </div>
