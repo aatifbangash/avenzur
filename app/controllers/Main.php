@@ -169,11 +169,11 @@ class Main extends MY_Shop_Controller
         $country_code = $this->get_country_by_ip();
         // Check if the response contains the country code
         if (isset($country_code) && !empty($country_code)) {
-            echo "Country Code: " . $country_code;
+            //echo "Country Code: " . $country_code;
         } else {
-            echo "Country code not found.";
+            //echo "Country code not found.";
         }
-        exit;
+        
         if (!SHOP || $this->Settings->mmode) {
             redirect('admin/login');
         }
@@ -237,7 +237,8 @@ class Main extends MY_Shop_Controller
             $this->data['message']    = $m ? lang('password_changed') : $this->session->flashdata('message');
             $this->data['page_title'] = lang('login');
             $this->data['page_desc']  = $this->shop_settings->description;
-             $this->data['country'] = $this->shop_model->getallCountryR();
+            $this->data['country'] = $this->shop_model->getallCountryR();
+            $this->data['country_code'] = $country_code;
             if ($this->shop_settings->private) {
                 $this->data['message']       = $data['message'] ?? $this->session->flashdata('message');
                 $this->data['error']         = isset($this->data['error']) ? $this->data['error'] : $this->session->flashdata('error');
