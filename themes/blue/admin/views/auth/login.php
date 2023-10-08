@@ -236,7 +236,7 @@ foreach ($bgs as &$bg) {
             <?php
             if ($Settings->allow_reg) {
                 ?>
-                <div id="register">
+                <div id="register">Peeeengaaa
                     <div class="container">
                         <div class="registration-form-div reg-content">
                             <?php echo admin_form_open('auth/register', 'class="login" data-toggle="validator"'); ?>
