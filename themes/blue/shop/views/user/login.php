@@ -79,7 +79,7 @@
                                             {
                                                 echo $country->code.' ---- '.$country_code;
                                                 $selected = ($country->code == $country_code) ? 'selected' : '';
-                                                echo $selected;
+                                                echo 'Selected is: '.$selected;
                                                 //echo '<option value="'.$country->code.'"' . $selected . '>'.$country->name.'</option>';
                                             }
                                         ?>                    
