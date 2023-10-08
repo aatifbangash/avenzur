@@ -241,7 +241,7 @@
     // Vanilla Javascript
     var input = document.querySelector("#phone");
     window.intlTelInput(input,({
-        initialCountry: "In"
+        initialCountry: "<?= $country_code; ?>"
     }));
 function LoginFn(){
              
