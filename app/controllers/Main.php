@@ -338,6 +338,7 @@ class Main extends MY_Shop_Controller
 
     public function register()
     {
+        echo 'Da de kana kwani khwatay...';exit;
         if ($this->shop_settings->private) {
             redirect('/login');
         }
