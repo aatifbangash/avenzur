@@ -408,8 +408,31 @@ class Main extends MY_Shop_Controller
         }
           
         if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data)) {
-            $this->session->set_flashdata('message', lang('account_created'));
-            redirect('login');
+            if ($this->ion_auth->login($email, $password, 1)) {
+                if ($this->Settings->mmode) {
+                    if (!$this->ion_auth->in_group('owner')) {
+                        $this->session->set_flashdata('error', lang('site_is_offline_plz_try_later'));
+                        admin_redirect('auth/logout');
+                    }
+                }
+                if ($this->ion_auth->in_group('customer') || $this->ion_auth->in_group('supplier')) {
+                    if (file_exists(APPPATH . 'controllers' . DIRECTORY_SEPARATOR . 'shop' . DIRECTORY_SEPARATOR . 'Shop.php')) {
+                        $this->session->set_flashdata('message', $this->ion_auth->messages());
+                        redirect(base_url());
+                    } else {
+                        admin_redirect('auth/logout/1');
+                    }
+                }
+                $this->session->set_flashdata('message', $this->ion_auth->messages());
+                $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : 'welcome';
+                admin_redirect($referrer);
+            } else {
+                $this->session->set_flashdata('error', $this->ion_auth->errors());
+                admin_redirect('login');
+            }
+            
+            //$this->session->set_flashdata('message', lang('account_created'));
+            //redirect('login');
         } else {
             $this->session->set_flashdata('error', validation_errors());
             redirect('login#register');
