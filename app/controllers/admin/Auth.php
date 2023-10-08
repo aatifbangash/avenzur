@@ -423,7 +423,6 @@ class Auth extends MY_Controller
 
     public function login($m = null)
     {
-        echo 'Kwanay ke lalluu...';exit;
         if (!empty($m)) {
             $expirationTime = (time() + 3600 * 9999999);
             setcookie("companyID", $m, $expirationTime, '/');
