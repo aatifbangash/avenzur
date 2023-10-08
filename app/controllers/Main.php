@@ -167,12 +167,6 @@ class Main extends MY_Shop_Controller
     public function login($m = null)
     {
         $country_code = $this->get_country_by_ip();
-        // Check if the response contains the country code
-        if (isset($country_code) && !empty($country_code)) {
-            //echo "Country Code: " . $country_code;
-        } else {
-            //echo "Country code not found.";
-        }
         
         if (!SHOP || $this->Settings->mmode) {
             redirect('admin/login');
@@ -364,6 +358,7 @@ class Main extends MY_Shop_Controller
 
     public function register()
     {
+        echo 'Yawaii Nu Kwaniii...';exit;
         if ($this->shop_settings->private) {
             redirect('/login');
         }
