@@ -91,7 +91,7 @@
                                         <div class="form-group">
                                             <?= lang('phone ', 'phone '); ?>
                                             <div class="controls">
-                                                  <input type="tel" id="phone" name="phone" class="form-control iti__selected-flag" data-country="sa" />
+                                                  <input type="tel" id="phone" name="phone" class="form-control" data-country="sa" />
                                                 <!--<?= form_input('phone', '', 'class="form-control" id="phone" '); ?>-->
                                             </div>
                                         </div>
