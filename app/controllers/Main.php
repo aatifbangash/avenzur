@@ -157,7 +157,6 @@ class Main extends MY_Shop_Controller
 
         // Execute the cURL request and get the response
         $response = curl_exec($ch);
-        echo 'Response: '.$response;exit;
         // Check for errors
         if (curl_errno($ch)) {
             echo 'Error: ' . curl_error($ch);
@@ -165,7 +164,7 @@ class Main extends MY_Shop_Controller
             // Parse the response as JSON
             $data = json_decode($response, true);
         }
-
+        echo 'Response: '.$data;exit;
         // Close the cURL session
         curl_close($ch);
 
