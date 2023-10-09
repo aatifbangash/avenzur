@@ -255,7 +255,6 @@ class Shop_settings extends MY_Controller
 
         if ($this->form_validation->run() == true) {
             $this->load->library('sms');
-            echo $this->input->post('mobile').' --- '.$this->input->post('message');exit;
             $res = $this->sms->send($this->input->post('mobile'), $this->input->post('message'));
             if (isset($res['error']) && $res['error']) {
                 $this->data['error'] = $res['message'] ?? lang('sms_request_failed');

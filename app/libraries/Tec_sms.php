@@ -22,6 +22,7 @@ class Tec_sms
 
     public function send($to, $text)
     {
+        echo 'here in sending tecmsms....'.$to.' - '.$text;exit;
         // $text = utf8_encode($text);
         // $text = mb_convert_encoding($text, 'UTF-8', 'auto');
         return $this->sms->send($to, $text)->response();
