@@ -609,6 +609,10 @@ class Shop_settings extends MY_Controller
             ];
         }
 
+        echo '<pre>';
+        print_r($sms_config);
+        exit;
+
         if ($this->form_validation->run() == true && $this->shop_admin_model->updateSmsSettings($sms_config)) {
             $this->session->set_flashdata('message', lang('settings_updated'));
             admin_redirect('shop_settings/sms_settings');
