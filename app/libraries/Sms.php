@@ -25,7 +25,7 @@ class Sms
         if (!empty($gateway) && (!empty($this->settings) || $gateway == 'Log')) {
             $this->lang->admin_load('sms', $this->Settings->language);
             $this->load->library('tec_sms', $this->config);
-            $this->load->library('tec_twilio', $this->config);
+            //$this->load->library('tec_twilio', $this->config);
             $this->load->library('parser');
         }
     }
