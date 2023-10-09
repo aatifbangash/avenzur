@@ -19,7 +19,6 @@ class Sms
 
     public function send($phone_numbers, $message)
     {
-        echo '<pre>';print_r($this->gateway);exit;
         if ($phone_numbers = $this->composeBulkNumbers($phone_numbers)) {
             try {
                 if ($result = $this->gateway->sendSms($phone_numbers, $message)) {
