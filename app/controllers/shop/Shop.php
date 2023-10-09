@@ -383,6 +383,9 @@ class Shop extends MY_Shop_Controller
     }
 
     public function sendSMS(){
+        error_reporting(E_ALL);
+        ini_set('display_errors', 1);
+        
         $sid = "AC0a1a268b42316a7925e2190b5501608d";
         $token = "d6cdca446054c10091ae2cbdde8b7f40";
         $client = new Twilio\Rest\Client($sid, $token);
