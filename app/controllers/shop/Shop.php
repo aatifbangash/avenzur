@@ -366,8 +366,8 @@ class Shop extends MY_Shop_Controller
                     } elseif ($this->input->post('payment_method') == 'skrill') {
                         redirect('pay/skrill/' . $sale_id);
                     } elseif ($this->input->post('payment_method') == 'directpay') {
-                        $this->sendSMS();
-                        //redirect('pay/directpay/' . $sale_id);
+                        //$this->sendSMS();
+                        redirect('pay/directpay/' . $sale_id);
                     }else {
                         shop_redirect('orders/' . $sale_id . '/' . ($this->loggedIn ? '' : $data['hash']));
                     }
@@ -403,8 +403,6 @@ class Shop extends MY_Shop_Controller
                 'body' => "Hey Jenny! Good luck on the bar exam!"
             ]
         );
-
-        echo 'Message Sent....';
     }
     
     public function aramexshipment($sale_id, $data, $products, $customer, $address, $pro_weight)
