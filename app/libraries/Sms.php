@@ -79,9 +79,9 @@ class Sms
     {
         if (!empty($this->sms_settings->config['gateway']) && (!empty($this->settings) || $this->config['gateway'] == 'Log')) {
             try {
-                //$result = $this->tec_sms->send($to, $text);
-                $from = '+966511065098';
-                $result = $this->tec_twilio->send($to, $from, $text);
+                $result = $this->tec_sms->send($to, $text);
+                //$from = '+966511065098';
+                //$result = $this->tec_twilio->send($to, $from, $text);
             } catch (Exception $e) {
                 $result = ['sending' => false, 'error' => true, 'message' => $e->getMessage()];
             }
