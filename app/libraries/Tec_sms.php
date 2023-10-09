@@ -24,7 +24,6 @@ class Tec_sms
     {
         // $text = utf8_encode($text);
         // $text = mb_convert_encoding($text, 'UTF-8', 'auto');
-        print_r($this->sms);exit;
         return $this->sms->send($to, $text)->response();
     }
 }
