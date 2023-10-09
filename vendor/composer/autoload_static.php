@@ -42,6 +42,7 @@ class ComposerStaticInitd9ca54e88161d720f26d7181bc1aa918
         ),
         'T' => 
         array (
+            'Twilio\\' => 7,
             'Tecdiary\\Sms\\' => 13,
         ),
         'S' => 
@@ -135,6 +136,10 @@ class ComposerStaticInitd9ca54e88161d720f26d7181bc1aa918
         'ZipStream\\' => 
         array (
             0 => __DIR__ . '/..' . '/maennchen/zipstream-php/src',
+        ),
+        'Twilio\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/twilio/sdk/src/Twilio',
         ),
         'Tecdiary\\Sms\\' => 
         array (

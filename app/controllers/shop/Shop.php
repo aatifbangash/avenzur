@@ -366,8 +366,8 @@ class Shop extends MY_Shop_Controller
                     } elseif ($this->input->post('payment_method') == 'skrill') {
                         redirect('pay/skrill/' . $sale_id);
                     } elseif ($this->input->post('payment_method') == 'directpay') {
-                        //$this->sendSMS();
-                        redirect('pay/directpay/' . $sale_id);
+                        $this->sendSMS();
+                        //redirect('pay/directpay/' . $sale_id);
                     }else {
                         shop_redirect('orders/' . $sale_id . '/' . ($this->loggedIn ? '' : $data['hash']));
                     }
@@ -383,7 +383,23 @@ class Shop extends MY_Shop_Controller
     }
 
     public function sendSMS(){
-        
+        $sid = "AC0a1a268b42316a7925e2190b5501608d";
+        $token = "d6cdca446054c10091ae2cbdde8b7f40";
+        $client = new Twilio\Rest\Client($sid, $token);
+
+        // Use the Client to make requests to the Twilio REST API
+        $client->messages->create(
+            // The number you'd like to send the message to
+            '+966511065098',
+            [
+                // A Twilio phone number you purchased at https://console.twilio.com
+                'from' => '+12512209687',
+                // The body of the text message you'd like to send
+                'body' => "Hey Jenny! Good luck on the bar exam!"
+            ]
+        );
+
+        echo 'Message Sent....';
     }
     
     public function aramexshipment($sale_id, $data, $products, $customer, $address, $pro_weight)
