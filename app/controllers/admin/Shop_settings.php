@@ -607,11 +607,10 @@ class Shop_settings extends MY_Controller
                 'auto_send' => $this->input->post('auto_send'),
                 'config'    => json_encode($data),
             ];
+            echo '<pre>';
+            print_r($sms_config);
+            exit;
         }
-
-        echo '<pre>';
-        print_r($sms_config);
-        exit;
 
         if ($this->form_validation->run() == true && $this->shop_admin_model->updateSmsSettings($sms_config)) {
             $this->session->set_flashdata('message', lang('settings_updated'));
