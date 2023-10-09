@@ -366,7 +366,7 @@ class Shop extends MY_Shop_Controller
                     } elseif ($this->input->post('payment_method') == 'skrill') {
                         redirect('pay/skrill/' . $sale_id);
                     } elseif ($this->input->post('payment_method') == 'directpay') {
-                        $this->sendSMS();
+                        //$this->sendSMS();
                         redirect('pay/directpay/' . $sale_id);
                     }else {
                         shop_redirect('orders/' . $sale_id . '/' . ($this->loggedIn ? '' : $data['hash']));

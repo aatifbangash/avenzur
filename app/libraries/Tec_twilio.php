@@ -17,6 +17,7 @@ class Tec_twilio
     {
         //$sid          = $config['sid'];
         //$token        = $config['token'];
+        print_r($config);exit;
         $sid = $this->config[$this->config['gateway']]['account_sid'];
         $token = $this->config[$this->config['gateway']]['auth_token'];
         $this->client = new Client($sid, $token);
