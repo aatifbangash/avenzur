@@ -25,6 +25,7 @@ class Sms
         if (!empty($gateway) && (!empty($this->settings) || $gateway == 'Log')) {
             $this->lang->admin_load('sms', $this->Settings->language);
             $this->load->library('tec_sms', $this->config);
+            $this->load->library('tec_twilio', $this->config);
             $this->load->library('parser');
         }
     }
@@ -78,7 +79,11 @@ class Sms
     {
         if (!empty($this->sms_settings->config['gateway']) && (!empty($this->settings) || $this->config['gateway'] == 'Log')) {
             try {
-                $result = $this->tec_sms->send($to, $text);
+                //$result = $this->tec_sms->send($to, $text);
+                echo '<pre>';
+                print_r($this->sms_settings->config['gateway']);
+                exit;
+                $result = $this->tec_twilio->send($to, $text);
             } catch (Exception $e) {
                 $result = ['sending' => false, 'error' => true, 'message' => $e->getMessage()];
             }

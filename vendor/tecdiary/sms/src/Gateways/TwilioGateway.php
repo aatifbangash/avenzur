@@ -38,7 +38,6 @@ class TwilioGateway implements SmsGatewayInterface
             'Authorization' => 'Basic ' . $this->credentials['authorization']
         ]]);
         try {
-            unset($this->params['From']);
             $this->response = $client->request('POST', $this->getUrl(), $this->params)->getBody()->getContents();
         } catch (\Exception $e) {
             $this->response = ['error' => $e->getMessage()];
