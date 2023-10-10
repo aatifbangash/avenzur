@@ -1149,7 +1149,7 @@ class Reports_model extends CI_Model
                             //&& $purchase->expiry == $returnSupplier->expiry
                         ) {
                             $purchase->quantity -= (int)abs($returnSupplier->quantity);
-                            $purchase->cost_price = ($purchase->cost_price + $returnSupplier->cost_price)/2;
+                            //$purchase->cost_price = ($purchase->cost_price + $returnSupplier->cost_price)/2;
                         }
                     }, $totalPurchases);
                 }
