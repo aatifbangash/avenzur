@@ -366,7 +366,8 @@ class Shop extends MY_Shop_Controller
                     } elseif ($this->input->post('payment_method') == 'skrill') {
                         redirect('pay/skrill/' . $sale_id);
                     } elseif ($this->input->post('payment_method') == 'directpay') {
-                        //$this->sendSMS();
+                        //$this->sendTwillioSMS();
+                        $this->sendMsegatSMS();
                         redirect('pay/directpay/' . $sale_id);
                     }else {
                         shop_redirect('orders/' . $sale_id . '/' . ($this->loggedIn ? '' : $data['hash']));
@@ -382,7 +383,45 @@ class Shop extends MY_Shop_Controller
         }
     }
 
-    public function sendSMS(){
+    public function sendMsegatSMS(){
+        $data = [
+            'userName' => 'phmc',
+            'numbers' => '966541226217',
+            'userSender' => 'phmc',
+            'apiKey' => 'd3a916960217e3c7bc0af6ed80d1435c',
+            'msg' => 'This is test message from MSEGAT',
+        ];
+
+        // Convert the data to JSON format
+        $jsonData = json_encode($data);
+
+        // Initialize cURL session
+        $ch = curl_init();
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_URL, 'https://www.msegat.com/gw/sendsms.php');
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+        ]);
+
+        // Execute the cURL request and store the response
+        $response = curl_exec($ch);
+
+        // Check for cURL errors
+        if (curl_errno($ch)) {
+            echo 'cURL Error: ' . curl_error($ch);
+        }
+
+        // Close the cURL session
+        curl_close($ch);
+
+        // Output the response
+        //echo $response;
+    }
+
+    public function sendTwillioSMS(){
         error_reporting(E_ALL);
         ini_set('display_errors', 1);
 
