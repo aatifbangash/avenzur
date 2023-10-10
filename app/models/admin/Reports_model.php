@@ -1412,7 +1412,7 @@ class Reports_model extends CI_Model
                     END AS name_of, 
 
                     saleItem.batch_no as batch_no,
-                    saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_unit_price as unit_cost,
+                    saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_cost as unit_cost,
                     saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id as product_id
                 
                     FROM sma_sales as sale
