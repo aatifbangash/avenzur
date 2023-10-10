@@ -1115,7 +1115,8 @@ class Reports_model extends CI_Model
                                         p.name,
                                         pi.batchno batch_no,
                                         pi.expiry expiry,
-                                        round(sum(pi.quantity)) quantity
+                                        round(sum(pi.quantity)) quantity,
+                                        round(avg(pi.net_unit_cost), 2) cost_price
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
                                 WHERE pi.purchase_item_id IS NOT NULL ";
@@ -1148,6 +1149,7 @@ class Reports_model extends CI_Model
                             //&& $purchase->expiry == $returnSupplier->expiry
                         ) {
                             $purchase->quantity -= (int)abs($returnSupplier->quantity);
+                            $purchase->cost_price = ($purchase->cost_price + $returnSupplier->cost_price)/2;
                         }
                     }, $totalPurchases);
                 }
