@@ -1398,7 +1398,7 @@ class Reports_model extends CI_Model
 
             case 'sales':
 
-                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.system_serial, 
+                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
                 IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
                 FROM sma_products as prd        
                 LEFT JOIN ( 
@@ -1605,7 +1605,7 @@ class Reports_model extends CI_Model
                     END AS name_of, 
                     
                      saleItem.batch_no as batch_no,
-                    saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_unit_price as unit_cost,
+                    saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_cost as unit_cost,
                     saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id
                 
                     FROM sma_sales as sale
