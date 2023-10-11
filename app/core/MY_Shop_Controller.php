@@ -40,6 +40,8 @@ class MY_Shop_Controller extends CI_Controller
                 $this->data['assets'] = base_url() . 'themes/default/shop/assets/';
             }
 
+            echo 'Shop Currency: '.get_cookie('shop_currency', true);exit;
+
             if ($selected_currency = get_cookie('shop_currency', true)) {
                 $this->Settings->selected_currency = $selected_currency;
             } else {
