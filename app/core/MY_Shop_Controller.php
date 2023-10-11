@@ -45,14 +45,10 @@ class MY_Shop_Controller extends CI_Controller
             } else {
                 $this->Settings->selected_currency = $this->Settings->default_currency;
             }
-            $this->default_currency          = $this->shop_model->getCurrencyByCode($this->Settings->default_currency);
+            $this->default_currency          = $this->shop_model->getCurrencyByCode('AED');
             $this->data['default_currency']  = $this->default_currency;
-            $this->selected_currency         = $this->shop_model->getCurrencyByCode($this->Settings->selected_currency);
+            $this->selected_currency         = $this->shop_model->getCurrencyByCode('AED');
             $this->data['selected_currency'] = $this->selected_currency;
-
-            print_r($this->default_currency);
-            print_r($this->selected_currency);
-            exit;
 
             $this->loggedIn             = $this->sma->logged_in();
             $this->data['loggedIn']     = $this->loggedIn;
