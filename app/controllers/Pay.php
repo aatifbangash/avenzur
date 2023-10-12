@@ -536,16 +536,16 @@ class Pay extends MY_Shop_Controller
                     'note'           => $_POST['Response_CurrencyISOCode'] . ' ' . $_POST['Response_Amount'] . ' had been paid for the Sale Reference No ' . $inv->reference_no,
                 ];
                 if ($this->pay_model->addPayment($payment)) {
+                    $address_id = $inv->address_id;
                     $customer = $this->pay_model->getCompanyByID($inv->customer_id);
-                    $address = $this->pay_model->getCompanyAddress($customer->id);
+                    //$address = $this->pay_model->getCompanyAddress($customer->id);
+                    $address = $this->pay_model->getAddressByID($address_id);
                     $this->pay_model->updateStatus($inv->id, 'completed');
                     $ipnstatus = true;
                     $sale_items = $this->pay_model->getSaleItems($invoice_no);
 
                     $delivery_country = $address->country;
                     $lowercase_delivery_country = strtolower($delivery_country);
-
-                    print_r($address);
 
                     if (strpos($lowercase_delivery_country, 'saudi') > -1 || strpos($lowercase_delivery_country, 'ksa') > -1) {
                         echo 'Here in KSA Block...';exit;
