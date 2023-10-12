@@ -314,7 +314,7 @@ class Sales extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            $this->sma->print_arrays($data, $products, $payment, $attachments);exit;
+            // $this->sma->print_arrays($data, $products, $payment, $attachments);
         }
         
         if ($this->form_validation->run() == true && $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
