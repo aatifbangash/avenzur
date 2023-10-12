@@ -1027,7 +1027,7 @@ class Reports_model extends CI_Model
                                     round(sum(pi.quantity)) quantity,
                                     round(avg(pi.sale_price), 2) sale_price,
                                     round(avg(pi.net_unit_cost), 2) cost_price,
-                                    round(avg(pi.net_unit_cost * pi.quantity), 2) total_cost_price,
+                                    round(pi.net_unit_cost * pi.quantity, 2) total_cost_price,
                                     round(avg(pi.unit_cost), 2) purchase_price
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
