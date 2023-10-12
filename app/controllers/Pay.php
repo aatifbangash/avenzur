@@ -542,9 +542,10 @@ class Pay extends MY_Shop_Controller
                     $ipnstatus = true;
                     $sale_items = $this->pay_model->getSaleItems($invoice_no);
 
-                    $delivery_country = $customer->country;
+                    $delivery_country = $address->country;
                     $lowercase_delivery_country = strtolower($delivery_country);
 
+                    echo $lowercase_delivery_country.'<br />';
                     echo 'Saudi Found Status: '.strpos($lowercase_delivery_country, 'saudi');exit;
 
                     if (strpos($lowercase_delivery_country, 'saudi') !== false || strpos($lowercase_delivery_country, 'ksa') !== false) {
