@@ -545,6 +545,9 @@ class Pay extends MY_Shop_Controller
                     $delivery_country = $customer->country;
                     $lowercase_delivery_country = strtolower($delivery_country);
 
+                    echo '<pre>';
+                    print_r($address);exit;
+
                     if (strpos($lowercase_delivery_country, 'saudi') !== false || strpos($lowercase_delivery_country, 'ksa') !== false) {
                         /* OTO Order Generation Starts */
                         $customer_data = array('name' => $customer->name,
