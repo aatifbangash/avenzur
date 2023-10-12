@@ -700,7 +700,7 @@ class Pay extends MY_Shop_Controller
             'numbers' => $receiver_number,
             'userSender' => 'phmc',
             'apiKey' => 'd3a916960217e3c7bc0af6ed80d1435c',
-            'msg' => 'Hello '.$receiver_name.' , thank you for your order! Your Invoice No: '.$order_id,
+            'msg' => 'Hello '.$receiver_name.', thank you for your order with Avenzur.com! Your Invoice No: '.$order_id,
         ];
 
         // Convert the data to JSON format
