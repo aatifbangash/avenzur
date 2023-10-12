@@ -545,10 +545,7 @@ class Pay extends MY_Shop_Controller
                     $delivery_country = $address->country;
                     $lowercase_delivery_country = strtolower($delivery_country);
 
-                    echo $lowercase_delivery_country.'<br />';
-                    echo 'Saudi Found Status: '.strpos($lowercase_delivery_country, 'saudi');exit;
-
-                    if (strpos($lowercase_delivery_country, 'saudi') !== false || strpos($lowercase_delivery_country, 'ksa') !== false) {
+                    if (strpos($lowercase_delivery_country, 'saudi') > -1 || strpos($lowercase_delivery_country, 'ksa') > -1) {
                         echo 'Here in KSA Block...';exit;
                         /* OTO Order Generation Starts */
                         $customer_data = array('name' => $customer->name,
