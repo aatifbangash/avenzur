@@ -545,18 +545,16 @@ class Pay extends MY_Shop_Controller
                     $delivery_country = $customer->country;
                     $lowercase_delivery_country = strtolower($delivery_country);
 
-                    echo '<pre>';
-                    print_r($address);exit;
-
                     if (strpos($lowercase_delivery_country, 'saudi') !== false || strpos($lowercase_delivery_country, 'ksa') !== false) {
+                        echo 'Here in KSA Block...';exit;
                         /* OTO Order Generation Starts */
                         $customer_data = array('name' => $customer->name,
                                             'email' => $customer->email,
-                                            'mobile' => $customer->phone,
+                                            'mobile' => $address->phone,
                                             'address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
                                             'district' => '',
                                             'city' => $address->city,
-                                            'country' => $customer->country,
+                                            'country' => $address->country,
                                             'postcode' => $address->postal_code,
                                             'lat' => '',
                                             'long' => '',
@@ -595,6 +593,7 @@ class Pay extends MY_Shop_Controller
                         $this->create_oto_order($order);
                         /* OTO Order Generation Ends */
                     }else{
+                        echo 'Here in Foreign Block...';exit;
                         /* Shipway Order Generation Ends */
 
                         $license_key = 'E908g3oR7PP7DG0gZXcRG3x89VO228Ry';
@@ -628,10 +627,10 @@ class Pay extends MY_Shop_Controller
                             'shipping_address2' => '',
                             'shipping_city' => $address->city,
                             'shipping_state' => $address->state,
-                            'shipping_country' => $customer->country,
+                            'shipping_country' => $address->country,
                             'shipping_firstname' => $customer->name,
                             'shipping_lastname' => '',
-                            'shipping_phone' => $customer->phone,
+                            'shipping_phone' => $address->phone,
                             'shipping_zipcode' => $address->postal_code,
                             'shipping_latitude' => '',
                             'shipping_longitude' => '',
