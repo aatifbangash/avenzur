@@ -546,7 +546,6 @@ class Pay extends MY_Shop_Controller
                     $lowercase_delivery_country = strtolower($delivery_country);
 
                     if (strpos($lowercase_delivery_country, 'saudi') > -1 || strpos($lowercase_delivery_country, 'ksa') > -1) {
-                        echo 'Here in KSA Block...';exit;
                         /* OTO Order Generation Starts */
                         $customer_data = array('name' => $customer->name,
                                             'email' => $customer->email,
@@ -593,7 +592,6 @@ class Pay extends MY_Shop_Controller
                         $this->create_oto_order($order);
                         /* OTO Order Generation Ends */
                     }else{
-                        echo 'Here in Foreign Block...';exit;
                         /* Shipway Order Generation Ends */
 
                         $license_key = 'E908g3oR7PP7DG0gZXcRG3x89VO228Ry';
