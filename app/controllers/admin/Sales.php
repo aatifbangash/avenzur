@@ -100,7 +100,8 @@ class Sales extends MY_Controller
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 $real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
                 $unit_price         = $this->sma->formatDecimal($_POST['unit_price'][$r]);
-                $net_cost           = $this->sma->formatDecimal($_POST['net_cost'][$r]);
+                //$net_cost           = $this->sma->formatDecimal($_POST['net_cost'][$r]);
+
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_serial        = $_POST['serial'][$r]           ?? '';
                 
@@ -117,6 +118,9 @@ class Sales extends MY_Controller
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
                 $main_net = $_POST['main_net'][$r];
+
+                $net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
+                print_r($net_cost_obj);exit;
 
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details = $item_type != 'manual' ? $this->sales_model->getProductByCode($item_code) : null;
