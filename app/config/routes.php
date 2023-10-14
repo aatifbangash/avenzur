@@ -56,3 +56,4 @@ $route['admin/products/(:num)']  = 'admin/products/index/$1';
 $route['admin/purchases/(:num)'] = 'admin/purchases/index/$1';
 $route['admin/quotes/(:num)']    = 'admin/quotes/index/$1';
 $route['admin/returns/(:num)']   = 'admin/returns/index/$1';
+$route['admin/returns_supplier/(:num)']   = 'admin/returns_supplier/index/$1';
