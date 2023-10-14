@@ -84,13 +84,13 @@
                     ?>
                 </div>
 
-                <div class="col-xs-6">
-                    <?php echo $this->lang->line('from'); ?>:
-                    <h2 style="margin-top:10px;"><?= $biller->company && $biller->company != '-' ? $biller->company : $biller->name; ?></h2>
-                    <?= $biller->company ? '' : 'Attn: ' . $biller->name ?>
+                <!--<div class="col-xs-6">
+                    <?php /*echo $this->lang->line('from'); */?>:
+                    <h2 style="margin-top:10px;"><?/*= $biller->company && $biller->company != '-' ? $biller->company : $biller->name; */?></h2>
+                    <?/*= $biller->company ? '' : 'Attn: ' . $biller->name */?>
 
                     <?php
-                    echo $biller->address . '<br>' . $biller->city . ' ' . $biller->postal_code . ' ' . $biller->state . '<br>' . $biller->country;
+/*                    echo $biller->address . '<br>' . $biller->city . ' ' . $biller->postal_code . ' ' . $biller->state . '<br>' . $biller->country;
 
                     echo '<p>';
 
@@ -121,8 +121,8 @@
 
                     echo '</p>';
                     echo lang('tel') . ': ' . $biller->phone . '<br>' . lang('email') . ': ' . $biller->email;
-                    ?>
-                </div>
+                    */?>
+                </div>-->
 
             </div>
 

@@ -1162,8 +1162,8 @@ class Returns_supplier extends MY_Controller
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by, true);
         }
-        $this->data['customer'] = $this->site->getCompanyByID($inv->customer_id);
-        $this->data['biller'] = $this->site->getCompanyByID($inv->biller_id);
+        $this->data['customer'] = $this->site->getCompanyByID($inv->supplier_id);
+//        $this->data['biller'] = $this->site->getCompanyByID($inv->biller_id);
         $this->data['created_by'] = $this->site->getUser($inv->created_by);
         $this->data['updated_by'] = $inv->updated_by ? $this->site->getUser($inv->updated_by) : null;
         $this->data['warehouse'] = $this->site->getWarehouseByID($inv->warehouse_id);
