@@ -536,57 +536,144 @@ class Pay extends MY_Shop_Controller
                     'note'           => $_POST['Response_CurrencyISOCode'] . ' ' . $_POST['Response_Amount'] . ' had been paid for the Sale Reference No ' . $inv->reference_no,
                 ];
                 if ($this->pay_model->addPayment($payment)) {
+                    $address_id = $inv->address_id;
                     $customer = $this->pay_model->getCompanyByID($inv->customer_id);
-                    $address = $this->pay_model->getCompanyAddress($customer->id);
+                    //$address = $this->pay_model->getCompanyAddress($customer->id);
+                    $address = $this->pay_model->getAddressByID($address_id);
                     $this->pay_model->updateStatus($inv->id, 'completed');
                     $ipnstatus = true;
                     $sale_items = $this->pay_model->getSaleItems($invoice_no);
 
-                    /* OTO Order Generation Starts */
-                    $customer_data = array('name' => $customer->name,
-                                        'email' => $customer->email,
-                                        'mobile' => $customer->phone,
-                                        'address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
-                                        'district' => '',
-                                        'city' => $address->city,
-                                        'country' => $customer->country,
-                                        'postcode' => $address->postal_code,
-                                        'lat' => '',
-                                        'long' => '',
-                                        'refID' => '',
-                                        'W3WAddress' => ''
-                    );
+                    $delivery_country = $address->country;
+                    $lowercase_delivery_country = strtolower($delivery_country);
 
-                    $items_data = array();
-                    foreach ($sale_items as $sale_item){
-                        $items_data[] = array('productId' => $sale_item->product_id,
-                                        'name' => $sale_item->product_name,
-                                        'price' => $sale_item->net_unit_price,
-                                        'rowTotal' => $sale_item->subtotal,
-                                        'taxAmount' => $sale_item->item_tax,
-                                        'quantity' => $sale_item->quantity,
-                                        'serialnumber' => '',
-                                        'sku' => $sale_item->product_code,
-                                        'image' => get_instance()->config->site_url('assets/uploads/').$sale_item->image
+                    if (strpos($lowercase_delivery_country, 'saudi') > -1 || strpos($lowercase_delivery_country, 'ksa') > -1) {
+                        /* OTO Order Generation Starts */
+                        $customer_data = array('name' => $customer->name,
+                                            'email' => $customer->email,
+                                            'mobile' => $address->phone,
+                                            'address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
+                                            'district' => '',
+                                            'city' => $address->city,
+                                            'country' => $address->country,
+                                            'postcode' => $address->postal_code,
+                                            'lat' => '',
+                                            'long' => '',
+                                            'refID' => '',
+                                            'W3WAddress' => ''
                         );
+
+                        $items_data = array();
+                        foreach ($sale_items as $sale_item){
+                            $items_data[] = array('productId' => $sale_item->product_id,
+                                            'name' => $sale_item->product_name,
+                                            'price' => $sale_item->net_unit_price,
+                                            'rowTotal' => $sale_item->subtotal,
+                                            'taxAmount' => $sale_item->item_tax,
+                                            'quantity' => $sale_item->quantity,
+                                            'serialnumber' => '',
+                                            'sku' => $sale_item->product_code,
+                                            'image' => get_instance()->config->site_url('assets/uploads/').$sale_item->image
+                            );
+                        }
+
+                        $order = array(
+                            'orderId' => $inv->id,
+                            'ref1' => $reference,
+                            'createShipment' => false,
+                            'payment_method' => 'paid',
+                            'amount' => $amount,
+                            'amount_due' => 0,
+                            'shippingAmount' => $inv->shipping,
+                            'currency' => 'SAR',
+                            'orderDate' => date('d/m/Y H:i'), // Use the current date and time
+                            'customer' => $customer_data,
+                            'items' => $items_data
+                        );
+
+                        $this->create_oto_order($order);
+                        /* OTO Order Generation Ends */
+
+                        $this->sendMsegatSMS($address->phone, $inv->id, $customer->name);
+
+                    }else{
+                        /* Shipway Order Generation Ends */
+
+                        $license_key = 'E908g3oR7PP7DG0gZXcRG3x89VO228Ry';
+                        $shipway_email = 'braphael@avenzur.com';
+
+                        $token = base64_encode($shipway_email.":".$license_key);
+                        $authHeaderString = 'Authorization: Basic ' . $token;
+
+                        // API Endpoint URL
+                        $url = 'https://app.shipway.com/api/v2orders';
+
+                        // Request headers
+                        $headers = array(
+                            $authHeaderString,
+                            'Content-Type: application/json'
+                        );
+
+                        // Request data
+                        $data = array(
+                            'order_id' => $inv->id,
+                            //'ewaybill' => 'AD767435878734PR',
+                            'products' => array(),
+                            'discount' => $inv->total_discount,
+                            'shipping' => $inv->shipping,
+                            'order_total' => $amount,
+                            'gift_card_amt' => '',
+                            'taxes' => $inv->total_tax,
+                            'payment_type' => 'P',
+                            'email' => $customer->email,
+                            'shipping_address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
+                            'shipping_address2' => '',
+                            'shipping_city' => $address->city,
+                            'shipping_state' => $address->state,
+                            'shipping_country' => $address->country,
+                            'shipping_firstname' => $customer->name,
+                            'shipping_lastname' => '',
+                            'shipping_phone' => $address->phone,
+                            'shipping_zipcode' => $address->postal_code,
+                            'shipping_latitude' => '',
+                            'shipping_longitude' => '',
+                            'order_weight' => '',
+                            'box_length' => '20',
+                            'box_breadth' => '15',
+                            'box_height' => '10',
+                            'order_date' => date('Y-m-d h:i:s'),
+                        );
+
+                        foreach ($sale_items as $sale_item){
+                            $data['products'][] = array(
+                                'product' => $sale_item->product_name,
+                                'price' => $sale_item->net_unit_price,
+                                'product_code' => $sale_item->product_code,
+                                'amount' => $sale_item->subtotal,
+                                'discount' => $sale_item->product_discount,
+                                'tax_rate' => $sale_item->tax,
+                                'tax_title' => $sale_item->tax,
+                            );
+                        }
+
+                        // Initialize cURL session
+                        $ch = curl_init();
+
+                        // Set cURL options
+                        curl_setopt($ch, CURLOPT_URL, $url);
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                        curl_setopt($ch, CURLOPT_POST, 1);
+                        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+                        // Execute cURL session
+                        $response = curl_exec($ch);
+
+                        // Close cURL session
+                        curl_close($ch);
+
+                        /* Shipway Order Generation Ends */
                     }
-
-                    $order = array(
-                        'orderId' => $inv->id,
-                        'ref1' => $reference,
-                        'createShipment' => false,
-                        'payment_method' => 'paid',
-                        'amount' => $amount,
-                        'amount_due' => 0,
-                        'shippingAmount' => $inv->shipping,
-                        'currency' => 'SAR',
-                        'orderDate' => date('d/m/Y H:i'), // Use the current date and time
-                        'customer' => $customer_data,
-                        'items' => $items_data
-                    );
-
-                    $this->create_oto_order($order);
-                    /* OTO Order Generation Ends */
 
                     $email = $this->order_received($invoice_no);
                     $this->sma->log_payment('SUCCESS', 'Payment has been made for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));
@@ -605,6 +692,44 @@ class Pay extends MY_Shop_Controller
 
         redirect(SHOP ? '/' : site_url($ipnstatus ? 'notify/payment_success' : 'notify/payment_failed'));
         exit();
+    }
+
+    public function sendMsegatSMS($receiver_number, $order_id, $receiver_name){
+        $data = [
+            'userName' => 'phmc',
+            'numbers' => $receiver_number,
+            'userSender' => 'phmc',
+            'apiKey' => 'd3a916960217e3c7bc0af6ed80d1435c',
+            'msg' => 'Hello '.$receiver_name.', thank you for your order with Avenzur.com! Your Invoice No: '.$order_id,
+        ];
+
+        // Convert the data to JSON format
+        $jsonData = json_encode($data);
+
+        // Initialize cURL session
+        $ch = curl_init();
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_URL, 'https://www.msegat.com/gw/sendsms.php');
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+        ]);
+
+        // Execute the cURL request and store the response
+        $response = curl_exec($ch);
+
+        // Check for cURL errors
+        if (curl_errno($ch)) {
+            echo 'cURL Error: ' . curl_error($ch);
+        }
+
+        // Close the cURL session
+        curl_close($ch);
+
+        // Output the response
+        //echo $response;
     }
     
     public function order_received($id = null, $hash = null)

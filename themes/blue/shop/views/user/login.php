@@ -69,27 +69,19 @@
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="form-group">
-                                            <?= lang('Country', 'Country'); ?>
-                                            <select class="form-control" id="country" name="country" >
+                                        <?= lang('Country', 'Country'); ?>
+                                        <select class="form-control" id="country" name="country" >
                                        
-                                         <!--<option value="AE">AE</option>-->
-                                       <option value="">Select Country</option>
-                                            <?php
-                                                 foreach($country as $country)
-                                                         {
-                                                          echo '<option value="'.$country->code.'">'.$country->name.'</option>';
-                                                           
-                                                         
-                                                         
-                                                          }
-                                                        
-                                                              
-                                                         
-                                                          
-                                            ?>
-                                                        
-                                                        
-                            </select>
+                                        <option value="AE">AE</option>
+                                        <option value="">Select Country</option>
+                                        <?php
+                                            foreach($country as $country)
+                                            {
+                                                $selected = (trim($country->code) == trim($country_code)) ? 'selected' : '';
+                                                echo '<option value="'.$country->code.'"' . $selected . '>'.$country->name.'</option>';
+                                            }
+                                        ?>                    
+                                        </select>
                             
 
                                         </div>
@@ -125,7 +117,7 @@
                                         <div class="form-group">
                                             <?= lang('password', 'passwordr'); ?>
                                             <div class="controls">
-                                                <?= form_password('password', '', 'class="form-control tip" id="passwordr" required="required" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"'); ?>
+                                                <?= form_password('password', '', 'class="form-control tip" id="passwordr" required="required" pattern="[0-9a-zA-Z]{5,}"'); ?>
                                                 <span class="help-block"><?= lang('pasword_hint'); ?></span>
                                             </div>
                                         </div>
@@ -134,7 +126,7 @@
                                         <div class="form-group">
                                             <?= lang('confirm_password', 'password_confirm'); ?>
                                             <div class="controls">
-                                                <?= form_password('password_confirm', '', 'class="form-control" id="password_confirm" required="required" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" data-bv-identical="true" data-bv-identical-field="password" data-bv-identical-message="' . lang('pw_not_same') . '"'); ?>
+                                                <?= form_password('password_confirm', '', 'class="form-control" id="password_confirm" required="required" pattern="[0-9a-zA-Z]{5,}" data-bv-identical="true" data-bv-identical-field="password" data-bv-identical-message="' . lang('pw_not_same') . '"'); ?>
                                             </div>
                                         </div>
                                     </div>
@@ -249,7 +241,7 @@
     // Vanilla Javascript
     var input = document.querySelector("#phone");
     window.intlTelInput(input,({
-      // options here
+        initialCountry: "<?= trim($country_code); ?>"
     }));
 function LoginFn(){
              

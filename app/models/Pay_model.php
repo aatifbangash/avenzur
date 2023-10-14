@@ -27,6 +27,11 @@ class Pay_model extends CI_Model
     {
         return $this->db->get_where('sma_addresses', ['company_id' => $id])->row();
     }
+
+    public function getAddressByID($id)
+    {
+        return $this->db->get_where('addresses', ['id' => $id], 1)->row();
+    }
     
     public function updateRefundStatus($rid,$data)
     {

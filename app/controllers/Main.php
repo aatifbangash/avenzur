@@ -147,8 +147,27 @@ class Main extends MY_Shop_Controller
         redirect($_SERVER['HTTP_REFERER']);
     }
 
+    public function get_country_by_ip(){
+        $data = array();
+        // Get the visitor's IP address
+        $ip = $_SERVER['REMOTE_ADDR'];
+        // Create a cURL request to fetch geolocation data
+        $ch = curl_init("https://ipinfo.io/{$ip}/country"); // 188.53.165.141
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        // Execute the cURL request and get the response
+        $response = curl_exec($ch);
+        
+        // Close the cURL session
+        curl_close($ch);
+
+        return $response;
+    }
+
     public function login($m = null)
     {
+        $country_code = $this->get_country_by_ip();
+        
         if (!SHOP || $this->Settings->mmode) {
             redirect('admin/login');
         }
@@ -212,7 +231,8 @@ class Main extends MY_Shop_Controller
             $this->data['message']    = $m ? lang('password_changed') : $this->session->flashdata('message');
             $this->data['page_title'] = lang('login');
             $this->data['page_desc']  = $this->shop_settings->description;
-             $this->data['country'] = $this->shop_model->getallCountryR();
+            $this->data['country'] = $this->shop_model->getallCountryR();
+            $this->data['country_code'] = $country_code;
             if ($this->shop_settings->private) {
                 $this->data['message']       = $data['message'] ?? $this->session->flashdata('message');
                 $this->data['error']         = isset($this->data['error']) ? $this->data['error'] : $this->session->flashdata('error');
@@ -346,7 +366,7 @@ class Main extends MY_Shop_Controller
         $this->form_validation->set_rules('phone', lang('phone'), 'required');
         $this->form_validation->set_rules('email', lang('email_address'), 'required|is_unique[users.email]');
         $this->form_validation->set_rules('username', lang('username'), 'required|is_unique[users.username]');
-        $this->form_validation->set_rules('password', lang('password'), 'required|min_length[8]|max_length[20]|matches[password_confirm]');
+        $this->form_validation->set_rules('password', lang('password'), 'required|min_length[5]|max_length[20]|matches[password_confirm]');
         $this->form_validation->set_rules('password_confirm', lang('confirm_password'), 'required');
         $this->form_validation->set_rules('country', lang('country'), 'required');
 
@@ -388,8 +408,31 @@ class Main extends MY_Shop_Controller
         }
           
         if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data)) {
-            $this->session->set_flashdata('message', lang('account_created'));
-            redirect('login');
+            if ($this->ion_auth->login($email, $password, 1)) {
+                if ($this->Settings->mmode) {
+                    if (!$this->ion_auth->in_group('owner')) {
+                        $this->session->set_flashdata('error', lang('site_is_offline_plz_try_later'));
+                        admin_redirect('auth/logout');
+                    }
+                }
+                if ($this->ion_auth->in_group('customer') || $this->ion_auth->in_group('supplier')) {
+                    if (file_exists(APPPATH . 'controllers' . DIRECTORY_SEPARATOR . 'shop' . DIRECTORY_SEPARATOR . 'Shop.php')) {
+                        $this->session->set_flashdata('message', $this->ion_auth->messages());
+                        redirect(base_url());
+                    } else {
+                        admin_redirect('auth/logout/1');
+                    }
+                }
+                $this->session->set_flashdata('message', $this->ion_auth->messages());
+                $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : 'welcome';
+                admin_redirect($referrer);
+            } else {
+                $this->session->set_flashdata('error', $this->ion_auth->errors());
+                admin_redirect('login');
+            }
+            
+            //$this->session->set_flashdata('message', lang('account_created'));
+            //redirect('login');
         } else {
             $this->session->set_flashdata('error', validation_errors());
             redirect('login#register');

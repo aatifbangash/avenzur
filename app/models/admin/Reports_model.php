@@ -1028,6 +1028,7 @@ class Reports_model extends CI_Model
                                     round(sum(pi.quantity)) quantity,
                                     round(avg(pi.sale_price), 2) sale_price,
                                     round(avg(pi.net_unit_cost), 2) cost_price,
+                                    round(sum(pi.net_unit_cost * pi.quantity), 2) total_cost_price,
                                     round(avg(pi.unit_cost), 2) purchase_price
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
@@ -1060,6 +1061,7 @@ class Reports_model extends CI_Model
         
         if ($totalPurchseResultSet->num_rows() > 0) {
             foreach ($totalPurchseResultSet->result() as $row) {
+                $row->cost_price = ($row->total_cost_price / $row->quantity);
                 $totalPurchases[] = $row;
             }
 
@@ -1116,7 +1118,8 @@ class Reports_model extends CI_Model
                                         p.name,
                                         pi.batchno batch_no,
                                         pi.expiry expiry,
-                                        round(sum(pi.quantity)) quantity
+                                        round(sum(pi.quantity)) quantity,
+                                        round(avg(pi.net_unit_cost), 2) cost_price
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
                                 WHERE pi.purchase_item_id IS NOT NULL ";
@@ -1149,6 +1152,7 @@ class Reports_model extends CI_Model
                             //&& $purchase->expiry == $returnSupplier->expiry
                         ) {
                             $purchase->quantity -= (int)abs($returnSupplier->quantity);
+                            //$purchase->cost_price = ($purchase->cost_price + $returnSupplier->cost_price)/2;
                         }
                     }, $totalPurchases);
                 }
@@ -1389,7 +1393,7 @@ class Reports_model extends CI_Model
 
                     LEFT JOIN sma_purchase_items as pitem ON pitem.purchase_id = purchase.id
 
-                    WHERE pitem.product_id = $productId AND DATE(purchase.date) >= '{$start_date}' AND DATE(purchase.date) <= '{$end_date}'  AND purchase.grand_total > 0 
+                    WHERE pitem.product_id = $productId AND DATE(purchase.date) >= '{$start_date}' AND DATE(purchase.date) <= '{$end_date}'  AND purchase.grand_total > 0 AND purchase.status = 'received'
                     
                 )
                  as data ON data.product_id = prd.id 
@@ -1413,7 +1417,7 @@ class Reports_model extends CI_Model
                     END AS name_of, 
 
                     saleItem.batch_no as batch_no,
-                    saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_unit_price as unit_cost,
+                    saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_cost as unit_cost,
                     saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id as product_id
                 
                     FROM sma_sales as sale
@@ -1421,7 +1425,7 @@ class Reports_model extends CI_Model
                     LEFT JOIN sma_sale_items as saleItem ON saleItem.sale_id = sale.id
                     LEFT JOIN sma_warehouses as wrs ON wrs.id = sale.warehouse_id
                 
-                    WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '{$start_date}' AND DATE(sale.date) <= '{$end_date}'
+                    WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '{$start_date}' AND DATE(sale.date) <= '{$end_date}' AND sale.sale_status = 'completed' AND saleItem.batch_no <> ''
                 )
                  AS data ON data.product_id = prd.id 
                  WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
@@ -1593,7 +1597,7 @@ class Reports_model extends CI_Model
 
                     LEFT JOIN sma_purchase_items as pitem ON pitem.purchase_id = purchase.id
 
-                    WHERE pitem.product_id = $productId AND DATE(purchase.date) >= '$start_date' AND DATE(purchase.date) <= '$end_date'  AND purchase.grand_total > 0 
+                    WHERE pitem.product_id = $productId AND DATE(purchase.date) >= '$start_date' AND DATE(purchase.date) <= '$end_date'  AND purchase.grand_total > 0 AND purchase.status = 'received'
 
                     UNION ALL 
 
@@ -1606,7 +1610,7 @@ class Reports_model extends CI_Model
                     END AS name_of, 
                     
                      saleItem.batch_no as batch_no,
-                    saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_unit_price as unit_cost,
+                    saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_cost as unit_cost,
                     saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id
                 
                     FROM sma_sales as sale
@@ -1614,7 +1618,7 @@ class Reports_model extends CI_Model
                     LEFT JOIN sma_sale_items as saleItem ON saleItem.sale_id = sale.id
                     LEFT JOIN sma_warehouses as wrs ON wrs.id = sale.warehouse_id
                 
-                    WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '$start_date' AND DATE(sale.date) <= '$end_date'
+                    WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '$start_date' AND DATE(sale.date) <= '$end_date' AND sale.sale_status = 'completed' AND saleItem.batch_no <> ''
 
                     UNION ALL 
 

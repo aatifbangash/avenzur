@@ -17,7 +17,8 @@
         "phpoffice/phpspreadsheet": "^1.11",
         "arutil/ar-php": "^0.1.1",
         "salla/zatca": "^1.0",
-        "chillerlan/php-qrcode": "^4.3"
+        "chillerlan/php-qrcode": "^4.3",
+        "twilio/sdk": "^7.11"
     },
     "license": "Commercial License",
     "authors": [
