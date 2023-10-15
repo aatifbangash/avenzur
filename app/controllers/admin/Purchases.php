@@ -97,6 +97,9 @@ class Purchases extends MY_Controller
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
                 $main_net = $_POST['main_net'][$r];
+
+                $net_cost_obj = $this->purchases_model->getAverageCost($item_batchno, $item_code);
+                $net_cost_sales = $net_cost_obj[0]->cost_price;
                 
                 if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity)) {
                     $product_details = $this->purchases_model->getProductByCode($item_code);
@@ -186,6 +189,7 @@ class Purchases extends MY_Controller
                         'discount2'         => $item_dis2,
                         'totalbeforevat'    => $totalbeforevat,
                         'main_net'          => $main_net,
+                        'net_cost_sales'    => $net_cost_sales
                     ];
 
                     if ($unit->id != $product_details->unit) {
@@ -731,6 +735,10 @@ class Purchases extends MY_Controller
                     $balance_qty       = $item_quantity;
                     $quantity_received = $item_quantity;
                 }
+
+                $net_cost_obj = $this->purchases_model->getAverageCost($item_batchno, $item_code);
+                $net_cost_sales = $net_cost_obj[0]->cost_price;
+
                 if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity) && isset($quantity_balance)) {
                     $product_details = $this->purchases_model->getProductByCode($item_code);
                     if($product_details->price != $item_sale_price){
@@ -816,7 +824,8 @@ class Purchases extends MY_Controller
                         'discount2'         => $item_dis2,
                         'totalbeforevat'    => $totalbeforevat,
                         'main_net'          => $main_net,
-                        'warehouse_shelf'   => ($warehouse_shelf ? $warehouse_shelf : '')
+                        'warehouse_shelf'   => ($warehouse_shelf ? $warehouse_shelf : ''),
+                        'net_cost_sales'    => $net_cost_sales
                     ];
 
                     if ($unit->id != $product_details->unit) {

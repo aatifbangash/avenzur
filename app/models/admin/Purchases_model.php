@@ -28,6 +28,38 @@ class Purchases_model extends CI_Model
         return false;
     }
 
+    public function getAverageCost($item_batchno, $item_code){
+        $totalPurchases = [];
+        $totalPurchasesQuery = "SELECT 
+                                    p.id, 
+                                    p.code item_code, 
+                                    p.name name, 
+                                    pi.batchno batch_no, 
+                                    pi.expiry expiry, 
+                                    round(sum(pi.quantity)) quantity,
+                                    round(avg(pi.sale_price), 2) sale_price,
+                                    round(avg(pi.net_unit_cost), 2) cost_price,
+                                    round(sum(pi.net_unit_cost * pi.quantity), 2) total_cost_price,
+                                    round(avg(pi.unit_cost), 2) purchase_price
+                                FROM sma_products p
+                                INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
+                                INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id
+                                WHERE pi.purchase_item_id IS NULL AND pc.status = 'received'";
+        $totalPurchasesQuery .= "AND (p.code = '{$item_code}' OR p.name LIKE '%{$item_code}%') ";
+        $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.batchno
+                                ORDER BY p.id DESC";
+        $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
+
+        if ($totalPurchseResultSet->num_rows() > 0) {
+            foreach ($totalPurchseResultSet->result() as $row) {
+                $row->cost_price = ($row->total_cost_price / $row->quantity);
+                $totalPurchases[] = $row;
+            }
+        }
+
+        return $totalPurchases;
+    }
+
     public function addPayment($data = [])
     {
         if ($this->db->insert('payments', $data)) {
@@ -67,6 +99,8 @@ class Purchases_model extends CI_Model
                 $this->site->updateReference('rep');
             }
             foreach ($items as $item) {
+                $net_cost_sales = $item['net_cost_sales'];
+                unset($item['net_cost_sales']);
                 $item['purchase_id'] = $purchase_id;
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 $this->db->insert('purchase_items', $item);
@@ -107,6 +141,8 @@ class Purchases_model extends CI_Model
                     }
                 }
                 if ($data['status'] == 'received' || $data['status'] == 'returned') {
+                    // Add the update sales cost price code here
+                    $this->updateSalesCostPrice($net_cost_sales, $item['batchno'], $item['product_code']);
                     $this->updateAVCO(['product_id' => $item['product_id'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'batch' => $item['batchno'], 'cost' => $item['base_unit_cost'] ?? $item['real_unit_cost']]);
                 }
             }
@@ -134,6 +170,10 @@ class Purchases_model extends CI_Model
             return true;
         }
         return false;
+    }
+
+    public function updateSalesCostPrice($net_cost_sales, $batch_no, $item_code){
+        $this->db->update('sma_sale_items', ['net_cost' => $net_cost_sales], ['batch_no' => $batch_no, 'product_code' => $item_code]);
     }
 
     public function calculatePurchaseTotals($id, $return_id, $surcharge)
@@ -715,6 +755,8 @@ class Purchases_model extends CI_Model
 
             foreach ($items as $item) {
                 $item['purchase_id'] = $id;
+                $net_cost_sales = $item['net_cost_sales'];
+                unset($item['net_cost_sales']);
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 $this->db->insert('purchase_items', $item);
                 if ($data['status'] == 'received' || $data['status'] == 'partial') {
@@ -749,6 +791,10 @@ class Purchases_model extends CI_Model
                 }
 
                 // Code for serials end here
+
+                if ($data['status'] == 'received' || $data['status'] == 'partial') {
+                    $this->updateSalesCostPrice($net_cost_sales, $item['batchno'], $item['product_code']);
+                }
             }
             $this->site->syncQuantity(null, null, $oitems);
 
