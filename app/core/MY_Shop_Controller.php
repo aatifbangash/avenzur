@@ -42,7 +42,8 @@ class MY_Shop_Controller extends CI_Controller
 
             $country_code = $this->get_country_by_ip();
             $country_details = $this->shop_model->getCountryByCode($country_code);
-
+            echo '<pre>';
+            print_r($country_details);
             if ($selected_currency = get_cookie('shop_currency', true)) {
                 $this->Settings->selected_currency = $selected_currency;
             } else {
@@ -50,6 +51,7 @@ class MY_Shop_Controller extends CI_Controller
                 $this->Settings->selected_currency = $country_details->currencycode;
                 
             }
+            print_r($this->Settings->selected_currency);exit;
             $this->default_currency          = $this->shop_model->getCurrencyByCode($this->Settings->default_currency);
             $this->data['default_currency']  = $this->default_currency;
             $this->selected_currency         = $this->shop_model->getCurrencyByCode($this->Settings->selected_currency);
