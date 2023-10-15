@@ -704,6 +704,19 @@
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_Return_Customer'); ?></span>
                                         </a>
                                     </li>
+
+
+                                    <li id="returns_index">
+                                        <a class="submenu" href="<?= admin_url('returns_supplier'); ?>">
+                                            <i class="fa fa-random"></i><span class="text"> <?= lang('List_Returns_Suppliers'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li id="returns_add">
+                                        <a class="submenu" href="<?= admin_url('returns_supplier/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_Return_Supplier'); ?></span>
+                                        </a>
+                                    </li>
                                     
                                     <!--<li id="returns_add">
                                         <a class="submenu" href="<?php //echo admin_url('returns/add_return'); ?>">
