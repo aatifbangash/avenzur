@@ -50,8 +50,6 @@ class MY_Shop_Controller extends CI_Controller
             $this->selected_currency         = $this->shop_model->getCurrencyByCode($this->Settings->selected_currency);
             $this->data['selected_currency'] = $this->selected_currency;
 
-            echo $this->default_currency.' -- '.$this->selected_currency;exit;
-
             $this->loggedIn             = $this->sma->logged_in();
             $this->data['loggedIn']     = $this->loggedIn;
             $this->loggedInUser         = $this->site->getUser();
