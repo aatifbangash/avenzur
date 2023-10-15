@@ -195,7 +195,7 @@ class Shop_model extends CI_Model
     }
 
     public function getCountryByCode($code){
-        return $this->db->get_where('countries', ['code' => $code], 1)->row();
+        return $this->db->get_where('countries', ['code' => trim($code)], 1)->row();
     }
 
     public function getCurrencyByCode($code)
