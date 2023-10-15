@@ -40,10 +40,15 @@ class MY_Shop_Controller extends CI_Controller
                 $this->data['assets'] = base_url() . 'themes/default/shop/assets/';
             }
 
+            $country_details = $this->get_country_by_ip();
+            print_r($country_details);exit;
+
             if ($selected_currency = get_cookie('shop_currency', true)) {
                 $this->Settings->selected_currency = $selected_currency;
             } else {
-                $this->Settings->selected_currency = $this->Settings->default_currency;
+                //$this->Settings->selected_currency = $this->Settings->default_currency;
+                //$this->Settings->selected_currency = ;
+                
             }
             $this->default_currency          = $this->shop_model->getCurrencyByCode($this->Settings->default_currency);
             $this->data['default_currency']  = $this->default_currency;
@@ -110,6 +115,23 @@ class MY_Shop_Controller extends CI_Controller
             $this->Settings->format_gst = true;
             $this->load->library('gst');
         }
+    }
+
+    public function get_country_by_ip(){
+        $data = array();
+        // Get the visitor's IP address
+        $ip = $_SERVER['REMOTE_ADDR'];
+        // Create a cURL request to fetch geolocation data
+        $ch = curl_init("https://ipinfo.io/{$ip}/country"); // 188.53.165.141
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        // Execute the cURL request and get the response
+        $response = curl_exec($ch);
+        
+        // Close the cURL session
+        curl_close($ch);
+
+        return $response;
     }
 
     public function page_construct($page, $data = [])
