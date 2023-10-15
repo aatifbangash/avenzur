@@ -450,8 +450,8 @@ class Returns_supplier extends MY_Controller
             $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->data['tax_rates'] = $this->site->getAllTaxRates();
             $this->data['units'] = $this->site->getAllBaseUnits();
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('returns_supplier'), 'page' => lang('returns')], ['link' => '#', 'page' => lang('add_return')]];
-            $meta = ['page_title' => lang('add_return'), 'bc' => $bc];
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('returns_supplier'), 'page' => lang('returns')], ['link' => '#', 'page' => lang('add_supplier_return')]];
+            $meta = ['page_title' => lang('add_supplier_return'), 'bc' => $bc];
             $this->page_construct('returns_supplier/add', $meta, $this->data);
         }
     }
@@ -461,119 +461,180 @@ class Returns_supplier extends MY_Controller
         $inv = $this->returns_supplier_model->getReturnByID($rid);
 
         $this->load->admin_model('companies_model');
-        $customer = $this->companies_model->getCompanyByID($inv->customer_id);
+        $supplier = $this->companies_model->getCompanyByID($inv->supplier_id);
         $warehouse_id = $inv->warehouse_id;
         $warehouse_ledgers = $this->site->getWarehouseByID($warehouse_id);
+
 
         /*Accounts Entries*/
         $entry = array(
             'entrytype_id' => 4,
-            'number' => 'RCO-' . $inv->reference_no,
+            'transaction_type' => 'returnorder',
+            'number' => 'RSO-' . $inv->reference_no,
             'date' => date('Y-m-d'),
             'dr_total' => $inv->grand_total,
             'cr_total' => $inv->grand_total,
-            'notes' => 'RCO Reference: ' . $inv->reference_no . ' Date: ' . date('Y-m-d H:i:s'),
-            'rid' => $inv->id,
-            'transaction_type' => 'returncustomerorder'
+            'notes' => 'Return Reference: ' . $inv->reference_no . ' Date: ' . date('Y-m-d H:i:s'),
+            'rsid' => $inv->id
         );
-
         $add = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
 
-        //$insert_id = 999;
         $entryitemdata = array();
 
         $inv_items = $this->returns_supplier_model->getReturnItems($rid);
 
-        $totalSalePrice = 0;
-        $totalPurchasePrice = 0;
         foreach ($inv_items as $item) {
             $proid = $item->product_id;
             $product = $this->site->getProductByID($proid);
-
-            $totalSalePrice = ($totalSalePrice) + ($item->net_unit_price * $item->quantity);
-            $totalPurchasePrice = $totalPurchasePrice + ($item->net_cost * $item->quantity);
+            //products
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $warehouse_ledgers->inventory_ledger,
+                    'amount' => -1 * ($item->net_unit_price * $item->quantity),
+                    'narration' => 'Inventory'
+                )
+            );
         }
 
-        $amount_to_pay = $totalSalePrice + $inv->total_tax - $inv->total_discount;
-
-        // //cash
+        //vat on purchase
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
                 'dc' => 'C',
-                'ledger_id' => $customer->ledger_account,
-                //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
-                'amount' => $amount_to_pay,
-                'narration' => 'customer'
+                'ledger_id' => $this->vat_on_purchase,
+                'amount' => -1 * ($inv->product_tax),
+                'narration' => 'Vat on Purchase'
             )
         );
 
-        // cost of goods sold
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'C',
-                'ledger_id' => $customer->cogs_ledger,
-                'amount' => $totalPurchasePrice,
-                'narration' => 'cost of goods sold'
-            )
-        );
-
-        // inventory
+        //supplier
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
                 'dc' => 'D',
-                'ledger_id' => $warehouse_ledgers->inventory_ledger,
-                'amount' => $totalPurchasePrice,
-                'narration' => 'inventory'
+                'ledger_id' => $supplier->ledger_account,
+                'amount' => -1 * ($inv->grand_total),
+                'narration' => 'Accounts payable'
             )
         );
 
-        // // sale account
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'D',
-                'ledger_id' => $customer->sales_ledger,
-                'amount' => $totalSalePrice,
-                'narration' => 'sale account'
-            )
-        );
-
-
-        // //discount
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'C',
-                'ledger_id' => $customer->discount_ledger,
-                'amount' => $inv->total_discount,
-                'narration' => 'discount'
-            )
-        );
-
-        // //vat on sale
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'D',
-                'ledger_id' => $this->vat_on_sale,
-                'amount' => $inv->total_tax,
-                'narration' => 'vat on sale'
-            )
-        );
-
-        $total_invoice_entry = $inv->total_tax + $totalSalePrice + $totalPurchasePrice;
-
-
-        $this->db->update('sma_accounts_entries', ['dr_total' => $total_invoice_entry, 'cr_total' => $total_invoice_entry], ['id' => $insert_id]);
-
-        //   /*Accounts Entry Items*/
         foreach ($entryitemdata as $row => $itemdata) {
             $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
         }
+
+
+//        /*Accounts Entries*/
+//        $entry = array(
+//            'entrytype_id' => 4,
+//            'number' => 'RCO-' . $inv->reference_no,
+//            'date' => date('Y-m-d'),
+//            'dr_total' => $inv->grand_total,
+//            'cr_total' => $inv->grand_total,
+//            'notes' => 'RCO Reference: ' . $inv->reference_no . ' Date: ' . date('Y-m-d H:i:s'),
+//            'rid' => $inv->id,
+//            'transaction_type' => 'returncustomerorder'
+//        );
+//
+//        $add = $this->db->insert('sma_accounts_entries', $entry);
+//        $insert_id = $this->db->insert_id();
+//
+//        //$insert_id = 999;
+//        $entryitemdata = array();
+//
+//        $inv_items = $this->returns_supplier_model->getReturnItems($rid);
+//
+//        $totalSalePrice = 0;
+//        $totalPurchasePrice = 0;
+//        foreach ($inv_items as $item) {
+//            $proid = $item->product_id;
+//            $product = $this->site->getProductByID($proid);
+//
+//            $totalSalePrice = ($totalSalePrice) + ($item->net_unit_price * $item->quantity);
+//            $totalPurchasePrice = $totalPurchasePrice + ($item->net_cost * $item->quantity);
+//        }
+//
+//        $amount_to_pay = $totalSalePrice + $inv->total_tax - $inv->total_discount;
+//
+//        // //cash
+//        $entryitemdata[] = array(
+//            'Entryitem' => array(
+//                'entry_id' => $insert_id,
+//                'dc' => 'C',
+//                'ledger_id' => $customer->ledger_account,
+//                //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
+//                'amount' => $amount_to_pay,
+//                'narration' => 'customer'
+//            )
+//        );
+//
+//        // cost of goods sold
+//        $entryitemdata[] = array(
+//            'Entryitem' => array(
+//                'entry_id' => $insert_id,
+//                'dc' => 'C',
+//                'ledger_id' => $customer->cogs_ledger,
+//                'amount' => $totalPurchasePrice,
+//                'narration' => 'cost of goods sold'
+//            )
+//        );
+//
+//        // inventory
+//        $entryitemdata[] = array(
+//            'Entryitem' => array(
+//                'entry_id' => $insert_id,
+//                'dc' => 'D',
+//                'ledger_id' => $warehouse_ledgers->inventory_ledger,
+//                'amount' => $totalPurchasePrice,
+//                'narration' => 'inventory'
+//            )
+//        );
+//
+//        // // sale account
+//        $entryitemdata[] = array(
+//            'Entryitem' => array(
+//                'entry_id' => $insert_id,
+//                'dc' => 'D',
+//                'ledger_id' => $customer->sales_ledger,
+//                'amount' => $totalSalePrice,
+//                'narration' => 'sale account'
+//            )
+//        );
+//
+//
+//        // //discount
+//        $entryitemdata[] = array(
+//            'Entryitem' => array(
+//                'entry_id' => $insert_id,
+//                'dc' => 'C',
+//                'ledger_id' => $customer->discount_ledger,
+//                'amount' => $inv->total_discount,
+//                'narration' => 'discount'
+//            )
+//        );
+//
+//        // //vat on sale
+//        $entryitemdata[] = array(
+//            'Entryitem' => array(
+//                'entry_id' => $insert_id,
+//                'dc' => 'D',
+//                'ledger_id' => $this->vat_on_sale,
+//                'amount' => $inv->total_tax,
+//                'narration' => 'vat on sale'
+//            )
+//        );
+//
+//        $total_invoice_entry = $inv->total_tax + $totalSalePrice + $totalPurchasePrice;
+//
+//
+//        $this->db->update('sma_accounts_entries', ['dr_total' => $total_invoice_entry, 'cr_total' => $total_invoice_entry], ['id' => $insert_id]);
+//
+//        //   /*Accounts Entry Items*/
+//        foreach ($entryitemdata as $row => $itemdata) {
+//            $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
+//        }
 
     }
 

@@ -331,7 +331,7 @@ $(document).ready(function (e) {
         item = rseitems[item_id];
         var qty = row.children().children('.rquantity').val(),
             product_option = row.children().children('.roption').val(),
-            unit_price = formatDecimal(row.children().children('.ruprice').val()),
+            unit_price = formatDecimal(row.children().children('.rucost').val()),
             discount = row.children().children('.rdiscount').val();
         if (item.options !== false) {
             $.each(item.options, function () {

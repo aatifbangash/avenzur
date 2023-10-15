@@ -106,3 +106,8 @@ ALTER TABLE `sma_accounts_entries` ADD `item_id` INT NOT NULL DEFAULT '0' AFTER 
 
 ============== 18/09/2023 START ===============
 ALTER TABLE `sma_rasd_notifications` ADD `invoice_no` VARCHAR(255) NULL AFTER `date`;
+
+
+15-10-2023
+=============
+ALTER TABLE `sma_accounts_entries` ADD `rsid` INT NULL AFTER `rid`;
