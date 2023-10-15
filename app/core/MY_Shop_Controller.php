@@ -40,20 +40,22 @@ class MY_Shop_Controller extends CI_Controller
                 $this->data['assets'] = base_url() . 'themes/default/shop/assets/';
             }
 
-            $country_details = $this->get_country_by_ip();
-            print_r($country_details);exit;
+            $country_code = $this->get_country_by_ip();
 
             if ($selected_currency = get_cookie('shop_currency', true)) {
                 $this->Settings->selected_currency = $selected_currency;
             } else {
                 //$this->Settings->selected_currency = $this->Settings->default_currency;
-                //$this->Settings->selected_currency = ;
+                $this->Settings->selected_currency = $country_code;
                 
             }
             $this->default_currency          = $this->shop_model->getCurrencyByCode($this->Settings->default_currency);
             $this->data['default_currency']  = $this->default_currency;
             $this->selected_currency         = $this->shop_model->getCurrencyByCode($this->Settings->selected_currency);
             $this->data['selected_currency'] = $this->selected_currency;
+
+            echo '<pre>';
+            print_r($this->data['selected_currency']);exit;
 
             $this->loggedIn             = $this->sma->logged_in();
             $this->data['loggedIn']     = $this->loggedIn;
