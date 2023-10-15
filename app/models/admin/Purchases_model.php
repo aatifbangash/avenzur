@@ -99,8 +99,6 @@ class Purchases_model extends CI_Model
                 $this->site->updateReference('rep');
             }
             foreach ($items as $item) {
-                $net_cost_sales = $item['net_cost_sales'];
-                unset($item['net_cost_sales']);
                 $item['purchase_id'] = $purchase_id;
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 $this->db->insert('purchase_items', $item);
@@ -142,6 +140,8 @@ class Purchases_model extends CI_Model
                 }
                 if ($data['status'] == 'received' || $data['status'] == 'returned') {
                     // Add the update sales cost price code here
+                    $net_cost_obj = $this->getAverageCost($item['batchno'], $item['product_code']);
+                    $net_cost_sales = $net_cost_obj[0]->cost_price;
                     $this->updateSalesCostPrice($net_cost_sales, $item['batchno'], $item['product_code']);
                     $this->updateAVCO(['product_id' => $item['product_id'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'batch' => $item['batchno'], 'cost' => $item['base_unit_cost'] ?? $item['real_unit_cost']]);
                 }
@@ -755,8 +755,6 @@ class Purchases_model extends CI_Model
 
             foreach ($items as $item) {
                 $item['purchase_id'] = $id;
-                $net_cost_sales = $item['net_cost_sales'];
-                unset($item['net_cost_sales']);
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 $this->db->insert('purchase_items', $item);
                 if ($data['status'] == 'received' || $data['status'] == 'partial') {
@@ -793,6 +791,8 @@ class Purchases_model extends CI_Model
                 // Code for serials end here
 
                 if ($data['status'] == 'received' || $data['status'] == 'partial') {
+                    $net_cost_obj = $this->getAverageCost($item['batchno'], $item['product_code']);
+                    $net_cost_sales = $net_cost_obj[0]->cost_price;
                     $this->updateSalesCostPrice($net_cost_sales, $item['batchno'], $item['product_code']);
                 }
             }
