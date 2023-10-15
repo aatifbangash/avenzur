@@ -46,8 +46,8 @@ class MY_Shop_Controller extends CI_Controller
             if ($selected_currency = get_cookie('shop_currency', true)) {
                 $this->Settings->selected_currency = $selected_currency;
             } else {
-                //$this->Settings->selected_currency = $this->Settings->default_currency;
-                $this->Settings->selected_currency = $country_details->currencycode;
+                $this->Settings->selected_currency = $this->Settings->default_currency;
+                //$this->Settings->selected_currency = $country_details->currencycode;
                 
             }
             
