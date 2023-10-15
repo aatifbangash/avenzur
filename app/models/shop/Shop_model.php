@@ -194,6 +194,10 @@ class Shop_model extends CI_Model
         return $this->db->get_where('companies', ['id' => $id])->row();
     }
 
+    public function getCountryByCode($code){
+        return $this->db->get_where('countries', ['code' => $code], 1)->row();
+    }
+
     public function getCurrencyByCode($code)
     {
         return $this->db->get_where('currencies', ['code' => $code], 1)->row();
