@@ -2023,15 +2023,14 @@ class Reports_model extends CI_Model
         
         LEFT JOIN(
         
-        SELECT product_id, SUM(movement_in_quantity) AS movement_in_quantity, AVG(movement_in_cost) AS movement_in_cost, AVG(movement_in_total_cost) AS movement_in_total_cost 
+        SELECT product_id, SUM(movement_in_quantity) AS movement_in_quantity, AVG(movement_in_cost) AS movement_in_cost
         
         FROM (
         
           SELECT
                     PI.product_id,
                     SUM(PI.quantity) AS movement_in_quantity,
-                    AVG(PI.net_unit_cost) AS movement_in_cost,
-                    round(sum(PI.net_unit_cost * PI.quantity), 2) AS movement_in_total_cost
+                    AVG(PI.net_unit_cost) AS movement_in_cost
                 FROM
                     sma_purchase_items PI
                 LEFT JOIN sma_purchases AS p
@@ -2049,7 +2048,6 @@ class Reports_model extends CI_Model
                     ri.product_id,
                     SUM(ri.quantity) AS movement_in_quantity,
                     AVG(ri.real_unit_price) AS movement_in_cost
-                    round(sum(ri.net_unit_cost * ri.quantity), 2) AS movement_in_total_cost
             FROM
                     sma_return_items ri
                 LEFT JOIN sma_returns AS r
@@ -2066,7 +2064,6 @@ class Reports_model extends CI_Model
             product_id,
             0 AS movement_in_quantity,
             0 AS movement_in_cost
-            0 As movement_in_total_cost
             FROM
             (
             SELECT
@@ -2121,14 +2118,12 @@ class Reports_model extends CI_Model
 
         $resultSet = array();
         if ($qry->num_rows() > 0) {
-            echo '<pre>';
             foreach (($qry->result()) as $row) {
-                print_r($row);
                 $resultSet[$row->product_id] = $row;
             }
         }
         //  echo $this->db->last_query();
-        echo '<pre>', print_r($resultSet), '</pre>';exit;
+        //  echo '<pre>', print_r($resultSet), '</pre>';
         return $resultSet;
 
     }
