@@ -2030,7 +2030,8 @@ class Reports_model extends CI_Model
           SELECT
                     PI.product_id,
                     SUM(PI.quantity) AS movement_in_quantity,
-                    AVG(PI.net_unit_cost) AS movement_in_cost
+                    AVG(PI.net_unit_cost) AS movement_in_cost,
+                    ROUND(SUM(pi.net_unit_cost * pi.quantity), 2) movement_in_total_cost
                 FROM
                     sma_purchase_items PI
                 LEFT JOIN sma_purchases AS p
@@ -2118,12 +2119,14 @@ class Reports_model extends CI_Model
 
         $resultSet = array();
         if ($qry->num_rows() > 0) {
+            echo '<pre>';
             foreach (($qry->result()) as $row) {
+                print_r($row);
                 $resultSet[$row->product_id] = $row;
             }
         }
         //  echo $this->db->last_query();
-        //  echo '<pre>', print_r($resultSet), '</pre>';
+        echo '<pre>', print_r($resultSet), '</pre>';exit;
         return $resultSet;
 
     }
