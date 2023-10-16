@@ -209,6 +209,8 @@ class Pay extends MY_Shop_Controller
     public function directpay($id)
     {
         $dp = $this->pay_model->getDirectPaySettings();
+        $currencySettings = $this->Settings->selected_currency;
+        $currencyObj = $this->pay_model->getCurrencyByCode($currencySettings);
 
             if($dp->activation == 1)
             {
@@ -227,7 +229,8 @@ class Pay extends MY_Shop_Controller
             }
 
             $ver = $dp->version;
-            $currencyCode = $dp->currencyISOCode;
+            //$currencyCode = $dp->currencyISOCode;
+            $currencyCode = $currencyObj->isocode;
             $paymentMsg = $dp->payment_message_id;
 
         if ($inv = $this->pay_model->getSaleByID($id)) {

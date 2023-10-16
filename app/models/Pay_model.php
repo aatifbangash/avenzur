@@ -53,6 +53,11 @@ class Pay_model extends CI_Model
         return $this->db->get_where('paypal', ['id' => 1])->row();
     }
 
+    public function getCurrencyByCode($code)
+    {
+        return $this->db->get_where('currencies', ['code' => $code], 1)->row();
+    }
+
     public function getSaleByID($id)
     {
         return $this->db->get_where('sales', ['id' => $id])->row();
