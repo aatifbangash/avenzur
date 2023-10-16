@@ -27,8 +27,8 @@ class Returns_supplier_model extends CI_Model
                 if ($item['product_type'] == 'standard') {
                     $clause = ['product_id' => $item['product_id'], 'warehouse_id' => $item['warehouse_id'], 'batchno' => $item['batch_no'], 'purchase_id' => null, 'transfer_id' => null, 'option_id' => $item['option_id']];
                     //TODO will check later
-                    $this->site->setPurchaseItem($clause, $item['quantity']);
-                    $this->site->syncQuantityReturn($return_id, $item['product_id']);
+                    $this->site->setPurchaseItem($clause, -1 * $item['quantity'], 'supplier');
+                    $this->site->syncQuantityReturnSupplier($return_id, $item['product_id']);
                     
                 } elseif ($item['product_type'] == 'combo') {
                     $combo_items = $this->site->getProductComboItems($item['product_id']);
