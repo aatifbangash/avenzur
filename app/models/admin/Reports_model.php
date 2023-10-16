@@ -2049,6 +2049,7 @@ class Reports_model extends CI_Model
                     ri.product_id,
                     SUM(ri.quantity) AS movement_in_quantity,
                     AVG(ri.real_unit_price) AS movement_in_cost
+                    round(sum(ri.net_unit_cost * ri.quantity), 2) AS movement_in_total_cost
             FROM
                     sma_return_items ri
                 LEFT JOIN sma_returns AS r
@@ -2065,6 +2066,7 @@ class Reports_model extends CI_Model
             product_id,
             0 AS movement_in_quantity,
             0 AS movement_in_cost
+            0 As movement_in_total_cost
             FROM
             (
             SELECT
