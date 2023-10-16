@@ -258,7 +258,7 @@ class Pay extends MY_Shop_Controller
                 $quantity =$inv->total_items;
                 $themeId = '1000000001';
                 $currencyCode = $currencyCode;//'682';
-                $totalAmount = intval(number_format($inv->grand_total, 2,'',''));
+                $totalAmount = intval(number_format($this->sma->convertMoney($inv->grand_total), 2,'',''));
                 $channel = 0; //E-Commerce channel in STS
                 $messageId = $paymentMsg;//'1'; 
                 
