@@ -1962,6 +1962,7 @@ class Reports_model extends CI_Model
                     s.id = si.sale_id
                 WHERE
                     DATE(s.date) BETWEEN '$start_date' AND '$end_date' 
+                    AND s.sale_status = 'completed'
                 GROUP BY
                     si.product_id
         
@@ -2037,6 +2038,7 @@ class Reports_model extends CI_Model
                     p.id = PI.purchase_id
                 WHERE
                     DATE(p.date) BETWEEN '$start_date' AND '$end_date' AND p.grand_total > 0
+                    AND PI.purchase_item_id IS NULL AND p.status = 'received'
                 GROUP BY
                     PI.product_id
         
