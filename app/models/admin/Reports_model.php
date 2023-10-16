@@ -2031,7 +2031,7 @@ class Reports_model extends CI_Model
                     PI.product_id,
                     SUM(PI.quantity) AS movement_in_quantity,
                     AVG(PI.net_unit_cost) AS movement_in_cost,
-                    ROUND(SUM(pi.net_unit_cost * pi.quantity), 2) movement_in_total_cost
+                    ROUND(SUM(pi.net_unit_cost * pi.quantity), 2) AS movement_in_total_cost
                 FROM
                     sma_purchase_items PI
                 LEFT JOIN sma_purchases AS p
