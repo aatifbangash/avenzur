@@ -1940,21 +1940,24 @@ class Reports_model extends CI_Model
         prd.name AS product_name, 
         movement_out.movement_out_quantity,
         movement_out.movement_out_cost,
+        movement_out.total_movement_out_cost,
         movement_in.movement_in_quantity,
-        movement_in.movement_in_cost
+        movement_in.movement_in_cost,
+        movement_in.total_movement_in_cost
         
         FROM 
         sma_products AS prd
     
         LEFT JOIN (
         
-        SELECT product_id, SUM(movement_out_quantity) AS movement_out_quantity, AVG(movement_out_cost) AS movement_out_cost
+        SELECT product_id, SUM(movement_out_quantity) AS movement_out_quantity, AVG(movement_out_cost) AS movement_out_cost, total_movement_out_cost
         
         FROM (
         
             SELECT product_id,
                     SUM(si.quantity) AS movement_out_quantity,
-                    AVG(si.net_unit_price) AS movement_out_cost
+                    AVG(si.net_unit_price) AS movement_out_cost,
+                    SUM(si.quantity * si.net_unit_price) AS total_movement_out_cost
                 FROM
                     sma_sale_items si
                 LEFT JOIN sma_sales AS s
@@ -1971,7 +1974,8 @@ class Reports_model extends CI_Model
                 SELECT
                     PI.product_id,
                     SUM(abs(PI.quantity)) AS movement_out_quantity,
-                    AVG(PI.net_unit_cost) AS movement_out_cost
+                    AVG(PI.net_unit_cost) AS movement_out_cost,
+                    0 AS total_movement_out_cost
                 FROM
                     sma_purchase_items PI
                 LEFT JOIN sma_purchases AS p
@@ -1985,7 +1989,8 @@ class Reports_model extends CI_Model
                 UNION ALL 
         
                 SELECT product_id, 0 AS movement_out_quantity, 
-                0 AS movement_out_cost
+                0 AS movement_out_cost,
+                0 AS total_movement_out_cost
                 FROM
                 (
                     SELECT trnItm.product_id, trnItm.quantity, trnItm.net_unit_cost
@@ -2023,14 +2028,15 @@ class Reports_model extends CI_Model
         
         LEFT JOIN(
         
-        SELECT product_id, SUM(movement_in_quantity) AS movement_in_quantity, AVG(movement_in_cost) AS movement_in_cost
+        SELECT product_id, SUM(movement_in_quantity) AS movement_in_quantity, AVG(movement_in_cost) AS movement_in_cost, total_movement_in_cost
         
         FROM (
         
           SELECT
                     PI.product_id,
                     SUM(PI.quantity) AS movement_in_quantity,
-                    AVG(PI.net_unit_cost) AS movement_in_cost
+                    AVG(PI.net_unit_cost) AS movement_in_cost,
+                    SUM(PI.quantity * PI.net_unit_cost) AS total_movement_in_cost
                 FROM
                     sma_purchase_items PI
                 LEFT JOIN sma_purchases AS p
@@ -2047,7 +2053,8 @@ class Reports_model extends CI_Model
             SELECT
                     ri.product_id,
                     SUM(ri.quantity) AS movement_in_quantity,
-                    AVG(ri.real_unit_price) AS movement_in_cost
+                    AVG(ri.real_unit_price) AS movement_in_cost,
+                    0 AS total_movement_in_cost
             FROM
                     sma_return_items ri
                 LEFT JOIN sma_returns AS r
@@ -2063,7 +2070,8 @@ class Reports_model extends CI_Model
         SELECT
             product_id,
             0 AS movement_in_quantity,
-            0 AS movement_in_cost
+            0 AS movement_in_cost,
+            0 AS total_movement_in_cost
             FROM
             (
             SELECT
