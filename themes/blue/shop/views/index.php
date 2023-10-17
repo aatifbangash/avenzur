@@ -10,24 +10,26 @@
         </div>
         <div class="carousel-inner">
             <?php
+                $sr = 0;
                 foreach ($slider as $slide) {
                     if (!empty($slide->image)) {
                         ?>
-                            <div class="carousel-item active">
+                            <div class="carousel-item <?= ($sr == 0 ? ' active' : ''); ?>">
                                 <img src="<?= base_url('assets/uploads/' . $slide->image); ?>" class="d-block w-100" alt="...">
                             </div>
                         <?php
                     }
+                    $sr++;
                 }
             ?>
         </div>
         <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true" style="background-image: url('./images/arrowleft.png')"></span>
+        <span class="carousel-control-prev-icon" aria-hidden="true" style="background-image: url('<?= base_url('assets/images/arrowleft.png'); ?>')"></span>
         <span class="visually-hidden">Previous</span>
         </button>
         <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
         <span class="arrowRight">
-        <span class="carousel-control-next-icon" aria-hidden="true" style="background-image: url('./images/arrowright.png');"></span>
+        <span class="carousel-control-next-icon" aria-hidden="true" style="background-image: url('<?= base_url('assets/images/arrowright.png'); ?>');"></span>
         <span class="visually-hidden">Next</span>
         </span>
         </button>
