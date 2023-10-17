@@ -1990,7 +1990,7 @@ class Reports_model extends CI_Model
         
                 SELECT product_id, 0 AS movement_out_quantity, 
                 0 AS movement_out_cost,
-                0 0 AS total_movement_out_cost
+                0 AS total_movement_out_cost
                 FROM
                 (
                     SELECT trnItm.product_id, trnItm.quantity, trnItm.net_unit_cost
