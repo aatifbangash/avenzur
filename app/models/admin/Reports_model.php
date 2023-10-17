@@ -2123,7 +2123,7 @@ class Reports_model extends CI_Model
             }
         }
         //  echo $this->db->last_query();
-        //  echo '<pre>', print_r($resultSet), '</pre>';
+        echo '<pre>', print_r($resultSet), '</pre>';exit;
         return $resultSet;
 
     }
