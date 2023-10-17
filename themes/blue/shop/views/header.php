@@ -59,7 +59,7 @@
         <div class="row  align-items-center justify-content-between py-3">
 
           <div class="col-md-2  mb-2">
-            <a class="navbar-brand" href="#"><img src="./images/logo.png" alt="logo"></a>
+            <a class="navbar-brand" href="#"><img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="<?= $shop_settings->shop_name; ?>"></a>
           </div>
           <div class="col-md-7">
             <form class="d-flex search-bar" role="search">
