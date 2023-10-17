@@ -2127,11 +2127,12 @@ class Reports_model extends CI_Model
         $resultSet = array();
         if ($qry->num_rows() > 0) {
             foreach (($qry->result()) as $row) {
+                $row->movement_in_cost = ($row->total_movement_in_cost / $row->movement_in_quantity);
                 $resultSet[$row->product_id] = $row;
             }
         }
         //  echo $this->db->last_query();
-        echo '<pre>', print_r($resultSet), '</pre>';exit;
+        //echo '<pre>', print_r($resultSet), '</pre>';exit;
         return $resultSet;
 
     }
