@@ -9,13 +9,17 @@
         
         </div>
         <div class="carousel-inner">
-        <div class="carousel-item active">
-            <img src="./images/herobner1.jpg" class="d-block w-100" alt="...">
-        </div>
-        <div class="carousel-item">
-            <img src="./images/herobner2.jpg" class="d-block w-100" alt="...">
-        </div>
-        
+            <?php
+                foreach ($slider as $slide) {
+                    if (!empty($slide->image)) {
+                        ?>
+                            <div class="carousel-item active">
+                                <img src="<?= base_url('assets/uploads/' . $slide->image); ?>" class="d-block w-100" alt="...">
+                            </div>
+                        <?php
+                    }
+                }
+            ?>
         </div>
         <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
         <span class="carousel-control-prev-icon" aria-hidden="true" style="background-image: url('./images/arrowleft.png')"></span>
