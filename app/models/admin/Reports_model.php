@@ -1943,7 +1943,7 @@ class Reports_model extends CI_Model
         movement_out.total_movement_out_cost,
         movement_in.movement_in_quantity,
         movement_in.movement_in_cost,
-        movement_in.total_movement_in_cost,
+        movement_in.total_movement_in_cost
         
         FROM 
         sma_products AS prd
@@ -2053,7 +2053,7 @@ class Reports_model extends CI_Model
             SELECT
                     ri.product_id,
                     SUM(ri.quantity) AS movement_in_quantity,
-                    AVG(ri.real_unit_price) AS movement_in_cost,
+                    AVG(ri.real_unit_price) AS movement_in_cost
                     0 AS total_movement_in_cost
             FROM
                     sma_return_items ri
