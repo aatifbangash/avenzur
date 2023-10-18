@@ -147,7 +147,7 @@ class Transfers_model extends CI_Model
                 } else {
                     $this->db->insert('transfer_items', $item);
                 }
-                echo '<pre>';print_r($item);exit;
+
                 // Code for serials here
                 $serials_quantity = $item['quantity'];
                 $serials_gtin = $item['product_code'];
@@ -192,7 +192,6 @@ class Transfers_model extends CI_Model
             }
 
         }
-        echo 'After the block...';exit;
         $this->db->trans_complete();
         if ($this->db->trans_status() === false) {
             log_message('error', 'An errors has been occurred while adding the sale (Add:Transfers_model.php)');
