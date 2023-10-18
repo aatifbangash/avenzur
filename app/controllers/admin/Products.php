@@ -956,7 +956,7 @@ class Products extends MY_Controller
         }
         $this->form_validation->set_rules('weight', lang('weight'), 'numeric');
         $this->form_validation->set_rules('product_image', lang('product_image'), 'xss_clean');
-        $this->form_validation->set_rules('digital_file', lang('digital_file'), 'xss_clean');
+        //$this->form_validation->set_rules('digital_file', lang('digital_file'), 'xss_clean');
         //$this->form_validation->set_rules('userfile', lang('product_gallery_images'), 'xss_clean');
 
         if ($this->form_validation->run('products/add') == true) {
