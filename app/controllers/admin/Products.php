@@ -1171,7 +1171,10 @@ class Products extends MY_Controller
                 $config = null;
             }
 
+            echo 'Till here we are fine...';
+
             if ($_FILES['userfile']['name'][0] != '') {
+                echo 'Here in gallery images';exit;
                 $config['upload_path']   = $this->upload_path;
                 $config['allowed_types'] = $this->image_types;
                 $config['max_size']      = $this->allowed_file_size;
@@ -1236,6 +1239,7 @@ class Products extends MY_Controller
                 }
                 $config = null;
             } else {
+                echo 'No gallery images';exit;
                 $photos = null;
             }
             $data['quantity'] = $wh_total_quantity ?? 0;
