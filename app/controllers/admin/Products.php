@@ -960,7 +960,7 @@ class Products extends MY_Controller
         $this->form_validation->set_rules('userfile', lang('product_gallery_images'), 'xss_clean');
 
         if ($this->form_validation->run('products/add') == true) {
-            
+            echo 'Here in add products...';exit;
             $product_countries = '';
             foreach ($this->input->post('cf1') as $pcountry)
             {
