@@ -133,7 +133,6 @@ class Transfers_model extends CI_Model
         $status = $data['status'];
         if ($this->db->insert('transfers', $data)) {
             $transfer_id = $this->db->insert_id();
-            echo 'Transfer Id: '.$transfer_id;exit;
             if ($this->site->getReference('to') == $data['transfer_no']) {
                 $this->site->updateReference('to');
             }
@@ -148,7 +147,7 @@ class Transfers_model extends CI_Model
                 } else {
                     $this->db->insert('transfer_items', $item);
                 }
-
+                echo '<pre>';print_r($item);exit;
                 // Code for serials here
                 $serials_quantity = $item['quantity'];
                 $serials_gtin = $item['product_code'];
