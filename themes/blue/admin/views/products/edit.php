@@ -815,7 +815,7 @@ if (!empty($variants)) {
             for (var x = 0; x < result.length; x++) {
                 var fle = result[x];
                 console.log(fle);
-                for (var i = 0; i <= result.length; i++) {
+                for (var i = 0; i < result.length; i++) {
                     var img = new Image();
                     img.onload = (function (value) {
                         return function () {
