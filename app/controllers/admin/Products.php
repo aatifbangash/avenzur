@@ -956,11 +956,11 @@ class Products extends MY_Controller
         }
         $this->form_validation->set_rules('weight', lang('weight'), 'numeric');
         $this->form_validation->set_rules('product_image', lang('product_image'), 'xss_clean');
-        //$this->form_validation->set_rules('digital_file', lang('digital_file'), 'xss_clean');
-        //$this->form_validation->set_rules('userfile', lang('product_gallery_images'), 'xss_clean');
+        $this->form_validation->set_rules('digital_file', lang('digital_file'), 'xss_clean');
+        $this->form_validation->set_rules('userfile', lang('product_gallery_images'), 'xss_clean');
 
         if ($this->form_validation->run('products/add') == true) {
-            echo 'Here in add products...';exit;
+            
             $product_countries = '';
             foreach ($this->input->post('cf1') as $pcountry)
             {
@@ -1033,7 +1033,6 @@ class Products extends MY_Controller
             $update_variants    = [];
             $this->load->library('upload');
             if ($this->input->post('type') == 'standard') {
-                echo 'Here in standard';exit;
                 if ($product_variants = $this->products_model->getProductOptions($id)) {
                     foreach ($product_variants as $pv) {
                         $update_variants[] = [
@@ -1078,10 +1077,8 @@ class Products extends MY_Controller
             }
 
             if ($this->input->post('type') == 'service') {
-                echo 'Here in service';exit;
                 $data['track_quantity'] = 0;
             } elseif ($this->input->post('type') == 'combo') {
-                echo 'Here in combo';exit;
                 $total_price = 0;
                 $c           = sizeof($_POST['combo_item_code']) - 1;
                 for ($r = 0; $r <= $c; $r++) {
@@ -1100,7 +1097,6 @@ class Products extends MY_Controller
                 }
                 $data['track_quantity'] = 0;
             } elseif ($this->input->post('type') == 'digital') {
-                echo 'Here in digital';exit;
                 if ($this->input->post('file_link')) {
                     $data['file'] = $this->input->post('file_link');
                 }
@@ -1126,7 +1122,6 @@ class Products extends MY_Controller
             if (!isset($items)) {
                 $items = null;
             }
-            echo 'Till 4';exit;
             if ($_FILES['product_image']['size'] > 0) {
                 $config['upload_path']   = $this->upload_path;
                 $config['allowed_types'] = $this->image_types;
@@ -1176,10 +1171,7 @@ class Products extends MY_Controller
                 $config = null;
             }
 
-            echo 'Till here we are fine...';
-
             if ($_FILES['userfile']['name'][0] != '') {
-                echo 'Here in gallery images';exit;
                 $config['upload_path']   = $this->upload_path;
                 $config['allowed_types'] = $this->image_types;
                 $config['max_size']      = $this->allowed_file_size;
@@ -1244,7 +1236,6 @@ class Products extends MY_Controller
                 }
                 $config = null;
             } else {
-                echo 'No gallery images';exit;
                 $photos = null;
             }
             $data['quantity'] = $wh_total_quantity ?? 0;
