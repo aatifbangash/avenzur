@@ -19,8 +19,8 @@ class Products extends MY_Controller
         $this->digital_upload_path = 'files/';
         $this->upload_path         = 'assets/uploads/';
         $this->thumbs_path         = 'assets/uploads/thumbs/';
-        $this->image_types         = 'gif|jpg|jpeg|png|tif';
-        $this->digital_file_types  = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt';
+        $this->image_types         = 'gif|jpg|jpeg|png|tif|webp';
+        $this->digital_file_types  = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt|webp';
         $this->allowed_file_size   = '1024000';
         $this->popup_attributes    = ['width' => '900', 'height' => '600', 'window_name' => 'sma_popup', 'menubar' => 'yes', 'scrollbars' => 'yes', 'status' => 'no', 'resizable' => 'yes', 'screenx' => '0', 'screeny' => '0'];
     }
@@ -30,6 +30,30 @@ class Products extends MY_Controller
         $imgArr = explode(",",$images);
 
         $this->products_model->updateProductImages($imgArr);
+    }
+
+    public function convertImagesThumbnails(){
+        $images = "23f464d2ca3d69f8f160003dcb22c11b.jpg,73d17cc2bdc0a0e3906469fc4842c62f.jpeg,1b6669198a4df7bcd386573e6a011ba5.jpeg,082f4eb07d3ec5686e196e36bf240f77.jpeg,3e83e39bc7b2df23f090e737d38abef4.jpeg,1abacbdb5e6b1815b428008d7334a9a5.jpeg,84d9ec341c62b8f443b9cdaa1f49a770.jpeg,acbb8bfe2179ea03ad66dbb086c8f72a.jpeg,da8b7250b5ca3c919bdbd0a444c3f9c9.jpeg,a67dd40afc0aeef53a1222cb80c01b27.jpeg,9b0ec372041c805dada856cd0ba83438.jpeg,2e2b4769f47726f01ee1ec487b5d5206.jpeg,121019357.jpg,121019397.jpg,121019395.jpg,121019247.jpg,121019379.jpg,121019289.jpg,121018812.jpg,121018815.jpg,121018811.jpg,121019238.jpg,121018813.jpg,121018445.jpg,121018439.jpg,121018440.jpg,121020653.jpg,121020665.jpg,121020664.jpg,121020661.jpg,121017353.jpg,121018192.jpg,121020652.jpg,121017354.jpg,121020651.jpg,121020656.jpg,121020650.jpg,121017300.jpg,121016350.jpg,142000018.jpg,121015629.jpg,121016545.jpg,142000026.jpg,121005959.jpg,121019636.jpg,121021031.jpg,121018302.jpg,121018936.jpg,121019215.jpg,121016424.jpg,121019217.jpg,121017317.jpg,121020918.jpg,121019642.jpg,121005288.jpg,121004766.jpg,143000349.jpg,121017723.jpg,121018789.jpg,121004326.jpg,121017711.jpg,143000301.jpg,121013897.jpg,121012967.jpg,131000005.jpg,131000224.jpg,121012563.jpg,121002237.jpg,121016365.jpg,121000237.jpg,121002190.jpg,121015829.jpg,121018761.jpg,121019061.jpg,121017751.jpg,121017154.jpg,121018483.jpg,121017014.jpg,121017779.jpg,121016783.jpg,131000049.jpg,121019754.jpg,121020774.jpg,121020722.jpg,121019143.jpg,121019146.jpg,121021028.jpg,121019213.jpg,121018788.jpg,121018201.jpg,121020003.jpg,121020762.jpg,121017524.jpg,121021016.jpg,121021022.jpg,121020154.jpg,121019708.jpg,121019097.jpg,121017787.jpg,121017526.jpg,121015797.jpg,121014506.jpg,121019756.jpg,121011337.jpg,121018882.jpg,121013745.jpg,121019802.jpg,121021013.jpg,121019622.jpg,121004780.jpg,121004824.jpg,121011052.jpg,121011051.jpg,121018751.jpg,121020838.jpg,121021005.jpg,121021035.jpg,121017310.jpg,121020002.jpg,121014960.jpg,121001580.jpg,121020834.jpg,121019741.jpg,121020835.jpg,121002526.jpg,121014092.jpg,121002546.jpg,121014081.jpg,111001698.jpg,111003332.jpg,121017616.jpg,121018498.jpg,121020726.jpg,121018883.jpg,121019155.jpg,121020625.jpg,111004003.jpg,111004178.jpg,111002372.jpg,111004444.jpg,111002659.jpg,111004398.jpg,121020809.jpg,111003308.jpg,111003893.jpg,111004390.jpg,ad7dfd0cf50d6f6dddd83f2f021be8ee.jpg,111004028.jpg,111004378.jpg,111004450.jpg,111004213.jpg,111001040.jpg,111003744.jpg,111004177.jpg,121020919.jpg,111003816.jpg,111001419.jpg,111004401.jpg,111004402.jpg,111004380.jpg,151001470.jpg,121019558.jpg,151000530.jpg,151001776.jpg,151001777.jpg,121020898.jpg,121020904.jpg,121020910.jpg,121021087.jpg,121021088.jpg,121021001.jpg,121020899.jpg,121019219.jpg,121020905.jpg,121020921.jpg,121020669.jpg,121020670.jpg,121020673.jpg";
+ 
+        $this->load->library('image_lib');
+        $imgArr = explode(",",$images);
+
+        foreach ($imgArr as $imageFilename) {
+            $config = null;
+            $config['image_library']  = 'gd2';
+            $config['maintain_ratio'] = true;
+            $config['width']          = $this->Settings->twidth;
+            $config['height']         = $this->Settings->theight;
+            $data['image'] = $imageFilename;
+            $config['source_image']   = $this->upload_path . $imageFilename;
+            $config['new_image']      = $this->thumbs_path . $imageFilename;
+
+            $this->image_lib->clear();
+            $this->image_lib->initialize($config);
+            if (!$this->image_lib->resize()) {
+                echo $this->image_lib->display_errors();
+            }
+        }
     }
 
     /* ------------------------------------------------------- */
