@@ -286,7 +286,7 @@
                                                 <div class="product alt ">
                                                     <div class="product-top">
                                                         <div class="image">
-                                                            <a href="<?= site_url('product/' . $fp->slug); ?>">
+                                                            <a href="<?= site_url('product/' . $sp->slug); ?>">
                                                                 <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" alt="" class="img-responsive">
                                                             </a>
                                                         </div>
@@ -402,7 +402,7 @@
                                                 <div class="product alt ">
                                                     <div class="product-top">
                                                         <div class="image">
-                                                            <a href="<?= site_url('product/' . $fp->slug); ?>">
+                                                            <a href="<?= site_url('product/' . $sp->slug); ?>">
                                                                 <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" alt="" class="img-responsive">
                                                             </a>
                                                         </div>
