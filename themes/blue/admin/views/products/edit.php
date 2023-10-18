@@ -808,10 +808,13 @@ if (!empty($variants)) {
         var _URL = window.URL || window.webkitURL;
         $("input#images").on('change.bs.fileinput', function () {
             var ele = document.getElementById($(this).attr('id'));
+            console.log(ele);
             var result = ele.files;
+            console.log(result);
             $('#img-details').empty();
             for (var x = 0; x < result.length; x++) {
                 var fle = result[x];
+                console.log(fle);
                 for (var i = 0; i <= result.length; i++) {
                     var img = new Image();
                     img.onload = (function (value) {
@@ -819,6 +822,7 @@ if (!empty($variants)) {
                             ctx[value].drawImage(result[value], 0, 0);
                         }
                     })(i);
+                    console.log(result[i]);
 
                     img.src = 'images/' + result[i];
                 }
