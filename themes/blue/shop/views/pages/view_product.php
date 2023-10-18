@@ -158,7 +158,7 @@
                                 <div class="row" style="padding:10px 10px 10px 10px !important;">
                                     <div class="col-md-8">    
                                     
-                                        <?= $product->details ? '<div class=""><div class="">' . $product->details . '</div></div>' : ''; ?>
+                                        <?= $product->product_details ? '<div class=""><div class="">' . $product->product_details . '</div></div>' : ''; ?>
                                     </div>
                                     <div class="col-md-4" >
                                          <h2>Additional Information</h2>

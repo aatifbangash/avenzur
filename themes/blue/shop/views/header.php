@@ -1,211 +1,517 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<!doctype html>
-<html lang="en">
-  <head>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?><!DOCTYPE html>
+<html>
+<head>
     <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Avenzur</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;1,100;1,300;1,400;1,700&family=Manrope:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="<?= $assets; ?>css/ecommerce-main.css" rel="stylesheet">
-</head>
-  <body>
-    <!-- top bar -->
-    <section class="top-bar py-1 ">
-        <div class="container container-max-width">
-            <div class="row align-items-center">
-              <div class="col-md-6">
-                Avenzur will deliver fast with safe packing in all over the country
-              </div>
-              <div class="col-md-6 d-flex justify-content-end ">
-                <div class="dropdown me-2">
-                    <a class="btn  dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-globe-americas me-1"></i> EN <i class="bi bi-chevron-down ms-2"></i>
-                    </a>
-                  
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">EN</a></li>
-                      <li><a class="dropdown-item" href="#">AR</a></li>
-                      
-                      
-                    </ul>
-                </div>
-                <div class="dropdown me-2">
-                    <a class="btn  dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      SAR <i class="bi bi-chevron-down ms-2"></i>
-                    </a>
-                  
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">SAR</a></li>
-                      <li><a class="dropdown-item" href="#">USD</a></li>
-                      <li><a class="dropdown-item" href="#">AED</a></li>
-                      
-                    </ul>
-                </div>
-                  <button type="button" class="btn text-white px-0"><i class="bi bi-person-fill"></i>&nbsp; My Account</button>
-              </div>
-              
-            </div>
-          </div>
-    </section>
-    <!-- top bar end -->
-
-    <!-- logo search bar -->
-    <section class="logo-searchBar">
-      <div class="container container-max-width">
-        <div class="row  align-items-center justify-content-between py-3">
-
-          <div class="col-md-2  mb-2">
-            <a class="navbar-brand" href="#"><img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="<?= $shop_settings->shop_name; ?>"></a>
-          </div>
-          <div class="col-md-7">
-            <form class="d-flex search-bar" role="search">
-              
-            <select class="form-select w-auto bg-transparent border-0 ps-4 categorySelect" aria-label="Default select">
-              <option selected>Category</option>
-              <option value="Medical">Medical</option>
-              <option value="Skin Care">Skin Care</option>
-              <option value="Suppliments">Suppliments</option>
-            </select>
-              <input class="form-control border-0 bg-transparent py-3" type="search" placeholder="What are you looking for?" aria-label="Search">
-              <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
-            </form>
-          </div>
-          <div class="col-md-2 ps-md-0">
-              <div class="d-flex align-items-center">
-                <h3 class="me-2 my-0">
-                  <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M23.1 6.29999C26.4417 6.29999 29.6466 7.62748 32.0096 9.99044C34.3725 12.3534 35.7 15.5583 35.7 18.9" stroke="#2B9B48" stroke-width="2.52" stroke-miterlimit="10" stroke-linecap="square"/>
-                    <path d="M29.4 18.9C29.4 17.2291 28.7363 15.6267 27.5548 14.4452C26.3733 13.2638 24.7709 12.6 23.1 12.6" stroke="#2B9B48" stroke-width="2.52" stroke-miterlimit="10" stroke-linecap="square"/>
-                    <path d="M25.9276 24.4576L23.5315 27.4533C19.8205 25.2721 16.7279 22.1795 14.5467 18.4684L17.5423 16.0723C17.8933 15.7912 18.1413 15.4019 18.2476 14.965C18.354 14.5281 18.3128 14.0683 18.1303 13.6573L15.4003 7.50959C15.2046 7.06855 14.8585 6.71138 14.4239 6.50177C13.9893 6.29215 13.4943 6.24371 13.0273 6.36509L7.82984 7.71329C7.34477 7.83993 6.92302 8.14013 6.64454 8.55699C6.36605 8.97385 6.25018 9.47839 6.31889 9.97499C7.23096 16.4701 10.2328 22.4916 14.8706 27.1294C19.5083 31.7672 25.5299 34.769 32.025 35.6811C32.5214 35.7495 33.0257 35.6335 33.4423 35.3551C33.859 35.0766 34.159 34.655 34.2856 34.1701L35.6338 28.9726C35.7547 28.506 35.7062 28.0117 35.4968 27.5775C35.2874 27.1434 34.9308 26.7976 34.4904 26.6017L28.3426 23.8717C27.9319 23.6891 27.4722 23.6475 27.0354 23.7535C26.5985 23.8595 26.209 24.1071 25.9276 24.4576Z" stroke="#2B9B48" stroke-width="2.52" stroke-miterlimit="10" stroke-linecap="square"/>
-                    </svg>
-                    
-                </h3>
-                <div>
-                  <p class="m-0  fw-bold">Sale & Service Support</p>
-                  <h5 class="fw-bold">0112133551</h5>
-                </div>
-              </div>
-          </div>
-
-        </div>
-      </div>
-        
-    </section>
+    <meta name="google-site-verification" content="UfVhqcmiHjWujvtylPvb9EH_m0yocS-R784juDf-Rcg" />
+    <script type="text/javascript">if (parent.frames.length !== 0) { top.location = '<?= site_url(); ?>'; }</script>
+    <title><?= $page_title; ?></title>
+    <meta name="description" content="<?= $page_desc; ?>">
+    <link rel="shortcut icon" href="<?= $assets; ?>images/edited.svg">
     
-    <!-- logo search bar end -->
+    <link href="<?= $assets; ?>css/libs.min.css" rel="stylesheet">
+    
+    <link href="<?= $assets; ?>css/styles.min.css" rel="stylesheet">
+    <link href="<?= base_url('assets/custom/shop.css') ?>" rel="stylesheet"/>
+    
+    <meta property="og:url" content="<?= isset($product) && !empty($product) ? site_url('product/' . $product->slug) : site_url(); ?>" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="<?= $page_title; ?>" />
+    <meta property="og:description" content="<?= $page_desc; ?>" />
+    <link href="<?= $assets; ?>css/jquery-ui.css?<?php echo time(); ?>" rel="stylesheet">
+    <meta property="og:image" content="<?= isset($product) && !empty($product) ? base_url('assets/uploads/' . $product->image) : base_url('assets/uploads/logos/' . $shop_settings->logo); ?>" />
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+   
+     <link href="https://fonts.googleapis.com/css?family=Montserrat:700%2C500%2C400%7CRoboto:400&amp;display=swap" rel="stylesheet" property="stylesheet" media="all" type="text/css">
 
-    <!-- menu bar -->
-    <section>
-      <div class="container container-max-width main-menuTab">
-        <div class="row align-items-center">
-          <div class="col-md-2 col-sm-2 mob-catS">
-            <button class="btn all-categoryBtn d-flex align-items-center justify-content-between" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
-              <i class="bi bi-filter-left "></i> All Category
-            </button>
-            
-            <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
-              <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="offcanvasExampleLabel">Categories</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-              </div>
-              <div class="offcanvas-body">           
-            
-                <ol class="list-group list-group-numbered">
-                  <li class="list-group-item d-flex justify-content-between align-items-start">
-                    <div class="ms-2 me-auto">
-                      <div class="fw-bold">Subheading</div>
-                      Content for list item
-                    </div>
-                    <span class="badge bg-primary rounded-pill">14</span>
-                  </li>
-                  <li class="list-group-item d-flex justify-content-between align-items-start">
-                    <div class="ms-2 me-auto">
-                      <div class="fw-bold">Subheading</div>
-                      Content for list item
-                    </div>
-                    <span class="badge bg-primary rounded-pill">14</span>
-                  </li>
-                  <li class="list-group-item d-flex justify-content-between align-items-start">
-                    <div class="ms-2 me-auto">
-                      <div class="fw-bold">Subheading</div>
-                      Content for list item
-                    </div>
-                    <span class="badge bg-primary rounded-pill">14</span>
-                  </li>
-                </ol>
-                
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6 col-sm-2 mob-menu">
-            <nav class="navbar navbar-expand-lg  container-max-width">
-              <div class="container-fluid">
-                
-                <div class="menu-av ">
-                  
-                  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                  </button>
-                  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                      <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#">Home</a>
-                      </li>
-                      <li class="nav-item">
-                        <a class="nav-link"  href="#">Products</a>
-                      </li>
-                      <li class="nav-item">
-                        <a class="nav-link"  href="#">About</a>
-                      </li>
+
+<!-- Css for country code -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/css/intlTelInput.min.css" />
+    <link rel="stylesheet" href="<?= $assets; ?>build/css/intlTelInput.css">
+  <!-- JS for country code -->
+  <!--<script src="<?= $assets; ?>build/js/intlTelInput.min.js"></script>-->
+    <script src="<?= $assets; ?>build/js/intlTelInput.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/intlTelInput.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/utils.min.js"></script>
+  <!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-0GGN9ELJJG"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-0GGN9ELJJG'); </script>
+  <script type="text/javascript" src="https://cdn.weglot.com/weglot.min.js"></script>
+<script>
+    Weglot.initialize({
+        api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55'
+    });
+
+    var currentLanguage = Weglot.getCurrentLang();
+    if (currentLanguage === 'en') {
+        // Change banner for English
+        alert('Current Language: '+currentLanguage);
+        
+    } else if (currentLanguage === 'fr') {
+        // Change banner for French
+        alert('Current Language: '+currentLanguage);
+    }
+
+    Weglot.on("languageChanged", function(newLang, prevLang) {
+        console.log("The language on the page just changed to (code): " + newLang)
+        console.log("The full name of the language is: " + Weglot.getLanguageName(newLang))
+    })
+</script>
+
+<script>
+        (function(w,d,s,r,n){w.TrustpilotObject=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};
+            a=d.createElement(s);a.async=1;a.src=r;a.type='text/java'+s;f=d.getElementsByTagName(s)[0];
+            f.parentNode.insertBefore(a,f)})(window,document,'script', 'https://invitejs.trustpilot.com/tp.min.js', 'tp');
+            tp('register', 'Odd7uxAMlhQd3OTz');
+</script>
+
+<script> 
+	document.addEventListener('DOMContentLoaded', function() {
+		const trustpilot_invitation = {
+   			recipientEmail: 'john@gmail.com',
+   			recipientName: 'John',
+   			referenceId: 'Order_123',
+   			source: 'InvitationScript',
+  		};
+  		tp('createInvitation', trustpilot_invitation);
+	});
+</script>
+</head>
+<style>
+
+
+
+
+
+
+.blue, .blue .theme {
+    background-color: unset !important;
+}
+button.btn.btn-secondary.dropdown-toggle.globe {
+    background: white !important;
+    padding: 10px;
+}
+.padding-bottom-md {
+    padding-bottom: 30px !important;
+    padding-top: 30px !important;
+    background-color: #ffffff00 !important;
+    bottom: 0;
+    color: #8b8b8b !important;
+}
+
+ /*.ui-autocomplete-row*/
+ /*     {*/
+ /*       padding:8px;*/
+ /*       background-color: #f4f4f4;*/
+ /*       border-bottom:1px solid #ccc;*/
+ /*       font-weight:bold;*/
+ /*     }*/
+ /*     .ui-autocomplete-row:hover*/
+ /*     {*/
+ /*       background-color: #ddd;*/
+ /*     }*/
+</style>
+<body>
+    <section id="wrapper" class="blue">
+        <header>
+            <!-- Top Header -->
+            <section class="top-header">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-xs-12">
                     
-                     
-                     
-                    </ul>
-                    
-                  </div>
+    <?php
+                                                                        if ($loggedIn) {
+                                                                        ?>
+                                                                
+                                                            
+                                                              <div class="dropdown">
+                                                                    <a href="#" class="dropdown-toggle user" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                                                        <?= lang('hi') . ' ' . $loggedInUser->first_name; ?> <span class="caret"></span>
+                                                                    </a>
+                                                                    <ul class="dropdown-menu dropdown-menu-right">
+                                                                        <li class=""><a href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a></li>
+                                                                        <li class=""><a href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a></li>
+                                                                        <li class=""><a href="<?= shop_url('quotes'); ?>"><i class="mi fa fa-heart-o"></i> <?= lang('quotes'); ?></a></li>
+                                                                        <li class=""><a href="<?= shop_url('downloads'); ?>"><i class="mi fa fa-download"></i> <?= lang('downloads'); ?></a></li>
+                                                                        <li class=""><a href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a></li>
+                                                                        <li class="divider"></li>
+                                                                        <li class=""><a href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a></li>
+                                                                    </ul>
+                                                                </div>
+                                                                <?php
+                                                            } else {
+                                                                ?>
+                                                                
+                                                                    <div class="dropdown">
+                                                                        <button class="btn dropdown-toggle" type="button" id="dropdownLogin" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                                                            <i class="fa fa-user"></i> 
+                                                                        </button>
+                                                                        <div class="dropdown-menu dropdown-menu-right dropdown-menu-login" aria-labelledby="dropdownLogin" data-dropdown-in="zoomIn" data-dropdown-out="fadeOut">
+                                                                            <?php  include FCPATH . 'themes' . DIRECTORY_SEPARATOR . $Settings->theme . DIRECTORY_SEPARATOR . 'shop' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'user' . DIRECTORY_SEPARATOR . 'login_form.php'; ?>
+                                                                        </div>
+                                                                    </div>
+                                                                
+                                                                <?php
+                                                            }
+                                                            ?>
+                                                            
+                                                            
+                                                            <ul class="nav navbar-nav header-mobile" >
+                                                                <li>
+                                                                        <div class="header-action-icon-2 cart-dropdown">
+                            
+                                                                                     <a class="mini-cart-icon" href="<?= site_url('cart'); ?>">
+                                                                                <i class="fa fa-shopping-cart items-c">
+                                        
+                                                                                        <!--<img alt="cart" src="<?= $assets; ?>images/theme/icons/icon-cart.svg" />-->
+                                        
+                                                                                    <span class="pro-count  cart-total-items"></span>
+                                                                                </i>
+                                        
+                            </a>
+                                                                    
+                                                                            <!--<div class="dropdown-menu dropdown-menu-right drop-cart" aria-labelledby="dropdown-cart" style="">-->
+                                                                            <!--                    <div id="cart-contents">-->
+                                                            
+                                                                            <!--                        <table class="table table-condensed table-striped table-cart" id="cart-items"></table>-->
+                                                            
+                                                                            <!--                        <div class="btn-group btn-group-justified" role="group" aria-label="View Cart and Checkout Button">-->
+                                                                            <!--                                    <div class="btn-group">-->
+                                                            
+                                                                            <!--                        <div class="shopping-cart-footer" id="cart-links">-->
+                                                            
+                                                                             
+                                                                            <!--                            <div class="shopping-cart-button">-->
+                                                            
+                                                                            <!--                                <a href="<?= site_url('cart'); ?>" class="outline"><?= lang('view_cart'); ?></a>-->
+                                                            
+                                                                            <!--                                <a href="<?= site_url('cart/checkout'); ?>"><?= lang('checkout'); ?></a>-->
+                                                            
+                                                                            <!--                            </div>-->
+                                                                                                       
+                                                            
+                                                                                                    
+                                                            
+                                                                            <!--                    </div>-->
+                                                                            <!--                    </div>-->
+                                                                            <!--                    </div>-->
+                                                                            <!--                    <div id="cart-empty"><p>Please add item to the cart first</p></div>-->
+                                                                            <!--            </div>-->
+                                                            
+                                                                            <!--</div>-->
+                                                                        </div>
+                                                                </li>
+                                                                
+                                                              <!--<li><a href="<?= shop_url('wishlist'); ?>"><i class="fa fa-heart"></i> <span class="hidden-xs"></span> (<span id="total-wishlist"><?= $wishlist; ?></span>)</a></li>-->
+                                          
+                                                        </ul>
+                                                            
+                                                            
+                                                            
+                            
+                        </div>
+                    </div>
                 </div>
-               
-               
-              </div>
-            </nav>
-          </div>
-          <div class="col-md-4 col-sm-2 shop-icons">
-            <div class="text-end">
+            </section>
+            <!-- End Top Header -->
 
-              <span class="shuffleIcon me-2">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <g id="Frame">
-                  <path id="Vector" d="M8.8 23.2H6.4C5.76348 23.2 5.15303 22.9471 4.70294 22.497C4.25286 22.047 4 21.4365 4 20.8L4 11.2C4 10.5635 4.25286 9.95302 4.70294 9.50293C5.15303 9.05284 5.76348 8.79999 6.4 8.79999L20 8.79999" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10"/>
-                  <path id="Vector_2" d="M23.2 8.79999H25.6C26.2365 8.79999 26.847 9.05284 27.2971 9.50293C27.7471 9.95302 28 10.5635 28 11.2L28 20.8C28 21.4365 27.7471 22.047 27.2971 22.497C26.847 22.9471 26.2365 23.2 25.6 23.2L12 23.2" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10"/>
-                  <path id="Vector_3" d="M16 4.79999L20 8.79999L16 12.8" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10" stroke-linecap="square"/>
-                  <path id="Vector_4" d="M16 19.2L12 23.2L16 27.2" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10" stroke-linecap="square"/>
-                  </g>
-                  </svg>
+            <!-- Main Header -->
+            <!--<section class="main-header">-->
+            <!--    <div class="container padding-y-md">-->
+            <!--        <div class="row">-->
+
+            <!--            <div class="col-sm-4 col-md-3 logo">-->
+
+            <!--            </div>-->
+
+            <!--            <div class="col-sm-8 col-md-9 margin-top-lg" style="width:100% !important;">-->
+                            
+            <!--                <div class="row">-->
+            <!--                    <div class="<?= (!$shop_settings->hide_price) ? 'col-sm-8 col-md-6 col-md-offset-3' : 'col-md-6 col-md-offset-6'; ?> search-box">-->
+            <!--                        <?= shop_form_open('products', 'id="product-search-form"'); ?>-->
+            <!--                        <div class="input-group">-->
+            <!--                            <input name="query" type="text" class="add_item_search"  id="product-search" aria-label="Search..." placeholder="<?= lang('search'); ?>">-->
+            <!--                            <div class="input-group-btn">-->
+            <!--                                <button type="submit" class="btn btn-default btn-search"><i class="fa fa-search"></i></button>-->
+            <!--                            </div>-->
+            <!--                        </div>-->
+                                    <?= form_close(); ?>
+                                <!--</div>-->
+
+                                <?php if (!$shop_settings->hide_price) {
+                                    ?>
+                                <!--<div class="col-sm-4 col-md-3 cart-btn hidden-xs">-->
+                                <!--    <button type="button" class="btn btn-theme btn-block dropdown-toggle shopping-cart" id="dropdown-cart" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">-->
+                                <!--        <i class="fa fa-shopping-cart margin-right-md"></i>-->
+                                <!--        <span class="cart-total-items"></span>-->
+                                        <!-- <i class="fa fa-caret-down margin-left-md"></i> -->
+                                <!--    </button>-->
+                                <!--    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-cart">-->
+                                <!--        <div id="cart-contents">-->
+                                <!--            <table class="table table-condensed table-striped table-cart" id="cart-items"></table>-->
+                                <!--            <div id="cart-links" class="text-center margin-bottom-md">-->
+                                <!--                <div class="btn-group btn-group-justified" role="group" aria-label="View Cart and Checkout Button">-->
+                                <!--                    <div class="btn-group">-->
+                                <!--                        <a class="btn btn-default btn-sm" href="<?= site_url('cart'); ?>"><i class="fa fa-shopping-cart"></i> <?= lang('view_cart'); ?></a>-->
+                                <!--                    </div>-->
+                                <!--                    <div class="btn-group">-->
+                                <!--                        <a class="btn btn-default btn-sm" href="<?= site_url('cart/checkout'); ?>"><i class="fa fa-check"></i> <?= lang('checkout'); ?></a>-->
+                                <!--                    </div>-->
+                                <!--                </div>-->
+                                <!--            </div>-->
+                                <!--        </div>-->
+                                        <!--<div id="cart-empty"><?= lang('please_add_item_to_cart'); ?></div>-->
+                                <!--    </div>-->
+                                <!--</div>-->
+                                <?php
+                                } ?>
+            <!--                </div>-->
+            <!--            </div>-->
+            <!--        </div>-->
+            <!--    </div>-->
+            <!--</section>-->
+            <!-- End Main Header -->
+
+            <!-- Nav Bar -->
+            <nav class="navbar navbar-default" role="navigation">
+                <div class="container" >
+                    <div class="row">
+                         
+                               <div class="col-md-2 col-xs-5 logo">
+                                   <a href="<?= site_url(); ?>">
+                                        <img  style= " height: 35px !important; width: 185px !important;    margin-bottom: 0px;" alt="<?= $shop_settings->shop_name; ?>" src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" class="img-responsive" />
+                                     </a>
+                                </div>
+                        
+                        
+                                <div class="col-xs-7 col-md-10">
+                                       <div class="navbar-header">
+                                                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-ex1-collapse">
+                                             <span><img src="<?= base_url('assets/uploads/menu-bar.png') ?>" height="20px" width="20px"></span>   
+                                            </button>
+                                            <div class="collapse navbar-collapse" id="navbar-ex1-collapse">
+                                               
+                                               
+                                                        <ul class="nav navbar-nav">
+                                                            
+                                                            <!--<li class="<?= $m == 'main' && $v == 'index' ? 'active' : ''; ?>"><a href="<?= base_url(); ?>"><?= lang('home'); ?></a></li>-->
+                                                            <?php if ($isPromo) {
+                                                                    ?>
+                                                            <li class="<?= $m == 'shop' && $v == 'products' && $this->input->get('promo') == 'yes' ? 'active' : ''; ?>"><a href="<?= shop_url('products?promo=yes'); ?>"><?= lang('promotions'); ?></a></li>
+                                                            <?php
+                                                                } ?>
+                                                            <li class="<?= $m == 'shop' && $v == 'products' && $this->input->get('promo') != 'yes' ? 'active' : ''; ?>"><a href="<?= shop_url('products'); ?>"><?= lang('products'); ?></a></li>
+                                                            <li class="dropdown">
+                                                                <a href="#" class="dropdown-toggle " data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                                                    <?= lang('categories'); ?> <span class="caret"></span>
+                                                                </a>
+                                                                <ul class="dropdown-menu">
+                                                                    <?php
+                                                                    foreach ($categories as $pc) {
+                                                                        echo '<li class="' . ($pc->subcategories ? 'dropdown dropdown-submenu' : '') . '">';
+                                                                        echo '<a ' . ($pc->subcategories ? 'class="dropdown-toggle" data-toggle="dropdown"' : '') . ' href="' . site_url('category/' . $pc->slug) . '">' . $pc->name . '</a>';
+                                                                        if ($pc->subcategories) {
+                                                                            echo '<ul class="dropdown-menu">';
+                                                                            foreach ($pc->subcategories as $sc) {
+                                                                                echo '<li><a href="' . site_url('category/' . $pc->slug . '/' . $sc->slug) . '">' . $sc->name . '</a></li>';
+                                                                            }
+                                                                            echo '<li class="divider"></li>';
+                                                                            echo '<li><a href="' . site_url('category/' . $pc->slug) . '">' . lang('all_products') . '</a></li>';
+                                                                            echo '</ul>';
+                                                                        }
+                                                                        echo '</li>';
+                                                                    }
+                                                                    ?>
+                                                                </ul>
+                                                            </li>
+                                                            
+                                                            </ul>
+                                                    
+                                                     <div class="<?= (!$shop_settings->hide_price) ? 'col-sm-8 col-md-6' : 'col-md-6 col-md-offset-6'; ?> search-box">
+                                    <?= shop_form_open('products', 'id="product-search-form"'); ?>
+                                    <div class="input-group">
+                                        <input name="query" type="text" class="add_item_search"  id="product-search" aria-label="Search..." placeholder="<?= lang('search'); ?>">
+                                        <div class="input-group-btn">
+                                            <button type="submit" class="btn btn-default btn-search"><i class="fa fa-search"></i></button>
+                                        </div>
+                                    </div>
+                                    <?= form_close(); ?>
+                                </div>
+                                                    
+                                                        <ul class="nav navbar-nav header" >
+                                                                <li>
+                                                                        <div class="header-action-icon-2 cart-dropdown">
+                            
+                                                                                     <!--<a class="mini-cart-icon" href="<?= site_url('cart'); ?>">-->
+                                                                                <i class="fa fa-shopping-cart items-c">
+                                        
+                                                                                        <!--<img alt="cart" src="<?= $assets; ?>images/theme/icons/icon-cart.svg" />-->
+                                        
+                                                                                    <span class="pro-count  cart-total-items"></span>
+                                                                                </i>
+                                        
+                            
+                                                                    
+                                                                            <div class="dropdown-menu dropdown-menu-right drop-cart" aria-labelledby="dropdown-cart" style="">
+                                                                                                <div id="cart-contents">
+                                                            
+                                                                                                    <table class="table table-condensed table-striped table-cart" id="cart-items"></table>
+                                                            
+                                                                                                    <div class="btn-group btn-group-justified" role="group" aria-label="View Cart and Checkout Button">
+                                                                                                                <div class="btn-group">
+                                                            
+                                                                                                    <div class="shopping-cart-footer" id="cart-links">
+                                                            
+                                                                             
+                                                                                                        <div class="shopping-cart-button">
+                                                            
+                                                                                                            <a href="<?= site_url('cart'); ?>" class="outline"><?= lang('view_cart'); ?></a>
+                                                            
+                                                                                                            <a href="<?= site_url('cart/checkout'); ?>"><?= lang('checkout'); ?></a>
+                                                            
+                                                                                                        </div>
+                                                                                                       
+                                                            
+                                                                                                    
+                                                            
+                                                                                                </div>
+                                                                                                </div>
+                                                                                                </div>
+                                                                                                <div id="cart-empty"><p>Please add item to the cart first</p></div>
+                                                                                        </div>
+                                                            
+                                                                            </div>
+                                                                        </div>
+                                                                </li>
+                                                                <!--<li class="hidden-xs hidden-sm"> <a href="<?= site_url('cart'); ?>" class="outline"><i class="fa fa-shopping-cart"> <span class="pro-count  cart-total-items"></span></i> </a></li>-->
+                                                                         <?php
+                                                                        if ($loggedIn) {
+                                                                        ?>
+                                                                
+                                                            
+                                                              <li class="dropdown">
+                                                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                                                        <?= lang('hi') . ' ' . $loggedInUser->first_name; ?> <span class="caret"></span>
+                                                                    </a>
+                                                                    <ul class="dropdown-menu dropdown-menu-right">
+                                                                        <li class=""><a href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a></li>
+                                                                        <li class=""><a href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a></li>
+                                                                        <li class=""><a href="<?= shop_url('quotes'); ?>"><i class="mi fa fa-heart-o"></i> <?= lang('quotes'); ?></a></li>
+                                                                        <li class=""><a href="<?= shop_url('downloads'); ?>"><i class="mi fa fa-download"></i> <?= lang('downloads'); ?></a></li>
+                                                                        <li class=""><a href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a></li>
+                                                                        <li class="divider"></li>
+                                                                        <li class=""><a href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a></li>
+                                                                    </ul>
+                                                                </li>
+                                                                <?php
+                                                            } else {
+                                                                ?>
+                                                                <li>
+                                                                    <div class="dropdown">
+                                                                        <button class="btn dropdown-toggle" type="button" id="dropdownLogin" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                                                            <i class="fa fa-user"></i> 
+                                                                        </button>
+                                                                        <div class="dropdown-menu dropdown-menu-right dropdown-menu-login" aria-labelledby="dropdownLogin" data-dropdown-in="zoomIn" data-dropdown-out="fadeOut">
+                                                                            <?php  include FCPATH . 'themes' . DIRECTORY_SEPARATOR . $Settings->theme . DIRECTORY_SEPARATOR . 'shop' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'user' . DIRECTORY_SEPARATOR . 'login_form.php'; ?>
+                                                                        </div>
+                                                                    </div>
+                                                                </li>
+                                                                <?php
+                                                            }
+                                                            ?>
+                                                       
+                                                              <!--<li><a href="<?= shop_url('wishlist'); ?>"><i class="fa fa-heart"></i> <span class="hidden-xs"></span> (<span id="total-wishlist"><?= $wishlist; ?></span>)</a></li>-->
+                                          <li>
+                                              
+                                              <div class="header-action-icon-2 selectcountry"  style="margin-top: 10px;cursor:pointer;">
+                                                  <i class="fa fa-globe"></i>
+                                              </div>
+                                             
+                                                <!--<div class="dropdown">-->
+                                                <!--  <button class="btn btn-secondary dropdown-toggle globe" type="button" data-bs-toggle="dropdown" aria-expanded="false">-->
+                                                <!--     <i class="fa fa-globe" id="locations-icon" ></i> -->
+                                                <!--  </button>-->
+                                                   
+                                                <!--  <ul class="dropdown-menu"  name="locations" id="locations"  >-->
+                                                <!--    <li  class="dropdown-item"  id="Saudi Arabia">Saudi Arabia</li>-->
+                                                <!--    <li class="dropdown-item"   id="UAE">UAE</li>-->
+                                                <!--    <li  class="dropdown-item"  id="Both">Both</li>-->
+                                                <!--  </ul>-->
+                                                
+                                                <!--</div>-->
+                                                <!--<div class="dropdown">-->
+                                                <!--  <button class="btn btn-secondary dropdown-toggle globe" type="button" data-bs-toggle="dropdown" aria-expanded="false">-->
+                                                <!--     <i class="fa fa-globe" id="locations-icon"></i> -->
+                                                <!--  </button>-->
+                                                   
+                                                <!--  <select class="dropdown-menu"  name="locations" id="locations" >-->
+                                                <!--    <option><a class="dropdown-item" href="saudiarabia" value="Saudi Arabia" >Saudi Arabia</a></option>-->
+                                                <!--    <option><a class="dropdown-item" href="uae" value="UAE">UAE</a></option>-->
+                                                <!--    <option><a class="dropdown-item" href="both" value="Both">Both</a></option>-->
+                                                <!--  </select>-->
+                                                
+                                                <!--</div>
+                                                <select name="country"  id="country" style="margin-top: 10px; " >
+                                                    
+                                                <option value="both">All</option>    
+                                                <?php foreach($allCountries as $cdata){ ?>
+                                                  <option value="<?=$cdata->code?>"><?=$cdata->name?></option>
+                                                <?php } ?>   
+                                                </select>
+                                                -->
+                                             
+                                            </li>
+                                        </ul>
+                                                       
+                                            </div>
+                                     
+         
+                                
+                                         </div>
+                         
+                                
+                            </div>
+                   
+                   
+                 
+                            
+                    </div>
+                    <div class="<?= (!$shop_settings->hide_price) ? 'col-sm-8 col-md-6' : 'col-md-6 col-md-offset-6'; ?> search-box-mbl">
+                                    <?= shop_form_open('products', 'id="product-search-form"'); ?>
+                                    <div class="input-group">
+                                        <input name="query" type="text" class="add_item_search"  id="product-search" aria-label="Search..." placeholder="<?= lang('search'); ?>">
+                                        <div class="input-group-btn">
+                                            <button type="submit" class="btn btn-default btn-search"><i class="fa fa-search"></i></button>
+                                        </div>
+                                    </div>
+                                    <?= form_close(); ?>
+                                </div>
+                </div>
+                            
                   
-              </span>
-            <span class="heartIcon me-2">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M26.0832 7.51679C23.5272 4.96079 19.3824 4.96079 16.8264 7.51679C16.5112 7.83199 16.2376 8.17199 16 8.52879C15.7624 8.17199 15.4888 7.83199 15.1736 7.51759C12.6176 4.96159 8.47282 4.96159 5.91682 7.51759C3.36082 10.0736 3.36082 14.2184 5.91682 16.7744L16 26.8568L26.0832 16.7736C28.6392 14.2176 28.6392 10.0736 26.0832 7.51679Z" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10" stroke-linecap="square"/>
-              </svg>
-            </span>
+                 
+               
+            </nav>
             
-              <span class="cartIcon">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9.33331 24C7.86665 24 6.67998 25.2 6.67998 26.6667C6.67998 28.1333 7.86665 29.3333 9.33331 29.3333C10.8 29.3333 12 28.1333 12 26.6667C12 25.2 10.8 24 9.33331 24ZM22.6666 24C21.2 24 20.0133 25.2 20.0133 26.6667C20.0133 28.1333 21.2 29.3333 22.6666 29.3333C24.1333 29.3333 25.3333 28.1333 25.3333 26.6667C25.3333 25.2 24.1333 24 22.6666 24ZM20.7333 17.3333C21.7333 17.3333 22.6133 16.7867 23.0666 15.96L27.84 7.30666C27.9523 7.10456 28.01 6.87662 28.0072 6.6454C28.0045 6.41418 27.9414 6.18769 27.8242 5.98834C27.707 5.78899 27.5398 5.6237 27.3391 5.50881C27.1384 5.39393 26.9112 5.33344 26.68 5.33332L6.94665 5.33332L5.69331 2.66666L1.33331 2.66666L1.33331 5.33332H3.99998L8.79998 15.4533L6.99998 18.7067C6.02665 20.4933 7.30665 22.6667 9.33331 22.6667L25.3333 22.6667V20L9.33331 20L10.8 17.3333L20.7333 17.3333ZM8.21331 7.99999L24.4133 7.99999L20.7333 14.6667L11.3733 14.6667L8.21331 7.99999Z" fill="#171A1F"/>
-              </svg>
-              <span class="quantitynum">1</span>
-            </span>
-              
-            </div>
-          
-              
-              
-          </div>
-        </div>
-      </div>
-    </section>
-    <!-- menu bar end -->
+            <!-- End Nav Bar -->
+        </header>
+        <?php if (DEMO && ($m != 'main' || $v != 'index')) {
+                                    ?>
+        <!--<div class="page-contents padding-bottom-no">-->
+        <!--    <div class="container">-->
+        <!--        <div class="alert alert-info margin-bottom-no">-->
+        <!--            <p>-->
+        <!--                <strong>Shop module is not complete item but add-on to Stock Manager Advance and is available separately.</strong><br>-->
+        <!--                This is joint demo for main item (Stock Manager Advance) and add-ons (POS & Shop Module). Please check the item page on codecanyon.net for more info about what's not included in the item and you must read the page there before purchase. Thank you-->
+        <!--            </p>-->
+        <!--        </div>-->
+        <!--    </div>-->
+        <!--</div>-->
+        <?php
+                                } ?>
+                                
+                                
+                                
+                                
