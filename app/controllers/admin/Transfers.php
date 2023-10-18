@@ -187,9 +187,6 @@ class Transfers extends MY_Controller
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
             // $this->sma->print_arrays($data, $products);
-            echo '<pre>';
-            print_r($products);
-            exit;
         }
 
         if ($this->form_validation->run() == true && $this->transfers_model->addTransfer($data, $products, $attachments)) {

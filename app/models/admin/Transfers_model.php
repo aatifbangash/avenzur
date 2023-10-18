@@ -133,6 +133,7 @@ class Transfers_model extends CI_Model
         $status = $data['status'];
         if ($this->db->insert('transfers', $data)) {
             $transfer_id = $this->db->insert_id();
+            echo 'Transfer Id: '.$transfer_id;exit;
             if ($this->site->getReference('to') == $data['transfer_no']) {
                 $this->site->updateReference('to');
             }
@@ -192,6 +193,7 @@ class Transfers_model extends CI_Model
             }
 
         }
+        echo 'After the block...';exit;
         $this->db->trans_complete();
         if ($this->db->trans_status() === false) {
             log_message('error', 'An errors has been occurred while adding the sale (Add:Transfers_model.php)');
