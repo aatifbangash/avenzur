@@ -37,8 +37,8 @@ class Products extends MY_Controller
  
         $this->load->library('image_lib');
         $imgArr = explode(",",$images);
-        
-        foreach ($images as $imageFilename) {
+
+        foreach ($imgArr as $imageFilename) {
             $config = null;
             $config['image_library']  = 'gd2';
             $config['maintain_ratio'] = true;
