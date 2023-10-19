@@ -1631,15 +1631,15 @@ class Reports_model extends CI_Model
 
                     UNION ALL 
 
-                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Return-Supplier' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
-                    pitem.expiry as expiry_date, abs(pitem.quantity) as quantity, pitem.net_unit_cost as unit_cost,
-                    pitem.serial_number as system_serial, pitem.sale_price as sale_price, NULL as purchase_price, pitem.product_id
+                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Supplier' as type, rtn.reference_no as document_no, rtn.supplier as name_of, ritem.batchno as batch_no, 
+                    ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_cost as unit_cost,
+                    ritem.serial_number as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id
 
-                    FROM sma_purchases as purchase
+                    FROM sma_returns_supplier as rtn
 
-                    LEFT JOIN sma_purchase_items as pitem ON pitem.purchase_id = purchase.id
+                    LEFT JOIN sma_return_supplier_items as ritem ON ritem.return_id = rtn.id
 
-                    WHERE pitem.product_id = $productId AND DATE(purchase.date) >= '$start_date' AND DATE(purchase.date) <= '$end_date'  AND purchase.grand_total < 0 
+                    WHERE ritem.product_id = $productId AND DATE(rtn.date) >= '$start_date' AND DATE(rtn.date) <= '$end_date'
 
                     UNION ALL 
 
