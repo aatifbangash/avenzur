@@ -1122,9 +1122,9 @@ class Reports_model extends CI_Model
                                         round(avg(pi.net_unit_price), 2) cost_price
                                 FROM sma_products p
                                 INNER JOIN sma_return_supplier_items pi ON p.id = pi.product_id
-                                INNER JOIN sma_return_items rt ON pi.return_id = rt.id ";
+                                INNER JOIN sma_returns_supplier rt ON pi.return_id = rt.id ";
             if ($at_date) {
-                $totalReturnSupplerQuery .= "WHERE pi.date <= '{$at_date}' ";
+                $totalReturnSupplerQuery .= "WHERE rt.date <= '{$at_date}' ";
             }
 
             if ($warehouse) {
