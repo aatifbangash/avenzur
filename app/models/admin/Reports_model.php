@@ -1144,6 +1144,7 @@ class Reports_model extends CI_Model
             $totalReturnSupplierResultSet = $this->db->query($totalReturnSupplerQuery);
             if ($totalReturnSupplierResultSet->num_rows() > 0) {
                 foreach ($totalReturnSupplierResultSet->result() as $returnSupplier) {
+                    print_r($returnSupplier);
                     array_map(function ($purchase) use ($returnSupplier) {
                         if (
                             $purchase->id == $returnSupplier->id
@@ -1157,6 +1158,8 @@ class Reports_model extends CI_Model
                     }, $totalPurchases);
                 }
             }
+
+            exit;
 
             //TODO add return customer to $totalPurchases.
             $totalReturnCustomerQuery = "select
