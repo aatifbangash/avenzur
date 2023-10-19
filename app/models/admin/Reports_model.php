@@ -1977,7 +1977,7 @@ class Reports_model extends CI_Model
                     sma_return_supplier_items ritems
                 LEFT JOIN sma_returns_supplier AS rt
                 ON
-                    rt.id = ritems.purchase_id
+                    rt.id = ritems.return_id
                 WHERE
                     DATE(rt.date) BETWEEN '$start_date' AND '$end_date'
                 GROUP BY
