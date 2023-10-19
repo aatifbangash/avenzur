@@ -1969,19 +1969,19 @@ class Reports_model extends CI_Model
                 UNION ALL
         
                 SELECT
-                    PI.product_id,
-                    SUM(abs(PI.quantity)) AS movement_out_quantity,
-                    AVG(PI.net_unit_cost) AS movement_out_cost,
-                    0 AS total_movement_out_cost
+                    ritems.product_id,
+                    SUM(ritems.quantity) AS movement_out_quantity,
+                    AVG(ritems.net_unit_price) AS movement_out_cost,
+                    SUM(ritems.quantity * ritems.net_cost) AS total_movement_out_cost
                 FROM
-                    sma_purchase_items PI
-                LEFT JOIN sma_purchases AS p
+                    sma_return_supplier_items ritems
+                LEFT JOIN sma_returns_supplier AS rt
                 ON
-                    p.id = PI.purchase_id
+                    rt.id = ritems.purchase_id
                 WHERE
-                    DATE(p.date) BETWEEN '$start_date' AND '$end_date'  AND p.grand_total < 0
+                    DATE(rt.date) BETWEEN '$start_date' AND '$end_date'
                 GROUP BY
-                    PI.product_id
+                    ritems.product_id
         
                 UNION ALL 
         
