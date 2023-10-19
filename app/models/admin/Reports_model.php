@@ -1140,6 +1140,7 @@ class Reports_model extends CI_Model
             }
 
             $totalReturnSupplerQuery .= "GROUP BY p.id, p.code, p.name, pi.batch_no";
+            echo $totalReturnSupplerQuery;exit;
 
             $totalReturnSupplierResultSet = $this->db->query($totalReturnSupplerQuery);
             if ($totalReturnSupplierResultSet->num_rows() > 0) {
