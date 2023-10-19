@@ -1124,7 +1124,7 @@ class Reports_model extends CI_Model
                                 INNER JOIN sma_return_supplier_items pi ON p.id = pi.product_id
                                 INNER JOIN sma_returns_supplier rt ON pi.return_id = rt.id ";
             if ($at_date) {
-                $totalReturnSupplerQuery .= "WHERE rt.date <= '{$at_date}' ";
+                $totalReturnSupplerQuery .= "WHERE rt.date <= '{$at_date} 23:59:59' ";
             }
 
             if ($warehouse) {
@@ -1140,12 +1140,10 @@ class Reports_model extends CI_Model
             }
 
             $totalReturnSupplerQuery .= "GROUP BY p.id, p.code, p.name, pi.batch_no";
-            echo $totalReturnSupplerQuery;exit;
 
             $totalReturnSupplierResultSet = $this->db->query($totalReturnSupplerQuery);
             if ($totalReturnSupplierResultSet->num_rows() > 0) {
                 foreach ($totalReturnSupplierResultSet->result() as $returnSupplier) {
-                    print_r($returnSupplier);
                     array_map(function ($purchase) use ($returnSupplier) {
                         if (
                             $purchase->id == $returnSupplier->id
@@ -1159,8 +1157,6 @@ class Reports_model extends CI_Model
                     }, $totalPurchases);
                 }
             }
-
-            exit;
 
             //TODO add return customer to $totalPurchases.
             $totalReturnCustomerQuery = "select
