@@ -1841,7 +1841,7 @@ class Reports_model extends CI_Model
             0 AS totalPurchaseQuantity,
             NULL AS purchaseUnitPrice,
             SUM(saleItem.quantity) AS totalSaleQuantity,
-            SUM(saleItem.quantity * saleItem.net_cost) As saleUnitPrice,
+            SUM(saleItem.quantity * saleItem.net_cost) As saleUnitPrice
             FROM
             `sma_sales` AS `sale`
             INNER JOIN
