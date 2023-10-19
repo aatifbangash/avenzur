@@ -86,6 +86,9 @@ class Transfers extends MY_Controller
 
                 $unit_cost = $item_net_cost;
 
+                $net_cost_obj = $this->transfers_model->getAverageCost($item_batchno, $item_code);
+                $net_cost = $net_cost_obj[0]->cost_price;
+
                 if (isset($item_code) && isset($item_quantity)) {
                     $product_details = $this->transfers_model->getProductByCode($item_code);
                     // if (!$this->Settings->overselling) {
@@ -128,7 +131,7 @@ class Transfers extends MY_Controller
                         'product_code'      => $item_code,
                         'product_name'      => $product_details->name,
                         'option_id'         => $item_option,
-                        'net_unit_cost'     => $item_net_cost,
+                        'net_unit_cost'     => $net_cost,
                         'unit_cost'         => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),
                         'quantity'          => $item_quantity,
                         'product_unit_id'   => $item_unit,
@@ -501,6 +504,9 @@ class Transfers extends MY_Controller
 
                 $unit_cost = $item_net_cost;
 
+                $net_cost_obj = $this->transfers_model->getAverageCost($item_batchno, $item_code);
+                $net_cost = $net_cost_obj[0]->cost_price;
+
                 if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity)) {
                     $product_details = $this->transfers_model->getProductByCode($item_code);
                     $pr_item_tax     = $item_tax     = 0;
@@ -533,7 +539,7 @@ class Transfers extends MY_Controller
                         'product_code'      => $item_code,
                         'product_name'      => $product_details->name,
                         'option_id'         => $item_option,
-                        'net_unit_cost'     => $item_net_cost,
+                        'net_unit_cost'     => $net_cost,
                         'unit_cost'         => $this->sma->formatDecimal(($item_net_cost + $item_tax), 4),
                         'quantity'          => $item_quantity,
                         'product_unit_id'   => $item_unit,
