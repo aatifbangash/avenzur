@@ -1746,16 +1746,17 @@ class Reports_model extends CI_Model
         $qry = $this->db->query("SELECT
             product_id,
             SUM(totalPurchaseQuantity) AS total_in_quantity,
-            AVG(purchaseUnitPrice) AS avg_unit_cost,
+            SUM(purchaseUnitPrice) AS avg_unit_cost,
             SUM(totalSaleQuantity) AS total_out_quantity,
-            AVG(saleUnitPrice) AS avgSaleUnitPrice
+            SUM(saleUnitPrice) AS avgSaleUnitPrice,
+            SUM(totalPurchasePrice) AS totalPurchasePrice
             FROM
             (
     
             SELECT
             purItem.product_id AS product_id,
             SUM(purItem.quantity) AS totalPurchaseQuantity,
-            IFNULL(AVG(purItem.net_unit_cost), p.cost) AS purchaseUnitPrice,
+            SUM(purItem.quantity * purItem.net_unit_cost) As purchaseUnitPrice,
             0 AS totalSaleQuantity,
             NULL AS saleUnitPrice
             FROM
@@ -1767,6 +1768,7 @@ class Reports_model extends CI_Model
             WHERE
             DATE(purchase.date) < '$start_date'
             AND `purchase`.`grand_total` > 0
+            AND `purchase`.`status` = 'received'
             GROUP BY
             purItem.product_id
     
@@ -1775,7 +1777,7 @@ class Reports_model extends CI_Model
             SELECT 
             rtnItem.product_id AS product_id,
             SUM(rtnItem.quantity) AS totalPurchaseQuantity,
-            NULL AS purchaseUnitPrice,
+            SUM(rtnItem.quantity * rtnItem.net_cost) As purchaseUnitPrice,
             0 AS totalSaleQuantity,
             NULL AS saleUnitPrice
     
@@ -1839,13 +1841,14 @@ class Reports_model extends CI_Model
             0 AS totalPurchaseQuantity,
             NULL AS purchaseUnitPrice,
             SUM(saleItem.quantity) AS totalSaleQuantity,
-            NULL AS saleUnitPrice
+            SUM(saleItem.quantity * saleItem.net_cost) As saleUnitPrice,
             FROM
             `sma_sales` AS `sale`
             INNER JOIN
             `sma_sale_items` AS `saleItem` ON `saleItem`.`sale_id` = `sale`.`id`
             WHERE
             DATE(sale.date) < '$start_date'
+            AND sale.status = 'completed'
             GROUP BY
             saleItem.product_id
     
@@ -1856,14 +1859,13 @@ class Reports_model extends CI_Model
             0 AS purchaseUnitPrice,
             NULL AS purchaseUnitPrice,
             SUM(ABS(purItem.quantity)) AS totalSaleQuantity,
-            NULL AS saleUnitPrice
+            SUM(purItem.quantity * purItem.net_cost) As saleUnitPrice
             FROM
-            `sma_purchases` AS `purchase`
+            `sma_returns_supplier` AS `purchase`
             INNER JOIN
-            `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id` = `purchase`.`id`
+            `sma_return_supplier_items` AS `purItem` ON `purItem`.`purchase_id` = `purchase`.`id`
             WHERE
             DATE(purchase.date) < '$start_date'
-            AND `purchase`.`grand_total` < 0
             GROUP BY
             purItem.product_id
     
@@ -1912,7 +1914,7 @@ class Reports_model extends CI_Model
         $resultSet = array();
         if ($qry->num_rows() > 0) {
             foreach (($qry->result()) as $row) {
-                $resultSet[$row->product_id] = ["total_opening_qty"=>$row->total_in_quantity - $row->total_out_quantity, "avg_unit_cost"=>$row->avg_unit_cost, 'all_data'=>$row];
+                $resultSet[$row->product_id] = ["total_opening_qty"=>$row->total_in_quantity - $row->total_out_quantity, "avg_unit_cost"=> ($row->avg_unit_cost - $row->avgSaleUnitPrice) / ($row->total_in_quantity - $row->total_out_quantity) , 'all_data'=>$row];
             }
         }
         // echo $this->db->last_query();
