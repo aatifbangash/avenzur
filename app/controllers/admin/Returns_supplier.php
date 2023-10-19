@@ -493,7 +493,7 @@ class Returns_supplier extends MY_Controller
                     'entry_id' => $insert_id,
                     'dc' => 'C',
                     'ledger_id' => $warehouse_ledgers->inventory_ledger,
-                    'amount' => -1 * ($item->net_unit_price * $item->quantity),
+                    'amount' => ($item->net_unit_price * $item->quantity),
                     'narration' => 'Inventory'
                 )
             );
@@ -505,7 +505,7 @@ class Returns_supplier extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => 'C',
                 'ledger_id' => $this->vat_on_purchase,
-                'amount' => -1 * ($inv->product_tax),
+                'amount' => ($inv->product_tax),
                 'narration' => 'Vat on Purchase'
             )
         );
@@ -516,7 +516,7 @@ class Returns_supplier extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => 'D',
                 'ledger_id' => $supplier->ledger_account,
-                'amount' => -1 * ($inv->grand_total),
+                'amount' => ($inv->grand_total),
                 'narration' => 'Accounts payable'
             )
         );
