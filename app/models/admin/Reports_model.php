@@ -2028,7 +2028,7 @@ class Reports_model extends CI_Model
         
         LEFT JOIN(
         
-        SELECT product_id, SUM(movement_in_quantity) AS movement_in_quantity, AVG(movement_in_cost) AS movement_in_cost, total_movement_in_cost
+        SELECT product_id, SUM(movement_in_quantity) AS movement_in_quantity, AVG(movement_in_cost) AS movement_in_cost, SUM(total_movement_in_cost) AS total_movement_in_cost
         
         FROM (
         
@@ -2127,14 +2127,14 @@ class Reports_model extends CI_Model
         $resultSet = array();
         if ($qry->num_rows() > 0) {
             foreach (($qry->result()) as $row) {
-                echo '<pre>';
-                print_r($row);
+                //echo '<pre>';
+                //print_r($row);
                 $row->movement_in_cost = ($row->total_movement_in_cost / $row->movement_in_quantity);
                 $resultSet[$row->product_id] = $row;
             }
         }
         //  echo $this->db->last_query();
-        echo '<pre>', print_r($resultSet), '</pre>';exit;
+        //echo '<pre>', print_r($resultSet), '</pre>';exit;
         return $resultSet;
 
     }
