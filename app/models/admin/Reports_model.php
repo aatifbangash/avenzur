@@ -1848,7 +1848,7 @@ class Reports_model extends CI_Model
             `sma_sale_items` AS `saleItem` ON `saleItem`.`sale_id` = `sale`.`id`
             WHERE
             DATE(sale.date) < '$start_date'
-            AND sale.status = 'completed'
+            AND sale.sale_status = 'completed'
             GROUP BY
             saleItem.product_id
     
