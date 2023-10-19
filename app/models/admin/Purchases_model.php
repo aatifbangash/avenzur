@@ -178,7 +178,10 @@ class Purchases_model extends CI_Model
     }
 
     public function updateReturnsCostPrice($net_cost_sales, $batch_no, $item_code){
+
         $this->db->update('sma_return_items', ['net_cost' => $net_cost_sales], ['batch_no' => $batch_no, 'product_code' => $item_code]);
+
+        $this->db->update('sma_return_supplier_items', ['net_cost' => $net_cost_sales], ['batch_no' => $batch_no, 'product_code' => $item_code]);
     }
 
     public function calculatePurchaseTotals($id, $return_id, $surcharge)
