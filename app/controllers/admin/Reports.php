@@ -3866,8 +3866,6 @@ class Reports extends MY_Controller
 
             $productInOutData = $this->reports_model->getInventoryTrialBalanceData($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
             
-            echo '<pre>';print_r($productInOutData);exit;
-            
             foreach($productInOutData as $prdId => $row){
 
                 $productCost = 1;
