@@ -978,13 +978,13 @@ class Reports_model extends CI_Model
         FROM
         ( SELECT SUM(saleItem.quantity) AS saleQuantity FROM `sma_sales` AS `sale` 
             INNER JOIN `sma_sale_items` AS `saleItem` ON `saleItem`.`sale_id` = `sale`.`id`
-            WHERE  `saleItem`.`product_id` = $productId AND DATE(sale.date) < '$start_date' AND `sale`.`sale_invoice`=1 ) AS sales, 
+            WHERE  `saleItem`.`product_id` = $productId AND DATE(sale.date) < '$start_date' AND `sale`.`sale_status` = 'completed' AND `saleItem`.`batch_no` != '' ) AS sales, 
         ( SELECT SUM(purItem.quantity) AS purchaseQuantity FROM `sma_purchases` AS `purchase` 
           INNER JOIN `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id`=`purchase`.`id` 
-          WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0 ) AS purchases,
-        ( SELECT SUM(abs(purItem.quantity)) AS returnSupplierQuantity FROM `sma_purchases` AS `purchase`
-            INNER JOIN `sma_purchase_items` AS `purItem` ON  `purItem`.`purchase_id` = `purchase`.`id`
-            WHERE `purItem`.`product_id` = $productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total` < 0 ) AS returnSupplier, 
+          WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`status` = 'received' AND `purItem`.`purchase_item_id` IS NULL ) AS purchases,
+        ( SELECT SUM(abs(purItem.quantity)) AS returnSupplierQuantity FROM `sma_returns_supplier` AS `purchase`
+            INNER JOIN `sma_return_supplier_items` AS `purItem` ON  `purItem`.`return_id` = `purchase`.`id`
+            WHERE `purItem`.`product_id` = $productId AND DATE(purchase.date) < '$start_date' ) AS returnSupplier, 
         ( SELECT SUM(rtnItem.quantity) AS returnQuantity FROM `sma_returns` AS `rtn` 
            INNER JOIN `sma_return_items` AS `rtnItem` ON `rtnItem`.`return_id`=`rtn`.`id` 
            WHERE `rtnItem`.`product_id`=$productId AND DATE(rtn.date) < '$start_date' ) AS returns, 
