@@ -1631,7 +1631,7 @@ class Reports_model extends CI_Model
 
                     UNION ALL 
 
-                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Supplier' as type, rtn.reference_no as document_no, rtn.supplier as name_of, ritem.batchno as batch_no, 
+                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Supplier' as type, rtn.reference_no as document_no, rtn.supplier as name_of, ritem.batch_no as batch_no, 
                     ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_cost as unit_cost,
                     ritem.serial_number as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id
 
