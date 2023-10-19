@@ -67,6 +67,38 @@ class Returns_model extends CI_Model
         return false;
     }
 
+    public function getAverageCost($item_batchno, $item_code){
+        $totalPurchases = [];
+        $totalPurchasesQuery = "SELECT 
+                                    p.id, 
+                                    p.code item_code, 
+                                    p.name name, 
+                                    pi.batchno batch_no, 
+                                    pi.expiry expiry, 
+                                    round(sum(pi.quantity)) quantity,
+                                    round(avg(pi.sale_price), 2) sale_price,
+                                    round(avg(pi.net_unit_cost), 2) cost_price,
+                                    round(sum(pi.net_unit_cost * pi.quantity), 2) total_cost_price,
+                                    round(avg(pi.unit_cost), 2) purchase_price
+                                FROM sma_products p
+                                INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
+                                INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id
+                                WHERE pi.purchase_item_id IS NULL AND pc.status = 'received'";
+        $totalPurchasesQuery .= "AND (p.code = '{$item_code}' OR p.name LIKE '%{$item_code}%') ";
+        $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.batchno
+                                ORDER BY p.id DESC";
+        $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
+
+        if ($totalPurchseResultSet->num_rows() > 0) {
+            foreach ($totalPurchseResultSet->result() as $row) {
+                $row->cost_price = ($row->total_cost_price / $row->quantity);
+                $totalPurchases[] = $row;
+            }
+        }
+
+        return $totalPurchases;
+    }
+
     public function getProductNamesWithBatches($term, $warehouse_id, $pos = false, $limit = 5)
     {
         $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
