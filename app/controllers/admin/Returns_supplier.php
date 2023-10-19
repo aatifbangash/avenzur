@@ -282,6 +282,9 @@ class Returns_supplier extends MY_Controller
 
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
 
+                $net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
+                $net_cost = $net_cost_obj[0]->cost_price;
+
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details = $item_type != 'manual' ? $this->site->getProductByCode($item_code) : null;
                     $pr_discount = $this->site->calculateDiscount($item_discount, $unit_price);
@@ -335,7 +338,7 @@ class Returns_supplier extends MY_Controller
                         'product_name' => $item_name,
                         'product_type' => $item_type,
                         'option_id' => $item_option,
-                        'net_cost' => $item_net_cost,
+                        'net_cost' => $net_cost,
                         'net_unit_price' => $item_net_price,
                         'unit_price' => $this->sma->formatDecimal($item_net_price + $item_tax),
                         'quantity' => $item_quantity,
@@ -724,6 +727,9 @@ class Returns_supplier extends MY_Controller
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
 
+                $net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
+                $net_cost = $net_cost_obj[0]->cost_price;
+
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details = $item_type != 'manual' ? $this->site->getProductByCode($item_code) : null;
                     $pr_discount = $this->site->calculateDiscount($item_discount, $unit_price);
@@ -772,7 +778,7 @@ class Returns_supplier extends MY_Controller
                         'product_name' => $item_name,
                         'product_type' => $item_type,
                         'option_id' => $item_option,
-                        'net_cost' => $item_cost_price,
+                        'net_cost' => $net_cost,
                         'net_unit_price' => $item_net_price,
                         'unit_price' => $this->sma->formatDecimal($item_net_price + $item_tax),
                         'quantity' => $item_quantity,

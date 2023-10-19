@@ -1116,12 +1116,13 @@ class Reports_model extends CI_Model
                                         p.id,
                                         p.code item_code,
                                         p.name,
-                                        pi.batchno batch_no,
+                                        pi.batch_no,
                                         pi.expiry expiry,
                                         round(sum(pi.quantity)) quantity,
                                         round(avg(pi.net_unit_cost), 2) cost_price
                                 FROM sma_products p
-                                INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
+                                INNER JOIN sma_return_supplier_items pi ON p.id = pi.product_id
+                                INNER JOIN sma_return_items rt ON pi.return_id = rt.id
                                 WHERE pi.purchase_item_id IS NOT NULL ";
             if ($at_date) {
                 $totalReturnSupplerQuery .= "AND pi.date <= '{$at_date}' ";
@@ -1139,7 +1140,7 @@ class Reports_model extends CI_Model
                 $totalReturnSupplerQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
             }
 
-            $totalReturnSupplerQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno";
+            $totalReturnSupplerQuery .= "GROUP BY p.id, p.code, p.name, pi.batch_no";
 
             $totalReturnSupplierResultSet = $this->db->query($totalReturnSupplerQuery);
             if ($totalReturnSupplierResultSet->num_rows() > 0) {
