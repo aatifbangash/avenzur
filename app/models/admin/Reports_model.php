@@ -2054,7 +2054,7 @@ class Reports_model extends CI_Model
                     ri.product_id,
                     SUM(ri.quantity) AS movement_in_quantity,
                     AVG(ri.real_unit_price) AS movement_in_cost,
-                    0 AS total_movement_in_cost
+                    SUM(ri.quantity * ri.net_cost) AS total_movement_in_cost
             FROM
                     sma_return_items ri
                 LEFT JOIN sma_returns AS r
@@ -2132,7 +2132,7 @@ class Reports_model extends CI_Model
             }
         }
         //  echo $this->db->last_query();
-        echo '<pre>', print_r($resultSet), '</pre>';exit;
+        //echo '<pre>', print_r($resultSet), '</pre>';exit;
         return $resultSet;
 
     }
