@@ -1748,8 +1748,7 @@ class Reports_model extends CI_Model
             SUM(totalPurchaseQuantity) AS total_in_quantity,
             SUM(purchaseUnitPrice) AS avg_unit_cost,
             SUM(totalSaleQuantity) AS total_out_quantity,
-            SUM(saleUnitPrice) AS avgSaleUnitPrice,
-            SUM(totalPurchasePrice) AS totalPurchasePrice
+            SUM(saleUnitPrice) AS avgSaleUnitPrice
             FROM
             (
     
