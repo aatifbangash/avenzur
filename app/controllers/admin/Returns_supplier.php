@@ -727,7 +727,7 @@ class Returns_supplier extends MY_Controller
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
 
-                $net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
+                $net_cost_obj = $this->returns_supplier_model->getAverageCost($item_batchno, $item_code);
                 $net_cost = $net_cost_obj[0]->cost_price;
 
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
