@@ -1033,7 +1033,7 @@ class Reports_model extends CI_Model
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
                                 INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id
-                                WHERE pi.purchase_item_id IS NULL AND pc.status = 'received'";
+                                WHERE pi.purchase_item_id IS NULL AND pc.status = 'received' AND pi.purchase_id IS NOT NULL";
         if ($at_date) {
             $totalPurchasesQuery .= "AND pi.date <= '{$at_date}' ";
         }
