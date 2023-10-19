@@ -1955,7 +1955,7 @@ class Reports_model extends CI_Model
             SELECT product_id,
                     SUM(si.quantity) AS movement_out_quantity,
                     AVG(si.net_unit_price) AS movement_out_cost,
-                    SUM(si.quantity * si.net_unit_price) AS total_movement_out_cost
+                    SUM(si.quantity * si.net_cost) AS total_movement_out_cost
                 FROM
                     sma_sale_items si
                 LEFT JOIN sma_sales AS s
@@ -2128,6 +2128,7 @@ class Reports_model extends CI_Model
                 //echo '<pre>';
                 //print_r($row);
                 $row->movement_in_cost = ($row->total_movement_in_cost / $row->movement_in_quantity);
+                $row->movement_out_cost = ($row->total_movement_out_cost / $row->movement_out_quantity);
                 $resultSet[$row->product_id] = $row;
             }
         }
