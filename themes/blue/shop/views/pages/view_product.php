@@ -73,7 +73,15 @@
                                                     } ?>
                                         </h4>
                                         <h3>
-                                            <?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?>
+                                            <?php 
+                                                if ($product->promotion) {
+                                                    echo '<del class="text-red">' . $this->sma->convertMoney(isset($product->special_price) && !empty(isset($product->special_price)) ? $product->special_price : $product->price) . '</del><br>';
+                                                    echo $this->sma->convertMoney($product->promo_price);
+                                                } else{
+                                                    echo $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price);
+                                                }
+                                                
+                                            ?>
                                         </h3>
                                           <?php if ($product->type == 'combo') {
                                                         ?>
