@@ -143,6 +143,7 @@ class Purchases_model extends CI_Model
                     $net_cost_obj = $this->getAverageCost($item['batchno'], $item['product_code']);
                     $net_cost_sales = $net_cost_obj[0]->cost_price;
                     $this->updateSalesCostPrice($net_cost_sales, $item['batchno'], $item['product_code']);
+                    $this->updateReturnsCostPrice($net_cost_sales, $item['batchno'], $item['product_code']);
                     $this->updateAVCO(['product_id' => $item['product_id'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'batch' => $item['batchno'], 'cost' => $item['base_unit_cost'] ?? $item['real_unit_cost']]);
                 }
             }
@@ -174,6 +175,10 @@ class Purchases_model extends CI_Model
 
     public function updateSalesCostPrice($net_cost_sales, $batch_no, $item_code){
         $this->db->update('sma_sale_items', ['net_cost' => $net_cost_sales], ['batch_no' => $batch_no, 'product_code' => $item_code]);
+    }
+
+    public function updateReturnsCostPrice($net_cost_sales, $batch_no, $item_code){
+        $this->db->update('sma_return_items', ['net_cost' => $net_cost_sales], ['batch_no' => $batch_no, 'product_code' => $item_code]);
     }
 
     public function calculatePurchaseTotals($id, $return_id, $surcharge)
@@ -794,6 +799,7 @@ class Purchases_model extends CI_Model
                     $net_cost_obj = $this->getAverageCost($item['batchno'], $item['product_code']);
                     $net_cost_sales = $net_cost_obj[0]->cost_price;
                     $this->updateSalesCostPrice($net_cost_sales, $item['batchno'], $item['product_code']);
+                    $this->updateReturnsCostPrice($net_cost_sales, $item['batchno'], $item['product_code']);
                 }
             }
             $this->site->syncQuantity(null, null, $oitems);
