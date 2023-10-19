@@ -1863,7 +1863,7 @@ class Reports_model extends CI_Model
             FROM
             `sma_returns_supplier` AS `purchase`
             INNER JOIN
-            `sma_return_supplier_items` AS `purItem` ON `purItem`.`purchase_id` = `purchase`.`id`
+            `sma_return_supplier_items` AS `purItem` ON `purItem`.`return_id` = `purchase`.`id`
             WHERE
             DATE(purchase.date) < '$start_date'
             GROUP BY
