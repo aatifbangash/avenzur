@@ -1948,7 +1948,7 @@ class Reports_model extends CI_Model
     
         LEFT JOIN (
         
-        SELECT product_id, SUM(movement_out_quantity) AS movement_out_quantity, AVG(movement_out_cost) AS movement_out_cost, total_movement_out_cost
+        SELECT product_id, SUM(movement_out_quantity) AS movement_out_quantity, AVG(movement_out_cost) AS movement_out_cost, SUM(total_movement_out_cost) AS total_movement_out_cost
         
         FROM (
         
