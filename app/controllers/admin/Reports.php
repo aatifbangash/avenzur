@@ -3863,10 +3863,9 @@ class Reports extends MY_Controller
 
             $inventryReportData = [];
             $productOpeningsData = $this->reports_model->getProductsQuantityUnitCost($start_date,$from_warehouse_id);
-            print_r($productOpeningsData);exit;
 
             $productInOutData = $this->reports_model->getInventoryTrialBalanceData($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
-            
+            print_r($productInOutData);exit;
             foreach($productInOutData as $prdId => $row){
 
                 $productCost = 1;
