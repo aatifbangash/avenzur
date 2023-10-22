@@ -1073,7 +1073,6 @@ class Shop extends MY_Shop_Controller
         }
         if ($this->input->get('promo') && $this->input->get('promo') == 'yes') {
             $promo = true;
-            echo 'Promo: '.$promo;exit;
         }
         
         if($category_slug != null)
@@ -1094,6 +1093,7 @@ class Shop extends MY_Shop_Controller
         ];
         $this->data['filtered_subcategories'] = $category_slug ? $this->shop_model->getSubCategories($filters['category']->id) : null;
         $this->data['filters']    = $filters;
+        print_r($filters);exit;
         $this->data['all_categories']    = $this->shop_model->getAllCategories();
         $this->data['error']      = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['page_title'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products'))) . ' - ' . $this->shop_settings->shop_name;
