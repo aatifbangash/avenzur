@@ -3804,6 +3804,9 @@ class Reports extends MY_Controller
             $end_date = $this->sma->fld($to_date);
 
             $itemOpenings = $this->reports_model->getItemOpeningBalance($productId, $start_date, $defaultWareHouseId);
+            echo '<pre>';
+            print_r($itemOpenings);
+            exit;
             $reportData = $this->reports_model->getItemMovementRecords($productId, $start_date, $end_date, $defaultWareHouseId, $filterOnType);
 
             $this->data['start_date'] = $from_date;
