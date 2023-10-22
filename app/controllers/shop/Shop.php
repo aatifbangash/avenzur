@@ -1072,7 +1072,7 @@ class Shop extends MY_Shop_Controller
             $brand_slug = $this->input->get('brand', true);
         }
         if ($this->input->get('promo') && $this->input->get('promo') == 'yes') {
-            $promo = true;
+            $promo = 1;
         }
         
         if($category_slug != null)
