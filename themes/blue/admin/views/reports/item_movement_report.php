@@ -149,9 +149,10 @@
                                             echo 'A:'.$balanceQantity.' - '.$itemOpenings->openingBalance.'<br />';
                                             if($balanceQantity == 0 && $itemOpenings->openingBalance > 0){
                                                 $balanceQantity = $itemOpenings->openingBalance;
-                                            }else{
-                                                $balanceQantity -= $rp->quantity;
                                             }
+                                                
+                                            $balanceQantity -= $rp->quantity;
+                                            
 
                                             echo 'B:'.$balanceQantity.'<br />';
 
