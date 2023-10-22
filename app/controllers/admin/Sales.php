@@ -121,6 +121,9 @@ class Sales extends MY_Controller
 
                 $net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
                 $net_cost = $net_cost_obj[0]->cost_price;
+                if(empty($net_cost) || $net_cost == NULL){
+                    $net_cost = 0;
+                }
 
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details = $item_type != 'manual' ? $this->sales_model->getProductByCode($item_code) : null;
@@ -1019,6 +1022,9 @@ class Sales extends MY_Controller
 
                 $net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
                 $net_cost = $net_cost_obj[0]->cost_price;
+                if(empty($net_cost) || $net_cost == NULL){
+                    $net_cost = 0;
+                }
 
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details = $item_type != 'manual' ? $this->sales_model->getProductByCode($item_code) : null;
