@@ -1073,6 +1073,7 @@ class Shop extends MY_Shop_Controller
         }
         if ($this->input->get('promo') && $this->input->get('promo') == 'yes') {
             $promo = true;
+            echo 'Promo: '.$promo;exit;
         }
         
         if($category_slug != null)
