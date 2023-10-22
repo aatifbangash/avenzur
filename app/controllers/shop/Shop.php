@@ -1195,7 +1195,9 @@ class Shop extends MY_Shop_Controller
 
             $pagination = pagination('shop/products', $total_rows, $limit);
 
-            //$pagination = str_replace('?page=', '?promo=yes&page=', $pagination);
+            if(isset($_GET['promo']) && !empty($_GET['promo'])){
+                $pagination = str_replace('?page=', '?promo=yes&page=', $pagination);
+            }
 
             $info       = ['page' => (isset($filters['page']) && !empty($filters['page']) ? $filters['page'] : 1), 'total' => ceil($total_rows / $limit)];
 
