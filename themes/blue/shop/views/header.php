@@ -11,18 +11,23 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="<?= $assets; ?>css/ecommerce-main.css" rel="stylesheet">
+    <!-- Add the slick-theme.css if you want default styling -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
+<!-- Add the slick-theme.css if you want default styling -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
+
 </head>
   <body>
     <!-- top bar -->
     <section class="top-bar py-1 ">
         <div class="container container-max-width">
             <div class="row align-items-center">
-              <div class="col-md-6">
+              <div class="col-md-6 topBartxt">
                 Avenzur will deliver fast with safe packing in all over the country
               </div>
-              <div class="col-md-6 d-flex justify-content-end ">
+              <div class="col-md-6 d-flex justify-content-end topbarBtns">
                 <div class="dropdown me-2">
-                    <a class="btn  dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a class="btn  dropdown-toggle text-white moblang" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-globe-americas me-1"></i> EN <i class="bi bi-chevron-down ms-2"></i>
                     </a>
                   
@@ -58,11 +63,19 @@
       <div class="container container-max-width">
         <div class="row  align-items-center justify-content-between py-3">
 
-          <div class="col-md-2  mb-2">
-            <a class="navbar-brand" href="#"><img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="<?= $shop_settings->shop_name; ?>"></a>
+          <div class="col-lg-2 col-md-3  mb-2">
+            <div class="logosearchMob">
+
+              <div> <a class="navbar-brand" href="#"><img src="./images/logo.png" alt="logo" class="w-100"></a></div>
+            <div id="searchtoggle"><i class="bi bi-search"></i></div>
+            </div>
+           
+             
+
           </div>
-          <div class="col-md-7">
-            <form class="d-flex search-bar" role="search">
+          <div class="col-lg-7 col-md-8" id="searchbarmob">
+            <div id="searchtogglecros"><i class="bi bi-x-circle-fill"></i></div>
+            <form class="d-flex search-bar" role="search" >
               
             <select class="form-select w-auto bg-transparent border-0 ps-4 categorySelect" aria-label="Default select">
               <option selected>Category</option>
@@ -74,22 +87,7 @@
               <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
             </form>
           </div>
-          <div class="col-md-2 ps-md-0">
-              <div class="d-flex align-items-center">
-                <h3 class="me-2 my-0">
-                  <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M23.1 6.29999C26.4417 6.29999 29.6466 7.62748 32.0096 9.99044C34.3725 12.3534 35.7 15.5583 35.7 18.9" stroke="#2B9B48" stroke-width="2.52" stroke-miterlimit="10" stroke-linecap="square"/>
-                    <path d="M29.4 18.9C29.4 17.2291 28.7363 15.6267 27.5548 14.4452C26.3733 13.2638 24.7709 12.6 23.1 12.6" stroke="#2B9B48" stroke-width="2.52" stroke-miterlimit="10" stroke-linecap="square"/>
-                    <path d="M25.9276 24.4576L23.5315 27.4533C19.8205 25.2721 16.7279 22.1795 14.5467 18.4684L17.5423 16.0723C17.8933 15.7912 18.1413 15.4019 18.2476 14.965C18.354 14.5281 18.3128 14.0683 18.1303 13.6573L15.4003 7.50959C15.2046 7.06855 14.8585 6.71138 14.4239 6.50177C13.9893 6.29215 13.4943 6.24371 13.0273 6.36509L7.82984 7.71329C7.34477 7.83993 6.92302 8.14013 6.64454 8.55699C6.36605 8.97385 6.25018 9.47839 6.31889 9.97499C7.23096 16.4701 10.2328 22.4916 14.8706 27.1294C19.5083 31.7672 25.5299 34.769 32.025 35.6811C32.5214 35.7495 33.0257 35.6335 33.4423 35.3551C33.859 35.0766 34.159 34.655 34.2856 34.1701L35.6338 28.9726C35.7547 28.506 35.7062 28.0117 35.4968 27.5775C35.2874 27.1434 34.9308 26.7976 34.4904 26.6017L28.3426 23.8717C27.9319 23.6891 27.4722 23.6475 27.0354 23.7535C26.5985 23.8595 26.209 24.1071 25.9276 24.4576Z" stroke="#2B9B48" stroke-width="2.52" stroke-miterlimit="10" stroke-linecap="square"/>
-                    </svg>
-                    
-                </h3>
-                <div>
-                  <p class="m-0  fw-bold">Sale & Service Support</p>
-                  <h5 class="fw-bold">0112133551</h5>
-                </div>
-              </div>
-          </div>
+          <div class="col-lg-2 col-md-1 ps-md-0" id="salemob"></div>
 
         </div>
       </div>
@@ -142,16 +140,16 @@
             </div>
           </div>
           <div class="col-md-6 col-sm-2 mob-menu">
-            <nav class="navbar navbar-expand-lg  container-max-width">
+            <nav class="navbar navbar-expand-lg navbar-expand-md  container-max-width">
               <div class="container-fluid">
                 
-                <div class="menu-av ">
+                <div class="menu-av" id="sourcedivmob">
                   
-                  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+                  <button id="menuiconMob" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"><i class="bi bi-list"></i></span>
                   </button>
                   <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0" >
                       <li class="nav-item">
                         <a class="nav-link active" aria-current="page" href="#">Home</a>
                       </li>
@@ -162,7 +160,9 @@
                         <a class="nav-link"  href="#">About</a>
                       </li>
                     
-                     
+                     <div id="mobnav"> 
+
+                     </div>
                      
                     </ul>
                     
@@ -174,7 +174,7 @@
             </nav>
           </div>
           <div class="col-md-4 col-sm-2 shop-icons">
-            <div class="text-end">
+            <div class="text-end" id="shoppingdivMob">
 
               <span class="shuffleIcon me-2">
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
