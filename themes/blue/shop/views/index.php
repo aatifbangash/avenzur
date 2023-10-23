@@ -1107,12 +1107,12 @@
         <div class="row">
           <div class="col-md-6">
             <div class="sideBannerImg my-2">
-             <a href="#"> <img src="./images/momBaby.jpg" alt="placeholder" class="w-100 h-100 rounded-4" ></a>
+             <a href="#"> <img src="<?= base_url('assets/images/banners/momBaby.jpg'); ?>" alt="placeholder" class="w-100 h-100 rounded-4" ></a>
             </div>
           </div>
           <div class="col-md-6">
             <div class="sideBannerImg my-2">
-              <a href="#"> <img src="./images/persC.jpg" alt="placeholder" class="w-100  rounded-4" ></a>
+              <a href="#"> <img src="<?= base_url('assets/images/banners/persC.jpg'); ?>" alt="placeholder" class="w-100  rounded-4" ></a>
             </div>
           </div>
         </div>
