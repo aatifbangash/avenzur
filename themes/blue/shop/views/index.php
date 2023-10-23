@@ -125,7 +125,7 @@
             <div class="row mt-4">
 
               <div class="col-md-5 col-sm-12">
-                <div class="boom-product-cat py-4 px-4" style="background-image: url('./images/boom4.png')">
+                <div class="boom-product-cat py-4 px-4" style="background-image: url(<?= base_url('assets/images/banners/boom4.png'); ?>)">
                   <div class="row ">
                    
                     <div class="col-md-6 pe-md-0">
@@ -136,13 +136,13 @@
                     </div>
                     <div class="col-md-6 p-0">
 
-                      <img src="./images/tabpack3.png" alt=""  class="w-100"/>
+                      <img src="<?= base_url('assets/images/banners/tabpack3.png'); ?>" alt=""  class="w-100"/>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="col-md-7 col-sm-12">
-                <div class="boom-product-cat py-4 px-5" style="background-image: url('./images/boom5.png')">
+                <div class="boom-product-cat py-4 px-5" style="background-image: url(<?= base_url('assets/images/banners/boom5.png'); ?>)">
                   <div class="row align-items-center">
                    
                     <div class="col-md-6 p-md-0 boomsale">
@@ -154,7 +154,7 @@
                     </div>
                     <div class="col-md-6">
 
-                      <img src="./images/tabpack5.png" alt=""  class="w-100"/>
+                      <img src="<?= base_url('assets/images/banners/tabpack5.png'); ?>" alt=""  class="w-100"/>
                     </div>
                   </div>
                 </div>
@@ -162,7 +162,7 @@
             </div>
           </div>
           <div class="col-lg-4 col-md-12 col-sm-12  pt-lg-0 pt-md-4">
-            <div class="boom-product-cat py-4 px-5" style="background-image: url('./images/boom3.png')">
+            <div class="boom-product-cat py-4 px-5" style="background-image: url('<?= base_url('assets/images/banners/boom3.png'); ?>')">
               <div class="row align-items-center">
                
                 <div class="col-md-12 mb-4">
@@ -174,7 +174,7 @@
                 </div>
                 <div class="col-md-12">
 
-                  <img src="./images/tabpack2.png" alt=""  class="w-100"/>
+                  <img src="<?= base_url('assets/images/banners/tabpack2.png'); ?>" alt=""  class="w-100"/>
                 </div>
               </div>
             </div>
