@@ -146,12 +146,12 @@
                                         }
                                         //  || $rp->type == "Transfer-Out"
                                         if (($rp->type == 'Sale' || $rp->type == 'Return-Supplier' )) {
-
+                                           
                                             if($balanceQantity == 0 && $itemOpenings->openingBalance > 0){
                                                 $balanceQantity = $itemOpenings->openingBalance;
-                                            }else{
-                                                $balanceQantity -= $rp->quantity;
                                             }
+                                                
+                                            $balanceQantity -= $rp->quantity;
 
                                             if($openingTotal > 0 && $totalValueOfItem ==0){
                                                 $totalValueOfItem = $openingTotal - ($rp->quantity * $rp->unit_cost);
@@ -159,6 +159,7 @@
                                                 $totalValueOfItem-= ($rp->quantity * $rp->unit_cost);
                                             }
                                             $showQty = -$rp->quantity;
+                                            
                                         }
                                         if($rp->type == "Transfer-Out" || $rp->type == "Transfer-In"){
                                             $showQty = $rp->quantity;
