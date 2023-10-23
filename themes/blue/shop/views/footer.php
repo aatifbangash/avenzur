@@ -1,13 +1,13 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <!-- footer -->
 <section class="footer-container" >
-      <div class="ft" style="background-image: url('./images/bgbanner.jpg'); max-width:1440px; margin-inline:auto;">
+      <div class="ft" style="background-image: url(<?= base_url('assets/images/banners/bgbanner.jpg'); ?>); max-width:1440px; margin-inline:auto;">
         <footer class="pt-5 pb-3">
 
           <div class="container container-max-width">
             <div class="row">
               <div class="col-md-12 col-sm-12">
-                <a class="navbar-brand" href="#"><img src="./images/logo.png" alt="logo" ></a>
+                <a class="navbar-brand" href="#"><img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="logo" ></a>
               </div>
             </div>
     
@@ -50,7 +50,7 @@
             </div>
             <div class="row pb-2 align-items-center">
               <div class="col-md-7 col-sm-12">
-                <img src="./images/pay.png" alt="logo" class="footer-pay w-50 mt-3">
+                <img src="<?= base_url('assets/images/banners/pay.png'); ?>" alt="logo" class="footer-pay w-50 mt-3">
               </div>
               <div class="col-md-5 col-sm-12">
                 <div class="mobficon text-center">

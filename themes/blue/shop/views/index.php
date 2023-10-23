@@ -1256,21 +1256,21 @@
       <div class="container container-max-width pb-5">
         <div class="widget-bar">
           <div class="brands-logo">
-            <div><img src="./images/beatswell.webp" alt="-" class="w-100"> </div>
-            <div><img src="./images/manu.png" alt="-" class="w-100"> </div>
-            <div><img src="./images/beatswell.webp" alt="-" class="w-100"> </div>
-            <div><img src="./images/beatswell.webp" alt="-" class="w-100"> </div>
-            <div><img src="./images/beatswell.webp" alt="-" class="w-100"> </div>
-            <div><img src="./images/beatswell.webp" alt="-" class="w-100"> </div>
-            <div><img src="./images/beatswell.webp" alt="-" class="w-100"> </div>
-            <div><img src="./images/beatswell.webp" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/beatswell.webp'); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/manu.png'); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/beatswell.webp'); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/manu.png'); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/beatswell.webp'); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/manu.png'); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/beatswell.webp'); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/manu.png'); ?>" alt="-" class="w-100"> </div>
           </div>
         </div>
       </div>
     </section>
 <!-- join container -->
     <section class="join-container " >
-      <div class="container container-max-width py-5" style="background-image: url('./images/bgbanner.jpg');">
+      <div class="container container-max-width py-5" style="background-image: url(<?= base_url('assets/images/banners/bgbanner.jpg'); ?>);">
         <div class="text-center">
           <h2>Join our newsletter</h2>
           <p>Join over half a million vitamin lovers and get our latest deals, articles, and resources!</p>
