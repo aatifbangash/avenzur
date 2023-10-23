@@ -16,7 +16,9 @@
                     if (!empty($slide->image)) {
                         ?>
                             <div class="carousel-item <?= ($sr == 0 ? ' active' : ''); ?>">
-                                <img src="<?= base_url('assets/uploads/' . $slide->image); ?>" class="d-block w-100" alt="...">
+                                <a href="<?php echo $slide->link; ?>">
+                                    <img src="<?= base_url('assets/uploads/' . $slide->image); ?>" class="d-block w-100" alt="...">
+                                </a>
                             </div>
                         <?php
                     }
