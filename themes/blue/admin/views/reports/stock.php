@@ -92,10 +92,17 @@
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <?= lang('Item', 'item'); ?>
-                            <?php echo form_input('item', set_value('item'), 'class="form-control input-tip" id="item"'); ?>
+                            <?php echo lang('Item', 'item'); ?>
+                            <?php echo form_input('sgproduct', (isset($_POST['sgproduct']) ? $_POST['sgproduct'] : ''), 'class="form-control" id="suggest_product2" data-bv-notempty="true"'); ?>
+                            <input type="hidden" name="item" value="<?= isset($_POST['item']) ? $_POST['item'] : 0 ?>" id="report_product_id2" />
                         </div>
                     </div>
+                    <!--<div class="col-md-4">
+                        <div class="form-group">
+                            <?php //echo lang('Item', 'item'); ?>
+                            <?php //echo form_input('item', set_value('item'), 'class="form-control input-tip" id="item"'); ?>
+                        </div>
+                    </div>-->
                 </div>
                 <div class="row">
                     <div class="col-md-4">
