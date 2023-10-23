@@ -62,8 +62,7 @@
                                 
                                     <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" class="card-img-top" alt="..."></div>
                                 <div class="card-body">
-                                    <h5 class="card-title">Herbals</h5>
-                                
+                                    <h5 class="card-title"><?= $fp->name; ?></h5>
                                 </div>
                                 </div> 
 
