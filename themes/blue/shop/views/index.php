@@ -49,86 +49,30 @@
        <div class="featureTitle text-center mb-5"><h2>Featured Categories</h2></div>
        <!-- cards -->
        <div class="row feature-cards text-center gy-4 ">
-        <div class="col-md-2 col-sm-12 col-6">
-          <a href="#" class="text-decoration-none">
-         
-            <div class="card" style="width: 100%;">
-              <div class="cardImg">
-               
-                <img src="./images/herb.png" class="card-img-top" alt="..."></div>
-              <div class="card-body">
-                <h5 class="card-title">Herbals</h5>
-              
-              </div>
-            </div> 
+            <?php
+                $r = 0;
+                foreach (array_chunk($featured_categories, 8) as $fps) {
+                    foreach ($fps as $fp) {
+                    ?>
+                        <div class="col-md-2 col-sm-12 col-6">
+                            <a href="<?= site_url('category/'.$fp->slug) ?>" class="text-decoration-none">
+                            
+                                <div class="card" style="width: 100%;">
+                                <div class="cardImg">
+                                
+                                    <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" class="card-img-top" alt="..."></div>
+                                <div class="card-body">
+                                    <h5 class="card-title">Herbals</h5>
+                                
+                                </div>
+                                </div> 
 
-          </a>
-        </div>
-        <div class="col-md-2 col-sm-12 col-6">
-          <a href="#" class="text-decoration-none">
-         
-            <div class="card" style="width: 100%">
-               <div class="cardImg"><img src="./images/momB.png" class="card-img-top" alt="..."></div>
-              <div class="card-body">
-                <h5 class="card-title">Mom & baby</h5>
-              
-              </div>
-            </div> 
-
-          </a>
-        </div>
-        <div class="col-md-2 col-sm-12 col-6">
-          <a href="#" class="text-decoration-none">
-         
-            <div class="card" style="width: 100%">
-               <div class="cardImg"><img src="./images/pharm.png" class="card-img-top" alt="..."></div>
-              <div class="card-body">
-                <h5 class="card-title">PHARMACEUTIC</h5>
-              
-              </div>
-            </div> 
-
-          </a>
-        </div>
-        <div class="col-md-2 col-sm-12 col-6">
-          <a href="#" class="text-decoration-none">
-         
-            <div class="card" style="width: 100%">
-               <div class="cardImg"><img src="./images/medical.png" class="card-img-top" alt="..."></div>
-              <div class="card-body">
-                <h5 class="card-title">MEDICAL</h5>
-              
-              </div>
-            </div> 
-
-          </a>
-        </div>
-        <div class="col-md-2 col-sm-12 col-6">
-          <a href="#" class="text-decoration-none">
-         
-            <div class="card" style="width: 100%">
-               <div class="cardImg"><img src="./images/beauty.png" class="card-img-top" alt="..."></div>
-              <div class="card-body">
-                <h5 class="card-title">BEAUTY</h5>
-              
-              </div>
-            </div> 
-
-          </a>
-        </div>
-        <div class="col-md-2 col-sm-12 col-6">
-          <a href="#" class="text-decoration-none">
-         
-            <div class="card" style="width: 100%">
-               <div class="cardImg"><img src="./images/vitamin.png" class="card-img-top" alt="..."></div>
-              <div class="card-body">
-                <h5 class="card-title">VITAMINS</h5>
-              
-              </div>
-            </div> 
-
-          </a>
-        </div>
+                            </a>
+                        </div>
+                    <?php
+                    }
+                }
+            ?>
        </div>
       </div>
     </section>
