@@ -189,7 +189,7 @@
     <section class="side-banner py-3 ">
       <div class="container container-max-width">
         <div class="sideBannerImg">
-          <img src="./images/side-banner.jpg" alt="placeholder" class="w-100" >
+          <img src="<?= base_url('assets/images/banners/side-banner.jpg'); ?>" alt="placeholder" class="w-100" >
         </div>
       </div>
     </section>
@@ -200,7 +200,7 @@
       <div class="container container-max-width ">
         <div class=" row skinBannerRow  rounded-4 align-items-center justify-content-between">
           <div class="col-lg-6 col-md-12 col-sm-12 ps-0 skinbnnerimg">
-            <img src="./images/skinbanner.jpg" alt="placeholder" class="w-100    rounded-start-3 rounded-end-5" >
+            <img src="<?= base_url('assets/images/banners/skinbanner.jpg'); ?>" alt="placeholder" class="w-100    rounded-start-3 rounded-end-5" >
           </div>
 
           <div class="col-lg-5 col-md-12 col-sm-12 pt-lg-0 pt-md-3">
