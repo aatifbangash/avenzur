@@ -87,11 +87,11 @@
             <div class="row ">
 
               <div class="col-lg-8 col-md-7 col-sm-12">
-                <div class="boom-product-cat py-4 px-5" style="background-image: url('./images/boom1.png')">
+                <div class="boom-product-cat py-4 px-5" style="background-image: url(<?= base_url('assets/images/banners/boom1.png'); ?>)">
                   <div class="row align-items-center">
                     <div class="col-md-5">
 
-                      <img src="./images/boomtab1.png" alt=""  class="w-100"/>
+                      <img src="<?= base_url('assets/images/banners/boomtab1.png'); ?>" alt=""  class="w-100"/>
                     </div>
                     <div class="col-lg-7 col-md-6">
                       <p class="m-0 py-2"><span class="boom-parag">Get it now 45% OFF</span></p>
@@ -103,7 +103,7 @@
                 </div>
               </div>
               <div class="col-lg-4 col-md-5 col-sm-12">
-                <div class="boom-product-cat py-4 px-5" style="background-image: url('./images/boom2.png')">
+                <div class="boom-product-cat py-4 px-5" style="background-image: url(<?= base_url('assets/images/banners/boom2.png'); ?>)">
                   <div class="row align-items-center">
                    
                     <div class="col-md-12">
@@ -114,7 +114,7 @@
                     </div>
                     <div class="col-md-12">
 
-                      <img src="./images/tabpack.png" alt=""  class="w-100"/>
+                      <img src="<?= base_url('assets/images/banners/tabpack.png'); ?>" alt=""  class="w-100"/>
                     </div>
                   </div>
                 </div>
