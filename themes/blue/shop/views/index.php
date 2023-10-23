@@ -1022,9 +1022,9 @@
                         <div class="card" style="width: 100%">
                             <a href="#" class="text-decoration-none">
                             <div class="cardImg position-relative">
-                            <span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
+                            <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
                                 Sale 20% OFF
-                            </span>
+                            </span>-->
                             <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="..."></div>
                             <div class="card-body px-0 text-start pb-0">
                             
@@ -1133,206 +1133,67 @@
 
         <!-- special products -->
         <div class="special_products">
-          <div class="row specialOfferP py-4">
-            <div class="col-md-12 col-sm-12">
-              <div class="row align-items-center">
-                <div class="col-md-5 col-sm-12">
-      
-                  <div class="cardImg rounded-3"><img src="./images/productimg1.jpg" class="card-img-top rounded-3" alt="..."></div>
-                </div>
-                <div class="col-md-7 col-sm-12 px-md-0">
-                  <div class="card-body px-md-0 text-start pb-0">
-                    <div class="product-cat-title"><span class="text-uppercase">Medical</span></div>
-                    <h5 class="card-title text-start">Vitamin C 500mg Sugarless Tab x 75</h5>
-                    <div class="row align-items-center justify-content-between">
-                      
-                      
-                    </div> 
-                    <!--price and quantity araea  -->
-
-                    <div class="row align-items-center justify-content-between w-100">
-                      <div class="col-md-6 ">
-                        <div class="price text-start  py-2"><h4 class="m-0 fw-bold">240.00 SAR</h4></div>
-                      </div>
-                      <div class="col-md-6 px-md-0">
-                        <div class="quantity text-end py-2 d-flex align-items-center  justify-content-md-between">
-                          <span class="plus"><i class="bi bi-plus-circle-fill"></i></span>
-                          <span class="Qnum ">1</span>
-                          <span class="minus"><i class="bi bi-dash-circle-fill"></i></span>
-                        </div>
-                      </div>
-                    </div>
-                    <div> <button type="button" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark">Add to cart </button></div>
-                    <!-- price area end -->
+            <?php
+                $r = 0;
+                foreach (array_chunk($special_offers, 4) as $sps){
+                    foreach ($sps as $sp) {
+                    ?>
+                        <div class="row specialOfferP py-4">
+                            <div class="col-md-12 col-sm-12">
+                            <div class="row align-items-center">
+                                <div class="col-md-5 col-sm-12">
                     
-                      
-                  </div>
-                </div>
-                
-              </div>
+                                <div class="cardImg rounded-3"><img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top rounded-3" alt="..."></div>
+                                </div>
+                                <div class="col-md-7 col-sm-12 px-md-0">
+                                <div class="card-body px-md-0 text-start pb-0">
+                                    <div class="product-cat-title"><span class="text-uppercase"><?= $sp->category_name; ?></span></div>
+                                    <h5 class="card-title text-start"><?= $sp->name; ?></h5>
+                                    <div class="row align-items-center justify-content-between">
+                                    
+                                    
+                                    </div> 
+                                    <!--price and quantity araea  -->
 
-            </div>
-            
-          </div>
-          <div class="row specialOfferP py-4">
-            <div class="col-md-12 col-sm-12">
-              <div class="row align-items-center">
-                <div class="col-md-5 col-sm-12">
-      
-                  <div class="cardImg rounded-3"><img src="./images/productimg1.jpg" class="card-img-top rounded-3" alt="..."></div>
-                </div>
-                <div class="col-md-7 col-sm-12 px-md-0">
-                  <div class="card-body px-md-0 text-start pb-0">
-                    <div class="product-cat-title"><span class="text-uppercase">Medical</span></div>
-                    <h5 class="card-title text-start">Vitamin C 500mg Sugarless Tab x 75</h5>
-                    <div class="row align-items-center justify-content-between">
-                      
-                      
-                    </div> 
-                    <!--price and quantity araea  -->
+                                    <div class="row align-items-center justify-content-between w-100">
+                                    <div class="col-md-6 ">
+                                        <div class="price text-start  py-2">
+                                            <h4 class="m-0 fw-bold">
+                                            <?php
+                                                if ($sp->promotion) {
+                                                    //echo '<del class="text-red">' . $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price) . '</del><br>';
+                                                    echo $this->sma->convertMoney($sp->promo_price);
+                                                } else {
+                                                    echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
+                                                } 
+                                            ?>
+                                            </h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 px-md-0">
+                                        <div class="quantity text-end py-2 d-flex align-items-center  justify-content-md-between">
+                                        <span class="plus"><i class="bi bi-plus-circle-fill"></i></span>
+                                        <span class="Qnum ">1</span>
+                                        <span class="minus"><i class="bi bi-dash-circle-fill"></i></span>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    <div> <button type="button" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark">Add to cart </button></div>
+                                    <!-- price area end -->
+                                    
+                                    
+                                </div>
+                                </div>
+                                
+                            </div>
 
-                    <div class="row align-items-center justify-content-between w-100">
-                      <div class="col-md-6 ">
-                        <div class="price text-start  py-2"><h4 class="m-0 fw-bold">240.00 SAR</h4></div>
-                      </div>
-                      <div class="col-md-6 px-md-0">
-                        <div class="quantity text-end py-2 d-flex align-items-center  justify-content-md-between">
-                          <span class="plus"><i class="bi bi-plus-circle-fill"></i></span>
-                          <span class="Qnum ">1</span>
-                          <span class="minus"><i class="bi bi-dash-circle-fill"></i></span>
+                            </div>
+                            
                         </div>
-                      </div>
-                    </div>
-                    <div> <button type="button" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark">Add to cart </button></div>
-                    <!-- price area end -->
-                    
-                      
-                  </div>
-                </div>
-                
-              </div>
-
-            </div>
-            
-          </div>
-          <div class="row specialOfferP py-4">
-            <div class="col-md-12 col-sm-12">
-              <div class="row align-items-center">
-                <div class="col-md-5 col-sm-12">
-      
-                  <div class="cardImg rounded-3"><img src="./images/productimg1.jpg" class="card-img-top rounded-3" alt="..."></div>
-                </div>
-                <div class="col-md-7 col-sm-12 px-md-0">
-                  <div class="card-body px-md-0 text-start pb-0">
-                    <div class="product-cat-title"><span class="text-uppercase">Medical</span></div>
-                    <h5 class="card-title text-start">Vitamin C 500mg Sugarless Tab x 75</h5>
-                    <div class="row align-items-center justify-content-between">
-                      
-                      
-                    </div> 
-                    <!--price and quantity araea  -->
-
-                    <div class="row align-items-center justify-content-between w-100">
-                      <div class="col-md-6 ">
-                        <div class="price text-start  py-2"><h4 class="m-0 fw-bold">240.00 SAR</h4></div>
-                      </div>
-                      <div class="col-md-6 px-md-0">
-                        <div class="quantity text-end py-2 d-flex align-items-center  justify-content-md-between">
-                          <span class="plus"><i class="bi bi-plus-circle-fill"></i></span>
-                          <span class="Qnum ">1</span>
-                          <span class="minus"><i class="bi bi-dash-circle-fill"></i></span>
-                        </div>
-                      </div>
-                    </div>
-                    <div> <button type="button" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark">Add to cart </button></div>
-                    <!-- price area end -->
-                    
-                      
-                  </div>
-                </div>
-                
-              </div>
-
-            </div>
-            
-          </div>
-          <div class="row specialOfferP py-4">
-            <div class="col-md-12 col-sm-12">
-              <div class="row align-items-center">
-                <div class="col-md-5 col-sm-12">
-      
-                  <div class="cardImg rounded-3"><img src="./images/productimg1.jpg" class="card-img-top rounded-3" alt="..."></div>
-                </div>
-                <div class="col-md-7 col-sm-12 px-md-0">
-                  <div class="card-body px-md-0 text-start pb-0">
-                    <div class="product-cat-title"><span class="text-uppercase">Medical</span></div>
-                    <h5 class="card-title text-start">Vitamin C 500mg Sugarless Tab x 75</h5>
-                    <div class="row align-items-center justify-content-between">
-                      
-                      
-                    </div> 
-                    <!--price and quantity araea  -->
-
-                    <div class="row align-items-center justify-content-between w-100">
-                      <div class="col-md-6 ">
-                        <div class="price text-start  py-2"><h4 class="m-0 fw-bold">240.00 SAR</h4></div>
-                      </div>
-                      <div class="col-md-6 px-md-0">
-                        <div class="quantity text-end py-2 d-flex align-items-center  justify-content-md-between">
-                          <span class="plus"><i class="bi bi-plus-circle-fill"></i></span>
-                          <span class="Qnum ">1</span>
-                          <span class="minus"><i class="bi bi-dash-circle-fill"></i></span>
-                        </div>
-                      </div>
-                    </div>
-                    <div> <button type="button" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark">Add to cart </button></div>
-                    <!-- price area end -->
-                    
-                      
-                  </div>
-                </div>
-                
-              </div>
-
-            </div>
-            
-          </div>
-          <div class="row specialOfferP py-4">
-            <div class="col-md-12 col-sm-12">
-              <div class="row align-items-center">
-                <div class="col-md-5 col-sm-12">
-      
-                  <div class="cardImg rounded-3"><img src="./images/productimg1.jpg" class="card-img-top rounded-3" alt="..."></div>
-                </div>
-                <div class="col-md-7 col-sm-12 px-md-0">
-                  <div class="card-body px-md-0 text-start pb-0">
-                    <div class="product-cat-title"><span class="text-uppercase">Medical</span></div>
-                    <h5 class="card-title text-start">Vitamin C 500mg Sugarless Tab x 75</h5>
-                    <div class="row align-items-center justify-content-between">
-                      
-                      
-                    </div> 
-                    <!--price and quantity araea  -->
-
-                    <div class="row align-items-center justify-content-between w-100">
-                      <div class="col-md-6 ">
-                        <div class="price text-start  py-2"><h4 class="m-0 fw-bold">240.00 SAR</h4></div>
-                      </div>
-                      <div class="col-md-6 px-md-0">
-                        <div class="quantity text-end py-2 d-flex align-items-center  justify-content-md-between">
-                          <span class="plus"><i class="bi bi-plus-circle-fill"></i></span>
-                          <span class="Qnum ">1</span>
-                          <span class="minus"><i class="bi bi-dash-circle-fill"></i></span>
-                        </div>
-                      </div>
-                    </div>
-                    <div> <button type="button" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark">Add to cart </button></div>
-                    <!-- price area end -->                                          
-                  </div>
-                </div>                
-              </div>
-            </div>            
-          </div>
+                    <?php
+                    }
+                }
+            ?>
         </div>
         <!-- special products end -->
       </div>
