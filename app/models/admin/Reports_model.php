@@ -1004,7 +1004,8 @@ class Reports_model extends CI_Model
         }
 
         if ($item) {
-            $totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+            //$totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+            $totalPurchasesQuery .= "AND (p.id = '{$item}') ";
         }
 
         $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.batchno
@@ -1043,7 +1044,7 @@ class Reports_model extends CI_Model
             }
 
             if ($item) {
-                $totalSalesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+                $totalSalesQuery .= "AND (p.id = '{$item}') ";
             }
 
             $totalSalesQuery .= "GROUP BY p.id, p.code, p.name, si.batch_no";
@@ -1089,7 +1090,7 @@ class Reports_model extends CI_Model
             }
 
             if ($item) {
-                $totalReturnSupplerQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+                $totalReturnSupplerQuery .= "AND (p.id = '{$item}') ";
             }
 
             $totalReturnSupplerQuery .= "GROUP BY p.id, p.code, p.name, pi.batch_no";
@@ -1136,7 +1137,7 @@ class Reports_model extends CI_Model
             }
 
             if ($item) {
-                $totalReturnSupplerQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+                $totalReturnSupplerQuery .= "AND (p.id = '{$item}') ";
             }
 
             $totalReturnCustomerQuery .= "group by p.id, p.code, p.name, rci.batch_no";
@@ -1185,7 +1186,7 @@ class Reports_model extends CI_Model
             }
 
             if ($item) {
-                $totalTransferQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+                $totalTransferQuery .= "AND (p.id = '{$item}') ";
             }
 
             $totalTransferQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno";
@@ -1241,7 +1242,7 @@ class Reports_model extends CI_Model
             }
 
             if ($item) {
-                $totalTransferQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+                $totalTransferQuery .= "AND (p.id = '{$item}') ";
             }
 
             $totalTransferQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno";
@@ -1301,7 +1302,7 @@ class Reports_model extends CI_Model
             }
 
             if ($item) {
-                $totalTransferQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
+                $totalTransferQuery .= "AND (p.id = '{$item}') ";
             }
 
             $totalTransferQuery .= "GROUP BY p.id, p.code, p.name, pi.batchno";
