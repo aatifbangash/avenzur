@@ -249,9 +249,9 @@
                                         <div class="card" style="width: 100%">
                                             <a href="#" class="text-decoration-none">
                                                 <div class="cardImg position-relative">
-                                                    <span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
+                                                    <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
                                                         Sale 20% OFF
-                                                    </span>
+                                                    </span>-->
                                                     <img src="<?= base_url('assets/uploads/' . $popular_product->image); ?>" class="card-img-top" alt="...">
                                                 </div>
                                                 <div class="card-body px-0 text-start pb-0">
