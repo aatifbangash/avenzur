@@ -249,7 +249,7 @@
                                                     <span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
                                                         Sale 20% OFF
                                                     </span>
-                                                    <img src="./images/productimg1.jpg" class="card-img-top" alt="...">
+                                                    <img src="<?= base_url('assets/uploads/' . $popular_product->image); ?>" class="card-img-top" alt="...">
                                                 </div>
                                                 <div class="card-body px-0 text-start pb-0">
                                                     <div class="product-cat-title">
