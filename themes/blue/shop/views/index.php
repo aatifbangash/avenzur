@@ -253,10 +253,10 @@
                       <span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
                        Sale 20% OFF
                       </span>
-                      <img src="./images/productimg1.jpg" class="card-img-top" alt="..."></div>
+                      <img src="<?= $popular_product->image; ?>" class="card-img-top" alt="..."></div>
                     <div class="card-body px-0 text-start pb-0">
-                      <div class="product-cat-title"><span class="text-uppercase">Medical</span></div>
-                      <h5 class="card-title text-start">Vitamin C 500mg Sugarless Tab x 75</h5>
+                      <div class="product-cat-title"><span class="text-uppercase"><?= $popular_category->name; ?></span></div>
+                      <h5 class="card-title text-start"><?= $popular_product->name; ?></h5>
                       <div class="row align-items-center justify-content-between">
                         <div class="col-md-6">
                           <div class="rating">
