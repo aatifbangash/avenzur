@@ -223,13 +223,13 @@
           <div class="popularTitle text-center mb-4"><h2>Popular Categories</h2></div>
           <ul class="nav nav-pills mb-3 justify-content-center" id="pills-tab" role="tablist">
             <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">Vitamins</button>
+              <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#vitamins" type="button" role="tab" aria-controls="vitamins" aria-selected="true">Vitamins</button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">Medical</button>
+              <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#medical" type="button" role="tab" aria-controls="medical" aria-selected="false">Medical</button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab" aria-controls="pills-contact" aria-selected="false">Herbal</button>
+              <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#herbal" type="button" role="tab" aria-controls="herbal" aria-selected="false">Herbal</button>
             </li>
            
           </ul>

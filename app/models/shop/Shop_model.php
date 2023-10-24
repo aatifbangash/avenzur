@@ -242,6 +242,18 @@ class Shop_model extends CI_Model
         return $this->db->count_all_results('sales');
     }
 
+    public function getPopularCategories($limit = 6){
+        $this->db->select("{$this->db->dbprefix('categories')}.id as id, {$this->db->dbprefix('categories')}.name as name, {$this->db->dbprefix('categories')}.code as code, {$this->db->dbprefix('categories')}.image as image, {$this->db->dbprefix('categories')}.slug as slug")
+            ->where('categories.popular', 1)
+        ->limit($limit);
+        $popular_categories = $this->db->get('categories')->result();
+        
+        foreach($popular_categories as $category){
+            echo '<pre>';
+            print_r($category);exit;
+        }
+    }
+
     public function getFeaturedCategories($limit = 6, $promo = true){
 
         $this->db->select("{$this->db->dbprefix('categories')}.id as id, {$this->db->dbprefix('categories')}.name as name, {$this->db->dbprefix('categories')}.code as code, {$this->db->dbprefix('categories')}.image as image, {$this->db->dbprefix('categories')}.slug as slug")
