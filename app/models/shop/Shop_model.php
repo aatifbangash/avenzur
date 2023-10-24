@@ -242,18 +242,6 @@ class Shop_model extends CI_Model
         return $this->db->count_all_results('sales');
     }
 
-    public function getPopularCategories($limit = 6){
-        $this->db->select("{$this->db->dbprefix('categories')}.id as id, {$this->db->dbprefix('categories')}.name as name, {$this->db->dbprefix('categories')}.code as code, {$this->db->dbprefix('categories')}.image as image, {$this->db->dbprefix('categories')}.slug as slug")
-            ->where('categories.popular', 1)
-        ->limit($limit);
-        $popular_categories = $this->db->get('categories')->result();
-        
-        foreach($popular_categories as $category){
-            echo '<pre>';
-            print_r($category);exit;
-        }
-    }
-
     public function getFeaturedCategories($limit = 6, $promo = true){
 
         $this->db->select("{$this->db->dbprefix('categories')}.id as id, {$this->db->dbprefix('categories')}.name as name, {$this->db->dbprefix('categories')}.code as code, {$this->db->dbprefix('categories')}.image as image, {$this->db->dbprefix('categories')}.slug as slug")
@@ -289,6 +277,42 @@ class Shop_model extends CI_Model
         }
         $this->db->order_by('RAND()');
         return $this->db->get('products')->result();  
+    }
+
+    public function getPopularCategories($limit = 6){
+        $this->db->select("{$this->db->dbprefix('categories')}.id as id, {$this->db->dbprefix('categories')}.name as name, {$this->db->dbprefix('categories')}.code as code, {$this->db->dbprefix('categories')}.image as image, {$this->db->dbprefix('categories')}.slug as slug")
+            ->where('categories.popular', 1)
+        ->limit($limit);
+        $popular_categories = $this->db->get('categories')->result();
+        
+        foreach($popular_categories as $category){
+            $this->db->select("{$this->db->dbprefix('products')}.id as id, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.slug as slug, {$this->db->dbprefix('products')}.price, quantity, type, promotion, promo_price, start_date, end_date, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug")
+            ->join('brands b', 'products.brand=b.id', 'left')
+            ->join('categories c', 'products.category_id=c.id', 'left')
+            ->where('products.category_id', $category->id)
+            ->where('hide !=', 1)
+            //->where('products.cf1', $countryId)
+            ->limit(20);
+
+            $sp = $this->getSpecialPrice();
+            if ($sp->cgp) {
+                $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
+            } elseif ($sp->wgp) {
+                $this->db->select('wgp.price as special_price', false)->join($sp->wgp, 'products.id=wgp.product_id', 'left');
+            }
+
+            if ($promo) {
+                $this->db->order_by('promotion desc');
+            }
+            $this->db->order_by('RAND()');
+            $products = $this->db->get('products')->result();
+
+            $category->products = $products;
+        }
+
+        echo '<pre>';
+        print_r($popular_categories);
+        exit;
     }
 
     public function getFeaturedProducts($limit = 16, $promo = true)
