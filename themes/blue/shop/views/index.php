@@ -260,7 +260,7 @@
                                                     <div class="product-cat-title">
                                                         <span class="text-uppercase"><?= $popular_category->name; ?></span>
                                                     </div>
-                                                    <h5 class="card-title text-start"><?= $popular_product->name; ?></h5>
+                                                    <h5 class="card-title text-start"><a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none"><?= $popular_product->name; ?></a></h5>
                                                     <div class="row align-items-center justify-content-between">
                                                         <div class="col-md-6">
                                                             <div class="rating">
