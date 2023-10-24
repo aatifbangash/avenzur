@@ -381,7 +381,7 @@
                     <div class="row products-card text-center gy-4 ">
                         <div class="col-md-12 col-sm-12">
                         <div class="card" style="width: 100%">
-                            <a href="#" class="text-decoration-none">
+                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
                             <div class="cardImg position-relative">
                             <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
                                 Sale 20% OFF
@@ -433,9 +433,10 @@
                                 </div>
                                 <div class="col-md-6">
                                 <div class="quantity text-end py-2 d-flex align-items-center justify-content-md-between">
-                                    <span class="plus"><i class="bi bi-plus-circle-fill"></i></span>
-                                    <span class="Qnum ">1</span>
-                                    <span class="minus"><i class="bi bi-dash-circle-fill"></i></span>
+                                    <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
+                                    <input type="text" name="quantity" class="Qnum" value="1" required="required" />
+                                    <!--<span class="Qnum ">1</span>-->
+                                    <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
                                 </div>
                                 </div>
                             </div>
@@ -445,7 +446,7 @@
                                 
                             </div>
                             </a>
-                            <div> <button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark">Add to cart </button></div>
+                            <div> <button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
                         </div> 
                         </div> 
                         
