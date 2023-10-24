@@ -381,15 +381,18 @@
                     <div class="row products-card text-center gy-4 ">
                         <div class="col-md-12 col-sm-12">
                         <div class="card" style="width: 100%">
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
+                            
                             <div class="cardImg position-relative">
                             <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
                                 Sale 20% OFF
                             </span>-->
-                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="..."></div>
+                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
+                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="...">
+                            </a>
+                            </div>
                             <div class="card-body px-0 text-start pb-0">
                             
-                            <h5 class="card-title text-start"><?= $sp->name; ?></h5>
+                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
                             <div class="row align-items-center justify-content-between">
                                 <div class="col-md-6">
                                 <div class="rating">
@@ -445,7 +448,7 @@
                             
                                 
                             </div>
-                            </a>
+                            
                             <div> <button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
                         </div> 
                         </div> 
