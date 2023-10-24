@@ -247,7 +247,7 @@
                                 ?>
                                     <div class="col-lg-3 col-md-4 col-sm-12">
                                         <div class="card" style="width: 100%">
-                                            <a href="#" class="text-decoration-none">
+                                            <!--<a href="#" class="text-decoration-none">-->
                                                 <div class="cardImg position-relative">
                                                     <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
                                                         Sale 20% OFF
@@ -312,7 +312,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </a>
+                                            <!--</a>-->
                                             <div> 
                                                 <button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark">Add to cart </button>
                                             </div>
