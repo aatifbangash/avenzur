@@ -73,10 +73,8 @@ $(document).ready(function(){
       t.preventDefault();
       var e = $(this).attr("data-id")
         , a = $(".shopping-cart:visible")
-        , s = $(this).parent().find("input");
+        , s = $(this).parents(".quantity").find("input");
 
-      console.log(e);
-      console.log(a);
       console.log(s);
 
         //, s = $(this).parents(".product-bottom").find(".quantity-input");
