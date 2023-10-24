@@ -98,12 +98,16 @@
             <div id="searchtogglecros"><i class="bi bi-x-circle-fill"></i></div>
             <form class="d-flex search-bar" role="search" >
               
-            <select class="form-select w-auto bg-transparent border-0 ps-4 categorySelect" aria-label="Default select">
-              <option selected>Category</option>
-              <option value="Medical">Medical</option>
-              <option value="Skin Care">Skin Care</option>
-              <option value="Suppliments">Suppliments</option>
-            </select>
+              <select class="form-select w-auto bg-transparent border-0 ps-4 categorySelect" aria-label="Default select">
+                <option selected>Category</option>
+                <?php
+                  foreach($all_categories as $category){
+                    ?>
+                      <option value="<?= $category->id; ?>"><?= $category->name; ?></option>
+                    <?php
+                  }
+                ?>
+              </select>
               <input class="form-control border-0 bg-transparent py-3" type="search" placeholder="What are you looking for?" aria-label="Search">
               <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
             </form>
