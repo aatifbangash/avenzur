@@ -48,6 +48,7 @@ toggleSearchcros.addEventListener('click', function() {
 );
 
 function update_mini_cart(t) {
+  console.log(t);
   if (t.total_items && t.total_items > 0) {
       $(".cart-total-items").text(t.total_items + " " + (t.total_items > 1 ? lang.items : lang.item)),
       $("#cart-items").empty(),
@@ -59,10 +60,11 @@ function update_mini_cart(t) {
       $("<tfoot>" + e + "</tfoot>").appendTo("#cart-items"),
       $("#cart-empty").hide(),
       $("#cart-contents").show()
-  } else
-      $(".cart-total-items").text(lang.cart_empty),
-      $("#cart-contents").hide(),
-      $("#cart-empty").show()
+  } else{
+    $(".cart-total-items").text(lang.cart_empty);
+    $("#cart-contents").hide();
+    $("#cart-empty").show();
+  }
 }
 
 // slick slider =====================
