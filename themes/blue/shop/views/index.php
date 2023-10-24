@@ -472,12 +472,12 @@
         <div class="row">
           <div class="col-md-6">
             <div class="sideBannerImg my-2">
-             <a href="#"> <img src="<?= base_url('assets/images/banners/momBaby.jpg'); ?>" alt="placeholder" class="w-100 h-100 rounded-4" ></a>
+             <a href="<?= site_url('category/mombaby'); ?>"> <img src="<?= base_url('assets/images/banners/momBaby.jpg'); ?>" alt="placeholder" class="w-100 h-100 rounded-4" ></a>
             </div>
           </div>
           <div class="col-md-6">
             <div class="sideBannerImg my-2">
-              <a href="#"> <img src="<?= base_url('assets/images/banners/persC.jpg'); ?>" alt="placeholder" class="w-100  rounded-4" ></a>
+              <a href="<?= site_url('category/skn'); ?>"> <img src="<?= base_url('assets/images/banners/persC.jpg'); ?>" alt="placeholder" class="w-100  rounded-4" ></a>
             </div>
           </div>
         </div>
@@ -508,12 +508,14 @@
                             <div class="row align-items-center">
                                 <div class="col-md-5 col-sm-12">
                     
-                                <div class="cardImg rounded-3"><img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top rounded-3" alt="..."></div>
+                                <div class="cardImg rounded-3">
+                                    <a href="<?= site_url('product/' . $sp->slug); ?>"><img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top rounded-3" alt="..."></a>
+                                </div>
                                 </div>
                                 <div class="col-md-7 col-sm-12 px-md-0">
                                 <div class="card-body px-md-0 text-start pb-0">
                                     <div class="product-cat-title"><span class="text-uppercase"><?= $sp->category_name; ?></span></div>
-                                    <h5 class="card-title text-start"><?= $sp->name; ?></h5>
+                                    <a href="<?= site_url('product/' . $sp->slug); ?>"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
                                     <div class="row align-items-center justify-content-between">
                                     
                                     
