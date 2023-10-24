@@ -268,19 +268,35 @@
                                                                 <i class="bi bi-star-fill"></i>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-6">
-                                                            <div class="discountPrice price text-end py-2">
-                                                                <h4 class="m-0 text-decoration-line-through">
-                                                                    240.00 SAR
-                                                                </h4>
-                                                            </div>
-                                                        </div>
+                                                        <?php
+                                                            if ($popular_product->promotion) {
+                                                                ?>
+                                                                    <div class="col-md-6">
+                                                                        <div class="discountPrice price text-end py-2">
+                                                                            <h4 class="m-0 text-decoration-line-through">
+                                                                                <?= $this->sma->convertMoney(isset($popular_product->special_price) && !empty(isset($popular_product->special_price)) ? $popular_product->special_price : $popular_product->price); ?>
+                                                                            </h4>
+                                                                        </div>
+                                                                    </div>
+                                                                <?php
+                                                                
+                                                            }
+                                                        ?>
                                                     </div> 
                                                     <div class="row align-items-center justify-content-between">
                                                         <div class="col-md-6 ">
                                                             <div class="price text-start  py-2">
                                                                 <h4 class="m-0 fw-bold">
-                                                                    240.00 SAR
+                                                                <?php
+                                                                if ($popular_product->promotion) {
+                                                                    
+                                                                        echo $this->sma->convertMoney($popular_product->promo_price);
+                                                                    
+                                                                }else{
+                                                                    echo $this->sma->convertMoney(isset($popular_product->special_price) && !empty(isset($popular_product->special_price)) ? $popular_product->special_price : $popular_product->price);
+                                                                }
+                                                                ?>
+                                                                    
                                                                 </h4>
                                                             </div>
                                                         </div>
