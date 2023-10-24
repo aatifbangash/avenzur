@@ -26,18 +26,19 @@
               </div>
               <div class="col-md-2 col-sm-12">
                 <div>
-                  <h6><a href="#" class="text-dark text-decoration-none" >Store Policy </a></h6>
-                  <h6><a href="#" class="text-dark text-decoration-none"> About</a></h6>
-                  <h6><a href="#" class="text-dark text-decoration-none"> Privacy Policy</a></h6>
-                  <h6> <a href="#" class="text-dark text-decoration-none">Terms & Conditions</a></h6>
+                  <h6><a href="<?= site_url('shop/page/store-policy'); ?>" class="text-dark text-decoration-none" >Store Policy </a></h6>
+                  <h6><a href="<?= site_url('shop/page/about-us-policy'); ?>" class="text-dark text-decoration-none"> About</a></h6>
+                  <h6><a href="<?= site_url('shop/page/privacy-policy'); ?>" class="text-dark text-decoration-none"> Privacy Policy</a></h6>
+                  <h6> <a href="<?= site_url('shop/page/terms'); ?>" class="text-dark text-decoration-none">Terms & Conditions</a></h6>
+                  <h6> <a href="<?= site_url('shop/page/exchange-return-policy'); ?>" class="text-dark text-decoration-none">Refund & Return</a></h6>
                 </div>
               </div>
               <div class="col-md-2 col-sm-12">
                 <div>
-                  <h6><a href="#" class="text-dark text-decoration-none" >Makeup </a></h6>
-                  <h6><a href="#" class="text-dark text-decoration-none"> Beauty</a></h6>
-                  <h6><a href="#" class="text-dark text-decoration-none"> Herbal</a></h6>
-                  <h6> <a href="#" class="text-dark text-decoration-none">Medicine</a></h6>
+                  <h6><a href="<?= site_url('category/beauty'); ?>" class="text-dark text-decoration-none" >Makeup </a></h6>
+                  <h6><a href="<?= site_url('category/beauty'); ?>" class="text-dark text-decoration-none"> Beauty</a></h6>
+                  <h6><a href="<?= site_url('category/herbal'); ?>" class="text-dark text-decoration-none"> Herbal</a></h6>
+                  <h6> <a href="<?= site_url('category/medical'); ?>" class="text-dark text-decoration-none">Medicine</a></h6>
                 </div>
               </div>
               <div class="col-md-2 col-sm-12">
