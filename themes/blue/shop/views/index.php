@@ -222,12 +222,14 @@
                 <div class="popularTitle text-center mb-4"><h2>Popular Categories</h2></div>
                 <ul class="nav nav-pills mb-3 justify-content-center" id="pills-tab" role="tablist">
                     <?php
+                    $pp = 0;
                     foreach($popular_categories as $popular_category){
                     ?>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="pills-<?= $popular_category->name; ?>-tab" data-bs-toggle="pill" data-bs-target="#pills-<?= $popular_category->name; ?>" type="button" role="tab" aria-controls="pills-<?= $popular_category->name; ?>" aria-selected="true"><?= $popular_category->name; ?></button>
+                            <button class="nav-link <?php if($pp == 0) echo 'active'; ?>" id="pills-<?= $popular_category->name; ?>-tab" data-bs-toggle="pill" data-bs-target="#pills-<?= $popular_category->name; ?>" type="button" role="tab" aria-controls="pills-<?= $popular_category->name; ?>" aria-selected="true"><?= $popular_category->name; ?></button>
                         </li>
                     <?php
+                        $pp++;
                     }
                     ?> 
                 </ul>
