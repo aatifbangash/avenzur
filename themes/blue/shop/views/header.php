@@ -148,7 +148,6 @@
                           </div>
                           <!--<span class="badge bg-primary rounded-pill">14</span>-->
                         </li>
-                        <option value="<?= $category->id; ?>"><?= $category->name; ?></option>
                       <?php
                     }
                   ?>
