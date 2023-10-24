@@ -515,7 +515,7 @@
                                 <div class="col-md-7 col-sm-12 px-md-0">
                                 <div class="card-body px-md-0 text-start pb-0">
                                     <div class="product-cat-title"><span class="text-uppercase"><?= $sp->category_name; ?></span></div>
-                                    <a href="<?= site_url('product/' . $sp->slug); ?>"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
+                                    <a style="text-decoration: none;" href="<?= site_url('product/' . $sp->slug); ?>"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
                                     <div class="row align-items-center justify-content-between">
                                     
                                     
