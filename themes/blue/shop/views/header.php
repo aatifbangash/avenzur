@@ -59,7 +59,7 @@
                       
                     </ul>
                 </div>
-                <div class="dropdown me-2">
+                <!--<div class="dropdown me-2">
                     <a class="btn  dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                       SAR <i class="bi bi-chevron-down ms-2"></i>
                     </a>
@@ -70,7 +70,7 @@
                       <li><a class="dropdown-item" href="#">AED</a></li>
                       
                     </ul>
-                </div>
+                </div>-->
                   <button type="button" class="btn text-white px-0"><i class="bi bi-person-fill"></i>&nbsp; My Account</button>
               </div>
               
@@ -197,7 +197,7 @@
           <div class="col-md-4 col-sm-2 shop-icons">
             <div class="text-end" id="shoppingdivMob">
 
-              <span class="shuffleIcon me-2">
+              <!--<span class="shuffleIcon me-2">
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <g id="Frame">
                   <path id="Vector" d="M8.8 23.2H6.4C5.76348 23.2 5.15303 22.9471 4.70294 22.497C4.25286 22.047 4 21.4365 4 20.8L4 11.2C4 10.5635 4.25286 9.95302 4.70294 9.50293C5.15303 9.05284 5.76348 8.79999 6.4 8.79999L20 8.79999" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10"/>
@@ -212,7 +212,7 @@
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M26.0832 7.51679C23.5272 4.96079 19.3824 4.96079 16.8264 7.51679C16.5112 7.83199 16.2376 8.17199 16 8.52879C15.7624 8.17199 15.4888 7.83199 15.1736 7.51759C12.6176 4.96159 8.47282 4.96159 5.91682 7.51759C3.36082 10.0736 3.36082 14.2184 5.91682 16.7744L16 26.8568L26.0832 16.7736C28.6392 14.2176 28.6392 10.0736 26.0832 7.51679Z" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10" stroke-linecap="square"/>
               </svg>
-            </span>
+            </span>-->
             
               <span class="cartIcon">
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
