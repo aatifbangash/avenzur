@@ -142,12 +142,13 @@
                     foreach($all_categories as $category){
                       ?>
                         <li class="list-group-item d-flex justify-content-between align-items-start">
-                          <a href="<?= site_url('category/'.$category->slug) ?>">
                           <div class="ms-2 me-auto">
-                            <div class="fw-bold"><?= $category->name; ?></div>
+                            <div class="fw-bold">
+                              <a href="<?= site_url('category/'.$category->slug) ?>"><?= $category->name; ?></a>
+                            </div>
                             <?= $category->description; ?>
                           </div>
-                          </a>
+                          
                           <!--<span class="badge bg-primary rounded-pill">14</span>-->
                         </li>
                         <option value="<?= $category->id; ?>"><?= $category->name; ?></option>
