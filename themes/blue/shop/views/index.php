@@ -222,16 +222,15 @@
         <div class="categoryTabs pt-4">
           <div class="popularTitle text-center mb-4"><h2>Popular Categories</h2></div>
           <ul class="nav nav-pills mb-3 justify-content-center" id="pills-tab" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#vitamins" type="button" role="tab" aria-controls="vitamins" aria-selected="true">Vitamins</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#medical" type="button" role="tab" aria-controls="medical" aria-selected="false">Medical</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#herbal" type="button" role="tab" aria-controls="herbal" aria-selected="false">Herbal</button>
-            </li>
-           
+            <?php
+                foreach($popular_categories as $popular_category){
+                    ?>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#<?= $popular_category->name; ?>" type="button" role="tab" aria-controls="<?= $popular_category->name; ?>" aria-selected="true"><?= $popular_category->name; ?></button>
+                    </li>
+                    <?php
+                }
+            ?>           
           </ul>
           <div class="tab-content pt-3" id="pills-tabContent">
             <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab" tabindex="0">

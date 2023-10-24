@@ -310,9 +310,7 @@ class Shop_model extends CI_Model
             $category->products = $products;
         }
 
-        echo '<pre>';
-        print_r($popular_categories);
-        exit;
+        return $popular_categories;
     }
 
     public function getFeaturedProducts($limit = 16, $promo = true)
