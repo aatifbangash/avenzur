@@ -314,7 +314,7 @@
                                                 </div>
                                             <!--</a>-->
                                             <div> 
-                                                <button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>
+                                                <button type="button" data-id="<?= $popular_product->id; ?>" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>
                                             </div>
                                         </div> 
                                     </div>
