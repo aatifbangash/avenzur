@@ -339,7 +339,7 @@
      <section class="side-banner py-3">
       <div class="container container-max-width">
         <div class="sideBannerImg">
-          <a href="#"><img src="<?= base_url('assets/images/banners/suppli.jpg'); ?>" alt="placeholder" class="w-100"></a>
+          <a href="<?= site_url('category/sup'); ?>"><img src="<?= base_url('assets/images/banners/suppli.jpg'); ?>" alt="placeholder" class="w-100"></a>
         </div>
       </div>
     </section>
@@ -349,12 +349,12 @@
         <div class="row">
           <div class="col-md-12">
             <div class="sideBannerImg mt-2">
-              <a href="#"> <img src="<?= base_url('assets/images/banners/vitamin.jpg'); ?>" alt="placeholder" class="w-100 h-100 " > </a>
+              <a href="<?= site_url('category/vitamins'); ?>"> <img src="<?= base_url('assets/images/banners/vitamin.jpg'); ?>" alt="placeholder" class="w-100 h-100 " > </a>
             </div>
           </div>
           <div class="col-md-12">
             <div class="sideBannerImg mt-4">
-              <a href="#"> <img src="<?= base_url('assets/images/banners/makeup.jpg'); ?>" alt="placeholder" class="w-100  " ></a>
+              <a href="<?= site_url('category/beauty'); ?>"> <img src="<?= base_url('assets/images/banners/makeup.jpg'); ?>" alt="placeholder" class="w-100  " ></a>
             </div>
           </div>
         </div>
