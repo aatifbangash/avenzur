@@ -216,98 +216,96 @@
     </section>
     <!-- skin container area end -->
 
-    <!-- popular catgory tabs  -->
     <section class="popularCat-container py-3">
-      <div class="container container-max-width">
-        <div class="categoryTabs pt-4">
-          <div class="popularTitle text-center mb-4"><h2>Popular Categories</h2></div>
-          <ul class="nav nav-pills mb-3 justify-content-center" id="pills-tab" role="tablist">
-            <?php
-                foreach($popular_categories as $popular_category){
-                    ?>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="pills-<?= $popular_category->name; ?>" data-bs-toggle="pill" data-bs-target="#<?= $popular_category->name; ?>" type="button" role="tab" aria-controls="<?= $popular_category->name; ?>" aria-selected="true"><?= $popular_category->name; ?></button>
-                    </li>
+        <div class="container container-max-width">
+            <div class="categoryTabs pt-4">
+                <div class="popularTitle text-center mb-4"><h2>Popular Categories</h2></div>
+                <ul class="nav nav-pills mb-3 justify-content-center" id="pills-tab" role="tablist">
                     <?php
-                }
-            ?>           
-          </ul>
-          <div class="tab-content pt-3" id="pills-tabContent">
+                    foreach($popular_categories as $popular_category){
+                    ?>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="pills-<?= $popular_category->name; ?>-tab" data-bs-toggle="pill" data-bs-target="#pills-<?= $popular_category->name; ?>" type="button" role="tab" aria-controls="pills-<?= $popular_category->name; ?>" aria-selected="true"><?= $popular_category->name; ?></button>
+                        </li>
+                    <?php
+                    }
+                    ?> 
+                </ul>
 
-            <?php
-            foreach($popular_categories as $popular_category){
-            ?>
-
-            <div class="tab-pane fade show active" id="<?= $popular_category->name; ?>" role="tabpanel" aria-labelledby="pills-<?= $popular_category->name; ?>" tabindex="0">
-              <!-- cards -->
-              <div class="row products-card text-center gy-4">
-                <?php
-                foreach($popular_category->products as $popular_product){
-                ?>
-                <div class="col-lg-3 col-md-4 col-sm-12">
-                <div class="card" style="width: 100%">
-                    <a href="#" class="text-decoration-none">
-                    <div class="cardImg position-relative">
-                        <span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
-                            Sale 20% OFF
-                        </span>
-                        <img src="<?= $popular_product->image; ?>" class="card-img-top" alt="..."></div>
-                        <div class="card-body px-0 text-start pb-0">
-                            <div class="product-cat-title"><span class="text-uppercase"><?= $popular_category->name; ?></span></div>
-                            <h5 class="card-title text-start"><?= $popular_product->name; ?></h5>
-                            <div class="row align-items-center justify-content-between">
-                                <div class="col-md-6">
-                                    <div class="rating">
-                                        <i class="bi bi-star-fill rated"></i>
-                                        <i class="bi bi-star-fill rated"></i>
-                                        <i class="bi bi-star-fill rated"></i>
-                                        <i class="bi bi-star-fill"></i>
+                <div class="tab-content pt-3" id="pills-tabContent">
+                    <?php
+                    foreach($popular_categories as $popular_category){
+                    ?>
+                        <div class="tab-pane fade show active" id="pills-<?= $popular_category->name; ?>" role="tabpanel" aria-labelledby="pills-<?= $popular_category->name; ?>-tab" tabindex="0">
+                            <!-- cards -->
+                            <div class="row products-card text-center gy-4">
+                                <?php
+                                foreach($popular_category->products as $popular_product){
+                                ?>
+                                    <div class="col-lg-3 col-md-4 col-sm-12">
+                                        <div class="card" style="width: 100%">
+                                            <a href="#" class="text-decoration-none">
+                                                <div class="cardImg position-relative">
+                                                    <span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
+                                                        Sale 20% OFF
+                                                    </span>
+                                                    <img src="./images/productimg1.jpg" class="card-img-top" alt="...">
+                                                </div>
+                                                <div class="card-body px-0 text-start pb-0">
+                                                    <div class="product-cat-title">
+                                                        <span class="text-uppercase"><?= $popular_category->name; ?></span>
+                                                    </div>
+                                                    <h5 class="card-title text-start"><?= $popular_product->name; ?></h5>
+                                                    <div class="row align-items-center justify-content-between">
+                                                        <div class="col-md-6">
+                                                            <div class="rating">
+                                                                <i class="bi bi-star-fill rated"></i>
+                                                                <i class="bi bi-star-fill rated"></i>
+                                                                <i class="bi bi-star-fill rated"></i>
+                                                                <i class="bi bi-star-fill"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="discountPrice price text-end py-2">
+                                                                <h4 class="m-0 text-decoration-line-through">
+                                                                    240.00 SAR
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                    </div> 
+                                                    <div class="row align-items-center justify-content-between">
+                                                        <div class="col-md-6 ">
+                                                            <div class="price text-start  py-2">
+                                                                <h4 class="m-0 fw-bold">
+                                                                    240.00 SAR
+                                                                </h4>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="quantity text-end py-2 d-flex align-items-center justify-content-between">
+                                                                <span class="plus">
+                                                                    <i class="bi bi-plus-circle-fill"></i>
+                                                                </span>
+                                                                <span class="Qnum ">1</span>
+                                                                <span class="minus"><i class="bi bi-dash-circle-fill"></i></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                            <div> 
+                                                <button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark">Add to cart </button>
+                                            </div>
+                                        </div> 
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">240.00 SAR</h4></div>
-                                </div>
-                            </div> 
-                            <!--price and quantity araea  -->
-  
-                            <div class="row align-items-center justify-content-between">
-                                <div class="col-md-6 ">
-                                    <div class="price text-start  py-2"><h4 class="m-0 fw-bold">240.00 SAR</h4></div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="quantity text-end py-2 d-flex align-items-center justify-content-between">
-                                        <span class="plus"><i class="bi bi-plus-circle-fill"></i></span>
-                                        <span class="Qnum ">1</span>
-                                        <span class="minus"><i class="bi bi-dash-circle-fill"></i></span>
-                                    </div>
-                                </div>
+                                <? } ?>
                             </div>
-                    
-                            <!-- price area end -->
                         </div>
-                    </div>
-                    </a>
-                    <div> <button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark">Add to cart </button></div>
-                </div> 
+                    <? } ?>
                 </div>
-                  
-                  <?php
-                  }
-                  ?>
-              </div>
             </div>
-
-            <?php
-            }
-            ?> 
-                
-            </div>
-          </div>
-
         </div>
-      </div>
     </section>
-    <!-- popular category tabs end -->
 
      <!-- banner area 1 -->
      <section class="side-banner py-3">
