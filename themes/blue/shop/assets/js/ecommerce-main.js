@@ -46,26 +46,27 @@ toggleSearchcros.addEventListener('click', function() {
 }
 
 );
+
+function update_mini_cart(t) {
+  if (t.total_items && t.total_items > 0) {
+      $(".cart-total-items").text(t.total_items + " " + (t.total_items > 1 ? lang.items : lang.item)),
+      $("#cart-items").empty(),
+      $.each(t.contents, function() {
+          var t = '<td><a href="' + site.site_url + "/product/" + this.slug + '"><span class="cart-item-image"><img src="' + site.base_url + "assets/uploads/thumbs/" + this.image + '" alt=""></span></a></td><td><a href="' + site.site_url + "/product/" + this.slug + '">' + this.name + "</a><br>" + this.qty + " x " + this.price + '</td><td class="text-right text-bold">' + this.subtotal + "</td>";
+          $("<tr>" + t + "</tr>").appendTo("#cart-items")
+      });
+      var e = '\n        <tr class="text-bold"><td colspan="2">' + lang.total_items + '</td><td class="text-right">' + t.total_items + '</td></tr>\n        <tr class="text-bold"><td colspan="2">' + lang.total + '</td><td class="text-right">' + t.total + "</td></tr>\n        ";
+      $("<tfoot>" + e + "</tfoot>").appendTo("#cart-items"),
+      $("#cart-empty").hide(),
+      $("#cart-contents").show()
+  } else
+      $(".cart-total-items").text(lang.cart_empty),
+      $("#cart-contents").hide(),
+      $("#cart-empty").show()
+}
+
 // slick slider =====================
 $(document).ready(function(){
-  function update_mini_cart(t) {
-    if (t.total_items && t.total_items > 0) {
-        $(".cart-total-items").text(t.total_items + " " + (t.total_items > 1 ? lang.items : lang.item)),
-        $("#cart-items").empty(),
-        $.each(t.contents, function() {
-            var t = '<td><a href="' + site.site_url + "/product/" + this.slug + '"><span class="cart-item-image"><img src="' + site.base_url + "assets/uploads/thumbs/" + this.image + '" alt=""></span></a></td><td><a href="' + site.site_url + "/product/" + this.slug + '">' + this.name + "</a><br>" + this.qty + " x " + this.price + '</td><td class="text-right text-bold">' + this.subtotal + "</td>";
-            $("<tr>" + t + "</tr>").appendTo("#cart-items")
-        });
-        var e = '\n        <tr class="text-bold"><td colspan="2">' + lang.total_items + '</td><td class="text-right">' + t.total_items + '</td></tr>\n        <tr class="text-bold"><td colspan="2">' + lang.total + '</td><td class="text-right">' + t.total + "</td></tr>\n        ";
-        $("<tfoot>" + e + "</tfoot>").appendTo("#cart-items"),
-        $("#cart-empty").hide(),
-        $("#cart-contents").show()
-    } else
-        $(".cart-total-items").text(lang.cart_empty),
-        $("#cart-contents").hide(),
-        $("#cart-empty").show()
-  }
-
   $(document).on("click", ".add-to-cart", function(t) {
       t.preventDefault();
       var e = $(this).attr("data-id")
