@@ -130,7 +130,7 @@
     lang.message = '<?= lang('message'); ?>';
     lang.required_invalid = '<?= lang('required_invalid'); ?>';
 
-    //update_mini_cart(cart);
+    update_mini_cart(cart);
     </script>
   </body>
 </html>
