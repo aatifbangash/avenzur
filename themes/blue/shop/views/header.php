@@ -171,7 +171,7 @@
                         <a class="nav-link active" aria-current="page" href="#">Home</a>
                       </li>
                       <li class="nav-item">
-                        <a class="nav-link"  href="#">Products</a>
+                        <a class="nav-link"  href="<?= site_url('shop/products'); ?>">Products</a>
                       </li>
                       <li class="nav-item">
                         <a class="nav-link"  href="#">About</a>
