@@ -110,6 +110,10 @@ function gen_html(t) {
   }
 }
 
+function get_width() {
+  return $(window).width()
+}
+
 function get_filters() {
   return filters.category = $("#product-category").val() ? $("#product-category").val() : filters.category,
   filters.min_price = $("#min-price").val(),
