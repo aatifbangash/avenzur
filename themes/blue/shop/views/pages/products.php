@@ -30,7 +30,7 @@
                                 foreach($categories as $cat)
                                 {
                                     ?>
-                                        <a href="<?= site_url('category/' . $cat->slug); ?>" class="list-group-item list-group-item-action active" aria-current="true">
+                                        <a href="<?= site_url('category/' . $cat->slug); ?>" class="list-group-item list-group-item-action <?php if($category == $cat->slug) { echo 'active'; } ?>" aria-current="true">
                                         <?= ucfirst(strtolower($cat->name)); ?>
                                         </a>
                                     <?php
