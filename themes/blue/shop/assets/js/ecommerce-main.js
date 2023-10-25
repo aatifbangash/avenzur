@@ -68,6 +68,12 @@ function update_mini_cart(t) {
   }
 }
 
+function get(t) {
+  if ("undefined" != typeof Storage)
+      return localStorage.getItem(t);
+  alert("Please use a modern browser as this site needs localstroage!")
+}
+
 function get_filters() {
   return filters.category = $("#product-category").val() ? $("#product-category").val() : filters.category,
   filters.min_price = $("#min-price").val(),
