@@ -84,7 +84,7 @@ function gen_html(t) {
         , s = 4;
   var i = a && ".three-col" == a ? "col-sm-6 col-md-4" : "col-md-6"
     , o = a && ".three-col" == a ? "alt" : "";
-  if (t || (e += '<div class="col-sm-12"><div class="alert alert-warning text-center padding-xl margin-top-lg"><h4 class="margin-bottom-no">' + lang.x_product + "</h4></div></div>"),
+  if (t || (e += '<div class="col-lg-3 col-md-4 col-sm-12"><div class="alert alert-warning text-center padding-xl margin-top-lg"><h4 class="margin-bottom-no">' + lang.x_product + "</h4></div></div>"),
   1 == site.settings.products_page && ($("#results").empty(),
   $(".grid").isotope("destroy").isotope()),
   $.each(t, function(a, r) {
@@ -92,9 +92,39 @@ function gen_html(t) {
         , l = r.special_price ? r.formated_special_price : r.formated_price
         , c = (r.promotion && r.promo_price && 0 != r.promo_price && r.promo_price,
       r.promotion && r.promo_price && 0 != r.promo_price ? r.formated_promo_price : l);
-      1 != site.settings.products_page && (0 === a ? e += '<div class="row">' : a % s == 0 && (e += '</div><div class="row">')),
-      e += '<div class="product-container ' + i + " " + (1 == site.settings.products_page ? "grid-item" : "") + '">\n        <div class="product ' + o + " " + (1 == site.settings.products_page ? "grid-sizer" : "") + '">\n        ' + (r.promo_price ? '<span class="badge badge-right theme">Promo</span>' : "") + '\n        <div class="product-top">\n        <div class="product-image">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <img class="img-responsive" src="' + site.base_url + "assets/uploads/" + r.image + '" alt=""/>\n        </a>\n        </div>\n        <div class="product-desc">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <h2 class="product-name">' + r.name + "</h2>\n        </a>\n        <p>" + r.details + '</p>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        ' + (1 == site.shop_settings.hide_price ? "" : '\n        <div class="product-bottom">\n        <div class="product-price">\n        ' + (r.promo_price ? '<del class="text-danger text-size-sm">' + l + "</del>" : "") + "\n        " + c + '\n        </div>\n        <div class="product-rating">\n        <div class="form-group" style="margin-bottom:0;">\n        <div class="input-group">\n        <span class="input-group-addon pointer btn-minus"><span class="fa fa-minus"></span></span>\n        <input type="text" name="quantity" class="form-control text-center quantity-input" value="1" required="required">\n        <span class="input-group-addon pointer btn-plus"><span class="fa fa-plus"></span></span>\n        </div>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        <div class="product-cart-button">\n        <div class="btn-group" role="group" aria-label="...">\n        <button class="btn btn-info add-to-wishlist" data-id="' + r.id + '"><i class="fa fa-heart-o"></i></button>\n        <button class="btn btn-theme add-to-cart" data-id="' + r.id + '"><i class="fa fa-shopping-cart padding-right-md"></i> ' + lang.add_to_cart + '</button>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        </div>') + '\n        </div>\n        <div class="clearfix"></div>\n        </div>',
-      1 != site.settings.products_page && a + 1 === t.length && (e += "</div>")
+      //1 != site.settings.products_page && (0 === a ? e += '<div class="row">' : a % s == 0 && (e += '</div><div class="row">')),
+      //e += '<div class="product-container ' + i + " " + (1 == site.settings.products_page ? "grid-item" : "") + '">\n        <div class="product ' + o + " " + (1 == site.settings.products_page ? "grid-sizer" : "") + '">\n        ' + (r.promo_price ? '<span class="badge badge-right theme">Promo</span>' : "") + '\n        <div class="product-top">\n        <div class="product-image">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <img class="img-responsive" src="' + site.base_url + "assets/uploads/" + r.image + '" alt=""/>\n        </a>\n        </div>\n        <div class="product-desc">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <h2 class="product-name">' + r.name + "</h2>\n        </a>\n        <p>" + r.details + '</p>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        ' + (1 == site.shop_settings.hide_price ? "" : '\n        <div class="product-bottom">\n        <div class="product-price">\n        ' + (r.promo_price ? '<del class="text-danger text-size-sm">' + l + "</del>" : "") + "\n        " + c + '\n        </div>\n        <div class="product-rating">\n        <div class="form-group" style="margin-bottom:0;">\n        <div class="input-group">\n        <span class="input-group-addon pointer btn-minus"><span class="fa fa-minus"></span></span>\n        <input type="text" name="quantity" class="form-control text-center quantity-input" value="1" required="required">\n        <span class="input-group-addon pointer btn-plus"><span class="fa fa-plus"></span></span>\n        </div>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        <div class="product-cart-button">\n        <div class="btn-group" role="group" aria-label="...">\n        <button class="btn btn-info add-to-wishlist" data-id="' + r.id + '"><i class="fa fa-heart-o"></i></button>\n        <button class="btn btn-theme add-to-cart" data-id="' + r.id + '"><i class="fa fa-shopping-cart padding-right-md"></i> ' + lang.add_to_cart + '</button>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        </div>') + '\n        </div>\n        <div class="clearfix"></div>\n        </div>',
+      //1 != site.settings.products_page && a + 1 === t.length && (e += "</div>")
+
+      //e += '<div class="col-lg-3 col-md-4 col-sm-12">';
+      e += '<div class="card" style="width: 100%">';
+      e += '<a href="#" class="text-decoration-none">';
+      e += '<div class="cardImg"><img src="'+site.base_url + "assets/uploads/" + r.image+'" class="card-img-top" alt="..."></div>';
+      e += '<div class="card-body px-0 text-start pb-0">';
+      e += '<div class="product-cat-title"><span class="text-uppercase">Medical</span></div>';
+      e += '<h5 class="card-title text-start">'+r.name+'</h5>';
+      e += '<div class="row align-items-center justify-content-between">';
+      e += '<div class="col-md-6"><div class="rating"><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill"></i></div></div>';
+      e += '<div class="col-md-6"><div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">'+r.promo_price+' SAR</h4></div></div>';
+      e += '</div>';
+      e += '<div class="row align-items-center justify-content-between">';
+      e += '<div class="col-md-6 "><div class="price text-start  py-2"><h4 class="m-0 fw-bold">'+r.promo_price+' SAR</h4></div></div>';
+      e += '<div class="col-md-6">';
+      e += '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between">';
+      e += '<span class="plus"><i class="bi bi-plus-circle-fill"></i></span>';
+      e += '<span class="Qnum ">1</span>';
+      e += '<span class="minus"><i class="bi bi-dash-circle-fill"></i></span>';
+      e += '</div>';
+      e += '</div>';
+      e += '</div>';
+      e += '</div>';
+      e += '</a>';
+      e += '<div>';
+      e += '<button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark">Add to cart </button>';
+      e += '</div>';
+      e += '</div>';
+      e += '</div>';
+
   }),
   1 != site.settings.products_page)
       $("#results").empty(),
