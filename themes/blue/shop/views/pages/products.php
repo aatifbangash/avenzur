@@ -27,6 +27,7 @@
                         <h5 class="fw-semibold">Categories</h5>
                         <div class="list-group catList">
                             <?php
+                                echo 'Category is : '.$category;
                                 foreach($categories as $cat)
                                 {
                                     ?>
