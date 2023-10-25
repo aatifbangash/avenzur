@@ -68,15 +68,71 @@ function update_mini_cart(t) {
   }
 }
 
+function searchProducts(t) {
+  /*if (history.pushState) {
+      var e = window.location.origin + window.location.pathname + "?page=" + filters.page;
+      window.history.pushState({
+          path: e,
+          filters: filters
+      }, "", e)
+  }*/
+
+var promo = 0;
+var callUrl;
+var currentURL = window.location.href;
+if (currentURL.includes("promo=yes")) {
+  promo = 1;
+  callUrl = site.shop_url + "search?page=" + filters.page + "&promo=yes";
+}else{
+  callUrl = site.shop_url + "search?page=" + filters.page;
+}
+
+  $("#loading").show();
+  var a = {};
+  a[site.csrf_token] = site.csrf_token_value,
+  a.filters = get_filters(),
+a.filters.promo = promo,
+  a.format = "json",
+  $.ajax({
+      url: callUrl,
+      type: "POST",
+      data: a,
+      dataType: "json"
+  }).done(function(t) {
+      products = t.products,
+      $(".page-info").empty(),
+      $("#pagination").empty(),
+      t.products && (t.pagination && $("#pagination").html(t.pagination),
+      t.info && $(".page-info").text(lang.page_info.replace("_page_", t.info.page).replace("_total_", t.info.total))),
+      gen_html(products)
+  }).always(function() {
+      $("#loading").hide()
+  }),
+  location.href.includes("products") && t && (window.history.pushState({
+      link: t,
+      filters: filters
+  }, "", t),
+  window.onpopstate = function(t) {
+      t.state && t.state.filters ? (filters = t.state.filters,
+      searchProducts()) : (filters.page = 1,
+      searchProducts())
+  }
+  ),
+  setTimeout(function() {
+      window.scrollTo(0, 0)
+  }, 500)
+}
+
 // slick slider =====================
 $(document).ready(function(){
+
+  searchProducts();
+
   $(document).on("click", ".add-to-cart", function(t) {
       t.preventDefault();
       var e = $(this).attr("data-id")
         , a = $(".shopping-cart:visible")
         , s = $(this).parents(".card").find("input");
-
-      console.log(s);
 
         //, s = $(this).parents(".product-bottom").find(".quantity-input");
       /*,i=$(this).parents(".product").find("img").eq(0);if(i){i.clone().offset({top:i.offset().top,left:i.offset().left}).css({opacity:"0.5",position:"absolute",height:"150px",width:"150px","z-index":"1000"}).appendTo($("body")).animate({top:a.offset().top+10,left:a.offset().left+10,width:"50px",height:"50px"},400).animate({width:0,height:0},function(){$(this).detach()})}*/
