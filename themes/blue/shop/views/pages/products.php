@@ -26,13 +26,16 @@
                         <div class="categ w-100">
                         <h5 class="fw-semibold">Categories</h5>
                         <div class="list-group catList">
-                            <a href="#" class="list-group-item list-group-item-action active" aria-current="true">
-                            Beauty
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action">Eye Care</a>
-                            <a href="#" class="list-group-item list-group-item-action">Hair Care</a>
-                            <a href="#" class="list-group-item list-group-item-action">Herbel</a>
-                            
+                            <?php
+                                foreach($categories as $cat)
+                                {
+                                    ?>
+                                        <a href="<?= site_url('category/' . $cat->slug); ?>" class="list-group-item list-group-item-action active" aria-current="true">
+                                        <?= ucfirst(strtolower($cat->name)); ?>
+                                        </a>
+                                    <?php
+                                }
+                            ?>
                         </div>
                         
                         
