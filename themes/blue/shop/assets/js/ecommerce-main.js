@@ -68,6 +68,17 @@ function update_mini_cart(t) {
   }
 }
 
+function get_filters() {
+  return filters.category = $("#product-category").val() ? $("#product-category").val() : filters.category,
+  filters.min_price = $("#min-price").val(),
+  filters.max_price = $("#max-price").val(),
+  filters.in_stock = $("#in-stock").is(":checked") ? 1 : 0,
+  filters.promo = $("#promotions").is(":checked") ? "yes" : 0,
+  filters.featured = $("#featured").is(":checked") ? "yes" : 0,
+  filters.sorting = get("sorting"),
+  filters
+}
+
 function searchProducts(t) {
   /*if (history.pushState) {
       var e = window.location.origin + window.location.pathname + "?page=" + filters.page;
