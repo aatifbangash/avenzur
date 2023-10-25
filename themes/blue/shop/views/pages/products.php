@@ -29,7 +29,6 @@
                             <?php
                                 foreach($categories as $cat)
                                 {
-                                    echo $category_slug.' === '.$cat->slug;
                                     ?>
                                         <a href="<?= site_url('category/' . $cat->slug); ?>" class="list-group-item list-group-item-action <?php if($category_slug == $cat->slug) { echo 'active'; } ?>" aria-current="true">
                                         <?= ucfirst(strtolower($cat->name)); ?>
