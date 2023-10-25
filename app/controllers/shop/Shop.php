@@ -1082,7 +1082,6 @@ class Shop extends MY_Shop_Controller
         $filters = [
             'query'       => $this->input->post('query'),
             'category'    => $category_slug ? $this->shop_model->getCategoryBySlug($category_slug) : null,
-            'category_slug' => $category_slug,
             'subcategory' => $subcategory_slug ? $this->shop_model->getCategoryBySlug($subcategory_slug) : null,
             'brand'       => $brand_slug ? $this->shop_model->getBrandBySlug($brand_slug) : null,
             'promo'       => $promo,
@@ -1095,6 +1094,7 @@ class Shop extends MY_Shop_Controller
         $this->data['filtered_subcategories'] = $category_slug ? $this->shop_model->getSubCategories($filters['category']->id) : null;
         $this->data['filters']    = $filters;
         $this->data['all_categories']    = $this->shop_model->getAllCategories();
+        $this->data['category_slug'] = $category_slug;
         $this->data['error']      = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['page_title'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products'))) . ' - ' . $this->shop_settings->shop_name;
         $this->data['page_title2'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products'))) ;
