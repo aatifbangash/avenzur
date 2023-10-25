@@ -1074,6 +1074,8 @@ class Shop extends MY_Shop_Controller
         if ($this->input->get('promo') && $this->input->get('promo') == 'yes') {
             $promo = true;
         }
+
+        echo 'Category Slug: '.$category_slug;exit;
         
         if($category_slug != null)
         { $this->data['featureImage'] = $this->shop_model->getCategoryBySlug($category_slug); }
