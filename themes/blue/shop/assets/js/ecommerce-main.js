@@ -101,13 +101,13 @@ function gen_html(t) {
       e += '<div class="card" style="width: 100%">';
       //e += '<a href="#" class="text-decoration-none">';
       e += '<div class="cardImg">';
-      e += '<a href="'+site.base_url+'/product/'+r.slug+'" class="text-decoration-none">';
+      e += '<a href="'+site.base_url+'product/'+r.slug+'" class="text-decoration-none">';
       e += '<img src="'+site.base_url + "assets/uploads/" + r.image+'" class="card-img-top" alt="...">';
       e += '</a>';
       e += '</div>';
       e += '<div class="card-body px-0 text-start pb-0">';
       e += '<div class="product-cat-title"><span class="text-uppercase">'+r.category_name+'</span></div>';
-      e += '<a href="'+site.base_url+'/product/'+r.slug+'" class="text-decoration-none">';
+      e += '<a href="'+site.base_url+'product/'+r.slug+'" class="text-decoration-none">';
       e += '<h5 class="card-title text-start">'+r.name+'</h5>';
       e += '</a>';
       e += '<div class="row align-items-center justify-content-between">';
