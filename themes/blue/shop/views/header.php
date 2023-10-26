@@ -74,7 +74,9 @@
                     </ul>
                 </div>-->
                 <div class="dropdown">
-                  <button type="button" class="btn text-white px-0"><i class="bi bi-person-fill"></i>&nbsp; My Account</button>
+                <button type="button" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                  <i class="bi bi-person-fill"></i>&nbsp; My Account
+                </button>
                   <form class="dropdown-menu p-3 myaccountForm" >
                     <div class="mb-3">
                     
