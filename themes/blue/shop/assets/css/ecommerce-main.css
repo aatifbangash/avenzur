@@ -328,6 +328,7 @@ text-transform: uppercase;
   border: 1px solid #E3E3E3;
   height: 23px;
   padding-block: 0;
+  max-width: 90px;
 }
 .addtocart {
   padding-block: 10px !important;
