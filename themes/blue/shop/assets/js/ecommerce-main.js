@@ -106,7 +106,7 @@ function gen_html(t) {
       e += '<h5 class="card-title text-start">'+r.name+'</h5>';
       e += '<div class="row align-items-center justify-content-between">';
       e += '<div class="col-md-6"><div class="rating"><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill"></i></div></div>';
-      if(r.promo_price){
+      if(r.promotion){
         e += '<div class="col-md-6"><div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">'+l+' SAR</h4></div></div>';
       }
       e += '</div>';
