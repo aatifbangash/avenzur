@@ -89,7 +89,7 @@
           <div class="col-lg-2 col-md-3  mb-2">
             <div class="logosearchMob">
 
-              <div> <a class="navbar-brand" href="#"><img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="<?= $shop_settings->shop_name; ?>"></a></div>
+              <div> <a class="navbar-brand" href="/"><img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="<?= $shop_settings->shop_name; ?>"></a></div>
             <div id="searchtoggle"><i class="bi bi-search"></i></div>
             </div>
            
