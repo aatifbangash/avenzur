@@ -102,16 +102,22 @@ function gen_html(t) {
       e += '<a href="#" class="text-decoration-none">';
       e += '<div class="cardImg"><img src="'+site.base_url + "assets/uploads/" + r.image+'" class="card-img-top" alt="..."></div>';
       e += '<div class="card-body px-0 text-start pb-0">';
-      e += '<div class="product-cat-title"><span class="text-uppercase">Medical</span></div>';
+      e += '<div class="product-cat-title"><span class="text-uppercase">'+category_name+'</span></div>';
       e += '<h5 class="card-title text-start">'+r.name+'</h5>';
       e += '<div class="row align-items-center justify-content-between">';
       e += '<div class="col-md-6"><div class="rating"><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill"></i></div></div>';
       if(r.promotion){
-        e += '<div class="col-md-6"><div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">'+l+' SAR</h4></div></div>';
+        e += '<div class="col-md-6"><div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">'+r.formated_price+'</h4></div></div>';
       }
       e += '</div>';
       e += '<div class="row align-items-center justify-content-between">';
-      e += '<div class="col-md-6 "><div class="price text-start  py-2"><h4 class="m-0 fw-bold">'+r.promo_price+' SAR</h4></div></div>';
+      e += '<div class="col-md-6 "><div class="price text-start  py-2"><h4 class="m-0 fw-bold">';
+      if(r.promotion){
+        e += r.formated_promo_price;
+      }else{
+        e += r.formated_price;
+      }
+      e += '</h4></div></div>';
       e += '<div class="col-md-6">';
       e += '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between">';
       e += '<span class="plus"><i class="bi bi-plus-circle-fill"></i></span>';
