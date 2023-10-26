@@ -246,9 +246,9 @@
                 <span class="quantitynum cart-total-items" style="display: none;">1</span>
               </a>
 
-              <div class=" dropdown-menu p-3 myaccountForm cartform">
-                <table class="table ">
-                  <thead>
+              <div id="cart-contents" class=" dropdown-menu p-3 myaccountForm cartform">
+                <table class="table " id="cart-items">
+                  <!--<thead>
                       <tr>
                           <th>Image</th>
                           <th>Name</th>
@@ -263,8 +263,6 @@
                           <td class="fw-bold">$19.99</td>
                         
                       </tr>
-                    
-                      <!-- Add more product rows here as needed -->
                   </tbody>
                   <tfoot>
                       <tr>
@@ -277,10 +275,7 @@
                       
                         <td colspan="2" class="text-end fw-bold">200 SAR</td>
                       </tr>
-                      
-                    
-                  </tfoot>
-                
+                  </tfoot>-->
               </table>
               <div class="d-flex">
                 <button type="submit" class="btn primary-buttonAV w-100 rounded-1 pb-2 me-2">View Cart</button>
