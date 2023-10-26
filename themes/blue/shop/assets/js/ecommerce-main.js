@@ -1,5 +1,3 @@
-
-
 // Find the source and target divs by their ids
 var buttonToMove = document.getElementById('menuiconMob');
 var sourceDiv = document.getElementById('sourcedivmob');
@@ -44,7 +42,6 @@ toggleSearchcros.addEventListener('click', function() {
         searchBar.style.display = 'none';
     }
 }
-
 );
 
 function update_mini_cart(t) {
@@ -67,6 +64,24 @@ function update_mini_cart(t) {
     //$("#cart-contents").hide();
     //$("#cart-empty").show();
   }
+}
+
+function update_cart_item(t, e, a, s, i) {
+  $.ajax({
+      url: t,
+      type: "POST",
+      data: e,
+      success: function(t) {
+          t.error ? ("text" == i ? s.val(a) : s.selectpicker("val", $po),
+          sa_alert("Error!", t.message, "error", !0)) : (t.cart && (cart = t.cart,
+          update_mini_cart(cart),
+          update_cart(cart)),
+          sa_alert(t.status, t.message))
+      },
+      error: function() {
+          sa_alert("Error!", "Ajax call failed, please try again or contact site owner.", "error", !0)
+      }
+  })
 }
 
 function update_cart(t) {
@@ -337,6 +352,32 @@ a.filters.promo = promo,
 $(document).ready(function(){
 
   searchProducts();
+
+  $(".product").each(function(t, e) {
+      $(e).find(".details").hover(function() {
+          $(this).parent().css("z-index", "20"),
+          $(this).addClass("animate")
+      }, function() {
+          $(this).removeClass("animate"),
+          $(this).parent().css("z-index", "1")
+      })
+  });
+
+  $(document).on("change", ".cart-item-option, .cart-item-qty", function(t) {
+      t.preventDefault();
+      var e = this.defaultValue
+        , a = $(this).closest("tr")
+        , s = a.attr("id")
+        , i = site.site_url + "cart/update"
+        , o = {};
+      o[site.csrf_token] = site.csrf_token_value,
+      o.rowid = s,
+      o.qty = a.find(".cart-item-qty").val(),
+      o.option = a.find(".cart-item-option").children("option:selected").val(),
+      update_cart_item(i, o, e, $(this), t.target.type)
+  });
+  
+
 
   var slider = $("#slider");
   var thumb = $("#thumb");
