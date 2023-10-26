@@ -9,7 +9,7 @@
             <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="#" class="text-decoration-none">Home</a></li>
             <li class="breadcrumb-item " aria-current="page"><a href="#" class="text-decoration-none">Products</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Pill Jar</li>
+            <li class="breadcrumb-item active" aria-current="page"><?= $product->name; ?></li>
             </ol>
         </nav>
         </div>
