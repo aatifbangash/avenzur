@@ -239,10 +239,55 @@
             </span>-->
             
             <span class="cartIcon" id="cart-items">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9.33331 24C7.86665 24 6.67998 25.2 6.67998 26.6667C6.67998 28.1333 7.86665 29.3333 9.33331 29.3333C10.8 29.3333 12 28.1333 12 26.6667C12 25.2 10.8 24 9.33331 24ZM22.6666 24C21.2 24 20.0133 25.2 20.0133 26.6667C20.0133 28.1333 21.2 29.3333 22.6666 29.3333C24.1333 29.3333 25.3333 28.1333 25.3333 26.6667C25.3333 25.2 24.1333 24 22.6666 24ZM20.7333 17.3333C21.7333 17.3333 22.6133 16.7867 23.0666 15.96L27.84 7.30666C27.9523 7.10456 28.01 6.87662 28.0072 6.6454C28.0045 6.41418 27.9414 6.18769 27.8242 5.98834C27.707 5.78899 27.5398 5.6237 27.3391 5.50881C27.1384 5.39393 26.9112 5.33344 26.68 5.33332L6.94665 5.33332L5.69331 2.66666L1.33331 2.66666L1.33331 5.33332H3.99998L8.79998 15.4533L6.99998 18.7067C6.02665 20.4933 7.30665 22.6667 9.33331 22.6667L25.3333 22.6667V20L9.33331 20L10.8 17.3333L20.7333 17.3333ZM8.21331 7.99999L24.4133 7.99999L20.7333 14.6667L11.3733 14.6667L8.21331 7.99999Z" fill="#171A1F"/>
-              </svg>
-              <span class="quantitynum cart-total-items" style="display: none;">1</span>
+              <a class="btn  dropdown-toggle border-0" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9.33331 24C7.86665 24 6.67998 25.2 6.67998 26.6667C6.67998 28.1333 7.86665 29.3333 9.33331 29.3333C10.8 29.3333 12 28.1333 12 26.6667C12 25.2 10.8 24 9.33331 24ZM22.6666 24C21.2 24 20.0133 25.2 20.0133 26.6667C20.0133 28.1333 21.2 29.3333 22.6666 29.3333C24.1333 29.3333 25.3333 28.1333 25.3333 26.6667C25.3333 25.2 24.1333 24 22.6666 24ZM20.7333 17.3333C21.7333 17.3333 22.6133 16.7867 23.0666 15.96L27.84 7.30666C27.9523 7.10456 28.01 6.87662 28.0072 6.6454C28.0045 6.41418 27.9414 6.18769 27.8242 5.98834C27.707 5.78899 27.5398 5.6237 27.3391 5.50881C27.1384 5.39393 26.9112 5.33344 26.68 5.33332L6.94665 5.33332L5.69331 2.66666L1.33331 2.66666L1.33331 5.33332H3.99998L8.79998 15.4533L6.99998 18.7067C6.02665 20.4933 7.30665 22.6667 9.33331 22.6667L25.3333 22.6667V20L9.33331 20L10.8 17.3333L20.7333 17.3333ZM8.21331 7.99999L24.4133 7.99999L20.7333 14.6667L11.3733 14.6667L8.21331 7.99999Z" fill="#171A1F"/>
+                </svg>
+                <span class="quantitynum cart-total-items" style="display: none;">1</span>
+              </a>
+
+              <div class=" dropdown-menu p-3 myaccountForm cartform">
+                <table class="table ">
+                  <thead>
+                      <tr>
+                          <th>Image</th>
+                          <th>Name</th>
+                          <th>Price</th>
+                        
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <tr>
+                          <td><img src="product1.jpg" alt="Product 1" class="img-thumbnail" style="max-width: 100px;"></td>
+                          <td>Product Name 1</td>
+                          <td class="fw-bold">$19.99</td>
+                        
+                      </tr>
+                    
+                      <!-- Add more product rows here as needed -->
+                  </tbody>
+                  <tfoot>
+                      <tr>
+                        <td colspan="2">Total item</td>
+                      
+                        <td class="text-end fw-bold">1</td>
+                      </tr>
+                      <tr>
+                        <td >Total </td>
+                      
+                        <td colspan="2" class="text-end fw-bold">200 SAR</td>
+                      </tr>
+                      
+                    
+                  </tfoot>
+                
+              </table>
+              <div class="d-flex">
+                <button type="submit" class="btn primary-buttonAV w-100 rounded-1 pb-2 me-2">View Cart</button>
+                <button type="submit" class="btn primary-buttonAV w-100 rounded-1 pb-2 ms-2">Checkout</button>
+              </div>
+            </div>
+
             </span>
               
             </div>
