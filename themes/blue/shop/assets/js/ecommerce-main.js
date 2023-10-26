@@ -88,6 +88,7 @@ function gen_html(t) {
   1 == site.settings.products_page && ($("#results").empty(),
   $(".grid").isotope("destroy").isotope()),
   $.each(t, function(a, r) {
+      console.log(r);
       var n = r.special_price ? r.special_price : r.price
         , l = r.special_price ? r.formated_special_price : r.formated_price
         , c = (r.promotion && r.promo_price && 0 != r.promo_price && r.promo_price,
