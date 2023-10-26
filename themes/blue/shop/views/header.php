@@ -73,6 +73,7 @@
                       
                     </ul>
                 </div>-->
+                <div class="dropdown">
                   <button type="button" class="btn text-white px-0"><i class="bi bi-person-fill"></i>&nbsp; My Account</button>
                   <form class="dropdown-menu p-3 myaccountForm" >
                     <div class="mb-3">
@@ -96,6 +97,7 @@
                     </div>
                     <button type="submit" class="btn primary-buttonAV w-100 rounded-1 pb-2">Login</button>
                   </form>
+                </div>
               </div>
               
             </div>
