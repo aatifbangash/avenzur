@@ -51,6 +51,7 @@ function update_mini_cart(t) {
   if (t.total_items && t.total_items > 0) {
     $(".cart-total-items").show();
     $(".cart-total-items").text(t.total_items);
+    $("#cart-contents").show()
     //$(".cart-total-items").text(t.total_items + " " + (t.total_items > 1 ? lang.items : lang.item));
     /*  $("#cart-items").empty(),
       $.each(t.contents, function() {
@@ -66,6 +67,111 @@ function update_mini_cart(t) {
     //$("#cart-contents").hide();
     //$("#cart-empty").show();
   }
+}
+
+function update_cart(t) {
+  if (t.total_items && t.total_items > 0) {
+      $("#cart-table tbody").empty();
+      var e = 1;
+      $.each(t.contents, function() {
+          var t = this
+            , a = '\n            <td class="text-center">\n            <a href="#" class="text-red remove-item" data-rowid="' + this.rowid + '"><i class="fa fa-trash-o"></i><a>\n            </td>\n            <td><input type="hidden" name="' + e + '[rowid]" value="' + this.rowid + '">' + e + '</td>\n            <td>\n            <a href="' + site.site_url + "/product/" + this.slug + '"><span class="cart-item-image pull-right"><img src="' + site.base_url + "assets/uploads/thumbs/" + this.image + '" alt=""></span></a>\n            </td>\n            <td><a href="' + site.site_url + "/product/" + this.slug + '">' + this.name + "</a></td>\n            <td>";
+          this.options && (a += '<select name="' + e + '[option]" class="selectpicker mobile-device cart-item-option" data-width="100%" data-style="btn-default">',
+          $.each(this.options, function() {
+              a += '<option value="' + this.id + '" ' + (this.id == t.option ? "selected" : "") + ">" + this.name + " " + (0 != parseFloat(this.price) ? "(+" + this.price + ")" : "") + "</option>"
+          }),
+          a += "</select>"),
+          a += '</td>\n            <td><input type="text" name="' + e + '[qty]" class="form-control text-center input-qty cart-item-qty" value="' + this.qty + '"></td>\n            <td class="text-right">' + this.price + '</td>\n            <td class="text-right">' + this.subtotal + "</td>\n            ",
+          e++,
+          $('<tr id="' + this.rowid + '">' + a + "</tr>").appendTo("#cart-table tbody")
+      }),
+      $("#cart-totals").empty();
+      var a = "<tr><td>" + lang.total_w_o_tax + '</td><td class="text-right">' + t.subtotal + "</td></tr>";
+      a += "<tr><td>" + lang.product_tax + '</td><td class="text-right">' + t.total_item_tax + "</td></tr>",
+      a += "<tr><td>" + lang.total + '</td><td class="text-right">' + t.total + "</td></tr>",
+      !1 !== site.settings.tax2 && (a += "<tr><td>" + lang.order_tax + '</td><td class="text-right">' + t.order_tax + "</td></tr>"),
+      a += "<tr><td>" + lang.shipping + ' *</td><td class="text-right">' + t.shipping + "</td></tr>",
+      a += '<tr><td colspan="2"></td></tr>',
+      a += '<tr class="active text-bold"><td>' + lang.grand_total + '</td><td class="text-right">' + t.grand_total + "</td></tr>",
+      $("<tbody>" + a + "</tbody>").appendTo("#cart-totals"),
+      $("#total-items").text(t.total_items + "(" + t.total_unique_items + ")"),
+      $(".cart-item-option").selectpicker("refresh"),
+      $(".cart-empty-msg").hide(),
+      $(".cart-contents").show()
+  } else
+      $("#total-items").text(t.total_items),
+      $(".cart-contents").hide(),
+      $(".cart-empty-msg").show()
+}
+
+function formatMoney(t, e) {
+  if (e || (e = site.settings.symbol),
+  1 == site.settings.sac)
+      return (1 == site.settings.display_symbol ? e : "") + "" + formatSA(parseFloat(t).toFixed(site.settings.decimals)) + (2 == site.settings.display_symbol ? e : "");
+  var a = accounting.formatMoney(t, e, site.settings.decimals, 0 == site.settings.thousands_sep ? " " : site.settings.thousands_sep, site.settings.decimals_sep, "%s%v");
+  return (1 == site.settings.display_symbol ? e : "") + a + (2 == site.settings.display_symbol ? e : "")
+}
+
+function formatSA(t) {
+  t = t.toString();
+  var e = "";
+  t.indexOf(".") > 0 && (e = t.substring(t.indexOf("."), t.length)),
+  t = Math.floor(t),
+  t = t.toString();
+  var a = t.substring(t.length - 3)
+    , s = t.substring(0, t.length - 3);
+  return "" != s && (a = "," + a),
+  s.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + a + e
+}
+
+function sa_alert(t, e, a, s) {
+  a = a || "success",
+  s = s || !1,
+  swal({
+      title: t,
+      html: e,
+      type: a,
+      timer: s ? 6e4 : 2e3,
+      confirmButtonText: "Okay"
+  }).catch(swal.noop)
+}
+
+function saa_alert(t, e, a, s) {
+  a = a || lang.delete,
+  e = e || lang.x_reverted_back,
+  s = s || {},
+  s._method = a,
+  s[site.csrf_token] = site.csrf_token_value,
+  swal({
+      title: lang.r_u_sure,
+      html: e,
+      type: "question",
+      showCancelButton: !0,
+      allowOutsideClick: !1,
+      showLoaderOnConfirm: !0,
+      preConfirm: function() {
+          return new Promise(function() {
+              $.ajax({
+                  url: t,
+                  type: "POST",
+                  data: s,
+                  success: function(t) {
+                      if (t.redirect)
+                          return window.location.href = t.redirect,
+                          !1;
+                      t.cart && (cart = t.cart,
+                      update_mini_cart(cart),
+                      update_cart(cart)),
+                      sa_alert(t.status, t.message)
+                  },
+                  error: function() {
+                      sa_alert("Error!", "Ajax call failed, please try again or contact site owner.", "error", !0)
+                  }
+              })
+          }
+          )
+      }
+  }).catch(swal.noop)
 }
 
 function get(t) {
