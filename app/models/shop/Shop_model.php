@@ -694,9 +694,6 @@ class Shop_model extends CI_Model
                 $data = $results->result_array();
             }
 		/*  echo $this->db->last_query(); */
-        echo '<pre>';
-        print_r($data);
-        exit;
         return $data;
     }
 
