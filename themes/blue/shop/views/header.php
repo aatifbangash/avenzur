@@ -74,6 +74,28 @@
                     </ul>
                 </div>-->
                   <button type="button" class="btn text-white px-0"><i class="bi bi-person-fill"></i>&nbsp; My Account</button>
+                  <form class="dropdown-menu p-3 myaccountForm" >
+                    <div class="mb-3">
+                    
+                      <label for="exampleDropdownFormEmail2" class="form-label">Username/Email</label>
+                      <a href="#" class="float-end text-decoration-none text-dark">Register</a>
+                      <input type="email" class="form-control" id="exampleDropdownFormEmail2" placeholder="email@example.com">
+                    </div>
+                    <div class="mb-3">
+                      <label for="exampleDropdownFormPassword2" class="form-label">Password</label>
+                      <a href="#" class="float-end text-decoration-none text-dark">Forgot?</a>
+                      <input type="password" class="form-control" id="exampleDropdownFormPassword2" placeholder="Password">
+                    </div>
+                    <div class="mb-3">
+                      <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="dropdownCheck2">
+                        <label class="form-check-label" for="dropdownCheck2">
+                          Remember me
+                        </label>
+                      </div>
+                    </div>
+                    <button type="submit" class="btn primary-buttonAV w-100 rounded-1 pb-2">Login</button>
+                  </form>
               </div>
               
             </div>
