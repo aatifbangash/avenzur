@@ -127,25 +127,25 @@
                     <tr>
                     
                     <td>Code</td>
-                    <td>111004378</td>
+                    <td><?= $product->code; ?></td>
                     
                     </tr>
                     <tr>
                     
                     <td>Brand</td>
-                    <td></td>
+                    <td><?= $brand ? '<a href="' . site_url('brand/' . $brand->slug) . '" class="line-height-lg">' . $brand->name . '</a>' : ''; ?></td>
                     
                     </tr>
                     <tr>
                     
                     <td>Category</td>
-                    <td>VITAMINS</td>
+                    <td><?= '<a href="' . site_url('category/' . $category->slug) . '" class="line-height-lg">' . $category->name . '</a>'; ?></td>
                     
                     </tr>
                     <tr>
                     
                     <td>Unit</td>
-                    <td>PC (1)</td>
+                    <td><?= $unit ? $unit->name . ' (' . $unit->code . ')' : ''; ?></td>
                     
                     </tr>
                     
