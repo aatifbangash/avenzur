@@ -79,14 +79,14 @@
                 <form action="#" class=" quantity text-end py-2 d-flex align-items-center justify-content-md-between">
                 
 
-                <span class="qtyminus minus"><i class="bi bi-dash-circle-fill"></i></span>
+                <span class="qtyminus minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
                 <input type="text" name="quantity" value="1" class="qty Qnum text-center w-100 p-0 ">
-                <span class="qtyplus plus"><i class="bi bi-plus-circle-fill"></i></span>
+                <span class="qtyplus plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
                 
                 
                 </form>
-                <button type="button" class="btn primary-buttonAV ms-2 py-1 addtocart  text-dark "><i class="bi bi-cart3 me-2"></i> Add to cart </button>
-                    </div>
+                <button type="button" data-id="<?= $product->id; ?>" class="btn primary-buttonAV ms-2 py-1 addtocart  text-dark add-to-cart"><i class="bi bi-cart3 me-2"></i> Add to cart </button>
+            </div>
             <!-- <div class="product_meta pt-4">
                 <p class="sku_wrapper m-0">SKU: <span class="sku">10007095</span></p>
                 <p class="posted_in m-0">Categories: <a href="#" rel="tag">Supplements</a>, <a href="#" rel="tag">Vitamins</a></p> 
