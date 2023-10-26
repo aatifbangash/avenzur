@@ -18,40 +18,32 @@
         <!-- product image col and thumb slider -->
             <div class="col-md-4 col-12 pe-md-5">
                 <div id="slider" class="owl-carousel product-slider">
-            <div class="item productzoomImg">
-                <img   src="./images/productimg1.jpg" />
-            </div>
-            <div class="item productzoomImg">
-                <img   src="./images/productimg2.png" />
-            </div>
-            <div class="item productzoomImg">
-                <img   src="./images/productimg1.jpg" />
-            </div>
-            <div class="item productzoomImg">
-                <img   src="./images/productimg1.jpg" />
-            </div>
-            <div class="item productzoomImg">
-                <img   src="./images/productimg1.jpg" />
-            </div>						
-                    </div>
+                    <?php
+                        if (!empty($images)) {
+                            foreach ($images as $ph) {
+                                ?>
+                                    <div class="item productzoomImg">
+                                        <img src="<?= base_url('assets/uploads/' . $ph->photo); ?>" />
+                                    </div>
+                                <?php
+                            }
+                        }
+                    ?>	
+                </div>
 
-            <div id="thumb" class="owl-carousel product-thumb">
-            <div class="item">
-                <img   src="./images/productimg1.jpg" />
-            </div>
-            <div class="item">
-                <img   src="./images/productimg2.png" />
-            </div>
-            <div class="item">
-                <img   src="./images/productimg1.jpg" />
-            </div>
-            <div class="item">
-                <img   src="./images/productimg1.jpg" />
-            </div>
-            <div class="item">
-                <img   src="./images/productimg1.jpg" />
-            </div>
-            </div>       
+                <div id="thumb" class="owl-carousel product-thumb">
+                    <?php
+                        if (!empty($images)) {
+                            foreach ($images as $ph) {
+                                ?>
+                                    <div class="item">
+                                        <img src="<?= base_url('assets/uploads/' . $ph->photo); ?>" />
+                                    </div>
+                                <?php
+                            }
+                        }
+                    ?>
+                </div>       
             </div>
             <!-- product image col and thumb slider end-->
 
