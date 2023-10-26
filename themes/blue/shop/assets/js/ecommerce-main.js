@@ -45,7 +45,6 @@ toggleSearchcros.addEventListener('click', function() {
 );
 
 function update_mini_cart(t) {
-  console.log('This is getting called...');
   if (t.total_items && t.total_items > 0) {
     $(".cart-total-items").show();
     $(".cart-total-items").text(t.total_items);
@@ -210,7 +209,6 @@ function gen_html(t) {
   1 == site.settings.products_page && ($("#results").empty(),
   $(".grid").isotope("destroy").isotope()),
   $.each(t, function(a, r) {
-      console.log(r);
       var n = r.special_price ? r.special_price : r.price
         , l = r.special_price ? r.formated_special_price : r.formated_price
         , c = (r.promotion && r.promo_price && 0 != r.promo_price && r.promo_price,
@@ -363,6 +361,8 @@ $(document).ready(function(){
           $(this).parent().css("z-index", "1")
       })
   });
+
+  update_cart(cart);
 
   $(document).on("change", ".cart-item-option, .cart-item-qty", function(t) {
       t.preventDefault();
