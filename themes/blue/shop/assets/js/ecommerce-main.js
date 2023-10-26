@@ -107,7 +107,7 @@ function gen_html(t) {
       e += '<div class="row align-items-center justify-content-between">';
       e += '<div class="col-md-6"><div class="rating"><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill"></i></div></div>';
       if(r.promotion){
-        e += '<div class="col-md-6"><div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">'+r.formated_price+'</h4></div></div>';
+        e += '<div class="col-md-6"><div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">'+l+'</h4></div></div>';
       }
       e += '</div>';
       e += '<div class="row align-items-center justify-content-between">';
@@ -115,7 +115,7 @@ function gen_html(t) {
       if(r.promotion){
         e += r.formated_promo_price;
       }else{
-        e += r.formated_price;
+        e += l;
       }
       e += '</h4></div></div>';
       e += '<div class="col-md-6">';
