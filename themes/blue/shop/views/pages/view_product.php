@@ -60,10 +60,10 @@
             <div class="col-md-6 col-12">
                 <div class="product-dtl">
                     <div class="product-info">
-                        <div class="product-name"><h2>Pill Jar</h2></div>		        		
+                        <div class="product-name"><h2><?= $product->name . ' (' . $product->code . ')'; ?></h2></div>		        		
             </div>
                     <div class="product-desc border-top border-bottom">
-                <p class="m-0 py-3">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                <p class="m-0 py-3"><?= $product->product_details; ?></p>
 
             </div>
                     <div class="product-price-discount"><h4 class="m-0"><span>39.00 SAR</span><span class="line-through">29.00 SAR</span></h4></div>
@@ -162,7 +162,7 @@
 
 <!-- join container -->
 <section class="join-container " >
-    <div class="container container-max-width py-5" style="background-image: url('./images/bgbanner.jpg');">
+    <div class="container container-max-width py-5" style="background-image: url(<?= base_url('assets/images/banners/bgbanner.jpg'); ?>);">
     <div class="text-center">
         <h2>Join our newsletter</h2>
         <p>Join over half a million vitamin lovers and get our latest deals, articles, and resources!</p>
