@@ -993,9 +993,6 @@ class Shop extends MY_Shop_Controller
         }
         $this->shop_model->updateProductViews($product->id, $product->views);
         $this->data['product']        = $product;
-        echo '<pre>';
-        print_r($this->data['product']);
-        exit;
         $this->data['other_products'] = $this->shop_model->getOtherProducts($product->id, $product->category_id, $product->brand);
         $this->data['unit']           = $this->site->getUnitByID($product->unit);
         $this->data['brand']          = $this->site->getBrandByID($product->brand);
