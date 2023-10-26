@@ -45,6 +45,7 @@ toggleSearchcros.addEventListener('click', function() {
 );
 
 function update_mini_cart(t) {
+  console.log('This is getting called...');
   if (t.total_items && t.total_items > 0) {
     $(".cart-total-items").show();
     $(".cart-total-items").text(t.total_items);
