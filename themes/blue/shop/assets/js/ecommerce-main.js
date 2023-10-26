@@ -110,7 +110,7 @@ function update_cart(t) {
       a += '<tr class="active text-bold"><td>' + lang.grand_total + '</td><td class="text-right">' + t.grand_total + "</td></tr>",
       $("<tbody>" + a + "</tbody>").appendTo("#cart-totals"),
       $("#total-items").text(t.total_items + "(" + t.total_unique_items + ")"),
-      $(".cart-item-option").selectpicker("refresh"),
+      //$(".cart-item-option").selectpicker("refresh"),
       $(".cart-empty-msg").hide(),
       $(".cart-contents").show()
   } else
