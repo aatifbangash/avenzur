@@ -99,11 +99,17 @@ function gen_html(t) {
 
       e += '<div class="col-lg-3 col-md-4 col-sm-12">';
       e += '<div class="card" style="width: 100%">';
-      e += '<a href="#" class="text-decoration-none">';
-      e += '<div class="cardImg"><img src="'+site.base_url + "assets/uploads/" + r.image+'" class="card-img-top" alt="..."></div>';
+      //e += '<a href="#" class="text-decoration-none">';
+      e += '<div class="cardImg">';
+      e += '<a href="'+site.base_url+'/product/'+r.slug+'" class="text-decoration-none">';
+      e += '<img src="'+site.base_url + "assets/uploads/" + r.image+'" class="card-img-top" alt="...">';
+      e += '</a>';
+      e += '</div>';
       e += '<div class="card-body px-0 text-start pb-0">';
       e += '<div class="product-cat-title"><span class="text-uppercase">'+r.category_name+'</span></div>';
+      e += '<a href="'+site.base_url+'/product/'+r.slug+'" class="text-decoration-none">';
       e += '<h5 class="card-title text-start">'+r.name+'</h5>';
+      e += '</a>';
       e += '<div class="row align-items-center justify-content-between">';
       e += '<div class="col-md-6"><div class="rating"><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill"></i></div></div>';
       if(r.promotion){
@@ -127,7 +133,7 @@ function gen_html(t) {
       e += '</div>';
       e += '</div>';
       e += '</div>';
-      e += '</a>';
+      //e += '</a>';
       e += '<div>';
       e += '<button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark">Add to cart </button>';
       e += '</div>';
