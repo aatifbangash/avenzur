@@ -689,6 +689,9 @@ class Shop_model extends CI_Model
 		
 		
 		$results = $this->db->get();
+        echo '<pre>';
+        print_r($results);
+        exit;
 		$data = array();
 		if($results !== FALSE && $results->num_rows() > 0){
                 $data = $results->result_array();
