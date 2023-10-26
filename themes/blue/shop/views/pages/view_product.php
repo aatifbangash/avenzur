@@ -58,7 +58,22 @@
                 <p class="m-0 py-3"><?= $product->product_details; ?></p>
 
             </div>
-                    <div class="product-price-discount"><h4 class="m-0"><span>39.00 SAR</span><span class="line-through">29.00 SAR</span></h4></div>
+                    <div class="product-price-discount"><h4 class="m-0">
+                        <?php 
+                            if ($product->promotion) {
+                                ?>
+                                    <span><?= $this->sma->convertMoney($product->promo_price); ?></span>
+                                    <span class="line-through"><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?></span>
+                                <?php
+                            } else{
+                                ?>
+                                    <span><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?></span>
+                                <?php
+                            }
+                            
+                        ?>
+                        
+                    </h4></div>
                     <div class="product-detail product-count d-flex align-items-center " style="width: fit-content;">
                         
                 <form action="#" class=" quantity text-end py-2 d-flex align-items-center justify-content-md-between">
