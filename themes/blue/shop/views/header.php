@@ -81,8 +81,8 @@
                     <div class="mb-3">
                     
                       <label for="exampleDropdownFormEmail2" class="form-label">Username/Email</label>
-                      <a href="#" class="float-end text-decoration-none text-dark">Register</a>
-                      <input type="email" class="form-control" id="exampleDropdownFormEmail2" placeholder="email@example.com">
+                      <a href="<?= site_url().'/login#register'; ?>" class="float-end text-decoration-none text-dark">Register</a>
+                      <input type="email" class="form-control" id="exampleDropdownFormEmail2" placeholder="Email">
                     </div>
                     <div class="mb-3">
                       <label for="exampleDropdownFormPassword2" class="form-label">Password</label>
