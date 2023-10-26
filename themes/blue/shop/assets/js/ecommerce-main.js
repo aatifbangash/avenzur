@@ -102,7 +102,7 @@ function gen_html(t) {
       e += '<a href="#" class="text-decoration-none">';
       e += '<div class="cardImg"><img src="'+site.base_url + "assets/uploads/" + r.image+'" class="card-img-top" alt="..."></div>';
       e += '<div class="card-body px-0 text-start pb-0">';
-      e += '<div class="product-cat-title"><span class="text-uppercase">'+category_name+'</span></div>';
+      e += '<div class="product-cat-title"><span class="text-uppercase">'+r.category_name+'</span></div>';
       e += '<h5 class="card-title text-start">'+r.name+'</h5>';
       e += '<div class="row align-items-center justify-content-between">';
       e += '<div class="col-md-6"><div class="rating"><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill"></i></div></div>';
