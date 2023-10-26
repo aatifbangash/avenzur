@@ -19,6 +19,14 @@
             <div class="col-md-4 col-12 pe-md-5">
                 <div id="slider" class="owl-carousel product-slider">
                     <?php
+                        if(isset($product->image)){
+                            ?>
+                                <div class="item productzoomImg">
+                                        <img src="<?= base_url('assets/uploads/' . $product->image); ?>" />
+                                </div>
+                            <?php
+                        }
+
                         if (!empty($images)) {
                             foreach ($images as $ph) {
                                 ?>
@@ -33,6 +41,14 @@
 
                 <div id="thumb" class="owl-carousel product-thumb">
                     <?php
+                        if(isset($product->image)){
+                            ?>
+                                <div class="item">
+                                        <img src="<?= base_url('assets/uploads/' . $product->image); ?>" />
+                                </div>
+                            <?php
+                        }
+
                         if (!empty($images)) {
                             foreach ($images as $ph) {
                                 ?>
