@@ -4,3 +4,5 @@ app/config/config.php
 app/config/database.php
 vendor/
 files/
+assets/uploads*
+.editorconfig
