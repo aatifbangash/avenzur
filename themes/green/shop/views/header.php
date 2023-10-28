@@ -76,28 +76,46 @@
                 <button type="button" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
                   <i class="bi bi-person-fill"></i>&nbsp; My Account
                 </button>
-                  <form action="<?= site_url().'/login' ?>" class="dropdown-menu p-3 myaccountForm" >
-                    <div class="mb-3">
-                    
-                      <label for="exampleDropdownFormEmail2" class="form-label">Username/Email</label>
-                      <a href="<?= site_url().'/login#register'; ?>" class="float-end text-decoration-none text-dark">Register</a>
-                      <input type="email" name="identity" class="form-control" id="exampleDropdownFormEmail2" placeholder="Email">
-                    </div>
-                    <div class="mb-3">
-                      <label for="exampleDropdownFormPassword2" class="form-label">Password</label>
-                      <a href="#" class="float-end text-decoration-none text-dark">Forgot?</a>
-                      <input type="password" name="password" class="form-control" id="exampleDropdownFormPassword2" placeholder="Password">
-                    </div>
-                    <div class="mb-3">
-                      <div class="form-check">
-                        <input type="checkbox" value="1" name="remember_me" class="form-check-input" id="dropdownCheck2">
-                        <label class="form-check-label" for="dropdownCheck2">
-                          Remember me
-                        </label>
-                      </div>
-                    </div>
-                    <button type="submit" value="login" name="login" class="btn primary-buttonAV w-100 rounded-1 pb-2">Login</button>
-                  </form>
+                  <?php 
+                    if ($loggedIn) {
+                      ?>
+                      <ul class="dropdown-menu dropdown-menu-right">
+                          <li class=""><a href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a></li>
+                          <li class=""><a href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a></li>
+                          <li class=""><a href="<?= shop_url('quotes'); ?>"><i class="mi fa fa-heart-o"></i> <?= lang('quotes'); ?></a></li>
+                          <li class=""><a href="<?= shop_url('downloads'); ?>"><i class="mi fa fa-download"></i> <?= lang('downloads'); ?></a></li>
+                          <li class=""><a href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a></li>
+                          <li class="divider"></li>
+                          <li class=""><a href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a></li>
+                      </ul>
+                      <?php
+                    }else{
+                      ?>
+                      <?= form_open('login', 'class="dropdown-menu p-3 myaccountForm validate"'); ?>
+                        <div class="mb-3">
+                        <?php $u = mt_rand(); ?>
+                          <label for="exampleDropdownFormEmail2" class="form-label">Username/Email</label>
+                          <a href="<?= site_url().'/login#register'; ?>" class="float-end text-decoration-none text-dark">Register</a>
+                          <input type="email" name="identity" class="form-control" id="username<?= $u; ?>" value="" placeholder="Email" />
+                        </div>
+                        <div class="mb-3">
+                          <label for="exampleDropdownFormPassword2" class="form-label">Password</label>
+                          <a href="#" class="float-end text-decoration-none text-dark">Forgot?</a>
+                          <input type="password" id="password<?= $u; ?>" name="password" value="" class="form-control" id="exampleDropdownFormPassword2" placeholder="Password" />
+                        </div>
+                        <div class="mb-3">
+                          <div class="form-check">
+                            <input type="checkbox" value="1" name="remember_me" class="form-check-input" id="dropdownCheck2">
+                            <label class="form-check-label" for="dropdownCheck2">
+                              Remember me
+                            </label>
+                          </div>
+                        </div>
+                        <button type="submit" value="login" name="login" class="btn primary-buttonAV w-100 rounded-1 pb-2">Login</button>
+                      <?= form_close(); ?>
+                      <?php
+                    }
+                  ?>
                 </div>
               </div>
               
