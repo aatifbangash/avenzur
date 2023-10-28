@@ -76,7 +76,7 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script src="<?= $assets; ?>js/owl.carousel.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
-    <script src="<?= $assets; ?>js/libs.min.js"></script>
+    <!--<script src="<?php //echo $assets; ?>js/libs.min.js"></script>-->
     <script  src="<?= $assets; ?>js/ecommerce-main.js"></script>
 
     <script type="text/javascript">
