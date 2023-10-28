@@ -6,8 +6,8 @@ class Shop extends MY_Shop_Controller
 {
     public function __construct()
     {
-        
-         
+
+
         parent::__construct();
         if ($this->Settings->mmode) {
             redirect('notify/offline');
@@ -21,7 +21,7 @@ class Shop extends MY_Shop_Controller
     // Add/edit customer address
     public function address($id = null)
     {
-            
+
         if (!$this->loggedIn) {
             $this->sma->send_json(['status' => 'error', 'message' => lang('please_login')]);
         }
@@ -348,12 +348,12 @@ class Shop extends MY_Shop_Controller
                     $customer = (array) $customer;
                 }
                 // $this->sma->print_arrays($data, $products, $customer, $address);
-                   
+
                 if ($sale_id = $this->shop_model->addSale($data, $products, $customer, $address)) {
-                    
+
                    //$added_record = $this->aramexshipment($sale_id, $data, $products, $customer, $address,$pro_weight);
                    //$email = $this->order_received($sale_id, $data['hash'], $added_record);
-                     
+
                    if (!$email['sent']) {
                       $this->session->set_flashdata('error', $email['error']);
                    }
@@ -443,7 +443,7 @@ class Shop extends MY_Shop_Controller
             ]
         );
     }
-    
+
     public function aramexshipment($sale_id, $data, $products, $customer, $address, $pro_weight)
     {
         $dp = $this->shop_model->getAramexSettings();
@@ -460,7 +460,7 @@ class Shop extends MY_Shop_Controller
                 $p_phonenumber = $dp->landline_number ; //"966568241418";
                 $p_cellnumber = $dp->cell_number ; //"966568241418";
                 $p_shipper_email    = $dp->Email ; //"ama@pharma.com.sa";
-                
+
                 $p_AccountEntity = $dp->account_entity ; //'RUH';
                 $p_AccountNumber  = $dp->account_number ; //'71449672';
                 $p_AccountPin = $dp->account_pin ; //'107806';
@@ -482,7 +482,7 @@ class Shop extends MY_Shop_Controller
                 $p_phonenumber = "966568241418";
                 $p_cellnumber = "966568241418";
                 $p_shipper_email    = "ama@pharma.com.sa";
-                
+
                 $p_AccountEntity = 'RUH';
                 $p_AccountNumber  = '71449672';
                 $p_AccountPin = '107806';
@@ -497,18 +497,18 @@ class Shop extends MY_Shop_Controller
         $soapClient = new SoapClient($p_soapLink);
             	//echo '<pre>';
             	//print_r($soapClient->__getFunctions());
-            	
-            	
+
+
             	$p_sale_id = $sale_id;
             	$p_transaction = (int)(microtime(true) * 1000);
-            	
-            	
+
+
             	$cutomer_array  = (array)$customer;
-                 
+
                  //print_r($cutomer_array);
-                 
+
                 // var_dump($address);
-                        
+
             	$c_Line1 = $cutomer_array['address'];
             	$c_City = $cutomer_array['city'];
             	$c_PostCode = $cutomer_array['postal_code'];
@@ -519,11 +519,11 @@ class Shop extends MY_Shop_Controller
             	$c_EmailAddress = $cutomer_array['email'];
             	$c_CompanyName = 'Pharma Drug Store';//$cutomer_array['company'];
             	$c_State = $cutomer_array['state'];
-            
+
                 $product_weight = 0.0;
                 $product_unit = 'Kg';
                 $params = array();
-                
+
                 foreach($pro_weight as $w)
                 {
                     $product_weight += $w['product_weight'];
@@ -531,19 +531,19 @@ class Shop extends MY_Shop_Controller
                 foreach($products as $product)
                 {
                     //$product_weight += $product['product_weight'];
-                    
+
                     $params['Shipments']['Shipment']['Details']['Items'][] = array(
                                                 		'PackageType' 	=> 'Box',
                                                 		'Quantity'		=> $product['quantity'],
                                                 		'Weight'		=> array(
                                                 				'Value'		=> '0.20',//$product['product_weight'],
-                                                				'Unit'		=> 'Kg',		
+                                                				'Unit'		=> 'Kg',
                                                 		),
                                                 		'Comments'		=> 'Medicine Boxes',
                                                 		'Reference'		=> ''
                                                 	);
                 }
-            	
+
             //var_dump($pro_weight);
         	$params = array(
         			'Shipments' => array(
@@ -576,7 +576,7 @@ class Shop extends MY_Shop_Controller
         											'Type'					=> ''
         										),
         						),
-        												
+
         						'Consignee'	=> array(
         										'Reference1'	=> $p_transaction,
         										'Reference2'	=> $p_sale_id,
@@ -590,7 +590,7 @@ class Shop extends MY_Shop_Controller
         											'PostCode'				=> (!empty($c_PostCode)) ? $c_PostCode : '',
         											'CountryCode'			=> $c_CountryCode
         										),
-        										
+
         										'Contact'		=> array(
         											'Department'			=> '',
         											'PersonName'			=> $c_PersonName,
@@ -606,7 +606,7 @@ class Shop extends MY_Shop_Controller
         											'Type'					=> ''
         										),
         						),
-        						
+
         						'ThirdParty' => array(
         										'Reference1' 	=> '',
         										'Reference2' 	=> '',
@@ -632,10 +632,10 @@ class Shop extends MY_Shop_Controller
         											'FaxNumber'				=> '',
         											'CellPhone'				=> '',
         											'EmailAddress'			=> '',
-        											'Type'					=> ''							
+        											'Type'					=> ''
         										),
         						),
-        						
+
         						'Reference1' 				=> $p_transaction ,
         						'Reference2' 				=> $p_sale_id,
         						'Reference3' 				=> '',
@@ -648,21 +648,21 @@ class Shop extends MY_Shop_Controller
         						'Comments'					=> $p_sale_id,
         						'AccountingInstrcutions' 	=> '',
         						'OperationsInstructions'	=> '',
-        						
+
         						'Details' => array(
         										'Dimensions' => array(
         											'Length'				=> '',
         											'Width'					=> '',
         											'Height'				=> '',
         											'Unit'					=> 'cm',
-        											
+
         										),
-        										
+
         										'ActualWeight' => array(
         											'Value'					=> ($product_weight >= 1) ? $product_weight : 1.0 ,
         											'Unit'					=> 'Kg'
         										),
-        										
+
         										'ProductGroup' 			=> 'EXP',
         										'ProductType'			=> 'PDX',
         										'PaymentType'			=> 'P',
@@ -671,41 +671,41 @@ class Shop extends MY_Shop_Controller
         										'NumberOfPieces'		=> 1,
         										'DescriptionOfGoods' 	=> 'Medicine',
         										'GoodsOriginCountry' 	=> $p_countrycode,
-        										
+
         										'CashOnDeliveryAmount' 	=> array(
         											'Value'					=> 0,
         											'CurrencyCode'			=> ''
         										),
-        										
+
         										'InsuranceAmount'		=> array(
         											'Value'					=> 0,
         											'CurrencyCode'			=> ''
         										),
-        										
+
         										'CollectAmount'			=> array(
         											'Value'					=> 0,
         											'CurrencyCode'			=> ''
         										),
-        										
+
         										'CashAdditionalAmount'	=> array(
         											'Value'					=> 0,
-        											'CurrencyCode'			=> ''							
+        											'CurrencyCode'			=> ''
         										),
-        										
+
         										'CashAdditionalAmountDescription' => '',
-        										
+
         										'CustomsValueAmount' => array(
         											'Value'					=> 0,
-        											'CurrencyCode'			=> ''								
+        											'CurrencyCode'			=> ''
         										),
-        										
+
         										'Items' 				=> array(
-        											
+
         										)
         						),
         				),
         		),
-        		
+
         			'ClientInfo'  			=> array(
         										'AccountCountryCode'	=> $p_countrycode,
         										'AccountEntity'		 	=> $p_AccountEntity,
@@ -715,13 +715,13 @@ class Shop extends MY_Shop_Controller
         										'Password'			 	=> $p_Password,
         										'Version'			 	=> $p_Version
         									),
-        
+
         			'Transaction' 			=> array(
         										'Reference1'			=> $p_transaction ,
-        										'Reference2'			=> $p_sale_id, 
-        										'Reference3'			=> '', 
-        										'Reference4'			=> '', 
-        										'Reference5'			=> '',									
+        										'Reference2'			=> $p_sale_id,
+        										'Reference3'			=> '',
+        										'Reference4'			=> '',
+        										'Reference5'			=> '',
         									),
         			'LabelInfo'				=> array(
         										//'ReportID' 				=> 9202,
@@ -729,9 +729,9 @@ class Shop extends MY_Shop_Controller
         										'ReportType'			=> 'URL',
         			),
         	);
-        	
-        	
-        	
+
+
+
         	/*$url = "https://ws.sbx.aramex.net/ShippingAPI.V2/Shipping/Service_1_0.svc/json/CreateShipments";
         	$ch = curl_init( $url );
                 # Setup request to send json via POST.
@@ -744,20 +744,20 @@ class Shop extends MY_Shop_Controller
                 $result = curl_exec($ch);
                 curl_close($ch);
                 # Print response.
-                
+
                 print_r($payload);
-                
+
                 echo $result;*/
-        	
+
         	try {
         		$auth_call = $soapClient->CreateShipments($params);
-        		
+
         		//var_dump((array)$auth_call);
         		$data = json_decode(json_encode($auth_call), true);//(array)$auth_call;
-        		
-        		
+
+
         		//var_dump($data);
-        		
+
         		$record = array(
         		        "salesid" => $data["Transaction"]["Reference2"],
         		        "reference" => $data["Transaction"]["Reference1"],
@@ -766,14 +766,14 @@ class Shop extends MY_Shop_Controller
         		        "date" => date('Y-m-d H:i:s'),
         		        "note" => "successful"
         		    );
-        		    
+
         		 $salesarr = array(
         		        'attachment' => $data['Shipments']["ProcessedShipment"]["ShipmentLabel"]["LabelURL"]
-        		     );  
-        		     
-        		     
-        		    
-        		$this->shop_model->addAramexShippment($record);    
+        		     );
+
+
+
+        		$this->shop_model->addAramexShippment($record);
         		$this->shop_model->salesarrAdd($p_sale_id,$salesarr);
         		/*echo "Salesid ".$data["Transaction"]["Reference1"].'<br>';
         		echo "Reference ".$data["Transaction"]["Reference2"].'<br>';
@@ -934,6 +934,25 @@ class Shop extends MY_Shop_Controller
         }
     }
 
+    public function contact_us()
+    {
+
+        if (!empty($_POST['formSubmitted'])) {
+            if ($this->shop_model->addContactUsRecord([
+                'user_id' => $this->session->userdata('user_id') ? $this->session->userdata('user_id') : null,
+                'type' => $_POST['type'],
+                'content' => $_POST['content']
+            ]))
+                // TODO(Will sent an email notification to the admin here)
+                $this->session->set_flashdata('success_message', 'Feedback submitted successfully!');;
+        }
+
+        $this->data['page_title'] = "Contact Us";
+        $this->data['title'] = "Contact Us";
+        $this->page_construct('pages/contact_us', $this->data);
+        $this->session->unset_userdata('success_message');
+    }
+
     // Display Page
     public function page($slug)
     {
@@ -944,11 +963,11 @@ class Shop extends MY_Shop_Controller
         $this->data['page']       = $page;
         $this->data['page_title'] = $page->title;
         $this->data['page_desc']  = $page->description;
-        
-        
+
+
         $this->page_construct('pages/page', $this->data);
     }
-    
+
     // Display blog page
     public function blog($slug = NULL)
     {
@@ -956,7 +975,7 @@ class Shop extends MY_Shop_Controller
         {
             $this->data['blogs']  = $this->shop_model->get_all_records();
             $this->data['page']       = 'blog_page';
-            
+
             $this->data['page_title'] = 'blog';
             $this->data['page_desc']  = '';
              $this->page_construct('pages/blog_page', $this->data);
@@ -970,7 +989,7 @@ class Shop extends MY_Shop_Controller
         $this->data['page_desc']  = $page->description;
         $this->page_construct('pages/blog', $this->data);
         }
-        
+
     }
      public  function get_all_data(){
                      $this->data['demo']  = $this->Shop_model->get_all_records();
@@ -981,7 +1000,7 @@ class Shop extends MY_Shop_Controller
     // Display Page
     public function product($slug)
     {
-      
+
         $product = $this->shop_model->getProductBySlug($slug);
         if (!$slug || !$product) {
             $this->session->set_flashdata('error', lang('product_not_found'));
@@ -1012,12 +1031,12 @@ class Shop extends MY_Shop_Controller
     // Featured Products
     public function featured_products($category_slug = null, $subcategory_slug = null, $brand_slug = null, $promo = null)
     {
-         
-          
+
+
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
         if ($this->input->get('category')) {
             $category_slug = $this->input->get('category', true);
-           
+
         }
         if ($this->input->get('brand')) {
             $brand_slug = $this->input->get('brand', true);
@@ -1025,7 +1044,7 @@ class Shop extends MY_Shop_Controller
         if ($this->input->get('promo') && $this->input->get('promo') == 'yes') {
             $promo = true;
         }
-        
+
         if($category_slug != null)
         { $this->data['featureImage'] = $this->shop_model->getCategoryBySlug($category_slug); }
         $reset = $category_slug || $subcategory_slug || $brand_slug ? true : false;
@@ -1053,7 +1072,7 @@ class Shop extends MY_Shop_Controller
            $this->data['location']    = $this->shop_model->getProductLocation();
            if($this->data=='Saudi Arabia'){
                 echo "Test";
-                
+
             }
         $this->page_construct('pages/featured_products', $this->data);
     }
@@ -1061,12 +1080,12 @@ class Shop extends MY_Shop_Controller
     // Products,  categories and brands page
     public function products($category_slug = null, $subcategory_slug = null, $brand_slug = null, $promo = null)
     {
-         
-          
+
+
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
         if ($this->input->get('category')) {
             $category_slug = $this->input->get('category', true);
-           
+
         }
         if ($this->input->get('brand')) {
             $brand_slug = $this->input->get('brand', true);
@@ -1074,7 +1093,7 @@ class Shop extends MY_Shop_Controller
         if ($this->input->get('promo') && $this->input->get('promo') == 'yes') {
             $promo = true;
         }
-        
+
         if($category_slug != null)
         { $this->data['featureImage'] = $this->shop_model->getCategoryBySlug($category_slug); }
         $reset = $category_slug || $subcategory_slug || $brand_slug ? true : false;
@@ -1102,7 +1121,7 @@ class Shop extends MY_Shop_Controller
            $this->data['location']    = $this->shop_model->getProductLocation();
            if($this->data=='Saudi Arabia'){
                 echo "Test";
-                
+
             }
         $this->page_construct('pages/products', $this->data);
     }
@@ -1254,7 +1273,7 @@ class Shop extends MY_Shop_Controller
         $this->data['page_desc']  = '';
         $this->page_construct('pages/wishlist', $this->data);
     }
-    
+
     public function suggestions($pos = 0)
     {
         $term         = $this->input->get('term', true);
@@ -1274,12 +1293,12 @@ class Shop extends MY_Shop_Controller
         $customer_group = "Retail";//$this->site->getCustomerGroupByID($customer->customer_group_id);
         $rows           = $this->shop_model->getProductNames($sr, $warehouse_id,$category_id, $pos);
         $currencies = $this->site->getAllCurrencies();
-        
+
 
         if ($rows) {
             $r = 0;
             foreach ($rows as $row) {
-            
+
                 $c = uniqid(mt_rand(), true);
                 unset($row->cost, $row->details, $row->product_details,  $row->barcode_symbology, $row->cf1, $row->cf2, $row->cf3, $row->cf4, $row->cf5, $row->cf6, $row->supplier1price, $row->supplier2price, $row->cfsupplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1, $row->supplier2, $row->supplier3, $row->supplier4, $row->supplier5, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
                 $option               = false;
@@ -1289,8 +1308,8 @@ class Shop extends MY_Shop_Controller
                 $row->discount        = '0';
                 $row->serial          = '';
                 $options              = $this->shop_model->getProductOptions($row->id, $warehouse_id);
-                
-                
+
+
                 if ($options) {
                     $opt = $option_id && $r == 0 ? $this->shop_model->getProductOptionByID($option_id) : $options[0];
                     if (!$option_id || $r > 0) {
@@ -1326,8 +1345,8 @@ class Shop extends MY_Shop_Controller
                 }
                 if ($this->sma->isPromo($row)) {
                     $row->price = $row->promo_price;
-                } 
-                
+                }
+
                 $row->real_unit_price = $row->price;
                 $row->base_quantity   = 1;
                 $row->base_unit       = $row->unit;
@@ -1335,7 +1354,7 @@ class Shop extends MY_Shop_Controller
                 $row->customer_group = $customer_group;
                 $row->unit            = $row->sale_unit ? $row->sale_unit : $row->unit;
                 $row->comment         = '';
-                
+
                 $combo_items          = false;
                 if ($row->type == 'combo') {
                     $combo_items = $this->shop_model->getProductComboItems($row->id, $warehouse_id);
@@ -1349,7 +1368,7 @@ class Shop extends MY_Shop_Controller
                 $r++;
             }
             $this->sma->send_json($pr);
-            
+
         } else {
             /*$rows = $this->shop_model->getProductBrandsByName($sr);
             if($rows){
@@ -1360,32 +1379,32 @@ class Shop extends MY_Shop_Controller
             $this->sma->send_json([['id' => 0, 'label' => lang('no_match_found'), 'value' => $term]]);
         }
     }
-    
+
     public function refundData()
 	{
         $dt   = date('Y-m-d');;
-        
+
         $data = array(
-        	
+
         	'order_id'=>$this->input->get('order_id'),
             'user_id'=>$this->input->get('customer_id'),
         	'req_dates'=>$dt,
         	'reason_refund'=>$this->input->get('reason_refund'),
         	 'notes'=>$this->input->get('notes')
         		);
-        		
+
         		$this->load->model('shop_model');
         		$result=$this->shop_model->saveRefundRecord($data);
         		if($result)
         		{
-        		echo  1;	
+        		echo  1;
         		}
         		else
         		{
-        		echo  0;	
+        		echo  0;
         		}
 	}
-	
+
 	public function globalupdate()
 	{
 	    $country_id = $this->input->get('countryName');
@@ -1394,8 +1413,8 @@ class Shop extends MY_Shop_Controller
 	    //$this->warehouse = $this->shop_model->getwharehouseID($country_id);
 	    echo 1;
 	}
-	
-	
+
+
 
 
 }
