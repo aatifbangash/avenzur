@@ -81,7 +81,7 @@
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="confirmPassword" class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
+                        <input type="password" class="form-control" id="confirmPassword" name="password_confirm" required>
                     </div>
                 </div>
             </div>      
