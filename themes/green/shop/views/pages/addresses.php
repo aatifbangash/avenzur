@@ -37,15 +37,14 @@
         <!-- Text Update Modal -->
     
         <!-- Add Address Modal -->
-        <div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+        <!--<div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="addAddressModalLabel"><?= lang('add_address'); ?></h5>
+                        <h5 class="modal-title" id="addAddressModalLabel"><?php //echo lang('add_address'); ?></h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <!-- Address input form in the modal -->
                         <form id="addressForm">
                             <div class="row">
                                 <div class="col-md-12">
@@ -111,14 +110,14 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="submitAddress"><?= lang('add_address'); ?></button>
+                        <button type="button" class="btn btn-primary" id="submitAddress"><?php //echo lang('add_address'); ?></button>
                     </div>
                 </div>
             </div>
-        </div>
+        </div>-->
     
         <!-- Edit Address Modal -->
-        <div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
+        <!--<div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -126,7 +125,6 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <!-- Address input form for editing in the modal -->
                         <form id="editAddressForm">
                             <div class="row">                            
                                 <div class="col-md-12">
@@ -198,7 +196,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div>-->
     </div>
 </section>
 

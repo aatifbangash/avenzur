@@ -654,11 +654,95 @@ $(document).ready(function(){
 
 // Addresses Section
 
-$(document).ready(function() {
-  // Initialize a variable to keep track of the unique ID for each address
-  var addressIdCounter = 1;
+$("#add-address").click(function(t) {
+  t.preventDefault(),
+  add_address()
+});
 
-  // Event listener for the "Add Address" button
+$(".edit-address").click(function(t) {
+  t.preventDefault();
+  var e = $(this).attr("data-id");
+  addresses && $.each(addresses, function() {
+      this.id == e && add_address(this)
+  })
+});
+
+function add_address(t) {
+  t = t || {};
+  var e = "";
+  if (istates) {
+      var a = document.createElement("select");
+      a.id = "address-state",
+      a.name = "state",
+      a.className = "selectpickerstate mobile-device",
+      a.setAttribute("data-live-search", !0),
+      a.setAttribute("title", "State");
+      Object.keys(istates).map(function(t) {
+          if (0 != t) {
+              var e = document.createElement("option");
+              e.value = t,
+              e.text = istates[t],
+              a.appendChild(e)
+          }
+      }),
+      e = a.outerHTML
+  } else
+      e = '<input name="state" value="' + (t.state ? t.state : "") + '" id="address-state" class="form-control" placeholder="' + lang.state + '">';
+  swal({
+      title: t.id ? lang.update_address : lang.add_address,
+      html: '<span class="text-bold padding-bottom-md">' + lang.fill_form + '</span><hr class="swal2-spacer padding-bottom-xs" style="display: block;"><form action="' + site.shop_url + 'address" id="address-form" class="padding-bottom-md"><input type="hidden" name="' + site.csrf_token + '" value="' + site.csrf_token_value + '"><div class="row"><div class="form-group col-sm-12"><input name="line1" id="address-line-1" value="' + (t.line1 ? t.line1 : "") + '" class="form-control" placeholder="' + lang.line_1 + '"></div></div><div class="row"><div class="form-group col-sm-12"><input name="line2" id="address-line-2" value="' + (t.line2 ? t.line2 : "") + '" class="form-control" placeholder="' + lang.line_2 + '"></div></div><div class="row"><div class="form-group col-sm-6"><input name="city" value="' + (t.city ? t.city : "") + '" id="address-city" class="form-control" placeholder="' + lang.city + '"></div><div class="form-group col-sm-6" id="istates">' + e + '</div><div class="form-group col-sm-6"><input name="postal_code" value="' + (t.postal_code ? t.postal_code : "") + '" id="address-postal-code" class="form-control" placeholder="' + lang.postal_code + '"></div><div class="form-group col-sm-6"><input name="country" value="' + (t.country ? t.country : "") + '" id="address-country" class="form-control" placeholder="' + lang.country + '"></div><div class="form-group col-sm-12 margin-bottom-no"><input name="phone" value="' + (t.phone ? t.phone : "") + '" id="address-phone" class="form-control" placeholder="' + lang.phone + '"></div></form></div>',
+      showCancelButton: !0,
+      allowOutsideClick: !1,
+      cancelButtonText: lang.cancel,
+      confirmButtonText: lang.submit,
+      preConfirm: function() {
+          return new Promise(function(t, e) {
+              $("#address-line-1").val() || e(lang.line_1 + " " + lang.is_required),
+              $("#address-city").val() || e(lang.city + " " + lang.is_required),
+              $("#address-state").val() || e(lang.state + " " + lang.is_required),
+              $("#address-country").val() || e(lang.country + " " + lang.is_required),
+              $("#address-phone").val() || e(lang.phone + " " + lang.is_required),
+              t()
+          }
+          )
+      },
+      onOpen: function() {
+          if ($("#address-line-1").val(t.line1 ? t.line1 : "").focus(),
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent))
+              $(".selectpickerstate").selectpicker({
+                  modile: !0
+              }),
+              $(".selectpickerstate").selectpicker("val", t.state ? t.state : "");
+          else {
+              for (var e = document.querySelectorAll(".mobile-device"), a = 0; a < e.length; a++)
+                  e[a].classList.remove("mobile-device");
+              $(".selectpickerstate").selectpicker({
+                  size: 5
+              }),
+              $(".selectpickerstate").selectpicker("val", t.state ? t.state : "")
+          }
+      }
+  }).then(function(e) {
+      var a = $("#address-form");
+      $.ajax({
+          url: a.attr("action") + (t.id ? "/" + t.id : ""),
+          type: "POST",
+          data: a.serialize(),
+          success: function(t) {
+              if (t.redirect)
+                  return window.location.href = t.redirect,
+                  !1;
+              sa_alert(t.status, t.message, t.level)
+          },
+          error: function() {
+              sa_alert("Error!", "Ajax call failed, please try again or contact site owner.", "error", !0)
+          }
+      })
+  }).catch(swal.noop)
+}
+
+/*$(document).ready(function() {
+  var addressIdCounter = 1;
   $('#submitAddress').click(function() {
       var line1 = $('#line1Input').val();
       var line2 = $('#line2Input').val();
@@ -669,11 +753,8 @@ $(document).ready(function() {
       var phone = $('#phoneInput').val();
 
       if (line1 && city) {
-          // Generate a unique ID for the new address
           var addressId = 'address' + addressIdCounter;
           addressIdCounter++;
-
-          // Create a card for the new address
           var addressCard = `
           
           <div class="col-md-6 mb-4" id="${addressId}">
@@ -691,13 +772,10 @@ $(document).ready(function() {
           </div>
           `;
 
-          // Add the new address card to the row
           $('#addressList').append(addressCard);
 
-          // Close the modal
           $('#addAddressModal').modal('hide');
 
-          // Clear the input fields
           $('#line1Input').val('');
           $('#line2Input').val('');
           $('#cityInput').val('');
@@ -777,4 +855,4 @@ $(document).ready(function() {
           $('#editPhoneInput').val('');
       }
   });
-});
+});*/
