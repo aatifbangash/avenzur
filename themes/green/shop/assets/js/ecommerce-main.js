@@ -348,8 +348,7 @@ a.filters.promo = promo,
 }
 
 // slick slider =====================
-var $j = jQuery.noConflict();
-$j(document).ready(function(){
+$(document).ready(function(){
 
   searchProducts();
 
