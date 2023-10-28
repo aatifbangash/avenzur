@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<section class="page-contents">
-    <div class="container">
+<section class="py-3">
+    <div class="container container-max-width">
         <div class="row">
             <div class="col-xs-12">
                 
