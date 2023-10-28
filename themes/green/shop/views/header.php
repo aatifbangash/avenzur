@@ -92,7 +92,7 @@
                       <?php
                     }else{
                       ?>
-                      <form action="<?= site_url().'/login' ?>" method="post" class="dropdown-menu p-3 myaccountForm validate" >
+                      <?= form_open('login', 'class="dropdown-menu p-3 myaccountForm validate"'); ?>
                         <div class="mb-3">
                         <?php $u = mt_rand(); ?>
                           <label for="exampleDropdownFormEmail2" class="form-label">Username/Email</label>
@@ -113,7 +113,7 @@
                           </div>
                         </div>
                         <button type="submit" value="login" name="login" class="btn primary-buttonAV w-100 rounded-1 pb-2">Login</button>
-                      </form>
+                      <?= form_close(); ?>
                       <?php
                     }
                   ?>
