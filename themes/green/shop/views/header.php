@@ -91,7 +91,7 @@
                       <?php
                     }else{
                       ?>
-                      <form action="<?= site_url().'/login' ?>" class="dropdown-menu p-3 myaccountForm validate" >
+                      <form action="<?= site_url().'/login' ?>" method="post" class="dropdown-menu p-3 myaccountForm validate" >
                         <div class="mb-3">
                         
                           <label for="exampleDropdownFormEmail2" class="form-label">Username/Email</label>
