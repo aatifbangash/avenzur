@@ -949,7 +949,7 @@ class Shop extends MY_Shop_Controller
 
         $this->data['page_title'] = "Contact Us";
         $this->data['title'] = "Contact Us";
-        $this->page_construct('pages/contact-us', $this->data);
+        $this->page_construct('pages/contact_us', $this->data);
         $this->session->unset_userdata('success_message');
     }
 
