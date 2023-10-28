@@ -7,6 +7,11 @@
                 <div class="px-3 py-2">
                 <div class="py-3"><h6 class="m-0 fw-semibold"><?= lang('select_address_to_edit'); ?></h6></div>
                 <div class="row" id="addressList">
+                    <?php
+                        if ($this->Settings->indian_gst) {
+                            $istates = $this->gst->getIndianStates();
+                        }
+                    ?>
                     <?php 
                         foreach ($addresses as $address){
                             ?>
@@ -34,6 +39,19 @@
                 </div>
             </div>
         </div>
+
+        <?php
+        if ($this->Settings->indian_gst) {
+            ?>
+        <script>
+            var istates = <?= json_encode($istates); ?>
+        </script>
+        <?php
+        } else {
+            echo '<script>var istates = false; </script>';
+        }
+        ?>
+
         <!-- Text Update Modal -->
     
         <!-- Add Address Modal -->
