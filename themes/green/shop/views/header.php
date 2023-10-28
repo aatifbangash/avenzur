@@ -78,6 +78,7 @@
                 </button>
                   <?php 
                     if ($loggedIn) {
+                      echo 'Here we are logged In...';exit;
                       ?>
                       <ul class="dropdown-menu dropdown-menu-right">
                           <li class=""><a href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a></li>
