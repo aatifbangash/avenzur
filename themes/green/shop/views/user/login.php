@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<section class=" py-3 ">
+<section class=" py-3 " style="margin-bottom: 50px;">
         <div class="container container-max-width">
             <div class="brad-crumb py-3">
                 <nav aria-label="breadcrumb">
