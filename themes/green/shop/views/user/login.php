@@ -49,7 +49,7 @@
                         <label for="phone" class="form-label">Phone</label>
                         <div class="input-group">
                         
-                        <input name="phone" class="form-control" type="text" id="phone" required/> 
+                        <input type="tel" name="phone" class="form-control" id="phone" required/> 
                         </div>
                     </div>
                 </div>

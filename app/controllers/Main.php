@@ -372,6 +372,16 @@ class Main extends MY_Shop_Controller
         $this->form_validation->set_rules('password_confirm', lang('confirm_password'), 'required');
         $this->form_validation->set_rules('country', lang('country'), 'required');
 
+        echo $this->input->post('email');
+        echo $this->input->post('username');
+        echo $this->input->post('first_name');
+        echo $this->input->post('last_name');
+        echo $this->input->post('phone');
+        echo $this->input->post('password');
+        echo $this->input->post('country');
+        echo $this->input->post('password_confirm');
+        exit;
+
         if ($this->form_validation->run('') == true) {
             echo 'Validated...';exit;
             $email    = strtolower($this->input->post('email'));
