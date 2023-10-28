@@ -88,24 +88,26 @@
                   <?php 
                     if ($loggedIn) {
                       ?>
-                      <div class="mb-3">
-                        <a href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a>
-                      </div>
-                      <div class="mb-3">
-                        <a href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a>
-                      </div>
-                      <div class="mb-3">
-                        <a href="<?= shop_url('quotes'); ?>"><i class="mi fa fa-heart-o"></i> <?= lang('quotes'); ?></a>
-                      </div>
-                      <div class="mb-3">
-                        <a href="<?= shop_url('downloads'); ?>"><i class="mi fa fa-download"></i> <?= lang('downloads'); ?></a>
-                      </div>
-                      <div class="mb-3">
-                        <a href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a>
-                      </div>
-                      <div class="mb-3">
-                        <a href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a>
-                      </div>
+                      <ul class="dropdown-menu dropdown-menu-right">
+                        <div class="mb-3">
+                          <a href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a>
+                        </div>
+                        <div class="mb-3">
+                          <a href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a>
+                        </div>
+                        <div class="mb-3">
+                          <a href="<?= shop_url('quotes'); ?>"><i class="mi fa fa-heart-o"></i> <?= lang('quotes'); ?></a>
+                        </div>
+                        <div class="mb-3">
+                          <a href="<?= shop_url('downloads'); ?>"><i class="mi fa fa-download"></i> <?= lang('downloads'); ?></a>
+                        </div>
+                        <div class="mb-3">
+                          <a href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a>
+                        </div>
+                        <div class="mb-3">
+                          <a href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a>
+                        </div>
+                      </ul>
                       <?php
                     }else{
                       ?>
