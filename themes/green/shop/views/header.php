@@ -94,15 +94,15 @@
                       ?>
                       <form action="<?= site_url().'/login' ?>" method="post" class="dropdown-menu p-3 myaccountForm validate" >
                         <div class="mb-3">
-                        
+                        <?php $u = mt_rand(); ?>
                           <label for="exampleDropdownFormEmail2" class="form-label">Username/Email</label>
                           <a href="<?= site_url().'/login#register'; ?>" class="float-end text-decoration-none text-dark">Register</a>
-                          <input type="email" name="identity" class="form-control" id="exampleDropdownFormEmail2" placeholder="Email">
+                          <input type="email" name="identity" class="form-control" id="username<?= $u; ?>" value="" placeholder="Email" />
                         </div>
                         <div class="mb-3">
                           <label for="exampleDropdownFormPassword2" class="form-label">Password</label>
                           <a href="#" class="float-end text-decoration-none text-dark">Forgot?</a>
-                          <input type="password" name="password" class="form-control" id="exampleDropdownFormPassword2" placeholder="Password">
+                          <input type="password" id="password<?= $u; ?>" name="password" value="" class="form-control" id="exampleDropdownFormPassword2" placeholder="Password" />
                         </div>
                         <div class="mb-3">
                           <div class="form-check">
