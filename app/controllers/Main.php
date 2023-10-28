@@ -373,6 +373,7 @@ class Main extends MY_Shop_Controller
         $this->form_validation->set_rules('country', lang('country'), 'required');
 
         if ($this->form_validation->run('') == true) {
+            echo 'Validated...';exit;
             $email    = strtolower($this->input->post('email'));
             $username = strtolower($this->input->post('username'));
             $password = $this->input->post('password');
@@ -436,6 +437,7 @@ class Main extends MY_Shop_Controller
             //$this->session->set_flashdata('message', lang('account_created'));
             //redirect('login');
         } else {
+            echo 'Registration Failed....';exit;
             $this->session->set_flashdata('error', validation_errors());
             redirect('login#register');
         }
