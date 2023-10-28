@@ -347,10 +347,40 @@ a.filters.promo = promo,
   }, 500)
 }
 
-// Owl Slider
+// slick slider =====================
+var $j = jQuery.noConflict();
+$j(document).ready(function(){
 
-var $k = jQuery.noConflict();
-$k(document).ready(function(){
+  searchProducts();
+
+  $(".product").each(function(t, e) {
+      $(e).find(".details").hover(function() {
+          $(this).parent().css("z-index", "20"),
+          $(this).addClass("animate")
+      }, function() {
+          $(this).removeClass("animate"),
+          $(this).parent().css("z-index", "1")
+      })
+  });
+
+  update_cart(cart);
+
+  $(document).on("change", ".cart-item-option, .cart-item-qty", function(t) {
+      t.preventDefault();
+      var e = this.defaultValue
+        , a = $(this).closest("tr")
+        , s = a.attr("id")
+        , i = site.site_url + "cart/update"
+        , o = {};
+      o[site.csrf_token] = site.csrf_token_value,
+      o.rowid = s,
+      o.qty = a.find(".cart-item-qty").val(),
+      o.option = a.find(".cart-item-option").children("option:selected").val(),
+      update_cart_item(i, o, e, $(this), t.target.type)
+  });
+  
+
+
   var slider = $("#slider");
   var thumb = $("#thumb");
   var slidesPerPage = 4; //globaly define number of elements per page
@@ -417,40 +447,6 @@ $k(document).ready(function(){
     e.preventDefault();
     var number = $(this).index();
     slider.data('owl.carousel').to(number, 300, true);
-  });
-});
-
-
-// slick slider =====================
-var $j = jQuery.noConflict();
-$j(document).ready(function(){
-
-  searchProducts();
-
-  $(".product").each(function(t, e) {
-      $(e).find(".details").hover(function() {
-          $(this).parent().css("z-index", "20"),
-          $(this).addClass("animate")
-      }, function() {
-          $(this).removeClass("animate"),
-          $(this).parent().css("z-index", "1")
-      })
-  });
-
-  update_cart(cart);
-
-  $(document).on("change", ".cart-item-option, .cart-item-qty", function(t) {
-      t.preventDefault();
-      var e = this.defaultValue
-        , a = $(this).closest("tr")
-        , s = a.attr("id")
-        , i = site.site_url + "cart/update"
-        , o = {};
-      o[site.csrf_token] = site.csrf_token_value,
-      o.rowid = s,
-      o.qty = a.find(".cart-item-qty").val(),
-      o.option = a.find(".cart-item-option").children("option:selected").val(),
-      update_cart_item(i, o, e, $(this), t.target.type)
   });
 
   $(".qtyminus").on("click",function(){
