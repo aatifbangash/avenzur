@@ -651,3 +651,130 @@ $(document).ready(function(){
     ]
   })
 });
+
+// Addresses Section
+
+$(document).ready(function() {
+  // Initialize a variable to keep track of the unique ID for each address
+  var addressIdCounter = 1;
+
+  // Event listener for the "Add Address" button
+  $('#submitAddress').click(function() {
+      var line1 = $('#line1Input').val();
+      var line2 = $('#line2Input').val();
+      var city = $('#cityInput').val();
+      var state = $('#stateInput').val();
+      var postalCode = $('#postalCodeInput').val();
+      var country = $('#countryInput').val();
+      var phone = $('#phoneInput').val();
+
+      if (line1 && city) {
+          // Generate a unique ID for the new address
+          var addressId = 'address' + addressIdCounter;
+          addressIdCounter++;
+
+          // Create a card for the new address
+          var addressCard = `
+          
+          <div class="col-md-6 mb-4" id="${addressId}">
+              <div class="card">
+                  <div class="card-body">
+                      <h5 class="card-title">${line1}</h5>
+                      <h6 class="card-subtitle mb-2 text-muted">${line2}</h6>
+                      <p class="card-text">${city}, ${state}</p>
+                      <p class="card-text">Postal Code: ${postalCode}</p>
+                      <p class="card-text">Country: ${country}</p>
+                      <p class="card-text">Phone: ${phone}</p>
+                      <button type="button" class="btn btn-primary edit-address" data-bs-toggle="modal" data-bs-target="#editAddressModal" data-id="${addressId}">Edit</button>
+                  </div>
+              </div>
+          </div>
+          `;
+
+          // Add the new address card to the row
+          $('#addressList').append(addressCard);
+
+          // Close the modal
+          $('#addAddressModal').modal('hide');
+
+          // Clear the input fields
+          $('#line1Input').val('');
+          $('#line2Input').val('');
+          $('#cityInput').val('');
+          $('#stateInput').val('');
+          $('#postalCodeInput').val('');
+          $('#countryInput').val('');
+          $('#phoneInput').val('');
+      }
+  });
+
+  // Event listener for the "Edit" button in the cards
+  $('#addressList').on('click', '.edit-address', function() {
+      // Get the unique ID of the address from the button's data-id attribute
+      var addressId = $(this).data('id');
+
+      // Find the address card associated with the ID
+      var addressCard = $(`#${addressId}`);
+
+      // Extract address details from the card
+      var line1 = addressCard.find('.card-title').text();
+      var line2 = addressCard.find('.card-subtitle').text();
+      var cityState = addressCard.find('.card-text:eq(0)').text().split(',');
+      var city = cityState[0].trim();
+      var state = cityState[1].trim();
+      var postalCode = addressCard.find('.card-text:eq(1)').text().replace('Postal Code: ', '');
+      var country = addressCard.find('.card-text:eq(2)').text().replace('Country: ', '');
+      var phone = addressCard.find('.card-text:eq(3)').text().replace('Phone: ', '');
+
+      // Set the address details in the edit modal inputs
+      $('#editLine1Input').val(line1);
+      $('#editLine2Input').val(line2);
+      $('#editCityInput').val(city);
+      $('#editStateInput').val(state);
+      $('#editPostalCodeInput').val(postalCode);
+      $('#editCountryInput').val(country);
+      $('#editPhoneInput').val(phone);
+
+      // Store the ID in the modal's data-id attribute
+      $('#updateAddress').data('id', addressId);
+  });
+
+  // Event listener for updating an address
+  $('#updateAddress').click(function() {
+      var updatedLine1 = $('#editLine1Input').val();
+      var updatedLine2 = $('#editLine2Input').val();
+      var updatedCity = $('#editCityInput').val();
+      var updatedState = $('#editStateInput').val();
+      var updatedPostalCode = $('#editPostalCodeInput').val();
+      var updatedCountry = $('#editCountryInput').val();
+      var updatedPhone = $('#editPhoneInput').val();
+
+      if (updatedLine1 && updatedCity) {
+          // Get the unique ID of the address from the modal's data attribute
+          var addressId = $(this).data('id');
+
+          // Find the card associated with the ID
+          var addressCard = $(`#${addressId}`);
+
+          // Update the address details in the card
+          addressCard.find('.card-title').text(updatedLine1);
+          addressCard.find('.card-subtitle').text(updatedLine2);
+          addressCard.find('.card-text:eq(0)').text(updatedCity + (updatedState ? `, ${updatedState}` : ''));
+          addressCard.find('.card-text:eq(1)').text(`Postal Code: ${updatedPostalCode}`);
+          addressCard.find('.card-text:eq(2)').text(`Country: ${updatedCountry}`);
+          addressCard.find('.card-text:eq(3)').text(`Phone: ${updatedPhone}`);
+
+          // Close the edit modal
+          $('#editAddressModal').modal('hide');
+
+          // Clear the input fields
+          $('#editLine1Input').val('');
+          $('#editLine2Input').val('');
+          $('#editCityInput').val('');
+          $('#editStateInput').val('');
+          $('#editPostalCodeInput').val('');
+          $('#editCountryInput').val('');
+          $('#editPhoneInput').val('');
+      }
+  });
+});
