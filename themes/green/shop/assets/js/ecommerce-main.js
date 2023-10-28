@@ -48,7 +48,7 @@ function update_mini_cart(t) {
   if (t.total_items && t.total_items > 0) {
     $(".cart-total-items").show();
     $(".cart-total-items").text(t.total_items);
-    $("#cart-contents").show()
+    //$("#cart-contents").show()
     //$(".cart-total-items").text(t.total_items + " " + (t.total_items > 1 ? lang.items : lang.item));
     /*  $("#cart-items").empty(),
       $.each(t.contents, function() {
