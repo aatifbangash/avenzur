@@ -169,6 +169,8 @@ class Main extends MY_Shop_Controller
     public function login($m = null)
     {
         $country_code = $this->get_country_by_ip();
+        echo 'Country Code: '.$country_code;
+        exit;
         
         if (!SHOP || $this->Settings->mmode) {
             redirect('admin/login');
