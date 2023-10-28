@@ -28,7 +28,7 @@
                     ?>
                 </div>
                 <!-- Button to trigger the add address modal -->
-                <button type="button" class="btn primary-buttonAV  rounded-1 pb-2" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                <button type="button" id="add-address" class="btn primary-buttonAV  rounded-1 pb-2" data-bs-toggle="modal" data-bs-target="#addAddressModal">
                     <?= lang('add_address'); ?>
                 </button>
                 </div>
