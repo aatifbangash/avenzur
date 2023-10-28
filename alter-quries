@@ -194,3 +194,14 @@ CREATE TABLE IF NOT EXISTS `sma_return_supplier_items` (
 
 
 ALTER TABLE `sma_accounts_entries` ADD `rsid` INT NULL AFTER `rid`;
+
+============== 2023/10/28 ==================
+CREATE TABLE `sma_contact_us`
+(
+`id` INT NOT NULL AUTO_INCREMENT ,
+`user_id` INT NULL ,
+`type` VARCHAR(50) NOT NULL ,
+`content` TEXT NULL ,
+`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+PRIMARY KEY (`id`)
+) ENGINE = MyISAM;

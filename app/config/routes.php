@@ -16,6 +16,7 @@ $route['brand/(:any)']           = 'shop/shop/products/0/0/$1';
 $route['category/(:any)/(:any)'] = 'shop/shop/products/$1/$2';
 
 // Page route
+$route['page/contact-us'] = 'shop/shop/contact_us';
 $route['page/(:any)'] = 'shop/shop/page/$1';
 
 // Cart routes

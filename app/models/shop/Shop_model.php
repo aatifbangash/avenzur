@@ -31,6 +31,14 @@ class Shop_model extends CI_Model
         }
         return false;
     }
+
+  public function addContactUsRecord($data)
+  {
+    if ($this->db->insert('contact_us', $data)) {
+      return $this->db->insert_id();
+    }
+    return false;
+  }
     
     public function addAramexShippment($data)
     {
