@@ -74,7 +74,16 @@
                 </div>-->
                 <div class="dropdown">
                 <button type="button" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
-                  <i class="bi bi-person-fill"></i>&nbsp; My Account
+                  <?php
+                    if ($loggedIn) {
+                      ?>
+                      <i class="bi bi-person-fill"></i>&nbsp; <?= lang('hi') . ' ' . $loggedInUser->first_name; ?>
+                    <?php }else{
+                      ?>
+                        <i class="bi bi-person-fill"></i>&nbsp; My Account
+                      <?php
+                    }
+                    ?>
                 </button>
                   <?php 
                     if ($loggedIn) {
