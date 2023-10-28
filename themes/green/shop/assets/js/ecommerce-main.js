@@ -720,9 +720,6 @@ $(document).ready(function() {
       var line1 = addressCard.find('.card-title').text();
       var line2 = addressCard.find('.card-subtitle').text();
       var cityState = addressCard.find('.card-text:eq(0)').text().split(',');
-      console.log(cityState);
-      console.log(city);
-      console.log(state);
       var city = cityState[0].trim();
       var state = cityState[1].trim();
       var postalCode = addressCard.find('.card-text:eq(1)').text().replace('Postal Code: ', '');

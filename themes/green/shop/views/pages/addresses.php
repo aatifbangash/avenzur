@@ -19,7 +19,7 @@
                                             <p class="card-text">Postal Code: <?= $address->postal_code; ?></p>
                                             <p class="card-text">Country: <?= $address->country; ?></p>
                                             <p class="card-text"><?= lang('phone') . ': ' . $address->phone; ?></p>
-                                            <button type="button" class="btn btn-primary edit-address" data-bs-toggle="modal" data-bs-target="#editAddressModal" data-id="<?= $address->line1; ?>">Edit</button>
+                                            <button type="button" class="btn btn-primary edit-address" data-bs-toggle="modal" data-bs-target="#editAddressModal" data-id="<?= $address->id; ?>">Edit</button>
                                         </div>
                                     </div>
                                 </div>
