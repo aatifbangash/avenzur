@@ -1040,3 +1040,9 @@ div#salediv {
 }
 
 }
+
+/* Css from older theme */
+
+.tab-content>.active {
+  display: block;
+}
