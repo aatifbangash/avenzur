@@ -285,7 +285,7 @@
               </a>
 
               <div id="cart-contents" class=" dropdown-menu p-3 myaccountForm cartform">
-                <table class="table " id="cart-items">
+                <table class="table " id="cart-items"></table>
                   <!--<thead>
                       <tr>
                           <th>Image</th>
@@ -314,7 +314,6 @@
                         <td colspan="2" class="text-end fw-bold">200 SAR</td>
                       </tr>
                   </tfoot>-->
-              </table>
               <div class="d-flex">
                 <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 me-2">View Cart</a>
                 <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 ms-2">Checkout</a>
