@@ -4,26 +4,28 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Shop_model extends CI_Model
 {
-     protected $table = 'products';
-     
+    protected $table = 'products';
+
     public function __construct()
     {
         parent::__construct();
     }
 
-  
-    public function get_count() {
+
+    public function get_count()
+    {
         return $this->db->count_all($this->table);
     }
 
-    public function get_authors($limit, $start) {
+    public function get_authors($limit, $start)
+    {
         $this->db->limit($limit, $start);
         $query = $this->db->get($this->table);
 
         return $query->result();
     }
-    
-    
+
+
     public function addCustomer($data)
     {
         if ($this->db->insert('companies', $data)) {
@@ -32,18 +34,18 @@ class Shop_model extends CI_Model
         return false;
     }
 
-  public function addContactUsRecord($data)
-  {
-    if ($this->db->insert('contact_us', $data)) {
-      return $this->db->insert_id();
+    public function addContactUsRecord($data)
+    {
+        if ($this->db->insert('contact_us', $data)) {
+            return $this->db->insert_id();
+        }
+        return false;
     }
-    return false;
-  }
-    
+
     public function addAramexShippment($data)
     {
         $this->db->insert('aramex_shippment', $data);
-            
+
     }
 
     public function addSale($data, $items, $customer, $address)
@@ -81,16 +83,16 @@ class Shop_model extends CI_Model
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
                             $item_cost['sale_item_id'] = $sale_item_id;
-                            $item_cost['sale_id']      = $sale_id;
-                            $item_cost['date']         = date('Y-m-d', strtotime($data['date']));
+                            $item_cost['sale_id'] = $sale_id;
+                            $item_cost['date'] = date('Y-m-d', strtotime($data['date']));
                             if (!isset($item_cost['pi_overselling'])) {
                                 $this->db->insert('costing', $item_cost);
                             }
                         } else {
                             foreach ($item_cost as $ic) {
                                 $ic['sale_item_id'] = $sale_item_id;
-                                $ic['sale_id']      = $sale_id;
-                                $ic['date']         = date('Y-m-d', strtotime($data['date']));
+                                $ic['sale_id'] = $sale_id;
+                                $ic['date'] = date('Y-m-d', strtotime($data['date']));
                                 if (!isset($ic['pi_overselling'])) {
                                     $this->db->insert('costing', $ic);
                                 }
@@ -202,7 +204,8 @@ class Shop_model extends CI_Model
         return $this->db->get_where('companies', ['id' => $id])->row();
     }
 
-    public function getCountryByCode($code){
+    public function getCountryByCode($code)
+    {
         return $this->db->get_where('countries', ['code' => trim($code)], 1)->row();
     }
 
@@ -225,12 +228,12 @@ class Shop_model extends CI_Model
     {
         if ($this->loggedIn) {
             $this->db->select("{$this->db->dbprefix('sale_items')}.product_id, {$this->db->dbprefix('sale_items')}.product_code, {$this->db->dbprefix('sale_items')}.product_name, {$this->db->dbprefix('sale_items')}.product_type")
-            ->distinct()
-            ->join('sale_items', 'sales.id=sale_items.sale_id', 'left')
-            ->where('sales.sale_status', 'completed')->where('sales.payment_status', 'paid')
-            ->where('sales.customer_id', $this->session->userdata('company_id'))
-            ->where('sale_items.product_type', 'digital')
-            ->order_by('sales.id', 'desc')->limit($limit, $offset);
+                ->distinct()
+                ->join('sale_items', 'sales.id=sale_items.sale_id', 'left')
+                ->where('sales.sale_status', 'completed')->where('sales.payment_status', 'paid')
+                ->where('sales.customer_id', $this->session->userdata('company_id'))
+                ->where('sale_items.product_type', 'digital')
+                ->order_by('sales.id', 'desc')->limit($limit, $offset);
             if ($product_id) {
                 $this->db->where('sale_items.product_id', $product_id);
             }
@@ -242,7 +245,7 @@ class Shop_model extends CI_Model
     public function getDownloadsCount()
     {
         $this->db->select("{$this->db->dbprefix('sale_items')}.product_id, {$this->db->dbprefix('sale_items')}.product_code, {$this->db->dbprefix('sale_items')}.product_name, {$this->db->dbprefix('sale_items')}.product_type")
-        ->distinct()
+            ->distinct()
             ->join('sale_items', 'sales.id=sale_items.sale_id', 'left')
             ->where('sales.sale_status', 'completed')->where('sales.payment_status', 'paid')
             ->where('sales.customer_id', $this->session->userdata('company_id'))
@@ -250,29 +253,52 @@ class Shop_model extends CI_Model
         return $this->db->count_all_results('sales');
     }
 
-    public function getFeaturedCategories($limit = 6, $promo = true){
+    public function getFeaturedCategories($limit = 6, $promo = true)
+    {
 
         $this->db->select("{$this->db->dbprefix('categories')}.id as id, {$this->db->dbprefix('categories')}.name as name, {$this->db->dbprefix('categories')}.code as code, {$this->db->dbprefix('categories')}.image as image, {$this->db->dbprefix('categories')}.slug as slug")
-        ->limit($limit);
+            ->limit($limit);
         return $this->db->get('categories')->result();
     }
 
     public function getSpecialOffers($limit = 16, $promo = true)
     {
         $countryId = get_cookie('shop_country', true);//$this->session->userdata('country');
-        $this->db->select("{$this->db->dbprefix('products')}.id as id, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.slug as slug, {$this->db->dbprefix('products')}.price, quantity, type, promotion, promo_price, start_date, end_date, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug")
-        ->join('brands b', 'products.brand=b.id', 'left')
-        ->join('categories c', 'products.category_id=c.id', 'left')
-        ->where('products.special_offer', 1)
-        ->where('hide !=', 1)
-        //->where('products.cf1', $countryId)
-        ->limit($limit);
-        
+        $this->db->select("
+        {$this->db->dbprefix('products')}.id as id, 
+        {$this->db->dbprefix('products')}.name as name, 
+        {$this->db->dbprefix('products')}.code as code, 
+        {$this->db->dbprefix('products')}.image as image, 
+        {$this->db->dbprefix('products')}.slug as slug, 
+        {$this->db->dbprefix('products')}.price, 
+        quantity, 
+        {$this->db->dbprefix('products')}.type, 
+        {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
+        {$this->db->dbprefix('products')}.tax_method,
+        promotion, 
+        promo_price, 
+        start_date, 
+        end_date, 
+        b.name as brand_name, 
+        b.slug as brand_slug, 
+        c.name as category_name, 
+        c.slug as category_slug,
+        t.name as taxName,
+        t.rate as taxPercentage,
+        t.code as taxCode")
+            ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
+            ->join('brands b', 'products.brand=b.id', 'left')
+            ->join('categories c', 'products.category_id=c.id', 'left')
+            ->where('products.special_offer', 1)
+            ->where('hide !=', 1)
+            //->where('products.cf1', $countryId)
+            ->limit($limit);
+
         /*if($countryId != '0')
         {
            $this->db->where('products.cf1', $countryId);
         }*/
-        
+
         $sp = $this->getSpecialPrice();
         if ($sp->cgp) {
             $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
@@ -284,23 +310,34 @@ class Shop_model extends CI_Model
             $this->db->order_by('promotion desc');
         }
         $this->db->order_by('RAND()');
-        return $this->db->get('products')->result();  
+        $result = $this->db->get('products')->result();
+//        dd($result);
+        array_map(function ($row) {
+            if ($row->tax_method == '0' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
+                $productTaxPercent = $row->taxPercentage;
+                $productPrice = $row->price;
+                $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+                $row->price = $productPrice + $productTaxAmount;
+            }
+        }, $result);
+        return $result;
     }
 
-    public function getPopularCategories($limit = 6){
+    public function getPopularCategories($limit = 6)
+    {
         $this->db->select("{$this->db->dbprefix('categories')}.id as id, {$this->db->dbprefix('categories')}.name as name, {$this->db->dbprefix('categories')}.code as code, {$this->db->dbprefix('categories')}.image as image, {$this->db->dbprefix('categories')}.slug as slug")
             ->where('categories.popular', 1)
-        ->limit($limit);
+            ->limit($limit);
         $popular_categories = $this->db->get('categories')->result();
-        
-        foreach($popular_categories as $category){
+
+        foreach ($popular_categories as $category) {
             $this->db->select("{$this->db->dbprefix('products')}.id as id, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.slug as slug, {$this->db->dbprefix('products')}.price, quantity, type, promotion, promo_price, start_date, end_date, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug")
-            ->join('brands b', 'products.brand=b.id', 'left')
-            ->join('categories c', 'products.category_id=c.id', 'left')
-            ->where('products.category_id', $category->id)
-            ->where('hide !=', 1)
-            //->where('products.cf1', $countryId)
-            ->limit(20);
+                ->join('brands b', 'products.brand=b.id', 'left')
+                ->join('categories c', 'products.category_id=c.id', 'left')
+                ->where('products.category_id', $category->id)
+                ->where('hide !=', 1)
+                //->where('products.cf1', $countryId)
+                ->limit(20);
 
             $sp = $this->getSpecialPrice();
             if ($sp->cgp) {
@@ -324,19 +361,42 @@ class Shop_model extends CI_Model
     public function getFeaturedProducts($limit = 16, $promo = true)
     {
         $countryId = get_cookie('shop_country', true);//$this->session->userdata('country');
-        $this->db->select("{$this->db->dbprefix('products')}.id as id, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.slug as slug, {$this->db->dbprefix('products')}.price, quantity, type, promotion, promo_price, start_date, end_date, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug")
-        ->join('brands b', 'products.brand=b.id', 'left')
-        ->join('categories c', 'products.category_id=c.id', 'left')
-        ->where('products.featured', 1)
-        ->where('hide !=', 1)
-        //->where('products.cf1', $countryId)
-        ->limit($limit);
-        
+        $this->db->select("
+        {$this->db->dbprefix('products')}.id as id, 
+        {$this->db->dbprefix('products')}.name as name, 
+        {$this->db->dbprefix('products')}.code as code, 
+        {$this->db->dbprefix('products')}.image as image, 
+        {$this->db->dbprefix('products')}.slug as slug, 
+        {$this->db->dbprefix('products')}.price, 
+        {$this->db->dbprefix('products')}.quantity, 
+        {$this->db->dbprefix('products')}.type, 
+        {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
+        {$this->db->dbprefix('products')}.tax_method, 
+        promotion, 
+        promo_price, 
+        start_date, 
+        end_date, 
+        b.name as brand_name, 
+        b.slug as brand_slug, 
+        c.name as category_name, 
+        c.slug as category_slug,
+        t.name as taxName,
+        t.rate as taxPercentage,
+        t.code as taxCode
+        ")
+            ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
+            ->join('brands b', 'products.brand=b.id', 'left')
+            ->join('categories c', 'products.category_id=c.id', 'left')
+            ->where('products.featured', 1)
+            ->where('hide !=', 1)
+            //->where('products.cf1', $countryId)
+            ->limit($limit);
+
         /*if($countryId != '0')
         {
            $this->db->where('products.cf1', $countryId);
         }*/
-        
+
         $sp = $this->getSpecialPrice();
         if ($sp->cgp) {
             $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
@@ -348,14 +408,25 @@ class Shop_model extends CI_Model
             $this->db->order_by('promotion desc');
         }
         $this->db->order_by('RAND()');
-        return $this->db->get('products')->result();
+        $result = $this->db->get('products')->result();
+//        dd($result);
+
+        array_map(function ($row) {
+            if ($row->tax_method == '0' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
+                $productTaxPercent = $row->taxPercentage;
+                $productPrice = $row->price;
+                $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+                $row->price = $productPrice + $productTaxAmount;
+            }
+        }, $result);
+        return $result;
     }
 
     public function getNotifications()
     {
         $date = date('Y-m-d H:i:s', time());
         $this->db->where('from_date <=', $date)
-        ->where('till_date >=', $date)->where('scope !=', 2);
+            ->where('till_date >=', $date)->where('scope !=', 2);
         return $this->db->get('notifications')->result();
     }
 
@@ -367,7 +438,7 @@ class Shop_model extends CI_Model
             return ($sale->customer_id == $this->session->userdata('company_id')) ? $sale : false;
         } elseif (!empty($clause['hash'])) {
             return $this->db->get_where('sales', $clause, 1)->row();
-        }else{
+        } else {
             $this->db->order_by('id desc');
             $sale = $this->db->get_where('sales', ['id' => $clause['id']], 1)->row();
             return $sale;
@@ -391,10 +462,10 @@ class Shop_model extends CI_Model
     {
         if ($this->loggedIn) {
             $this->db->select('sales.*, deliveries.status as delivery_status, refund.refund_status as refund_status')
-            ->join('deliveries', 'deliveries.sale_id=sales.id', 'left')
-            ->join('refund', 'refund.order_id=sales.id', 'left')
-            ->distinct('sales.id')
-            ->order_by('id', 'desc')->limit($limit, $offset);
+                ->join('deliveries', 'deliveries.sale_id=sales.id', 'left')
+                ->join('refund', 'refund.order_id=sales.id', 'left')
+                ->distinct('sales.id')
+                ->order_by('id', 'desc')->limit($limit, $offset);
             return $this->db->get_where('sales', ['customer_id' => $this->session->userdata('company_id')])->result();
         }
         return false;
@@ -409,11 +480,11 @@ class Shop_model extends CI_Model
     public function getOtherProducts($id, $category_id, $brand)
     {
         $this->db->select("{$this->db->dbprefix('products')}.id as id, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.slug as slug, {$this->db->dbprefix('products')}.price, quantity, type, promotion, promo_price, start_date, end_date, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug")
-        ->join('brands b', 'products.brand=b.id', 'left')
-        ->join('categories c', 'products.category_id=c.id', 'left')
-        ->where('category_id', $category_id)->where('brand', $brand)
-        ->where('products.id !=', $id)->where('hide !=', 1)
-        ->order_by('rand()')->limit(4);
+            ->join('brands b', 'products.brand=b.id', 'left')
+            ->join('categories c', 'products.category_id=c.id', 'left')
+            ->where('category_id', $category_id)->where('brand', $brand)
+            ->where('products.id !=', $id)->where('hide !=', 1)
+            ->order_by('rand()')->limit(4);
 
         $sp = $this->getSpecialPrice();
         if ($sp->cgp) {
@@ -429,11 +500,11 @@ class Shop_model extends CI_Model
         return $this->db->get_where('pages', ['slug' => $slug], 1)->row();
     }
 
-  public function getBlogBySlug($slug)
+    public function getBlogBySlug($slug)
     {
         // $this->db->select("*");
         // $this->db->from('blog');
-      
+
         // $query = $this->db->get();
         // if ($query->num_rows() > 0){
         //     return $query->result();
@@ -441,8 +512,9 @@ class Shop_model extends CI_Model
         //     return false;
         // }
         return $this->db->get_where('blog', ['slug' => $slug], 1)->row();
-        
+
     }
+
     public function getPaypalSettings()
     {
         return $this->db->get_where('paypal', ['id' => 1])->row();
@@ -461,14 +533,14 @@ class Shop_model extends CI_Model
 
     public function getProductBySlug($slug)
     {
-        $this->db->select("{$this->db->dbprefix('products')}.*,".$this->db->dbprefix('brands').'.name as brand_name');
+        $this->db->select("{$this->db->dbprefix('products')}.*," . $this->db->dbprefix('brands') . '.name as brand_name');
         $sp = $this->getSpecialPrice();
         if ($sp->cgp) {
             $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
         } elseif ($sp->wgp) {
             $this->db->select('wgp.price as special_price', false)->join($sp->wgp, 'products.id=wgp.product_id', 'left');
         }
-        $this->db->join('brands','products.brand='.$this->db->dbprefix('brands').'.id', 'left');
+        $this->db->join('brands', 'products.brand=' . $this->db->dbprefix('brands') . '.id', 'left');
         return $this->db->get_where('products', ['products.slug' => $slug, 'products.hide !=' => 1], 1)->row();
     }
 
@@ -497,7 +569,18 @@ class Shop_model extends CI_Model
         }
         $q = $this->db->get('products', 1);
         if ($q->num_rows() > 0) {
-            return $q->row();
+            $row = $q->row();
+//            Added by Atif and Commented by atif.
+//            if($row->tax_method == '0') { // 0 = tax inclusive, 1 = tax exclusive
+//                $tax = $this->db->get_where('tax_rates', ['id' => $row->tax_rate])->row();
+//                if($tax){
+//                    $productTaxPercent = $tax->rate;
+//                    $productPrice = (int)$row->price;
+//                    $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+//                    $row->price = $productPrice + $productTaxAmount;
+//                }
+//            }
+            return $row;
         }
         return false;
     }
@@ -531,81 +614,104 @@ class Shop_model extends CI_Model
         }
     }
 
-   /* public function getProducts($filters = [])
-    {
-        $this->db->select("{$this->db->dbprefix('products')}.id as id,{$this->db->dbprefix('categories')}.name as category_name,{$this->db->dbprefix('categories')}.slug as category_slug,{$this->db->dbprefix('brands')}.name as brand_name,{$this->db->dbprefix('brands')}.slug as brand_slug, {$this->db->dbprefix('products')}.Price_in_Dollar, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.slug as slug, {$this->db->dbprefix('products')}.retail_price, {$this->db->dbprefix('products')}.price, {$this->db->dbprefix('products')}.Auther_1, {$this->db->dbprefix('warehouses_products')}.quantity as quantity, type, promotion, promo_price, start_date, end_date, product_details as details")
-        ->from('products')
-        ->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
-        ->join('publishers as pub1', 'products.publisher=pub1.id', 'left')  
-        ->join('categories', 'products.category_id=categories.id', 'left') 
-        ->join('brands', 'products.brand=brands.id', 'left'); 
-        if($this->shop_settings->warehouse>0 ){
-            $this->db->where('warehouses_products.warehouse_id', $this->shop_settings->warehouse);
-        }
-        $this->db->group_by('products.id');
+    /* public function getProducts($filters = [])
+     {
+         $this->db->select("{$this->db->dbprefix('products')}.id as id,{$this->db->dbprefix('categories')}.name as category_name,{$this->db->dbprefix('categories')}.slug as category_slug,{$this->db->dbprefix('brands')}.name as brand_name,{$this->db->dbprefix('brands')}.slug as brand_slug, {$this->db->dbprefix('products')}.Price_in_Dollar, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.slug as slug, {$this->db->dbprefix('products')}.retail_price, {$this->db->dbprefix('products')}.price, {$this->db->dbprefix('products')}.Auther_1, {$this->db->dbprefix('warehouses_products')}.quantity as quantity, type, promotion, promo_price, start_date, end_date, product_details as details")
+         ->from('products')
+         ->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
+         ->join('publishers as pub1', 'products.publisher=pub1.id', 'left')
+         ->join('categories', 'products.category_id=categories.id', 'left')
+         ->join('brands', 'products.brand=brands.id', 'left');
+         if($this->shop_settings->warehouse>0 ){
+             $this->db->where('warehouses_products.warehouse_id', $this->shop_settings->warehouse);
+         }
+         $this->db->group_by('products.id');
 
-        $sp = $this->getSpecialPrice();
-        if ($sp->cgp) {
-            $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
-        } elseif ($sp->wgp) {
-            $this->db->select('wgp.price as special_price', false)->join($sp->wgp, 'products.id=wgp.product_id', 'left');
-        }
+         $sp = $this->getSpecialPrice();
+         if ($sp->cgp) {
+             $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
+         } elseif ($sp->wgp) {
+             $this->db->select('wgp.price as special_price', false)->join($sp->wgp, 'products.id=wgp.product_id', 'left');
+         }
 
-        if ($this->shop_settings->hide0) {
-            $this->db->group_start()->where('warehouses_products.quantity >', 0)->or_where('products.type !=', 'standard')->group_end();
-        }
-        $this->db->where('hide !=', 1)
-        ->limit($filters['limit'], $filters['offset']);
-        if (!empty($filters)) {
-            if (!empty($filters['promo'])) {
-                $today = date('Y-m-d');
-                $this->db->where('promotion', 1)->where('start_date <=', $today)->where('end_date >=', $today);
-            }
-            if (!empty($filters['featured'])) {
-                $this->db->where('featured', 1);
-            }
-            if (!empty($filters['query'])) {
-                $this->db->group_start()->like('name', $filters['query'], 'both')->or_like('code', $filters['query'], 'both')->group_end();
-            }
-            if (!empty($filters['category'])) {
-                $this->db->where('category_id', $filters['category']['id']);
-            }
-            if (!empty($filters['subcategory'])) {
-                $this->db->where('subcategory_id', $filters['subcategory']['id']);
-            }
-            if (!empty($filters['brand'])) {
-                $this->db->where('brand', $filters['brand']['id']);
-            }
-            if (!empty($filters['min_price'])) {
-                $this->db->where('products.price >=', $filters['min_price']);
-            }
-            if (!empty($filters['max_price'])) {
-                $this->db->where('products.price <=', $filters['max_price']);
-            }
-            if (!empty($filters['in_stock'])) {
-                $this->db->group_start()->where('warehouses_products.quantity >=', 1)->or_where('type !=', 'standard')->group_end();
-            }
-            if (!empty($filters['sorting'])) {
-                $sort = explode('-', $filters['sorting']);
-                $this->db->order_by($sort[0], $this->db->escape_str($sort[1]));
-            } else {
-                $this->db->order_by('name asc');
-            }
-        } else {
-            $this->db->order_by('name asc');
-        }
-        return $this->db->get()->result_array();
-    }*/
-    
+         if ($this->shop_settings->hide0) {
+             $this->db->group_start()->where('warehouses_products.quantity >', 0)->or_where('products.type !=', 'standard')->group_end();
+         }
+         $this->db->where('hide !=', 1)
+         ->limit($filters['limit'], $filters['offset']);
+         if (!empty($filters)) {
+             if (!empty($filters['promo'])) {
+                 $today = date('Y-m-d');
+                 $this->db->where('promotion', 1)->where('start_date <=', $today)->where('end_date >=', $today);
+             }
+             if (!empty($filters['featured'])) {
+                 $this->db->where('featured', 1);
+             }
+             if (!empty($filters['query'])) {
+                 $this->db->group_start()->like('name', $filters['query'], 'both')->or_like('code', $filters['query'], 'both')->group_end();
+             }
+             if (!empty($filters['category'])) {
+                 $this->db->where('category_id', $filters['category']['id']);
+             }
+             if (!empty($filters['subcategory'])) {
+                 $this->db->where('subcategory_id', $filters['subcategory']['id']);
+             }
+             if (!empty($filters['brand'])) {
+                 $this->db->where('brand', $filters['brand']['id']);
+             }
+             if (!empty($filters['min_price'])) {
+                 $this->db->where('products.price >=', $filters['min_price']);
+             }
+             if (!empty($filters['max_price'])) {
+                 $this->db->where('products.price <=', $filters['max_price']);
+             }
+             if (!empty($filters['in_stock'])) {
+                 $this->db->group_start()->where('warehouses_products.quantity >=', 1)->or_where('type !=', 'standard')->group_end();
+             }
+             if (!empty($filters['sorting'])) {
+                 $sort = explode('-', $filters['sorting']);
+                 $this->db->order_by($sort[0], $this->db->escape_str($sort[1]));
+             } else {
+                 $this->db->order_by('name asc');
+             }
+         } else {
+             $this->db->order_by('name asc');
+         }
+         return $this->db->get()->result_array();
+     }*/
+
     public function getProducts($filters = [])
     {
-		
-        $this->db->select("{$this->db->dbprefix('products')}.id as id,{$this->db->dbprefix('categories')}.name as category_name,{$this->db->dbprefix('categories')}.slug as category_slug,{$this->db->dbprefix('brands')}.name as brand_name,{$this->db->dbprefix('brands')}.slug as brand_slug, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.slug as slug, {$this->db->dbprefix('products')}.price,{$this->db->dbprefix('warehouses_products')}.quantity as quantity, type, promotion, promo_price, start_date, end_date, product_details as details")
-        ->from('products')
-        ->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
-        ->join('categories', 'products.category_id=categories.id', 'left') 
-        ->join('brands', 'products.brand=brands.id', 'left');
-        if($this->shop_settings->warehouse>0 ){
+
+        $this->db->select("
+        {$this->db->dbprefix('products')}.id as id,
+        {$this->db->dbprefix('categories')}.name as category_name,
+        {$this->db->dbprefix('categories')}.slug as category_slug,
+        {$this->db->dbprefix('brands')}.name as brand_name,
+        {$this->db->dbprefix('brands')}.slug as brand_slug, 
+        {$this->db->dbprefix('products')}.name as name, 
+        {$this->db->dbprefix('products')}.code as code, 
+        {$this->db->dbprefix('products')}.image as image, 
+        {$this->db->dbprefix('products')}.slug as slug, 
+        {$this->db->dbprefix('products')}.price,
+        {$this->db->dbprefix('warehouses_products')}.quantity as quantity, 
+        {$this->db->dbprefix('products')}.type, 
+        {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
+        {$this->db->dbprefix('products')}.tax_method,
+        promotion, 
+        promo_price, 
+        start_date, 
+        end_date, 
+        product_details as details,
+        t.name as taxName,
+        t.rate as taxPercentage,
+        t.code as taxCode")
+            ->from('products')
+            ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
+            ->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
+            ->join('categories', 'products.category_id=categories.id', 'left')
+            ->join('brands', 'products.brand=brands.id', 'left');
+        if ($this->shop_settings->warehouse > 0) {
             $this->db->where('warehouses_products.warehouse_id', $this->shop_settings->warehouse);
         }
         $this->db->group_by('products.id');
@@ -626,47 +732,47 @@ class Shop_model extends CI_Model
             if (!empty($filters['featured'])) {
                 $this->db->where('featured', 1);
             }
-			$sortcase='';
+            $sortcase = '';
             if (!empty($filters['query'])) {
-				$booksearch=strtolower($filters['query']);
-				$sortcase="CASE when (".$this->db->dbprefix('products').".name LIKE '%".$booksearch."%') THEN 1 ELSE 0 END";
-				 
-				$wheres = array();
-				$searchquery = explode(' ',$booksearch);
-				foreach($searchquery  as $booksearch){ 
-					if(!empty(trim($booksearch))){ 
-						$wheres[]= "( {$this->db->dbprefix('products')}.name LIKE '%".$booksearch."%' OR {$this->db->dbprefix('products')}.code LIKE '%".$booksearch."%')";
-					}
-				}
-				if(!empty($wheres)){
-					$this->db->where("(".implode(' AND ',$wheres).")");
-				}
-				/* Comment June 14, 2022 */
+                $booksearch = strtolower($filters['query']);
+                $sortcase = "CASE when (" . $this->db->dbprefix('products') . ".name LIKE '%" . $booksearch . "%') THEN 1 ELSE 0 END";
+
+                $wheres = array();
+                $searchquery = explode(' ', $booksearch);
+                foreach ($searchquery as $booksearch) {
+                    if (!empty(trim($booksearch))) {
+                        $wheres[] = "( {$this->db->dbprefix('products')}.name LIKE '%" . $booksearch . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $booksearch . "%')";
+                    }
+                }
+                if (!empty($wheres)) {
+                    $this->db->where("(" . implode(' AND ', $wheres) . ")");
+                }
+                /* Comment June 14, 2022 */
                 /* $nameRegex = str_replace(' ','|', strtolower($filters['query'])); 
 			 
                 $this->db->group_start()->where("LOWER({$this->db->dbprefix('products')}.name) REGEXP ", $nameRegex)->or_like("{$this->db->dbprefix('products')}.code", $filters['query'], 'both') ->or_like("{$this->db->dbprefix('products')}.Auther_1", $filters['query'], 'both')->or_like("{$this->db->dbprefix('products')}.Auther_2", $filters['query'], 'both')->or_like("{$this->db->dbprefix('products')}.Auther_3", $filters['query'], 'both') -> or_where("LOWER(pub1.name) REGEXP ", $filters['query'], 'both')->group_end();   */
-				/* END */
-				
+                /* END */
+
                 /* $this->db->group_start()->where("LOWER({$this->db->dbprefix('products')}.name) REGEXP ", $nameRegex)->or_like("{$this->db->dbprefix('products')}.code", $filters['query'], 'both') ->or_like("{$this->db->dbprefix('products')}.Auther_1", $filters['query'], 'both')->or_like("{$this->db->dbprefix('products')}.Auther_2", $filters['query'], 'both')->or_like("{$this->db->dbprefix('products')}.Auther_3", $filters['query'], 'both')->group_end();  */
-				
-                  /* $this->db->group_start()->where('LOWER(name) REGEXP ', $nameRegex)->or_like('code', $filters['query'], 'both')->group_end(); */  
-				
-               // $this->db->group_start()->like('name', $filters['query'], 'both')->or_like('code', $filters['query'], 'both')->group_end();
+
+                /* $this->db->group_start()->where('LOWER(name) REGEXP ', $nameRegex)->or_like('code', $filters['query'], 'both')->group_end(); */
+
+                // $this->db->group_start()->like('name', $filters['query'], 'both')->or_like('code', $filters['query'], 'both')->group_end();
             }
-			if (empty($filters['query'])) {
-				if (!empty($filters['category'])) {
-					$this->db->where('category_id', $filters['category']['id']);
-				}
-				if (!empty($filters['subcategory'])) {
-					$this->db->where('subcategory_id', $filters['subcategory']['id']);
-				}
-			}
-			if (!empty($filters['category_id'])) {
-				$this->db->where('category_id', $filters['category_id']);
-			}
-			if (!empty($filters['subcategory_id'])) {
-				$this->db->where_in('subcategory_id', $filters['subcategory_id']);
-			}
+            if (empty($filters['query'])) {
+                if (!empty($filters['category'])) {
+                    $this->db->where('category_id', $filters['category']['id']);
+                }
+                if (!empty($filters['subcategory'])) {
+                    $this->db->where('subcategory_id', $filters['subcategory']['id']);
+                }
+            }
+            if (!empty($filters['category_id'])) {
+                $this->db->where('category_id', $filters['category_id']);
+            }
+            if (!empty($filters['subcategory_id'])) {
+                $this->db->where_in('subcategory_id', $filters['subcategory_id']);
+            }
             if (!empty($filters['brand'])) {
                 $this->db->where('brand', $filters['brand']['id']);
             }
@@ -679,38 +785,52 @@ class Shop_model extends CI_Model
             if (!empty($filters['in_stock'])) {
                 $this->db->group_start()->where('warehouses_products.quantity >=', 1)->or_where('type !=', 'standard')->group_end();
             }
-			if (empty($filters['query'])) {
-				if (!empty($filters['sorting'])) {
-					$sort = explode('-', $filters['sorting']);
-					$this->db->order_by($sort[0], $this->db->escape_str($sort[1]));
-				} else {
-					$this->db->order_by('name asc');
-				}
-			}else{
-				$this->db->order_by($sortcase.' desc');
-				
-				
-			}
-        } else {
-             $this->db->order_by('name asc');
-         }
-		
-		
-		$results = $this->db->get();
-		$data = array();
-		if($results !== FALSE && $results->num_rows() > 0){
-                $data = $results->result_array();
+            if (empty($filters['query'])) {
+                if (!empty($filters['sorting'])) {
+                    $sort = explode('-', $filters['sorting']);
+                    $this->db->order_by($sort[0], $this->db->escape_str($sort[1]));
+                } else {
+                    $this->db->order_by('name asc');
+                }
+            } else {
+                $this->db->order_by($sortcase . ' desc');
+
+
             }
-		/*  echo $this->db->last_query(); */
-        return $data;
+        } else {
+            $this->db->order_by('name asc');
+        }
+
+
+        $results = $this->db->get();
+        $data = array();
+
+        if ($results !== FALSE && $results->num_rows() > 0) {
+            $data = $results->result_array();
+
+            $mapData = array_map(function ($row) {
+                if ($row['tax_method'] == '0' && $row['taxPercentage'] > 0) { // tax_method = 0 means inclusiveTax
+                    $productTaxPercent = $row['taxPercentage'];
+                    $productPrice = $row['price'];
+                    $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+
+                    $row['price'] = $productPrice + $productTaxAmount;
+                    return $row;
+                }
+                return $row;
+            }, $data);
+        }
+        /*  echo $this->db->last_query(); */
+//        dd($data);
+        return $mapData;
     }
 
     public function getProductsCount($filters = [])
     {
         $this->db->select("{$this->db->dbprefix('products')}.id as id")
-        ->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
-        ->where('warehouses_products.warehouse_id', $this->shop_settings->warehouse)
-        ->group_by('products.id');
+            ->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
+            ->where('warehouses_products.warehouse_id', $this->shop_settings->warehouse)
+            ->group_by('products.id');
 
         $sp = $this->getSpecialPrice();
         if ($sp->cgp) {
@@ -846,7 +966,7 @@ class Shop_model extends CI_Model
 
     public function getSpecialPrice()
     {
-        $sp      = new stdClass();
+        $sp = new stdClass();
         $sp->cgp = ($this->customer && $this->customer->price_group_id) ? "( SELECT {$this->db->dbprefix('product_prices')}.price as price, {$this->db->dbprefix('product_prices')}.product_id as product_id, {$this->db->dbprefix('product_prices')}.price_group_id as price_group_id from {$this->db->dbprefix('product_prices')} WHERE {$this->db->dbprefix('product_prices')}.price_group_id = {$this->customer->price_group_id} ) cgp" : null;
 
         $sp->wgp = ($this->warehouse && $this->warehouse->price_group_id && !$this->customer) ? "( SELECT {$this->db->dbprefix('product_prices')}.price as price, {$this->db->dbprefix('product_prices')}.product_id as product_id, {$this->db->dbprefix('product_prices')}.price_group_id as price_group_id from {$this->db->dbprefix('product_prices')} WHERE {$this->db->dbprefix('product_prices')}.price_group_id = {$this->warehouse->price_group_id} ) wgp" : null;
@@ -900,7 +1020,8 @@ class Shop_model extends CI_Model
         return $this->db->update('products', ['views' => $views], ['id' => $id]);
     }
 
-    public function getProductBrandsByName($term){
+    public function getProductBrandsByName($term)
+    {
         $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
 
         $this->db->distinct();
@@ -909,141 +1030,145 @@ class Shop_model extends CI_Model
             // ->join('warehouses_products FWP', 'FWP.product_id=products.id', 'left')
             ->join('categories', 'categories.id=products.category_id', 'left')
             ->group_by('products.id');
-            
 
-            $booksearch=strtolower($term);
-            $wheres = array();
-            $searchquery = explode(' ',$booksearch);
-            foreach($searchquery  as $booksearch){ 
-                if(!empty(trim($booksearch))){ 
-                    $wheres[]= "( {$this->db->dbprefix('products')}.name LIKE '%".$booksearch."%' OR  {$this->db->dbprefix('products')}.code LIKE '%".$booksearch."%')";
-                }
-            }
 
-            if(!empty($wheres)){
-                $this->db->or_where("(".implode(' AND ',$wheres).")");
+        $booksearch = strtolower($term);
+        $wheres = array();
+        $searchquery = explode(' ', $booksearch);
+        foreach ($searchquery as $booksearch) {
+            if (!empty(trim($booksearch))) {
+                $wheres[] = "( {$this->db->dbprefix('products')}.name LIKE '%" . $booksearch . "%' OR  {$this->db->dbprefix('products')}.code LIKE '%" . $booksearch . "%')";
             }
+        }
 
-            if ($category_id != null && $category_id != 0) {
-                $this->db->where('products.category_id', $category_id);
-            }
-            if ($pos) {
-                $this->db->where('hide_pos !=', 1);
-            }
-            //$this->db->limit($limit);
-            $q = $this->db->get('products');
-            $checkCounter = 1;
-            $oneString = '';
-            if($q !== FALSE && $q->num_rows() > 0){
-                foreach (($q->result()) as $row) 
-                {
+        if (!empty($wheres)) {
+            $this->db->or_where("(" . implode(' AND ', $wheres) . ")");
+        }
 
-                    $data[] = $row;
-                }
-                return $data;
+        if ($category_id != null && $category_id != 0) {
+            $this->db->where('products.category_id', $category_id);
+        }
+        if ($pos) {
+            $this->db->where('hide_pos !=', 1);
+        }
+        //$this->db->limit($limit);
+        $q = $this->db->get('products');
+        $checkCounter = 1;
+        $oneString = '';
+        if ($q !== FALSE && $q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+
+                $data[] = $row;
             }
+            return $data;
+        }
     }
-    
-    public function getProductNames($term, $warehouse_id, $category_id , $pos = false,  $limit = 20)
+
+    public function getProductNames($term, $warehouse_id, $category_id, $pos = false, $limit = 20)
     {
-                $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
+        $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
 
-                $this->db->distinct();
-                $this->db->select('products.*, categories.id as category_id, categories.name as category_name', false)
-                   // ->join($wp, 'FWP.product_id=products.id', 'left')
-                    // ->join('warehouses_products FWP', 'FWP.product_id=products.id', 'left')
-                    ->join('categories', 'categories.id=products.category_id', 'left')
-                    ->group_by('products.id');
-                   
+        $this->db->distinct();
+        $this->db->select('products.*, categories.id as category_id, categories.name as category_name', false)
+            // ->join($wp, 'FWP.product_id=products.id', 'left')
+            // ->join('warehouses_products FWP', 'FWP.product_id=products.id', 'left')
+            ->join('categories', 'categories.id=products.category_id', 'left')
+            ->group_by('products.id');
 
-                //if ($this->Settings->overselling) {
-                   $booksearch=strtolower($term);
-                   $wheres = array();
-                   $searchquery = explode(' ',$booksearch);
-                    foreach($searchquery  as $booksearch){ 
-                            if(!empty(trim($booksearch))){ 
-                                $wheres[]= "( {$this->db->dbprefix('products')}.name LIKE '%".$booksearch."%' OR  {$this->db->dbprefix('products')}.code LIKE '%".$booksearch."%')";
-                            }
-                        }
-                        if(!empty($wheres)){
-                            $this->db->or_where("(".implode(' AND ',$wheres).")");
-                        }
 
-                // $this->db->order_by('products.name ASC');
-                if ($category_id != null && $category_id != 0) {
-                    $this->db->where('products.category_id', $category_id);
-                }
-                if ($pos) {
-                    $this->db->where('hide_pos !=', 1);
-                }
-                //$this->db->limit($limit);
-                $q = $this->db->get('products');
-                $checkCounter = 1;
-                $oneString = '';
-                if($q !== FALSE && $q->num_rows() > 0){
-                    foreach (($q->result()) as $row) 
-                    {
+        //if ($this->Settings->overselling) {
+        $booksearch = strtolower($term);
+        $wheres = array();
+        $searchquery = explode(' ', $booksearch);
+        foreach ($searchquery as $booksearch) {
+            if (!empty(trim($booksearch))) {
+                $wheres[] = "( {$this->db->dbprefix('products')}.name LIKE '%" . $booksearch . "%' OR  {$this->db->dbprefix('products')}.code LIKE '%" . $booksearch . "%')";
+            }
+        }
+        if (!empty($wheres)) {
+            $this->db->or_where("(" . implode(' AND ', $wheres) . ")");
+        }
 
-                        $data[] = $row;
-                    }
-                    return $data;
-                }
+        // $this->db->order_by('products.name ASC');
+        if ($category_id != null && $category_id != 0) {
+            $this->db->where('products.category_id', $category_id);
+        }
+        if ($pos) {
+            $this->db->where('hide_pos !=', 1);
+        }
+        //$this->db->limit($limit);
+        $q = $this->db->get('products');
+        $checkCounter = 1;
+        $oneString = '';
+        if ($q !== FALSE && $q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+
+                $data[] = $row;
+            }
+            return $data;
+        }
     }
-  public function get_all_records(){
+
+    public function get_all_records()
+    {
         $this->db->select("*");
         $this->db->from('blog');
-     
+
         $query = $this->db->get();
-        if ($query->num_rows() > 0){
+        if ($query->num_rows() > 0) {
             return $query->result_array();
-        }else{
+        } else {
             return false;
         }
     }
 
-public function getProductLocation(){
-      $this->db->select("cf2");
+    public function getProductLocation()
+    {
+        $this->db->select("cf2");
         $this->db->from('products');
         $query = $this->db->get();
-        if ($query->num_rows() > 0){
+        if ($query->num_rows() > 0) {
             return $query->result_array();
-        }else{
+        } else {
             return false;
         }
-}
-public function saveRefundRecord($data)
-	{
-        $this->db->insert('refund',$data);
+    }
+
+    public function saveRefundRecord($data)
+    {
+        $this->db->insert('refund', $data);
         return true;
-	}
-	public function getallCountryR(){
-        
+    }
+
+    public function getallCountryR()
+    {
+
         $query = $this->db->get('countries');
         return $query->result();
-    
-	}
-	
-	public function getwharehouseID($cid)
-	{
-	   $id =  $this->db->where('country_id',$cid)
-	             ->get('warehouses_country')->row()->warehouses_id;
-	             
-	             
-	    $q = $this->db->get_where('warehouses', ['id' => $id], 1);
+
+    }
+
+    public function getwharehouseID($cid)
+    {
+        $id = $this->db->where('country_id', $cid)
+            ->get('warehouses_country')->row()->warehouses_id;
+
+
+        $q = $this->db->get_where('warehouses', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
-        return false;             
-	}
-	
-	 public function salesarrAdd($id, $data = [])
+        return false;
+    }
+
+    public function salesarrAdd($id, $data = [])
     {
         return $this->db->update('sales', $data, ['id' => $id]);
     }
 
     public function getAramexSettings()
     {
-         return $this->db->get_where('sma_aramex', ['id' => 1])->row();
+        return $this->db->get_where('sma_aramex', ['id' => 1])->row();
     }
- 
+
 }
