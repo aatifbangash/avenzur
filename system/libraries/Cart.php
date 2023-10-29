@@ -560,6 +560,7 @@ class CI_Cart {
 	 */
 	public function destroy()
 	{
+		echo 'Here the biggest khwata...';exit;
 		$this->_cart_contents = array('cart_total' => 0, 'total_items' => 0);
 		$this->CI->session->unset_userdata('cart_contents');
 	}
