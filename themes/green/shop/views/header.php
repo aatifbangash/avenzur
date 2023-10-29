@@ -295,18 +295,9 @@
                       </tr>
                   </thead>
                   <tbody id="cart-body"></tbody>
-                  <tfoot>
-                      <tr>
-                        <td colspan="2">Total item</td>
+                  <tfoot id="cart-foot">
                       
-                        <td class="text-end fw-bold">1</td>
-                      </tr>
-                      <tr>
-                        <td >Total </td>
-                      
-                        <td colspan="2" class="text-end fw-bold">200 SAR</td>
-                      </tr>
-                  </tfoot>-->
+                  </tfoot>
               <div class="d-flex">
                 <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 me-2">View Cart</a>
                 <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 ms-2">Checkout</a>
