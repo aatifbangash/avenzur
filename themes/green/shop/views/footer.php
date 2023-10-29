@@ -135,6 +135,63 @@
 
     update_mini_cart(cart);
     </script>
+
+    <script>
+      $(document).ready(function () {
+        $(".add_item_search").autocomplete({
+            source: function (request, response) {
+                
+                   // $('#add_item').val('').removeClass('ui-autocomplete-loading');
+                    //bootbox.alert('<?=lang('select_above');?>');
+                   // $('#add_item').focus();
+                    
+                
+                $.ajax({
+                    type: 'get',
+                    url: '<?php echo base_url();?>shop/suggestions',
+                    dataType: "json",
+                    data: {
+                        term: request.term,
+                        category_id: $("#category").val(),
+                    },
+                    success: function (data) {
+                        $(this).removeClass('ui-autocomplete-loading');
+                        response(data);
+                    }
+                });
+            },
+            minLength: 1,
+            autoFocus: false,
+            delay: 250,
+            select: function (event, ui) {
+                event.preventDefault();
+                if (ui.item.id !== 0) {
+                   // var row = add_invoice_item(ui.item);
+                   window.open(ui.item.plink,'_self');
+                    if (row)
+                        $(this).val('');
+                } else {
+                    //bootbox.alert('<?= lang('no_match_found') ?>');
+                }
+            }
+        }).data('ui-autocomplete')._renderItem = function(ul, item){
+            return $("<li class='ui-autocomplete-row'></li>")
+              .data("item.autocomplete", item)
+              .append( "<a>" + "<img style='width:35px;height:35px' src='" +site.site_url+"assets/uploads/"+ item.image + "' /> " + item.label+ "</a>" )  
+              .appendTo(ul);
+          };
+
+        $('.ui-autocomplete-input').keydown(function(event)
+        { 
+          if(event.keyCode == 13) 
+          {
+          $('form#product-search-form').submit();
+          return false; 
+          }
+        });
+
+
+      });
     <script src="<?= $assets; ?>js/jquery-ui.min.js"></script>
     <script src="<?= $assets; ?>js/jquery-ui.js"></script>
   </body>

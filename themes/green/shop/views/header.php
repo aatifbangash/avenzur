@@ -179,7 +179,7 @@
                   }
                 ?>
               </select>
-              <input class="form-control border-0 bg-transparent py-3" type="search" placeholder="What are you looking for?" aria-label="Search">
+              <input class="form-control border-0 bg-transparent py-3 add_item_search"  id="product-search" type="search" placeholder="What are you looking for?" aria-label="Search">
               <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
             </form>
           </div>
