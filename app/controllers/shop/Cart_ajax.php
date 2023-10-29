@@ -115,6 +115,7 @@ class Cart_ajax extends MY_Shop_Controller
 
     public function destroy()
     {
+        echo 'Here in second biggest khwata...';exit;
         if ($this->input->is_ajax_request()) {
             if ($this->cart->destroy()) {
                 $this->session->set_flashdata('message', lang('cart_items_deleted'));
