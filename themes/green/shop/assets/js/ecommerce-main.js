@@ -363,6 +363,11 @@ $(document).ready(function(){
       })
   });
 
+  $("#empty-cart").click(function(t) {
+      t.preventDefault(),
+      saa_alert($(this).attr("href"))
+  });
+
   update_cart(cart);
 
   $(document).on("change", ".cart-item-option, .cart-item-qty", function(t) {
