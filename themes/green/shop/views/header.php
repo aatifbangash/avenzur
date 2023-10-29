@@ -167,7 +167,7 @@
           </div>
           <div class="col-lg-7 col-md-8" id="searchbarmob">
             <div id="searchtogglecros"><i class="bi bi-x-circle-fill"></i></div>
-            <form class="d-flex search-bar" role="search" >
+            <?= shop_form_open('products', 'id="product-search-form"', 'class="d-flex search-bar"'); ?>
               
               <select class="form-select w-auto bg-transparent border-0 ps-4 categorySelect" aria-label="Default select">
                 <option selected>Category</option>
@@ -181,7 +181,7 @@
               </select>
               <input class="form-control border-0 bg-transparent py-3 add_item_search"  id="product-search" type="search" placeholder="What are you looking for?" aria-label="Search">
               <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
-            </form>
+            <?= form_close(); ?>
           </div>
           <div class="col-lg-2 col-md-1 ps-md-0" id="salemob"></div>
 
