@@ -1044,5 +1044,5 @@ div#salediv {
 /* Css from older theme */
 
 .tab-content>.active {
-  display: block;
+  opacity: 1;
 }
