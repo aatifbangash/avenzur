@@ -57,7 +57,7 @@ function update_mini_cart(t) {
       });
       var e = '\n        <tr><td colspan="2">' + lang.total_items + '</td><td class="text-end fw-bold">' + t.total_items + '</td></tr>\n        <tr><td>' + lang.total + '</td><td colspan="2" class="text-end fw-bold">' + t.total + "</td></tr>\n        ";
       //$( e ).appendTo("#cart-foot"),
-      $("#cart-foot").append(e);
+      $("#cart-foot").html(e);
       $("#cart-empty").hide();
       //$("#cart-contents").show()
   } else{
