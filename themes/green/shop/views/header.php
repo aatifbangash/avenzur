@@ -316,8 +316,8 @@
                   </tfoot>-->
               </table>
               <div class="d-flex">
-                <button type="submit" class="btn primary-buttonAV w-100 rounded-1 pb-2 me-2">View Cart</button>
-                <button type="submit" class="btn primary-buttonAV w-100 rounded-1 pb-2 ms-2">Checkout</button>
+                <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 me-2">View Cart</a>
+                <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 ms-2">Checkout</a>
               </div>
             </div>
 
