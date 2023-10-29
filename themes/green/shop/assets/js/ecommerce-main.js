@@ -85,9 +85,8 @@ function update_cart_item(t, e, a, s, i) {
 }
 
 function update_cart(t) {
-  console.log(t);
   if (t.total_items && t.total_items > 0) {
-      $("#cart-table tbody").empty();
+      //$("#cart-table tbody").empty();
       var e = 1;
       $.each(t.contents, function() {
           var t = this
@@ -100,7 +99,10 @@ function update_cart(t) {
           a += '</td>\n            <td><input type="text" name="' + e + '[qty]" class="form-control text-center input-qty cart-item-qty" value="' + this.qty + '"></td>\n            <td class="text-right">' + this.price + '</td>\n            <td class="text-right">' + this.subtotal + "</td>\n            ",
           e++,
           $('<tr id="' + this.rowid + '">' + a + "</tr>").appendTo("#cart-table tbody")
-      }),
+      });
+
+      console.log(a);
+
       $("#cart-totals").empty();
       var a = "<tr><td>" + lang.total_w_o_tax + '</td><td class="text-right">' + t.subtotal + "</td></tr>";
       a += "<tr><td>" + lang.product_tax + '</td><td class="text-right">' + t.total_item_tax + "</td></tr>",
