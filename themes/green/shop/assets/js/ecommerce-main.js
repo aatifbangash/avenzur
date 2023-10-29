@@ -52,10 +52,12 @@ function update_mini_cart(t) {
     $("#cart-items-table").empty(),
       $.each(t.contents, function() {
           var t = '<td><a href="' + site.site_url + "/product/" + this.slug + '"><span class="cart-item-image"><img src="' + site.base_url + "assets/uploads/thumbs/" + this.image + '" alt=""></span></a></td><td><a href="' + site.site_url + "/product/" + this.slug + '">' + this.name + "</a><br>" + this.qty + " x " + this.price + '</td><td class="text-right text-bold">' + this.subtotal + "</td>";
-          $("<tr>" + t + "</tr>").appendTo("#cart-body")
+          //$("<tr>" + t + "</tr>").appendTo("#cart-body")
+          $("#cart-body").append("<tr>" + t + "</tr>");
       });
       var e = '\n        <tr><td colspan="2">' + lang.total_items + '</td><td class="text-end fw-bold">' + t.total_items + '</td></tr>\n        <tr><td>' + lang.total + '</td><td colspan="2" class="text-end fw-bold">' + t.total + "</td></tr>\n        ";
-      $( e ).appendTo("#cart-foot"),
+      //$( e ).appendTo("#cart-foot"),
+      $("#cart-foot").append(e);
       $("#cart-empty").hide();
       //$("#cart-contents").show()
   } else{
