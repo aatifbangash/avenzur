@@ -285,7 +285,7 @@
               </a>
 
               <div id="cart-contents" class=" dropdown-menu p-3 myaccountForm cartform">
-                <table class="table " id="cart-items-table"></table>
+                <table class="table " id="cart-items-table">
                   <thead>
                       <tr>
                           <th>Image</th>
@@ -295,9 +295,8 @@
                       </tr>
                   </thead>
                   <tbody id="cart-body"></tbody>
-                  <tfoot id="cart-foot">
-                      
-                  </tfoot>
+                  <tfoot id="cart-foot"></tfoot>
+                </table>
               <div class="d-flex">
                 <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 me-2">View Cart</a>
                 <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 ms-2">Checkout</a>
