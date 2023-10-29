@@ -57,7 +57,7 @@ function update_mini_cart(t) {
       var e = '\n        <tr class="text-bold"><td colspan="2">' + lang.total_items + '</td><td class="text-right">' + t.total_items + '</td></tr>\n        <tr class="text-bold"><td colspan="2">' + lang.total + '</td><td class="text-right">' + t.total + "</td></tr>\n        ";
       $("<tfoot>" + e + "</tfoot>").appendTo("#cart-items"),
       $("#cart-empty").hide(),
-      $("#cart-contents").show()
+      //$("#cart-contents").show()
   } else{
     //$(".cart-total-items").text(lang.cart_empty);
     //$("#cart-contents").hide();
