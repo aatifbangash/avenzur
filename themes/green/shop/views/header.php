@@ -286,7 +286,7 @@
 
               <div id="cart-contents" class=" dropdown-menu p-3 myaccountForm cartform">
                 <table class="table " id="cart-items"></table>
-                  <!--<thead>
+                  <thead>
                       <tr>
                           <th>Image</th>
                           <th>Name</th>
@@ -294,14 +294,7 @@
                         
                       </tr>
                   </thead>
-                  <tbody>
-                      <tr>
-                          <td><img src="product1.jpg" alt="Product 1" class="img-thumbnail" style="max-width: 100px;"></td>
-                          <td>Product Name 1</td>
-                          <td class="fw-bold">$19.99</td>
-                        
-                      </tr>
-                  </tbody>
+                  <tbody id="cart-body"></tbody>
                   <tfoot>
                       <tr>
                         <td colspan="2">Total item</td>

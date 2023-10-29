@@ -52,9 +52,9 @@ function update_mini_cart(t) {
     $("#cart-items").empty(),
       $.each(t.contents, function() {
           var t = '<td><a href="' + site.site_url + "/product/" + this.slug + '"><span class="cart-item-image"><img src="' + site.base_url + "assets/uploads/thumbs/" + this.image + '" alt=""></span></a></td><td><a href="' + site.site_url + "/product/" + this.slug + '">' + this.name + "</a><br>" + this.qty + " x " + this.price + '</td><td class="text-right text-bold">' + this.subtotal + "</td>";
-          $("<tr>" + t + "</tr>").appendTo("#cart-items")
+          $("<tr>" + t + "</tr>").appendTo("#cart-body")
       });
-      var e = '\n        <tr class="text-bold"><td colspan="2">' + lang.total_items + '</td><td class="text-right">' + t.total_items + '</td></tr>\n        <tr class="text-bold"><td colspan="2">' + lang.total + '</td><td class="text-right">' + t.total + "</td></tr>\n        ";
+      var e = '\n        <tr><td colspan="2">' + lang.total_items + '</td><td class="text-end fw-bold">' + t.total_items + '</td></tr>\n        <tr><td>' + lang.total + '</td><td colspan="2" class="text-end fw-bold">' + t.total + "</td></tr>\n        ";
       $("<tfoot>" + e + "</tfoot>").appendTo("#cart-items"),
       $("#cart-empty").hide();
       //$("#cart-contents").show()
