@@ -651,3 +651,208 @@ $(document).ready(function(){
     ]
   })
 });
+
+// Addresses Section
+
+$("#add-address").click(function(t) {
+  t.preventDefault(),
+  add_address()
+});
+
+$(".edit-address").click(function(t) {
+  t.preventDefault();
+  var e = $(this).attr("data-id");
+  addresses && $.each(addresses, function() {
+      this.id == e && add_address(this)
+  })
+});
+
+function add_address(t) {
+  t = t || {};
+  var e = "";
+  if (istates) {
+      var a = document.createElement("select");
+      a.id = "address-state",
+      a.name = "state",
+      a.className = "selectpickerstate mobile-device",
+      a.setAttribute("data-live-search", !0),
+      a.setAttribute("title", "State");
+      Object.keys(istates).map(function(t) {
+          if (0 != t) {
+              var e = document.createElement("option");
+              e.value = t,
+              e.text = istates[t],
+              a.appendChild(e)
+          }
+      }),
+      e = a.outerHTML
+  } else
+      e = '<input name="state" value="' + (t.state ? t.state : "") + '" id="address-state" class="form-control" placeholder="' + lang.state + '">';
+  swal({
+      title: t.id ? lang.update_address : lang.add_address,
+      html: '<span class="text-bold padding-bottom-md">' + lang.fill_form + '</span><hr class="swal2-spacer padding-bottom-xs" style="display: block;"><form action="' + site.shop_url + 'address" id="address-form" class="padding-bottom-md"><input type="hidden" name="' + site.csrf_token + '" value="' + site.csrf_token_value + '"><div class="row"><div class="form-group col-sm-12"><input name="line1" id="address-line-1" value="' + (t.line1 ? t.line1 : "") + '" class="form-control" placeholder="' + lang.line_1 + '"></div></div><div class="row"><div class="form-group col-sm-12"><input name="line2" id="address-line-2" value="' + (t.line2 ? t.line2 : "") + '" class="form-control" placeholder="' + lang.line_2 + '"></div></div><div class="row"><div class="form-group col-sm-6"><input name="city" value="' + (t.city ? t.city : "") + '" id="address-city" class="form-control" placeholder="' + lang.city + '"></div><div class="form-group col-sm-6" id="istates">' + e + '</div><div class="form-group col-sm-6"><input name="postal_code" value="' + (t.postal_code ? t.postal_code : "") + '" id="address-postal-code" class="form-control" placeholder="' + lang.postal_code + '"></div><div class="form-group col-sm-6"><input name="country" value="' + (t.country ? t.country : "") + '" id="address-country" class="form-control" placeholder="' + lang.country + '"></div><div class="form-group col-sm-12 margin-bottom-no"><input name="phone" value="' + (t.phone ? t.phone : "") + '" id="address-phone" class="form-control" placeholder="' + lang.phone + '"></div></form></div>',
+      showCancelButton: !0,
+      allowOutsideClick: !1,
+      cancelButtonText: lang.cancel,
+      confirmButtonText: lang.submit,
+      preConfirm: function() {
+          return new Promise(function(t, e) {
+              $("#address-line-1").val() || e(lang.line_1 + " " + lang.is_required),
+              $("#address-city").val() || e(lang.city + " " + lang.is_required),
+              $("#address-state").val() || e(lang.state + " " + lang.is_required),
+              $("#address-country").val() || e(lang.country + " " + lang.is_required),
+              $("#address-phone").val() || e(lang.phone + " " + lang.is_required),
+              t()
+          }
+          )
+      },
+      onOpen: function() {
+          if ($("#address-line-1").val(t.line1 ? t.line1 : "").focus(),
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent))
+              $(".selectpickerstate").selectpicker({
+                  modile: !0
+              }),
+              $(".selectpickerstate").selectpicker("val", t.state ? t.state : "");
+          else {
+              for (var e = document.querySelectorAll(".mobile-device"), a = 0; a < e.length; a++)
+                  e[a].classList.remove("mobile-device");
+              $(".selectpickerstate").selectpicker({
+                  size: 5
+              }),
+              $(".selectpickerstate").selectpicker("val", t.state ? t.state : "")
+          }
+      }
+  }).then(function(e) {
+      var a = $("#address-form");
+      $.ajax({
+          url: a.attr("action") + (t.id ? "/" + t.id : ""),
+          type: "POST",
+          data: a.serialize(),
+          success: function(t) {
+              if (t.redirect)
+                  return window.location.href = t.redirect,
+                  !1;
+              sa_alert(t.status, t.message, t.level)
+          },
+          error: function() {
+              sa_alert("Error!", "Ajax call failed, please try again or contact site owner.", "error", !0)
+          }
+      })
+  }).catch(swal.noop)
+}
+
+/*$(document).ready(function() {
+  var addressIdCounter = 1;
+  $('#submitAddress').click(function() {
+      var line1 = $('#line1Input').val();
+      var line2 = $('#line2Input').val();
+      var city = $('#cityInput').val();
+      var state = $('#stateInput').val();
+      var postalCode = $('#postalCodeInput').val();
+      var country = $('#countryInput').val();
+      var phone = $('#phoneInput').val();
+
+      if (line1 && city) {
+          var addressId = 'address' + addressIdCounter;
+          addressIdCounter++;
+          var addressCard = `
+          
+          <div class="col-md-6 mb-4" id="${addressId}">
+              <div class="card">
+                  <div class="card-body">
+                      <h5 class="card-title">${line1}</h5>
+                      <h6 class="card-subtitle mb-2 text-muted">${line2}</h6>
+                      <p class="card-text">${city}, ${state}</p>
+                      <p class="card-text">Postal Code: ${postalCode}</p>
+                      <p class="card-text">Country: ${country}</p>
+                      <p class="card-text">Phone: ${phone}</p>
+                      <button type="button" class="btn btn-primary edit-address" data-bs-toggle="modal" data-bs-target="#editAddressModal" data-id="${addressId}">Edit</button>
+                  </div>
+              </div>
+          </div>
+          `;
+
+          $('#addressList').append(addressCard);
+
+          $('#addAddressModal').modal('hide');
+
+          $('#line1Input').val('');
+          $('#line2Input').val('');
+          $('#cityInput').val('');
+          $('#stateInput').val('');
+          $('#postalCodeInput').val('');
+          $('#countryInput').val('');
+          $('#phoneInput').val('');
+      }
+  });
+
+  // Event listener for the "Edit" button in the cards
+  $('#addressList').on('click', '.edit-address', function() {
+      // Get the unique ID of the address from the button's data-id attribute
+      var addressId = $(this).data('id');
+
+      // Find the address card associated with the ID
+      var addressCard = $(`#${addressId}`);
+
+      // Extract address details from the card
+      var line1 = addressCard.find('.card-title').text();
+      var line2 = addressCard.find('.card-subtitle').text();
+      var cityState = addressCard.find('.card-text:eq(0)').text().split(',');
+      var city = cityState[0].trim();
+      var state = cityState[1].trim();
+      var postalCode = addressCard.find('.card-text:eq(1)').text().replace('Postal Code: ', '');
+      var country = addressCard.find('.card-text:eq(2)').text().replace('Country: ', '');
+      var phone = addressCard.find('.card-text:eq(3)').text().replace('Phone: ', '');
+
+      // Set the address details in the edit modal inputs
+      $('#editLine1Input').val(line1);
+      $('#editLine2Input').val(line2);
+      $('#editCityInput').val(city);
+      $('#editStateInput').val(state);
+      $('#editPostalCodeInput').val(postalCode);
+      $('#editCountryInput').val(country);
+      $('#editPhoneInput').val(phone);
+
+      // Store the ID in the modal's data-id attribute
+      $('#updateAddress').data('id', addressId);
+  });
+
+  // Event listener for updating an address
+  $('#updateAddress').click(function() {
+      var updatedLine1 = $('#editLine1Input').val();
+      var updatedLine2 = $('#editLine2Input').val();
+      var updatedCity = $('#editCityInput').val();
+      var updatedState = $('#editStateInput').val();
+      var updatedPostalCode = $('#editPostalCodeInput').val();
+      var updatedCountry = $('#editCountryInput').val();
+      var updatedPhone = $('#editPhoneInput').val();
+
+      if (updatedLine1 && updatedCity) {
+          // Get the unique ID of the address from the modal's data attribute
+          var addressId = $(this).data('id');
+
+          // Find the card associated with the ID
+          var addressCard = $(`#${addressId}`);
+
+          // Update the address details in the card
+          addressCard.find('.card-title').text(updatedLine1);
+          addressCard.find('.card-subtitle').text(updatedLine2);
+          addressCard.find('.card-text:eq(0)').text(updatedCity + (updatedState ? `, ${updatedState}` : ''));
+          addressCard.find('.card-text:eq(1)').text(`Postal Code: ${updatedPostalCode}`);
+          addressCard.find('.card-text:eq(2)').text(`Country: ${updatedCountry}`);
+          addressCard.find('.card-text:eq(3)').text(`Phone: ${updatedPhone}`);
+
+          // Close the edit modal
+          $('#editAddressModal').modal('hide');
+
+          // Clear the input fields
+          $('#editLine1Input').val('');
+          $('#editLine2Input').val('');
+          $('#editCityInput').val('');
+          $('#editStateInput').val('');
+          $('#editPostalCodeInput').val('');
+          $('#editCountryInput').val('');
+          $('#editPhoneInput').val('');
+      }
+  });
+});*/
