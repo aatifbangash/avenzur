@@ -285,7 +285,7 @@
               </a>
 
               <div id="cart-contents" class=" dropdown-menu p-3 myaccountForm cartform">
-                <table class="table " id="cart-items"></table>
+                <table class="table " id="cart-items-table"></table>
                   <thead>
                       <tr>
                           <th>Image</th>
