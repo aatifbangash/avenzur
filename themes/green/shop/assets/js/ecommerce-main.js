@@ -45,8 +45,8 @@ toggleSearchcros.addEventListener('click', function() {
 );
 
 function update_mini_cart(t) {
-  console.log(t);
   if (t.total_items && t.total_items > 0) {
+    console.log('Here more than 1 items...');
     $(".cart-total-items").show();
     $(".cart-total-items").text(t.total_items);
     //$(".cart-total-items").text(t.total_items + " " + (t.total_items > 1 ? lang.items : lang.item));
@@ -61,6 +61,7 @@ function update_mini_cart(t) {
     //$("#cart-empty").hide();
     //$("#cart-contents").show()
   } else{
+    console.log('No items in cart...');
     $("#cart-items-table").empty();
     //$(".cart-total-items").text(lang.cart_empty);
     //$("#cart-contents").hide();
