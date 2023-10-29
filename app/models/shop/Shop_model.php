@@ -1096,7 +1096,7 @@ class Shop_model extends CI_Model
         if ($pos) {
             $this->db->where('hide_pos !=', 1);
         }
-        //$this->db->limit($limit);
+        $this->db->limit($limit);
         $q = $this->db->get('products');
         $checkCounter = 1;
         $oneString = '';
