@@ -137,6 +137,5 @@
     </script>
     <script src="<?= $assets; ?>js/jquery-ui.min.js"></script>
     <script src="<?= $assets; ?>js/jquery-ui.js"></script>
-    <script src="<?= $assets; ?>build/js/intlTelInput.js"></script>
   </body>
 </html>
