@@ -49,7 +49,7 @@ function update_mini_cart(t) {
     $(".cart-total-items").show();
     $(".cart-total-items").text(t.total_items);
     //$(".cart-total-items").text(t.total_items + " " + (t.total_items > 1 ? lang.items : lang.item));
-    //$("#cart-items-table").empty(),
+    $("#cart-body").empty(),
     $.each(t.contents, function() {
         var t = '<td><a href="' + site.site_url + "/product/" + this.slug + '"><span class="cart-item-image"><img style="width: 42px;" src="' + site.base_url + "assets/uploads/thumbs/" + this.image + '" alt=""></span></a></td><td><a href="' + site.site_url + "/product/" + this.slug + '">' + this.name + "</a><br>" + this.qty + " x " + this.price + '</td><td class="text-right text-bold">' + this.subtotal + "</td>";
         //$("<tr>" + t + "</tr>").appendTo("#cart-body")
