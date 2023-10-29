@@ -85,7 +85,7 @@ function update_cart_item(t, e, a, s, i) {
 }
 
 function update_cart(t) {
-  console.log('Here we are in update cart....');
+  console.log(t);
   if (t.total_items && t.total_items > 0) {
       $("#cart-table tbody").empty();
       var e = 1;
