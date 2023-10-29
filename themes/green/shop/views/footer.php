@@ -177,7 +177,8 @@
         }).data('ui-autocomplete')._renderItem = function(ul, item){
             return $("<li class='ui-autocomplete-row'></li>")
               .data("item.autocomplete", item)
-              .append( "<a>" + "<img style='width:35px;height:35px' src='" +site.site_url+"assets/uploads/"+ item.image + "' /> " + item.label+ "</a>" )  
+              //.append( "<a>" + "<img style='width:35px;height:35px' src='" +site.site_url+"assets/uploads/"+ item.image + "' /> " + item.label+ "</a>" )  
+              .append( "<a>" + item.label + "</a>" )
               .appendTo(ul);
           };
 
