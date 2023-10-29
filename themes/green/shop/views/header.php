@@ -167,7 +167,7 @@
           </div>
           <div class="col-lg-7 col-md-8" id="searchbarmob">
             <div id="searchtogglecros"><i class="bi bi-x-circle-fill"></i></div>
-            <?= shop_form_open('products', 'id="product-search-form"', 'class="d-flex search-bar"'); ?>
+            <?= shop_form_open('products', 'class="d-flex search-bar"'); ?>
               
               <select class="form-select w-auto bg-transparent border-0 ps-4 categorySelect" aria-label="Default select">
                 <option selected>Category</option>
