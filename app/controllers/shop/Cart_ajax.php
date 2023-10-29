@@ -122,13 +122,6 @@ class Cart_ajax extends MY_Shop_Controller
             } else {
                 $this->sma->send_json(['status' => lang('error'), 'message' => lang('error_occured')]);
             }
-        }else{
-            if ($this->cart->destroy()) {
-                $this->session->set_flashdata('message', lang('cart_items_deleted'));
-                $this->sma->send_json(['redirect' => base_url()]);
-            } else {
-                $this->sma->send_json(['status' => lang('error'), 'message' => lang('error_occured')]);
-            }
         }
     }
 
