@@ -13,7 +13,6 @@
     <link href="<?= $assets; ?>css/libs.min.css" rel="stylesheet">
     <link href="<?= $assets; ?>css/ecommerce-main.css" rel="stylesheet">
     <link rel="stylesheet" href="<?= $assets; ?>build/css/intlTelInput.css">
-    <script src="<?= $assets; ?>build/js/intlTelInput.js"></script>
     <!-- Add the slick-theme.css if you want default styling -->
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
 <!-- Add the slick-theme.css if you want default styling -->
