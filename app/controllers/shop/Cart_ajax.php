@@ -116,7 +116,13 @@ class Cart_ajax extends MY_Shop_Controller
     public function destroy()
     {
         if ($this->input->is_ajax_request()) {
-            echo 'Kwas ke larooo...';exit;
+            if ($this->cart->destroy()) {
+                $this->session->set_flashdata('message', lang('cart_items_deleted'));
+                $this->sma->send_json(['redirect' => base_url()]);
+            } else {
+                $this->sma->send_json(['status' => lang('error'), 'message' => lang('error_occured')]);
+            }
+        }else{
             if ($this->cart->destroy()) {
                 $this->session->set_flashdata('message', lang('cart_items_deleted'));
                 $this->sma->send_json(['redirect' => base_url()]);
@@ -124,7 +130,6 @@ class Cart_ajax extends MY_Shop_Controller
                 $this->sma->send_json(['status' => lang('error'), 'message' => lang('error_occured')]);
             }
         }
-        echo 'Kwas ke kho la naro...';exit;
     }
 
     public function index()
