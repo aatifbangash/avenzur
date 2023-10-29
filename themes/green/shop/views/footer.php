@@ -178,7 +178,7 @@
             return $("<li class='ui-autocomplete-row'></li>")
               .data("item.autocomplete", item)
               //.append( "<a>" + "<img style='width:35px;height:35px' src='" +site.site_url+"assets/uploads/"+ item.image + "' /> " + item.label+ "</a>" )  
-              .append( "<a style='text-decoration:none;color:#000;padding:5px;'>" + item.label + "</a>" )
+              .append( "<a style='text-decoration:none;color:#000;padding:10px;'>" + item.label + "</a><hr />" )
               .appendTo(ul);
           };
 
