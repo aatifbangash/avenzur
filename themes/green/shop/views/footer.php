@@ -42,11 +42,11 @@
                 </div>
               </div>
               <div class="col-md-2 col-sm-12">
-                <div class="footer-icons">
+                <!--<div class="footer-icons">
                   <h6><a href="#" class="text-dark text-decoration-none" >My Account</a>
                   <a href="#" class="text-dark text-decoration-none"> Order Tracking</a>
                  
-                </div>
+                </div>-->
               </div>
             </div>
             <div class="row pb-2 align-items-center">
