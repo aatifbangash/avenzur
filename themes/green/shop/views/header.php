@@ -12,6 +12,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="<?= $assets; ?>css/libs.min.css" rel="stylesheet">
     <link href="<?= $assets; ?>css/ecommerce-main.css" rel="stylesheet">
+    <link rel="stylesheet" href="<?= $assets; ?>build/css/intlTelInput.css">
+    <script src="<?= $assets; ?>build/js/intlTelInput.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/intlTelInput.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/utils.min.js"></script>
     <!-- Add the slick-theme.css if you want default styling -->
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
 <!-- Add the slick-theme.css if you want default styling -->
@@ -54,25 +59,23 @@
                         <i class="bi bi-globe-americas me-1"></i> EN <i class="bi bi-chevron-down ms-2"></i>
                     </a>
                   
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">EN</a></li>
-                      <li><a class="dropdown-item" href="#">AR</a></li>
-                      
-                      
+                    <ul class="dropdown-menu" id="languageDropdown">
+                      <li><a class="dropdown-item" href="#" data-lang="en">EN</a></li>
+                      <li><a class="dropdown-item" href="#" data-lang="ar">AR</a></li>
                     </ul>
                 </div>
-                <!--<div class="dropdown me-2">
+                <div class="dropdown me-2">
                     <a class="btn  dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                       SAR <i class="bi bi-chevron-down ms-2"></i>
                     </a>
                   
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">SAR</a></li>
-                      <li><a class="dropdown-item" href="#">USD</a></li>
-                      <li><a class="dropdown-item" href="#">AED</a></li>
+                    <ul class="dropdown-menu" id="currencyDropdown">
+                        <li><a class="dropdown-item" href="#" data-lang="SAR">SAR</a></li>
+                      <li><a class="dropdown-item" href="#" data-lang="USD">USD</a></li>
+                      <li><a class="dropdown-item" href="#" data-lang="AED">AED</a></li>
                       
                     </ul>
-                </div>-->
+                </div>
                 <div class="dropdown">
                 <button type="button" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
                   <?php
@@ -89,26 +92,20 @@
                   <?php 
                     if ($loggedIn) {
                       ?>
-                      <ul class="dropdown-menu dropdown-menu-right">
-                        <div class="mb-3">
-                          <a href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a>
+                      <div class="dropdown-menu dropdown-menu-right p-3 loggedin"">
+                        <div>
+                          <a class="text-decoration-none text-dark" href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a>
                         </div>
-                        <div class="mb-3">
-                          <a href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a>
+                        <div>
+                          <a class="text-decoration-none text-dark" href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a>
                         </div>
-                        <div class="mb-3">
-                          <a href="<?= shop_url('quotes'); ?>"><i class="mi fa fa-heart-o"></i> <?= lang('quotes'); ?></a>
+                        <div>
+                          <a class="text-decoration-none text-dark" href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a>
                         </div>
-                        <div class="mb-3">
-                          <a href="<?= shop_url('downloads'); ?>"><i class="mi fa fa-download"></i> <?= lang('downloads'); ?></a>
+                        <div>
+                          <a class="text-decoration-none text-dark" href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a>
                         </div>
-                        <div class="mb-3">
-                          <a href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a>
-                        </div>
-                        <div class="mb-3">
-                          <a href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a>
-                        </div>
-                      </ul>
+                    </div>
                       <?php
                     }else{
                       ?>
@@ -162,7 +159,7 @@
           </div>
           <div class="col-lg-7 col-md-8" id="searchbarmob">
             <div id="searchtogglecros"><i class="bi bi-x-circle-fill"></i></div>
-            <form class="d-flex search-bar" role="search" >
+            <?= shop_form_open('products', 'class="d-flex search-bar"'); ?>
               
               <select class="form-select w-auto bg-transparent border-0 ps-4 categorySelect" aria-label="Default select">
                 <option selected>Category</option>
@@ -174,9 +171,9 @@
                   }
                 ?>
               </select>
-              <input class="form-control border-0 bg-transparent py-3" type="search" placeholder="What are you looking for?" aria-label="Search">
+              <input name="query" class="form-control border-0 bg-transparent py-3 add_item_search"  id="product-search" type="search" placeholder="What are you looking for?" aria-label="Search">
               <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
-            </form>
+            <?= form_close(); ?>
           </div>
           <div class="col-lg-2 col-md-1 ps-md-0" id="salemob"></div>
 
@@ -285,8 +282,8 @@
               </a>
 
               <div id="cart-contents" class=" dropdown-menu p-3 myaccountForm cartform">
-                <table class="table " id="cart-items">
-                  <!--<thead>
+                <table class="table " id="cart-items-table">
+                  <thead>
                       <tr>
                           <th>Image</th>
                           <th>Name</th>
@@ -294,30 +291,12 @@
                         
                       </tr>
                   </thead>
-                  <tbody>
-                      <tr>
-                          <td><img src="product1.jpg" alt="Product 1" class="img-thumbnail" style="max-width: 100px;"></td>
-                          <td>Product Name 1</td>
-                          <td class="fw-bold">$19.99</td>
-                        
-                      </tr>
-                  </tbody>
-                  <tfoot>
-                      <tr>
-                        <td colspan="2">Total item</td>
-                      
-                        <td class="text-end fw-bold">1</td>
-                      </tr>
-                      <tr>
-                        <td >Total </td>
-                      
-                        <td colspan="2" class="text-end fw-bold">200 SAR</td>
-                      </tr>
-                  </tfoot>-->
-              </table>
+                  <tbody id="cart-body"></tbody>
+                  <tfoot id="cart-foot"></tfoot>
+                </table>
               <div class="d-flex">
-                <button type="submit" class="btn primary-buttonAV w-100 rounded-1 pb-2 me-2">View Cart</button>
-                <button type="submit" class="btn primary-buttonAV w-100 rounded-1 pb-2 ms-2">Checkout</button>
+                <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 me-2">View Cart</a>
+                <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 ms-2">Checkout</a>
               </div>
             </div>
 

@@ -1406,6 +1406,15 @@ class Shop extends MY_Shop_Controller
         		}
 	}
 
+    public function currencyupdate()
+	{
+	    $currency_name = $this->input->get('currencyName');
+	    //$this->session->set_userdata('country',$country_id);
+	    set_cookie('shop_currency', $currency_name, 31536000);
+	    //$this->warehouse = $this->shop_model->getwharehouseID($country_id);
+	    echo 1;
+	}
+
 	public function globalupdate()
 	{
 	    $country_id = $this->input->get('countryName');

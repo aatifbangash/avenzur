@@ -428,7 +428,7 @@
                     </div>
 
                     <div class="col-sm-3 col-md-2">
-                        <?php include 'sidebar2.php'; ?>
+                        <?php //include 'sidebar2.php'; ?>
                     </div>
                 </div>
             </div>

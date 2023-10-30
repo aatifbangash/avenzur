@@ -26,10 +26,10 @@
               </div>
               <div class="col-md-2 col-sm-12">
                 <div>
-                  <h6><a href="<?= site_url('shop/page/store-policy'); ?>" class="text-dark text-decoration-none" >Store Policy </a></h6>
-                  <h6><a href="<?= site_url('shop/page/about-us-policy'); ?>" class="text-dark text-decoration-none"> About</a></h6>
+                  <h6><a href="<?= site_url('shop/page/not-healthcare-advice'); ?>" class="text-dark text-decoration-none" >Not healthcare </a></h6>
+                  <h6><a href="<?= site_url('shop/page/about-us'); ?>" class="text-dark text-decoration-none"> About</a></h6>
                   <h6><a href="<?= site_url('shop/page/privacy-policy'); ?>" class="text-dark text-decoration-none"> Privacy Policy</a></h6>
-                  <h6> <a href="<?= site_url('shop/page/terms'); ?>" class="text-dark text-decoration-none">Terms & Conditions</a></h6>
+                  <h6> <a href="<?= site_url('shop/page/Terms-Conditions'); ?>" class="text-dark text-decoration-none">Terms & Conditions</a></h6>
                   <h6> <a href="<?= site_url('shop/page/exchange-return-policy'); ?>" class="text-dark text-decoration-none">Refund & Return</a></h6>
                 </div>
               </div>
@@ -42,11 +42,11 @@
                 </div>
               </div>
               <div class="col-md-2 col-sm-12">
-                <div class="footer-icons">
+                <!--<div class="footer-icons">
                   <h6><a href="#" class="text-dark text-decoration-none" >My Account</a>
                   <a href="#" class="text-dark text-decoration-none"> Order Tracking</a>
                  
-                </div>
+                </div>-->
               </div>
             </div>
             <div class="row pb-2 align-items-center">
@@ -134,6 +134,103 @@
     lang.required_invalid = '<?= lang('required_invalid'); ?>';
 
     update_mini_cart(cart);
+    </script>
+
+    <script>
+      $(document).ready(function () {
+
+        const dropdown = document.getElementById('languageDropdown');
+        dropdown.addEventListener('click', function (event) {
+          const target = event.target;
+          
+          // Check if the clicked element is a list item with data-lang attribute
+          if (target.tagName === 'A' && target.hasAttribute('data-lang')) {
+            const selectedLang = target.getAttribute('data-lang');
+            // Perform your actions based on the selected language (EN or AR)
+            if (selectedLang === 'en') {
+              Weglot.switchTo(selectedLang);
+            } else if (selectedLang === 'ar') {
+              Weglot.switchTo(selectedLang);
+            }
+          }
+        });
+
+        const currencydropdown = document.getElementById('currencyDropdown');
+        currencydropdown.addEventListener('click', function (event) {
+          const target = event.target;
+          
+          // Check if the clicked element is a list item with data-lang attribute
+          if (target.tagName === 'A' && target.hasAttribute('data-lang')) {
+            const selectedCurrency = target.getAttribute('data-lang');
+            $.ajax({
+                type: 'get',
+                url: '<?php echo base_url();?>shop/currencyupdate',
+                data: {
+                    currencyName: selectedCurrency,
+                    
+                },
+                success: function (data) {
+                  location.reload();
+                }
+            });
+          }
+        });
+
+        $(".add_item_search").autocomplete({
+            source: function (request, response) {
+                
+                   // $('#add_item').val('').removeClass('ui-autocomplete-loading');
+                    //bootbox.alert('<?=lang('select_above');?>');
+                   // $('#add_item').focus();
+                    
+                
+                $.ajax({
+                    type: 'get',
+                    url: '<?php echo base_url();?>shop/suggestions',
+                    dataType: "json",
+                    data: {
+                        term: request.term,
+                        category_id: $("#category").val(),
+                    },
+                    success: function (data) {
+                        $(this).removeClass('ui-autocomplete-loading');
+                        response(data);
+                    }
+                });
+            },
+            minLength: 1,
+            autoFocus: false,
+            delay: 250,
+            select: function (event, ui) {
+                event.preventDefault();
+                if (ui.item.id !== 0) {
+                   // var row = add_invoice_item(ui.item);
+                   window.open(ui.item.plink,'_self');
+                    if (row)
+                        $(this).val('');
+                } else {
+                    //bootbox.alert('<?= lang('no_match_found') ?>');
+                }
+            }
+        }).data('ui-autocomplete')._renderItem = function(ul, item){
+            return $("<li class='ui-autocomplete-row'></li>")
+              .data("item.autocomplete", item)
+              //.append( "<a>" + "<img style='width:35px;height:35px' src='" +site.site_url+"assets/uploads/"+ item.image + "' /> " + item.label+ "</a>" )  
+              .append( "<a style='text-decoration:none;color:#000;padding:6px;'>" + item.label + "</a><hr />" )
+              .appendTo(ul);
+          };
+
+        $('.ui-autocomplete-input').keydown(function(event)
+        { 
+          if(event.keyCode == 13) 
+          {
+          $('form#product-search-form').submit();
+          return false; 
+          }
+        });
+
+
+      });
     </script>
     <script src="<?= $assets; ?>js/jquery-ui.min.js"></script>
     <script src="<?= $assets; ?>js/jquery-ui.js"></script>

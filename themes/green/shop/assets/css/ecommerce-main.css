@@ -321,15 +321,7 @@ text-transform: uppercase;
   color:  var(--primary-color);
   font-size: 19px;
 }
-.Qnum {
-  background: #f7f7f7;
-  padding: 2px 34px;
-  border-radius: 32px;
-  border: 1px solid #E3E3E3;
-  height: 23px;
-  padding-block: 0;
-  max-width: 90px;
-}
+
 .addtocart {
   padding-block: 10px !important;
   background: #DDC3F4;
@@ -815,6 +807,16 @@ input.qty.Qnum {
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }
+
+.loggedin div {
+  margin: 4px 0px;
+  background: #ddc3f4;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+.loggedin {
+  padding: 4px 6px !important;
+}
 /* media */
 
 @media screen and (max-width: 768px) {
@@ -836,7 +838,10 @@ input.qty.Qnum {
  
 }
 @media screen and (min-width:600px) {
-  
+  .loginPage .registerform {
+    max-width: 450px;
+    margin-inline: auto;
+  }
   .slick-prev {
     left: -35px !important;
   }
@@ -1039,4 +1044,51 @@ div#salediv {
   padding: 0 39px 33px 0;
 }
 
+}
+
+/* Css from older theme */
+
+.tab-content>.active {
+  opacity: 1;
+}
+
+.Qnum {
+  background: #f7f7f7;
+  padding: 2px 34px;
+  border-radius: 32px;
+  border: 1px solid #E3E3E3;
+  height: 23px;
+  padding-block: 0;
+  max-width: 90px;
+}
+
+.text-dark{
+  line-height: 32px;
+}
+
+.panel-default>.panel-heading {
+  color: #333;
+  background-color: #f5f5f5;
+  border-color: #ddd;
+  font-weight: bold;
+  padding: 10px 15px;
+  border-bottom: 1px solid transparent;
+}
+
+.panel-body {
+  padding: 15px;
+}
+
+.page-contents{
+  padding: 20px 0;
+  background-color: #f8f8f8;
+}
+
+h4{
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+h5{
+  font-size: 16px;
 }

@@ -46,20 +46,26 @@ toggleSearchcros.addEventListener('click', function() {
 
 function update_mini_cart(t) {
   if (t.total_items && t.total_items > 0) {
+    var cart_table = '<thead><tr><th>Image</th><th>Name</th><th>Price</th></tr></thead>';
+    cart_table += '<tbody id="cart-body"></tbody>';
+    cart_table += '<tfoot id="cart-foot"></tfoot>';
+    $("#cart-items-table").html(cart_table);
+
     $(".cart-total-items").show();
     $(".cart-total-items").text(t.total_items);
-    //$("#cart-contents").show()
     //$(".cart-total-items").text(t.total_items + " " + (t.total_items > 1 ? lang.items : lang.item));
-    /*  $("#cart-items").empty(),
-      $.each(t.contents, function() {
-          var t = '<td><a href="' + site.site_url + "/product/" + this.slug + '"><span class="cart-item-image"><img src="' + site.base_url + "assets/uploads/thumbs/" + this.image + '" alt=""></span></a></td><td><a href="' + site.site_url + "/product/" + this.slug + '">' + this.name + "</a><br>" + this.qty + " x " + this.price + '</td><td class="text-right text-bold">' + this.subtotal + "</td>";
-          $("<tr>" + t + "</tr>").appendTo("#cart-items")
-      });
-      var e = '\n        <tr class="text-bold"><td colspan="2">' + lang.total_items + '</td><td class="text-right">' + t.total_items + '</td></tr>\n        <tr class="text-bold"><td colspan="2">' + lang.total + '</td><td class="text-right">' + t.total + "</td></tr>\n        ";
-      $("<tfoot>" + e + "</tfoot>").appendTo("#cart-items"),
-      $("#cart-empty").hide(),
-      $("#cart-contents").show()*/
+    $("#cart-body").empty(),
+    $.each(t.contents, function() {
+        var t = '<td><a href="' + site.site_url + "/product/" + this.slug + '"><span class="cart-item-image"><img style="width: 42px;" src="' + site.base_url + "assets/uploads/thumbs/" + this.image + '" alt=""></span></a></td><td><a href="' + site.site_url + "/product/" + this.slug + '">' + this.name + "</a><br>" + this.qty + " x " + this.price + '</td><td class="text-right text-bold">' + this.subtotal + "</td>";
+        //$("<tr>" + t + "</tr>").appendTo("#cart-body")
+        $("#cart-body").append("<tr>" + t + "</tr>");
+    });
+    var e = '\n  <tr><td colspan="2">' + lang.total_items + '</td><td class="text-end fw-bold">' + t.total_items + '</td></tr>\n        <tr><td>' + lang.total + '</td><td colspan="2" class="text-end fw-bold">' + t.total + "</td></tr>\n        ";
+    $("#cart-foot").html(e);
+    //$("#cart-empty").hide();
+    //$("#cart-contents").show()
   } else{
+    $("#cart-items-table").empty();
     //$(".cart-total-items").text(lang.cart_empty);
     //$("#cart-contents").hide();
     //$("#cart-empty").show();
@@ -360,6 +366,11 @@ $(document).ready(function(){
           $(this).removeClass("animate"),
           $(this).parent().css("z-index", "1")
       })
+  });
+
+  $("#empty-cart").click(function(t) {
+      t.preventDefault(),
+      saa_alert($(this).attr("href"))
   });
 
   update_cart(cart);

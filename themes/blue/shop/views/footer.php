@@ -45,7 +45,7 @@
             <div class="col-md-3 col-sm-6" style="padding: 75px;">
                 <ul style="font-family: 'Montserrat';font-size: 13px;">
                     <li>Store Policy</li>
-                    <li>About</li>
+                    <li><a href="<?= site_url('shop/page/about-us'); ?>">About</a></li>
                     <li><a href="<?= site_url('shop/page/' . $shop_settings->privacy_link); ?>"><?= lang('privacy_policy'); ?></a></li>
                     <li><a href="<?= site_url('shop/page/' . $shop_settings->terms_link); ?>"><?= lang('terms_conditions'); ?></a></li>
                     <li>Track Order</li>

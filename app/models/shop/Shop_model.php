@@ -1064,7 +1064,7 @@ class Shop_model extends CI_Model
         }
     }
 
-    public function getProductNames($term, $warehouse_id, $category_id, $pos = false, $limit = 20)
+    public function getProductNames($term, $warehouse_id, $category_id, $pos = false, $limit = 8)
     {
         $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
 
@@ -1096,7 +1096,7 @@ class Shop_model extends CI_Model
         if ($pos) {
             $this->db->where('hide_pos !=', 1);
         }
-        //$this->db->limit($limit);
+        $this->db->limit($limit);
         $q = $this->db->get('products');
         $checkCounter = 1;
         $oneString = '';
