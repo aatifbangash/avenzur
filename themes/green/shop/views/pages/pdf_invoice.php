@@ -19,37 +19,54 @@
                 $data   = file_get_contents($path);
                 $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
                 ?>
-                <div class="text-center">
-                    <img src="<?= $base64; ?>" alt="<?= $biller->company && $biller->company != '-' ? $biller->company : $biller->name; ?>">
-                    <h2 style="margin: 0;"><?= $biller->company          && $biller->company != '-' ? $biller->company : $biller->name; ?></h2>
-                    <?= $biller->company ? '' : 'Attn: ' . $biller->name ?>
-                    <?php
-                    echo $biller->address . ' ' . $biller->city . ' ' . $biller->postal_code . ' ' . $biller->state . ' ' . $biller->country;
-                    if ($biller->vat_no != '-' && $biller->vat_no != '') {
-                        echo '<br>' . lang('vat_no') . ': ' . $biller->vat_no;
-                    }
-                    if ($biller->cf1 != '-' && $biller->cf1 != '') {
-                        echo '<br>' . lang('bcf1') . ': ' . $biller->cf1;
-                    }
-                    if ($biller->cf2 != '-' && $biller->cf2 != '') {
-                        echo '<br>' . lang('bcf2') . ': ' . $biller->cf2;
-                    }
-                    if ($biller->cf3 != '-' && $biller->cf3 != '') {
-                        echo '<br>' . lang('bcf3') . ': ' . $biller->cf3;
-                    }
-                    if ($biller->cf4 != '-' && $biller->cf4 != '') {
-                        echo '<br>' . lang('bcf4') . ': ' . $biller->cf4;
-                    }
-                    if ($biller->cf5 != '-' && $biller->cf5 != '') {
-                        echo '<br>' . lang('bcf5') . ': ' . $biller->cf5;
-                    }
-                    if ($biller->cf6 != '-' && $biller->cf6 != '') {
-                        echo '<br>' . lang('bcf6') . ': ' . $biller->cf6;
-                    }
-                    echo '<br>' . lang('tel') . ': ' . $biller->phone . ' ' . lang('email') . ': ' . $biller->email;
-                    ?>
-                    <hr>
+                <div style="display: flex; justify-content: space-between;">
+                    <div style="flex: 1;">&nbsp;</div>
+                    <div style="flex: 1;" class="text-center">
+                        <img src="<?= $base64; ?>"
+                             alt="<?= $biller->company && $biller->company != '-' ? $biller->company : $biller->name; ?>">
+                        <h2 style="margin: 0;"><?= $biller->company && $biller->company != '-' ? $biller->company : $biller->name; ?></h2>
+                        <?= $biller->company ? '' : 'Attn: ' . $biller->name ?>
+                        <?php
+                        echo $biller->address . ' ' . $biller->city . ' ' . $biller->postal_code . ' ' . $biller->state . ' ' . $biller->country;
+                        if ($biller->vat_no != '-' && $biller->vat_no != '') {
+                            echo '<br>' . lang('vat_no') . ': ' . $biller->vat_no;
+                        }
+                        if ($biller->cf1 != '-' && $biller->cf1 != '') {
+                            echo '<br>' . lang('bcf1') . ': ' . $biller->cf1;
+                        }
+                        if ($biller->cf2 != '-' && $biller->cf2 != '') {
+                            echo '<br>' . lang('bcf2') . ': ' . $biller->cf2;
+                        }
+                        if ($biller->cf3 != '-' && $biller->cf3 != '') {
+                            echo '<br>' . lang('bcf3') . ': ' . $biller->cf3;
+                        }
+                        if ($biller->cf4 != '-' && $biller->cf4 != '') {
+                            echo '<br>' . lang('bcf4') . ': ' . $biller->cf4;
+                        }
+                        if ($biller->cf5 != '-' && $biller->cf5 != '') {
+                            echo '<br>' . lang('bcf5') . ': ' . $biller->cf5;
+                        }
+                        if ($biller->cf6 != '-' && $biller->cf6 != '') {
+                            echo '<br>' . lang('bcf6') . ': ' . $biller->cf6;
+                        }
+                        echo '<br>' . lang('tel') . ': ' . $biller->phone . ' ' . lang('email') . ': ' . $biller->email;
+                        ?>
+
+                    </div>
+                    <div style="flex: 1;">
+                        <?php
+                        $qrtext = $this->inv_qrcode->base64([
+                            'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+                            'vat_no' => $biller->vat_no ?: $biller->get_no,
+                            'date' => $inv->date,
+                            'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
+                            'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
+                        ]);
+                        echo $this->sma->qrcode('text', $qrtext, 2);
+                        ?>
+                    </div>
                 </div>
+                <hr>
                 <div class="clearfix"></div>
 
                 <div class="padding10">
