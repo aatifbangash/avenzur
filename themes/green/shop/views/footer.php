@@ -147,12 +147,10 @@
           if (target.tagName === 'A' && target.hasAttribute('data-lang')) {
             const selectedLang = target.getAttribute('data-lang');
             // Perform your actions based on the selected language (EN or AR)
-            if (selectedLang === 'EN') {
-              // Handle EN selection
-              console.log('EN selected');
-            } else if (selectedLang === 'AR') {
-              // Handle AR selection
-              console.log('AR selected');
+            if (selectedLang === 'en') {
+              Weglot.switchTo(selectedLang);
+            } else if (selectedLang === 'ar') {
+              Weglot.switchTo(selectedLang);
             }
           }
         });
