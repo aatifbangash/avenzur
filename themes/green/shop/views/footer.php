@@ -162,14 +162,17 @@
           // Check if the clicked element is a list item with data-lang attribute
           if (target.tagName === 'A' && target.hasAttribute('data-lang')) {
             const selectedCurrency = target.getAttribute('data-lang');
-            // Perform your actions based on the selected language (EN or AR)
-            if (selectedCurrency === 'SAR') {
-              console.log('Currency is SAR...');
-            } else if (selectedCurrency === 'USD') {
-              console.log('Currency is USD...');
-            } else if (selectedCurrency === 'AED') {
-              console.log('Currency is AED...');
-            }
+            $.ajax({
+                type: 'get',
+                url: '<?php echo base_url();?>shop/currencyupdate',
+                data: {
+                    currencyName: selectedCurrency,
+                    
+                },
+                success: function (data) {
+                  location.reload();
+                }
+            });
           }
         });
 
