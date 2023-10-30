@@ -328,7 +328,6 @@ text-transform: uppercase;
   border: 1px solid #E3E3E3;
   height: 23px;
   padding-block: 0;
-  max-width: 90px;
 }
 .addtocart {
   padding-block: 10px !important;
@@ -815,6 +814,16 @@ input.qty.Qnum {
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }
+
+.loggedin div {
+  margin: 4px 0px;
+  background: #ddc3f4;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+.loggedin {
+  padding: 4px 6px !important;
+}
 /* media */
 
 @media screen and (max-width: 768px) {
@@ -836,7 +845,10 @@ input.qty.Qnum {
  
 }
 @media screen and (min-width:600px) {
-  
+  .loginPage .registerform {
+    max-width: 450px;
+    margin-inline: auto;
+  }
   .slick-prev {
     left: -35px !important;
   }
@@ -1045,4 +1057,14 @@ div#salediv {
 
 .tab-content>.active {
   opacity: 1;
+}
+
+.Qnum {
+  background: #f7f7f7;
+  padding: 2px 34px;
+  border-radius: 32px;
+  border: 1px solid #E3E3E3;
+  height: 23px;
+  padding-block: 0;
+  max-width: 90px;
 }
