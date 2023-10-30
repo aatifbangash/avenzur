@@ -82,7 +82,7 @@
                     </div>
 
                     <div class="col-sm-3 col-md-2">
-                        <?php include 'sidebar1.php'; ?>
+                        <?php //include 'sidebar1.php'; ?>
                     </div>
                 </div>
             </div>
