@@ -64,18 +64,18 @@
                       <li><a class="dropdown-item" href="#" data-lang="ar">AR</a></li>
                     </ul>
                 </div>
-                <!--<div class="dropdown me-2">
+                <div class="dropdown me-2">
                     <a class="btn  dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                       SAR <i class="bi bi-chevron-down ms-2"></i>
                     </a>
                   
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">SAR</a></li>
-                      <li><a class="dropdown-item" href="#">USD</a></li>
-                      <li><a class="dropdown-item" href="#">AED</a></li>
+                    <ul class="dropdown-menu" id="currencyDropdown">
+                        <li><a class="dropdown-item" href="#" data-lang="SAR">SAR</a></li>
+                      <li><a class="dropdown-item" href="#" data-lang="USD">USD</a></li>
+                      <li><a class="dropdown-item" href="#" data-lang="AED">AED</a></li>
                       
                     </ul>
-                </div>-->
+                </div>
                 <div class="dropdown">
                 <button type="button" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
                   <?php
