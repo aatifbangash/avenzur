@@ -102,12 +102,6 @@
                           <a class="text-decoration-none text-dark" href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a>
                         </div>
                         <div>
-                          <a class="text-decoration-none text-dark" href="<?= shop_url('quotes'); ?>"><i class="mi fa fa-heart-o"></i> <?= lang('quotes'); ?></a>
-                        </div>
-                        <div>
-                          <a class="text-decoration-none text-dark" href="<?= shop_url('downloads'); ?>"><i class="mi fa fa-download"></i> <?= lang('downloads'); ?></a>
-                        </div>
-                        <div>
                           <a class="text-decoration-none text-dark" href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a>
                         </div>
                         <div>
