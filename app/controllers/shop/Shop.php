@@ -895,6 +895,7 @@ class Shop extends MY_Shop_Controller
                 redirect('/');
             }
         } elseif ($pdf || $this->input->get('download')) {
+            $this->load->library('inv_qrcode');
             $id                          = $pdf ? $id : $this->input->get('download', true);
             $hash                        = $hash ? $hash : $this->input->get('hash', true);
             $order                       = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash]);

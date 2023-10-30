@@ -77,10 +77,10 @@
                                             <?php
                                             if ($Settings->ksa_qrcode) {
                                                 $qrtext = $this->inv_qrcode->base64([
-                                                    'seller'           => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
-                                                    'vat_no'           => $biller->vat_no ?: $biller->get_no,
-                                                    'date'             => $inv->date,
-                                                    'grand_total'      => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
+                                                    'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+                                                    'vat_no' => $biller->vat_no ?: $biller->get_no,
+                                                    'date' => $inv->date,
+                                                    'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
                                                     'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
                                                 ]);
                                                 echo $this->sma->qrcode('text', $qrtext, 2);

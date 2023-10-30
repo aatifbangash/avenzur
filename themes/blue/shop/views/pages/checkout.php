@@ -50,7 +50,14 @@
                                                         <div class="col-sm-6">
                                                             <div class="checkbox bg">
                                                                 <label>
-                                                                    <input type="radio" name="address" value="<?= $address->id; ?>" <?= $r == 1 ? 'checked' : ''; ?>>
+                                                                    <input
+                                                                    class="payment-address"
+                                                                    type="radio"
+                                                                    name="address"
+                                                                    value="<?= $address->id; ?>"
+                                                                    <?= $r == 1 ? 'checked' : ''; ?>
+                                                                    data-payload='<?= json_encode($address) ?>'
+                                                                    />
                                                                     <span>
                                                                         <?= $address->line1; ?><br>
                                                                         <?= $address->line2; ?><br>
@@ -440,6 +447,7 @@
                                 </div>
                                 <div class="panel-body">
                                     <?php
+
                                     $total     = $this->sma->convertMoney($this->cart->total(), false, false);
                                     $shipping  = $this->sma->convertMoney($this->cart->shipping(), false, false);
                                     $order_tax = $this->sma->convertMoney($this->cart->order_tax(), false, false);
@@ -495,5 +503,38 @@
           $('#phone').val("");
           $('#phone').val("+"+countryCode+" "+ $('#phone').val());
        });
+
+        $('.payment-address').click(function (e) {
+            var addressObject = $(this).data('payload');
+            if (addressObject) {
+                var country = addressObject.country
+                var city = addressObject.city
+                var shipping = 24;
+
+                if (country.toLowerCase() === 'saudi arabia') {
+                    shipping = 19
+
+                    if (city.toLowerCase() === 'riyadh') {
+                        shipping = 16
+                        //if express shipping = 21
+                    }
+
+                    if (city.toLowerCase() === 'jeddah') {
+                        shipping = 16
+                    }
+                }
+                if (['bahrain',
+                    'kuwait',
+                    'oman',
+                    'qatar',
+                    'united arab emirates',
+                    'uae']
+                    .includes(country.toLowerCase())) { //GCC
+                    shipping = 32
+                }
+            }
+
+            console.log(shipping);
+        })
     });
   </script>
