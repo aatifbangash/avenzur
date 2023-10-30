@@ -1075,3 +1075,7 @@ div#salediv {
 .panel-body {
   padding: 15px;
 }
+
+.panel-heading .text-bold{
+  font-weight: bold;
+}
