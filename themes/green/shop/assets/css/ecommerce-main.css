@@ -1076,3 +1076,8 @@ div#salediv {
 .panel-body {
   padding: 15px;
 }
+
+.page-contents{
+  padding: 20px 0;
+  background-color: #f8f8f8;
+}
