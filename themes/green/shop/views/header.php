@@ -94,7 +94,7 @@
                   <?php 
                     if ($loggedIn) {
                       ?>
-                      <ul class="dropdown-menu dropdown-menu-right">
+                      <div class="dropdown-menu dropdown-menu-right p-3 loggedin"">
                         <div>
                           <a class="text-decoration-none text-dark" href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a>
                         </div>
@@ -113,7 +113,7 @@
                         <div>
                           <a class="text-decoration-none text-dark" href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a>
                         </div>
-                      </ul>
+                    </div>
                       <?php
                     }else{
                       ?>
