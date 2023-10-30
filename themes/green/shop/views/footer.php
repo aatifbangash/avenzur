@@ -138,6 +138,25 @@
 
     <script>
       $(document).ready(function () {
+
+        const dropdown = document.getElementById('languageDropdown');
+        dropdown.addEventListener('click', function (event) {
+          const target = event.target;
+          
+          // Check if the clicked element is a list item with data-lang attribute
+          if (target.tagName === 'A' && target.hasAttribute('data-lang')) {
+            const selectedLang = target.getAttribute('data-lang');
+            // Perform your actions based on the selected language (EN or AR)
+            if (selectedLang === 'EN') {
+              // Handle EN selection
+              console.log('EN selected');
+            } else if (selectedLang === 'AR') {
+              // Handle AR selection
+              console.log('AR selected');
+            }
+          }
+        });
+
         $(".add_item_search").autocomplete({
             source: function (request, response) {
                 

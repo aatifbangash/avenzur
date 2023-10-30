@@ -59,11 +59,9 @@
                         <i class="bi bi-globe-americas me-1"></i> EN <i class="bi bi-chevron-down ms-2"></i>
                     </a>
                   
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">EN</a></li>
-                      <li><a class="dropdown-item" href="#">AR</a></li>
-                      
-                      
+                    <ul class="dropdown-menu" id="languageDropdown">
+                      <li><a class="dropdown-item" href="#" data-lang="EN">EN</a></li>
+                      <li><a class="dropdown-item" href="#" data-lang="AR">AR</a></li>
                     </ul>
                 </div>
                 <!--<div class="dropdown me-2">
