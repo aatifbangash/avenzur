@@ -1070,12 +1070,9 @@ div#salediv {
   color: #333;
   background-color: #f5f5f5;
   border-color: #ddd;
+  font-weight: bold;
 }
 
 .panel-body {
   padding: 15px;
-}
-
-.panel-heading .text-bold{
-  font-weight: bold;
 }
