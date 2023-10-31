@@ -1,8 +1,4 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed');
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-echo 'here we are...';exit;
-?>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <!-- hero silder -->
 <section class="heroSlider">
       <div class="container container-max-width py-4">
