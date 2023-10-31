@@ -226,7 +226,7 @@
                         <a class="nav-link"  href="<?= site_url('shop/products'); ?>">Products</a>
                       </li>
                       <li class="nav-item">
-                        <a class="nav-link"  href="#">About</a>
+                        <a class="nav-link"  href="<?= site_url('shop/page/about-us'); ?>">About</a>
                       </li>
                     
                      <div id="mobnav"> 
