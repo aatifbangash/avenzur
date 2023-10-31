@@ -239,93 +239,18 @@
                 <div class="tab-content pt-3" id="pills-tabContent">
                     <?php
                     $pc = 0;
-                    print_r($popular_categories);exit;
                     foreach($popular_categories as $popular_category){
                     ?>
                         <div class="tab-pane fade show <?php if($pc == 0) echo 'active'; ?>" id="pills-<?= $popular_category->name; ?>" role="tabpanel" aria-labelledby="pills-<?= $popular_category->name; ?>-tab" tabindex="0">
                             <!-- cards -->
                             <div class="row products-card text-center gy-4">
                                 <?php
+                                echo '<pre>';
                                 foreach($popular_category->products as $popular_product){
-                                ?>
-                                    <div class="col-lg-3 col-md-4 col-sm-12">
-                                        <div class="card" style="width: 100%">
-                                            <!--<a href="#" class="text-decoration-none">-->
-                                                <div class="cardImg position-relative">
-                                                    <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
-                                                        Sale 20% OFF
-                                                    </span>-->
-                                                    <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none">
-                                                        <img src="<?= base_url('assets/uploads/' . $popular_product->image); ?>" class="card-img-top" alt="...">
-                                                    </a>
-                                                </div>
-                                                <div class="card-body px-0 text-start pb-0">
-                                                    <div class="product-cat-title">
-                                                        <span class="text-uppercase"><?= $popular_category->name; ?></span>
-                                                    </div>
-                                                    <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none">
-                                                        <h5 class="card-title text-start"><?= $popular_product->name; ?></h5>
-                                                    </a>
-                                                    <div class="row align-items-center justify-content-between">
-                                                        <div class="col-md-6">
-                                                            <div class="rating">
-                                                                <i class="bi bi-star-fill rated"></i>
-                                                                <i class="bi bi-star-fill rated"></i>
-                                                                <i class="bi bi-star-fill rated"></i>
-                                                                <i class="bi bi-star-fill"></i>
-                                                            </div>
-                                                        </div>
-                                                        <?php
-                                                            if ($popular_product->promotion) {
-                                                                ?>
-                                                                    <div class="col-md-6">
-                                                                        <div class="discountPrice price text-end py-2">
-                                                                            <h4 class="m-0 text-decoration-line-through">
-                                                                                <?= $this->sma->convertMoney(isset($popular_product->special_price) && !empty(isset($popular_product->special_price)) ? $popular_product->special_price : $popular_product->price); ?>
-                                                                            </h4>
-                                                                        </div>
-                                                                    </div>
-                                                                <?php
-                                                                
-                                                            }
-                                                        ?>
-                                                    </div> 
-                                                    <div class="row align-items-center justify-content-between">
-                                                        <div class="col-md-6 ">
-                                                            <div class="price text-start  py-2">
-                                                                <h4 class="m-0 fw-bold">
-                                                                <?php
-                                                                if ($popular_product->promotion) {
-                                                                    
-                                                                        echo $this->sma->convertMoney($popular_product->promo_price);
-                                                                    
-                                                                }else{
-                                                                    echo $this->sma->convertMoney(isset($popular_product->special_price) && !empty(isset($popular_product->special_price)) ? $popular_product->special_price : $popular_product->price);
-                                                                }
-                                                                ?>
-                                                                    
-                                                                </h4>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <div class="quantity text-end py-2 d-flex align-items-center justify-content-between">
-                                                                <span class="plus btn-plus">
-                                                                    <i class="bi bi-plus-circle-fill"></i>
-                                                                </span>
-                                                                <input type="text" name="quantity" class="Qnum" value="1" required="required" />
-                                                                <!--<span class="Qnum ">1</span>-->
-                                                                <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            <!--</a>-->
-                                            <div> 
-                                                <button type="button" data-id="<?= $popular_product->id; ?>" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>
-                                            </div>
-                                        </div> 
-                                    </div>
-                                <? } ?>
+                                  print_r($popular_product);
+                                 } 
+                                 exit;
+                                 ?>
                             </div>
                         </div>
                     <? 
