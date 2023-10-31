@@ -314,7 +314,7 @@ class Pay extends MY_Shop_Controller
                             $data["formdata"] = $finalData;
                         
                       
-               $this->load->view('blue/directpay', $data);
+               $this->load->view('green/directpay', $data);
             }
         }
         //$this->session->set_flashdata('error', lang('sale_x_found'));
