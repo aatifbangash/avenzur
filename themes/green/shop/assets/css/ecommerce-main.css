@@ -1190,6 +1190,12 @@ input.btn.btn-lg.btn-primary {
 form#guest-checkout {
   padding: 15px;
 }
+form#user-profile {
+  padding: 15px;
+}
+form#user-change-password {
+  padding: 15px;
+}
 .registertab-k .btn:hover {
   background: #4f127c !important;
   color:white !important;
