@@ -160,17 +160,6 @@
           <div class="col-lg-7 col-md-8" id="searchbarmob">
             <div id="searchtogglecros"><i class="bi bi-x-circle-fill"></i></div>
             <?= shop_form_open('products', 'class="d-flex search-bar"'); ?>
-              
-              <select class="form-select w-auto bg-transparent border-0 ps-4 categorySelect" aria-label="Default select">
-                <option selected>Category</option>
-                <?php
-                  foreach($all_categories as $category){
-                    ?>
-                      <option value="<?= $category->id; ?>"><?= $category->name; ?></option>
-                    <?php
-                  }
-                ?>
-              </select>
               <input name="query" class="form-control border-0 bg-transparent py-3 add_item_search"  id="product-search" type="search" placeholder="What are you looking for?" aria-label="Search">
               <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
             <?= form_close(); ?>
