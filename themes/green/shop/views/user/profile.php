@@ -125,7 +125,7 @@
                                     </div>
                                 </div>
 
-                                <?= form_submit('billing', lang('update'), 'class="btn btn-primary"'); ?>
+                                <?= form_submit('billing', lang('update'), 'class="btn btn-lg btn-primary"'); ?>
                                 <?php echo form_close(); ?>
 
                             </div>
@@ -150,7 +150,7 @@
                                             <?= form_password('new_password_confirm', set_value('new_password_confirm'), 'class="form-control tip" id="new_password_confirm" required="required" data-fv-identical="true" data-fv-identical-field="new_password" data-fv-identical-message="' . lang('pw_not_same') . '"'); ?>
                                         </div>
 
-                                        <?= form_submit('change_password', lang('change_password'), 'class="btn btn-primary"'); ?>
+                                        <?= form_submit('change_password', lang('change_password'), 'class="btn btn-lg btn-primary"'); ?>
                                     </div>
                                 </div>
                                 <?php echo form_close(); ?>
