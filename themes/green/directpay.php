@@ -18,6 +18,7 @@ $paymentMethod =$formdata["PaymentMethod"];
 $paymentDescription= $formdata['PaymentDescription'];
 $genertaeToken =$formdata["GenerateToken"];
 
+print_r($formdata);exit;
 
 ?>
 
@@ -92,7 +93,7 @@ $genertaeToken =$formdata["GenerateToken"];
   </style>
 </head>
 
-<body onload="javascript:document.redirectForm.submit();" >
+<body >
   <div></div>
   <form action="<?php echo $redirectURL?>" method="post" name="redirectForm">
 
