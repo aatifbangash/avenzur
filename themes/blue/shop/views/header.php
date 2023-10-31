@@ -105,6 +105,10 @@ button.btn.btn-secondary.dropdown-toggle.globe {
     color: #8b8b8b !important;
 }
 
+.pac-container{
+    z-index: 9999 !important;
+}
+
  /*.ui-autocomplete-row*/
  /*     {*/
  /*       padding:8px;*/

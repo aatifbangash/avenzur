@@ -180,6 +180,7 @@
     
 <script src="<?= $assets; ?>js/libs.min.js"></script>
 <script src="<?= $assets; ?>js/jquery.toast.min.js"></script>
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9B2FB0OWZb_CrS8Njrdgek7djxBagYek&libraries=places"></script>
 <script src="<?= $assets; ?>js/scripts.min.js"></script>
 <script type="text/javascript">
     var m = '<?= $m; ?>', v = '<?= $v; ?>', products = {}, filters = <?= isset($filters) && !empty($filters) ? json_encode($filters) : '{}'; ?>, shop_color, shop_grid, sorting;
