@@ -1,16 +1,16 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
 <section class="page-contents">
-    <div class="container">
+    <div class="container container-max-width">
         <div class="row">
             <div class="col-md-12">
-                <div class="row">
+                <div class="row checkoutbox-k">
 
                     <div class="col-sm-8">
-                        <div class="panel panel-default margin-top-lg">
+                        <div class="panel panel-default margin-top-lg checkLeftCol-k">
                             <div class="panel-heading text-bold">
                                 <i class="fa fa-shopping-cart margin-right-sm"></i> <?= lang('checkout'); ?>
-                                <a href="<?= site_url('cart'); ?>" class="pull-right">
+                                <a href="<?= site_url('cart'); ?>" class="pull-right back-k">
                                     <i class="fa fa-share"></i>
                                     <?= lang('back_to_cart'); ?>
                                 </a>
@@ -41,14 +41,14 @@
                                                     $istates = $this->gst->getIndianStates();
                                                 }
                                                 if (!empty($addresses)) {
-                                                    echo shop_form_open('order', 'class="validate"');
-                                                    echo '<div class="row">';
-                                                    echo '<div class="col-sm-12 text-bold">' . lang('select_address') . '</div>';
+                                                    echo shop_form_open('order', 'class="validate addressform-k"');
+                                                    echo '<div class="row address-row-k">';
+                                                    echo '<div class="col-sm-12 text-bold py-2">' . lang('select_address') . '</div>';
                                                     $r = 1;
                                                     foreach ($addresses as $address) {
                                                         ?>
                                                         <div class="col-sm-6">
-                                                            <div class="checkbox bg">
+                                                            <div class="checkbox bg addressbox-k">
                                                                 <label>
                                                                     <input type="radio" name="address" value="<?= $address->id; ?>" <?= $r == 1 ? 'checked' : ''; ?>>
                                                                     <span>
@@ -142,7 +142,7 @@
                                                 </div>
                                                 <?php
                                                 if (!empty($addresses) && !$this->Staff) {
-                                                    echo form_submit('add_order', lang('Proceed to Payment'), 'class="btn btn-theme"');
+                                                    echo form_submit('add_order', lang('Proceed to Payment'), 'class="btn btn-theme payment-k"');
                                                 } elseif ($this->Staff) {
                                                     echo '<div class="alert alert-warning margin-bottom-no">' . lang('staff_not_allowed') . '</div>';
                                                 } else {
@@ -158,12 +158,14 @@
                                                         </div>
                                                     </div>
                                                     <div class="col-sm-6">
+                                                        <div class="registertab-k">
                                                         <h4 class="title"><span><?= lang('register_new_account'); ?></span></h4>
                                                         <p>
                                                             <?= lang('register_account_info'); ?>
                                                         </p>
                                                         <a href="<?= site_url('login#register'); ?>" class="btn btn-theme"><?= lang('register'); ?></a>
                                                         <a href="#" class="btn btn-default pull-right guest-checkout"><?= lang('guest_checkout'); ?></a>
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -438,7 +440,7 @@
                                 <div class="panel-heading text-bold">
                                     <i class="fa fa-shopping-cart margin-right-sm"></i> <?= lang('totals'); ?>
                                 </div>
-                                <div class="panel-body">
+                                <div class="panel-body total-k">
                                     <?php
                                     $total     = $this->sma->convertMoney($this->cart->total(), false, false);
                                     $shipping  = $this->sma->convertMoney($this->cart->shipping(), false, false);
