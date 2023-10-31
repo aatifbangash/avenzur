@@ -1092,3 +1092,131 @@ h4{
 h5{
   font-size: 16px;
 }
+
+.panel.panel-default.margin-top-lg.checkLeftCol-k {
+  border: 1px solid #e5e5e5 !important;
+  border-radius: 4px !important;
+}
+.checkoutbox-k .panel-default>.panel-heading {
+  
+  background-color: #ddc3f4 !important;
+}
+
+.checkoutbox-k  ul.nav.nav-tabs li {
+  background: #ddc3f4;
+  margin-right: 10px;
+  padding: 7px 11px;
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+}
+.checkoutbox-k ul.nav.nav-tabs li a {
+  text-decoration: none;
+  color: black;
+  font-size: 15px;
+  font-weight: 600;
+}
+.checkoutbox-k ul.nav.nav-tabs li.active,.checkoutbox-k  ul.nav.nav-tabs li:hover {
+  background: #662d91;
+  
+}
+.checkoutbox-k ul.nav.nav-tabs li.active a , .checkoutbox-k  ul.nav.nav-tabs li:hover a{
+  color:white;
+}
+
+.checkoutbox-k form.validate {
+  padding: 10px;
+}
+
+.checkoutbox-k div#login .form-group, form#guest-checkout .form-group{
+  margin: 10px 0;
+}
+
+.checkoutbox-k div#login .form-group a, div#login .form-group label {
+  text-decoration: none !important;
+  color: black;
+  padding-bottom: 5px;
+  font-size: 15px;
+}
+
+.checkoutbox-k div#user,form#guest-checkout {
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  box-shadow: 0px 2px 8px #662d9191;
+}
+.checkoutbox-k div#login {
+  border: 1px solid #ddc3f4;
+  margin-left: 0px;
+  padding: 0px 0px 11px 0px;
+  border-radius: 3px;
+  box-shadow: 0px 1px 5px #cbcbcb;
+}
+.checkoutbox-k div#login button.btn.btn-block.btn-success {
+  width: 100%;
+  background: #662d91;
+  border: none;
+}
+
+.checkoutbox-k .registertab-k {
+  padding: 10px 23px 0px 10px;
+}
+
+.registertab-k a.btn.btn-theme {
+  background: #662d91;
+  color: white;
+  font-weight: 600;
+}
+
+.registertab-k a.guest-checkout {
+  background: #ddc3f4;
+  font-weight: 600;
+}
+a.pull-right.back-k {
+  text-decoration: none !important;
+  color: black !important;
+}
+.panel-body.total-k {
+  border: 1px solid #e5e5e5;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+input.btn.btn-lg.btn-primary {
+  font-size: 17px;
+  padding: 8px 20px;
+  font-weight: 600;
+  background: #662d91;
+  border-color: #662d91;
+}
+form#guest-checkout {
+  padding: 15px;
+}
+.registertab-k .btn:hover {
+  background: #4f127c !important;
+  color:white !important;
+}
+form.validate.addressform-k {
+  padding: 20px;
+}
+.addressform-k .checkbox.addressbox-k {
+  
+  border: 1px solid #ddc3f4;
+  padding: 17px 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  box-shadow: 0px 0px 6px #ddc3f4;
+}
+.checkbox.bg.addressbox-k label {
+  font-weight: 600;
+}
+a#add-address, input.btn.btn-theme.payment-k {
+  border: none;
+  background: #662d91;
+  padding: 10px 19px;
+  font-size: 15px;
+  font-weight: 600;
+      margin-bottom: 20px;
+      color:white;
+}
+input.btn.btn-theme.payment-k {
+  margin-top: 10px;
+}
