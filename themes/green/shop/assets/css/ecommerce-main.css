@@ -1192,9 +1192,15 @@ form#guest-checkout {
 }
 form#user-profile {
   padding: 15px;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  box-shadow: 0px 2px 8px #662d9191;
 }
 form#user-change-password {
   padding: 15px;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  box-shadow: 0px 2px 8px #662d9191;
 }
 .registertab-k .btn:hover {
   background: #4f127c !important;
