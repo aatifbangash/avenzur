@@ -239,9 +239,8 @@
                 <div class="tab-content pt-3" id="pills-tabContent">
                     <?php
                     $pc = 0;
+                    print_r($popular_categories);exit;
                     foreach($popular_categories as $popular_category){
-                      echo '<pre>';
-                      print_r($popular_category);exit;
                     ?>
                         <div class="tab-pane fade show <?php if($pc == 0) echo 'active'; ?>" id="pills-<?= $popular_category->name; ?>" role="tabpanel" aria-labelledby="pills-<?= $popular_category->name; ?>-tab" tabindex="0">
                             <!-- cards -->
