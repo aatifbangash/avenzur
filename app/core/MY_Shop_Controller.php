@@ -198,7 +198,6 @@ class MY_Shop_Controller extends CI_Controller
             $this->session->unset_userdata('warning');
             $this->session->unset_userdata('reminder');
             $this->load->view($this->theme . 'header', $data);
-            echo $this->theme . $page;exit;
             $this->load->view($this->theme . $page, $data);
             $this->load->view($this->theme . 'footer');
         }
