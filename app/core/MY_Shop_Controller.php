@@ -193,12 +193,11 @@ class MY_Shop_Controller extends CI_Controller
             $data['info']          = $this->shop_model->getNotifications();
             $data['ip_address']    = $this->input->ip_address();
             $data['page_desc']     = isset($data['page_desc']) && !empty($data['page_desc']) ? $data['page_desc'] : $this->shop_settings->description;
-            echo '<pre>';
-            print_r($data);exit;
             $this->session->unset_userdata('error');
             $this->session->unset_userdata('message');
             $this->session->unset_userdata('warning');
             $this->session->unset_userdata('reminder');
+            echo 'loading header';exit;
             $this->load->view($this->theme . 'header', $data);
             $this->load->view($this->theme . $page, $data);
             $this->load->view($this->theme . 'footer');
