@@ -241,7 +241,7 @@
                     $pc = 0;
                     foreach($popular_categories as $popular_category){
                     ?>
-                        <div class="tab-pane fade show <?php if($pc == 0) echo 'active'; ?>" id="pills-<?= $popular_category->name; ?>" role="tabpanel" aria-labelledby="pills-<?= $popular_category->name; ?>-tab" tabindex="0">
+                        <div class="tab-pane fade show" id="pills-" role="tabpanel" aria-labelledby="pills--tab" tabindex="0">
                             <!-- cards -->
                             <div class="row products-card text-center gy-4">
                                 
