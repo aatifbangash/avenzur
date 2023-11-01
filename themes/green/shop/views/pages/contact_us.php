@@ -1,12 +1,12 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <section class="page-contents" id="contact-us-section">
-  <div class="container">
+  <div class="container container-max-width">
     <div class="row">
       <div class="col-xs-12">
 
         <div class="row">
           <div class="col-sm-9 col-md-10">
-            <div class="panel panel-default margin-top-lg">
+            <div class="panel panel-default margin-top-lg checkLeftCol-k">
               <div class="panel-heading text-bold">
                 <?= $title; ?>
               </div>
