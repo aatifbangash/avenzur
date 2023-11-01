@@ -528,6 +528,9 @@ class Pay extends MY_Shop_Controller
                         }
               */          
             if ($inv = $this->pay_model->getSaleByID($invoice_no)) {
+                echo '<pre>';
+                print_r($inv);
+                exit;
                 $payment = [
                     'date'           => date('Y-m-d H:i:s'),
                     'sale_id'        => $invoice_no,
@@ -678,7 +681,6 @@ class Pay extends MY_Shop_Controller
                         /* Shipway Order Generation Ends */
                     }
 
-                    echo 'Here is ghilmaaan';exit;
                     $email = $this->order_received($invoice_no);
                     $this->sma->log_payment('SUCCESS', 'Payment has been made for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));
                     $this->session->set_flashdata('message', lang('payment_added'));
