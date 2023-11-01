@@ -76,6 +76,7 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>-->
     <script src="<?= $assets; ?>js/libs.min.js"></script>
     <script src="<?= $assets; ?>js/jquery.toast.min.js"></script>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9B2FB0OWZb_CrS8Njrdgek7djxBagYek&libraries=places"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
     <script  src="<?= $assets; ?>js/ecommerce-main.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>

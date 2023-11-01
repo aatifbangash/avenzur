@@ -688,6 +688,58 @@ $(".edit-address").click(function(t) {
   })
 });
 
+function initialize() {
+  var input = document.getElementById('autocomplete_search');
+  var autocomplete = new google.maps.places.Autocomplete(input);
+  autocomplete.addListener('place_changed', function () {
+
+      document.getElementById('address-city').value = "";
+      document.getElementById('address-country').value = "";
+      document.getElementById('address-line-1').value = "";
+      document.getElementById('address-postal-code').value = "";
+      document.getElementById('address-state').value = "";
+
+      var place = autocomplete.getPlace();
+      // Define variables to store city and country names
+      var city, country, street, postalCode, stateName;
+
+      // Loop through address components to find city and country
+      place.address_components.forEach(function (component) {
+
+          component.types.forEach(function (type) {
+              console.log(type + component.long_name)
+              if (type === 'locality') {
+                  city = component.long_name;
+                  document.getElementById('address-city').value = city;
+              }
+              if (type === 'country') {
+                  country = component.long_name;
+                  document.getElementById('address-country').value = country;
+              }
+              if (type === 'route') {
+                  street = component.long_name
+                  document.getElementById('address-line-1').value = street;
+              }
+              if (type === 'postal_code') {
+                  postalCode = component.long_name
+                  document.getElementById('address-postal-code').value = postalCode;
+              }
+              if (type === 'administrative_area_level_1') {
+                  stateName = component.long_name
+                  document.getElementById('address-state').value = stateName;
+              }
+          });
+      });
+
+      console.log('Street: ' + street);
+      console.log('City: ' + city);
+      console.log('Country: ' + country);
+      // place variable will have all the information you are looking for.
+      $('#lat').val(place.geometry['location'].lat());
+      $('#long').val(place.geometry['location'].lng());
+  });
+}
+
 function add_address(t) {
   t = t || {};
   var e = "";
@@ -711,7 +763,7 @@ function add_address(t) {
       e = '<input name="state" value="' + (t.state ? t.state : "") + '" id="address-state" class="form-control" placeholder="' + lang.state + '">';
   swal({
       title: t.id ? lang.update_address : lang.add_address,
-      html: '<span class="text-bold padding-bottom-md">' + lang.fill_form + '</span><hr class="swal2-spacer padding-bottom-xs" style="display: block;"><form action="' + site.shop_url + 'address" id="address-form" class="padding-bottom-md"><input type="hidden" name="' + site.csrf_token + '" value="' + site.csrf_token_value + '"><div class="row"><div class="form-group col-sm-12"><input name="line1" id="address-line-1" value="' + (t.line1 ? t.line1 : "") + '" class="form-control" placeholder="' + lang.line_1 + '"></div></div><div class="row"><div class="form-group col-sm-12"><input name="line2" id="address-line-2" value="' + (t.line2 ? t.line2 : "") + '" class="form-control" placeholder="' + lang.line_2 + '"></div></div><div class="row"><div class="form-group col-sm-6"><input name="city" value="' + (t.city ? t.city : "") + '" id="address-city" class="form-control" placeholder="' + lang.city + '"></div><div class="form-group col-sm-6" id="istates">' + e + '</div><div class="form-group col-sm-6"><input name="postal_code" value="' + (t.postal_code ? t.postal_code : "") + '" id="address-postal-code" class="form-control" placeholder="' + lang.postal_code + '"></div><div class="form-group col-sm-6"><input name="country" value="' + (t.country ? t.country : "") + '" id="address-country" class="form-control" placeholder="' + lang.country + '"></div><div class="form-group col-sm-12 margin-bottom-no"><input name="phone" value="' + (t.phone ? t.phone : "") + '" id="address-phone" class="form-control" placeholder="' + lang.phone + '"></div></form></div>',
+      html: '<span class="text-bold padding-bottom-md">' + lang.fill_form + '</span><hr class="swal2-spacer padding-bottom-xs" style="display: block;"><form action="' + site.shop_url + 'address" id="address-form" class="padding-bottom-md"><input type="hidden" name="' + site.csrf_token + '" value="' + site.csrf_token_value + '"><div class="row"><div class="form-group col-sm-12"><input id="autocomplete_search"  class="form-control" placeholder="Type for the address..." autocomplete="on" /></div></div><div class="row"><div class="form-group col-sm-12"><input name="line1" id="address-line-1" value="' + (t.line1 ? t.line1 : "") + '" class="form-control" placeholder="' + lang.line_1 + '"></div></div><div class="row"><div class="form-group col-sm-12"><input name="line2" id="address-line-2" value="' + (t.line2 ? t.line2 : "") + '" class="form-control" placeholder="' + lang.line_2 + '"></div></div><div class="row"><div class="form-group col-sm-6"><input name="city" value="' + (t.city ? t.city : "") + '" id="address-city" class="form-control" placeholder="' + lang.city + '"></div><div class="form-group col-sm-6" id="istates">' + e + '</div><div class="form-group col-sm-6"><input name="postal_code" value="' + (t.postal_code ? t.postal_code : "") + '" id="address-postal-code" class="form-control" placeholder="' + lang.postal_code + '"></div><div class="form-group col-sm-6"><input name="country" value="' + (t.country ? t.country : "") + '" id="address-country" class="form-control" placeholder="' + lang.country + '"></div><div class="form-group col-sm-12 margin-bottom-no"><input name="phone" value="' + (t.phone ? t.phone : "") + '" id="address-phone" class="form-control" placeholder="' + lang.phone + '"></div></form></div>',
       showCancelButton: !0,
       allowOutsideClick: !1,
       cancelButtonText: lang.cancel,
@@ -742,6 +794,7 @@ function add_address(t) {
               }),
               $(".selectpickerstate").selectpicker("val", t.state ? t.state : "")
           }
+          initialize()
       }
   }).then(function(e) {
       var a = $("#address-form");

@@ -46,6 +46,11 @@
     })
 </script>
 </head>
+  <style> 
+    .pac-container{
+        z-index: 9999 !important;
+    }
+  </style>
   <body>
     <!-- top bar -->
     <section class="top-bar py-1 ">
