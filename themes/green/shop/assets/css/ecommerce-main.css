@@ -1122,6 +1122,12 @@ h5{
 #user-profile ul.nav.nav-tabs li.active a , #user-profile  ul.nav.nav-tabs li:hover a{
   color:white;
 }
+#user-profile form.validate {
+  padding: 10px;
+}
+#user-profile div#login .form-group, form#guest-checkout .form-group{
+  margin: 10px 0;
+}
 
 .checkoutbox-k  ul.nav.nav-tabs li {
   background: #ddc3f4;
