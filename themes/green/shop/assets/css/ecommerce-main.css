@@ -1102,7 +1102,9 @@ h5{
   background-color: #ddc3f4 !important;
 }
 
-
+#contact-us .panel-heading {
+  background-color: #ddc3f4 !important;
+}
 
 #user-profile-section  ul.nav.nav-tabs li {
   background: #ddc3f4;
