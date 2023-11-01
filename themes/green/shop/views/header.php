@@ -227,10 +227,14 @@
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0" >
                       <li class="nav-item">
                         <?php 
+                          $isHttps = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+                          $domain = $_SERVER['HTTP_HOST'];
+                          $url = ($isHttps ? 'https://' : 'http://') . $domain . $_SERVER['REQUEST_URI'];
+                        
                           echo site_url().'<br />';
-                          echo $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'].'<br />';exit;
+                          echo $url.'<br />';exit;
                         ?>
-                        <a class="nav-link <?php if(site_url() == $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']){ echo 'active'; } ?>" aria-current="page" href="<?= site_url(); ?>">Home</a>
+                        <a class="nav-link <?php if(site_url() == $url){ echo 'active'; } ?>" aria-current="page" href="<?= site_url(); ?>">Home</a>
                       </li>
                       <li class="nav-item">
                         <a class="nav-link"  href="<?= site_url('shop/products'); ?>">Products</a>
