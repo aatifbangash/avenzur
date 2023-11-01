@@ -779,8 +779,8 @@ class Pay extends MY_Shop_Controller
 
             $btn_code .= '<div class="clearfix"></div></div>';
             $message    = $message . $btn_code;
-            echo $message;exit;
             $attachment = $this->orders($id, $hash, true, 'S');
+            echo 'Got attachment...';exit;
             $subject    = lang('new_order_received');
             $sent       = false;
             $error      = false;
