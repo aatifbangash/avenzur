@@ -8,6 +8,7 @@
           <div class="col-sm-9 col-md-10">
             <div class="panel panel-default margin-top-lg checkLeftCol-k">
               <div class="panel-heading text-bold">
+                <i class="bi bi-person-fill"></i>
                 <?= $title; ?>
               </div>
               <div class="panel-body">
@@ -18,7 +19,7 @@
                   echo '<div class="alert alert-success" role="alert">' . $successMessage . '</div>';
                 }
                 ?>
-                <?php echo form_open('page/contact-us'); ?>
+                <?php echo form_open('page/contact-us', 'class="validate" id="contact-us"'); ?>
                 <div class="form-group">
                   <label for="type">Type:</label>
                   <?php
