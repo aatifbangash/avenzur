@@ -538,9 +538,6 @@ class Pay extends MY_Shop_Controller
                     'type'           => 'received',
                     'note'           => $_POST['Response_CurrencyISOCode'] . ' ' . $_POST['Response_Amount'] . ' had been paid for the Sale Reference No ' . $inv->reference_no,
                 ];
-                echo '<pre>';
-                print_r($payment);
-                exit;
                 if ($this->pay_model->addPayment($payment)) {
                     $address_id = $inv->address_id;
                     $customer = $this->pay_model->getCompanyByID($inv->customer_id);
@@ -691,6 +688,8 @@ class Pay extends MY_Shop_Controller
                 $this->sma->log_payment('ERROR', 'Payment failed for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));
                 $this->session->set_flashdata('error', lang('payment_failed'));
         }
+
+        echo '<pre>';print_r($inv);exit;
 
         if ($inv->shop) {
             shop_redirect('orders/' . $inv->id . '/' . ($this->loggedIn ? '' : $inv->hash));
