@@ -634,6 +634,7 @@ button.btn.btn-primary.d-lg-none.catsidebarmob {
 	color: #212529;
 	text-decoration: none;
 }
+
 .product-info-tabs {
 	margin-top: 25px; 
 }
@@ -1130,7 +1131,7 @@ h5{
   margin: 10px 0;
 }
 
-.checkoutbox-k div#login .form-group a, div#login .form-group label {
+.checkoutbox-k div#login .form-group a, div#login .form-group label,  .register-k  div#login .form-group a{
   text-decoration: none !important;
   color: black;
   padding-bottom: 5px;
@@ -1149,7 +1150,7 @@ h5{
   border-radius: 3px;
   box-shadow: 0px 1px 5px #cbcbcb;
 }
-.checkoutbox-k div#login button.btn.btn-block.btn-success {
+.checkoutbox-k div#login button.btn.btn-block.btn-success, .register-k div#login button.btn.btn-block.btn-success {
   width: 100%;
   background: #662d91;
   border: none;
@@ -1230,4 +1231,91 @@ a#add-address, input.btn.btn-theme.payment-k {
 }
 input.btn.btn-theme.payment-k {
   margin-top: 10px;
+}
+
+.cartpage .panel-heading {
+    background: #ddc3f4;
+}
+.cartpage .panel {
+    border: 1px solid #ddc3f4;
+        border-radius: 5px;
+            border-radius: 5px;
+    box-shadow: 0px 0px 8px #00000021;
+}
+.cartpage div#cart-helper {
+    padding: 0px 10px 14px 10px;
+    border: none;
+    box-shadow: none;
+}
+.cart-empty-msg {
+    padding: 17px 13px 0px 13px;
+}
+.continushoping {
+    text-decoration: none;
+    color: white;
+    background: #662d91;
+    border: none;
+ 
+}
+.continushopingtxt{
+    text-decoration: none;
+    color: black;
+}
+.proceed-k {
+    background: #662d91;
+    border: none;
+    font-size: 18px;
+    font-weight: 600;
+    width: 100%;
+}
+a.btn.btn-primary:hover {
+    background: #47126e;
+    color:white !important;
+}
+
+
+table#cart-table tr td,, table#cart-table thead tr th {
+    text-align: center;
+    border: 1px solid #efeaea;
+}
+table#cart-table tr td a{
+    text-decoration:none;
+    color:black;
+}
+table#cart-table tr td span.cart-item-image img {
+    width: 100%;
+    height: 82px;
+}
+
+
+.register-k #register form.validate, .register-k div#login {
+    border-radius: 5px;
+    box-shadow: 0px 2px 8px #662d9191;
+    padding: 15px 17px;
+}
+
+.register-k ul.nav.nav-tabs {
+    border: none;
+}
+
+.register-k a#login {
+    background: #ddc3f4;
+    border: none;
+    color: black;
+    font-weight: 600;
+}
+.register-k div#register form.validate .form-group , .register-k div#login .form-group{
+    margin: 10px 0;
+}
+.register-k div#register form.validate .iti.iti--allow-dropdown {
+    width: 100%;
+}
+.register-k input#register,.register-k a#registerbtn {
+    background: #662d91;
+    border: none;
+    font-weight: 600;
+}
+.register-k div#login {
+    
+    padding: 11px 8px 23px 8px;
 }
