@@ -131,7 +131,7 @@
                             </div>
 
                             <div role="tabpanel" class="tab-pane fade" id="password">
-                                <p><?= lang('fill_form'); ?></p>
+                                <!--<p><?php //echo lang('fill_form'); ?></p>-->
                                 <?= form_open('profile/password', 'class="validate" id="user-change-password"'); ?>
                                 <div class="row">
                                     <div class="col-md-6">
