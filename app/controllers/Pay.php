@@ -738,6 +738,7 @@ class Pay extends MY_Shop_Controller
     public function order_received($id = null, $hash = null)
     {
         if ($inv = $this->shop_model->getOrder(['id' => $id])) {
+            echo 'order received...';exit;
             $user     = $inv->created_by ? $this->site->getUser($inv->created_by) : null;
             $customer = $this->site->getCompanyByID($inv->customer_id);
             $biller   = $this->site->getCompanyByID($inv->biller_id);
@@ -793,8 +794,7 @@ class Pay extends MY_Shop_Controller
             /*if ($warehouse->email) {
                 $cc[] = $warehouse->email;
             }*/
-            $sent = true;
-            /*try {
+            try {
                 if ($this->sma->send_email(($customer ? $customer->email : $user->email), $subject, $message, null, null, $attachment, $cc, $bcc)) {
                     $this->sma->send_email('ama@pharma.com.sa', 'New Order Generated On Avenzur', $message, null, null, $attachment, $cc, $bcc);
                     delete_files($attachment);
@@ -802,7 +802,7 @@ class Pay extends MY_Shop_Controller
                 }
             } catch (Exception $e) {
                 $error = $e->getMessage();
-            }*/
+            }
             return ['sent' => $sent, 'error' => $error];
         }
     }
