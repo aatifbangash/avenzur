@@ -1,11 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <section class="page-contents">
-    <div class="container">
+    <div class="container container-max-width register-k">
         <div class="row">
             <div class="col-xs-12">
                 
                     <div class="row">
-                    <div class="col-sm-9 col-md-10">
+                    <div class="col-sm-9 col-md-12">
 
                         <ul class="nav nav-tabs" role="tablist">
                             
@@ -20,8 +20,8 @@
                         <div class="tab-content padding-lg white bordered-light"  style="margin-top:-1px;">
                             <div class="loginform" style="display:none;" >
                             
-                                <div class="row">
-                                    <div class="col-sm-6">
+                                <div class="row w-100 m-auto">
+                                    <div class="col-sm-5">
                                         <div class="well margin-bottom-no">
                                           
                                          <?php include 'login_form.php'; ?>
@@ -29,7 +29,7 @@
                                     </div>
                              <?php if (!$shop_settings->private) {
      ?>
-                                    <div class="col-sm-6">
+                                    <div class="col-sm-7 px-md-5">
                                         <h4 class="title"><span><?= lang('register_new_account'); ?></span></h4>
                                         <p>
                                             <?= lang('register_account_info'); ?>
@@ -130,10 +130,12 @@
                                     </div>
                                     <div class="clearfix"></div>
                                 </div>
+                                <div class="mt-2">
                                 <input type="submit" name="register" class="btn btn-primary" id="register" value="Register" >
                                 <!--<h5>For Login  <a href="<?= site_url('login_form.php'); ?>">Click Here</a></h5>-->
                                  <!--<?= form_submit('register', lang('register'), 'class="btn btn-primary"'); ?>-->
                                <a   id="login" onclick="LoginFn()" name="login" value="Login" class="btn btn-secondary">Already have an account</a>
+                               </div>
                                 <?= form_close(); ?>
                            
                             </div>

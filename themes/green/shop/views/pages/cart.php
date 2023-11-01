@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <section class="page-contents">
-    <div class="container">
+    <div class="container container-max-width cartpage">
         <div class="row">
             <div class="col-md-12">
                 <div class="row">
@@ -10,7 +10,7 @@
                             <div class="panel-heading text-bold">
                                 <i class="fa fa-shopping-cart margin-right-sm"></i> <?= lang('shopping_cart'); ?>
                                 [ <?= lang('items'); ?>: <span id="total-items"></span> ]
-                                <a href="<?= shop_url('products'); ?>" class="pull-right hidden-xs">
+                                <a href="<?= shop_url('products'); ?>" class="pull-right hidden-xs continushopingtxt">
                                     <i class="fa fa-share"></i>
                                     <?= lang('continue_shopping'); ?>
                                 </a>
@@ -43,7 +43,7 @@
                                     <a href="<?= site_url('cart/destroy'); ?>" id="empty-cart" class="btn btn-danger btn-sm">
                                         <?= lang('empty_cart'); ?>
                                     </a>
-                                    <a href="<?= shop_url('products'); ?>" class="btn btn-primary btn-sm pull-right">
+                                    <a href="<?= shop_url('products'); ?>" class="btn btn-primary btn-sm pull-right continushoping">
                                         <i class="fa fa-share"></i>
                                         <?= lang('continue_shopping'); ?>
                                     </a>
@@ -52,8 +52,9 @@
                         </div>
                     </div>
 
-                    <div class="cart-contents">
-                        <div class="col-sm-4">
+                   
+                    <div class="col-sm-4">
+                        <div class="cart-contents">
                             <div id="sticky-con" class="margin-top-lg">
                                 <div class="panel panel-default">
                                     <div class="panel-heading text-bold">
@@ -61,12 +62,13 @@
                                     </div>
                                     <div class="panel-body">
                                         <table id="cart-totals" class="table table-borderless table-striped cart-totals"></table>
-                                        <a href="<?= site_url('cart/checkout'); ?>" class="btn btn-primary btn-lg btn-block"><?= lang('checkout'); ?></a>
+                                        <a href="<?= site_url('cart/checkout'); ?>" class="btn btn-primary btn-lg btn-block proceed-k"><?= lang('checkout'); ?></a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    
                 </div>
                 <!--<code class="text-muted">* <?= lang('shipping_rate_info'); ?></code>-->
             </div>
