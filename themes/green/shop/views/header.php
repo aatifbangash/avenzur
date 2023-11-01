@@ -230,9 +230,6 @@
                           $isHttps = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
                           $domain = $_SERVER['HTTP_HOST'];
                           $url = ($isHttps ? 'https://' : 'http://') . $domain . $_SERVER['REQUEST_URI'];
-                        
-                          echo site_url().'<br />';
-                          echo $url.'<br />';exit;
                         ?>
                         <a class="nav-link <?php if(site_url() == $url){ echo 'active'; } ?>" aria-current="page" href="<?= site_url(); ?>">Home</a>
                       </li>
