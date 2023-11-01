@@ -738,7 +738,6 @@ class Pay extends MY_Shop_Controller
     public function order_received($id = null, $hash = null)
     {
         if ($inv = $this->shop_model->getOrder(['id' => $id])) {
-            echo 'order received...';exit;
             $user     = $inv->created_by ? $this->site->getUser($inv->created_by) : null;
             $customer = $this->site->getCompanyByID($inv->customer_id);
             $biller   = $this->site->getCompanyByID($inv->biller_id);
@@ -791,6 +790,7 @@ class Pay extends MY_Shop_Controller
             }
             $cc[]      = $biller->email;*/
             $warehouse = $this->site->getWarehouseByID($inv->warehouse_id);
+            echo 'here till warehouse....';exit;
             /*if ($warehouse->email) {
                 $cc[] = $warehouse->email;
             }*/
