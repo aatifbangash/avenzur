@@ -528,9 +528,6 @@ class Pay extends MY_Shop_Controller
                         }
               */          
             if ($inv = $this->pay_model->getSaleByID($invoice_no)) {
-                echo '<pre>';
-                print_r($inv);
-                exit;
                 $payment = [
                     'date'           => date('Y-m-d H:i:s'),
                     'sale_id'        => $invoice_no,
