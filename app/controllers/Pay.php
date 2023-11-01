@@ -681,7 +681,7 @@ class Pay extends MY_Shop_Controller
                         /* Shipway Order Generation Ends */
                     }
 
-                    $email = $this->order_received($invoice_no);
+                    //$email = $this->order_received($invoice_no);
                     $this->sma->log_payment('SUCCESS', 'Payment has been made for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));
                     $this->session->set_flashdata('message', lang('payment_added'));
                     
@@ -692,6 +692,7 @@ class Pay extends MY_Shop_Controller
                 $this->session->set_flashdata('error', lang('payment_failed'));
         }
 
+        echo 'reached here';exit;
         if ($inv->shop) {
             shop_redirect('orders/' . $inv->id . '/' . ($this->loggedIn ? '' : $inv->hash));
         }
