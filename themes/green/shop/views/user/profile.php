@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<section class="page-contents">
+<section class="page-contents" id="user-profile">
     <div class="container">
         <div class="row">
             <div class="col-xs-12">
