@@ -136,7 +136,6 @@ class Main extends MY_Shop_Controller
         $this->data['slider']            = json_decode($this->shop_settings->slider);
         $this->data['page_title']        = $this->shop_settings->shop_name;
         $this->data['page_desc']         = $this->shop_settings->description;
-        $this->data['current_uri'] = $this->uri->uri_string();
         $this->page_construct('index', $this->data);
     }
 

@@ -228,9 +228,9 @@
                       <li class="nav-item">
                         <?php 
                           echo site_url().'<br />';
-                          echo $current_uri.'<br />';exit;
+                          echo $_SERVER['REQUEST_URI'].'<br />';exit;
                         ?>
-                        <a class="nav-link <?php if(site_url() == $current_uri){ echo 'active'; } ?>" aria-current="page" href="<?= site_url(); ?>">Home</a>
+                        <a class="nav-link <?php if(site_url() == $_SERVER['REQUEST_URI']){ echo 'active'; } ?>" aria-current="page" href="<?= site_url(); ?>">Home</a>
                       </li>
                       <li class="nav-item">
                         <a class="nav-link"  href="<?= site_url('shop/products'); ?>">Products</a>
