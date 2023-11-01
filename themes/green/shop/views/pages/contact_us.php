@@ -44,7 +44,7 @@
                   ?>
                 </div>
                 <?php echo form_hidden('formSubmitted', '1'); ?>
-                <?php echo form_submit('submit', 'Submit', 'class="btn btn-primary"'); ?>
+                <?php echo form_submit('submit', 'Submit', 'class="btn btn-lg btn-primary"'); ?>
                 <?php echo form_close(); ?>
               </div>
             </div>
