@@ -21,7 +21,7 @@
                 ?>
                 <?php echo form_open('page/contact-us', 'class="validate" id="contact-us"'); ?>
                 <div class="form-group">
-                  <label for="type">Type:</label>
+                  <label for="type">Query Type:</label>
                   <?php
                   $options = array(
                     'cancel' => 'Cancel',
@@ -32,7 +32,7 @@
                   ?>
                 </div>
                 <div class="form-group">
-                  <label for="content">Content:</label>
+                  <label for="content">Your Message:</label>
                   <?php
                   $textarea_data = array(
                     'name' => 'content',
