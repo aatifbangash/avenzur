@@ -234,13 +234,13 @@
                         <a class="nav-link <?php if(site_url() == $url){ echo 'active'; } ?>" aria-current="page" href="<?= site_url(); ?>">Home</a>
                       </li>
                       <li class="nav-item">
-                        <a class="nav-link"  href="<?= site_url('shop/products'); ?>">Products</a>
+                        <a class="nav-link <?php if(site_url('shop/products') == $url){ echo 'active'; } ?>"  href="<?= site_url('shop/products'); ?>">Products</a>
                       </li>
                       <li class="nav-item">
-                        <a class="nav-link"  href="<?= site_url('shop/page/about-us'); ?>">About</a>
+                        <a class="nav-link <?php if(site_url('shop/page/about-us') == $url){ echo 'active'; } ?>"  href="<?= site_url('shop/page/about-us'); ?>">About</a>
                       </li>
                       <li class="nav-item">
-                        <a class="nav-link"  href="<?= site_url('shop/contact_us'); ?>">Contact</a>
+                        <a class="nav-link <?php if(site_url('shop/contact_us') == $url){ echo 'active'; } ?>"  href="<?= site_url('shop/contact_us'); ?>">Contact</a>
                       </li>
                     
                      <div id="mobnav"> 
