@@ -594,10 +594,10 @@ class Pay extends MY_Shop_Controller
                             'items' => $items_data
                         );
 
-                        //$this->create_oto_order($order);
+                        $this->create_oto_order($order);
                         /* OTO Order Generation Ends */
 
-                        //$this->sendMsegatSMS($address->phone, $inv->id, $customer->name);
+                        $this->sendMsegatSMS($address->phone, $inv->id, $customer->name);
 
                     }else{
                         /* Shipway Order Generation Ends */
@@ -689,7 +689,6 @@ class Pay extends MY_Shop_Controller
                 $this->session->set_flashdata('error', lang('payment_failed'));
         }
 
-        echo 'reached here';exit;
         if ($inv->shop) {
             shop_redirect('orders/' . $inv->id . '/' . ($this->loggedIn ? '' : $inv->hash));
         }
@@ -794,7 +793,8 @@ class Pay extends MY_Shop_Controller
             /*if ($warehouse->email) {
                 $cc[] = $warehouse->email;
             }*/
-            try {
+            $sent = true;
+            /*try {
                 if ($this->sma->send_email(($customer ? $customer->email : $user->email), $subject, $message, null, null, $attachment, $cc, $bcc)) {
                     $this->sma->send_email('ama@pharma.com.sa', 'New Order Generated On Avenzur', $message, null, null, $attachment, $cc, $bcc);
                     delete_files($attachment);
@@ -802,7 +802,7 @@ class Pay extends MY_Shop_Controller
                 }
             } catch (Exception $e) {
                 $error = $e->getMessage();
-            }
+            }*/
             return ['sent' => $sent, 'error' => $error];
         }
     }
