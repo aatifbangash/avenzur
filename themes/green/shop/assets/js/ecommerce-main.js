@@ -538,7 +538,9 @@ $(document).ready(function(){
             showHideTransition: 'slide',
             icon: 'success'
           });
-          (a = t, update_mini_cart(t));
+          //(a = t, update_mini_cart(t));
+          t.error ? sa_alert("Error!", t.message, "error", !0) : (a = t,
+          update_mini_cart(t))
       })
   });
 
