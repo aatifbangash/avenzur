@@ -779,6 +779,7 @@ class Pay extends MY_Shop_Controller
 
             $btn_code .= '<div class="clearfix"></div></div>';
             $message    = $message . $btn_code;
+            echo $message;exit;
             $attachment = $this->orders($id, $hash, true, 'S');
             $subject    = lang('new_order_received');
             $sent       = false;
@@ -790,7 +791,6 @@ class Pay extends MY_Shop_Controller
             }
             $cc[]      = $biller->email;*/
             $warehouse = $this->site->getWarehouseByID($inv->warehouse_id);
-            echo 'here till warehouse....';exit;
             /*if ($warehouse->email) {
                 $cc[] = $warehouse->email;
             }*/
