@@ -515,9 +515,6 @@ class Pay extends MY_Shop_Controller
         $this->sma->log_payment('INFO', 'DirectPay Payment Request', $req);
         $invoice_no = substr($_POST['Response_TransactionID'],13);
         $response_status = $_POST['Response_StatusCode'];
-
-        echo 'Status Code: '.$response_status;
-        exit;
         
         if($response_status == '00000')
         {
@@ -541,6 +538,9 @@ class Pay extends MY_Shop_Controller
                     'type'           => 'received',
                     'note'           => $_POST['Response_CurrencyISOCode'] . ' ' . $_POST['Response_Amount'] . ' had been paid for the Sale Reference No ' . $inv->reference_no,
                 ];
+                echo '<pre>';
+                print_r($payment);
+                exit;
                 if ($this->pay_model->addPayment($payment)) {
                     $address_id = $inv->address_id;
                     $customer = $this->pay_model->getCompanyByID($inv->customer_id);
