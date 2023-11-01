@@ -594,10 +594,10 @@ class Pay extends MY_Shop_Controller
                             'items' => $items_data
                         );
 
-                        $this->create_oto_order($order);
+                        //$this->create_oto_order($order);
                         /* OTO Order Generation Ends */
 
-                        $this->sendMsegatSMS($address->phone, $inv->id, $customer->name);
+                        //$this->sendMsegatSMS($address->phone, $inv->id, $customer->name);
 
                     }else{
                         /* Shipway Order Generation Ends */
