@@ -549,7 +549,7 @@ class Pay extends MY_Shop_Controller
 
                     $delivery_country = $address->country;
                     $lowercase_delivery_country = strtolower($delivery_country);
-
+                    echo 'here we are....';exit;
                     if (strpos($lowercase_delivery_country, 'saudi') > -1 || strpos($lowercase_delivery_country, 'ksa') > -1) {
                         /* OTO Order Generation Starts */
                         $customer_data = array('name' => $customer->name,
@@ -688,8 +688,6 @@ class Pay extends MY_Shop_Controller
                 $this->sma->log_payment('ERROR', 'Payment failed for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));
                 $this->session->set_flashdata('error', lang('payment_failed'));
         }
-
-        echo '<pre>';print_r($inv);exit;
 
         if ($inv->shop) {
             shop_redirect('orders/' . $inv->id . '/' . ($this->loggedIn ? '' : $inv->hash));
