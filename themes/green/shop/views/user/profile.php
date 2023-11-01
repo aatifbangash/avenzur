@@ -15,7 +15,7 @@
                         <div class="tab-content padding-lg white bordered-light" style="margin-top:-1px;">
                             <div role="tabpanel" class="tab-pane fade in active" id="user">
 
-                                <p><?= lang('fill_form'); ?></p>
+                                <!--<p><?php //echo lang('fill_form'); ?></p>-->
                                 <?= form_open('profile/user', 'class="validate" id="user-profile"'); ?>
                                 <div class="row">
                                     <div class="col-md-6">
