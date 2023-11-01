@@ -1127,6 +1127,10 @@ h5{
 }
 form#user-profile .form-group{
   margin: 10px 0;
+  padding: 5px;
+}
+form#user-profile .form-group label{
+  margin-bottom: 10px;
 }
 
 .checkoutbox-k  ul.nav.nav-tabs li {
