@@ -590,7 +590,7 @@
           </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 my-3">
+        <!--<div class="col-lg-3 col-md-6 my-3">
           <div class="card text-center py-2" >
             <h3 class="pt-2"><i class="bi bi-box"></i></h3>
             <div class="card-body">
@@ -599,7 +599,7 @@
              
             </div>
           </div>
-        </div>
+        </div>-->
 
         <div class="col-lg-3 col-md-6 my-3">
           <div class="card text-center py-2">
