@@ -338,7 +338,7 @@ class Shop_model extends CI_Model
                 ->where('products.category_id', $category->id)
                 ->where('hide !=', 1)
                 //->where('products.cf1', $countryId)
-                ->limit(20);
+                ->limit(8);
 
             $sp = $this->getSpecialPrice();
             if ($sp->cgp) {
