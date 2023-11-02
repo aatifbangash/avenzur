@@ -607,8 +607,8 @@
           <div class="card text-center py-2">
             <h3 class="pt-2"><i class="bi bi-box-arrow-up-right"></i></h3>
             <div class="card-body">
-              <h5 class="card-title"><b>Return & Exchange</b></h5>
-              <p class="card-text">You can return or exchange your newly purchased <br />product within 14 days</p>
+              <h5 class="card-title"><b>Easy Return</b></h5>
+              <p class="card-text">You can easily return your newly purchased <br />products within 14 days.</p>
              
             </div>
           </div>
@@ -619,7 +619,7 @@
             <h3 class="pt-2"><i class="bi bi-wallet"></i></h3>
             <div class="card-body">
               <h5 class="card-title"><b>Payments</b></h5>
-              <p class="card-text">We provides secure and multiple method of payments to its customers. VISA, MasterCard, Mada and Apple Pay</p>
+              <p class="card-text">We provides secure and multiple method of payments to customers. VISA, MasterCard, Mada and Apple Pay.</p>
              
             </div>
           </div>
