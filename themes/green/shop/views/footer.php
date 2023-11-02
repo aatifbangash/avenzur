@@ -30,6 +30,8 @@
                   <h6><a href="<?= site_url('category/beauty'); ?>" class="text-dark text-decoration-none"> Beauty</a></h6>
                   <h6><a href="<?= site_url('category/herbal'); ?>" class="text-dark text-decoration-none"> Herbal</a></h6>
                   <h6> <a href="<?= site_url('category/medical'); ?>" class="text-dark text-decoration-none">Medicine</a></h6>
+                  <h6> <a href="<?= site_url('category/mombaby'); ?>" class="text-dark text-decoration-none">Mom & Baby</a></h6>
+                  <h6> <a href="<?= site_url('category/vitamins'); ?>" class="text-dark text-decoration-none">Vitamins</a></h6>
                 </div>
               </div>
 
