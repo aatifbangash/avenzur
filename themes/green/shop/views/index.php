@@ -94,9 +94,9 @@
                       <img src="<?= base_url('assets/images/banners/boomtab1.png'); ?>" alt=""  class="w-100"/>
                     </div>
                     <div class="col-lg-7 col-md-6">
-                      <p class="m-0 py-2"><span class="boom-parag">Get it now 45% OFF</span></p>
-                      <span class="btitle py-3"><span style="font-weight: bold;">Pyridoxine</span> Vitamin B6</span>
-                      <button type="button" class="btn primary-buttonAV mt-4 pt-1">Buy now <i class="bi bi-chevron-right ms-1"></i></button>
+                      <p class="m-0 py-2"><span class="boom-parag"></span></p>
+                      <span class="btitle py-3"><span style="font-weight: bold;">Ghalior</span> Collection</span>
+                      <a href="https://avenzur.com/brand/ghalior-paris"><button type="button" class="btn primary-buttonAV mt-4 pt-1">Buy now <i class="bi bi-chevron-right ms-1"></i></button></a>
 
                     </div>
                   </div>
@@ -130,7 +130,7 @@
                    
                     <div class="col-md-6 pe-md-0">
                       <p class="m-0 py-2"><span class="boom-parag">Get it now 45% OFF</span></p>
-                      <span class="btitle py-3"><span style="font-weight: bold;">Ghalior</span> Collection</span>
+                      <span class="btitle py-3"><span style="font-weight: bold;">Pyridoxine</span> Vitamin B6</span>
                       <button type="button" class="btn primary-buttonAV mt-3 pt-1">Buy now <i class="bi bi-chevron-right ms-1s"></i></button>
 
                     </div>
@@ -147,9 +147,9 @@
                    
                     <div class="col-md-6 p-md-0 boomsale">
                       <span class="bigsale">Big Sale 65% OFF</span>
-                      <p class="m-0 py-2"><span class="boom-parag"></span></p>
+                      <p class="m-0 py-2"><span class="boom-parag">Get it now 45% OFF</span></p>
                       <span class="btitle "><span style="font-weight: bold;">Pyridoxine</span> Vitamin B6, A1, C</span>
-                      <a href="https://avenzur.com/brand/ghalior-paris"><button type="button" class="btn primary-buttonAV mt-3 pt-1">Buy now <i class="bi bi-chevron-right ms-1"></i></button></a>
+                      <button type="button" class="btn primary-buttonAV mt-3 pt-1">Buy now <i class="bi bi-chevron-right ms-1"></i></button>
 
                     </div>
                     <div class="col-md-6">
