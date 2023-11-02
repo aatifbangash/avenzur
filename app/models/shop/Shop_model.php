@@ -360,6 +360,7 @@ class Shop_model extends CI_Model
             $products = $this->db->get('products')->result();
 
             $category->products = $products;
+            $category->name = ucfirst(strtolower($category->name));
         }
 
         return $popular_categories;
