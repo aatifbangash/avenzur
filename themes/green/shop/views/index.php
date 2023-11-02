@@ -619,7 +619,7 @@
             <h3 class="pt-2"><i class="bi bi-wallet"></i></h3>
             <div class="card-body">
               <h5 class="card-title"><b>Payments</b></h5>
-              <p class="card-text">We provides secure and multiple method of payments to its customers. <br />VISA, MasterCard, Mada and Apple Pay</p>
+              <p class="card-text">We provides secure and multiple method of payments to its customers. VISA, MasterCard, Mada and Apple Pay</p>
              
             </div>
           </div>
