@@ -107,9 +107,11 @@
                   <div class="row align-items-center">
                    
                     <div class="col-md-12">
-                      <p class="m-0 py-2"><span class="boom-parag">Get it now 45% OFF</span></p>
-                      <span class="btitle py-3"><span style="font-weight: bold;">Pyridoxine</span> Vitamin B6</span>
-                      <button type="button" class="btn primary-buttonAV mt-3 pt-1">Buy now <i class="bi bi-chevron-right ms-1s"></i></button>
+                      <p class="m-0 py-2"><span class="boom-parag"></span></p>
+                      <span class="btitle py-3"><span style="font-weight: bold;">Artelac</span> Advanced Eye Drops</span>
+                      <a href="https://avenzur.com/product/1110033321">
+                        <button type="button" class="btn primary-buttonAV mt-3 pt-1">Buy now <i class="bi bi-chevron-right ms-1s"></i></button>
+                      </a>
 
                     </div>
                     <div class="col-md-12">
@@ -129,10 +131,11 @@
                   <div class="row ">
                    
                     <div class="col-md-6 pe-md-0">
-                      <p class="m-0 py-2"><span class="boom-parag">Get it now 45% OFF</span></p>
-                      <span class="btitle py-3"><span style="font-weight: bold;">Pyridoxine</span> Vitamin B6</span>
+                      <p class="m-0 py-2"><span class="boom-parag"></span></p>
+                      <span class="btitle py-3"><span style="font-weight: bold;">Laperva</span> Collections</span>
+                      <a href="https://avenzur.com/brand/laperva">
                       <button type="button" class="btn primary-buttonAV mt-3 pt-1">Buy now <i class="bi bi-chevron-right ms-1s"></i></button>
-
+                      </a>
                     </div>
                     <div class="col-md-6 p-0">
 
@@ -146,11 +149,12 @@
                   <div class="row align-items-center">
                    
                     <div class="col-md-6 p-md-0 boomsale">
-                      <span class="bigsale">Big Sale 65% OFF</span>
-                      <p class="m-0 py-2"><span class="boom-parag">Get it now 45% OFF</span></p>
-                      <span class="btitle "><span style="font-weight: bold;">Pyridoxine</span> Vitamin B6, A1, C</span>
+                      <span class="bigsale"></span>
+                      <p class="m-0 py-2"><span class="boom-parag"></span></p>
+                      <span class="btitle "><span style="font-weight: bold;">Mavala Scientifique K+Pro</span> Keratin Nail Hardener 5ml</span>
+                      <a href="https://avenzur.com/product/1210173541">
                       <button type="button" class="btn primary-buttonAV mt-3 pt-1">Buy now <i class="bi bi-chevron-right ms-1"></i></button>
-
+                      </a>
                     </div>
                     <div class="col-md-6">
 
@@ -166,11 +170,12 @@
               <div class="row align-items-center">
                
                 <div class="col-md-12 mb-4">
-                  <span class="bigsale">Big Sale 65% OFF</span>
-                  <p class="m-0 py-2"><span class="boom-parag">Get it now 45% OFF</span></p>
-                  <span class="btitle py-3"><span style="font-weight: bold;">Pyridoxine</span> Vitamin B6</span>
+                  <span class="bigsale"></span>
+                  <p class="m-0 py-2"><span class="boom-parag"></span></p>
+                  <span class="btitle py-3"><span style="font-weight: bold;">Vitamins</span> Collection</span>
+                  <a href="https://avenzur.com/category/vitamins">
                   <button type="button" class="btn primary-buttonAV mt-4 pt-1">Buy now <i class="bi bi-chevron-right ms-1s"></i></button>
-
+                  </a>
                 </div>
                 <div class="col-md-12">
 
@@ -209,7 +214,9 @@
             <div class="px-4">
               <div class="skinareaTitle"><h2 class="fw-bold">Beauty starts from inside</h2></div>
               <div class="skinareatext"><p class="m-0 py-2">Discover our specially formulated products that helps you shine from inside out.</p></div>
+              <a href="https://avenzur.com/category/beauty">
               <button type="button" class="btn primary-buttonAV my-3 py-2 discoverbtn">Discover <i class="bi bi-chevron-right ms-1"></i></button>
+              </a>
             </div>
           </div>
          
