@@ -170,7 +170,7 @@
         $("#register").show();  
     }
 
-    /*var input = document.querySelector("#phone");
+    var input = document.querySelector("#phone");
     window.intlTelInput(input,({
         initialCountry: "<?= trim($country_code); ?>"
     }));
@@ -184,7 +184,7 @@
        });
  
          
-    });*/
+    });
          
 
   </script>
