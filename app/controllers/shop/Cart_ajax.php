@@ -110,6 +110,7 @@ class Cart_ajax extends MY_Shop_Controller
         $this->data['country'] = $this->settings_model->getallCountry();
         $this->data['addresses']  = $this->loggedIn ? $this->shop_model->getAddresses() : false;
         $this->data['page_title'] = lang('checkout');
+        $this->data['all_categories']    = $this->shop_model->getAllCategories();
         $this->page_construct('pages/checkout', $this->data);
     }
 
@@ -133,6 +134,7 @@ class Cart_ajax extends MY_Shop_Controller
             shop_redirect('products');
         }
         $this->data['page_title'] = lang('shopping_cart');
+        $this->data['all_categories']    = $this->shop_model->getAllCategories();
         $this->page_construct('pages/cart', $this->data);
     }
 
