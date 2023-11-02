@@ -27,7 +27,6 @@
               <div class="col-md-2 col-sm-12">
                 <div>
                   <h6><a href="" class="text-dark text-decoration-none" ><b>Our Top Categories</b></a></h6>
-                  <h6><a href="<?= site_url('category/beauty'); ?>" class="text-dark text-decoration-none" >Makeup </a></h6>
                   <h6><a href="<?= site_url('category/beauty'); ?>" class="text-dark text-decoration-none"> Beauty</a></h6>
                   <h6><a href="<?= site_url('category/herbal'); ?>" class="text-dark text-decoration-none"> Herbal</a></h6>
                   <h6> <a href="<?= site_url('category/medical'); ?>" class="text-dark text-decoration-none">Medicine</a></h6>
@@ -49,7 +48,7 @@
                   <h6><a href="" class="text-dark text-decoration-none" ><b>About Us</b></a></h6>
                   <h6><a href="<?= site_url('shop/page/about-us'); ?>" class="text-dark text-decoration-none"> About Avenzur</a></h6>
                   <h6><a href="<?= site_url('shop/contact_us'); ?>" class="text-dark text-decoration-none" >Contact Us </a></h6>
-                  
+                  <h6><a href="<?= site_url('profile'); ?>" class="text-dark text-decoration-none" >My Account </a></h6>
                 </div>
               </div>
             </div>
