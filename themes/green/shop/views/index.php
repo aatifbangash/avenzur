@@ -631,14 +631,12 @@
       <div class="container container-max-width pb-5">
         <div class="widget-bar">
           <div class="brands-logo">
-            <div><img src="<?= base_url('assets/images/banners/beatswell.webp'); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/manu.png'); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/beatswell.webp'); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/manu.png'); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/beatswell.webp'); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/manu.png'); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/beatswell.webp'); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/manu.png'); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/ceraVe.jpg'); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Ghalior-Paris.jpg'); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Jamieson.jpg'); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Johnsons.jpg'); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Laperva.jpg'); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Purever-CANADA.jpg'); ?>" alt="-" class="w-100"> </div>
           </div>
         </div>
       </div>
