@@ -276,12 +276,12 @@
                                                     </a>
                                                     <div class="row align-items-center justify-content-between">
                                                         <div class="col-md-6">
-                                                            <div class="rating">
+                                                            <!--<div class="rating">
                                                                 <i class="bi bi-star-fill rated"></i>
                                                                 <i class="bi bi-star-fill rated"></i>
                                                                 <i class="bi bi-star-fill rated"></i>
                                                                 <i class="bi bi-star-fill"></i>
-                                                            </div>
+                                                            </div>-->
                                                         </div>
                                                         <?php
                                                             if ($popular_product->promotion) {
@@ -404,13 +404,13 @@
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
                             <div class="row align-items-center justify-content-between">
                                 <div class="col-md-6">
-                                <div class="rating">
+                                <!--<div class="rating">
                                     <i class="bi bi-star-fill rated"></i>
                                     <i class="bi bi-star-fill rated"></i>
                                     <i class="bi bi-star-fill rated"></i>
                                     <i class="bi bi-star-fill"></i>
                                     
-                                </div>
+                                </div>-->
                                 </div>
                                 <?php
                                 if ($sp->promotion) {
@@ -585,7 +585,7 @@
           <div class="card text-center py-2" >
             <h3 class="pt-2 fw-bolder"><i class="bi bi-telephone-forward-fill"></i></h3>
             <div class="card-body">
-              <h5 class="card-title">Help & Support</h5>
+              <h5 class="card-title"><b>Help & Support</b></h5>
               <p class="card-text">For inquires and support. Please contact us.</p>
              
             </div>
@@ -607,7 +607,7 @@
           <div class="card text-center py-2">
             <h3 class="pt-2"><i class="bi bi-box-arrow-up-right"></i></h3>
             <div class="card-body">
-              <h5 class="card-title">Return & Exchange</h5>
+              <h5 class="card-title"><b>Return & Exchange</b></h5>
               <p class="card-text">You can return or exchange your newly purchased product within 14 days</p>
              
             </div>
@@ -618,8 +618,8 @@
           <div class="card text-center py-2" >
             <h3 class="pt-2"><i class="bi bi-wallet"></i></h3>
             <div class="card-body">
-              <h5 class="card-title">Payments</h5>
-              <p class="card-text">We provides secure and multiple method of payments to its customers. VISA, MasterCard, Apply Pay with Card on Delivery</p>
+              <h5 class="card-title"><b>Payments</b></h5>
+              <p class="card-text">We provides secure and multiple method of payments to its customers. VISA, MasterCard, Mada, Apple Pay and Cash on Delivery</p>
              
             </div>
           </div>
