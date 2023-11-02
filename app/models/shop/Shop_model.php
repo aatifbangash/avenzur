@@ -349,7 +349,7 @@ class Shop_model extends CI_Model
             if ($promo) {
                 $this->db->order_by('promotion desc');
             }
-            $this->db->order_by('RAND()');
+            $this->db->order_by('id desc');
             $products = $this->db->get('products')->result();
 
             $category->products = $products;
