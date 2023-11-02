@@ -809,7 +809,6 @@ class Pay extends MY_Shop_Controller
     // Customer order/orders page
     public function orders($id = null, $hash = null, $pdf = null, $buffer_save = null)
     {
-        echo 'We are here';exit;
         $hash = $hash ? $hash : $this->input->get('hash', true);
         if ($id && !$pdf) {
             if ($order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash])) {
