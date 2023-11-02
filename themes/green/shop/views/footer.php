@@ -26,7 +26,7 @@
               </div>
               <div class="col-md-2 col-sm-12">
                 <div>
-                  <h6><a href="<?= site_url('shop/page/not-healthcare-advice'); ?>" class="text-dark text-decoration-none" >Not healthcare </a></h6>
+                  <h6><a href="<?= site_url('shop/contact_us'); ?>" class="text-dark text-decoration-none" >Contact Us </a></h6>
                   <h6><a href="<?= site_url('shop/page/about-us'); ?>" class="text-dark text-decoration-none"> About</a></h6>
                   <h6><a href="<?= site_url('shop/page/privacy-policy'); ?>" class="text-dark text-decoration-none"> Privacy Policy</a></h6>
                   <h6> <a href="<?= site_url('shop/page/Terms-Conditions'); ?>" class="text-dark text-decoration-none">Terms & Conditions</a></h6>
