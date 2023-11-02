@@ -157,26 +157,23 @@
 </section>
  <script>
     // Vanilla Javascript
+
+    function LoginFn(){ 
+        $(".register").hide();
+        $("#register").hide();
+        $(".loginform").show();
+    }
+    
+    function registerBtn(){
+        $(".loginform").hide();
+        $(".register").show();
+        $("#register").show();  
+    }
+
     var input = document.querySelector("#phone");
     window.intlTelInput(input,({
         initialCountry: "<?= trim($country_code); ?>"
     }));
-function LoginFn(){
-             
-         
-                  $(".register").hide();
-                    $("#register").hide();
-                  $(".loginform").show();
-     
-           
-}
-function registerBtn(){
-     $(".loginform").hide();
-                $(".register").show();
-                    $("#register").show();
-                 
-}
-
 
     $(document).ready(function() {
         $('.iti__flag-container').click(function() { 
