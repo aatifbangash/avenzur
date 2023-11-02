@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <section class="page-contents">
-    <div class="container">
+    <div class="container container-max-width order-page-k">
         <div class="row">
             <div class="col-xs-12">
 
@@ -62,16 +62,16 @@
                                     }
                                     echo '</div>'; ?>
                                       
-                                    <!--<div class="row" style="margin-top:15px;">
+                                    <div class="row" style="margin-top:15px;">
                                         <div class="col-md-6">
                                             <span class="page-info line-height-xl hidden-xs hidden-sm">
-                                                <?php //echo str_replace(['_page_', '_total_'], [$page_info['page'], $page_info['total']], lang('page_info')); ?>
+                                                <?= str_replace(['_page_', '_total_'], [$page_info['page'], $page_info['total']], lang('page_info')); ?>
                                             </span>
                                         </div>
                                         <div class="col-md-6">
-                                        <div id="pagination" class="pagination-right"><?php //echo $pagination; ?></div>
+                                        <div id="pagination" class="pagination-right"><?= $pagination; ?></div>
                                         </div>
-                                    </div>-->
+                                    </div>
                                     <?php
                                 } else {
                                     echo '<strong>' . lang('no_data_to_display') . '</strong>';
