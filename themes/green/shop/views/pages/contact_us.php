@@ -7,7 +7,7 @@
         <div class="row">
           <div class="col-sm-9 col-md-10">
             <div class="panel panel-default margin-top-lg checkLeftCol-k">
-              <div class="panel-heading text-bold" id="contact-us-heading">
+              <div class="panel-heading text-bold">
                 <i class="bi bi-person-fill"></i>
                 <?= $title; ?>
               </div>
