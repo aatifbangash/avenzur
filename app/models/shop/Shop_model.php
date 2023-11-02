@@ -153,7 +153,13 @@ class Shop_model extends CI_Model
             $this->db->having('product_count >', 0);
         }
         $this->db->group_start()->where('parent_id', null)->or_where('parent_id', 0)->group_end()->order_by('name');
-        return $this->db->get('categories')->result();
+        $categories = $this->db->get('categories')->result();
+
+        foreach ($categories as $category) {
+            $category->name = ucfirst(strtolower($category->name));
+        }
+    
+        return $categories;
     }
 
     public function getAllCurrencies()
