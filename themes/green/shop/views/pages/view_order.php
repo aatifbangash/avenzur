@@ -1,11 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <section class="page-contents">
-    <div class="container">
+    <div class="container container-max-width orderView-page-k">
         <div class="row">
             <div class="col-xs-12">
 
                 <div class="row">
-                    <div class="col-sm-9 col-md-10">
+                    <div class="col-sm-12 col-md-12">
 
                         <div class="panel panel-default margin-top-lg">
                             <div class="panel-heading text-bold">
@@ -14,89 +14,91 @@
                             <a href="<?= shop_url('orders?download=' . $inv->id . ($this->loggedIn ? '' : '&hash=' . $inv->hash)); ?>" class="pull-right" style="margin-right:10px;"><i class="fa fa-download"></i> <?= lang('download'); ?></a>
                             </div>
                             <div class="panel-body mprint">
-
-                                <div class="text-center biller-header print" style="margin-bottom:20px;">
-                                    <img src="<?= base_url() . 'assets/uploads/logos/' . $biller->logo; ?>"
-                                    alt="<?= $biller->company                         && $biller->company != '-' ? $biller->company : $biller->name; ?>">
-                                    <h2 style="margin-top:10px;"><?= $biller->company && $biller->company != '-' ? $biller->company : $biller->name; ?></h2>
-                                    <?= $biller->company ? '' : 'Attn: ' . $biller->name ?>
-
-                                    <?php
-                                    echo $biller->address . ' ' . $biller->city . ' ' . $biller->postal_code . ' ' . $biller->state . ' ' . $biller->country;
-
-                                    echo '<br>';
-
-                                    if ($biller->vat_no != '-' && $biller->vat_no != '') {
-                                        echo lang('vat_no') . ': ' . $biller->vat_no;
-                                    }
-                                    if ($biller->cf1 != '-' && $biller->cf1 != '') {
-                                        echo ', ' . lang('bcf1') . ': ' . $biller->cf1;
-                                    }
-                                    if ($biller->cf2 != '-' && $biller->cf2 != '') {
-                                        echo ', ' . lang('bcf2') . ': ' . $biller->cf2;
-                                    }
-                                    if ($biller->cf3 != '-' && $biller->cf3 != '') {
-                                        echo ', ' . lang('bcf3') . ': ' . $biller->cf3;
-                                    }
-                                    if ($biller->cf4 != '-' && $biller->cf4 != '') {
-                                        echo ', ' . lang('bcf4') . ': ' . $biller->cf4;
-                                    }
-                                    if ($biller->cf5 != '-' && $biller->cf5 != '') {
-                                        echo ', ' . lang('bcf5') . ': ' . $biller->cf5;
-                                    }
-                                    if ($biller->cf6 != '-' && $biller->cf6 != '') {
-                                        echo ', ' . lang('bcf6') . ': ' . $biller->cf6;
-                                    }
-
-                                    echo '<br>';
-                                    echo lang('tel') . ': ' . $biller->phone . ' ' . lang('email') . ': ' . $biller->email;
-                                    ?>
-                                </div>
-
-                                <div class="well well-sm">
-                                    <div class="row bold">
-                                        <div class="col-xs-5">
-                                            <p style="margin-bottom:0;">
-                                                <?= lang('date'); ?>: <?= $this->sma->hrld($inv->date); ?><br>
-                                                <?= lang('ref'); ?>: <?= $inv->reference_no; ?><br>
-                                                <?php if (!empty($inv->return_sale_ref)) {
-                                                    echo lang('return_ref') . ': ' . $inv->return_sale_ref;
-                                                    if ($inv->return_id) {
-                                                        echo ' <a data-target="#myModal2" data-toggle="modal" href="' . admin_url('sales/modal_view/' . $inv->return_id) . '"><i class="fa fa-external-link no-print"></i></a><br>';
-                                                    } else {
-                                                        echo '<br>';
-                                                    }
-                                                } ?>
-                                                <?= lang('sale_status'); ?>: <?= lang($inv->sale_status); ?><br>
-                                                <?= lang('payment_status'); ?>: <?= lang($inv->payment_status); ?><br>
-                                                <?= lang('payment_method'); ?>: <?= lang($inv->payment_method); ?>
-                                            </p>
-                                        </div>
-                                        <div class="col-xs-7 text-right order_barcodes">
-                                            <img src="<?= admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1'); ?>" alt="<?= $inv->reference_no; ?>" class="bcimg" />
-                                            <?php
-                                            if ($Settings->ksa_qrcode) {
-                                                $qrtext = $this->inv_qrcode->base64([
-                                                    'seller'           => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
-                                                    'vat_no'           => $biller->vat_no ?: $biller->get_no,
-                                                    'date'             => $inv->date,
-                                                    'grand_total'      => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
-                                                    'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
-                                                ]);
-                                                echo $this->sma->qrcode('text', $qrtext, 2);
-                                            } else {
-                                                echo $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
-                                            }
-                                            ?>
+                                <div class="row billinfo-k1">
+                                  
+                                    <div class="text-left biller-header print col-md-6 mb-0" style="margin-bottom:20px;">
+                                        <img src="<?= base_url() . 'assets/uploads/logos/' . $biller->logo; ?>"
+                                        alt="<?= $biller->company                         && $biller->company != '-' ? $biller->company : $biller->name; ?>">
+                                        <h2 style="margin-top:10px;"><?= $biller->company && $biller->company != '-' ? $biller->company : $biller->name; ?></h2>
+                                        <?= $biller->company ? '' : 'Attn: ' . $biller->name ?>
+    
+                                        <?php
+                                        echo $biller->address . ' ' . $biller->city . ' ' . $biller->postal_code . ' ' . $biller->state . ' ' . $biller->country;
+    
+                                        echo '<br>';
+    
+                                        if ($biller->vat_no != '-' && $biller->vat_no != '') {
+                                            echo lang('vat_no') . ': ' . $biller->vat_no;
+                                        }
+                                        if ($biller->cf1 != '-' && $biller->cf1 != '') {
+                                            echo ', ' . lang('bcf1') . ': ' . $biller->cf1;
+                                        }
+                                        if ($biller->cf2 != '-' && $biller->cf2 != '') {
+                                            echo ', ' . lang('bcf2') . ': ' . $biller->cf2;
+                                        }
+                                        if ($biller->cf3 != '-' && $biller->cf3 != '') {
+                                            echo ', ' . lang('bcf3') . ': ' . $biller->cf3;
+                                        }
+                                        if ($biller->cf4 != '-' && $biller->cf4 != '') {
+                                            echo ', ' . lang('bcf4') . ': ' . $biller->cf4;
+                                        }
+                                        if ($biller->cf5 != '-' && $biller->cf5 != '') {
+                                            echo ', ' . lang('bcf5') . ': ' . $biller->cf5;
+                                        }
+                                        if ($biller->cf6 != '-' && $biller->cf6 != '') {
+                                            echo ', ' . lang('bcf6') . ': ' . $biller->cf6;
+                                        }
+    
+                                        echo '<br>';
+                                        echo lang('tel') . ': ' . $biller->phone . ' ' . lang('email') . ': ' . $biller->email;
+                                        ?>
+                                    </div>
+    
+                                    <div class="well well-sm col-md-6">
+                                        <div class="row bold justify-content-end">
+                                            <div class="col-xs-5 w-auto ">
+                                                <p style="margin-bottom:0;">
+                                                    <?= lang('date'); ?>: <?= $this->sma->hrld($inv->date); ?><br>
+                                                    <?= lang('ref'); ?>: <?= $inv->reference_no; ?><br>
+                                                    <?php if (!empty($inv->return_sale_ref)) {
+                                                        echo lang('return_ref') . ': ' . $inv->return_sale_ref;
+                                                        if ($inv->return_id) {
+                                                            echo ' <a data-target="#myModal2" data-toggle="modal" href="' . admin_url('sales/modal_view/' . $inv->return_id) . '"><i class="fa fa-external-link no-print"></i></a><br>';
+                                                        } else {
+                                                            echo '<br>';
+                                                        }
+                                                    } ?>
+                                                    <?= lang('sale_status'); ?>: <?= lang($inv->sale_status); ?><br>
+                                                    <?= lang('payment_status'); ?>: <?= lang($inv->payment_status); ?><br>
+                                                    <?= lang('payment_method'); ?>: <?= lang($inv->payment_method); ?>
+                                                </p>
+                                            </div>
+                                            <div class="col-xs-7 text-right order_barcodes text-end w-auto">
+                                                <img src="<?= admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1'); ?>" alt="<?= $inv->reference_no; ?>" class="bcimg" />
+                                                <?php
+                                                if ($Settings->ksa_qrcode) {
+                                                    $qrtext = $this->inv_qrcode->base64([
+                                                        'seller'           => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+                                                        'vat_no'           => $biller->vat_no ?: $biller->get_no,
+                                                        'date'             => $inv->date,
+                                                        'grand_total'      => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
+                                                        'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
+                                                    ]);
+                                                    echo $this->sma->qrcode('text', $qrtext, 2);
+                                                } else {
+                                                    echo $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
+                                                }
+                                                ?>
+                                            </div>
+                                            <div class="clearfix"></div>
                                         </div>
                                         <div class="clearfix"></div>
                                     </div>
-                                    <div class="clearfix"></div>
                                 </div>
 
-                                <div class="row" style="margin-bottom:15px;">
+                                <div class="row billin-k2" style="margin-bottom:15px;">
 
-                                    <div class="col-xs-6">
+                                    <div class="col-md-6">
                                         <?php echo $this->lang->line('billing'); ?>:<br/>
                                         <h2 style="margin-top:10px;"><?= $customer->company && $customer->company != '-' ? $customer->company : $customer->name; ?></h2>
                                         <?= $customer->company ? '' : 'Attn: ' . $customer->name ?>
@@ -134,7 +136,7 @@
                                     </div>
                                     <?php if ($address) {
                                         ?>
-                                    <div class="col-xs-6">
+                                    <div class="col-md-6">
                                         <?php echo $this->lang->line('shipping'); ?>:
                                         <h2 style="margin-top:10px;"><?= $customer->company && $customer->company != '-' ? $customer->company : $customer->name; ?></h2>
                                         <?= $customer->company ? '' : 'Attn: ' . $customer->name ?>
@@ -190,7 +192,7 @@
                                                 <td style="vertical-align:middle;">
                                                     <?= $row->product_code . ' - ' . $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
                                                     <?= $row->second_name ? '<br>' . $row->second_name : ''; ?>
-                                                    <?php //echo $row->details ? '<br>' . $row->details : ''; ?>
+                                                    <?= $row->details ? '<br>' . $row->details : ''; ?>
                                                     <?= $row->serial_no ? '<br>' . $row->serial_no : ''; ?>
                                                 </td>
                                                 <?php if ($Settings->indian_gst) {
