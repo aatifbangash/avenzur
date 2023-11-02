@@ -648,7 +648,7 @@
       <div class="container container-max-width py-5" style="background-image: url(<?= base_url('assets/images/banners/bgbanner.jpg'); ?>);">
         <div class="text-center">
           <h2>Join our newsletter</h2>
-          <p>Join over newsletter and get our latest deals, articles, and resources!</p>
+          <p>Join our newsletter and get latest deals, articles, and resources!</p>
           <form class="d-flex search-bar w-50 mx-auto" role="search">
               
             
