@@ -37,8 +37,7 @@
               <div class="col-md-2 col-sm-12">
                 <div>
                   <h6><a href="" class="text-dark text-decoration-none" ><b>Store Policies</b></a></h6>
-                  <h6><a href="<?= site_url('shop/contact_us'); ?>" class="text-dark text-decoration-none" >Contact Us </a></h6>
-                  <h6><a href="<?= site_url('shop/page/about-us'); ?>" class="text-dark text-decoration-none"> About</a></h6>
+                  
                   <h6><a href="<?= site_url('shop/page/privacy-policy'); ?>" class="text-dark text-decoration-none"> Privacy Policy</a></h6>
                   <h6> <a href="<?= site_url('shop/page/Terms-Conditions'); ?>" class="text-dark text-decoration-none">Terms & Conditions</a></h6>
                   <h6> <a href="<?= site_url('shop/page/exchange-return-policy'); ?>" class="text-dark text-decoration-none">Refund & Return</a></h6>
@@ -47,8 +46,10 @@
               
               <div class="col-md-2 col-sm-12">
                 <div class="footer-icons">
-                  <h6><a href="" class="text-dark text-decoration-none" ><b>Request a Demo</b></a></h6>
-                 
+                  <h6><a href="" class="text-dark text-decoration-none" ><b>About Us</b></a></h6>
+                  <h6><a href="<?= site_url('shop/page/about-us'); ?>" class="text-dark text-decoration-none"> About Avenzur</a></h6>
+                  <h6><a href="<?= site_url('shop/contact_us'); ?>" class="text-dark text-decoration-none" >Contact Us </a></h6>
+                  
                 </div>
               </div>
             </div>
