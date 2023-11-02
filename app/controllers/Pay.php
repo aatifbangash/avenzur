@@ -811,6 +811,7 @@ class Pay extends MY_Shop_Controller
     {
         $hash = $hash ? $hash : $this->input->get('hash', true);
         if ($id && !$pdf) {
+            echo 'Here Id is not null...';exit;
             if ($order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash])) {
                 $this->load->library('inv_qrcode');
                 $this->data['inv']         = $order;
