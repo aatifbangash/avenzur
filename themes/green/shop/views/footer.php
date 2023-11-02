@@ -42,6 +42,7 @@
                   <h6><a href="<?= site_url('shop/page/privacy-policy'); ?>" class="text-dark text-decoration-none"> Privacy Policy</a></h6>
                   <h6> <a href="<?= site_url('shop/page/Terms-Conditions'); ?>" class="text-dark text-decoration-none">Terms & Conditions</a></h6>
                   <h6> <a href="<?= site_url('shop/page/exchange-return-policy'); ?>" class="text-dark text-decoration-none">Refund & Return</a></h6>
+                  <h6> <a href="<?= site_url('shop/page/delivery'); ?>" class="text-dark text-decoration-none">Delivery Information</a></h6>
                 </div>
               </div>
               
