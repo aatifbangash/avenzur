@@ -235,6 +235,7 @@ class Main extends MY_Shop_Controller
             $this->data['page_desc']  = $this->shop_settings->description;
             $this->data['country'] = $this->shop_model->getallCountryR();
             $this->data['country_code'] = $country_code;
+            $this->data['all_categories']    = $this->shop_model->getAllCategories();
             if ($this->shop_settings->private) {
                 $this->data['message']       = $data['message'] ?? $this->session->flashdata('message');
                 $this->data['error']         = isset($this->data['error']) ? $this->data['error'] : $this->session->flashdata('error');
