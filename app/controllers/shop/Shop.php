@@ -950,6 +950,7 @@ class Shop extends MY_Shop_Controller
 
         $this->data['page_title'] = "Contact Us";
         $this->data['title'] = "Contact Us";
+        $this->data['all_categories']    = $this->shop_model->getAllCategories();
         $this->page_construct('pages/contact_us', $this->data);
         $this->session->unset_userdata('success_message');
     }
@@ -964,6 +965,7 @@ class Shop extends MY_Shop_Controller
         $this->data['page']       = $page;
         $this->data['page_title'] = $page->title;
         $this->data['page_desc']  = $page->description;
+        $this->data['all_categories']    = $this->shop_model->getAllCategories();
 
 
         $this->page_construct('pages/page', $this->data);
