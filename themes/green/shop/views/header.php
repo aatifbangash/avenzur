@@ -237,6 +237,9 @@
                         <a class="nav-link <?php if(site_url('shop/products') == $url){ echo 'active'; } ?>"  href="<?= site_url('shop/products'); ?>">Products</a>
                       </li>
                       <li class="nav-item">
+                        <a class="nav-link <?php if(site_url('shop/products?promo=yes') == $url){ echo 'active'; } ?>"  href="<?= site_url('shop/products?promo=yes'); ?>">Promotions</a>
+                      </li>
+                      <li class="nav-item">
                         <a class="nav-link <?php if(site_url('shop/page/about-us') == $url){ echo 'active'; } ?>"  href="<?= site_url('shop/page/about-us'); ?>">About</a>
                       </li>
                       <li class="nav-item">
