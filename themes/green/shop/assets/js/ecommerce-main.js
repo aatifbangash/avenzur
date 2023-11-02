@@ -531,16 +531,18 @@ $(document).ready(function(){
       }).done(function(t) {
           //t.error ? sa_alert("Error!", t.message, "error", !0) : (a = t,
           //update_mini_cart(t))
+          
+          //(a = t, update_mini_cart(t));
+          t.error ? sa_alert("Error!", t.message, "error", !0) : (a = t,
+          update_mini_cart(t),
           $.toast({
             heading: 'Success',
             text: 'Product Added To The Cart.',
             position: 'top-right',
             showHideTransition: 'slide',
             icon: 'success'
-          });
-          //(a = t, update_mini_cart(t));
-          t.error ? sa_alert("Error!", t.message, "error", !0) : (a = t,
-          update_mini_cart(t))
+          })
+          )
       })
   });
 
