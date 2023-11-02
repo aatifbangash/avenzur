@@ -355,6 +355,7 @@ class Main extends MY_Shop_Controller
         $this->data['user']              = $this->site->getUser();
         $this->data['page_title']        = lang('profile');
         $this->data['page_desc']         = $this->shop_settings->description;
+        $this->data['all_categories']    = $this->shop_model->getAllCategories();
         $this->page_construct('user/profile', $this->data);
     }
 

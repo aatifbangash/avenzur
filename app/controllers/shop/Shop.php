@@ -889,6 +889,7 @@ class Shop extends MY_Shop_Controller
                 $this->config->load('payment_gateways');
                 $this->data['stripe_secret_key']      = $this->config->item('stripe_secret_key');
                 $this->data['stripe_publishable_key'] = $this->config->item('stripe_publishable_key');
+                $this->data['all_categories']    = $this->shop_model->getAllCategories();
                 $this->page_construct('pages/view_order', $this->data);
             } else {
                 $this->session->set_flashdata('error', lang('access_denied'));
@@ -907,6 +908,7 @@ class Shop extends MY_Shop_Controller
             $this->data['return_sale']   = $order->return_id ? $this->shop_model->getOrder(['id' => $id]) : null;
             $this->data['return_rows']   = $order->return_id ? $this->shop_model->getOrderItems($order->return_id) : null;
             $this->data['Settings']      = $this->Settings;
+            $this->data['all_categories']    = $this->shop_model->getAllCategories();
             $this->data['shop_settings'] = $this->shop_settings;
             $html                        = $this->load->view($this->Settings->theme . '/shop/views/pages/pdf_invoice', $this->data, true);
             if ($this->input->get('view')) {
@@ -931,6 +933,7 @@ class Shop extends MY_Shop_Controller
             $this->data['page_info']  = ['page' => $page, 'total' => ceil($total_rows / $limit)];
             $this->data['page_title'] = lang('my_orders');
             $this->data['page_desc']  = '';
+            $this->data['all_categories']    = $this->shop_model->getAllCategories();
             $this->page_construct('pages/orders', $this->data);
         }
     }
