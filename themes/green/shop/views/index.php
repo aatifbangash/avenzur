@@ -652,7 +652,7 @@
           <form class="d-flex search-bar w-50 mx-auto" role="search">
               
             
-              <input class="form-control border-0 bg-white py-3 ps-5" type="search" placeholder="What are you looking for?" aria-label="Search">
+              <input class="form-control border-0 bg-white py-3 ps-5" type="search" placeholder="Subscribe to our newsletters?" aria-label="Search">
               <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
             </form>
         </div>
