@@ -269,6 +269,8 @@ class Shop_model extends CI_Model
         foreach ($categories as $category) {
             $category->name = ucfirst(strtolower($category->name));
         }
+
+        echo '<pre>';print_r($categories);exit;
     
         return $categories;
     }

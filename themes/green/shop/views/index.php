@@ -95,7 +95,7 @@
                     </div>
                     <div class="col-lg-7 col-md-6">
                       <p class="m-0 py-2"><span class="boom-parag"></span></p>
-                      <span class="btitle py-3"><span style="font-weight: bold;">Ghalior</span> Collection</span>
+                      <span class="btitle py-3"><span style="font-weight: bold;">Gha'lior</span> Collection</span>
                       <a href="https://avenzur.com/brand/ghalior-paris"><button type="button" class="btn primary-buttonAV mt-4 pt-1">Buy now <i class="bi bi-chevron-right ms-1"></i></button></a>
 
                     </div>
