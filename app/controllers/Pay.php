@@ -853,7 +853,6 @@ class Pay extends MY_Shop_Controller
                 exit;
             }
             $name = lang('invoice') . '_' . str_replace('/', '_', $order->reference_no) . '.pdf';
-            echo $name;exit;
             if ($buffer_save) {
                 return $this->sma->generate_pdf($html, $name, $buffer_save, $this->data['biller']->invoice_footer);
             }
