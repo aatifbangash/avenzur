@@ -648,11 +648,11 @@
       <div class="container container-max-width py-5" style="background-image: url(<?= base_url('assets/images/banners/bgbanner.jpg'); ?>);">
         <div class="text-center">
           <h2>Join our newsletter</h2>
-          <p>Join over half a million vitamin lovers and get our latest deals, articles, and resources!</p>
+          <p>Join over newsletter and get our latest deals, articles, and resources!</p>
           <form class="d-flex search-bar w-50 mx-auto" role="search">
               
             
-              <input class="form-control border-0 bg-white py-3 ps-5" type="search" placeholder="Subscribe to our newsletters?" aria-label="Search">
+              <input class="form-control border-0 bg-white py-3 ps-5" type="search" placeholder="Subscribe to our newsletter?" aria-label="Search">
               <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
             </form>
         </div>
