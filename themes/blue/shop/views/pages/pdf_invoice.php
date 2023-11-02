@@ -63,7 +63,7 @@
                         //'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
                         //'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
                     ]);
-                    echo $this->sma->qrcode('text', $qrtext, 2);
+                    //echo $this->sma->qrcode('text', $qrtext, 2);
                     ?>
                 </div>
             </div>
