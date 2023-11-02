@@ -926,11 +926,11 @@ class Shop extends MY_Shop_Controller
             $limit  = 50;
             $offset = ($page * $limit) - $limit;
             $this->load->helper('pagination');
-            $total_rows = $this->shop_model->getOrdersCount();
+            //$total_rows = $this->shop_model->getCustomerOrdersCount();
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
             $this->data['error']      = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
             $this->data['orders']     = $this->shop_model->getOrders($limit, $offset);
-            $this->data['pagination'] = pagination('shop/orders', $total_rows, $limit);
+            //$this->data['pagination'] = pagination('shop/orders', $total_rows, $limit);
             $this->data['page_info']  = ['page' => $page, 'total' => ceil($total_rows / $limit)];
             $this->data['page_title'] = lang('my_orders');
             $this->data['page_desc']  = '';

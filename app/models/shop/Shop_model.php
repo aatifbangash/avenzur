@@ -491,6 +491,12 @@ class Shop_model extends CI_Model
         return $this->db->count_all_results('sales');
     }
 
+    public function getCustomerOrdersCount($customer_id)
+    {
+        $this->db->where('customer_id', $customer_id);
+        return $this->db->count_all_results('sales');
+    }
+
     public function getOtherProducts($id, $category_id, $brand)
     {
         $this->db->select("{$this->db->dbprefix('products')}.id as id, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.slug as slug, {$this->db->dbprefix('products')}.price, quantity, type, promotion, promo_price, start_date, end_date, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug")
