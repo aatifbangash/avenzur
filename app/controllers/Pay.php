@@ -847,10 +847,10 @@ class Pay extends MY_Shop_Controller
             $this->data['Settings']      = $this->Settings;
             $this->data['shop_settings'] = $this->shop_settings;
             $html                        = $this->load->view($this->Settings->theme . '/shop/views/pages/pdf_invoice', $this->data, true);
-            if ($this->input->get('view')) {
+            /*if ($this->input->get('view')) {
                 echo $html;
                 exit;
-            }
+            }*/
             $name = lang('invoice') . '_' . str_replace('/', '_', $order->reference_no) . '.pdf';
             echo $name;exit;
             if ($buffer_save) {
