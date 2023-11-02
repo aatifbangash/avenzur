@@ -923,7 +923,7 @@ class Shop extends MY_Shop_Controller
             $this->sma->generate_pdf($html, $name, false, $this->data['biller']->invoice_footer);
         } elseif (!$id) {
             $page   = $this->input->get('page') ? $this->input->get('page', true) : 1;
-            $limit  = 10;
+            $limit  = 50;
             $offset = ($page * $limit) - $limit;
             $this->load->helper('pagination');
             $total_rows = $this->shop_model->getOrdersCount();
