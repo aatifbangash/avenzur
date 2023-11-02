@@ -327,8 +327,9 @@ class Shop_model extends CI_Model
     {
         $this->db->select("{$this->db->dbprefix('categories')}.id as id, {$this->db->dbprefix('categories')}.name as name, {$this->db->dbprefix('categories')}.code as code, {$this->db->dbprefix('categories')}.image as image, {$this->db->dbprefix('categories')}.slug as slug")
             ->where('categories.popular', 1)
+            ->order_by('id desc')
             ->limit($limit);
-        $popular_categories = $this->db->order_by('id desc')->get('categories')->result();
+        $popular_categories = $this->db->get('categories')->result();
 
         foreach ($popular_categories as $category) {
             $this->db->select("{$this->db->dbprefix('products')}.id as id, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.slug as slug, {$this->db->dbprefix('products')}.price, quantity, type, promotion, promo_price, start_date, end_date, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug")
