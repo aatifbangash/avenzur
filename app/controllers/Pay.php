@@ -834,6 +834,7 @@ class Pay extends MY_Shop_Controller
                 redirect('/');
             }
         } elseif ($pdf || $this->input->get('download')) {
+            echo 'here in second block...';exit;
             $id                          = $pdf ? $id : $this->input->get('download', true);
             $hash                        = $hash ? $hash : $this->input->get('hash', true);
             $order                       = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash]);
@@ -848,7 +849,6 @@ class Pay extends MY_Shop_Controller
             $this->data['shop_settings'] = $this->shop_settings;
             $html                        = $this->load->view($this->Settings->theme . '/shop/views/pages/pdf_invoice', $this->data, true);
             if ($this->input->get('view')) {
-                echo 'here we are in printing the html....';
                 echo $html;
                 exit;
             }
