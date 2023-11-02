@@ -69,8 +69,6 @@
                                         <div class="form-group">
                                         <?= lang('Country', 'Country'); ?>
                                         <select class="form-control" id="country" name="country" >
-                                       
-                                        <option value="AE">AE</option>
                                         <option value="">Select Country</option>
                                         <?php
                                             foreach($country as $country)
