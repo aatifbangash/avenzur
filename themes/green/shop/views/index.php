@@ -579,7 +579,7 @@
     <section class="widgets">
       <div class="container container-max-width py-4">
       <div class="row">
-        <div class="col-lg-3 col-md-6 my-3">
+        <div class="col-lg-4 col-md-6 my-4">
           <div class="card text-center py-2" >
             <h3 class="pt-2 fw-bolder"><i class="bi bi-telephone-forward-fill"></i></h3>
             <div class="card-body">
@@ -601,7 +601,7 @@
           </div>
         </div>-->
 
-        <div class="col-lg-3 col-md-6 my-3">
+        <div class="col-lg-4 col-md-6 my-4">
           <div class="card text-center py-2">
             <h3 class="pt-2"><i class="bi bi-box-arrow-up-right"></i></h3>
             <div class="card-body">
@@ -612,7 +612,7 @@
           </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 my-3">
+        <div class="col-lg-4 col-md-6 my-4">
           <div class="card text-center py-2" >
             <h3 class="pt-2"><i class="bi bi-wallet"></i></h3>
             <div class="card-body">
