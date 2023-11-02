@@ -78,6 +78,7 @@ class Shop extends MY_Shop_Controller
         $this->data['addresses']  = $this->shop_model->getAddresses();
         $this->data['page_title'] = lang('my_addresses');
         $this->data['page_desc']  = '';
+        $this->data['all_categories']    = $this->shop_model->getAllCategories();
         $this->page_construct('pages/addresses', $this->data);
     }
 
