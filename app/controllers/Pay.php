@@ -810,9 +810,10 @@ class Pay extends MY_Shop_Controller
     public function orders($id = null, $hash = null, $pdf = null, $buffer_save = null)
     {
         $hash = $hash ? $hash : $this->input->get('hash', true);
+        $this->load->library('inv_qrcode');
         if ($id && !$pdf) {
             if ($order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash])) {
-                $this->load->library('inv_qrcode');
+                
                 $this->data['inv']         = $order;
                 $this->data['rows']        = $this->shop_model->getOrderItems($id);
                 $this->data['customer']    = $this->site->getCompanyByID($order->customer_id);
