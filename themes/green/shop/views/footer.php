@@ -26,6 +26,17 @@
               </div>
               <div class="col-md-2 col-sm-12">
                 <div>
+                  <h6><a href="" class="text-dark text-decoration-none" ><b>Our Top Categories</b></a></h6>
+                  <h6><a href="<?= site_url('category/beauty'); ?>" class="text-dark text-decoration-none" >Makeup </a></h6>
+                  <h6><a href="<?= site_url('category/beauty'); ?>" class="text-dark text-decoration-none"> Beauty</a></h6>
+                  <h6><a href="<?= site_url('category/herbal'); ?>" class="text-dark text-decoration-none"> Herbal</a></h6>
+                  <h6> <a href="<?= site_url('category/medical'); ?>" class="text-dark text-decoration-none">Medicine</a></h6>
+                </div>
+              </div>
+
+              <div class="col-md-2 col-sm-12">
+                <div>
+                  <h6><a href="" class="text-dark text-decoration-none" ><b>Store Policies</b></a></h6>
                   <h6><a href="<?= site_url('shop/contact_us'); ?>" class="text-dark text-decoration-none" >Contact Us </a></h6>
                   <h6><a href="<?= site_url('shop/page/about-us'); ?>" class="text-dark text-decoration-none"> About</a></h6>
                   <h6><a href="<?= site_url('shop/page/privacy-policy'); ?>" class="text-dark text-decoration-none"> Privacy Policy</a></h6>
@@ -33,20 +44,12 @@
                   <h6> <a href="<?= site_url('shop/page/exchange-return-policy'); ?>" class="text-dark text-decoration-none">Refund & Return</a></h6>
                 </div>
               </div>
+              
               <div class="col-md-2 col-sm-12">
-                <div>
-                  <h6><a href="<?= site_url('category/beauty'); ?>" class="text-dark text-decoration-none" >Makeup </a></h6>
-                  <h6><a href="<?= site_url('category/beauty'); ?>" class="text-dark text-decoration-none"> Beauty</a></h6>
-                  <h6><a href="<?= site_url('category/herbal'); ?>" class="text-dark text-decoration-none"> Herbal</a></h6>
-                  <h6> <a href="<?= site_url('category/medical'); ?>" class="text-dark text-decoration-none">Medicine</a></h6>
-                </div>
-              </div>
-              <div class="col-md-2 col-sm-12">
-                <!--<div class="footer-icons">
-                  <h6><a href="#" class="text-dark text-decoration-none" >My Account</a>
-                  <a href="#" class="text-dark text-decoration-none"> Order Tracking</a>
+                <div class="footer-icons">
+                  <h6><a href="" class="text-dark text-decoration-none" ><b>Request a Demo</b></a></h6>
                  
-                </div>-->
+                </div>
               </div>
             </div>
             <div class="row pb-2 align-items-center">
