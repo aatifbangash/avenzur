@@ -384,7 +384,7 @@ class Shop extends MY_Shop_Controller
                 redirect($_SERVER['HTTP_REFERER'] ?? 'cart/checkout');
             }
         } else {
-            $this->session->set_flashdata('error', validation_errors());
+            $this->session->set_flashdata('validation_errors', validation_errors());
             redirect('cart/checkout' . ($guest_checkout ? '#guest' : ''));
         }
     }

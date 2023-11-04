@@ -1,6 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
 <section class="page-contents">
+
     <div class="container container-max-width">
         <div class="row">
             <div class="col-md-12">
@@ -16,7 +17,14 @@
                                 </a>
                             </div>
                             <div class="panel-body">
-
+                                <?php if ($this->session->flashdata('validation_errors')) {
+                                    ?>
+                                    <div class="alert alert-danger">
+                                        <?= $this->session->flashdata('validation_errors') ?>
+                                        <?php $this->session->set_flashdata('validation_errors', null) ?>
+                                    </div>
+                                    <?php
+                                } ?>
                                 <div>
                                     <?php
                                     //echo $this->loggedIn;
@@ -515,6 +523,18 @@
                                                         id="grand-total-price"><?= $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($order_tax) + $this->sma->formatDecimal($shipping))); ?></span><?= $selected_currency->symbol ?>
                                             </td>
                                         </tr>
+                                        <tr>
+                                            <td colspan="2"></td>
+                                        </tr>
+                                        <tr class="active text-bold">
+                                            <td><?= lang('Express_delivery'); ?></td>
+                                            <td class="text-right">
+                                                <input type="checkbox" id="express-delivery-check" disabled/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2"></td>
+                                        </tr>
                                     </table>
 
                                 </div>
@@ -534,20 +554,26 @@
         // options here
     }));
 
-    function calCulateShipping(city, country) {
+    function calCulateShipping(city, country, isExpressDelivery = false) {
+
+        $("#express-delivery-check").prop("disabled", true);
         var shipping = parseInt('<?= round($calculateShipping); ?>');
         if (city != '' || country != '') {
+
             if (country.toLowerCase() === 'saudi arabia') {
                 shipping = 19
 
                 if (city.toLowerCase() === 'riyadh') {
                     shipping = 16
-                    //if express shipping = 21
+                    $("#express-delivery-check").prop("disabled", false);
+
+                    if (isExpressDelivery == true)
+                        shipping = 21
                 }
 
-                if (city.toLowerCase() === 'jeddah') {
+                if (city.toLowerCase() === 'jeddah')
                     shipping = 16
-                }
+
             }
             if (['bahrain',
                 'kuwait',
@@ -578,18 +604,33 @@
         });
 
         $('#billing_country').change(function () {
+            $("#express-delivery-check").prop('checked', false)
             var city = $('#billing_city').val();
             var country = $('#billing_country').find("option:selected").text();
             calCulateShipping(city, country);
         })
 
         $('#billing_city').blur(function () {
+            $("#express-delivery-check").prop('checked', false)
             var city = $('#billing_city').val();
             var country = $('#billing_country').find("option:selected").text();
             calCulateShipping(city, country);
         })
 
+        $('#express-delivery-check').change(function () {
+            var addressObject = $('.payment-address:checked').data('payload');
+            if (addressObject != undefined) {
+                var country = addressObject.country
+                var city = addressObject.city
+            } else {
+                var city = $('#billing_city').val();
+                var country = $('#billing_country').find("option:selected").text();
+            }
+            calCulateShipping(city, country, $(this).prop('checked'));
+        })
+
         $('.payment-address').click(function (e) {
+            $("#express-delivery-check").prop('checked', false)
             var addressObject = $(this).data('payload');
             if (addressObject) {
                 var country = addressObject.country
