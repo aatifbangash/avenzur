@@ -18,108 +18,121 @@
                             <div class="panel-body">
 
                                 <div>
-                                <?php
-                                //echo $this->loggedIn;
-                                if (!$this->loggedIn) {
-                                    ?>
-                                    <ul class="nav nav-tabs" role="tablist">
-                                        <li role="presentation"><a href="#guest" aria-controls="guest" role="tab" data-toggle="tab"><?= lang('guest_checkout'); ?></a></li>
-                                        <li role="presentation" class="active"><a href="#user" aria-controls="user" role="tab" data-toggle="tab"><?= lang('returning_user'); ?></a></li>
-                                        
-                                    </ul>
                                     <?php
-                                }
-                                ?>
+                                    //echo $this->loggedIn;
+                                    if (!$this->loggedIn) {
+                                        ?>
+                                        <ul class="nav nav-tabs" role="tablist">
+                                            <li role="presentation"><a href="#guest" aria-controls="guest" role="tab"
+                                                                       data-toggle="tab"><?= lang('guest_checkout'); ?></a>
+                                            </li>
+                                            <li role="presentation" class="active"><a href="#user" aria-controls="user"
+                                                                                      role="tab"
+                                                                                      data-toggle="tab"><?= lang('returning_user'); ?></a>
+                                            </li>
+
+                                        </ul>
+                                        <?php
+                                    }
+                                    ?>
 
                                     <div class="tab-content padding-lg">
                                         <div role="tabpanel" class="tab-pane fade in active " id="user">
                                             <?php
-                                            
+                                            $calculateShipping = $this->cart->shipping();
+
                                             if ($this->loggedIn) {
-                                                
+
                                                 if ($this->Settings->indian_gst) {
                                                     $istates = $this->gst->getIndianStates();
                                                 }
-                                                if (!empty($addresses)) {
-                                                    echo shop_form_open('order', 'class="validate addressform-k"');
-                                                    echo '<div class="row address-row-k">';
-                                                    echo '<div class="col-sm-12 text-bold py-2">' . lang('select_address') . '</div>';
-                                                    $r = 1;
-                                                    foreach ($addresses as $address) {
-                                                        ?>
-                                                        <div class="col-sm-6">
-                                                            <div class="checkbox bg addressbox-k">
-                                                                <label>
-                                                                    <input type="radio" name="address" value="<?= $address->id; ?>" <?= $r == 1 ? 'checked' : ''; ?>>
-                                                                    <span>
+                                            if (!empty($addresses)) {
+                                                echo shop_form_open('order', 'class="validate addressform-k"');
+                                                echo '<div class="row address-row-k">';
+                                                echo '<div class="col-sm-12 text-bold py-2">' . lang('select_address') . '</div>';
+                                                $r = 1;
+                                            foreach ($addresses as $address) {
+                                                ?>
+                                                <div class="col-sm-6">
+                                                    <div class="checkbox bg addressbox-k">
+                                                        <label>
+                                                            <input
+                                                                    class="payment-address"
+                                                                    type="radio"
+                                                                    name="address"
+                                                                    value="<?= $address->id; ?>"
+                                                                    data-payload='<?= json_encode($address) ?>'
+                                                            >
+                                                            <span>
                                                                         <?= $address->line1; ?><br>
                                                                         <?= $address->line2; ?><br>
                                                                         <?= $address->city; ?>
-                                                                        <?= $this->Settings->indian_gst && isset($istates[$address->state]) ? $istates[$address->state] . ' - ' . $address->state : $address->state; ?><br>
+                                                                <?= $this->Settings->indian_gst && isset($istates[$address->state]) ? $istates[$address->state] . ' - ' . $address->state : $address->state; ?><br>
                                                                         <?= $address->postal_code; ?> <?= $address->country; ?><br>
                                                                         <?= lang('phone') . ': ' . $address->phone; ?>
                                                                     </span>
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                        <?php
-                                                        $r++;
-                                                    }
-                                                    echo '</div>';
-                                                }
-                                                if (count($addresses) < 6 && !$this->Staff) {
-                                                    echo '<div class="row margin-bottom-lg">';
-                                                    echo '<div class="col-sm-12"><a href="#" id="add-address" class="btn btn-primary btn-sm">' . lang('add_new_address') . '</a></div>';
-                                                    echo '</div>';
-                                                }
-                                                if ($this->Settings->indian_gst && (isset($istates))) {
-                                                    ?>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            <?php
+                                            $r++;
+                                            }
+                                            echo '</div>';
+                                            }
+                                            if (count($addresses) < 6 && !$this->Staff) {
+                                                echo '<div class="row margin-bottom-lg">';
+                                                echo '<div class="col-sm-12"><a href="#" id="add-address" class="btn btn-primary btn-sm">' . lang('add_new_address') . '</a></div>';
+                                                echo '</div>';
+                                            }
+                                            if ($this->Settings->indian_gst && (isset($istates))) {
+                                            ?>
                                                 <script>
                                                     var istates = <?= json_encode($istates); ?>
                                                 </script>
-                                                <?php
-                                                } else {
-                                                    echo '<script>var istates = false; </script>';
-                                                } ?>
+                                            <?php
+                                            } else {
+                                                echo '<script>var istates = false; </script>';
+                                            } ?>
                                                 <!--<hr>-->
                                                 <!--<h5><strong><?= lang('payment_method'); ?></strong></h5>-->
-                                                  <input type="hidden" name="payment_method" value="directpay" id="directpay" required="required">
+                                            <input type="hidden" name="payment_method" value="directpay" id="directpay"
+                                                   required="required">
                                                 <div class="checkbox bg">
                                                     <?php if ($paypal->active) {
-                                                    ?>
-                                                    <!--<label style="display: inline-block; width: auto;">-->
-                                                    <!--    <input type="radio" name="payment_method" value="paypal" id="paypal" required="required">-->
-                                                    <!--    <span>-->
-                                                    <!--        <i class="fa fa-paypal margin-right-md"></i> <?= lang('paypal') ?>-->
-                                                    <!--    </span>-->
-                                                    <!--</label>-->
-                                                    <?php
-                                                } ?>
+                                                        ?>
+                                                        <!--<label style="display: inline-block; width: auto;">-->
+                                                        <!--    <input type="radio" name="payment_method" value="paypal" id="paypal" required="required">-->
+                                                        <!--    <span>-->
+                                                        <!--        <i class="fa fa-paypal margin-right-md"></i> <?= lang('paypal') ?>-->
+                                                        <!--    </span>-->
+                                                        <!--</label>-->
+                                                        <?php
+                                                    } ?>
                                                     <?php if ($skrill->active) {
-                                                    ?>
+                                                        ?>
+                                                        <!--<label style="display: inline-block; width: auto;">-->
+                                                        <!--    <input type="radio" name="payment_method" value="skrill" id="skrill" required="required">-->
+                                                        <!--    <span>-->
+                                                        <!--        <i class="fa fa-credit-card-alt margin-right-md"></i> <?= lang('skrill') ?>-->
+                                                        <!--    </span>-->
+                                                        <!--</label>-->
+                                                        <?php
+                                                    } ?>
+                                                    <?php if ($shop_settings->stripe) {
+                                                        ?>
+                                                        <!--<label style="display: inline-block; width: auto;">-->
+                                                        <!--    <input type="radio" name="payment_method" value="stripe" id="stripe" required="required">-->
+                                                        <!--    <span>-->
+                                                        <!--        <i class="fa fa-cc-stripe margin-right-md"></i> <?= lang('stripe') ?>-->
+                                                        <!--    </span>-->
+                                                        <!--</label>-->
+                                                        <?php
+                                                    } ?>
                                                     <!--<label style="display: inline-block; width: auto;">-->
-                                                    <!--    <input type="radio" name="payment_method" value="skrill" id="skrill" required="required">-->
-                                                    <!--    <span>-->
-                                                    <!--        <i class="fa fa-credit-card-alt margin-right-md"></i> <?= lang('skrill') ?>-->
-                                                    <!--    </span>-->
-                                                    <!--</label>-->
-                                                    <?php
-                                                } ?>
-                                                <?php if ($shop_settings->stripe) {
-                                                    ?>
-                                                    <!--<label style="display: inline-block; width: auto;">-->
-                                                    <!--    <input type="radio" name="payment_method" value="stripe" id="stripe" required="required">-->
-                                                    <!--    <span>-->
-                                                    <!--        <i class="fa fa-cc-stripe margin-right-md"></i> <?= lang('stripe') ?>-->
-                                                    <!--    </span>-->
-                                                    <!--</label>-->
-                                                    <?php
-                                                } ?>
-                                                    <!--<label style="display: inline-block; width: auto;">-->
-                                                      
-                                                        <!--<span>-->
-                                                        <!--    <i class="fa fa-cc-stripe margin-right-md"></i> Direct Pay-->
-                                                        <!--</span>-->
+
+                                                    <!--<span>-->
+                                                    <!--    <i class="fa fa-cc-stripe margin-right-md"></i> Direct Pay-->
+                                                    <!--</span>-->
                                                     <!--</label>-->
                                                     <!--<label style="display: inline-block; width: auto;">-->
                                                     <!--    <input type="radio" name="payment_method" value="bank" id="bank" required="required">-->
@@ -140,31 +153,38 @@
                                                     <?= lang('comment_any', 'comment'); ?>
                                                     <?= form_textarea('comment', set_value('comment'), 'class="form-control" id="comment" style="height:100px;"'); ?>
                                                 </div>
-                                                <?php
-                                                if (!empty($addresses) && !$this->Staff) {
-                                                    echo form_submit('add_order', lang('Proceed to Payment'), 'class="btn btn-theme payment-k"');
-                                                } elseif ($this->Staff) {
-                                                    echo '<div class="alert alert-warning margin-bottom-no">' . lang('staff_not_allowed') . '</div>';
-                                                } else {
-                                                    echo '<div class="alert alert-warning margin-bottom-no">' . lang('please_add_address_first') . '</div>';
-                                                }
-                                                echo form_close();
+                                            <?php
+                                            if (!empty($addresses) && !$this->Staff) {
+                                            ?>
+                                            <input type="hidden" id="shipping-input" name="shipping"
+                                                   value="<?= $calculateShipping ?>"/>
+                                            <?php
+                                            echo form_submit('add_order', lang('Proceed to Payment'), 'class="btn btn-theme payment-k"');
+                                            } elseif ($this->Staff) {
+                                                echo '<div class="alert alert-warning margin-bottom-no">' . lang('staff_not_allowed') . '</div>';
                                             } else {
-                                                ?>
+                                                echo '<div class="alert alert-warning margin-bottom-no">' . lang('please_add_address_first') . '</div>';
+                                            }
+                                            echo form_close();
+                                            } else {
+                                            ?>
                                                 <div class="row">
                                                     <div class="col-sm-6">
                                                         <div class="well margin-bottom-no">
-                                                            <?php  include FCPATH . 'themes' . DIRECTORY_SEPARATOR . $Settings->theme . DIRECTORY_SEPARATOR . 'shop' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'user' . DIRECTORY_SEPARATOR . 'login_form.php'; ?>
+                                                            <?php include FCPATH . 'themes' . DIRECTORY_SEPARATOR . $Settings->theme . DIRECTORY_SEPARATOR . 'shop' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'user' . DIRECTORY_SEPARATOR . 'login_form.php'; ?>
                                                         </div>
                                                     </div>
                                                     <div class="col-sm-6">
                                                         <div class="registertab-k">
-                                                        <h4 class="title"><span><?= lang('register_new_account'); ?></span></h4>
-                                                        <p>
-                                                            <?= lang('register_account_info'); ?>
-                                                        </p>
-                                                        <a href="<?= site_url('login#register'); ?>" class="btn btn-theme"><?= lang('register'); ?></a>
-                                                        <a href="#" class="btn btn-default pull-right guest-checkout"><?= lang('guest_checkout'); ?></a>
+                                                            <h4 class="title">
+                                                                <span><?= lang('register_new_account'); ?></span></h4>
+                                                            <p>
+                                                                <?= lang('register_account_info'); ?>
+                                                            </p>
+                                                            <a href="<?= site_url('login#register'); ?>"
+                                                               class="btn btn-theme"><?= lang('register'); ?></a>
+                                                            <a href="#"
+                                                               class="btn btn-default pull-right guest-checkout"><?= lang('guest_checkout'); ?></a>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -175,7 +195,7 @@
                                         </div>
                                         <div role="tabpanel" class="tab-pane fade " id="guest">
                                             <?= shop_form_open('order', 'class="validate" id="guest-checkout"'); ?>
-                                            <input type="hidden" value="1" name="guest_checkout">
+                                            4 <input type="hidden" value="1" name="guest_checkout">
                                             <div class="row">
                                                 <div class="col-md-12">
                                                     <div class="row">
@@ -202,7 +222,8 @@
                                                 <div class="col-md-6">
                                                     <div class="form-group">
                                                         <?= lang('phone', 'phone'); ?> * <br>
-                                                        <input type="tel" id="phone" name="phone" class="form-control" required="required"  />
+                                                        <input type="tel" id="phone" name="phone" class="form-control"
+                                                               required="required"/>
                                                         <!--<?= form_input('phone', set_value('phone'), 'class="form-control" id="phone" required="required"'); ?>-->
                                                     </div>
                                                 </div>
@@ -251,30 +272,32 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    
+
                                                     <div class="form-group">
-                                                         <?= lang('country', 'country'); ?> *
-                                                        <select class="form-control" id="billing_country" name="billing_country" >
-                                                              
-                                                       
-                                                      <?php
-                                                                   foreach($country as $u)
-                                                                   {
-                                                                    echo '<option value="'.$u->code.'">'.$u->name.'</option>';
-                                                                   }
-                                                                  ?>
-                                                        
-                                                        
-                                                       </select>
-                                                      
-                                              <!--form_input('billing_country', set_value('billing_country'), 'class="form-control" id="billing_country" required="required"')-->
+                                                        <?= lang('country', 'country'); ?> *
+                                                        <select class="form-control" id="billing_country"
+                                                                name="billing_country">
+
+
+                                                            <?php
+                                                            foreach ($country as $u) {
+                                                                echo '<option value="' . $u->code . '">' . $u->name . '</option>';
+                                                            }
+                                                            ?>
+
+
+                                                        </select>
+
+                                                        <!--form_input('billing_country', set_value('billing_country'), 'class="form-control" id="billing_country" required="required"')-->
                                                     </div>
                                                 </div>
 
                                                 <div class="col-md-12">
-                                                    <div class="checkbox bg pull-right" style="margin-top: 0; margin-bottom: 0;">
+                                                    <div class="checkbox bg pull-right"
+                                                         style="margin-top: 0; margin-bottom: 0;">
                                                         <label>
-                                                            <input type="checkbox" name="same" value="1" id="same_as_billing">
+                                                            <input type="checkbox" name="same" value="1"
+                                                                   id="same_as_billing">
                                                             <span>
                                                                 <?= lang('same_as_billing') ?>
                                                             </span>
@@ -324,33 +347,33 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    
+
                                                     <div class="form-group">
                                                         <?= lang('country', 'shipping_country'); ?> *
-                                                           <?php 
+                                                        <?php
                                                         //  $opts[''] = lang('select') . ' ' . lang('country');
                                                         //     foreach ($country as $country) {
                                                         //         $opts[$country->id] = $country->name;
                                                         //     }
                                                         //     echo form_dropdown('shipping_country', $opts, 'class="form-control" id="shipping_country"  required="required"');
                                                         ?>
-                                                        
-                                                            <select class="form-control" id="shipping_country" name="shipping_country" >
-                                                              
-                                                       
-                                                      <?php
-                                                                   foreach($country as $u)
-                                                                   {
-                                                                    echo '<option value="'.$u->code.'">'.$u->name.'</option>';
-                                                                   }
-                                                                  ?>
-                                                        
-                                                        
-                                                       </select>
+
+                                                        <select class="form-control" id="shipping_country"
+                                                                name="shipping_country">
+
+
+                                                            <?php
+                                                            foreach ($country as $u) {
+                                                                echo '<option value="' . $u->code . '">' . $u->name . '</option>';
+                                                            }
+                                                            ?>
+
+
+                                                        </select>
                                                         <!--<select name="shipping_country" id="shipping_country" class="form-control"  required="required">-->
                                                         <!--  <option value="SA">Saudi Arabia</option>-->
                                                         <!--  <option value="AE">UAE</option>-->
-                                                          
+
                                                         <!--</select>-->
                                                         <!--form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required"'); ?>-->
                                                     </div>
@@ -366,63 +389,69 @@
                                                     <!--<h5><strong><?= lang('payment_method'); ?></strong></h5>-->
                                                     <!--<hr>-->
                                                     <!--<div class="checkbox bg">-->
-                                                        <?php if ($paypal->active) {
-                                                            ?>
+                                                    <?php if ($paypal->active) {
+                                                        ?>
                                                         <label style="display: inline-block; width: auto;">
-                                                            <input type="radio" name="payment_method" value="paypal" id="paypal" required="required">
+                                                            <input type="radio" name="payment_method" value="paypal"
+                                                                   id="paypal" required="required">
                                                             <span>
                                                                 <i class="fa fa-paypal margin-right-md"></i> <?= lang('paypal') ?>
                                                             </span>
                                                         </label>
                                                         <?php
-                                                        } ?>
-                                                        <?php if ($skrill->active) {
-                                                            ?>
+                                                    } ?>
+                                                    <?php if ($skrill->active) {
+                                                        ?>
                                                         <label style="display: inline-block; width: auto;">
-                                                            <input type="radio" name="payment_method" value="skrill" id="skrill" required="required">
+                                                            <input type="radio" name="payment_method" value="skrill"
+                                                                   id="skrill" required="required">
                                                             <span>
                                                                 <i class="fa fa-credit-card-alt margin-right-md"></i> <?= lang('skrill') ?>
                                                             </span>
                                                         </label>
                                                         <?php
-                                                        } ?>
-                                                        <?php if ($shop_settings->stripe) {
-                                                            ?>
+                                                    } ?>
+                                                    <?php if ($shop_settings->stripe) {
+                                                        ?>
                                                         <label style="display: inline-block; width: auto;">
-                                                            <input type="radio" name="payment_method" value="stripe" id="stripe" required="required">
+                                                            <input type="radio" name="payment_method" value="stripe"
+                                                                   id="stripe" required="required">
                                                             <span>
                                                                 <i class="fa fa-cc-stripe margin-right-md"></i> <?= lang('stripe') ?>
                                                             </span>
                                                         </label>
                                                         <?php
-                                                        } ?>
-                                                        
-                                                        <label style="display: inline-block; width: auto;">
-                                                            <input type="hidden" name="payment_method" value="directpay" id="directpay" required="required">
-                                                             <!--<input type="radio" name="payment_method" value="directpay" id="directpay" required="required">-->
-                                                            <!--<span>-->
-                                                            <!--    <i class="fa fa-bank margin-right-md"></i> Direct Pay-->
-                                                            <!--</span>-->
-                                                        </label>
-  
-                                                        
-                                                        <!--<label style="display: inline-block; width: auto;">-->
-                                                        <!--    <input type="radio" name="payment_method" value="bank" id="bank" required="required">-->
-                                                        <!--    <span>-->
-                                                        <!--        <i class="fa fa-bank margin-right-md"></i> <?= lang('bank_in') ?>-->
-                                                        <!--    </span>-->
-                                                        <!--</label>-->
+                                                    } ?>
 
-                                                        <!--<label style="display: inline-block; width: auto;">-->
-                                                        <!--    <input type="radio" name="payment_method" value="cod" id="cod" required="required">-->
-                                                        <!--    <span>-->
-                                                        <!--        <i class="fa fa-money margin-right-md"></i> <?= lang('cod') ?>-->
-                                                        <!--    </span>-->
-                                                        <!--</label>-->
+                                                    <label style="display: inline-block; width: auto;">
+                                                        <input type="hidden" name="payment_method" value="directpay"
+                                                               id="directpay" required="required">
+                                                        <!--<input type="radio" name="payment_method" value="directpay" id="directpay" required="required">-->
+                                                        <!--<span>-->
+                                                        <!--    <i class="fa fa-bank margin-right-md"></i> Direct Pay-->
+                                                        <!--</span>-->
+                                                    </label>
+
+
+                                                    <!--<label style="display: inline-block; width: auto;">-->
+                                                    <!--    <input type="radio" name="payment_method" value="bank" id="bank" required="required">-->
+                                                    <!--    <span>-->
+                                                    <!--        <i class="fa fa-bank margin-right-md"></i> <?= lang('bank_in') ?>-->
+                                                    <!--    </span>-->
+                                                    <!--</label>-->
+
+                                                    <!--<label style="display: inline-block; width: auto;">-->
+                                                    <!--    <input type="radio" name="payment_method" value="cod" id="cod" required="required">-->
+                                                    <!--    <span>-->
+                                                    <!--        <i class="fa fa-money margin-right-md"></i> <?= lang('cod') ?>-->
+                                                    <!--    </span>-->
+                                                    <!--</label>-->
                                                     <!--</div>-->
                                                 </div>
 
                                             </div>
+                                            <input type="hidden" id="shipping-input" name="shipping"
+                                                   value="<?= $calculateShipping ?>"/>
                                             <?= form_submit('guest_order', lang('Proceed to Payment'), 'class="btn btn-lg btn-primary"'); ?>
                                             <?= form_close(); ?>
                                         </div>
@@ -442,8 +471,9 @@
                                 </div>
                                 <div class="panel-body total-k">
                                     <?php
-                                    $total     = $this->sma->convertMoney($this->cart->total(), false, false);
-                                    $shipping  = $this->sma->convertMoney($this->cart->shipping(), false, false);
+                                    $total = $this->sma->convertMoney($this->cart->total(), false, false);
+
+                                    $shipping = $this->sma->convertMoney($calculateShipping, false, false);
                                     $order_tax = $this->sma->convertMoney($this->cart->order_tax(), false, false);
                                     ?>
                                     <table class="table table-striped table-borderless cart-totals margin-bottom-no">
@@ -457,22 +487,36 @@
                                         </tr>
                                         <tr>
                                             <td><?= lang('total'); ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney($total, $selected_currency->symbol); ?></td>
+                                            <td class="text-right">
+                                                <?= $this->sma->formatMoney($total, $selected_currency->symbol); ?>
+                                                <input type="hidden" id="total-price" value="<?= $total ?>"/>
+                                            </td>
                                         </tr>
                                         <?php if ($Settings->tax2 !== false) {
-                                        echo '<tr><td>' . lang('order_tax') . '</td><td class="text-right">' . $this->sma->formatMoney($order_tax, $selected_currency->symbol) . '</td></tr>';
-                                    } ?>
+                                            echo '<tr><td>' . lang('order_tax') . '</td>
+                                                    <td class="text-right">' . $this->sma->formatMoney($order_tax, $selected_currency->symbol) . '
+                                                    <input type="hidden" id="total-order-tax" value="' . $order_tax . '"/>
+                                                    </td>
+                                                    </tr>';
+                                        } ?>
                                         <tr>
                                             <td><?= lang('shipping'); ?> *</td>
-                                            <td class="text-right"><?= $this->sma->formatMoney($shipping, $selected_currency->symbol); ?></td>
+                                            <td class="text-right">
+                                                <span id="shipping-price">
+                                                <?= $this->sma->formatNumber($shipping); ?></span><?= $selected_currency->symbol ?>
+                                            </td>
                                         </tr>
-                                        <tr><td colspan="2"></td></tr>
+                                        <tr>
+                                            <td colspan="2"></td>
+                                        </tr>
                                         <tr class="active text-bold">
                                             <td><?= lang('grand_total'); ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($order_tax) + $this->sma->formatDecimal($shipping)), $selected_currency->symbol); ?></td>
+                                            <td class="text-right"><span
+                                                        id="grand-total-price"><?= $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($order_tax) + $this->sma->formatDecimal($shipping))); ?></span><?= $selected_currency->symbol ?>
+                                            </td>
                                         </tr>
                                     </table>
-                                     
+
                                 </div>
                             </div>
                         </div>
@@ -483,19 +527,75 @@
         </div>
     </div>
 </section>
- <script>
+<script>
     // Vanilla Javascript
     var input = document.querySelector("#phone");
-    window.intlTelInput(input,({
-      // options here
+    window.intlTelInput(input, ({
+        // options here
     }));
 
-    $(document).ready(function() {
-        $('.iti__flag-container').click(function() { 
-          var countryCode = $('.iti__selected-flag').attr('title');
-          var countryCode = countryCode.replace(/[^0-9]/g,'')
-          $('#phone').val("");
-          $('#phone').val("+"+countryCode+" "+ $('#phone').val());
-       });
+    function calCulateShipping(city, country) {
+        var shipping = parseInt('<?= round($calculateShipping); ?>');
+        if (city != '' || country != '') {
+            if (country.toLowerCase() === 'saudi arabia') {
+                shipping = 19
+
+                if (city.toLowerCase() === 'riyadh') {
+                    shipping = 16
+                    //if express shipping = 21
+                }
+
+                if (city.toLowerCase() === 'jeddah') {
+                    shipping = 16
+                }
+            }
+            if (['bahrain',
+                'kuwait',
+                'oman',
+                'qatar',
+                'united arab emirates',
+                'uae']
+                .includes(country.toLowerCase())) { //GCC
+                shipping = 32
+            }
+
+            var totalPrice = parseFloat($('#total-price').val());
+            var totalOrderTax = parseFloat($('#total-order-tax').val());
+            var grandTotalPrice = totalPrice + totalOrderTax + shipping;
+
+            $('#shipping-price').text(parseFloat(shipping).toFixed(2))
+            $('#grand-total-price').text(parseFloat(grandTotalPrice).toFixed(2))
+            $('#shipping-input').val(parseFloat(shipping).toFixed(2));
+        }
+    }
+
+    $(document).ready(function () {
+        $('.iti__flag-container').click(function () {
+            var countryCode = $('.iti__selected-flag').attr('title');
+            var countryCode = countryCode.replace(/[^0-9]/g, '')
+            $('#phone').val("");
+            $('#phone').val("+" + countryCode + " " + $('#phone').val());
+        });
+
+        $('#billing_country').change(function () {
+            var city = $('#billing_city').val();
+            var country = $('#billing_country').find("option:selected").text();
+            calCulateShipping(city, country);
+        })
+
+        $('#billing_city').blur(function () {
+            var city = $('#billing_city').val();
+            var country = $('#billing_country').find("option:selected").text();
+            calCulateShipping(city, country);
+        })
+
+        $('.payment-address').click(function (e) {
+            var addressObject = $(this).data('payload');
+            if (addressObject) {
+                var country = addressObject.country
+                var city = addressObject.city
+                calCulateShipping(city, country)
+            }
+        })
     });
-  </script>
+</script>
