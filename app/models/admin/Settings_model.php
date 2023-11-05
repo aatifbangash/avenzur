@@ -12,7 +12,7 @@ class Settings_model extends CI_Model
     public function add_newsletter_subscription($newletterEmail){
         $q = $this->db->get_where('sma_newsletter_subscribers', ['email' => $newletterEmail], 1);
         if ($q->num_rows() > 0) {
-            return false;
+            return 'exists';
         }else{
             $data = array(
                 'email' =>  $newletterEmail,
@@ -20,9 +20,9 @@ class Settings_model extends CI_Model
                 'date_created' => date('Y-m-d')
             );
             if ($this->db->insert('sma_newsletter_subscribers', $data)) {
-                return true;
+                return 'added';
             }
-            return false;
+            return 'failed';
         }
     }
 

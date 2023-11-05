@@ -22,10 +22,12 @@ class Cart_ajax extends MY_Shop_Controller
     public function subscribe_newsletter(){
         if ($_GET['newsletterEmail']) {
             $subscription = $this->settings_model->add_newsletter_subscription($_GET['newsletterEmail']);
-            if(!$subscription){
+            if($subscription == 'failed'){
                 $this->sma->send_json(['status' => lang('error'), 'message' => 'Unable to add subscription']);
-            }else{
+            }else if($subscription == 'added'){
                 $this->sma->send_json(['status' => lang('success'), 'message' => 'Subscription added successfully']);
+            }else if($subscription == 'exists'){
+                $this->sma->send_json(['status' => lang('error'), 'message' => 'Subscription already exists']);
             }
         }
     }
