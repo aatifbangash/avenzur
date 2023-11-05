@@ -203,7 +203,7 @@
                                         </div>
                                         <div role="tabpanel" class="tab-pane fade " id="guest">
                                             <?= shop_form_open('order', 'class="validate" id="guest-checkout"'); ?>
-                                            4 <input type="hidden" value="1" name="guest_checkout">
+                                            <input type="hidden" value="1" name="guest_checkout">
                                             <div class="row">
                                                 <div class="col-md-12">
                                                     <div class="row">

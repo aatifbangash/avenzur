@@ -6,8 +6,6 @@ class Shop extends MY_Shop_Controller
 {
     public function __construct()
     {
-
-
         parent::__construct();
         if ($this->Settings->mmode) {
             redirect('notify/offline');
@@ -547,6 +545,7 @@ class Shop extends MY_Shop_Controller
                 'Reference' => ''
             );
         }
+
 
         //var_dump($pro_weight);
         $params = array(

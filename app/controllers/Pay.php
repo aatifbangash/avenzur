@@ -594,7 +594,7 @@ class Pay extends MY_Shop_Controller
                             'items' => $items_data
                         );
 
-                        $this->create_oto_order($order);
+                        //$this->create_oto_order($order);
                         /* OTO Order Generation Ends */
 
                         $this->sendMsegatSMS($address->phone, $inv->id, $customer->name);
@@ -602,7 +602,7 @@ class Pay extends MY_Shop_Controller
                     }else{
                         /* Shipway Order Generation Ends */
 
-                        $license_key = 'E908g3oR7PP7DG0gZXcRG3x89VO228Ry';
+                        /*$license_key = 'E908g3oR7PP7DG0gZXcRG3x89VO228Ry';
                         $shipway_email = 'braphael@avenzur.com';
 
                         $token = base64_encode($shipway_email.":".$license_key);
@@ -673,7 +673,7 @@ class Pay extends MY_Shop_Controller
                         $response = curl_exec($ch);
 
                         // Close cURL session
-                        curl_close($ch);
+                        curl_close($ch);*/
 
                         /* Shipway Order Generation Ends */
                     }
