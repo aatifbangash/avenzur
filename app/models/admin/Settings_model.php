@@ -9,6 +9,23 @@ class Settings_model extends CI_Model
         parent::__construct();
     }
 
+    public function add_newsletter_subscription($newletterEmail){
+        $q = $this->db->get_where('sma_newsletter_subscribers', ['email' => $newletterEmail], 1);
+        if ($q->num_rows() > 0) {
+            return false;
+        }else{
+            $data = array(
+                'email' =>  $newletterEmail,
+                'status' => 1,
+                'date_created' => date('Y-m-d')
+            );
+            if ($this->db->insert('sma_newsletter_subscribers', $data)) {
+                return true;
+            }
+            return false;
+        }
+    }
+
     public function addBrand($data)
     {
         if ($this->db->insert('brands', $data)) {

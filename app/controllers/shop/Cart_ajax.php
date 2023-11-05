@@ -19,6 +19,19 @@ class Cart_ajax extends MY_Shop_Controller
             $this->load->admin_model('settings_model');
     }
 
+    public function subscribe_newsletter(){
+        if ($this->input->is_ajax_request() || $this->input->post('newsletterEmail')) {
+            $subscription = $this->settings_model->add_newsletter_subscription($this->input->post('newsletterEmail'));
+            if($subscription){
+                $this->session->set_flashdata('message', lang('Subscription added successfully'));
+                redirect($_SERVER['HTTP_REFERER']);
+            }else{
+                $this->session->set_flashdata('error', 'Unable to add subscription');
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+        }
+    }
+
     public function add($product_id)
     {
         if ($this->input->is_ajax_request() || $this->input->post('quantity')) {
