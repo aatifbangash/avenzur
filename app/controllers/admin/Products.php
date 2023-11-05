@@ -1596,8 +1596,7 @@ class Products extends MY_Controller
             $user         = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
         }
-        //$detail_link = anchor('admin/products/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('product_details'));
-        $detail_link = anchor('admin/products/edit/$1', '<i class="fa fa-file-text-o"></i> ' . lang('product_details'));
+        $detail_link = anchor('admin/products/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('product_details'));
         $delete_link = "<a href='#' class='tip po' title='<b>" . $this->lang->line('delete_product') . "</b>' data-content=\"<p>"
             . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete1' id='a__$1' href='" . admin_url('products/delete/$1') . "'>"
             . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "

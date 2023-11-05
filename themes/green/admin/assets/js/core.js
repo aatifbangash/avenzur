@@ -1354,11 +1354,11 @@ $(document).ready(function () {
         $('#myModal').modal('show');
     });
     $('body').on('click', '.product_link td:not(:first-child, :nth-child(2), :last-child)', function () {
-        $('#myModal').modal({
+        /*$('#myModal').modal({
             remote: site.base_url + 'products/modal_view/' + $(this).parent('.product_link').attr('id'),
         });
-        $('#myModal').modal('show');
-        //window.location.href = site.base_url + 'products/view/' + $(this).parent('.product_link').attr('id');
+        $('#myModal').modal('show');*/
+        window.location.href = site.base_url + 'products/edit/' + $(this).parent('.product_link').attr('id');
     });
     $('body').on('click', '.product_link2 td:first-child, .product_link2 td:nth-child(2)', function () {
         $('#myModal').modal({
