@@ -344,7 +344,25 @@ class Shop_model extends CI_Model
         $popular_categories = $this->db->get('categories')->result();
 
         foreach ($popular_categories as $category) {
-            $this->db->select("{$this->db->dbprefix('products')}.id as id, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('products')}.code as code, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.slug as slug, {$this->db->dbprefix('products')}.price, quantity, type, promotion, promo_price, start_date, end_date, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug")
+            $this->db->select("
+            {$this->db->dbprefix('products')}.id as id, 
+            {$this->db->dbprefix('products')}.name as name, 
+            {$this->db->dbprefix('products')}.code as code, 
+            {$this->db->dbprefix('products')}.image as image, 
+            {$this->db->dbprefix('products')}.slug as slug, 
+            {$this->db->dbprefix('products')}.price, 
+            {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
+            {$this->db->dbprefix('products')}.tax_method,
+            quantity, 
+            {$this->db->dbprefix('products')}.type, 
+            promotion, 
+            promo_price, 
+            start_date, 
+            t.name as taxName,
+            t.rate as taxPercentage,
+            t.code as taxCode,
+            end_date, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug")
+                ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
                 ->join('brands b', 'products.brand=b.id', 'left')
                 ->join('categories c', 'products.category_id=c.id', 'left')
                 ->where('products.category_id', $category->id)
@@ -365,6 +383,14 @@ class Shop_model extends CI_Model
             $this->db->order_by('RAND()');
             $products = $this->db->get('products')->result();
 
+            array_map(function ($row) {
+                if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
+                    $productTaxPercent = $row->taxPercentage;
+                    $productPrice = $row->price;
+                    $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+                    $row->price = $productPrice + $productTaxAmount;
+                }
+            }, $products);
             $category->products = $products;
             $category->name = ucfirst(strtolower($category->name));
         }
@@ -553,7 +579,14 @@ class Shop_model extends CI_Model
 
     public function getProductBySlug($slug)
     {
-        $this->db->select("{$this->db->dbprefix('products')}.*," . $this->db->dbprefix('brands') . '.name as brand_name');
+        $this->db->select("
+        {$this->db->dbprefix('products')}.*," .
+            $this->db->dbprefix('brands') . '.name as brand_name,
+            t.name as taxName,
+            t.rate as taxPercentage,
+            t.code as taxCode'
+        )
+        ->join('tax_rates t', 'products.tax_rate = t.id', 'left');
         $sp = $this->getSpecialPrice();
         if ($sp->cgp) {
             $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
@@ -829,7 +862,7 @@ class Shop_model extends CI_Model
             $data = $results->result_array();
 
             $mapData = array_map(function ($row) {
-                if ($row['tax_method'] == '0' && $row['taxPercentage'] > 0) { // tax_method = 0 means inclusiveTax
+                if ($row['tax_method'] == '1' && $row['taxPercentage'] > 0) { // tax_method = 0 means inclusiveTax
                     $productTaxPercent = $row['taxPercentage'];
                     $productPrice = $row['price'];
                     $productTaxAmount = $productPrice * ($productTaxPercent / 100);
