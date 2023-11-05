@@ -548,6 +548,7 @@ class Shop extends MY_Shop_Controller
             );
         }
 
+        
         //var_dump($pro_weight);
         $params = array(
             'Shipments' => array(
