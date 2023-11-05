@@ -1913,7 +1913,7 @@ class system_settings extends MY_Controller
                     fclose($handle);
                 }
                 $titles = array_shift($arrResult);
-                $keys   = ['name', 'code', 'image'];
+                $keys   = ['name', 'code', 'image', 'slug', 'description'];
                 $final  = [];
                 foreach ($arrResult as $key => $value) {
                     $final[] = array_combine($keys, $value);
@@ -1925,6 +1925,8 @@ class system_settings extends MY_Controller
                             'code'  => trim($csv_ct['code']),
                             'name'  => trim($csv_ct['name']),
                             'image' => trim($csv_ct['image']),
+                            'slug' => trim($csv_ct['slug']),
+                            'description' => trim($csv_ct['description']),
                         ];
                     }
                 }
