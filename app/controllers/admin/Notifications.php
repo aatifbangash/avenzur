@@ -208,6 +208,34 @@ class Notifications extends MY_Controller
         $this->page_construct('notifications/rasd', $meta, $this->data);
     }
 
+    public function add_rasd_serials_from_csv(){
+        $file_name = base_url('assets/csv/sample_adjustments_retaj.csv');
+
+        if (($handle = fopen($csvFile, 'r')) !== false) {
+            $header = fgetcsv($handle);  // Read the header row to get column names
+        
+            if ($header !== false) {
+                // Output the column names
+                echo 'Column Names: ' . implode(', ', $header) . '<br>';
+        
+                // Loop through the CSV data and display each row
+                while (($data = fgetcsv($handle)) !== false) {
+                    // Output the data for each column
+                    for ($i = 0; $i < count($header); $i++) {
+                        echo $header[$i] . ': ' . $data[$i] . '<br>';
+                    }
+                    echo '<br>';  // Add a line break between rows
+                }
+            } else {
+                echo 'The CSV file is empty or invalid.';
+            }
+
+            fclose($handle);
+        } else {
+            echo 'Unable to open the CSV file.';
+        }
+    }
+
     public function sync_rasd_serials(){
         $this->load->admin_model('purchases_model');
         $rasd_notifications = $this->cmt_model->getRasdNotifications();
