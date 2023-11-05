@@ -23,7 +23,6 @@ class Cart_ajax extends MY_Shop_Controller
         if ($_GET['newsletterEmail']) {
             $subscription = $this->settings_model->add_newsletter_subscription($_GET['newsletterEmail']);
             if($subscription){
-                echo 'Subscriptions: '.$subscription;exit;
                 $this->session->set_flashdata('message', lang('Subscription added successfully'));
                 redirect($_SERVER['HTTP_REFERER']);
             }else{
