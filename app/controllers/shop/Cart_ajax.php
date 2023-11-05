@@ -35,7 +35,6 @@ class Cart_ajax extends MY_Shop_Controller
 
     public function add($product_id)
     {
-        echo 'Product Id: '.$product_id;exit;
         if ($this->input->is_ajax_request() || $this->input->post('quantity')) {
             $product = $this->shop_model->getProductForCart($product_id);
             $options = $this->shop_model->getProductVariants($product_id);
