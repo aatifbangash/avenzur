@@ -527,8 +527,15 @@ $(document).ready(function(){
             newsletterEmail: newsletterEmail
           }
       }).done(function(t) {
-          console.log(t);
-          t.error ? sa_alert("Error!", t.message, "error", !0) : (
+          if(t.status == 'Error!'){
+            $.toast({
+              heading: 'Error',
+              text: 'Cannot add subscription',
+              position: 'top-right',
+              showHideTransition: 'slide',
+              icon: 'error'
+            })
+          }else{
             $.toast({
               heading: 'Success',
               text: 'Newsletter Subscription Success',
@@ -536,7 +543,7 @@ $(document).ready(function(){
               showHideTransition: 'slide',
               icon: 'success'
             })
-          )
+          }
       })
   });
 
