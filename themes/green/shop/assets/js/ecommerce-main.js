@@ -527,6 +527,7 @@ $(document).ready(function(){
             newsletterEmail: newsletterEmail
           }
       }).done(function(t) {
+          console.log(t);
           t.error ? sa_alert("Error!", t.message, "error", !0) : (
             $.toast({
               heading: 'Success',
