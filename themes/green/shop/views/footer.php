@@ -190,6 +190,12 @@
 
         $(".add_item_search").autocomplete({
             source: function (request, response) {
+                
+                   // $('#add_item').val('').removeClass('ui-autocomplete-loading');
+                    //bootbox.alert('<?=lang('select_above');?>');
+                   // $('#add_item').focus();
+                    
+                
                 $.ajax({
                     type: 'get',
                     url: '<?php echo base_url();?>shop/suggestions',
@@ -211,6 +217,7 @@
                 event.preventDefault();
                 if (ui.item.id !== 0) {
                    // var row = add_invoice_item(ui.item);
+                   
                    window.open(ui.item.plink,'_self');
                     if (row)
                         $(this).val('');
@@ -235,7 +242,10 @@
           }
         });
 
-
+        var $uiIdElement = $("#ui-id-1").detach();
+    
+        // Append the detached element to the form with the class "d-flex search-bar"
+        $("#autocomplete-suggestions").append($uiIdElement);
       });
     </script>
     <script src="<?= $assets; ?>js/jquery-ui.min.js"></script>
