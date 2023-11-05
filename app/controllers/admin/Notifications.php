@@ -209,7 +209,7 @@ class Notifications extends MY_Controller
     }
 
     public function add_rasd_serials_from_csv(){
-        $file_name = base_url('assets/csv/sample_adjustments_retaj.csv');
+        $file_name = base_url('assets/uploads/csv/sample_adjustments_retaj.csv');
 
         if (($handle = fopen($csvFile, 'r')) !== false) {
             $header = fgetcsv($handle);  // Read the header row to get column names
