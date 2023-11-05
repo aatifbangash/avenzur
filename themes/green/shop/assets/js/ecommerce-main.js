@@ -521,7 +521,7 @@ $(document).ready(function(){
       /*,i=$(this).parents(".product").find("img").eq(0);if(i){i.clone().offset({top:i.offset().top,left:i.offset().left}).css({opacity:"0.5",position:"absolute",height:"150px",width:"150px","z-index":"1000"}).appendTo($("body")).animate({top:a.offset().top+10,left:a.offset().left+10,width:"50px",height:"50px"},400).animate({width:0,height:0},function(){$(this).detach()})}*/
       $.ajax({
           url: site.site_url + "cart/subscribe_newsletter",
-          type: "POST",
+          type: "GET",
           dataType: "json",
           data: {
             newsletterEmail: newsletterEmail
