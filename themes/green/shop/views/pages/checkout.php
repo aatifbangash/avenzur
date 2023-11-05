@@ -47,7 +47,7 @@
                                     <div class="tab-content padding-lg">
                                         <div role="tabpanel" class="tab-pane fade in active " id="user">
                                             <?php
-                                            $calculateShipping = $this->cart->shipping();
+                                            $calculateShipping = 0;
 
                                             if ($this->loggedIn) {
 
@@ -167,7 +167,7 @@
                                             <input type="hidden" id="shipping-input" name="shipping"
                                                    value="<?= $calculateShipping ?>"/>
                                             <?php
-                                            echo form_submit('add_order', lang('Proceed to Payment'), 'class="btn btn-theme payment-k"');
+                                            echo form_submit('add_order', lang('Proceed to Payment'), 'class="btn btn-theme payment-k" disabled ');
                                             } elseif ($this->Staff) {
                                                 echo '<div class="alert alert-warning margin-bottom-no">' . lang('staff_not_allowed') . '</div>';
                                             } else {
@@ -557,10 +557,13 @@
     function calCulateShipping(city, country, isExpressDelivery = false) {
 
         $("#express-delivery-check").prop("disabled", true);
+        $('.payment-k').prop('disabled', true);
+
         var shipping = parseInt('<?= round($calculateShipping); ?>');
         if (city != '' || country != '') {
 
             if (country.toLowerCase() === 'saudi arabia') {
+                $('.payment-k').prop('disabled', false)
                 shipping = 19
 
                 if (city.toLowerCase() === 'riyadh') {
@@ -582,6 +585,7 @@
                 'united arab emirates',
                 'uae']
                 .includes(country.toLowerCase())) { //GCC
+                $('.payment-k').prop('disabled', false)
                 shipping = 32
             }
 

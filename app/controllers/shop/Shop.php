@@ -1017,6 +1017,14 @@ class Shop extends MY_Shop_Controller
             $this->data['combo_items'] = $this->shop_model->getProductComboItems($product->id);
         }
         $this->shop_model->updateProductViews($product->id, $product->views);
+
+        if ($product->tax_method == '1' && $product->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
+            $productTaxPercent = $product->taxPercentage;
+            $productPrice = $product->price;
+            $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+            $product->price = $productPrice + $productTaxAmount;
+        }
+
         $this->data['product'] = $product;
         $this->data['other_products'] = $this->shop_model->getOtherProducts($product->id, $product->category_id, $product->brand);
         $this->data['unit'] = $this->site->getUnitByID($product->unit);
