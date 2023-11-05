@@ -23,11 +23,9 @@ class Cart_ajax extends MY_Shop_Controller
         if ($_GET['newsletterEmail']) {
             $subscription = $this->settings_model->add_newsletter_subscription($_GET['newsletterEmail']);
             if($subscription){
-                $this->session->set_flashdata('message', lang('Subscription added successfully'));
-                redirect($_SERVER['HTTP_REFERER']);
+                $this->sma->send_json(['status' => lang('error'), 'message' => 'Unable to add subscription']);
             }else{
-                $this->session->set_flashdata('error', 'Unable to add subscription');
-                redirect($_SERVER['HTTP_REFERER']);
+                $this->sma->send_json(['status' => lang('success'), 'message' => 'Subscription added successfully']);
             }
         }
     }
