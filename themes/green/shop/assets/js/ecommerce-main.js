@@ -530,7 +530,7 @@ $(document).ready(function(){
           if(t.status == 'Error!'){
             $.toast({
               heading: 'Error',
-              text: 'Cannot add subscription',
+              text: t.message,
               position: 'top-right',
               showHideTransition: 'slide',
               icon: 'error'
@@ -538,7 +538,7 @@ $(document).ready(function(){
           }else{
             $.toast({
               heading: 'Success',
-              text: 'Newsletter Subscription Success',
+              text: t.message,
               position: 'top-right',
               showHideTransition: 'slide',
               icon: 'success'
