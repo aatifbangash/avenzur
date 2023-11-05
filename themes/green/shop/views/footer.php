@@ -190,12 +190,6 @@
 
         $(".add_item_search").autocomplete({
             source: function (request, response) {
-                
-                   // $('#add_item').val('').removeClass('ui-autocomplete-loading');
-                    //bootbox.alert('<?=lang('select_above');?>');
-                   // $('#add_item').focus();
-                    
-                
                 $.ajax({
                     type: 'get',
                     url: '<?php echo base_url();?>shop/suggestions',
