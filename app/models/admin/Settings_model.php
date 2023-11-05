@@ -10,7 +10,6 @@ class Settings_model extends CI_Model
     }
 
     public function add_newsletter_subscription($newletterEmail){
-        echo 'Newsletter Email: '.$newletterEmail;exit;
         $q = $this->db->get_where('sma_newsletter_subscribers', ['email' => $newletterEmail], 1);
         if ($q->num_rows() > 0) {
             return false;
