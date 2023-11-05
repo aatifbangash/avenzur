@@ -644,7 +644,7 @@
       </div>
     </section>
 <!-- join container -->
-    <section class="join-container " >
+    <section class="join-container mb-2" >
       <div class="container container-max-width py-5" style="background-image: url(<?= base_url('assets/images/banners/bgbanner.jpg'); ?>);">
         <div class="text-center">
           <h2>Join our newsletter</h2>
@@ -652,8 +652,8 @@
           <form class="d-flex search-bar w-50 mx-auto" role="search">
               
             
-              <input class="form-control border-0 bg-white py-3 ps-5" type="search" placeholder="Subscribe to our newsletter?" aria-label="Search">
-              <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
+              <input class="form-control border-0 bg-white py-3 ps-5" id="newsletterEmail" type="search" placeholder="Subscribe to our newsletter?" aria-label="Search">
+              <button class="btn searchsubmitBtn" id="newsletterSubscribe" type="submit"><i class="bi bi-search"></i></button>
             </form>
         </div>
       </div>
