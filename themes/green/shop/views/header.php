@@ -169,6 +169,7 @@
               <input name="query" class="form-control border-0 bg-transparent py-3 add_item_search"  id="product-search" type="search" placeholder="What are you looking for?" aria-label="Search">
               <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
             <?= form_close(); ?>
+            <ul id="autocomplete-suggestions" class="ui-autocomplete"></ul>
           </div>
           <div class="col-lg-2 col-md-1 ps-md-0" id="salemob"></div>
 
