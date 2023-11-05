@@ -158,7 +158,7 @@ class Shop_model extends CI_Model
         foreach ($categories as $category) {
             $category->name = ucfirst(strtolower($category->name));
         }
-    
+
         return $categories;
     }
 
@@ -325,7 +325,7 @@ class Shop_model extends CI_Model
         $result = $this->db->get('products')->result();
 //        dd($result);
         array_map(function ($row) {
-            if ($row->tax_method == '0' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
+            if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
                 $productTaxPercent = $row->taxPercentage;
                 $productPrice = $row->price;
                 $productTaxAmount = $productPrice * ($productTaxPercent / 100);
@@ -426,7 +426,7 @@ class Shop_model extends CI_Model
 //        dd($result);
 
         array_map(function ($row) {
-            if ($row->tax_method == '0' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
+            if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
                 $productTaxPercent = $row->taxPercentage;
                 $productPrice = $row->price;
                 $productTaxAmount = $productPrice * ($productTaxPercent / 100);
