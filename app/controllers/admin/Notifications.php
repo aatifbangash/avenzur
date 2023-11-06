@@ -231,7 +231,8 @@ class Notifications extends MY_Controller
                         }
 
                         if($header[$i] == 'Batch'){
-                            $insertArr[$k]['batch_no'] = $data[$i];
+                            $cleaned_batch_no = preg_replace('/[^a-zA-Z0-9]/', '', $data[$i]);
+                            $insertArr[$k]['batch_no'] = $cleaned_batch_no;
                         }
 
                         if($header[$i] == 'Expiry'){
