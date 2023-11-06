@@ -72,8 +72,20 @@
             </div>
                     <div class="product-desc border-top border-bottom" id="show_desc">
                 <p class="m-0 py-3">
-                    <span><?= mb_strimwidth($product->product_details, 0, 350, ''); ?></span>
-                    <a id="a_desc" style="text-decoration: underline;cursor: pointer;">More...</a>
+                    <span><?php 
+                        if(strlen($product->product_details) > 350){
+                            echo mb_strimwidth($product->product_details, 0, 350, ''); 
+                        }else{
+                            echo $product->product_details;
+                        }   
+                    ?></span>
+                    <?php 
+                    if(strlen($product->product_details) > 350){
+                        ?>
+                        <a id="a_desc" style="text-decoration: underline;cursor: pointer;">More...</a>
+                        <?php
+                    }
+                    ?>
                 </p>
 
             </div>
