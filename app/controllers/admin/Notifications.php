@@ -235,7 +235,9 @@ class Notifications extends MY_Controller
                         }
 
                         if($header[$i] == 'Expiry'){
-                            $insertArr[$k]['expiry'] = $data[$i];
+                            $timestamp = strtotime($data[$i]);
+                            $formattedDate = date('Y-m-d', $timestamp);
+                            $insertArr[$k]['expiry'] = $formattedDate;
                         }
                     }
 
