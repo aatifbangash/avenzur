@@ -73,7 +73,7 @@
                     <div class="product-desc border-top border-bottom">
                 <p class="m-0 py-3" id="show_desc">
                     <?= mb_strimwidth($product->product_details, 0, 350, ''); ?>
-                    <a onclick="showMore('show_desc');" style="text-decoration: underline;cursor: pointer;">More...</a>
+                    <a onClick="showMore('show_desc');" style="text-decoration: underline;cursor: pointer;">More...</a>
                 </p>
 
             </div>
