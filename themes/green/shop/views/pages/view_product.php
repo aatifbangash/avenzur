@@ -73,7 +73,7 @@
                     <div class="product-desc border-top border-bottom">
                 <p class="m-0 py-3" id="show_desc">
                     <?= mb_strimwidth($product->product_details, 0, 350, ''); ?>
-                    <a onclick="showMore('show_desc');" style="color:blue;text-decoration: underline;">Read More...</a>
+                    <a onclick="showMore('show_desc');" style="text-decoration: underline;cursor: pointer;">More...</a>
                 </p>
 
             </div>
@@ -202,3 +202,10 @@
     </div>
 </section>
 <!-- join section end -->
+
+<script>
+    function showMore(id){
+        var showId = document.getElementById(id);
+        showId.innerHtml = '<?= $product->product_details; ?>';
+    }
+</script>
