@@ -239,6 +239,13 @@
                                                     <h5><strong><?= lang('billing_address'); ?></strong></h5>
                                                     <input type="hidden" value="new" name="address">
                                                     <hr>
+
+
+                                                    <div class="form-group">
+                                                        <?= lang('Search_For_The_Billing_Address', ''); ?>
+                                                        <input id="autocomplete_search_billing" type="text" class="form-control"
+                                                               placeholder="" />
+                                                    </div>
                                                     <div class="form-group">
                                                         <?= lang('line1', 'billing_line1'); ?> *
                                                         <?= form_input('billing_line1', set_value('billing_line1'), 'class="form-control" id="billing_line1" required="required"'); ?>
@@ -283,18 +290,20 @@
 
                                                     <div class="form-group">
                                                         <?= lang('country', 'country'); ?> *
-                                                        <select class="form-control" id="billing_country"
+
+                                                        <?= form_input('billing_country', set_value('billing_country'), 'class="form-control" id="billing_country" required="required"'); ?>
+                                                        <!--<select class="form-control" id="billing_country"
                                                                 name="billing_country">
 
 
                                                             <?php
-                                                            foreach ($country as $u) {
+/*                                                            foreach ($country as $u) {
                                                                 echo '<option value="' . $u->code . '">' . $u->name . '</option>';
                                                             }
-                                                            ?>
+                                                            */?>
 
 
-                                                        </select>
+                                                        </select>-->
 
                                                         <!--form_input('billing_country', set_value('billing_country'), 'class="form-control" id="billing_country" required="required"')-->
                                                     </div>
@@ -314,6 +323,11 @@
                                                     <h5><strong><?= lang('shipping_address'); ?></strong></h5>
                                                     <input type="hidden" value="new" name="address">
                                                     <hr>
+                                                    <div class="form-group">
+                                                        <?= lang('Search_For_The_Shipping_Address', ''); ?>
+                                                        <input id="autocomplete_search_shipping" type="text" class="form-control"
+                                                               placeholder="" />
+                                                    </div>
                                                     <div class="form-group">
                                                         <?= lang('line1', 'shipping_line1'); ?> *
                                                         <?= form_input('shipping_line1', set_value('shipping_line1'), 'class="form-control" id="shipping_line1" required="required"'); ?>
@@ -358,26 +372,7 @@
 
                                                     <div class="form-group">
                                                         <?= lang('country', 'shipping_country'); ?> *
-                                                        <?php
-                                                        //  $opts[''] = lang('select') . ' ' . lang('country');
-                                                        //     foreach ($country as $country) {
-                                                        //         $opts[$country->id] = $country->name;
-                                                        //     }
-                                                        //     echo form_dropdown('shipping_country', $opts, 'class="form-control" id="shipping_country"  required="required"');
-                                                        ?>
-
-                                                        <select class="form-control" id="shipping_country"
-                                                                name="shipping_country">
-
-
-                                                            <?php
-                                                            foreach ($country as $u) {
-                                                                echo '<option value="' . $u->code . '">' . $u->name . '</option>';
-                                                            }
-                                                            ?>
-
-
-                                                        </select>
+                                                        <?= form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required"'); ?>
                                                         <!--<select name="shipping_country" id="shipping_country" class="form-control"  required="required">-->
                                                         <!--  <option value="SA">Saudi Arabia</option>-->
                                                         <!--  <option value="AE">UAE</option>-->
@@ -607,17 +602,17 @@
             $('#phone').val("+" + countryCode + " " + $('#phone').val());
         });
 
-        $('#billing_country').change(function () {
+        $('#shipping_country').blur(function () {
             $("#express-delivery-check").prop('checked', false)
-            var city = $('#billing_city').val();
-            var country = $('#billing_country').find("option:selected").text();
+            var city = $('#shipping_city').val();
+            var country = $('#shipping_country').val();
             calCulateShipping(city, country);
         })
 
-        $('#billing_city').blur(function () {
+        $('#shipping_city').blur(function () {
             $("#express-delivery-check").prop('checked', false)
-            var city = $('#billing_city').val();
-            var country = $('#billing_country').find("option:selected").text();
+            var city = $('#shipping_city').val();
+            var country = $('#shipping_country').val();
             calCulateShipping(city, country);
         })
 
@@ -627,8 +622,8 @@
                 var country = addressObject.country
                 var city = addressObject.city
             } else {
-                var city = $('#billing_city').val();
-                var country = $('#billing_country').find("option:selected").text();
+                var city = $('#shipping_city').val();
+                var country = $('#shipping_country').val();
             }
             calCulateShipping(city, country, $(this).prop('checked'));
         })
@@ -643,4 +638,101 @@
             }
         })
     });
+</script>
+<script>
+    $(document).ready(function () {
+        google.maps.event.addDomListener(window, 'load', initialize);
+
+        function initialize() {
+            var input = document.getElementById('autocomplete_search_billing');
+            var autocomplete = new google.maps.places.Autocomplete(input);
+            autocomplete.addListener('place_changed', function () {
+
+                document.getElementById('billing_city').value = "";
+                document.getElementById('billing_country').value = "";
+                document.getElementById('billing_line1').value = "";
+                document.getElementById('billing_postal_code').value = "";
+                document.getElementById('billing_state').value = "";
+
+                var place = autocomplete.getPlace();
+                // Define variables to store city and country names
+                var city, country, street, postalCode, stateName;
+
+                // Loop through address components to find city and country
+                place.address_components.forEach(function (component) {
+
+                    component.types.forEach(function (type) {
+                        if (type === 'locality') {
+                            city = component.long_name;
+                            document.getElementById('billing_city').value = city;
+                        }
+                        if (type === 'country') {
+                            country = component.long_name;
+                            document.getElementById('billing_country').value = country;
+                        }
+                        if (type === 'route') {
+                            street = component.long_name
+                            document.getElementById('billing_line1').value = street;
+                        }
+                        if (type === 'postal_code') {
+                            postalCode = component.long_name
+                            document.getElementById('billing_postal_code').value = postalCode;
+                        }
+                        if (type === 'administrative_area_level_1') {
+                            stateName = component.long_name
+                            document.getElementById('billing_state').value = stateName;
+                        }
+                    });
+                });
+
+                // calCulateShipping(city, country)
+            });
+
+
+            var inputShipping = document.getElementById('autocomplete_search_shipping');
+            var autocompleteShipping = new google.maps.places.Autocomplete(inputShipping);
+            autocompleteShipping.addListener('place_changed', function () {
+
+                document.getElementById('shipping_city').value = "";
+                document.getElementById('shipping_country').value = "";
+                document.getElementById('shipping_line1').value = "";
+                document.getElementById('shipping_postal_code').value = "";
+                document.getElementById('shipping_state').value = "";
+
+                var placeShipping = autocompleteShipping.getPlace();
+                // Define variables to store city and country names
+                var cityShipping, countryShipping, streetShipping, postalCodeShipping, stateNameShipping;
+
+                // Loop through address components to find city and country
+                placeShipping.address_components.forEach(function (component) {
+
+                    component.types.forEach(function (type) {
+                        if (type === 'locality') {
+                            cityShipping = component.long_name;
+                            document.getElementById('shipping_city').value = cityShipping;
+                        }
+                        if (type === 'country') {
+                            countryShipping = component.long_name;
+                            document.getElementById('shipping_country').value = countryShipping;
+                        }
+                        if (type === 'route') {
+                            streetShipping = component.long_name
+                            document.getElementById('shipping_line1').value = streetShipping;
+                        }
+                        if (type === 'postal_code') {
+                            postalCodeShipping = component.long_name
+                            document.getElementById('shipping_postal_code').value = postalCodeShipping;
+                        }
+                        if (type === 'administrative_area_level_1') {
+                            stateNameShipping = component.long_name
+                            document.getElementById('shipping_state').value = stateNameShipping;
+                        }
+                    });
+                });
+
+                calCulateShipping(cityShipping, countryShipping)
+            });
+        }
+    })
+
 </script>
