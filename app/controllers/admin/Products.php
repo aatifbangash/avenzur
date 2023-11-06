@@ -32,7 +32,7 @@ class Products extends MY_Controller
             $slug = preg_replace('/[^a-zA-Z0-9]+/', '-', $product->name);
             $slug = strtolower($slug);
             $slug = trim($slug, '-');
-            $slug = $slug.'/'.$product->code;
+            $slug = $slug.'-'.$product->code;
 
             $this->products_model->updateProductSlugs($slug, $product->id);
         }
