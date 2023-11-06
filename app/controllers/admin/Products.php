@@ -34,8 +34,10 @@ class Products extends MY_Controller
             $slug = trim($slug, '-');
             $slug = $slug.'/'.$product->code;
 
-            echo $slug.'<br />';
+            $this->db->update('sma_products', ['slug' => $slug], ['id' => $product->id]);
         }
+
+        echo 'Products Slugs updated...';
     }
 
     public function setProductImages(){
