@@ -71,7 +71,10 @@
                         <div class="product-name"><h2><?= $product->name; ?></h2></div>		        		
             </div>
                     <div class="product-desc border-top border-bottom">
-                <p class="m-0 py-3"><?= mb_strimwidth($product->product_details, 0, 350, '...'); ?></p>
+                <p class="m-0 py-3" id="show_desc">
+                    <?= mb_strimwidth($product->product_details, 0, 350, ''); ?>
+                    <a onclick="showMore('show_desc');">Read More...</a>
+                </p>
 
             </div>
                     <div class="product-price-discount"><h4 class="m-0">
