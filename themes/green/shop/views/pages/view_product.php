@@ -68,7 +68,7 @@
             <div class="col-md-6 col-12">
                 <div class="product-dtl">
                     <div class="product-info">
-                        <div class="product-name"><h2><?= $product->name . ' (' . $product->code . ')'; ?></h2></div>		        		
+                        <div class="product-name"><h2><?= $product->name; ?></h2></div>		        		
             </div>
                     <div class="product-desc border-top border-bottom">
                 <p class="m-0 py-3"><?= $product->product_details; ?></p>
