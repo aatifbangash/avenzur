@@ -71,7 +71,7 @@
                         <div class="product-name"><h2><?= $product->name; ?></h2></div>		        		
             </div>
                     <div class="product-desc border-top border-bottom">
-                <p class="m-0 py-3"><?= $product->product_details; ?></p>
+                <p class="m-0 py-3"><?= mb_strimwidth($product->product_details, 0, 120, '...'); ?></p>
 
             </div>
                     <div class="product-price-discount"><h4 class="m-0">
@@ -131,7 +131,7 @@
         <div class="tab-content" id="productTabsContent">
             <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
             <p class="m-0 py-3 lh-base fs-6">
-                <?= $product->details; ?>
+                <?= $product->product_details; ?>
             </p>
             </div>
             <div class="tab-pane fade" id="additional" role="tabpanel" aria-labelledby="additional-tab">
