@@ -216,16 +216,33 @@ class Notifications extends MY_Controller
             $header = fgetcsv($handle);  // Read the header row to get column names
     
             if ($header !== false) {
-                // Output the column names
-                echo 'Column Names: ' . implode(', ', $header) . '<br>';
     
                 // Loop through the CSV data and display each row
+                $k = 0;
+                $insertArr = array();
                 while (($data = fgetcsv($handle)) !== false) {
-                    // Output the data for each column
                     for ($i = 0; $i < count($header); $i++) {
-                        echo $header[$i] . ': ' . $data[$i] . '<br>';
+                        if($header[$i] == 'GTIN'){
+                            $insertArr[$k]['gtin'] = $data[$i];
+                        }
+                        
+                        if($header[$i] == 'SN'){
+                            $insertArr[$k]['serial'] = $data[$i];
+                        }
+
+                        if($header[$i] == 'Batch'){
+                            $insertArr[$k]['batch'] = $data[$i];
+                        }
+
+                        if($header[$i] == 'Expiry'){
+                            $insertArr[$k]['expiry'] = $data[$i];
+                        }
                     }
-                    echo '<br>';  // Add a line break between rows
+
+                    $insertArr[$k]['notification_id'] = '123400089';
+                    $insertArr[$k]['dispatch_id'] = '123400089';
+
+                    $k++;
                 }
             } else {
                 echo 'The CSV file is empty or invalid.';
