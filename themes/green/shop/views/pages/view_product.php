@@ -72,7 +72,7 @@
             </div>
                     <div class="product-desc border-top border-bottom">
                 <p class="m-0 py-3" id="show_desc">
-                    <?= mb_strimwidth($product->product_details, 0, 350, ''); ?>
+                    <span><?= mb_strimwidth($product->product_details, 0, 350, ''); ?></span>
                     <a id="a_desc" style="text-decoration: underline;cursor: pointer;">More...</a>
                 </p>
 
