@@ -34,7 +34,7 @@ class Products extends MY_Controller
             $slug = trim($slug, '-');
             $slug = $slug.'/'.$product->code;
 
-            $this->db->update('sma_products', ['slug' => $slug], ['id' => $product->id]);
+            $this->products_model->updateProductSlugs($slug, $product->id);
         }
 
         echo 'Products Slugs updated...';

@@ -945,6 +945,10 @@ class Products_model extends CI_Model
         }
     }
 
+    public function updateProductSlugs($slug, $product_id){
+        $this->db->update('sma_products', ['slug' => $slug], ['id' => $product_id]);
+    }
+
     public function updateProductImages($imgArr){
         foreach ($imgArr as $img){
             echo 'Upading Code: '.$img.'<br />';
