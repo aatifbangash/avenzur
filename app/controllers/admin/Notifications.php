@@ -245,8 +245,9 @@ class Notifications extends MY_Controller
 
                     $k++;
                 }
-
-                $this->db->insert_batch('sma_notification_serials', $insertArr);
+                echo '<pre>';
+                print_r($insertArr);
+                //$this->db->insert_batch('sma_notification_serials', $insertArr);
                 echo 'Data entered successfully...';
             } else {
                 echo 'The CSV file is empty or invalid.';
