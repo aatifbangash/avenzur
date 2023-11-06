@@ -25,6 +25,19 @@ class Products extends MY_Controller
         $this->popup_attributes    = ['width' => '900', 'height' => '600', 'window_name' => 'sma_popup', 'menubar' => 'yes', 'scrollbars' => 'yes', 'status' => 'no', 'resizable' => 'yes', 'screenx' => '0', 'screeny' => '0'];
     }
 
+    public function setProductSlugs(){
+        $products = $this->products_model->getAllProducts();
+
+        foreach($products as $product){
+            $slug = preg_replace('/[^a-zA-Z0-9]+/', '-', $product->name);
+            $slug = strtolower($slug);
+            $slug = trim($slug, '-');
+            $slug = $slug.'/'.$product->code;
+
+            echo $slug.'<br />';
+        }
+    }
+
     public function setProductImages(){
         $images = "111004213, 121017310-a, 121017310, 121019636, 121019708, 121019754, 121019756, 121020664, 121020673, 121020722, 121020838, 121020904, 121020905, 131000049";
         $imgArr = explode(",",$images);
