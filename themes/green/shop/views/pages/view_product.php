@@ -207,7 +207,7 @@
 
     $(document).on("click", "#a_desc", function(t) {
         var showId = document.getElementById('show_desc');
-        showId.innerHtml = '<?= $product->product_details; ?>';
+        showId.innerHTML = '<?= $product->product_details; ?>';
     });
     
 </script>
