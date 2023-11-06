@@ -71,7 +71,7 @@
                         <div class="product-name"><h2><?= $product->name; ?></h2></div>		        		
             </div>
                     <div class="product-desc border-top border-bottom">
-                <p class="m-0 py-3"><?= mb_strimwidth($product->product_details, 0, 120, '...'); ?></p>
+                <p class="m-0 py-3"><?= mb_strimwidth($product->product_details, 0, 350, '...'); ?></p>
 
             </div>
                     <div class="product-price-discount"><h4 class="m-0">
