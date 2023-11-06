@@ -241,6 +241,7 @@ class Notifications extends MY_Controller
 
                     $insertArr[$k]['notification_id'] = '123400089';
                     $insertArr[$k]['dispatch_id'] = '123400089';
+                    $insertArr[$k]['used'] = 0;
 
                     $k++;
                 }
