@@ -133,7 +133,7 @@
         </ul>
         <div class="tab-content" id="productTabsContent">
             <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
-            <p class="m-0 py-3 lh-base fs-6">
+            <p class="m-0 py-3 lh-base fs-6" id="full_desc">
                 <?= $product->product_details; ?>
             </p>
             </div>
@@ -207,8 +207,8 @@
 
     $(document).on("click", "#a_desc", function(t) {
         var showId = document.getElementById('show_desc');
-        console.log('Here we are.......');
-        
+        var fullDesc = document.getElementById('full_desc').innerHTML;
+        showId.innerHTML = fullDesc;
     });
     
 </script>
