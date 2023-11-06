@@ -244,6 +244,9 @@ class Notifications extends MY_Controller
 
                     $k++;
                 }
+
+                echo '<pre>';
+                print_r($insertArr);
             } else {
                 echo 'The CSV file is empty or invalid.';
             }
