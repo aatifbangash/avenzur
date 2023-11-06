@@ -81,9 +81,9 @@
                     ?></span>
                     <?php 
                     if(strlen($product->product_details) > 350){
-                        ?>
-                        <a id="a_desc" style="text-decoration: underline;cursor: pointer;">More...</a>
-                        <?php
+                    ?>
+                    <a id="a_desc" style="text-decoration: underline;cursor: pointer;float: right;margin-right: 50px; color: grey;">More...</a>
+                    <?php
                     }
                     ?>
                 </p>
