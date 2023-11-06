@@ -206,10 +206,8 @@
 <script>
 
     $(document).on("click", "#a_desc", function(t) {
-        console.log(t);
-    });
-    /*function showMore(id){
-        var showId = document.getElementById(id);
+        var showId = document.getElementById('show_desc');
         showId.innerHtml = '<?= $product->product_details; ?>';
-    }*/
+    });
+    
 </script>
