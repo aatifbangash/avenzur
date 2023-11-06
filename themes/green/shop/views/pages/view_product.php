@@ -208,6 +208,7 @@
     $(document).on("click", "#a_desc", function(t) {
         var showId = document.getElementById('show_desc');
         var fullDesc = document.getElementById('full_desc').innerHTML;
+        console.log(fullDesc);
         showId.innerHTML = fullDesc;
     });
     
