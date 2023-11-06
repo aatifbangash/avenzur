@@ -227,11 +227,11 @@ class Notifications extends MY_Controller
                         }
                         
                         if($header[$i] == 'SN'){
-                            $insertArr[$k]['serial'] = $data[$i];
+                            $insertArr[$k]['serial_no'] = $data[$i];
                         }
 
                         if($header[$i] == 'Batch'){
-                            $insertArr[$k]['batch'] = $data[$i];
+                            $insertArr[$k]['batch_no'] = $data[$i];
                         }
 
                         if($header[$i] == 'Expiry'){
