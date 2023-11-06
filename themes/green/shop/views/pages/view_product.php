@@ -70,7 +70,6 @@
                     <div class="product-info">
                         <div class="product-name">
                             <h2><?= $product->name; ?></h2>
-                            <b><?= $product->brand; ?></b>
                         </div>		        		
             </div>
                     <div class="product-desc border-top border-bottom" id="show_desc">
