@@ -70,8 +70,8 @@
                     <div class="product-info">
                         <div class="product-name"><h2><?= $product->name; ?></h2></div>		        		
             </div>
-                    <div class="product-desc border-top border-bottom">
-                <p class="m-0 py-3" id="show_desc">
+                    <div class="product-desc border-top border-bottom" id="show_desc">
+                <p class="m-0 py-3">
                     <span><?= mb_strimwidth($product->product_details, 0, 350, ''); ?></span>
                     <a id="a_desc" style="text-decoration: underline;cursor: pointer;">More...</a>
                 </p>
@@ -133,7 +133,7 @@
         </ul>
         <div class="tab-content" id="productTabsContent">
             <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
-            <p class="m-0 py-3 lh-base fs-6" id="full_desc">
+            <p class="m-0 py-3 lh-base fs-6">
                 <?= $product->product_details; ?>
             </p>
             </div>
@@ -207,7 +207,7 @@
 
     $(document).on("click", "#a_desc", function(t) {
         var showId = document.getElementById('show_desc');
-        var fullDesc = document.getElementById('full_desc').innerHTML;
+        var fullDesc = document.getElementById('description').innerHTML;
         console.log(fullDesc);
         showId.innerHTML = fullDesc;
     });
