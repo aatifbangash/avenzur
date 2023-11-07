@@ -68,6 +68,7 @@
             <div class="col-md-7 col-12">
                 <div class="product-dtl">
                     <div class="product-info">
+                        <span><?= $brand->name; ?></span>
                         <div class="product-name">
                             <h2><?= $product->name; ?></h2>
                         </div>		        		
