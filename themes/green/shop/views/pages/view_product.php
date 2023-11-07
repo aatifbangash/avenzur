@@ -201,8 +201,8 @@
 </section>
 
 <!-- join container -->
-<section class="join-container " >
-    <div class="container container-max-width py-5" style="background-image: url(<?= base_url('assets/images/banners/bgbanner.jpg'); ?>);">
+<!--<section class="join-container " >
+    <div class="container container-max-width py-5" style="background-image: url(<?php //echo base_url('assets/images/banners/bgbanner.jpg'); ?>);">
     <div class="text-center">
         <h2>Join our newsletter</h2>
         <p>Join over half a million vitamin lovers and get our latest deals, articles, and resources!</p>
@@ -214,7 +214,7 @@
         </form>
     </div>
     </div>
-</section>
+</section>-->
 <!-- join section end -->
 
 <script>
