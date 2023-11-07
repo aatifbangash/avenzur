@@ -95,7 +95,7 @@
                 
             </h4></div>
 
-            <div class="product-desc border-top border-bottom" id="show_desc">
+            <div class="product-desc border-top border-bottom" id="show_desc" style="min-height: 320px;">
                 <p class="m-0 py-3">
                     <span><?php 
                         if(strlen($product->details) > 350){
@@ -115,7 +115,7 @@
 
             </div>
                     
-            <div class="product-detail product-count d-flex align-items-center " style="width: fit-content;min-height: 320px;">
+            <div class="product-detail product-count d-flex align-items-center " style="width: fit-content;">
                         
                 <form action="#" class=" quantity text-end py-2 d-flex align-items-center justify-content-md-between">
                 
