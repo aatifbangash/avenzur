@@ -628,10 +628,10 @@ if (!empty($variants)) {
                     <div class="form-group all">
                         <?php 
                             $bullets_html = '<p><strong>Highlights:</strong></p>';
-                            $bullets_html .= '<p><ul><li>Point 1</li>';
-                            $bullets_html .= '<li>Point 2</li>';
-                            $bullets_html .= '<li>Point 3</li>';
-                            $bullets_html .= '<li>Point 4</li>';
+                            $bullets_html .= '<p><ul><li><strong></strong>Point 1</li>';
+                            $bullets_html .= '<li><strong></strong>Point 2</li>';
+                            $bullets_html .= '<li><strong></strong>Point 3</li>';
+                            $bullets_html .= '<li><strong></strong>Point 4</li>';
                             $bullets_html .= '</ul></p>';
                         ?>
                         <?= lang('Bullet Points', 'details') ?>
