@@ -95,7 +95,7 @@
                 
             </h4></div>
 
-            <div class="product-desc border-top border-bottom" id="show_desc" style="min-height: 220px;">
+            <div class="product-desc border-top border-bottom" id="show_desc" style="min-height: 220px;line-height: 35px;">
                 <p class="m-0 py-3">
                     <span><?php 
                         if(strlen($product->details) > 350){
