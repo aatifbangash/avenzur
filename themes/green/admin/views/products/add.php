@@ -628,7 +628,11 @@ if (!empty($variants)) {
                     <div class="form-group all">
                         <?php 
                             $bullets_html = '<p><strong>Highlights</strong></p>';
-                            $bullets_html .= '<ul><li><strong>Point 1</strong></li></ul>';
+                            $bullets_html .= '<ul><li>Point 1</li>';
+                            $bullets_html .= '<li>Point 2</li>';
+                            $bullets_html .= '<li>Point 3</li>';
+                            $bullets_html .= '<li>Point 4</li>';
+                            $bullets_html .= '</ul>';
                         ?>
                         <?= lang('Bullet Points', 'details') ?>
                         <?= form_textarea('details', ($_POST['details'] ?? ($product ? $product->details : '<b>'.$bullets_html.'</b><br />')), 'class="form-control" id="details"'); ?>
