@@ -627,7 +627,7 @@ if (!empty($variants)) {
 
                     <div class="form-group all">
                         <?= lang('Bullet Points', 'details') ?>
-                        <?= form_textarea('details', ($_POST['details'] ?? ($product ? $product->details : '<b>Bullet Points</b>')), 'class="form-control" id="details"'); ?>
+                        <?= form_textarea('details', ($_POST['details'] ?? ($product ? $product->details : '<b>Highlights</b>')), 'class="form-control" id="details"'); ?>
                     </div>
 
                     <div class="form-group all">
