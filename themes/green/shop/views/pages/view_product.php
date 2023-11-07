@@ -77,6 +77,24 @@
                             <h2><?= $product->name; ?></h2>
                         </div>		        		
             </div>
+
+            <div class="product-price-discount"><h4 class="m-0">
+                <?php 
+                    if ($product->promotion) {
+                        ?>
+                            <span><?= $this->sma->convertMoney($product->promo_price); ?></span>
+                            <span class="line-through"><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?></span>
+                        <?php
+                    } else{
+                        ?>
+                            <span><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?></span>
+                        <?php
+                    }
+                    
+                ?>
+                
+            </h4></div>
+
             <div class="product-desc border-top border-bottom" id="show_desc">
                 <p class="m-0 py-3">
                     <span><?php 
@@ -96,23 +114,8 @@
                 </p>
 
             </div>
-                    <div class="product-price-discount"><h4 class="m-0">
-                        <?php 
-                            if ($product->promotion) {
-                                ?>
-                                    <span><?= $this->sma->convertMoney($product->promo_price); ?></span>
-                                    <span class="line-through"><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?></span>
-                                <?php
-                            } else{
-                                ?>
-                                    <span><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?></span>
-                                <?php
-                            }
-                            
-                        ?>
-                        
-                    </h4></div>
-                    <div class="product-detail product-count d-flex align-items-center " style="width: fit-content;">
+                    
+                <div class="product-detail product-count d-flex align-items-center " style="width: fit-content;">
                         
                 <form action="#" class=" quantity text-end py-2 d-flex align-items-center justify-content-md-between">
                 
