@@ -87,7 +87,7 @@
                         <?php
                     } else{
                         ?>
-                            <span style="font-weight: bold;font-size: 20px;"><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?></span>
+                            <span style="font-weight: bold; font-size: 20px;"><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?></span>
                         <?php
                     }
                     
