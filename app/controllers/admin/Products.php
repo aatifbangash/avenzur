@@ -1811,6 +1811,7 @@ class Products extends MY_Controller
                         'supplier5_part_no' => isset($value[39]) ? trim($value[39]) : '',
                         'supplier5price'    => isset($value[40]) ? trim($value[40]) : '',
                         'slug'              => $this->Settings->use_code_for_slug ? $this->sma->slug($value[1]) : $this->sma->slug($value[0]),
+                        'hide'              => isset($value[41]) ? trim($value[41]) : '',
                     ];
 
                     if ($catd = $this->products_model->getCategoryByCode($item['category_code'])) {
