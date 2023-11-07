@@ -68,7 +68,11 @@
             <div class="col-md-7 col-12">
                 <div class="product-dtl">
                     <div class="product-info">
-                        <span style="background: #662d91;color: #fff;padding: 3px;font-size: 13px;border-radius: 3px;"><?= $brand->name; ?></span>
+                        <?php if(isset($brand->name)){
+                            ?>
+                                <span style="background: #662d91;color: #fff;padding: 3px;font-size: 13px;border-radius: 3px;"><?= $brand->name; ?></span>
+                            <?php
+                        } ?>
                         <div class="product-name">
                             <h2><?= $product->name; ?></h2>
                         </div>		        		
