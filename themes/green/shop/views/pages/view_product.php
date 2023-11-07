@@ -222,8 +222,23 @@
     $(document).on("click", "#a_desc", function(t) {
         var showId = document.getElementById('show_desc');
         var fullDesc = document.getElementById('description').innerHTML;
-        fullDesc += '<a id="l_desc" style="text-decoration: underline;cursor: pointer;float: right;margin-right: 50px; color: grey;">More...</a>';
+        fullDesc += '<a id="l_desc" style="text-decoration: underline;cursor: pointer;float: right;margin-right: 50px; color: grey;">Less...</a>';
         showId.innerHTML = fullDesc;
     });
+
+    $(document).on("click", "#l_desc", function(t) {
+        var showId = document.getElementById('show_desc');
+        var fullDesc = limitText(document.getElementById('description').innerHTML, 300);
+        fullDesc += '<a id="a_desc" style="text-decoration: underline;cursor: pointer;float: right;margin-right: 50px; color: grey;">More...</a>';
+        showId.innerHTML = fullDesc;
+    });
+
+    function limitText(text, maxLength) {
+        if (text.length <= maxLength) {
+            return text;
+        } else {
+            return text.slice(0, maxLength) + '...';
+        }
+    }
     
 </script>
