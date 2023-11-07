@@ -1383,9 +1383,6 @@ class Shop extends MY_Shop_Controller
                     'row' => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, 'plink' => base_url() . 'product/' . $row->slug];
                 $r++;
             }
-            echo '<pre>';
-            print_r($pr);
-            exit;
             $this->sma->send_json($pr);
 
         } else {
