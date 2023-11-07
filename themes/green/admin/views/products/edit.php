@@ -608,13 +608,13 @@ if (!empty($variants)) {
                         -->
 
                     <div class="form-group all">
-                        <?= lang('Bullet Points', 'details').'Pr-details: '.strlen($product->details); ?>
-                        <?= form_textarea('details', (isset($_POST['details']) ? $_POST['details'].'Peeep' : ($product && strlen($product->details) > 0 != '' ? $product->details.'pooop' : '<b>'.$bullets_html.'</b>')), 'class="form-control" id="details"'); ?>
+                        <?= lang('Bullet Points', 'details') ?>
+                        <?= form_textarea('details', (isset($_POST['details']) ? $_POST['details'] : ($product && !empty($product->details) ? $product->details : '<b>Highlights:</b>')), 'class="form-control" id="details"'); ?>
                     </div>
 
                     <div class="form-group all">
                         <?= lang('product_details', 'product_details') ?>
-                        <?= form_textarea('product_details', (isset($_POST['product_details']) ? $_POST['product_details'] : ($product && strlen($product->product_details) > 0 != '' ? $product->product_details : '<b>Product Description:</b>')), 'class="form-control" id="details"'); ?>
+                        <?= form_textarea('product_details', (isset($_POST['product_details']) ? $_POST['product_details'] : ($product && !empty($product->product_details) ? $product->product_details : '<b>Product Description:</b>')), 'class="form-control" id="details"'); ?>
                     </div>
 
                     <div class="form-group">
