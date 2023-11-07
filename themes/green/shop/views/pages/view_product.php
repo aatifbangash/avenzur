@@ -82,8 +82,8 @@
                 <?php 
                     if ($product->promotion) {
                         ?>
-                            <span style="font-weight: bold;font-size: 20px;"><?= $this->sma->convertMoney($product->promo_price); ?></span>
-                            <span class="line-through"><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?> (vat inclusive)</span>
+                            <span style="font-weight: bold;font-size: 20px;"><?= $this->sma->convertMoney($product->promo_price); ?> (vat inclusive)</span>
+                            <span class="line-through"><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?> </span>
                         <?php
                     } else{
                         ?>
