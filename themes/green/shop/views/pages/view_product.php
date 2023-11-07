@@ -82,12 +82,12 @@
                 <?php 
                     if ($product->promotion) {
                         ?>
-                            <span><?= $this->sma->convertMoney($product->promo_price); ?></span>
+                            <span style="font-weight: bold;"><?= $this->sma->convertMoney($product->promo_price); ?></span>
                             <span class="line-through"><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?></span>
                         <?php
                     } else{
                         ?>
-                            <span><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?></span>
+                            <span style="font-weight: bold;"><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?></span>
                         <?php
                     }
                     
