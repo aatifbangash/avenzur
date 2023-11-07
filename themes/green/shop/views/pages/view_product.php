@@ -87,7 +87,7 @@
                         <?php
                     } else{
                         ?>
-                            <span style="font-weight: bold; font-size: 20px;"><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?> (vat inclusive)</span>
+                            <span style="font-weight: bold; font-size: 20px;"><?= $this->sma->convertMoney(isset($product->special_price) ? $product->special_price : $product->price); ?> <span style="font-size: 12px;font-weight: normal;">(vat inclusive)</span></span>
                         <?php
                     }
                     
@@ -95,7 +95,7 @@
                 
             </h4></div>
 
-            <div class="product-desc border-top border-bottom" id="show_desc" style="min-height: 320px;">
+            <div class="product-desc border-top border-bottom" id="show_desc" style="min-height: 220px;">
                 <p class="m-0 py-3">
                     <span><?php 
                         if(strlen($product->details) > 350){
