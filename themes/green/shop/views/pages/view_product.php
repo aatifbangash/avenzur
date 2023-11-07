@@ -72,7 +72,7 @@
                             <h2><?= $product->name; ?></h2>
                         </div>		        		
             </div>
-                    <div class="product-desc border-top border-bottom" id="show_desc">
+            <div class="product-desc border-top border-bottom" id="show_desc">
                 <p class="m-0 py-3">
                     <span><?php 
                         if(strlen($product->product_details) > 350){
@@ -222,7 +222,7 @@
     $(document).on("click", "#a_desc", function(t) {
         var showId = document.getElementById('show_desc');
         var fullDesc = document.getElementById('description').innerHTML;
-        console.log(fullDesc);
+        fullDesc += '<a id="l_desc" style="text-decoration: underline;cursor: pointer;float: right;margin-right: 50px; color: grey;">More...</a>';
         showId.innerHTML = fullDesc;
     });
     
