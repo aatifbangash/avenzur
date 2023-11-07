@@ -16,7 +16,7 @@
         
         <div class="row">
         <!-- product image col and thumb slider -->
-            <div class="col-md-4 col-12 pe-md-5">
+            <div class="col-md-5 col-12 pe-md-5">
                 <div id="slider" class="owl-carousel product-slider">
                     <?php
                         if(isset($product->image)){
@@ -65,7 +65,7 @@
 
             <!--product info start  -->
 
-            <div class="col-md-6 col-12">
+            <div class="col-md-7 col-12">
                 <div class="product-dtl">
                     <div class="product-info">
                         <div class="product-name">
