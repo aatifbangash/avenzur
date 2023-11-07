@@ -1147,7 +1147,7 @@ class Shop_model extends CI_Model
             $this->db->where('products.category_id', $category_id);
         }
         if ($pos) {
-            $this->db->where('hide_pos !=', 1);
+            $this->db->where('hide !=', 1);
         }
         $this->db->limit($limit);
         $q = $this->db->get('products');
