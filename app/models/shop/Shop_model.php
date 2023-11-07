@@ -1146,9 +1146,10 @@ class Shop_model extends CI_Model
         if ($category_id != null && $category_id != 0) {
             $this->db->where('products.category_id', $category_id);
         }
-        if ($pos) {
-            $this->db->where('hide !=', 1);
-        }
+        /*if ($pos) {
+            $this->db->where('hide_pos !=', 1);
+        }*/
+        $this->db->where('hide !=', 1);
         $this->db->limit($limit);
         $q = $this->db->get('products');
         $checkCounter = 1;
