@@ -609,12 +609,12 @@ if (!empty($variants)) {
 
                     <div class="form-group all">
                         <?= lang('Bullet Points', 'details') ?>
-                        <?= form_textarea('details', (isset($_POST['details']) ? $_POST['details'] : ($product ? $product->details : '')), 'class="form-control" id="details"'); ?>
+                        <?= form_textarea('details', (isset($_POST['details']) ? $_POST['details'] : ($product && !empty($product->details) ? $product->details : '<b>'.$bullets_html.'</b>')), 'class="form-control" id="details"'); ?>
                     </div>
 
                     <div class="form-group all">
                         <?= lang('product_details', 'product_details') ?>
-                        <?= form_textarea('product_details', (isset($_POST['product_details']) ? $_POST['product_details'] : ($product ? $product->product_details : '')), 'class="form-control" id="details"'); ?>
+                        <?= form_textarea('product_details', (isset($_POST['product_details']) ? $_POST['product_details'] : ($product && !empty($product->product_details) ? $product->product_details : '<b>Product Description:</b>')), 'class="form-control" id="details"'); ?>
                     </div>
 
                     <div class="form-group">
