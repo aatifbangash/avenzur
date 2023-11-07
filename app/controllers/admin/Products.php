@@ -1768,6 +1768,11 @@ class Products extends MY_Controller
                     $supplier_name5 = isset($value[38]) ? trim($value[38]) : '';
                     $supplier5      = $supplier_name5 ? $this->products_model->getSupplierByName($supplier_name5) : null;
 
+                    $slug = preg_replace('/[^a-zA-Z0-9]+/', '-', trim($value[0]));
+                    $slug = strtolower($slug);
+                    $slug = trim($slug, '-');
+                    $slug = $slug.'-'.trim($value[1]);
+
                     $item = [
                         'name'              => isset($value[0]) ? trim($value[0]) : '',
                         'code'              => isset($value[1]) ? trim($value[1]) : '',
@@ -1810,7 +1815,8 @@ class Products extends MY_Controller
                         'supplier5'         => $supplier5 ? $supplier5->id : null,
                         'supplier5_part_no' => isset($value[39]) ? trim($value[39]) : '',
                         'supplier5price'    => isset($value[40]) ? trim($value[40]) : '',
-                        'slug'              => $this->Settings->use_code_for_slug ? $this->sma->slug($value[1]) : $this->sma->slug($value[0]),
+                        //'slug'              => $this->Settings->use_code_for_slug ? $this->sma->slug($value[1]) : $this->sma->slug($value[0]),
+                        'slug'              => $slug,
                         'hide'              => isset($value[41]) ? trim($value[41]) : '',
                     ];
 
