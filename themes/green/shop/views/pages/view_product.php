@@ -228,7 +228,7 @@
 
     $(document).on("click", "#l_desc", function(t) {
         var showId = document.getElementById('show_desc');
-        var fullDesc = limitText(document.getElementById('description').innerHTML, 350);
+        var fullDesc = limitText(document.getElementById('description').innerHTML, 400);
         fullDesc += '<a id="a_desc" style="text-decoration: underline;cursor: pointer;float: right;margin-right: 50px; color: grey;">More...</a>';
         showId.innerHTML = fullDesc;
     });
