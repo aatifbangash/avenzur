@@ -69,7 +69,7 @@ if (!empty($variants)) {
         });
 
         $('#back_product').on("click", function(t) {
-            console.log(t);
+            window.location.href = '<?= admin_url('products'); ?>';
         });
     });
 </script>
