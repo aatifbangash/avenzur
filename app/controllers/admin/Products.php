@@ -1651,7 +1651,7 @@ class Products extends MY_Controller
             $this->datatables->join('categories', 'products.category_id=categories.id', 'left')
             ->join('units', 'products.unit=units.id', 'left')
             ->join('brands', 'products.brand=brands.id', 'left')
-            ->where('products.hidden', 1)
+            ->where('products.hide', 1)
             ->where('products.draft', 0)
             ->group_by("products.id");
         } else {
@@ -1668,7 +1668,7 @@ class Products extends MY_Controller
                 $this->datatables->join('categories', 'products.category_id=categories.id', 'left')
                 ->join('units', 'products.unit=units.id', 'left')
                 ->join('brands', 'products.brand=brands.id', 'left')
-                ->where('products.hidden', 1)
+                ->where('products.hide', 1)
                 ->where('products.draft', 0)
                 ->group_by("products.id");
         }
