@@ -390,6 +390,12 @@
                                             <span class="text"> <?= lang('Shop Products'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="products_draft">
+                                        <a class="submenu" href="<?= admin_url('products/draft'); ?>">
+                                            <i class="fa fa-barcode"></i>
+                                            <span class="text"> <?= lang('Draft Products'); ?></span>
+                                        </a>
+                                    </li>
                                     <li id="products_add">
                                         <a class="submenu" href="<?= admin_url('products/add'); ?>">
                                             <i class="fa fa-plus-circle"></i>
