@@ -67,7 +67,13 @@ if (!empty($variants)) {
 </script>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-edit"></i><?= lang('edit_product'); ?></h2>
+        <h2 class="blue">
+            <i class="fa-fw fa fa-edit"></i><?= lang('edit_product'); ?>
+            <span style="float:left;">
+                <input type="submit" name="save_product" value="Save" class="btn btn-primary">
+                <input type="submit" name="back_product" value="Back" class="btn btn-primary">
+            </span>
+        </h2>
     </div>
     <div class="box-content">
         <div class="row">
