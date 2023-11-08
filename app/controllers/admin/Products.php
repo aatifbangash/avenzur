@@ -1686,7 +1686,7 @@ class Products extends MY_Controller
             ->or_where('supplier5', $supplier)
             ->group_end();
         }
-        $this->datatables->add_column('Actions', $action, 'productid, image, code, name');
+        $this->datatables->add_column('Actions', $action, 'productid, hide, image, code, name');
         echo $this->datatables->generate();
     }
 
