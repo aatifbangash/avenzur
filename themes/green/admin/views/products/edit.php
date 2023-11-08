@@ -65,7 +65,8 @@ if (!empty($variants)) {
         });
 
         $('#save_product').on("click", function(t) {
-            console.log(t);
+            var editForm = document.getElementById('editForm');
+            editForm.submit();
         });
 
         $('#back_product').on("click", function(t) {
@@ -89,7 +90,7 @@ if (!empty($variants)) {
             <div class="col-lg-12">
                 <p class="introtext"><?php echo lang('update_info'); ?></p>
                 <?php
-                $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
+                $attrib = ['data-toggle' => 'validator', 'role' => 'form',  'id' => 'editForm'];
                 echo admin_form_open_multipart('products/edit/' . $product->id, $attrib)
                 ?>
                 <div class="col-md-5">
