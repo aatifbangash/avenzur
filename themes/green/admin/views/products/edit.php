@@ -71,7 +71,7 @@ if (!empty($variants)) {
             <i class="fa-fw fa fa-edit"></i><?= lang('edit_product'); ?>
             
         </h2>
-        <span style="float:right;">
+        <span style="float:right;margin-right:30px">
             <input type="submit" name="save_product" value="Save" class="btn btn-primary">
             <input type="submit" name="back_product" value="Back" class="btn btn-primary">
         </span>
