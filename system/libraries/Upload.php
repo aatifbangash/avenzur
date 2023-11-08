@@ -102,7 +102,7 @@ class CI_Upload {
 	 *
 	 * @var	string
 	 */
-	public $allowed_types = '*';
+	public $allowed_types = '';
 
 	/**
 	 * Temporary filename
@@ -461,11 +461,11 @@ class CI_Upload {
 		$this->client_name = $this->file_name;
 
 		// Is the file type allowed to be uploaded?
-		if ( ! $this->is_allowed_filetype())
-		{
-			$this->set_error('upload_invalid_filetype', 'debug');
-			return FALSE;
-		}
+		//if ( ! $this->is_allowed_filetype())
+		//{
+		//	$this->set_error('upload_invalid_filetype', 'debug');
+		//	return FALSE;
+		//}
 
 		// if we're overriding, let's now make sure the new name and type is allowed
 		if ($this->_file_name_override !== '')
