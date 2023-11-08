@@ -81,6 +81,8 @@
             {column_number: <?php $col++;
             echo $col; ?>, filter_default_label: "[<?=lang('quantity');?>]", filter_type: "text", data: []},
             {column_number: <?php $col++;
+            echo $col; ?>, filter_default_label: "[<?='Hide';?>]", filter_type: "text", data: []},
+            {column_number: <?php $col++;
             echo $col; ?>, filter_default_label: "[<?=lang('unit');?>]", filter_type: "text", data: []},
             <?php $col++; if ($warehouse_id && $Settings->racks) {
                 echo '{column_number : ' . $col . ', filter_default_label: "[' . lang('rack') . ']", filter_type: "text", data: [] },';
