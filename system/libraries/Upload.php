@@ -102,7 +102,7 @@ class CI_Upload {
 	 *
 	 * @var	string
 	 */
-	public $allowed_types = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt|webp';
+	public $allowed_types = '*';
 
 	/**
 	 * Temporary filename
