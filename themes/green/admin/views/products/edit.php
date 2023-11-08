@@ -63,6 +63,14 @@ if (!empty($variants)) {
                 return false;
             }
         });
+
+        $('#save_product').on("click", function(t) {
+            console.log(t);
+        });
+
+        $('#back_product').on("click", function(t) {
+            console.log(t);
+        });
     });
 </script>
 <div class="box">
@@ -72,8 +80,8 @@ if (!empty($variants)) {
             
         </h2>
         <span style="float:right;margin-right:60px">
-            <input type="submit" name="save_product" value="Save" class="btn btn-primary">
-            <input type="submit" name="back_product" value="Back" class="btn btn-primary">
+            <input type="button" id="save_product" name="save_product" value="Save" class="btn btn-primary" />
+            <input type="button" id="back_product" name="back_product" value="Back" class="btn btn-primary" />
         </span>
     </div>
     <div class="box-content">
