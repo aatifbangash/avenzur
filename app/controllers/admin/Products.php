@@ -1149,6 +1149,7 @@ class Products extends MY_Controller
                     $this->upload->initialize($config);
                     if (!$this->upload->do_upload('digital_file')) {
                         $error = $this->upload->display_errors();
+                        echo 'Error1: '.$error;exit;
                         $this->session->set_flashdata('error', $error);
                         admin_redirect('products/add');
                     }
@@ -1173,6 +1174,7 @@ class Products extends MY_Controller
                 $this->upload->initialize($config);
                 if (!$this->upload->do_upload('product_image')) {
                     $error = $this->upload->display_errors();
+                    echo 'Error2: '.$error;exit;
                     $this->session->set_flashdata('error', $error);
                     admin_redirect('products/edit/' . $id);
                 }
@@ -1188,7 +1190,7 @@ class Products extends MY_Controller
                 $this->image_lib->clear();
                 $this->image_lib->initialize($config);
                 if (!$this->image_lib->resize()) {
-                    echo $this->image_lib->display_errors();
+                    echo 'Error3: '.$this->image_lib->display_errors();exit;
                 }
                 if ($this->Settings->watermark) {
                     $this->image_lib->clear();
@@ -1251,7 +1253,7 @@ class Products extends MY_Controller
                         $this->image_lib->initialize($config);
 
                         if (!$this->image_lib->resize()) {
-                            echo $this->image_lib->display_errors();
+                            echo 'Error4: '.$this->image_lib->display_errors();
                         }
 
                         if ($this->Settings->watermark) {
