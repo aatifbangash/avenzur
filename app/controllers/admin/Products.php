@@ -1283,7 +1283,8 @@ class Products extends MY_Controller
 
         if ($this->form_validation->run() == true && $this->products_model->updateProduct($id, $data, $items, $warehouse_qty, $product_attributes, $photos, $update_variants)) {
             $this->session->set_flashdata('message', lang('product_updated'));
-            admin_redirect('products');
+            //admin_redirect('products');
+            admin_redirect('products/edit/' . $id);
         } else {
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
 
