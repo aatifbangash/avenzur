@@ -201,7 +201,6 @@
                             }
                             ?>
                             <th><?= lang('quantity') ?></th>
-                            <th><?= lang('hide') ?></th>
                             <th><?= lang('unit') ?></th>
                             <th><?= lang('rack') ?></th>
                             <th><?= lang('alert_quantity') ?></th>
