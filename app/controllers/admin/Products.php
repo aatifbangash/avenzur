@@ -1653,6 +1653,7 @@ class Products extends MY_Controller
             ->join('brands', 'products.brand=brands.id', 'left')
             ->where('products.hide', 1)
             ->where('products.draft', 0)
+            ->where('products.category_id !=', 29)
             ->group_by("products.id");
         } else {
 
@@ -1670,6 +1671,7 @@ class Products extends MY_Controller
                 ->join('brands', 'products.brand=brands.id', 'left')
                 ->where('products.hide', 1)
                 ->where('products.draft', 0)
+                ->where('products.category_id !=', 29)
                 ->group_by("products.id");
         }
         if (!$this->Owner && !$this->Admin) {
