@@ -69,11 +69,12 @@ if (!empty($variants)) {
     <div class="box-header">
         <h2 class="blue">
             <i class="fa-fw fa fa-edit"></i><?= lang('edit_product'); ?>
-            <span style="float:right;">
-                <input type="submit" name="save_product" value="Save" class="btn btn-primary">
-                <input type="submit" name="back_product" value="Back" class="btn btn-primary">
-            </span>
+            
         </h2>
+        <span style="float:right;">
+            <input type="submit" name="save_product" value="Save" class="btn btn-primary">
+            <input type="submit" name="back_product" value="Back" class="btn btn-primary">
+        </span>
     </div>
     <div class="box-content">
         <div class="row">
