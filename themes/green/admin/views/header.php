@@ -396,6 +396,12 @@
                                             <span class="text"> <?= lang('Draft Products'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="products_hidden">
+                                        <a class="submenu" href="<?= admin_url('products/hidden'); ?>">
+                                            <i class="fa fa-barcode"></i>
+                                            <span class="text"> <?= lang('Hidden Products'); ?></span>
+                                        </a>
+                                    </li>
                                     <li id="products_add">
                                         <a class="submenu" href="<?= admin_url('products/add'); ?>">
                                             <i class="fa fa-plus-circle"></i>

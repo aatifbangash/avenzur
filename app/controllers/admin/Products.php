@@ -1602,6 +1602,97 @@ class Products extends MY_Controller
         echo $this->datatables->generate();
     }
 
+    public function getHiddenProducts($warehouse_id = null){
+        $this->sma->checkPermissions('index', true);
+        $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
+
+        if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
+            $user         = $this->site->getUser();
+            $warehouse_id = $user->warehouse_id;
+        }
+        $detail_link = anchor('admin/products/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('product_details'));
+        $delete_link = "<a href='#' class='tip po' title='<b>" . $this->lang->line('delete_product') . "</b>' data-content=\"<p>"
+            . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete1' id='a__$1' href='" . admin_url('products/delete/$1') . "'>"
+            . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
+            . lang('delete_product') . '</a>';
+        $single_barcode = anchor('admin/products/print_barcodes/$1', '<i class="fa fa-print"></i> ' . lang('print_barcode_label'));
+        // $single_label = anchor_popup('products/single_label/$1/' . ($warehouse_id ? $warehouse_id : ''), '<i class="fa fa-print"></i> ' . lang('print_label'), $this->popup_attributes);
+        $action = '<div class="text-center"><div class="btn-group text-left">'
+            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+            . lang('actions') . ' <span class="caret"></span></button>
+        <ul class="dropdown-menu pull-right" role="menu">
+            <li>' . $detail_link . '</li>
+            <li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>
+            <li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
+        if ($warehouse_id) {
+            $action .= '<li><a href="' . admin_url('products/set_rack/$1/' . $warehouse_id) . '" data-toggle="modal" data-target="#myModal"><i class="fa fa-bars"></i> '
+                . lang('set_rack') . '</a></li>';
+        }
+        $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
+            . lang('view_image') . '</a></li>
+            <li>' . $single_barcode . '</li>
+            <li class="divider"></li>
+            <li>' . $delete_link . '</li>
+            </ul>
+        </div></div>';
+        $this->load->library('datatables');
+        if ($warehouse_id) {
+            $this->datatables
+            ->select($this->db->dbprefix('products') . ".id as productid, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.code as code,{$this->db->dbprefix('products')}.sequence_code as sequence_code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname, cost as cost, price as price, SUM(wp.quantity) as quantity, {$this->db->dbprefix('units')}.code as unit, wp.rack as rack, alert_quantity", false)
+            ->from('products');
+            if ($this->Settings->display_all_products) {
+                $this->datatables->join('warehouses_products wp', "wp.product_id=products.id AND wp.warehouse_id={$warehouse_id}", 'left');
+            // $this->datatables->join("( SELECT product_id, quantity, rack from {$this->db->dbprefix('warehouses_products')} WHERE warehouse_id = {$warehouse_id}) wp", 'products.id=wp.product_id', 'left');
+            } else {
+                $this->datatables->join('warehouses_products wp', 'products.id=wp.product_id', 'left')
+                ->where('wp.warehouse_id', $warehouse_id)
+                ->where('wp.quantity !=', 0);
+            }
+            $this->datatables->join('categories', 'products.category_id=categories.id', 'left')
+            ->join('units', 'products.unit=units.id', 'left')
+            ->join('brands', 'products.brand=brands.id', 'left')
+            ->where('products.hidden', 1)
+            ->where('products.draft', 0)
+            ->group_by("products.id");
+        } else {
+
+            $this->datatables
+                ->select($this->db->dbprefix('products') . ".id as productid, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.code as code,{$this->db->dbprefix('products')}.sequence_code as sequence_code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname, cost as cost, price as price, SUM(wp.quantity) as quantity, {$this->db->dbprefix('units')}.code as unit, wp.rack as rack, alert_quantity", false)
+                ->from('products');
+                if ($this->Settings->display_all_products) {
+                    $this->datatables->join('warehouses_products wp', "wp.product_id=products.id", 'left');
+                } else {
+                    $this->datatables->join('warehouses_products wp', 'products.id=wp.product_id', 'left')
+                    ->where('wp.quantity !=', 0);
+                }
+                $this->datatables->join('categories', 'products.category_id=categories.id', 'left')
+                ->join('units', 'products.unit=units.id', 'left')
+                ->join('brands', 'products.brand=brands.id', 'left')
+                ->where('products.hidden', 1)
+                ->where('products.draft', 0)
+                ->group_by("products.id");
+        }
+        if (!$this->Owner && !$this->Admin) {
+            if (!$this->session->userdata('show_cost')) {
+                $this->datatables->unset_column('cost');
+            }
+            if (!$this->session->userdata('show_price')) {
+                $this->datatables->unset_column('price');
+            }
+        }
+        if ($supplier) {
+            $this->datatables->group_start()
+            ->where('supplier1', $supplier)
+            ->or_where('supplier2', $supplier)
+            ->or_where('supplier3', $supplier)
+            ->or_where('supplier4', $supplier)
+            ->or_where('supplier5', $supplier)
+            ->group_end();
+        }
+        $this->datatables->add_column('Actions', $action, 'productid, image, code, name');
+        echo $this->datatables->generate();
+    }
+
     public function getDraftProducts($warehouse_id = null){
         $this->sma->checkPermissions('index', true);
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
@@ -2091,6 +2182,26 @@ class Products extends MY_Controller
             $meta = ['page_title' => lang('import_products_by_csv'), 'bc' => $bc];
             $this->page_construct('products/import_csv', $meta, $this->data);
         }
+    }
+
+    public function hidden($warehouse_id = null){
+        $this->sma->checkPermissions();
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
+            $this->data['warehouses']   = $this->site->getAllWarehouses();
+            $this->data['warehouse_id'] = $warehouse_id;
+            $this->data['warehouse']    = $warehouse_id ? $this->site->getWarehouseByID($warehouse_id) : null;
+        } else {
+            $this->data['warehouses']   = null;
+            $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
+            $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
+        }
+
+        $this->data['supplier'] = $this->input->get('supplier') ? $this->site->getCompanyByID($this->input->get('supplier')) : null;
+        $bc                     = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('products')]];
+        $meta                   = ['page_title' => lang('products'), 'bc' => $bc];
+        $this->page_construct('products/hidden_products', $meta, $this->data);
     }
 
     public function draft($warehouse_id = null){
