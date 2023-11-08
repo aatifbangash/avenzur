@@ -1358,7 +1358,9 @@ $(document).ready(function () {
             remote: site.base_url + 'products/modal_view/' + $(this).parent('.product_link').attr('id'),
         });
         $('#myModal').modal('show');*/
-        window.location.href = site.base_url + 'products/edit/' + $(this).parent('.product_link').attr('id');
+        //window.location.href = site.base_url + 'products/edit/' + $(this).parent('.product_link').attr('id');
+        window.open(site.base_url + 'products/edit/' + $(this).parent('.product_link').attr('id'), '_blank');
+
     });
     $('body').on('click', '.product_link2 td:first-child, .product_link2 td:nth-child(2)', function () {
         $('#myModal').modal({
