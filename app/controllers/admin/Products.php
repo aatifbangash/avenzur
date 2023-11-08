@@ -1232,6 +1232,7 @@ class Products extends MY_Controller
 
                     if (!$this->upload->do_upload()) {
                         $error = $this->upload->display_errors();
+                        echo $error;exit;
                         $this->session->set_flashdata('error', $error);
                         admin_redirect('products/edit/' . $id);
                     } else {
