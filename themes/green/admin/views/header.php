@@ -384,6 +384,12 @@
                                             <span class="text"> <?= lang('list_products'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="products_shop">
+                                        <a class="submenu" href="<?= admin_url('products/shop'); ?>">
+                                            <i class="fa fa-barcode"></i>
+                                            <span class="text"> <?= lang('shop_products'); ?></span>
+                                        </a>
+                                    </li>
                                     <li id="products_add">
                                         <a class="submenu" href="<?= admin_url('products/add'); ?>">
                                             <i class="fa fa-plus-circle"></i>
