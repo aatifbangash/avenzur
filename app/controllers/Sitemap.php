@@ -20,6 +20,7 @@ class Sitemap extends MY_Shop_Controller
         $query = $this->db->get("products");
         $this->data['products'] = $query->result();
 
-        $this->page_construct('sitemap', $this->data);
+        //$this->page_construct('sitemap', $this->data);
+        $this->load->view($this->theme . 'sitemap', $this->data);
     }
 }
