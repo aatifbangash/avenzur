@@ -8,6 +8,10 @@ class Sitemap extends CI_Controller
     {
         parent::__construct();
         $this->lang->admin_load('sma');
+        $this->load->library('ion_auth');
+        $this->load->library('form_validation');
+        $this->lang->admin_load('auth', $this->Settings->user_language);
+        $this->load->helper('url');
     }
 
     public function index()
