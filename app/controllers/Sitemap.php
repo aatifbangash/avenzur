@@ -20,6 +20,6 @@ class Sitemap extends CI_Controller
         $query = $this->db->get("products");
         $this->data['products'] = $query->result();
 
-        $this->page_construct('index', $this->data);
+        $this->page_construct('sitemap', $this->data);
     }
 }
