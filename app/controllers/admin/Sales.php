@@ -1915,7 +1915,7 @@ class Sales extends MY_Controller
         }
         
         // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
-        
+        echo 'Here: '.$this->input->get('shop');exit;
         if ($this->input->get('shop') == 'yes') {
             $this->datatables->where('shop', 1);
         } elseif ($this->input->get('shop') == 'no') {
@@ -2025,6 +2025,8 @@ class Sales extends MY_Controller
         $meta = ['page_title' => lang('sales'), 'bc' => $bc];
         $this->page_construct('sales/index', $meta, $this->data);
     }
+
+
 
     public function modal_view($id = null)
     {
