@@ -1847,6 +1847,7 @@ class Sales extends MY_Controller
         $edit_link         = anchor('admin/sales/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_sale'), 'class="sledit"');
         $pdf_link          = anchor('admin/sales/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
         $return_link       = anchor('admin/sales/return_sale/$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
+        $courier_link    = anchor('admin/sales/assign_courier/$1', '<i class="fa fa-money"></i> ' . lang('Assign to Courier'), 'data-toggle="modal" data-target="#myModal"');
         //$shipment_link     = anchor('$1', '<i class="fa fa-angle-double-left"></i> ' . lang('Shipping_Slip'));
         $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_sale') . "</b>' data-content=\"<p>"
         . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('sales/delete/$1') . "'>"
@@ -1891,6 +1892,7 @@ class Sales extends MY_Controller
             <li>' . $pdf_link . '</li>
             <li>' . $email_link . '</li>
             <li>' . $return_link . '</li>
+            <li>' .$courier_link. '</li>
             <li>' . $delete_link . '</li>
         </ul>
     </div></div>';
