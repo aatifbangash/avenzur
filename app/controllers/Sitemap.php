@@ -17,7 +17,7 @@ class Sitemap extends MY_Shop_Controller
     public function index()
     {
         $this->load->database();
-        $query = $this->db->get("products");
+        $query = $this->db->where('hide', 0)->get("products");
         $this->data['products'] = $query->result();
 
         //$this->page_construct('sitemap', $this->data);
