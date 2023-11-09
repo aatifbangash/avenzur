@@ -1824,6 +1824,24 @@ class Sales extends MY_Controller
         }
     }
 
+    public function assign_courier($id = null)
+    {
+        $this->sma->checkPermissions();
+        $this->data['sale_id'] = $id;
+        //$this->data['inv']      = $this->purchases_model->getPurchaseByID($id);
+
+        //if(empty($this->data['inv']->invoice_number) || $this->data['inv']->invoice_number == ''){
+        //    $this->session->set_flashdata('error', 'Cannot transfer orders that are not invoiced');
+            //return false;
+            //admin_redirect('purchases');
+        //}
+
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        //$this->data['payments'] = $this->purchases_model->getPurchasePayments($id);
+        $this->load->view($this->theme . 'sales/assign_courier', $this->data);
+        
+    }
+
     public function getEcommerceSales($warehouse_id = null){
         $this->sma->checkPermissions('index');
 
