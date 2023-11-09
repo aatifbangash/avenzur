@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Sitemap extends CI_Controller
+class Sitemap extends MY_Shop_Controller
 {
     public function __construct()
     {
