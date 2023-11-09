@@ -8,7 +8,7 @@
             <h4 class="modal-title" id="myModalLabel"><?php echo lang('Assign To Courier'); ?></h4>
         </div>
         <?php $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'id' => 'assign-courier-form'];
-        echo admin_form_open_multipart('purchases/transfer_stock', $attrib); ?>
+        echo admin_form_open_multipart('sales/add_to_courier', $attrib); ?>
 
         <div class="modal-body">
             <p><?= lang('enter_info'); ?></p>

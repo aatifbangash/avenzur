@@ -1824,6 +1824,11 @@ class Sales extends MY_Controller
         }
     }
 
+    public function add_to_courier(){
+        echo '<pre>';
+        print_r($_POST);
+    }
+
     public function assign_courier($id = null)
     {
         $this->sma->checkPermissions();
