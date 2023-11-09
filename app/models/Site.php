@@ -537,6 +537,15 @@ public function getallCountry()
         return false;
     }
 
+    public function getCourierById($id)
+    {
+        $q = $this->db->get_where('brands', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getCategoryByID($id)
     {
         $q = $this->db->get_where('categories', ['id' => $id], 1);

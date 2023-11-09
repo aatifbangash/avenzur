@@ -1825,8 +1825,11 @@ class Sales extends MY_Controller
     }
 
     public function add_to_courier(){
-        echo '<pre>';
-        print_r($_POST);
+        $courier_id = $_POST['Courier'];
+        $sale_id = $_POST['sale_id'];
+
+        $courier = $this->site->getCourierById($courier_id);
+        $sale = $this->site->getCourierById($courier_id);
     }
 
     public function assign_courier($id = null)
