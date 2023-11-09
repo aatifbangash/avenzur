@@ -16,12 +16,12 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label class="control-label" for="warehouse"><?php echo $this->lang->line('warehouse'); ?></label>
+                        <label class="control-label" for="courier"><?php echo $this->lang->line('Courier'); ?></label>
                         <?php
-                        foreach ($warehouses as $warehouse) {
-                            $cgs[$warehouse->id] = $warehouse->name;
+                        foreach ($couriers as $courier) {
+                            $cgs[$courier->id] = $courier->name;
                         }
-                        echo form_dropdown('warehouse', $cgs, '', 'class="form-control select" id="warehouse" style="width:100%;" required="required"');
+                        echo form_dropdown('Courier', $cgs, '', 'class="form-control select" id="courier" style="width:100%;" required="required"');
                         ?>
                     </div>
                 </div>

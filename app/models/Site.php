@@ -479,6 +479,18 @@ class Site extends CI_Model
         return false;
     }
 
+    public function getAllCouriers()
+    {
+        $q = $this->db->get('sma_courier');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getAllShelf($id)
     {
         $q = $this->db->get_where('warehouse_shelf', ['warehouse_id' => $id]);

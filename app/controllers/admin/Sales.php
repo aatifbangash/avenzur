@@ -1837,6 +1837,7 @@ class Sales extends MY_Controller
         //}
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['couriers'] = $this->site->getAllCouriers();
         //$this->data['payments'] = $this->purchases_model->getPurchasePayments($id);
         $this->load->view($this->theme . 'sales/assign_courier', $this->data);
         
