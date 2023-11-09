@@ -319,7 +319,7 @@ if (!empty($variants)) {
                 </div>
                 <div class="col-md-6 col-md-offset-1">
                     <div class="standard">
-                        <div>
+                        <div style="margin-bottom: 15px;">
                         <img src="<?= site_url('assets/uploads/'.$product->image) ?>" width="150" height="150" />
                         </div>
 
