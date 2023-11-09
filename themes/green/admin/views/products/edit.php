@@ -304,6 +304,7 @@ if (!empty($variants)) {
                     </div>
 
                     <div class="form-group all">
+                        <img src="<?= site_url('assets/upload/'.$product->image) ?>" width="100" height="100" />
                         <?= lang('product_image', 'product_image') ?>
                         <input id="product_image" type="file" data-browse-label="<?= lang('browse'); ?>" name="product_image" data-show-upload="false"
                                data-show-preview="false" accept="image/*" class="form-control file">
