@@ -1824,6 +1824,120 @@ class Sales extends MY_Controller
         }
     }
 
+    public function getEcommerceSales($warehouse_id = null){
+        $this->sma->checkPermissions('index');
+
+        if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
+            $user         = $this->site->getUser();
+            $warehouse_id = $user->warehouse_id;
+        }
+        $detail_link       = anchor('admin/sales/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('sale_details'));
+        $duplicate_link    = anchor('admin/sales/add?sale_id=$1', '<i class="fa fa-plus-circle"></i> ' . lang('duplicate_sale'));
+        $payments_link     = anchor('admin/sales/payments/$1', '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
+        
+          if(isset($this->GP) && $this->GP['accountant'])
+        {
+            $convert_sale_invoice = anchor('admin/sales/convert_sale_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
+        }
+        
+        $add_payment_link  = anchor('admin/sales/add_payment/$1', '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"');
+        $packagink_link    = anchor('admin/sales/packaging/$1', '<i class="fa fa-archive"></i> ' . lang('packaging'), 'data-toggle="modal" data-target="#myModal"');
+        $add_delivery_link = anchor('admin/sales/add_delivery/$1', '<i class="fa fa-truck"></i> ' . lang('add_delivery'), 'data-toggle="modal" data-target="#myModal"');
+        $email_link        = anchor('admin/sales/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_sale'), 'data-toggle="modal" data-target="#myModal"');
+        $edit_link         = anchor('admin/sales/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_sale'), 'class="sledit"');
+        $pdf_link          = anchor('admin/sales/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
+        $return_link       = anchor('admin/sales/return_sale/$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
+        //$shipment_link     = anchor('$1', '<i class="fa fa-angle-double-left"></i> ' . lang('Shipping_Slip'));
+        $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_sale') . "</b>' data-content=\"<p>"
+        . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('sales/delete/$1') . "'>"
+        . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
+        . lang('delete_sale') . '</a>';
+        
+        
+       if(isset($this->GP) && $this->GP['accountant'])
+        {
+
+        $action = '<div class="text-center"><div class="btn-group text-left">'
+        . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+        . lang('actions') . ' <span class="caret"></span></button>
+        <ul class="dropdown-menu pull-right" role="menu">
+            <li>' . $convert_sale_invoice . '</li>
+            <li>' . $detail_link . '</li>
+            <li>' . $duplicate_link . '</li>
+            <li>' . $payments_link . '</li>
+            <li>' . $add_payment_link . '</li>
+            <li>' . $packagink_link . '</li>
+            <li>' . $add_delivery_link . '</li>
+            <li>' . $edit_link . '</li>
+            <li>' . $pdf_link . '</li>
+            <li>' . $email_link . '</li>
+            <li>' . $return_link . '</li>
+            <li>' . $delete_link . '</li>
+        </ul>
+    </div></div>';
+    }else{
+
+        $action = '<div class="text-center"><div class="btn-group text-left">'
+        . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+        . lang('actions') . ' <span class="caret"></span></button>
+        <ul class="dropdown-menu pull-right" role="menu">
+            <li>' . $detail_link . '</li>
+            <li>' . $duplicate_link . '</li>
+            <li>' . $payments_link . '</li>
+            <li>' . $add_payment_link . '</li>
+            <li>' . $packagink_link . '</li>
+            <li>' . $add_delivery_link . '</li>
+            <li>' . $edit_link . '</li>
+            <li>' . $pdf_link . '</li>
+            <li>' . $email_link . '</li>
+            <li>' . $return_link . '</li>
+            <li>' . $delete_link . '</li>
+        </ul>
+    </div></div>';
+    }
+        //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
+
+        $this->load->library('datatables');
+        if ($warehouse_id) {
+            $this->datatables
+                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id")
+                ->from('sales')
+                ->where('warehouse_id', $warehouse_id)
+                ->where('shop', 1);
+                //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
+        } else {
+            $this->datatables
+                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id,")
+                ->from('sales')
+                ->where('shop', 1);
+                
+                
+        }
+        
+        // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
+        if ($this->input->get('shop') == 'yes') {
+            $this->datatables->where('shop', 1);
+        } elseif ($this->input->get('shop') == 'no') {
+            $this->datatables->where('shop !=', 1);
+        }
+        if ($this->input->get('delivery') == 'no') {
+            $this->datatables->join('deliveries', 'deliveries.sale_id=sales.id', 'left')
+            ->where('sales.sale_status', 'completed')->where('sales.payment_status', 'paid')
+            ->where("({$this->db->dbprefix('deliveries')}.status != 'delivered' OR {$this->db->dbprefix('deliveries')}.status IS NULL)", null);
+        }
+        if ($this->input->get('attachment') == 'yes') {
+            $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
+        }
+        $this->datatables->where('pos !=', 1); // ->where('sale_status !=', 'returned');
+        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+            $this->datatables->where('created_by', $this->session->userdata('user_id'));
+        } elseif ($this->Customer) {
+            $this->datatables->where('customer_id', $this->session->userdata('user_id'));
+        }
+        $this->datatables->add_column('Actions', $action, 'id');
+        echo $this->datatables->generate();
+    }
+
 
     public function getSales($warehouse_id = null)
     {
