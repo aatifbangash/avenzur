@@ -320,6 +320,10 @@ if (!empty($variants)) {
                 <div class="col-md-6 col-md-offset-1">
                     <div class="standard">
                         <div>
+                        <img src="<?= site_url('assets/uploads/'.$product->image) ?>" width="150" height="150" />
+                        </div>
+
+                        <div>
                             <?php
                             if (!empty($warehouses) || !empty($warehouses_products)) {
                                 echo '<div class="row"><div class="col-md-12"><div class="well">';
