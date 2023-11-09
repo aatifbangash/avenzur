@@ -2027,6 +2027,26 @@ class Sales extends MY_Controller
         $this->page_construct('sales/index', $meta, $this->data);
     }
 
+    public function ecommerce($warehouse_id = null)
+    {
+        $this->sma->checkPermissions();
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
+            $this->data['warehouses']   = $this->site->getAllWarehouses();
+            $this->data['warehouse_id'] = $warehouse_id;
+            $this->data['warehouse']    = $warehouse_id ? $this->site->getWarehouseByID($warehouse_id) : null;
+        } else {
+            $this->data['warehouses']   = null;
+            $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
+            $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
+        }
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('sales')]];
+        $meta = ['page_title' => lang('sales'), 'bc' => $bc];
+        $this->page_construct('sales/ecommerce', $meta, $this->data);
+    }
+
 
 
     public function modal_view($id = null)

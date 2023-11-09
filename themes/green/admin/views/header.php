@@ -460,6 +460,12 @@
                                             <span class="text"> <?= lang('list_sales'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="sales_ecommerce">
+                                        <a class="submenu" href="<?= admin_url('sales/ecommerce'); ?>">
+                                            <i class="fa fa-heart"></i>
+                                            <span class="text"> <?= lang('Ecommerce Sales'); ?></span>
+                                        </a>
+                                    </li>
                                     <?php if (POS) {
                                         ?>
                                     <li id="pos_sales">
