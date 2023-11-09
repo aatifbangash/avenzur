@@ -387,7 +387,7 @@
                                     <li id="products_shop">
                                         <a class="submenu" href="<?= admin_url('products/shop'); ?>">
                                             <i class="fa fa-barcode"></i>
-                                            <span class="text"> <?= lang('Shop Products'); ?></span>
+                                            <span class="text"> <?= lang('Live Products'); ?></span>
                                         </a>
                                     </li>
                                     <li id="products_draft">

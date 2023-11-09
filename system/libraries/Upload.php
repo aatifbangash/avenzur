@@ -460,6 +460,7 @@ class CI_Upload {
 		$this->file_ext	 = $this->get_extension($this->file_name);
 		$this->client_name = $this->file_name;
 
+		// To uncomment
 		// Is the file type allowed to be uploaded?
 		//if ( ! $this->is_allowed_filetype())
 		//{
