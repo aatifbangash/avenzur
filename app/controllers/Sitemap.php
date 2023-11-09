@@ -12,6 +12,7 @@ class Sitemap extends CI_Controller
 
     public function index()
     {
+        echo 'Here we are...';exit;
         $this->load->database();
         $query = $this->db->get("products");
         $data['products'] = $query->result();
