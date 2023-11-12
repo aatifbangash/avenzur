@@ -476,7 +476,7 @@ if (!empty($variants)) {
                         <div class="form-group digital">
                             <?= lang('digital_file', 'digital_file') ?>
                             <input id="digital_file" type="file" data-browse-label="<?= lang('browse'); ?>" name="digital_file" data-show-upload="false"
-                                   data-show-preview="false" class="form-control file">
+                                   data-show-preview="true" class="form-control file">
                         </div>
                         <div class="form-group">
                             <?= lang('file_link', 'file_link'); ?>
