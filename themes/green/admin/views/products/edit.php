@@ -70,7 +70,7 @@ if (!empty($variants)) {
 
         $('#live_product').on("click", function(t) {
             var draft = document.getElementById('draft');
-            draft.checked = true;
+            draft.checked = false;
             var editForm = document.getElementById('editForm');
             editForm.submit();
         });
