@@ -65,8 +65,19 @@ if (!empty($variants)) {
         });
 
         $('#save_product').on("click", function(t) {
+            window.location.href = '<?= admin_url('products'); ?>';
+        });
+
+        $('#live_product').on("click", function(t) {
+            var draft = document.getElementById('draft');
+            draft.checked = true;
             var editForm = document.getElementById('editForm');
             editForm.submit();
+        });
+
+        $('#link_product').on("click", function(t) {
+            //var editForm = document.getElementById('editForm');
+            //editForm.submit();
         });
 
         $('#back_product').on("click", function(t) {
@@ -81,6 +92,8 @@ if (!empty($variants)) {
             
         </h2>
         <span style="float:right;margin-right:60px">
+            <input type="button" id="link_product" name="link_product" value="Link" class="btn btn-primary" />
+            <input type="button" id="live_product" name="live_product" value="Make Live" class="btn btn-primary" />
             <input type="button" id="save_product" name="save_product" value="Save" class="btn btn-primary" />
             <input type="button" id="back_product" name="back_product" value="Back" class="btn btn-primary" />
         </span>
