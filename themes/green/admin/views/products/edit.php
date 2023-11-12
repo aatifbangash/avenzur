@@ -93,7 +93,7 @@ if (!empty($variants)) {
             <i class="fa-fw fa fa-edit"></i><?= lang('edit_product'); ?>
             
         </h2>
-        <span style="position: fixed;float:right;margin-right:60px">
+        <span style="position: fixed;z-index: 9999999999;top: 100px;right: 100px;">
             <!--<input type="button" id="link_product" name="link_product" value="Link" class="btn btn-primary" />-->
             <input type="button" id="live_product" name="live_product" value="Make Live" class="btn btn-primary" />
             <input type="button" id="save_product" name="save_product" value="Save" class="btn btn-primary" />
