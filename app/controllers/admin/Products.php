@@ -1263,6 +1263,57 @@ class Products extends MY_Controller
                 }
                 $this->image_lib->clear();
                 $config = null;
+            }else if(!empty($this->input->post('product_image_link'))) {
+                $product_image_link = $this->input->post('product_image_link');
+
+                if (filter_var($product_image_link, FILTER_VALIDATE_URL) === false) {
+                    $this->session->set_flashdata('error', 'Invalid image URL');
+                    admin_redirect('products/add');
+                }
+            
+                $image_data = file_get_contents($product_image_link);
+            
+                if ($image_data === false) {
+                    $this->session->set_flashdata('error', 'Failed to retrieve image from URL');
+                    admin_redirect('products/add');
+                }
+            
+                $photo = md5(uniqid(rand(), true)) . '.jpg';
+            
+                file_put_contents($this->upload_path . $photo, $image_data);
+                $data['image'] = $photo;
+
+
+                $this->load->library('image_lib');
+                $config['image_library']  = 'gd2';
+                $config['source_image']   = $this->upload_path . $photo;
+                $config['new_image']      = $this->thumbs_path . $photo;
+                $config['maintain_ratio'] = true;
+                $config['width']          = $this->Settings->twidth;
+                $config['height']         = $this->Settings->theight;
+                $this->image_lib->clear();
+                $this->image_lib->initialize($config);
+                if (!$this->image_lib->resize()) {
+                    echo $this->image_lib->display_errors();
+                }
+                if ($this->Settings->watermark) {
+                    $this->image_lib->clear();
+                    $wm['source_image']     = $this->upload_path . $photo;
+                    $wm['wm_text']          = 'Copyright ' . date('Y') . ' - ' . $this->Settings->site_name;
+                    $wm['wm_type']          = 'text';
+                    $wm['wm_font_path']     = 'system/fonts/texb.ttf';
+                    $wm['quality']          = '100';
+                    $wm['wm_font_size']     = '16';
+                    $wm['wm_font_color']    = '999999';
+                    $wm['wm_shadow_color']  = 'CCCCCC';
+                    $wm['wm_vrt_alignment'] = 'top';
+                    $wm['wm_hor_alignment'] = 'left';
+                    $wm['wm_padding']       = '10';
+                    $this->image_lib->initialize($wm);
+                    $this->image_lib->watermark();
+                }
+                $this->image_lib->clear();
+                $config = null;
             }
 
             if ($_FILES['userfile']['name'][0] != '') {
