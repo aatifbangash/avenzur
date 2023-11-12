@@ -527,6 +527,10 @@ if (!empty($variants)) {
                         <label for="special_offer" class="padding05"><?= lang('Special Offer') ?></label>
                     </div>
                     <div class="form-group">
+                        <input name="draft" type="checkbox" class="checkbox" id="draft" value="1" <?= empty($product->draft) ? '' : 'checked="checked"' ?>/>
+                        <label for="Draft" class="padding05"><?= lang('Draft') ?></label>
+                    </div>
+                    <div class="form-group">
                         <input name="hide_pos" type="checkbox" class="checkbox" id="hide_pos" value="1" <?= empty($product->hide_pos) ? '' : 'checked="checked"' ?>/>
                         <label for="hide_pos" class="padding05"><?= lang('hide_in_pos') ?></label>
                     </div>
