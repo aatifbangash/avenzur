@@ -321,6 +321,7 @@ if (!empty($variants)) {
 
                     <div class="form-group all">
                         <?= lang('product_image', 'product_image') ?>
+                        <input id="product_image_link" type="text" data-browse-label="upload from link"  name="product_image_link" class="form-control file" />
                         <input id="product_image" type="file" data-browse-label="<?= lang('browse'); ?>"  name="product_image" data-show-upload="false"
                                data-show-preview="true" accept="image/*" class="form-control file">
                                <span>*Image should be Square</span>
