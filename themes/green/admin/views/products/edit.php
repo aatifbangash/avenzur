@@ -71,6 +71,8 @@ if (!empty($variants)) {
         $('#live_product').on("click", function(t) {
             var draft = document.getElementById('draft');
             draft.checked = false;
+            var hide = document.getEelementById('hide');
+            hide.checked = false;
             var editForm = document.getElementById('editForm');
             editForm.submit();
         });
