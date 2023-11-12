@@ -91,7 +91,7 @@ if (!empty($variants)) {
             
         </h2>
         <span style="float:right;margin-right:60px">
-            <input type="button" id="link_product" name="link_product" value="Link" class="btn btn-primary" />
+            <!--<input type="button" id="link_product" name="link_product" value="Link" class="btn btn-primary" />-->
             <input type="button" id="live_product" name="live_product" value="Make Live" class="btn btn-primary" />
             <input type="button" id="save_product" name="save_product" value="Save" class="btn btn-primary" />
             <input type="button" id="back_product" name="back_product" value="Back" class="btn btn-primary" />
