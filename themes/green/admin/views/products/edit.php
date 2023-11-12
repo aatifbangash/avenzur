@@ -322,13 +322,13 @@ if (!empty($variants)) {
                         <img src="<?= site_url('assets/uploads/'.$product->image) ?>" width="50" height="50" /><br />
                         <?= lang('product_image', 'product_image') ?>
                         <input id="product_image" type="file" data-browse-label="<?= lang('browse'); ?>" name="product_image" data-show-upload="false"
-                               data-show-preview="false" accept="image/*" class="form-control file">
+                               data-show-preview="true" accept="image/*" class="form-control file">
                     </div>
 
                     <div class="form-group all">
                         <?= lang('product_gallery_images', 'images') ?>
                         <input id="images" type="file" data-browse-label="<?= lang('browse'); ?>" name="userfile[]" multiple="true" data-show-upload="false"
-                               data-show-preview="false" class="form-control file" accept="image/*">
+                               data-show-preview="true" class="form-control file" accept="image/*">
                     </div>
                     <div id="img-details"></div>
                 </div>
