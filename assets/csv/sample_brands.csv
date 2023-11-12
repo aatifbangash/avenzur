@@ -1,2 +1,2 @@
-Name,Code,Image name
-Guess,,guess.png
+Name,Code,Image name,Slug,Description
+Guess,,guess.png,guess-slug,This is test description
