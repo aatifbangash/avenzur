@@ -65,7 +65,8 @@ if (!empty($variants)) {
         });
 
         $('#save_product').on("click", function(t) {
-            window.location.href = '<?= admin_url('products'); ?>';
+            var editForm = document.getElementById('editForm');
+            editForm.submit();
         });
 
         $('#live_product').on("click", function(t) {
