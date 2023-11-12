@@ -76,8 +76,7 @@ if (!empty($variants)) {
         });
 
         $('#link_product').on("click", function(t) {
-            //var editForm = document.getElementById('editForm');
-            //editForm.submit();
+            window.open('<?= site_url('product/'.$product->slug); ?>', '_blank').focus();
         });
 
         $('#back_product').on("click", function(t) {
