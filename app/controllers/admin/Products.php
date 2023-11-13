@@ -1442,14 +1442,14 @@ class Products extends MY_Controller
                     // Validate the URL
                     if (filter_var($image_link, FILTER_VALIDATE_URL) === false) {
                         $this->session->set_flashdata('error', 'Invalid image URL');
-                        admin_redirect('products/add');
+                        admin_redirect('products/edit/' . $id);
                     }
             
                     $image_data = file_get_contents($image_link);
             
                     if ($image_data === false) {
                         $this->session->set_flashdata('error', 'Failed to retrieve image from URL');
-                        admin_redirect('products/add');
+                        admin_redirect('products/edit/' . $id);
                     }
             
                     $pho = md5(uniqid(rand(), true)) . '.jpg';
