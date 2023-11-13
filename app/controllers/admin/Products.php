@@ -1438,57 +1438,58 @@ class Products extends MY_Controller
                 $config = null;
             }else if(!empty($this->input->post('product_image_gallery'))){
                 $product_image_gallery = $this->input->post('product_image_gallery');
-                print_r($product_image_gallery);exit;
                 foreach ($product_image_gallery as $image_link) {
-                    // Validate the URL
-                    if (filter_var($image_link, FILTER_VALIDATE_URL) === false) {
-                        $this->session->set_flashdata('error', 'Invalid image URL');
-                        admin_redirect('products/edit/' . $id);
-                    }
-            
-                    $image_data = file_get_contents($image_link);
-            
-                    if ($image_data === false) {
-                        $this->session->set_flashdata('error', 'Failed to retrieve image from URL');
-                        admin_redirect('products/edit/' . $id);
-                    }
-            
-                    $pho = md5(uniqid(rand(), true)) . '.jpg';
-                    file_put_contents($this->upload_path . $pho, $image_data);
-                    //$this->processImage($pho);
+                    if(!empty($image_link)){
+                        // Validate the URL
+                        if (filter_var($image_link, FILTER_VALIDATE_URL) === false) {
+                            $this->session->set_flashdata('error', 'Invalid image URL');
+                            admin_redirect('products/edit/' . $id);
+                        }
+                
+                        $image_data = file_get_contents($image_link);
+                
+                        if ($image_data === false) {
+                            $this->session->set_flashdata('error', 'Failed to retrieve image from URL');
+                            admin_redirect('products/edit/' . $id);
+                        }
+                
+                        $pho = md5(uniqid(rand(), true)) . '.jpg';
+                        file_put_contents($this->upload_path . $pho, $image_data);
+                        //$this->processImage($pho);
 
-                    $this->load->library('image_lib');
-                    $config['image_library']  = 'gd2';
-                    $config['source_image']   = $this->upload_path . $pho;
-                    $config['new_image']      = $this->thumbs_path . $pho;
-                    $config['maintain_ratio'] = true;
-                    $config['width']          = $this->Settings->twidth;
-                    $config['height']         = $this->Settings->theight;
+                        $this->load->library('image_lib');
+                        $config['image_library']  = 'gd2';
+                        $config['source_image']   = $this->upload_path . $pho;
+                        $config['new_image']      = $this->thumbs_path . $pho;
+                        $config['maintain_ratio'] = true;
+                        $config['width']          = $this->Settings->twidth;
+                        $config['height']         = $this->Settings->theight;
 
-                    $this->image_lib->initialize($config);
+                        $this->image_lib->initialize($config);
 
-                    if (!$this->image_lib->resize()) {
-                        echo $this->image_lib->display_errors();
-                    }
+                        if (!$this->image_lib->resize()) {
+                            echo $this->image_lib->display_errors();
+                        }
 
-                    if ($this->Settings->watermark) {
+                        if ($this->Settings->watermark) {
+                            $this->image_lib->clear();
+                            $wm['source_image']     = $this->upload_path . $pho;
+                            $wm['wm_text']          = 'Copyright ' . date('Y') . ' - ' . $this->Settings->site_name;
+                            $wm['wm_type']          = 'text';
+                            $wm['wm_font_path']     = 'system/fonts/texb.ttf';
+                            $wm['quality']          = '100';
+                            $wm['wm_font_size']     = '16';
+                            $wm['wm_font_color']    = '999999';
+                            $wm['wm_shadow_color']  = 'CCCCCC';
+                            $wm['wm_vrt_alignment'] = 'top';
+                            $wm['wm_hor_alignment'] = 'left';
+                            $wm['wm_padding']       = '10';
+                            $this->image_lib->initialize($wm);
+                            $this->image_lib->watermark();
+                        }
+
                         $this->image_lib->clear();
-                        $wm['source_image']     = $this->upload_path . $pho;
-                        $wm['wm_text']          = 'Copyright ' . date('Y') . ' - ' . $this->Settings->site_name;
-                        $wm['wm_type']          = 'text';
-                        $wm['wm_font_path']     = 'system/fonts/texb.ttf';
-                        $wm['quality']          = '100';
-                        $wm['wm_font_size']     = '16';
-                        $wm['wm_font_color']    = '999999';
-                        $wm['wm_shadow_color']  = 'CCCCCC';
-                        $wm['wm_vrt_alignment'] = 'top';
-                        $wm['wm_hor_alignment'] = 'left';
-                        $wm['wm_padding']       = '10';
-                        $this->image_lib->initialize($wm);
-                        $this->image_lib->watermark();
                     }
-
-                    $this->image_lib->clear();
                 }
 
             } else {
