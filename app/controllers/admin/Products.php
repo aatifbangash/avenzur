@@ -328,8 +328,10 @@ class Products extends MY_Controller
                 $config['source_image']   = $this->upload_path . $photo;
                 $config['new_image']      = $this->thumbs_path . $photo;
                 $config['maintain_ratio'] = true;
-                $config['width']          = $this->Settings->twidth;
-                $config['height']         = $this->Settings->theight;
+                //$config['width']          = $this->Settings->twidth;
+                //$config['height']         = $this->Settings->theight;
+                $config['width']          = 1200;
+                $config['height']         = 1200;
                 $this->image_lib->clear();
                 $this->image_lib->initialize($config);
                 if (!$this->image_lib->resize()) {
