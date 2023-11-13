@@ -57,9 +57,9 @@
                             </div>
                             </div>
 
-                            <div class="py-3">
-                            <h5>Brands</h5>
-                            <div class="form-check">
+                            <!--<div class="py-3">
+                                <h5>Brands</h5>
+                                <div class="form-check">
                                 <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
                                 <label class="form-check-label" for="flexCheckDefault">
                                     <h6 class="fw-bold">Beatswell</h6>
@@ -71,7 +71,7 @@
                                     <h6 class="fw-bold">Manukora</h6>
                                 </label>
                                 </div>
-                            </div>
+                            </div>-->
                         </div>
                     </div>
                 </div>
@@ -79,7 +79,7 @@
             </div>
             <div class="col-md-10 ps-md-5">
                 <div class="row justify-content-between align-items-center">
-                    <div class="col-md-6 col-6">
+                    <!--<div class="col-md-6 col-6">
                         <div class="dropdown sortp">
                             <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Default sorting <i class="bi bi-chevron-down ps-2"></i>
@@ -98,7 +98,7 @@
                                 only product on sale
                             </label>
                         </div>
-                    </div>
+                    </div>-->
                 </div>
     <!-- all products -->
 
