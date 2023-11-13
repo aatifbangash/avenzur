@@ -670,7 +670,7 @@ button.btn.btn-primary.d-lg-none.catsidebarmob {
   cursor: zoom-in;
   height: 500px;
   margin-bottom: 10px;
-
+  text-align: center;
 }
 .productzoomImg > img{
   height: 100%;
