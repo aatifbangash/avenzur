@@ -1438,6 +1438,7 @@ class Products extends MY_Controller
                 $config = null;
             }else if(!empty($this->input->post('product_image_gallery'))){
                 $product_image_gallery = $this->input->post('product_image_gallery');
+                print_r($product_image_gallery);exit;
                 foreach ($product_image_gallery as $image_link) {
                     // Validate the URL
                     if (filter_var($image_link, FILTER_VALIDATE_URL) === false) {
