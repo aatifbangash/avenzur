@@ -673,7 +673,7 @@ button.btn.btn-primary.d-lg-none.catsidebarmob {
   text-align: center;
 }
 .productzoomImg > img{
-  height: 100%;
+  max-height: 100%;
   /*object-fit: cover;*/
   max-width: 100%;
 }
