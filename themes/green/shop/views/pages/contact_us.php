@@ -10,13 +10,14 @@
              <div class="panel panel-default margin-top-lg checkLeftCol-k h-100 contleftbar">
                  
                 <div class="p-3 py-4 contleft">
-                  <h4><i class="bi bi-telephone-forward"></i> 0112133551</h4>
+                  <h4><i class="bi bi-telephone-forward"></i> 0114654636</h4>
                   <h4><i class="bi bi-envelope-fill"></i> info@avenzur.com</h4>
                   <h4 class="mb-1"><i class="bi bi-geo-alt"></i> KSA</h4>
-                  <p class="px-2">
+                  <p class="px-2">6675, Olaya, Olaya District, 2628</p>
+                  <!--<p class="px-2">
                     Riyadh ,Olaya main road,Mousa bin nosair street.
                     Silicon building no.1, Office 7
-                  </p>
+                  </p>-->
                 </div>
                 <h4 class="text-center contleftsocial">
                     <a href="https://www.facebook.com/people/Avenzur/61551081317111/" class="text-dark text-decoration-none mx-2"> <i class="bi bi-facebook"></i></a> 
