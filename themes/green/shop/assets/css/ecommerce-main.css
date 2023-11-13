@@ -675,7 +675,7 @@ button.btn.btn-primary.d-lg-none.catsidebarmob {
 .productzoomImg > img{
   /*height: 100%;
   object-fit: cover;*/
-  width: 100%;
+  max-width: 100%;
 }
 
 #thumb .item {
