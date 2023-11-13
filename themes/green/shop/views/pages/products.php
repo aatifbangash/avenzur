@@ -39,7 +39,7 @@
                         </div>
                         
                         
-                        <hr>
+                        <!--<hr>
                             <div class="py-3">
                             <div>
                                 <label for="customRange3" class="form-label"><h5>Price</h5></label>
@@ -55,7 +55,7 @@
                                         </div>
                                 </div>
                             </div>
-                            </div>
+                            </div>-->
 
                             <!--<div class="py-3">
                                 <h5>Brands</h5>
