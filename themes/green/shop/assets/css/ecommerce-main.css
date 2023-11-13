@@ -672,10 +672,10 @@ button.btn.btn-primary.d-lg-none.catsidebarmob {
   margin-bottom: 10px;
   text-align: center;
 }
-.productzoomImg > img{
+/*.productzoomImg > img{
   height: 100%;
   object-fit: cover;
-}
+}*/
 
 #thumb .item {
   margin: 3px;
