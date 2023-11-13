@@ -21,7 +21,7 @@
                   <!--<h6>KSA ,Riyadh ,Olaya main road,Mousa bin nosair street.</h6>
                   <h6>Silicon building no.1, Office 7</h6>-->
                   <h6>Phone No. 0114654636</h6>
-                  <h6><a href="mailto:Email info@avenzur.com" class="text-dark text-decoration-none">Email info@avenzur.com</a></h6>
+                  <h6><a href="mailto:Email info@avenzur.com" class="text-dark text-decoration-none">Email: info@avenzur.com</a></h6>
               
                
               </div>
