@@ -18,9 +18,12 @@
     <link href="<?= $assets; ?>css/jquery.toast.min.css?<?php echo time(); ?>" rel="stylesheet">
     <link rel="stylesheet" href="<?= $assets; ?>build/css/intlTelInput.css">
     <script src="<?= $assets; ?>build/js/intlTelInput.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/intlTelInput.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/utils.min.js"></script>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>-->
+    <script src="<?= $assets; ?>js/jquery.min.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/intlTelInput.min.js"></script>-->
+    <script src="<?= $assets; ?>js/intlTelInput.min.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/utils.min.js"></script>-->
+    <script src="<?= $assets; ?>js/utils.min.js"></script>
     <!-- Add the slick-theme.css if you want default styling -->
     <!--<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>-->
     <link href="<?= $assets; ?>css/slick.css" rel="stylesheet">
@@ -31,7 +34,8 @@
     <link href="<?= $assets; ?>css/owl.carousel.min.css" rel="stylesheet">
     <!--<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">-->
     <link href="<?= $assets; ?>css/owl.theme.default.min.css" rel="stylesheet">
-    <script type="text/javascript" src="https://cdn.weglot.com/weglot.min.js"></script>
+    <!--<script type="text/javascript" src="https://cdn.weglot.com/weglot.min.js"></script>-->
+    <script src="<?= $assets; ?>js/weglot.min.js"></script>
     <script>
     Weglot.initialize({
         api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55'
