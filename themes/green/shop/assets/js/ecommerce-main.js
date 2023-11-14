@@ -356,7 +356,10 @@ a.filters.promo = promo,
 // slick slider =====================
 $(document).ready(function(){
 
-  searchProducts();
+  var curr_url = window.location.href;
+  if(curr_url != 'https://avenzur.com/'){
+    searchProducts();
+  }
 
   $(".product").each(function(t, e) {
       $(e).find(".details").hover(function() {
