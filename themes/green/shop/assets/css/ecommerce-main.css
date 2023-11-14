@@ -293,7 +293,7 @@ font-weight: 700;
   text-align: left;
 }
 .products-card  .card .cardImg img {
-  height: 300px;
+  height: 240px;
   border-radius: 10px;
   object-fit: contain;
 }
