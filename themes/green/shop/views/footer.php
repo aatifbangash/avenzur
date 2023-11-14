@@ -81,7 +81,61 @@
       
   </section>
     <!-- footer end -->
-    
+    <link href="<?= $assets; ?>css/fontfamily.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!--<link href="<?php //echo $assets; ?>css/bootstrap.min.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!--<link href="<?php //echo $assets; ?>css/bootstrap-icons.css" rel="stylesheet">-->
+    <link href="<?= $assets; ?>css/libs.min.css" rel="stylesheet">
+    <link href="<?= $assets; ?>css/ecommerce-main.css" rel="stylesheet">
+    <link href="<?= $assets; ?>css/jquery.toast.min.css?<?php echo time(); ?>" rel="stylesheet">
+    <link rel="stylesheet" href="<?= $assets; ?>build/css/intlTelInput.css">
+    <script src="<?= $assets; ?>build/js/intlTelInput.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <!--<script src="<?php //echo $assets; ?>js/jquery.min.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/intlTelInput.min.js"></script>
+    <!--<script src="<?php //echo $assets; ?>js/intlTelInput.min.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/utils.min.js"></script>
+    <!--<script src="<?php //echo $assets; ?>js/utils.min.js"></script>-->
+    <!-- Add the slick-theme.css if you want default styling -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
+    <!--<link href="<?php //echo $assets; ?>css/slick.css" rel="stylesheet">-->
+    <!-- Add the slick-theme.css if you want default styling -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
+    <!--<link href="<?php //echo $assets; ?>css/slick-theme.css" rel="stylesheet">-->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+    <!--<link href="<?php //echo $assets; ?>css/owl.carousel.min.css" rel="stylesheet">-->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
+    <!--<link href="<?php //echo $assets; ?>css/owl.theme.default.min.css" rel="stylesheet">-->
+    <script type="text/javascript" src="https://cdn.weglot.com/weglot.min.js"></script>
+    <!--<script src="<?php //echo $assets; ?>js/weglot.min.js"></script>-->
+    <script>
+    Weglot.initialize({
+        api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55'
+    });
+
+    var currentLanguage = Weglot.getCurrentLang();
+    if (currentLanguage === 'en') {
+        // Change banner for English
+        alert('Current Language: '+currentLanguage);
+        
+    } else if (currentLanguage === 'fr') {
+        // Change banner for French
+        alert('Current Language: '+currentLanguage);
+    }
+
+    Weglot.on("languageChanged", function(newLang, prevLang) {
+        console.log("The language on the page just changed to (code): " + newLang)
+        console.log("The full name of the language is: " + Weglot.getLanguageName(newLang))
+    })
+    </script>
+    <style> 
+      .pac-container{
+          z-index: 9999 !important;
+      }
+    </style>
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>-->
