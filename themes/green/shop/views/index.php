@@ -17,7 +17,7 @@
                         ?>
                             <div class="carousel-item <?= ($sr == 0 ? ' active' : ''); ?>">
                                 <a href="<?php echo $slide->link; ?>">
-                                    <img src="<?= base_url('assets/uploads/' . $slide->image); ?>" class="d-block w-100" alt="...">
+                                    <img src="<?= base_url('assets/uploads/' . $slide->image.'?timestamp='.time()); ?>" class="d-block w-100" alt="...">
                                 </a>
                             </div>
                         <?php
