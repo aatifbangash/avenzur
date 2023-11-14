@@ -86,7 +86,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!--<link href="<?php //echo $assets; ?>css/bootstrap-icons.css" rel="stylesheet">-->
     <link href="<?= $assets; ?>css/libs.min.css" rel="stylesheet">
-    <link href="<?= $assets; ?>css/ecommerce-main.css" rel="stylesheet">
     <link href="<?= $assets; ?>css/jquery.toast.min.css?<?php echo time(); ?>" rel="stylesheet">
     <link rel="stylesheet" href="<?= $assets; ?>build/css/intlTelInput.css">
     <script src="<?= $assets; ?>build/js/intlTelInput.js"></script>
