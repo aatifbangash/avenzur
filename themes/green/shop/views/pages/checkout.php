@@ -243,8 +243,9 @@
 
                                                     <div class="form-group">
                                                         <?= lang('Search_For_The_Billing_Address', ''); ?>
-                                                        <input id="autocomplete_search_billing" type="text" class="form-control"
-                                                               placeholder="" />
+                                                        <input id="autocomplete_search_billing" type="text"
+                                                               class="form-control"
+                                                               placeholder=""/>
                                                     </div>
                                                     <div class="form-group">
                                                         <?= lang('line1', 'billing_line1'); ?> *
@@ -297,10 +298,10 @@
 
 
                                                             <?php
-/*                                                            foreach ($country as $u) {
-                                                                echo '<option value="' . $u->code . '">' . $u->name . '</option>';
-                                                            }
-                                                            */?>
+                                                        /*                                                            foreach ($country as $u) {
+                                                                                                                        echo '<option value="' . $u->code . '">' . $u->name . '</option>';
+                                                                                                                    }
+                                                                                                                    */ ?>
 
 
                                                         </select>-->
@@ -325,8 +326,9 @@
                                                     <hr>
                                                     <div class="form-group">
                                                         <?= lang('Search_For_The_Shipping_Address', ''); ?>
-                                                        <input id="autocomplete_search_shipping" type="text" class="form-control"
-                                                               placeholder="" />
+                                                        <input id="autocomplete_search_shipping" type="text"
+                                                               class="form-control"
+                                                               placeholder=""/>
                                                     </div>
                                                     <div class="form-group">
                                                         <?= lang('line1', 'shipping_line1'); ?> *
@@ -455,7 +457,7 @@
                                             </div>
                                             <input type="hidden" id="shipping-input" name="shipping"
                                                    value="<?= $calculateShipping ?>"/>
-                                            <?= form_submit('guest_order', lang('Proceed to Payment'), 'class="btn btn-lg btn-primary"'); ?>
+                                            <?= form_submit('guest_order', lang('Proceed to Payment'), 'class="btn btn-lg btn-primary payment-k" disabled'); ?>
                                             <?= form_close(); ?>
                                         </div>
                                     </div>
@@ -510,7 +512,12 @@
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td colspan="2"></td>
+                                            <td><?= lang('Delivery'); ?> *</td>
+                                            <td class="text-right">
+                                                <span id="delivery-days">
+                                                Not Available
+                                                </span>
+                                            </td>
                                         </tr>
                                         <tr class="active text-bold">
                                             <td><?= lang('grand_total'); ?></td>
@@ -518,17 +525,11 @@
                                                         id="grand-total-price"><?= $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($order_tax) + $this->sma->formatDecimal($shipping))); ?></span><?= $selected_currency->symbol ?>
                                             </td>
                                         </tr>
-                                        <tr>
-                                            <td colspan="2"></td>
-                                        </tr>
                                         <tr class="active text-bold">
                                             <td><?= lang('Express_delivery'); ?></td>
                                             <td class="text-right">
                                                 <input type="checkbox" id="express-delivery-check" disabled/>
                                             </td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2"></td>
                                         </tr>
                                     </table>
 
@@ -555,22 +556,28 @@
         $('.payment-k').prop('disabled', true);
 
         var shipping = parseInt('<?= round($calculateShipping); ?>');
+        var deliveryDays = "Not Available";
         if (city != '' || country != '') {
 
             if (country.toLowerCase() === 'saudi arabia') {
                 $('.payment-k').prop('disabled', false)
                 shipping = 19
-
+                deliveryDays = "2 to 4 days"
                 if (city.toLowerCase() === 'riyadh') {
                     shipping = 16
+                    deliveryDays = "1 to 2 days"
                     $("#express-delivery-check").prop("disabled", false);
 
-                    if (isExpressDelivery == true)
+                    if (isExpressDelivery == true) {
                         shipping = 21
+                        deliveryDays = "5 to 6 hours"
+                    }
                 }
 
-                if (city.toLowerCase() === 'jeddah')
+                if (city.toLowerCase() === 'jeddah') {
                     shipping = 16
+                    deliveryDays = "1 to 2 days"
+                }
 
             }
             if (['bahrain',
@@ -581,7 +588,10 @@
                 'uae']
                 .includes(country.toLowerCase())) { //GCC
                 $('.payment-k').prop('disabled', false)
-                shipping = 32
+                {
+                    shipping = 32
+                    deliveryDays = "4 to 6 days"
+                }
             }
 
             var totalPrice = parseFloat($('#total-price').val());
@@ -591,6 +601,8 @@
             $('#shipping-price').text(parseFloat(shipping).toFixed(2))
             $('#grand-total-price').text(parseFloat(grandTotalPrice).toFixed(2))
             $('#shipping-input').val(parseFloat(shipping).toFixed(2));
+
+            $('#delivery-days').text(deliveryDays);
         }
     }
 
