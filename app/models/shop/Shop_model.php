@@ -328,6 +328,13 @@ class Shop_model extends CI_Model
         array_map(function ($row) {
             if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
                 $productTaxPercent = $row->taxPercentage;
+
+                if($row->promotion == 1){
+                    $productPromoPrice = $row->promo_price;
+                    $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                    $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
+                }
+
                 $productPrice = $row->price;
                 $productTaxAmount = $productPrice * ($productTaxPercent / 100);
                 $row->price = $productPrice + $productTaxAmount;
@@ -387,6 +394,13 @@ class Shop_model extends CI_Model
             array_map(function ($row) {
                 if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
                     $productTaxPercent = $row->taxPercentage;
+
+                    if($row->promotion == 1){
+                        $productPromoPrice = $row->promo_price;
+                        $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                        $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
+                    }
+
                     $productPrice = $row->price;
                     $productTaxAmount = $productPrice * ($productTaxPercent / 100);
                     $row->price = $productPrice + $productTaxAmount;
@@ -455,6 +469,13 @@ class Shop_model extends CI_Model
         array_map(function ($row) {
             if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
                 $productTaxPercent = $row->taxPercentage;
+
+                if($row->promotion == 1){
+                    $productPromoPrice = $row->promo_price;
+                    $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                    $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
+                }
+
                 $productPrice = $row->price;
                 $productTaxAmount = $productPrice * ($productTaxPercent / 100);
                 $row->price = $productPrice + $productTaxAmount;
@@ -865,6 +886,13 @@ class Shop_model extends CI_Model
             $mapData = array_map(function ($row) {
                 if ($row['tax_method'] == '1' && $row['taxPercentage'] > 0) { // tax_method = 0 means inclusiveTax
                     $productTaxPercent = $row['taxPercentage'];
+
+                    if($row['promotion'] == 1){
+                        $productPromoPrice = $row['promo_price'];
+                        $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                        $row['promo_price'] = $productPromoPrice + $promoProductTaxAmount;
+                    }
+
                     $productPrice = $row['price'];
                     $productTaxAmount = $productPrice * ($productTaxPercent / 100);
 

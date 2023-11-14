@@ -1020,6 +1020,13 @@ class Shop extends MY_Shop_Controller
 
         if ($product->tax_method == '1' && $product->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
             $productTaxPercent = $product->taxPercentage;
+
+            if($product->promotion == 1){
+                $productPromoPrice = $product->promo_price;
+                $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                $product->promo_price = $productPromoPrice + $promoProductTaxAmount;
+            }
+
             $productPrice = $product->price;
             $productTaxAmount = $productPrice * ($productTaxPercent / 100);
             $product->price = $productPrice + $productTaxAmount;
