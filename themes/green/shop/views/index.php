@@ -17,7 +17,7 @@
                         ?>
                             <div class="carousel-item <?= ($sr == 0 ? ' active' : ''); ?>">
                                 <a href="<?php echo $slide->link; ?>">
-                                    <img src="<?= base_url('assets/uploads/' . $slide->image); ?>" class="d-block w-100" alt="...">
+                                    <img loading="lazy" src="<?= base_url('assets/uploads/' . $slide->image); ?>" class="d-block w-100" alt="...">
                                 </a>
                             </div>
                         <?php
@@ -91,7 +91,7 @@
                   <div class="row align-items-center">
                     <div class="col-md-5">
 
-                      <img src="<?= base_url('assets/images/banners/boomtab1.png'); ?>" alt=""  class="w-100"/>
+                      <img loading="lazy" src="<?= base_url('assets/images/banners/boomtab1.png'); ?>" alt=""  class="w-100"/>
                     </div>
                     <div class="col-lg-7 col-md-6">
                       <p class="m-0 py-2"><span class="boom-parag"></span></p>
@@ -116,7 +116,7 @@
                     </div>
                     <div class="col-md-12">
 
-                      <img src="<?= base_url('assets/images/banners/tabpack.png'); ?>" alt=""  class="w-100"/>
+                      <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack.png'); ?>" alt=""  class="w-100"/>
                     </div>
                   </div>
                 </div>
@@ -139,7 +139,7 @@
                     </div>
                     <div class="col-md-6 p-0">
 
-                      <img src="<?= base_url('assets/images/banners/tabpack3.png'); ?>" alt=""  class="w-100"/>
+                      <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack3.png'); ?>" alt=""  class="w-100"/>
                     </div>
                   </div>
                 </div>
@@ -158,7 +158,7 @@
                     </div>
                     <div class="col-md-6">
 
-                      <img src="<?= base_url('assets/images/banners/tabpack5.png'); ?>" alt=""  class="w-100"/>
+                      <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack5.png'); ?>" alt=""  class="w-100"/>
                     </div>
                   </div>
                 </div>
@@ -179,7 +179,7 @@
                 </div>
                 <div class="col-md-12">
 
-                  <img src="<?= base_url('assets/images/banners/tabpack2.png'); ?>" alt=""  class="w-100"/>
+                  <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack2.png'); ?>" alt=""  class="w-100"/>
                 </div>
               </div>
             </div>
@@ -195,7 +195,7 @@
       <div class="container container-max-width">
         <div class="sideBannerImg">
           <a href="<?= site_url('category/skn'); ?>">
-            <img src="<?= base_url('assets/images/banners/side-banner.jpg'); ?>" alt="placeholder" class="w-100" />
+            <img loading="lazy" src="<?= base_url('assets/images/banners/side-banner.jpg'); ?>" alt="placeholder" class="w-100" />
           </a>
         </div>
       </div>
@@ -208,7 +208,7 @@
         <div class=" row skinBannerRow  rounded-4 align-items-center justify-content-between">
           <div class="col-lg-6 col-md-12 col-sm-12 ps-0 skinbnnerimg">
             
-                <img src="<?= base_url('assets/images/banners/skinbanner.jpg'); ?>" alt="placeholder" class="w-100    rounded-start-3 rounded-end-5" />
+                <img loading="lazy" src="<?= base_url('assets/images/banners/skinbanner.jpg'); ?>" alt="placeholder" class="w-100    rounded-start-3 rounded-end-5" />
             </a>
           </div>
 
@@ -348,7 +348,7 @@
      <section class="side-banner py-3">
       <div class="container container-max-width">
         <div class="sideBannerImg">
-          <a href="<?= site_url('category/sup'); ?>"><img src="<?= base_url('assets/images/banners/suppli.jpg'); ?>" alt="placeholder" class="w-100"></a>
+          <a href="<?= site_url('category/sup'); ?>"><img loading="lazy" src="<?= base_url('assets/images/banners/suppli.jpg'); ?>" alt="placeholder" class="w-100"></a>
         </div>
       </div>
     </section>
@@ -358,12 +358,12 @@
         <div class="row">
           <div class="col-md-12">
             <div class="sideBannerImg mt-2">
-              <a href="<?= site_url('category/vitamins'); ?>"> <img src="<?= base_url('assets/images/banners/vitamin.jpg'); ?>" alt="placeholder" class="w-100 h-100 " > </a>
+              <a href="<?= site_url('category/vitamins'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/vitamin.jpg'); ?>" alt="placeholder" class="w-100 h-100 " > </a>
             </div>
           </div>
           <div class="col-md-12">
             <div class="sideBannerImg mt-4">
-              <a href="<?= site_url('category/beauty'); ?>"> <img src="<?= base_url('assets/images/banners/makeup.jpg'); ?>" alt="placeholder" class="w-100  " ></a>
+              <a href="<?= site_url('category/beauty'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/makeup.jpg'); ?>" alt="placeholder" class="w-100  " ></a>
             </div>
           </div>
         </div>
@@ -481,12 +481,12 @@
         <div class="row">
           <div class="col-md-6">
             <div class="sideBannerImg my-2">
-             <a href="<?= site_url('category/mombaby'); ?>"> <img src="<?= base_url('assets/images/banners/momBaby.jpg'); ?>" alt="placeholder" class="w-100 h-100 rounded-4" ></a>
+             <a href="<?= site_url('category/mombaby'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/momBaby.jpg'); ?>" alt="placeholder" class="w-100 h-100 rounded-4" ></a>
             </div>
           </div>
           <div class="col-md-6">
             <div class="sideBannerImg my-2">
-              <a href="<?= site_url('category/skn'); ?>"> <img src="<?= base_url('assets/images/banners/persC.jpg'); ?>" alt="placeholder" class="w-100  rounded-4" ></a>
+              <a href="<?= site_url('category/skn'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/persC.jpg'); ?>" alt="placeholder" class="w-100  rounded-4" ></a>
             </div>
           </div>
         </div>
