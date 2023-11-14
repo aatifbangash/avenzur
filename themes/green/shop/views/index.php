@@ -10,7 +10,21 @@
           </div>
 
           <div class="carousel-inner">
-            
+            <?php
+                $sr = 0;
+                foreach ($slider as $slide) {
+                    if (!empty($slide->image)) {
+                        ?>
+                            <div class="carousel-item <?= ($sr == 0 ? ' active' : ''); ?>">
+                                <a href="<?php echo $slide->link; ?>">
+                                    <img src="<?= base_url('assets/uploads/' . $slide->image); ?>" class="d-block w-100" alt="...">
+                                </a>
+                            </div>
+                        <?php
+                    }
+                    $sr++;
+                }
+            ?>
           </div>
           <div class="arowbtn">
           <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
