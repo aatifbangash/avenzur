@@ -71,6 +71,65 @@ class Products extends MY_Controller
         }
     }
 
+    public function convertImagesThumbs() {
+        // Set the path to the directory containing your images
+        $imageDirectory = $this->upload_path;
+    
+        // Get the list of files in the directory
+        $files = scandir($imageDirectory);
+    
+        // Remove '.' and '..' from the list
+        $files = array_diff($files, array('.', '..'));
+    
+        $this->load->library('image_lib');
+    
+        foreach ($files as $imageFilename) {
+            // Process only image files (you may need to adjust this condition based on your file types)
+            if (is_file($imageDirectory . $imageFilename) && in_array(pathinfo($imageFilename, PATHINFO_EXTENSION), ['jpg', 'jpeg', 'png', 'gif'])) {
+                $config = null;
+                $config['image_library']  = 'gd2';
+                $config['maintain_ratio'] = true;
+                $config['width']          = $this->Settings->twidth;
+                $config['height']         = $this->Settings->theight;
+    
+                $config['source_image']   = $imageDirectory . $imageFilename;
+                $config['new_image']      = $this->thumbs_path . $imageFilename;
+    
+                $this->image_lib->clear();
+                $this->image_lib->initialize($config);
+    
+                if (!$this->image_lib->resize()) {
+                    echo $this->image_lib->display_errors();
+                }
+            }
+        }
+    }
+    
+
+    /*public function convertImagesThumbs(){
+        $images = "23f464d2ca3d69f8f160003dcb22c11b.jpg,73d17cc2bdc0a0e3906469fc4842c62f.jpeg";
+ 
+        $this->load->library('image_lib');
+        $imgArr = explode(",",$images);
+
+        foreach ($imgArr as $imageFilename) {
+            $config = null;
+            $config['image_library']  = 'gd2';
+            $config['maintain_ratio'] = true;
+            $config['width']          = $this->Settings->twidth;
+            $config['height']         = $this->Settings->theight;
+            $data['image'] = $imageFilename;
+            $config['source_image']   = $this->upload_path . $imageFilename;
+            $config['new_image']      = $this->thumbs_path . $imageFilename;
+
+            $this->image_lib->clear();
+            $this->image_lib->initialize($config);
+            if (!$this->image_lib->resize()) {
+                echo $this->image_lib->display_errors();
+            }
+        }
+    }*/
+
     /* ------------------------------------------------------- */
     public function add($id = null)
     {
