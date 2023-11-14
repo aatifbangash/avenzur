@@ -100,7 +100,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
     <!--<link href="<?php //echo $assets; ?>css/slick-theme.css" rel="stylesheet">-->
     <!--<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">-->
-    <link href="<?php //echo $assets; ?>css/owl.carousel.min.css" rel="stylesheet">
+    <link href="<?php echo $assets; ?>css/owl.carousel.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
     <!--<link href="<?php //echo $assets; ?>css/owl.theme.default.min.css" rel="stylesheet">-->
     <script type="text/javascript" src="https://cdn.weglot.com/weglot.min.js"></script>
