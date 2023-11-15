@@ -1854,6 +1854,9 @@ class Sales extends MY_Controller
             );
         }
 
+        echo '<pre>';
+        print_r($address);exit;
+
         $data = array(
             'order_number' => $sale->id,
             'source_customer_phone' => '0114654636',
