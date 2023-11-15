@@ -539,7 +539,7 @@ public function getallCountry()
 
     public function getCourierById($id)
     {
-        $q = $this->db->get_where('brands', ['id' => $id], 1);
+        $q = $this->db->get_where('courier', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
