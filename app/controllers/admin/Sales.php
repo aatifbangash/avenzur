@@ -1877,7 +1877,7 @@ class Sales extends MY_Controller
             'packages' => $items_data
         );
 
-        $ch = curl_init($courier->url.'staging');
+        $ch = curl_init($courier->url.'orders');
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
@@ -1894,6 +1894,30 @@ class Sales extends MY_Controller
         curl_close($ch);
 
         return $response;
+    }
+
+    public function getRunXOrders(){
+        $courier_id = 1;
+        $courier = $this->site->getCourierById($courier_id);
+
+        $url = $courier->url.'orders';
+        $options = array(
+            'http' => array(
+                'header' => "Accept: application/json\r\n",
+                'method' => 'GET',
+            ),
+        );
+
+        $context = stream_context_create($options);
+        $response = file_get_contents($url, false, $context);
+
+        if ($response === FALSE) {
+            // Handle error
+            echo 'Failed to fetch data.';
+        } else {
+            // Process the response
+            echo $response;
+        }
     }
 
     public function add_to_courier(){
