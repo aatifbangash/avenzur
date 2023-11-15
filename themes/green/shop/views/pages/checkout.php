@@ -749,8 +749,8 @@
                     });
                 });
 
-                var lat = place.geometry['location'].lat();
-                var lng = place.geometry['location'].lng();
+                var lat = placeShipping.geometry['location'].lat();
+                var lng = placeShipping.geometry['location'].lng();
 
                 document.getElementById('shipping_latitude').value = lat;
                 document.getElementById('shipping_longitude').value = lng;
