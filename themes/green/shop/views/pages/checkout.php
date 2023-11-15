@@ -370,6 +370,12 @@
                                                         ?>
                                                     </div>
                                                 </div>
+
+                                                <input type="hidden" id="shipping_latitude" name="shipping_latitude" value="" />
+                                                <input type="hidden" id="shipping_longitude" name="shipping_longitude" value="" />
+
+
+
                                                 <div class="col-md-6">
 
                                                     <div class="form-group">
@@ -742,6 +748,12 @@
                         }
                     });
                 });
+
+                var lat = place.geometry['location'].lat();
+                var lng = place.geometry['location'].lng();
+
+                document.getElementById('shipping_latitude').value = lat;
+                document.getElementById('shipping_longitude').value = lng;
 
                 calCulateShipping(cityShipping, countryShipping)
             });
