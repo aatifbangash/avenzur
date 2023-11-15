@@ -1834,8 +1834,10 @@ class Sales extends MY_Controller
         if($courier->name == 'Run X'){
             $response = $this->assignRunX($sale, $courier);
             if($respArr = json_decode($response)){
-                echo '<pre>';
-                print_r($respArr);
+                if(isset($respArr->success)){
+                    $token = $respArr->success->token;
+                    echo 'Token: '.$token;
+                }
             }
         }else if($courier->name == 'J&T'){
             $response = $this->assignJT($sale, $courier);
