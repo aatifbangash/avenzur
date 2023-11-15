@@ -1825,7 +1825,6 @@ class Sales extends MY_Controller
     }
 
     public function createRunXOrder($token, $sale, $courier){
-        echo $token;exit;
         $authHeaderString = 'Authorization: Basic ' . $token;
         $headers = array(
             $authHeaderString,
@@ -1846,29 +1845,16 @@ class Sales extends MY_Controller
             $items_data[] = array(
                 'product_id' => $sale_item->product_id,
                 'product_name' => $sale_item->product_name,
-                //'product_description' => $sale_item->description,
                 'product_quantity' => $sale_item->quantity,
             );
         }
 
         $data = array(
             'order_number' => $sale->id,
-            //'source_customer_phone' => $address->phone,
-            //'source_customer_name' => $customer->name,
-            //'payment_status' => 'paid',
-            /*'source_customer_reference' => 'OR-000100',
-            'source_location_lat' => 24.55678722148060089,
-            'source_location_long' => 46.5923190846573760,
-            'source_address' => 'Al Woroud Dist - Eng.Musaid Al Angari St Postal Code: 12252 - RIYADH - KSA',*/
             'destination_customer_phone' => $address->phone,
             'destination_customer_name' => $customer->name,
-            //'destination_customer_reference' => 'OR-000100',
-            //'destination_location_lat' => 24.81533350000000126,
-            //'destination_location_long' => 46.753805499,
             'destination_address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
             'shipping_date' => date('Y-m-d'),
-            //'collection_time' => '15:13',
-            //'total_weight' => '4',
             'payment_type' => 'prepaid',
             'payment_method' => 'paid',
             'price' => $sale->total,
@@ -1876,7 +1862,6 @@ class Sales extends MY_Controller
             'delivery_fee' => $sale->shipping,
             'total_amount' => $sale->paid,
             'number_of_packages' => sizeOf($items_data),
-            //'notes' => 'no comments',
             'packages' => $items_data
         );
 
