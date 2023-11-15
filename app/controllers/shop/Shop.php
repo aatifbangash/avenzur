@@ -44,6 +44,8 @@ class Shop extends MY_Shop_Controller
                 'state' => $this->input->post('state'),
                 'postal_code' => $this->input->post('postal_code'),
                 'country' => $this->input->post('country'),
+                'latitude' => $this->input->post('latitude'),
+                'longitude' => $this->input->post('longitude'),
                 'company_id' => $this->session->userdata('company_id'),];
 
             if ($id) {
