@@ -1830,6 +1830,8 @@ class Sales extends MY_Controller
 
         $courier = $this->site->getCourierById($courier_id);
         $sale = $this->site->getCourierById($courier_id);
+
+        print_r($courier);exit;
     }
 
     public function assign_courier($id = null)
