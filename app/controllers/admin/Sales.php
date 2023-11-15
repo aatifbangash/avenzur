@@ -1841,12 +1841,15 @@ class Sales extends MY_Controller
         foreach ($sale_items as $sale_item){
 
             $product = $this->site->getProductByID($sale_item->product_id);
+            $strippedDescription = str_replace('<p><strong>Product Description:</strong></p>', '', $product->product_details);
+            $strippedDescription = strip_tags($strippedDescription, '<ul><li><strong>');
+            // Remove additional line
 
             $items_data[] = array(
                 'product_id' => $sale_item->product_id,
                 'product_name' => $sale_item->product_name,
                 'product_quantity' => $sale_item->quantity,
-                'product_description' => '',
+                'product_description' => $strippedDescription,
                 'product_temperature' => '',
                 'package_length' => '',
                 'package_width' => '' ,
@@ -1858,13 +1861,13 @@ class Sales extends MY_Controller
             'order_number' => $sale->id,
             'source_customer_phone' => '0114654636',
             'source_customer_name' => 'Avenzur.com',
-            'source_customer_reference' => '',
-            'source_location_lat' => '',
-            'source_location_long' => '',
-            'source_address' => '',
+            'source_customer_reference' => $sale->reference_no,
+            'source_location_lat' => '24.80725847115936',
+            'source_location_long' => '46.71702811046411',
+            'source_address' => 'Business Gate, Riyadh KSA',
             'destination_customer_phone' => $address->phone,
             'destination_customer_name' => $customer->name,
-            'destination_customer_reference' => $sales->reference_no,
+            'destination_customer_reference' => $sale->reference_no,
             'destination_location_lat' => !empty($address->latitude) ? $address->latitude : '',
             'destination_location_long' => !empty($address->longitude) ? $address->longitude : '',
             'destination_address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
