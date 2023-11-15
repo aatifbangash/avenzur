@@ -667,6 +667,7 @@
                 document.getElementById('billing_state').value = "";
 
                 var place = autocomplete.getPlace();
+                console.log(place);
                 // Define variables to store city and country names
                 var city, country, street, postalCode, stateName;
 
