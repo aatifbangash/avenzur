@@ -1854,9 +1854,6 @@ class Sales extends MY_Controller
             );
         }
 
-        echo '<pre>';
-        print_r($address);exit;
-
         $data = array(
             'order_number' => $sale->id,
             'source_customer_phone' => '0114654636',
@@ -1885,6 +1882,9 @@ class Sales extends MY_Controller
             'notes' => 'no comments',
             'packages' => $items_data
         );
+
+        echo '<pre>';
+        print_r($data);exit;
 
         $ch = curl_init($courier->url.'orders');
 
