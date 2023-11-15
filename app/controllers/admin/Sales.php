@@ -1829,9 +1829,48 @@ class Sales extends MY_Controller
         $sale_id = $_POST['sale_id'];
 
         $courier = $this->site->getCourierById($courier_id);
-        $sale = $this->site->getCourierById($courier_id);
+        $sale = $this->site->getSaleByID($sale_id);
 
-        print_r($courier);exit;
+        if($courier->name == 'Run X'){
+            $response = $this->assignRunX($sale, $courier);
+            echo $response;
+        }else if($courier->name == 'J&T'){
+            $response = $this->assignJT($sale, $courier);
+        }
+    }
+
+    public function assignRunX($sale, $courier){
+        $headers = array(
+            'Accept: application/json',
+            'Content-Type: application/json',
+        );
+
+        $data = array(
+            'email' => $courier->username,
+            'password' => $courier->password,
+        );
+
+        $ch = curl_init($courier->url.'/login');
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            echo 'cURL error: ' . curl_error($ch);
+        }
+
+        curl_close($ch);
+
+        return $response;
+    }
+
+    public function assignJT($sale, $courier){
+        
     }
 
     public function assign_courier($id = null)
