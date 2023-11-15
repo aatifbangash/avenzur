@@ -958,6 +958,10 @@ class Sales_model extends CI_Model
         return false;
     }
 
+    public function updateSaleWithCourier($id, $courier_id){
+        $this->db->update('sales', ['courier_id' => $courier_id], ['id' => $id]);
+    }
+
     public function updateSale($id, $data, $items = [], $attachments = [])
     {
         $this->db->trans_start();
