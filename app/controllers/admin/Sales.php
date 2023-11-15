@@ -1844,30 +1844,31 @@ class Sales extends MY_Controller
             'Accept: application/json',
             'Content-Type: application/json',
         );
-
+    
         $data = array(
             'email' => $courier->username,
             'password' => $courier->password,
         );
-
+    
         $ch = curl_init($courier->url.'login');
-
+    
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data)); // Send JSON-encoded data
+    
         $response = curl_exec($ch);
-
+    
         if (curl_errno($ch)) {
             echo 'cURL error: ' . curl_error($ch);
         }
-
+    
         curl_close($ch);
-
+    
         return $response;
     }
+    
 
     public function assignJT($sale, $courier){
         
