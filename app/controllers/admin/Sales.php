@@ -1846,15 +1846,32 @@ class Sales extends MY_Controller
                 'product_id' => $sale_item->product_id,
                 'product_name' => $sale_item->product_name,
                 'product_quantity' => $sale_item->quantity,
+                'product_description' => '',
+                'product_temperature' => '',
+                'package_length' => '',
+                'package_width' => '' ,
+                'package_height' => ''
             );
         }
 
         $data = array(
             'order_number' => $sale->id,
+            'source_customer_phone' => '',
+            'source_customer_name' => '',
+            'payment_status' => '',
+            'source_customer_reference' => '',
+            'source_location_lat' => '',
+            'source_location_long' => '',
+            'source_address' => '',
             'destination_customer_phone' => $address->phone,
             'destination_customer_name' => $customer->name,
+            'destination_customer_reference' => '',
+            'destination_location_lat' => '',
+            'destination_location_long' => '',
             'destination_address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
             'shipping_date' => date('Y-m-d'),
+            'collection_time' => '',
+            'total_weight' => '',
             'payment_type' => 'prepaid',
             'payment_method' => 'paid',
             'price' => $sale->total,
@@ -1862,6 +1879,7 @@ class Sales extends MY_Controller
             'delivery_fee' => $sale->shipping,
             'total_amount' => $sale->paid,
             'number_of_packages' => sizeOf($items_data),
+            'notes' => 'no comments',
             'packages' => $items_data
         );
 
