@@ -1824,6 +1824,79 @@ class Sales extends MY_Controller
         }
     }
 
+    public function createRunXOrder($token, $sale, $courier){
+        $headers = array(
+            'Accept: application/json',
+            'Content-Type: application/json',
+        );
+
+        $address_id = $sale->address_id;
+        $customer = $this->site->getCompanyByID($sale->customer_id);
+        $address = $this->site->getAddressByID($address_id);
+        $sale_items = $this->site->getAllSaleItems($sale->id);
+
+        $items_data = array();
+        foreach ($sale_items as $sale_item){
+
+            $product = $this->site->getProductByID($sale_item->product_id);
+            echo '<pre>';print_r($product);exit;
+
+            $items_data[] = array(
+                'product_id' => $sale_item->product_id,
+                'product_name' => $sale_item->product_name,
+                'product_description' => $sale_item->description,
+                'product_quantity' => $sale_item->quantity,
+            );
+        }
+
+        $data = array(
+            'order_number' => $sale->id,
+            //'source_customer_phone' => $address->phone,
+            //'source_customer_name' => $customer->name,
+            //'payment_status' => 'paid',
+            /*'source_customer_reference' => 'OR-000100',
+            'source_location_lat' => 24.55678722148060089,
+            'source_location_long' => 46.5923190846573760,
+            'source_address' => 'Al Woroud Dist - Eng.Musaid Al Angari St Postal Code: 12252 - RIYADH - KSA',*/
+            'destination_customer_phone' => $address->phone,
+            'destination_customer_name' => $customer->name,
+            //'destination_customer_reference' => 'OR-000100',
+            //'destination_location_lat' => 24.81533350000000126,
+            //'destination_location_long' => 46.753805499,
+            'destination_address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
+            'shipping_date' => date('Y-m-d'),
+            //'collection_time' => '15:13',
+            //'total_weight' => '4',
+            'payment_type' => 'prepaid',
+            'payment_method' => 'paid',
+            'price' => $sale->total,
+            'tax' => $sale->total_tax,
+            'delivery_fee' => $sale->shipping,
+            'total_amount' => $sale->paid,
+            'number_of_packages' => sizeOf($items_data),
+            //'notes' => 'no comments',
+            'packages' => $items_data
+        );
+
+        $ch = curl_init($courier->url.'staging');
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            echo 'cURL error: ' . curl_error($ch);
+        }
+
+        curl_close($ch);
+
+        echo $response;
+    }
+
     public function add_to_courier(){
         $courier_id = $_POST['Courier'];
         $sale_id = $_POST['sale_id'];
@@ -1836,7 +1909,7 @@ class Sales extends MY_Controller
             if($respArr = json_decode($response)){
                 if(isset($respArr->success)){
                     $token = $respArr->success->token;
-                    echo 'Token: '.$token;
+                    $this->createRunXOrder($token, $sale, $courier);
                 }
             }
         }else if($courier->name == 'J&T'){
