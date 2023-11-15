@@ -1833,7 +1833,10 @@ class Sales extends MY_Controller
 
         if($courier->name == 'Run X'){
             $response = $this->assignRunX($sale, $courier);
-            echo $response;
+            if($respArr = json_decode($response)){
+                echo '<pre>';
+                print_r($respArr);
+            }
         }else if($courier->name == 'J&T'){
             $response = $this->assignJT($sale, $courier);
         }
