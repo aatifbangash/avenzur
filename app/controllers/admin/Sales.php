@@ -1877,9 +1877,6 @@ class Sales extends MY_Controller
             'packages' => $items_data
         );
 
-        echo '<pre>';print_r($data);
-        exit;
-
         $ch = curl_init($courier->url.'staging');
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -1896,7 +1893,7 @@ class Sales extends MY_Controller
 
         curl_close($ch);
 
-        echo $response;
+        return $response;
     }
 
     public function add_to_courier(){
@@ -1911,7 +1908,8 @@ class Sales extends MY_Controller
             if($respArr = json_decode($response)){
                 if(isset($respArr->success)){
                     $token = $respArr->success->token;
-                    $this->createRunXOrder($token, $sale, $courier);
+                    $order = $this->createRunXOrder($token, $sale, $courier);
+                    admin_redirect('sales/ecommerce');
                 }
             }
         }else if($courier->name == 'J&T'){
