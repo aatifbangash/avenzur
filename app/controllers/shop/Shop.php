@@ -195,6 +195,8 @@ class Shop extends MY_Shop_Controller
                         'state' => $this->input->post('shipping_state'),
                         'postal_code' => $this->input->post('shipping_postal_code'),
                         'country' => $this->input->post('shipping_country'),
+                        'latitude' => $this->input->post('shipping_latitude'),
+                        'longitude' => $this->input->post('shipping_longitude')
                     ];
                 }
                 if ($this->input->post('address') != 'new') {
