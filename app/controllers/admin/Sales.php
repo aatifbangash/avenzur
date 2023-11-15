@@ -1850,8 +1850,7 @@ class Sales extends MY_Controller
             'password' => $courier->password,
         );
 
-        echo $courier->url.'/login';exit;
-        $ch = curl_init($courier->url.'/login');
+        $ch = curl_init($courier->url.'login');
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
