@@ -1856,7 +1856,7 @@ class Sales extends MY_Controller
 
         $data = array(
             'order_number' => $sale->id,
-            'source_customer_phone' => '',
+            'source_customer_phone' => '1123445',
             'source_customer_name' => '',
             'payment_status' => '',
             'source_customer_reference' => '',
