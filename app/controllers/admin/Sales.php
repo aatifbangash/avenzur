@@ -1839,12 +1839,11 @@ class Sales extends MY_Controller
         foreach ($sale_items as $sale_item){
 
             $product = $this->site->getProductByID($sale_item->product_id);
-            echo '<pre>';print_r($product);exit;
 
             $items_data[] = array(
                 'product_id' => $sale_item->product_id,
                 'product_name' => $sale_item->product_name,
-                'product_description' => $sale_item->description,
+                //'product_description' => $sale_item->description,
                 'product_quantity' => $sale_item->quantity,
             );
         }
@@ -1877,6 +1876,9 @@ class Sales extends MY_Controller
             //'notes' => 'no comments',
             'packages' => $items_data
         );
+
+        echo '<pre>';print_r($data);
+        exit;
 
         $ch = curl_init($courier->url.'staging');
 
