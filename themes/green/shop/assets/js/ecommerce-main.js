@@ -770,8 +770,8 @@ function initialize() {
       });
 
       // place variable will have all the information you are looking for.
-      $('#lat').val(place.geometry['location'].lat());
-      $('#long').val(place.geometry['location'].lng());
+      $('#latitude').val(place.geometry['location'].lat());
+      $('#longitude').val(place.geometry['location'].lng());
   });
 }
 
