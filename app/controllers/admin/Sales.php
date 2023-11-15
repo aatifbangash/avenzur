@@ -1858,7 +1858,6 @@ class Sales extends MY_Controller
             'order_number' => $sale->id,
             'source_customer_phone' => '0114654636',
             'source_customer_name' => 'Avenzur.com',
-            'payment_status' => '',
             'source_customer_reference' => '',
             'source_location_lat' => '',
             'source_location_long' => '',
@@ -1870,10 +1869,11 @@ class Sales extends MY_Controller
             'destination_location_long' => '',
             'destination_address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
             'shipping_date' => date('Y-m-d'),
-            'collection_time' => '',
+            'collection_time' => '00:00',
             'total_weight' => '',
             'payment_type' => 'prepaid',
-            'payment_method' => 'paid',
+            'payment_method' => 'directpay',
+            'payment_status' => 'paid',
             'price' => $sale->total,
             'tax' => $sale->total_tax,
             'delivery_fee' => $sale->shipping,
@@ -1950,6 +1950,113 @@ class Sales extends MY_Controller
         }
     }
 
+    public function assignJT($sale, $courier){
+        $url = $courier->url.'order/addOrder';
+
+        $apiAccount = $courier->api_account;
+        $privateKey = $courier->auth_key;
+
+        $headers = array(
+            'apiAccount: '.$apiAccount,
+            'digest: dv7y+k4Pth0asb/tf7IOtg==',
+            'timestamp: '.time(),
+            'Content-Type: application/x-www-form-urlencoded',
+        );
+
+        $data = array(
+            'bizContent' => json_encode(array(
+                'customerCode' => 'J0086024071',
+                'digest' => '4hQ8qXNkuSJ8cIgJQDFFRA==',
+                'serviceType' => '01',
+                'orderType' => '2',
+                'deliveryType' => '04',
+                'expressType' => 'EZKSA',
+                'network' => '',
+                'length' => 30,
+                'sendStartTime' => '2021-12-03 10:02:50',
+                'weight' => 5.01,
+                'remark' => 'test',
+                'billCode' => '',
+                'batchNumber' => '',
+                'txlogisticId' => 'SA67733240451',
+                'goodsType' => 'ITN1',
+                'totalQuantity' => '1',
+                'receiver' => array(
+                    'area' => 'sdfdsafdsfdsafdsa1',
+                    'address' => 'sdfsacdscdscds2a',
+                    'town' => '',
+                    'street' => '',
+                    'city' => 'Abu Ajram',
+                    'mobile' => '1441234567843543543554311143',
+                    'mailBox' => 'ant_li123@qq.com',
+                    'phone' => '1441234567843543543554311143',
+                    'countryCode' => 'KSA',
+                    'name' => 'test_receiver',
+                    'company' => 'guangdongshengshenzhenshizhuantayigeyidianzishiyeyouxianggongsi',
+                    'postCode' => '518000',
+                    'prov' => 'Al Jawf'
+                ),
+                'sender' => array(
+                    'area' => 'sdfsafdsafsdfdsa',
+                    'address' => 'cdscds 132132131cdscd cdscdscdscdsscdscds 132132131cdscd cdscdscdscdsscdscds 132132131cdscd cdscdscdscdsscdscds 132132131cdscd cdscdscdscdsscdscds 132132131cdscd cdscdscdscdsscdscds 132132131cdscd cdscdscdscdss',
+                    'town' => 'town1',
+                    'street' => 'street1',
+                    'city' => 'Al Ammarah',
+                    'mobile' => '1441234567843543543554311143',
+                    'mailBox' => 'ant_li12345678901234567890@qq.com',
+                    'phone' => '1441234567843543543554311143',
+                    'countryCode' => 'KSA',
+                    'name' => 'test_sender',
+                    'company' => 'jiangsunanjingshihonghuangzhili kejiyouxiangongsisdfdsfdsfds',
+                    'postCode' => '518000',
+                    'prov' => 'Al Qassim'
+                ),
+                'itemsValue' => 1500.02,
+                'priceCurrency' => 'SAR',
+                'width' => 10,
+                'offerFee' => 3600.01,
+                'items' => array(
+                    array(
+                        'number' => 1,
+                        'itemType' => 'ITN1',
+                        'itemName' => '服饰123456test',
+                        'priceCurrency' => 'DHS',
+                        'itemValue' => '12.36',
+                        'itemUrl' => 'http://www.baidu.com/shangpinlianjiedizhi',
+                        'desc' => 'test_ordermiaoshu'
+                    ),
+                    // Include other items as needed
+                ),
+                'sendEndTime' => '2021-12-04 10:02:50',
+                'height' => 60,
+                'payType' => 'PP_PM',
+                'operateType' => 1,
+                'platformName' => '开放13213154564646132131312sdfdsfdsfdsafdsafdsdsfdsafdsafdsfsadfsdafsdafsad',
+                'customerAccount' => '客户0086023990sdfdsfdsfdsafdsafdsafdsfsacdsfdsafdsfdsfdsafdsafsdfsdfdsafdsafdsfdsafdsa',
+                'isUnpackEnabled' => 1
+            )),
+        );
+
+        $ch = curl_init($url);
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data)); // Encode data as X-WWW-FORM-URLENCODED
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            echo 'cURL error: ' . curl_error($ch);
+        }
+
+        curl_close($ch);
+
+        return $response;
+
+    }
+
     public function assignRunX($sale, $courier){
         $headers = array(
             'Accept: application/json',
@@ -1978,11 +2085,6 @@ class Sales extends MY_Controller
         curl_close($ch);
     
         return $response;
-    }
-    
-
-    public function assignJT($sale, $courier){
-        
     }
 
     public function assign_courier($id = null)
