@@ -1825,7 +1825,9 @@ class Sales extends MY_Controller
     }
 
     public function createRunXOrder($token, $sale, $courier){
+        $authHeaderString = 'Authorization: Basic ' . $token;
         $headers = array(
+            $authHeaderString,
             'Accept: application/json',
             'Content-Type: application/json',
         );
