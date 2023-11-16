@@ -103,7 +103,7 @@
                 </div>-->
 
                 <!-- all products -->
-
+            <div class="feature_products">
                 <?php
             $r = 0;
             foreach (array_chunk($best_sellers, 4) as $sps){
@@ -189,7 +189,7 @@
                 }
             } 
             ?>   
-                    
+            </div>
                 </div>
                 <!-- all products end -->
             </div>
