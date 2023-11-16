@@ -1103,6 +1103,11 @@ class Shop extends MY_Shop_Controller
         $this->page_construct('pages/featured_products', $this->data);
     }
 
+    public function bestsellers(){
+        $this->data['all_categories'] = $this->shop_model->getAllCategories();
+        $this->page_construct('pages/best_sellers', $this->data);
+    }
+
     // Products,  categories and brands page
     public function products($category_slug = null, $subcategory_slug = null, $brand_slug = null, $promo = null)
     {
