@@ -644,7 +644,7 @@
                 var country = $('#shipping_country').val();
             }
 
-            console.log($(this).prop('checked'));
+            document.getElementById('express_delivery').value = $(this).prop('checked');
 
             calCulateShipping(city, country, $(this).prop('checked'));
         })
