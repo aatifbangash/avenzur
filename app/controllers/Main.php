@@ -248,6 +248,7 @@ class Main extends MY_Shop_Controller
                 $this->load->view($this->theme . 'user/private_login.php', $this->data);
                 
             } else {
+                echo 'Here we are...babwaa';exit;
                 $this->page_construct('user/login', $this->data);
             }
         }
