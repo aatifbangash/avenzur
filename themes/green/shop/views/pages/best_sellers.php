@@ -127,20 +127,41 @@
                                                 
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">240.00 SAR</h4></div>
-                                            </div>
+                                            <?php
+                                            if ($sp->promotion) {
+                                                ?>
+                                                <div class="col-md-6">
+                                                    <div class="discountPrice price text-end py-2">
+                                                        <h4 class="m-0 text-decoration-line-through">
+                                                            <?php echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price); ?>
+                                                        </h4>
+                                                    </div>
+                                                </div>
+                                                <?php
+                                            }
+                                            ?>
                                             </div> 
                         
                                             <div class="row align-items-center justify-content-between">
                                             <div class="col-md-6 ">
-                                                <div class="price text-start  py-2"><h4 class="m-0 fw-bold">240.00 SAR</h4></div>
+                                                <div class="price text-start  py-2">
+                                                    <h4 class="m-0 fw-bold">
+                                                    <?php
+                                                    if ($sp->promotion) {
+                                                        echo $this->sma->convertMoney($sp->promo_price);
+                                                    }else{
+                                                        echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
+                                                    }
+                                                    ?>
+                                                    </h4>
+                                                </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="quantity text-end py-2 d-flex align-items-center justify-content-between">
-                                                <span class="plus"><i class="bi bi-plus-circle-fill"></i></span>
-                                                <span class="Qnum ">1</span>
-                                                <span class="minus"><i class="bi bi-dash-circle-fill"></i></span>
+                                                <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
+                                                <input type="text" name="quantity" class="Qnum" value="1" required="required" />
+                                                <!--<span class="Qnum ">1</span>-->
+                                                <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
                                                 </div>
                                             </div>
                                             </div>
