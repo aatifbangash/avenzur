@@ -103,59 +103,58 @@
                 </div>-->
 
                 <!-- all products -->
-
+                <div class="row products-card text-center gy-4 py-4">
+                                    <div class="col-lg-3 col-md-4 col-sm-12">
                 <?php
                     $r = 0;
                     foreach (array_chunk($best_sellers, 4) as $sps){
                         foreach ($sps as $sp) {
-                            print_r($sp);
                             ?>
-                                <!--<div class="row products-card text-center gy-4 py-4">
-                    <div class="col-lg-3 col-md-4 col-sm-12">
-                        <div class="card" style="width: 100%">
-                        <a href="#" class="text-decoration-none">
-                        <div class="cardImg"><img src="./images/productimg1.jpg" class="card-img-top" alt="..."></div>
-                        <div class="card-body px-0 text-start pb-0">
-                            <div class="product-cat-title"><span class="text-uppercase">Medical</span></div>
-                            <h5 class="card-title text-start"><?= $sp->name; ?></h5>
-                            <div class="row align-items-center justify-content-between">
-                            <div class="col-md-6">
-                                <div class="rating">
-                                <i class="bi bi-star-fill rated"></i>
-                                <i class="bi bi-star-fill rated"></i>
-                                <i class="bi bi-star-fill rated"></i>
-                                <i class="bi bi-star-fill"></i>
                                 
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">240.00 SAR</h4></div>
-                            </div>
-                            </div> 
-        
-                            <div class="row align-items-center justify-content-between">
-                            <div class="col-md-6 ">
-                                <div class="price text-start  py-2"><h4 class="m-0 fw-bold">240.00 SAR</h4></div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="quantity text-end py-2 d-flex align-items-center justify-content-between">
-                                <span class="plus"><i class="bi bi-plus-circle-fill"></i></span>
-                                <span class="Qnum ">1</span>
-                                <span class="minus"><i class="bi bi-dash-circle-fill"></i></span>
-                                </div>
-                            </div>
-                            </div>
+                                        <div class="card" style="width: 100%">
+                                        <a href="#" class="text-decoration-none">
+                                        <div class="cardImg"><img src="./images/productimg1.jpg" class="card-img-top" alt="..."></div>
+                                        <div class="card-body px-0 text-start pb-0">
+                                            <div class="product-cat-title"><span class="text-uppercase">Medical</span></div>
+                                            <h5 class="card-title text-start"><?= $sp->name; ?></h5>
+                                            <div class="row align-items-center justify-content-between">
+                                            <div class="col-md-6">
+                                                <div class="rating">
+                                                <i class="bi bi-star-fill rated"></i>
+                                                <i class="bi bi-star-fill rated"></i>
+                                                <i class="bi bi-star-fill rated"></i>
+                                                <i class="bi bi-star-fill"></i>
+                                                
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">240.00 SAR</h4></div>
+                                            </div>
+                                            </div> 
                         
-                            </div>
-                        </a>
-                        <div> <button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark">Add to cart </button></div>
-                        </div> 
-                    </div>-->
+                                            <div class="row align-items-center justify-content-between">
+                                            <div class="col-md-6 ">
+                                                <div class="price text-start  py-2"><h4 class="m-0 fw-bold">240.00 SAR</h4></div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="quantity text-end py-2 d-flex align-items-center justify-content-between">
+                                                <span class="plus"><i class="bi bi-plus-circle-fill"></i></span>
+                                                <span class="Qnum ">1</span>
+                                                <span class="minus"><i class="bi bi-dash-circle-fill"></i></span>
+                                                </div>
+                                            </div>
+                                            </div>
+                                        
+                                            </div>
+                                        </a>
+                                        <div> <button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark">Add to cart </button></div>
+                                        
                             <?php
                         }
                     }
                 ?>
-                    
+                </div> 
+                                    </div>   
                 </div>
                 <!-- all products end -->
             </div>
