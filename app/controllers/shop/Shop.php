@@ -186,8 +186,6 @@ class Shop extends MY_Shop_Controller
         }
 
         if ($this->form_validation->run() == true) {
-            echo 'Here we are.....';
-            echo $this->input->post('express_delivery');exit;
             if ($guest_checkout || $address = $this->shop_model->getAddressByID($this->input->post('address'))) {
                 $new_customer = false;
                 if ($guest_checkout) {
@@ -347,6 +345,7 @@ class Shop extends MY_Shop_Controller
                     'address_id' => ($this->input->post('address') == 'new') ? '' : $address->id,
                     'hash' => hash('sha256', microtime() . mt_rand()),
                     'payment_method' => $this->input->post('payment_method'),
+                    'delivery_type' => $this->input->post('express_delivery')
                 ];
                 if ($this->Settings->invoice_view == 2) {
                     $data['cgst'] = $total_cgst;
