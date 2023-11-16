@@ -1850,6 +1850,7 @@ class Sales extends MY_Controller
                 'product_name' => $sale_item->product_name,
                 'product_quantity' => $sale_item->quantity,
                 'product_description' => $strippedDescription,
+                'package_weight' => 0,
                 'product_temperature' => 0,
                 'package_length' => 0,
                 'package_width' => 0,
@@ -1942,7 +1943,6 @@ class Sales extends MY_Controller
                 if(isset($respArr->success)){
                     $token = $respArr->success->token;
                     $order = $this->createRunXOrder($token, $sale, $courier);
-                    print_r($order);exit;
                     $this->updateSaleWithCourier($sale_id, $courier->id);
                     admin_redirect('sales/ecommerce');
                 }
