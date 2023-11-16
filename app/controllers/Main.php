@@ -248,8 +248,10 @@ class Main extends MY_Shop_Controller
                 $this->load->view($this->theme . 'user/private_login.php', $this->data);
                 
             } else {
-                echo 'Here we are...babwaa';exit;
-                $this->page_construct('user/login', $this->data);
+                $this->session->set_flashdata('error', 'Login Failed / Wrong Credentials');
+                $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
+                redirect($referrer);
+                //$this->page_construct('user/login', $this->data);
             }
         }
     }
