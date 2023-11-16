@@ -1906,11 +1906,20 @@ class Sales extends MY_Controller
         return $response;
     }
 
-    public function getRunXOrders(){
+    public function getRunXOrders() {
         $courier_id = 1;
         $courier = $this->site->getCourierById($courier_id);
+    
+        // Step 1: Get Bearer token
+        $token = $this->getBearerToken($courier);
+    
+        // Step 2: Make API request with Bearer token
+        $orderResponse = $this->makeOrderRequest($courier->url, $token);
+        print_r($orderResponse);
+        // Process $orderResponse as needed
+    }
 
-
+    private function getBearerToken($courier) {
         $headers = array(
             'Accept: application/json',
             'Content-Type: application/json',
@@ -1921,49 +1930,53 @@ class Sales extends MY_Controller
             'password' => $courier->password,
         );
     
-        $ch = curl_init($courier->url.'login');
+        $ch = curl_init($courier->url . 'login');
     
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data)); // Send JSON-encoded data
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     
         $response = curl_exec($ch);
-    
         if (curl_errno($ch)) {
             echo 'cURL error: ' . curl_error($ch);
         }
     
         curl_close($ch);
+    
+        $responseData = json_decode($response, true);
+        return $responseData['access_token']; // Assuming the token is in 'access_token' field
+    }
 
-        $authHeaderString = 'Authorization: Bearer ' . $response;
-        /*$headers = array(
-            $authHeaderString,
+    private function makeOrderRequest($apiUrl, $token) {
+        $headers = array(
+            'Authorization: Bearer ' . $token,
             'Accept: application/json',
             'Content-Type: application/json',
-        );*/
-
-        $url = $courier->url.'orders';
-        $options = array(
-            'http' => array(
-                'header' => "Accept: application/json\r\n",
-                'method' => 'GET',
-                $authHeaderString
-            ),
         );
-
-        $context = stream_context_create($options);
-        $response = file_get_contents($url, false, $context);
-        print_r($response);exit;
-
-        if ($response === FALSE) {
-            // Handle error
-            echo 'Failed to fetch data.';
-        } else {
-            // Process the response
-            echo $response;
+    
+        $ch = curl_init($apiUrl . 'orders');
+    
+        // Set up your order request data here if needed
+        // $orderData = ...
+    
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        // Set up other CURLOPT options as needed
+        // ...
+    
+        // You can set CURLOPT_POSTFIELDS if you have data to send in the request body
+    
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            echo 'cURL error: ' . curl_error($ch);
         }
+    
+        curl_close($ch);
+    
+        return $response;
     }
 
     public function add_to_courier(){
