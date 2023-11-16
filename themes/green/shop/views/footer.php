@@ -68,13 +68,13 @@
                     <a href="https://www.youtube.com/channel/UCrzcYJ1xERstbhGunjgWDLA" class="text-dark text-decoration-none mx-2"> <i class="bi bi-youtube"></i></a> 
                     <a href="https://twitter.com/aveznur" class="text-dark text-decoration-none mx-2"> <i class="bi bi-twitter"></i></a>
                     <a href="https://instagram.com/avenzurksa?igshid=NTc4MTIwNjQ2YQ==" class="text-dark text-decoration-none mx-2"><i class="bi bi-instagram"></i></a> 
-                    <a href="tiktok.com/@avenzur" class="text-dark text-decoration-none mx-2"><i class="bi bi-ticktok"></i></a></h6>
+                    <a href="tiktok.com/@avenzur" class="text-dark text-decoration-none mx-2"><i class="bi bi-tiktok"></i></a></h6>
               </div>
               </div>
             </div>
           </div>
           <div class="text-center border-top pt-3 pb-2">
-            <p class="m-0 fw-bold">All Rights Reserved Avenzur.com By Pharma Medcial Company</p>
+            <p class="m-0 fw-bold copyr">All Rights Reserved Avenzur.com By Pharma Medcial Company</p>
           </div>
         </footer>
       </div>
