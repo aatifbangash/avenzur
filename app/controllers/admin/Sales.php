@@ -1862,10 +1862,10 @@ class Sales extends MY_Controller
             'order_number' => '123457'.$sale->id,
             'source_customer_phone' => '0114654636',
             'source_customer_name' => 'Avenzur.com',
-            'source_customer_reference' => $sale->reference_no,
-            'source_location_lat' => '24.80725847115936',
-            'source_location_long' => '46.71702811046411',
-            'source_address' => 'Business Gate, Riyadh KSA',
+            'source_customer_reference' => '0',
+            'source_location_lat' => 0.0,
+            'source_location_long' => 0.0,
+            'source_address' => '-',
             'destination_customer_phone' => $address->phone,
             'destination_customer_name' => $customer->name,
             'destination_customer_reference' => $sale->reference_no,
@@ -2005,6 +2005,7 @@ class Sales extends MY_Controller
             }
         }else if($courier->name == 'J&T'){
             $response = $this->assignJT($sale, $courier);
+            print_r($response);exit;
         }
     }
 
@@ -2013,6 +2014,9 @@ class Sales extends MY_Controller
 
         $apiAccount = $courier->api_account;
         $privateKey = $courier->auth_key;
+
+        $cipher_text = md5($courier->password.'jadada236t2');
+        $digest = base64_encode(md5($courier->username.$cipher_text.$courier->auth_key));
 
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
@@ -2042,15 +2046,17 @@ class Sales extends MY_Controller
 
         $headers = array(
             'apiAccount: '.$apiAccount,
-            'digest: dv7y+k4Pth0asb/tf7IOtg==',
+            'digest: '.$digest,
             'timestamp: '.time(),
             'Content-Type: application/x-www-form-urlencoded',
         );
 
+        $express_type = $sale->delivery_type == 'Express' ? 'SDD' : 'EZKSA';
+
         $data = array(
             'bizContent' => json_encode(array(
-                'customerCode' => 'J0086024173', // This is test customer code
-                'digest' => '4hQ8qXNkuSJ8cIgJQDFFRA==',
+                'customerCode' => $courier->username, // This is test customer code
+                'digest' => $digest,
                 'serviceType' => '02', // 01 => door to door pickup, 02 => store delivery
                 'orderType' => '1', // 1 => individual customer, 2 => monthly settlement
                 'deliveryType' => '03', // 03 => pick at store, 04 => door to door pickup
