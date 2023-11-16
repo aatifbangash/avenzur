@@ -186,7 +186,7 @@ class Shop extends MY_Shop_Controller
         }
 
         if ($this->form_validation->run() == true) {
-            echo $this->input->post('express_delivery');exit;
+            echo $this->input->post('shipping_phone');exit;
             if ($guest_checkout || $address = $this->shop_model->getAddressByID($this->input->post('address'))) {
                 $new_customer = false;
                 if ($guest_checkout) {
