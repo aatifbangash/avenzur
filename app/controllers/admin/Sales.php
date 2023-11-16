@@ -2018,7 +2018,8 @@ class Sales extends MY_Controller
         //$cipher_text = md5($courier->password.'jadada236t2');
         //$digest = base64_encode(md5($courier->username.$cipher_text.$courier->auth_key));
 
-        $cipher_text = md5('Aa123456jadada236t2');
+        $cipher_text = strtoupper(md5('Aa123456jadada236t2'));
+        echo 'Cipher: '.$cipher_text.'<br />';
         $digest = base64_encode(md5('J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9'));
         echo 'Digest: '.$digest;exit;
         $address_id = $sale->address_id;
