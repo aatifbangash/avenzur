@@ -1859,7 +1859,7 @@ class Sales extends MY_Controller
         }
 
         $data = array(
-            'order_number' => $sale->id,
+            'order_number' => '123456'.$sale->id,
             'source_customer_phone' => '0114654636',
             'source_customer_name' => 'Avenzur.com',
             'source_customer_reference' => $sale->reference_no,
