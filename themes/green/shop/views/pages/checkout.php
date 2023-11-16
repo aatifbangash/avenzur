@@ -435,8 +435,8 @@
                                                     } ?>
 
                                                     <label style="display: inline-block; width: auto;">
-                                                        <input type="hidden" name="payment_method" value="directpay"
-                                                               id="directpay" required="required">
+                                                        <input type="hidden" name="payment_method" value="directpay" id="directpay" required="required">
+                                                        <input type="hidden" name="express_delivery" id="express_delivery" />
                                                         <!--<input type="radio" name="payment_method" value="directpay" id="directpay" required="required">-->
                                                         <!--<span>-->
                                                         <!--    <i class="fa fa-bank margin-right-md"></i> Direct Pay-->
@@ -643,6 +643,9 @@
                 var city = $('#shipping_city').val();
                 var country = $('#shipping_country').val();
             }
+
+            console.log($(this).prop('checked'));
+
             calCulateShipping(city, country, $(this).prop('checked'));
         })
 
