@@ -112,8 +112,8 @@
                             ?>
                                 
                                         <div class="card" style="width: 100%">
-                                        <a href="#" class="text-decoration-none">
-                                        <div class="cardImg"><img src="./images/productimg1.jpg" class="card-img-top" alt="..."></div>
+                                        <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
+                                        <div class="cardImg"><img src="<?= base_url('assets/uploads/thumbs/' . $sp->image); ?>" class="card-img-top" alt="..."></div>
                                         <div class="card-body px-0 text-start pb-0">
                                             <div class="product-cat-title"><span class="text-uppercase">Medical</span></div>
                                             <h5 class="card-title text-start"><?= $sp->name; ?></h5>
@@ -147,7 +147,7 @@
                                         
                                             </div>
                                         </a>
-                                        <div> <button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark">Add to cart </button></div>
+                                        <div> <button type="button" data-id="<?= $sp->id; ?>" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
                                         
                             <?php
                         }
