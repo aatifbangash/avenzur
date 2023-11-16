@@ -104,13 +104,13 @@
 
                 <!-- all products -->
                 <div class="row products-card text-center gy-4 py-4">
-                                    
+                                    <div class="col-lg-3 col-md-4 col-sm-12">
                 <?php
                     $r = 0;
                     foreach (array_chunk($best_sellers, 4) as $sps){
                         foreach ($sps as $sp) {
                             ?>
-                                    <div class="col-lg-3 col-md-4 col-sm-12">
+                                
                                         <div class="card" style="width: 100%">
                                         <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
                                         <div class="cardImg"><img src="<?= base_url('assets/uploads/thumbs/' . $sp->image); ?>" class="card-img-top" alt="..."></div>
@@ -169,12 +169,12 @@
                                             </div>
                                         </a>
                                         <div> <button type="button" data-id="<?= $sp->id; ?>" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
-                                                </div>
+                                        
                             <?php
                         }
                     }
                 ?>
-                
+                </div> 
                                     </div>   
                 </div>
                 <!-- all products end -->
