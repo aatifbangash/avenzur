@@ -2019,6 +2019,9 @@ class Sales extends MY_Controller
         $address = $this->site->getAddressByID($address_id);
         $sale_items = $this->site->getAllSaleItems($sale->id);
 
+        $countryArr = $this->site->getCountryByName($address->country);
+        print_r($countryArr);exit;
+
         $items_data = array();
         foreach ($sale_items as $sale_item){
 
@@ -2028,14 +2031,13 @@ class Sales extends MY_Controller
             // Remove additional line
 
             $items_data[] = array(
-                'product_id' => $sale_item->product_id,
-                'product_name' => $sale_item->product_name,
-                'product_quantity' => $sale_item->quantity,
-                'product_description' => $strippedDescription,
-                'product_temperature' => '',
-                'package_length' => '',
-                'package_width' => '' ,
-                'package_height' => ''
+                'number' => $sale_item->product_id,
+                'itemType' => '',
+                'itemName' => $sale_item->product_name,
+                'priceCurrency' => 'SAR',
+                'itemValue' => $sale_item->subtotal,
+                'itemUrl' => 'https://avenzur.com/product/'.$product->slug,
+                'desc' => $sale_item->product_name
             );
         }
 
@@ -2050,34 +2052,25 @@ class Sales extends MY_Controller
             'bizContent' => json_encode(array(
                 'customerCode' => 'J0086024071',
                 'digest' => '4hQ8qXNkuSJ8cIgJQDFFRA==',
-                'serviceType' => '01',
-                'orderType' => '2',
-                'deliveryType' => '04',
-                'expressType' => 'EZKSA',
-                'network' => '',
-                'length' => 30,
-                'sendStartTime' => '2021-12-03 10:02:50',
-                'weight' => 5.01,
-                'remark' => 'test',
-                'billCode' => '',
-                'batchNumber' => '',
-                'txlogisticId' => 'SA67733240451',
-                'goodsType' => 'ITN1',
-                'totalQuantity' => '1',
+                'serviceType' => '02', // 01 => door to door pickup, 02 => store delivery
+                'orderType' => '1', // 1 => individual customer, 2 => monthly settlement
+                'deliveryType' => '03', // 03 => pick at store, 04 => door to door pickup
+                'expressType' => 'SDD', // SDD => Same day delivery KSA, EZKSA => standard KSA 
+                'sendStartTime' => date("Y-m-d H:i:s"),
+                'weight' => 0, // We cannot send this
+                'billCode' => '', // Waybill number (Needed)
+                //'batchNumber' => '',
+                'txlogisticId' => $sale->id,
+                'goodsType' => 'ITN4', // ITN1 Clothing, ITN2 file, ITN3 Food, ITN4 Others, ITN5 digital products, ITN6 daily necessities, ITN7 Fragile
                 'receiver' => array(
-                    'area' => 'sdfdsafdsfdsafdsa1',
-                    'address' => 'sdfsacdscdscds2a',
-                    'town' => '',
-                    'street' => '',
-                    'city' => 'Abu Ajram',
-                    'mobile' => '1441234567843543543554311143',
-                    'mailBox' => 'ant_li123@qq.com',
-                    'phone' => '1441234567843543543554311143',
+                    'address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
+                    'city' => $address->city,
+                    'mobile' => $address->phone,
+                    'phone' => $address->phone,
                     'countryCode' => 'KSA',
-                    'name' => 'test_receiver',
-                    'company' => 'guangdongshengshenzhenshizhuantayigeyidianzishiyeyouxianggongsi',
-                    'postCode' => '518000',
-                    'prov' => 'Al Jawf'
+                    'name' => $customer->name,
+                    'postCode' => $address->postal_code,
+                    'prov' => $address->state
                 ),
                 'sender' => array(
                     'area' => 'sdfsafdsafsdfdsa',
@@ -2094,29 +2087,12 @@ class Sales extends MY_Controller
                     'postCode' => '518000',
                     'prov' => 'Al Qassim'
                 ),
-                'itemsValue' => 1500.02,
+                'itemsValue' => $sale->paid,
                 'priceCurrency' => 'SAR',
-                'width' => 10,
-                'offerFee' => 3600.01,
-                'items' => array(
-                    array(
-                        'number' => 1,
-                        'itemType' => 'ITN1',
-                        'itemName' => '服饰123456test',
-                        'priceCurrency' => 'DHS',
-                        'itemValue' => '12.36',
-                        'itemUrl' => 'http://www.baidu.com/shangpinlianjiedizhi',
-                        'desc' => 'test_ordermiaoshu'
-                    ),
-                    // Include other items as needed
-                ),
-                'sendEndTime' => '2021-12-04 10:02:50',
-                'height' => 60,
-                'payType' => 'PP_PM',
-                'operateType' => 1,
-                'platformName' => '开放13213154564646132131312sdfdsfdsfdsafdsafdsdsfdsafdsafdsfsadfsdafsdafsad',
-                'customerAccount' => '客户0086023990sdfdsfdsfdsafdsafdsafdsfsacdsfdsafdsfdsfdsafdsafsdfsdfdsafdsafdsfdsafdsa',
-                'isUnpackEnabled' => 1
+                'items' => $items_data,
+                'sendEndTime' => date("Y-m-d H:i:s"),
+                'operateType' => 1, // 1 => New, 2 => Modifications
+                'platformName' => 'Avenzur.com',
             )),
         );
 

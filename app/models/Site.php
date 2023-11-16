@@ -537,6 +537,18 @@ public function getallCountry()
         return false;
     }
 
+    public function getCountryByName($name)
+    {
+        $this->db->like('name', $name);
+        $q = $this->db->get('countries', 1);
+
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+
+        return false;
+    }
+
     public function getCourierById($id)
     {
         $q = $this->db->get_where('courier', ['id' => $id], 1);
