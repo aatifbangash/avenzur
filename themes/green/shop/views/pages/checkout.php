@@ -164,6 +164,7 @@
                                             <?php
                                             if (!empty($addresses) && !$this->Staff) {
                                             ?>
+                                            <input type="hidden" name="express_delivery" id="express_delivery" value="Standard" />
                                             <input type="hidden" id="shipping-input" name="shipping"
                                                    value="<?= $calculateShipping ?>"/>
                                             <?php
