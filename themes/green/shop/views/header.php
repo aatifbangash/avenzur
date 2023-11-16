@@ -204,6 +204,9 @@
                       <li class="nav-item">
                         <a class="nav-link <?php if(site_url('shop/products?promo=yes') == $url){ echo 'active'; } ?>"  href="<?= site_url('shop/products?promo=yes'); ?>">Promotions</a>
                       </li>
+                      <li class="nav-item">
+                        <a class="nav-link <?php if(site_url('shop/bestsellers') == $url){ echo 'active'; } ?>"  href="<?= site_url('shop/bestsellers'); ?>">Best Sellers</a>
+                      </li>
                       
                     
                      <div id="mobnav"> 
