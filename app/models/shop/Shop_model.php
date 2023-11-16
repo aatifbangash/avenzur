@@ -462,7 +462,78 @@ class Shop_model extends CI_Model
         if ($promo) {
             $this->db->order_by('promotion desc');
         }
-        $this->db->order_by('RAND()');
+        $this->db->order_by('id desc');
+        $result = $this->db->get('products')->result();
+//        dd($result);
+
+        array_map(function ($row) {
+            if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
+                $productTaxPercent = $row->taxPercentage;
+
+                if($row->promotion == 1){
+                    $productPromoPrice = $row->promo_price;
+                    $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                    $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
+                }
+
+                $productPrice = $row->price;
+                $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+                $row->price = $productPrice + $productTaxAmount;
+            }
+        }, $result);
+        return $result;
+    }
+
+    public function getBestSellersAdditional($limit = 16, $promo = true)
+    {
+        $countryId = get_cookie('shop_country', true);//$this->session->userdata('country');
+        $this->db->select("
+        {$this->db->dbprefix('products')}.id as id, 
+        {$this->db->dbprefix('products')}.name as name, 
+        {$this->db->dbprefix('products')}.code as code, 
+        {$this->db->dbprefix('products')}.image as image, 
+        {$this->db->dbprefix('products')}.slug as slug, 
+        {$this->db->dbprefix('products')}.price, 
+        {$this->db->dbprefix('products')}.quantity, 
+        {$this->db->dbprefix('products')}.type, 
+        {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
+        {$this->db->dbprefix('products')}.tax_method, 
+        promotion, 
+        promo_price, 
+        start_date, 
+        end_date, 
+        b.name as brand_name, 
+        b.slug as brand_slug, 
+        c.name as category_name, 
+        c.slug as category_slug,
+        t.name as taxName,
+        t.rate as taxPercentage,
+        t.code as taxCode
+        ")
+            ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
+            ->join('brands b', 'products.brand=b.id', 'left')
+            ->join('categories c', 'products.category_id=c.id', 'left')
+            ->where('products.best_seller', 1)
+            ->where('hide !=', 1)
+            //->where('products.cf1', $countryId)
+            ->limit($limit);
+
+        /*if($countryId != '0')
+        {
+           $this->db->where('products.cf1', $countryId);
+        }*/
+
+        $sp = $this->getSpecialPrice();
+        if ($sp->cgp) {
+            $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
+        } elseif ($sp->wgp) {
+            $this->db->select('wgp.price as special_price', false)->join($sp->wgp, 'products.id=wgp.product_id', 'left');
+        }
+
+        if ($promo) {
+            $this->db->order_by('promotion desc');
+        }
+        $this->db->order_by('id asc');
         $result = $this->db->get('products')->result();
 //        dd($result);
 
