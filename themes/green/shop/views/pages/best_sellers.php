@@ -103,93 +103,62 @@
                 </div>-->
 
                 <!-- all products -->
-            <div class="feature_products">
+
                 <?php
-            $r = 0;
-            foreach (array_chunk($best_sellers, 4) as $sps){
-                foreach ($sps as $sp) {
-                ?>
-                    <div class="row products-card text-center gy-4 ">
-                        <div class="col-md-12 col-sm-12">
+                    $r = 0;
+                    foreach (array_chunk($best_sellers, 4) as $sps){
+                        foreach ($sps as $sp) {
+                            ?>
+                                <div class="row products-card text-center gy-4 py-4">
+                    <div class="col-lg-3 col-md-4 col-sm-12">
                         <div class="card" style="width: 100%">
-                            
-                            <div class="cardImg position-relative">
-                            <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
-                                Sale 20% OFF
-                            </span>-->
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
-                            <img src="<?= base_url('assets/uploads/thumbs/' . $sp->image); ?>" class="card-img-top" alt="...">
-                            </a>
-                            </div>
-                            <div class="card-body px-0 text-start pb-0">
-                            
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
+                        <a href="#" class="text-decoration-none">
+                        <div class="cardImg"><img src="./images/productimg1.jpg" class="card-img-top" alt="..."></div>
+                        <div class="card-body px-0 text-start pb-0">
+                            <div class="product-cat-title"><span class="text-uppercase">Medical</span></div>
+                            <h5 class="card-title text-start"><?= $sp->name; ?></h5>
                             <div class="row align-items-center justify-content-between">
-                                <div class="col-md-6">
-                                <!--<div class="rating">
-                                    <i class="bi bi-star-fill rated"></i>
-                                    <i class="bi bi-star-fill rated"></i>
-                                    <i class="bi bi-star-fill rated"></i>
-                                    <i class="bi bi-star-fill"></i>
-                                    
-                                </div>-->
-                                </div>
-                                <?php
-                                if ($sp->promotion) {
-                                    ?>
-                                    <div class="col-md-6">
-                                        <div class="discountPrice price text-end py-2">
-                                            <h4 class="m-0 text-decoration-line-through">
-                                                <?php echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price); ?>
-                                            </h4>
-                                        </div>
-                                    </div>
-                                    <?php
-                                }
-                                ?>
+                            <div class="col-md-6">
+                                <div class="rating">
+                                <i class="bi bi-star-fill rated"></i>
+                                <i class="bi bi-star-fill rated"></i>
+                                <i class="bi bi-star-fill rated"></i>
+                                <i class="bi bi-star-fill"></i>
                                 
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">240.00 SAR</h4></div>
+                            </div>
                             </div> 
                             <!--price and quantity araea  -->
-
+        
                             <div class="row align-items-center justify-content-between">
-                                <div class="col-md-6 ">
-                                    <div class="price text-start  py-2">
-                                        <h4 class="m-0 fw-bold">
-                                            <?php
-                                            if ($sp->promotion) {
-                                                echo $this->sma->convertMoney($sp->promo_price);
-                                            }else{
-                                                echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
-                                            }
-                                            ?>
-                                        </h4>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                <div class="quantity text-end py-2 d-flex align-items-center justify-content-md-between">
-                                    <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
-                                    <input type="text" name="quantity" class="Qnum" value="1" required="required" />
-                                    <!--<span class="Qnum ">1</span>-->
-                                    <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
-                                </div>
+                            <div class="col-md-6 ">
+                                <div class="price text-start  py-2"><h4 class="m-0 fw-bold">240.00 SAR</h4></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="quantity text-end py-2 d-flex align-items-center justify-content-between">
+                                <span class="plus"><i class="bi bi-plus-circle-fill"></i></span>
+                                <span class="Qnum ">1</span>
+                                <span class="minus"><i class="bi bi-dash-circle-fill"></i></span>
                                 </div>
                             </div>
-                            
+                            </div>
+                        
                             <!-- price area end -->
                             
-                                
-                            </div>
                             
-                            <div> <button type="button" data-id="<?= $sp->id; ?>" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
+                            </div>
+                        </a>
+                        <div> <button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark">Add to cart </button></div>
                         </div> 
-                        </div> 
-                        
                     </div>
-                <?php 
-                }
-            } 
-            ?>   
-            </div>
+                            <?php
+                        }
+                    }
+                ?>
+                    
                 </div>
                 <!-- all products end -->
             </div>
