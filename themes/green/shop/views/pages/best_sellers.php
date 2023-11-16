@@ -104,14 +104,17 @@
 
                 <!-- all products -->
 
-                <div class="row products-card text-center gy-4 py-4">
+                <?php
+                foreach ($best_sellers as $best_seller){
+                    ?>
+                    <div class="row products-card text-center gy-4 py-4">
                     <div class="col-lg-3 col-md-4 col-sm-12">
                         <div class="card" style="width: 100%">
                         <a href="#" class="text-decoration-none">
                         <div class="cardImg"><img src="./images/productimg1.jpg" class="card-img-top" alt="..."></div>
                         <div class="card-body px-0 text-start pb-0">
                             <div class="product-cat-title"><span class="text-uppercase">Medical</span></div>
-                            <h5 class="card-title text-start">Vitamin C 500mg Sugarless Tab x 75</h5>
+                            <h5 class="card-title text-start"><?= $best_seller->same; ?></h5>
                             <div class="row align-items-center justify-content-between">
                             <div class="col-md-6">
                                 <div class="rating">
@@ -149,10 +152,11 @@
                         <div> <button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark">Add to cart </button></div>
                         </div> 
                     </div>
-
+                    <?php
+                }
+                ?>   
                     
-                    
-                    </div>
+                </div>
                 <!-- all products end -->
             </div>
         </div>
