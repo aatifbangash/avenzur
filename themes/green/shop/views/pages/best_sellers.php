@@ -108,6 +108,7 @@
                     $r = 0;
                     foreach (array_chunk($best_sellers, 4) as $sps){
                         foreach ($sps as $sp) {
+                            print_r($sp);exit;
                             ?>
                                 <div class="row products-card text-center gy-4 py-4">
                     <div class="col-lg-3 col-md-4 col-sm-12">
