@@ -114,7 +114,7 @@
                         <div class="cardImg"><img src="./images/productimg1.jpg" class="card-img-top" alt="..."></div>
                         <div class="card-body px-0 text-start pb-0">
                             <div class="product-cat-title"><span class="text-uppercase">Medical</span></div>
-                            <h5 class="card-title text-start"><?= $best_seller->same; ?></h5>
+                            <h5 class="card-title text-start"><?= $best_seller->name; ?></h5>
                             <div class="row align-items-center justify-content-between">
                             <div class="col-md-6">
                                 <div class="rating">
