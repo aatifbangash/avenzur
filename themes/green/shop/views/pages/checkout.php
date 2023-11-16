@@ -436,7 +436,7 @@
 
                                                     <label style="display: inline-block; width: auto;">
                                                         <input type="hidden" name="payment_method" value="directpay" id="directpay" required="required">
-                                                        <input type="hidden" name="express_delivery" id="express_delivery" value="standard" />
+                                                        
                                                         <!--<input type="radio" name="payment_method" value="directpay" id="directpay" required="required">-->
                                                         <!--<span>-->
                                                         <!--    <i class="fa fa-bank margin-right-md"></i> Direct Pay-->
@@ -461,6 +461,7 @@
                                                 </div>
 
                                             </div>
+                                            <input type="hidden" name="express_delivery" id="express_delivery" value="standard" />
                                             <input type="hidden" id="shipping-input" name="shipping"
                                                    value="<?= $calculateShipping ?>"/>
                                             <?= form_submit('guest_order', lang('Proceed to Payment'), 'class="btn btn-lg btn-primary payment-k" disabled'); ?>
