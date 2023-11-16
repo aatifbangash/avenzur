@@ -461,7 +461,7 @@
                                                 </div>
 
                                             </div>
-                                            <input type="hidden" name="express_delivery" id="express_delivery" value="standard" />
+                                            <input type="hidden" name="express_delivery" id="express_delivery" value="Standard" />
                                             <input type="hidden" id="shipping-input" name="shipping"
                                                    value="<?= $calculateShipping ?>"/>
                                             <?= form_submit('guest_order', lang('Proceed to Payment'), 'class="btn btn-lg btn-primary payment-k" disabled'); ?>
