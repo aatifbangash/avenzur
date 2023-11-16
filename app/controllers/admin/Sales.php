@@ -2020,7 +2020,6 @@ class Sales extends MY_Controller
         $sale_items = $this->site->getAllSaleItems($sale->id);
 
         $countryArr = $this->site->getCountryByName($address->country);
-        print_r($countryArr);exit;
 
         $items_data = array();
         foreach ($sale_items as $sale_item){
@@ -2058,7 +2057,7 @@ class Sales extends MY_Controller
                 'expressType' => 'SDD', // SDD => Same day delivery KSA, EZKSA => standard KSA 
                 'sendStartTime' => date("Y-m-d H:i:s"),
                 'weight' => 0, // We cannot send this
-                'billCode' => '', // Waybill number (Needed)
+                'billCode' => $sale->reference_no, // Waybill number (Needed)
                 //'batchNumber' => '',
                 'txlogisticId' => $sale->id,
                 'goodsType' => 'ITN4', // ITN1 Clothing, ITN2 file, ITN3 Food, ITN4 Others, ITN5 digital products, ITN6 daily necessities, ITN7 Fragile
@@ -2067,25 +2066,19 @@ class Sales extends MY_Controller
                     'city' => $address->city,
                     'mobile' => $address->phone,
                     'phone' => $address->phone,
-                    'countryCode' => 'KSA',
+                    'countryCode' => $countryArr->iso3,
                     'name' => $customer->name,
                     'postCode' => $address->postal_code,
                     'prov' => $address->state
                 ),
                 'sender' => array(
-                    'area' => 'sdfsafdsafsdfdsa',
-                    'address' => 'cdscds 132132131cdscd cdscdscdscdsscdscds 132132131cdscd cdscdscdscdsscdscds 132132131cdscd cdscdscdscdsscdscds 132132131cdscd cdscdscdscdsscdscds 132132131cdscd cdscdscdscdsscdscds 132132131cdscd cdscdscdscdss',
-                    'town' => 'town1',
-                    'street' => 'street1',
-                    'city' => 'Al Ammarah',
-                    'mobile' => '1441234567843543543554311143',
-                    'mailBox' => 'ant_li12345678901234567890@qq.com',
-                    'phone' => '1441234567843543543554311143',
+                    'address' => 'Business Gate, Riyadh KSA',
+                    'city' => 'Riyadh',
+                    'mobile' => '0114654636',
+                    'phone' => '0114654636',
                     'countryCode' => 'KSA',
-                    'name' => 'test_sender',
-                    'company' => 'jiangsunanjingshihonghuangzhili kejiyouxiangongsisdfdsfdsfds',
-                    'postCode' => '518000',
-                    'prov' => 'Al Qassim'
+                    'name' => 'Avenzur.com',
+                    'prov' => 'Riyadh'
                 ),
                 'itemsValue' => $sale->paid,
                 'priceCurrency' => 'SAR',
