@@ -2019,9 +2019,8 @@ class Sales extends MY_Controller
         //$digest = base64_encode(md5($courier->username.$cipher_text.$courier->auth_key));
 
         $cipher_text = md5('Aa123456jadada236t2');
-        echo 'Ciphertext: '.$cipher_text;exit;
         $digest = base64_encode(md5('J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9'));
-
+        echo 'Digest: '.$digest;exit;
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
         $address = $this->site->getAddressByID($address_id);
