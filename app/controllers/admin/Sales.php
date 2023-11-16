@@ -1945,8 +1945,16 @@ class Sales extends MY_Controller
     
         curl_close($ch);
     
-        $responseData = json_decode($response, true);
-        return $responseData['access_token']; // Assuming the token is in 'access_token' field
+        if($respArr = json_decode($response)){
+            if(isset($respArr->success)){
+                $token = $respArr->success->token;
+            }else{
+                $token = false;
+            }
+        }else{
+            $token = false;
+        }
+        return $token; // Assuming the token is in 'access_token' field
     }
 
     private function makeOrderRequest($apiUrl, $token) {
