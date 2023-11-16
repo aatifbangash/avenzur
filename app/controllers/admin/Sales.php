@@ -1850,10 +1850,10 @@ class Sales extends MY_Controller
                 'product_name' => $sale_item->product_name,
                 'product_quantity' => $sale_item->quantity,
                 'product_description' => $strippedDescription,
-                'product_temperature' => '',
-                'package_length' => '',
-                'package_width' => '' ,
-                'package_height' => ''
+                'product_temperature' => 0,
+                'package_length' => 0,
+                'package_width' => 0,
+                'package_height' => 0
             );
         }
 
@@ -1873,7 +1873,7 @@ class Sales extends MY_Controller
             'destination_address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
             'shipping_date' => date('Y-m-d'),
             'collection_time' => '00:00',
-            'total_weight' => '',
+            'total_weight' => 0,
             'payment_type' => 'prepaid',
             'payment_method' => 'directpay',
             'payment_status' => 'paid',
@@ -1885,9 +1885,6 @@ class Sales extends MY_Controller
             'notes' => 'no comments',
             'packages' => $items_data
         );
-
-        echo '<pre>';
-        print_r($data);exit;
 
         $ch = curl_init($courier->url.'orders');
 
@@ -1945,8 +1942,6 @@ class Sales extends MY_Controller
                 if(isset($respArr->success)){
                     $token = $respArr->success->token;
                     $order = $this->createRunXOrder($token, $sale, $courier);
-                    echo '<pre>';
-                    print_r($order);exit;
                     $this->updateSaleWithCourier($sale_id, $courier->id);
                     admin_redirect('sales/ecommerce');
                 }
@@ -1961,6 +1956,31 @@ class Sales extends MY_Controller
 
         $apiAccount = $courier->api_account;
         $privateKey = $courier->auth_key;
+
+        $address_id = $sale->address_id;
+        $customer = $this->site->getCompanyByID($sale->customer_id);
+        $address = $this->site->getAddressByID($address_id);
+        $sale_items = $this->site->getAllSaleItems($sale->id);
+
+        $items_data = array();
+        foreach ($sale_items as $sale_item){
+
+            $product = $this->site->getProductByID($sale_item->product_id);
+            $strippedDescription = str_replace('<p><strong>Product Description:</strong></p>', '', $product->product_details);
+            $strippedDescription = strip_tags($strippedDescription, '<ul><li><strong>');
+            // Remove additional line
+
+            $items_data[] = array(
+                'product_id' => $sale_item->product_id,
+                'product_name' => $sale_item->product_name,
+                'product_quantity' => $sale_item->quantity,
+                'product_description' => $strippedDescription,
+                'product_temperature' => '',
+                'package_length' => '',
+                'package_width' => '' ,
+                'package_height' => ''
+            );
+        }
 
         $headers = array(
             'apiAccount: '.$apiAccount,
