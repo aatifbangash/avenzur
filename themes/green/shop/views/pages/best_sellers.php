@@ -106,7 +106,6 @@
 
                 <?php
                     $r = 0;
-                    print_r($best_sellers);exit;
                     foreach (array_chunk($best_sellers, 4) as $sps){
                         foreach ($sps as $sp) {
                             print_r($sp);exit;
