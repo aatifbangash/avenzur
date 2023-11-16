@@ -1849,7 +1849,7 @@ class Sales extends MY_Controller
                 'product_id' => $sale_item->product_id,
                 'product_name' => $sale_item->product_name,
                 'product_quantity' => $sale_item->quantity,
-                'product_description' => '',
+                'product_description' => $sale_item->product_name,
                 'package_weight' => 0,
                 'product_temperature' => 0,
                 'package_length' => 0,
