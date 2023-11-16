@@ -1105,6 +1105,9 @@ class Shop extends MY_Shop_Controller
 
     public function bestsellers(){
         $this->data['all_categories'] = $this->shop_model->getAllCategories();
+        $this->data['location'] = $this->shop_model->getProductLocation();
+        $this->data['best_sellers'] = $this->shop_model->getBestSellers(100);
+
         $this->page_construct('pages/best_sellers', $this->data);
     }
 
