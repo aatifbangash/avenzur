@@ -186,6 +186,7 @@ class Shop extends MY_Shop_Controller
         }
 
         if ($this->form_validation->run() == true) {
+            echo 'Here we are.....';
             echo $this->input->post('shipping_phone');exit;
             if ($guest_checkout || $address = $this->shop_model->getAddressByID($this->input->post('address'))) {
                 $new_customer = false;
