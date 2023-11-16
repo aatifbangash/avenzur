@@ -106,11 +106,12 @@
 
                 <?php
                     $r = 0;
+                    print_r($best_sellers);exit;
                     foreach (array_chunk($best_sellers, 4) as $sps){
                         foreach ($sps as $sp) {
                             print_r($sp);exit;
                             ?>
-                                <div class="row products-card text-center gy-4 py-4">
+                                <!--<div class="row products-card text-center gy-4 py-4">
                     <div class="col-lg-3 col-md-4 col-sm-12">
                         <div class="card" style="width: 100%">
                         <a href="#" class="text-decoration-none">
@@ -132,7 +133,6 @@
                                 <div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">240.00 SAR</h4></div>
                             </div>
                             </div> 
-                            <!--price and quantity araea  -->
         
                             <div class="row align-items-center justify-content-between">
                             <div class="col-md-6 ">
@@ -147,14 +147,11 @@
                             </div>
                             </div>
                         
-                            <!-- price area end -->
-                            
-                            
                             </div>
                         </a>
                         <div> <button type="button" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark">Add to cart </button></div>
                         </div> 
-                    </div>
+                    </div>-->
                             <?php
                         }
                     }
