@@ -1993,20 +1993,26 @@ class Sales extends MY_Controller
         $courier = $this->site->getCourierById($courier_id);
         $sale = $this->site->getSaleByID($sale_id);
 
-        if($courier->name == 'Run X'){
-            $response = $this->assignRunX($sale, $courier);
-            if($respArr = json_decode($response)){
-                if(isset($respArr->success)){
-                    $token = $respArr->success->token;
-                    $order = $this->createRunXOrder($token, $sale, $courier);
-                    $this->updateSaleWithCourier($sale_id, $courier->id);
-                    admin_redirect('sales/ecommerce');
+        if($sale->courier_id == 0){
+            if($courier->name == 'Run X'){
+                $response = $this->assignRunX($sale, $courier);
+                if($respArr = json_decode($response)){
+                    if(isset($respArr->success)){
+                        $token = $respArr->success->token;
+                        $order = $this->createRunXOrder($token, $sale, $courier);
+                        $this->updateSaleWithCourier($sale_id, $courier->id);
+                        admin_redirect('sales/ecommerce');
+                    }
                 }
+            }else if($courier->name == 'J&T'){
+                $response = $this->assignJT($sale, $courier);
+                print_r($response);exit;
             }
-        }else if($courier->name == 'J&T'){
-            $response = $this->assignJT($sale, $courier);
-            print_r($response);exit;
+        }else{
+            $this->session->set_flashdata('error', lang('Courier Already Assigned'));
+            admin_redirect('sales/ecommerce');
         }
+        
     }
 
     public function assignJT($sale, $courier){
