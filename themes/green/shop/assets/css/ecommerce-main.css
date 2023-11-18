@@ -1570,10 +1570,7 @@ ol.list-group.list-group-numbered li:hover {
     padding-inline: 15px;
     padding-block: 5px;
   }
-  /* .collapse.show#navbarSupportedContent {
-    display: flex;
-    flex-direction: column-reverse;
-  } */
+
   #navbarSupportedContent ul.navbar-nav {
     width: 100%;
   }
