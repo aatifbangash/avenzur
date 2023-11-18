@@ -118,9 +118,9 @@
         <div class="row  align-items-center justify-content-between py-3">
 
           <div class="col-lg-2 col-md-3  mb-2">
-            <div class="logosearchMob">
+            <div class="logosearchMob" id="shoppingdivMob">
 
-              <div> <a class="navbar-brand" href="<?= site_url(); ?>"><img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="<?= $shop_settings->shop_name; ?>"></a></div>
+              <div class="logo-k"> <a class="navbar-brand" href="<?= site_url(); ?>"><img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="<?= $shop_settings->shop_name; ?>"></a></div>
             <div id="searchtoggle"><i class="bi bi-search"></i></div>
             </div>
            
@@ -148,8 +148,8 @@
     <section>
       <div class="container container-max-width main-menuTab">
         <div class="row align-items-center">
-          <div class="col-md-2 col-sm-2 mob-catS">
-            <button class="btn all-categoryBtn d-flex align-items-center justify-content-between" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+          <div class="col-md-2 col-sm-2 mob-catS" id="allcatDiv">
+            <button class="btn all-categoryBtn d-flex align-items-center justify-content-between" id="allCatmob" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
               <i class="bi bi-filter-left "></i> All Category
             </button>
             
@@ -223,7 +223,7 @@
             </nav>
           </div>
           <div class="col-md-4 col-sm-2 shop-icons">
-            <div class="text-end" id="shoppingdivMob">
+            <div class="text-end" id="cartdiv">
 
               <!--<span class="shuffleIcon me-2">
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -236,40 +236,40 @@
                   </svg>
                   
               </span>
-            <span class="heartIcon me-2">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M26.0832 7.51679C23.5272 4.96079 19.3824 4.96079 16.8264 7.51679C16.5112 7.83199 16.2376 8.17199 16 8.52879C15.7624 8.17199 15.4888 7.83199 15.1736 7.51759C12.6176 4.96159 8.47282 4.96159 5.91682 7.51759C3.36082 10.0736 3.36082 14.2184 5.91682 16.7744L16 26.8568L26.0832 16.7736C28.6392 14.2176 28.6392 10.0736 26.0832 7.51679Z" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10" stroke-linecap="square"/>
-              </svg>
-            </span>-->
-            
-            <span class="cartIcon" id="cart-items">
-              <a class="btn  dropdown-toggle border-0" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="heartIcon me-2">
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9.33331 24C7.86665 24 6.67998 25.2 6.67998 26.6667C6.67998 28.1333 7.86665 29.3333 9.33331 29.3333C10.8 29.3333 12 28.1333 12 26.6667C12 25.2 10.8 24 9.33331 24ZM22.6666 24C21.2 24 20.0133 25.2 20.0133 26.6667C20.0133 28.1333 21.2 29.3333 22.6666 29.3333C24.1333 29.3333 25.3333 28.1333 25.3333 26.6667C25.3333 25.2 24.1333 24 22.6666 24ZM20.7333 17.3333C21.7333 17.3333 22.6133 16.7867 23.0666 15.96L27.84 7.30666C27.9523 7.10456 28.01 6.87662 28.0072 6.6454C28.0045 6.41418 27.9414 6.18769 27.8242 5.98834C27.707 5.78899 27.5398 5.6237 27.3391 5.50881C27.1384 5.39393 26.9112 5.33344 26.68 5.33332L6.94665 5.33332L5.69331 2.66666L1.33331 2.66666L1.33331 5.33332H3.99998L8.79998 15.4533L6.99998 18.7067C6.02665 20.4933 7.30665 22.6667 9.33331 22.6667L25.3333 22.6667V20L9.33331 20L10.8 17.3333L20.7333 17.3333ZM8.21331 7.99999L24.4133 7.99999L20.7333 14.6667L11.3733 14.6667L8.21331 7.99999Z" fill="#171A1F"/>
+                  <path d="M26.0832 7.51679C23.5272 4.96079 19.3824 4.96079 16.8264 7.51679C16.5112 7.83199 16.2376 8.17199 16 8.52879C15.7624 8.17199 15.4888 7.83199 15.1736 7.51759C12.6176 4.96159 8.47282 4.96159 5.91682 7.51759C3.36082 10.0736 3.36082 14.2184 5.91682 16.7744L16 26.8568L26.0832 16.7736C28.6392 14.2176 28.6392 10.0736 26.0832 7.51679Z" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10" stroke-linecap="square"/>
                 </svg>
-                <span class="quantitynum cart-total-items" style="display: none;">1</span>
-              </a>
+              </span>-->
+            
+              <span class="cartIcon" id="cart-items">
+                <a class="btn  dropdown-toggle border-0" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.33331 24C7.86665 24 6.67998 25.2 6.67998 26.6667C6.67998 28.1333 7.86665 29.3333 9.33331 29.3333C10.8 29.3333 12 28.1333 12 26.6667C12 25.2 10.8 24 9.33331 24ZM22.6666 24C21.2 24 20.0133 25.2 20.0133 26.6667C20.0133 28.1333 21.2 29.3333 22.6666 29.3333C24.1333 29.3333 25.3333 28.1333 25.3333 26.6667C25.3333 25.2 24.1333 24 22.6666 24ZM20.7333 17.3333C21.7333 17.3333 22.6133 16.7867 23.0666 15.96L27.84 7.30666C27.9523 7.10456 28.01 6.87662 28.0072 6.6454C28.0045 6.41418 27.9414 6.18769 27.8242 5.98834C27.707 5.78899 27.5398 5.6237 27.3391 5.50881C27.1384 5.39393 26.9112 5.33344 26.68 5.33332L6.94665 5.33332L5.69331 2.66666L1.33331 2.66666L1.33331 5.33332H3.99998L8.79998 15.4533L6.99998 18.7067C6.02665 20.4933 7.30665 22.6667 9.33331 22.6667L25.3333 22.6667V20L9.33331 20L10.8 17.3333L20.7333 17.3333ZM8.21331 7.99999L24.4133 7.99999L20.7333 14.6667L11.3733 14.6667L8.21331 7.99999Z" fill="#171A1F"/>
+                  </svg>
+                  <span class="quantitynum cart-total-items" style="display: none;">1</span>
+                </a>
 
-              <div id="cart-contents" class=" dropdown-menu p-3 myaccountForm cartform">
-                <table class="table " id="cart-items-table">
-                  <thead>
-                      <tr>
-                          <th>Image</th>
-                          <th>Name</th>
-                          <th>Price</th>
-                        
-                      </tr>
-                  </thead>
-                  <tbody id="cart-body"></tbody>
-                  <tfoot id="cart-foot"></tfoot>
-                </table>
-              <div class="d-flex">
-                <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 me-2">View Cart</a>
-                <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 ms-2">Checkout</a>
+                <div id="cart-contents" class=" dropdown-menu p-3 myaccountForm cartform">
+                  <table class="table " id="cart-items-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Price</th>
+                          
+                        </tr>
+                    </thead>
+                    <tbody id="cart-body"></tbody>
+                    <tfoot id="cart-foot"></tfoot>
+                  </table>
+                <div class="d-flex">
+                  <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 me-2">View Cart</a>
+                  <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 ms-2">Checkout</a>
+                </div>
               </div>
-            </div>
 
-            </span>
+              </span>
               
             </div>
           

@@ -5,6 +5,11 @@ var targetDiv = document.getElementById("shoppingdivMob");
 var saledivToMove = document.getElementById("salediv");
 var sourcesalemob = document.getElementById("salemob");
 var targetmobnav = document.getElementById("mobnav");
+var cartToMove = document.getElementById("cart-items");
+var cartsourceDiv = document.getElementById("cartdiv");
+var allCatToMove = document.getElementById("allCatmob");
+var catsourceDiv = document.getElementById("allcatDiv");
+var targetmenuDiv = document.getElementById("navbarSupportedContent");
 // Check if the screen width is less than a certain threshold (e.g., 768 pixels for typical mobile screens)
 
 // Remove the button from the source div
@@ -12,14 +17,6 @@ sourceDiv.removeChild(buttonToMove);
 
 // Append the button to the target div
 targetDiv.appendChild(buttonToMove);
-
-// if (window.innerWidth < 768) {
-//   // Remove the button from the source div
-//   sourcesalemob.removeChild(saledivToMove);
-
-//   // Append the button to the target div
-//   targetmobnav.appendChild(saledivToMove);
-// }
 
 //     seaerch bar =================================
 var toggleSearch = document.getElementById("searchtoggle");
@@ -906,6 +903,46 @@ $(document).ready(function () {
       // instead of a settings object
     ],
   });
+
+  $(".suprtwidget").slick({
+    infinite: false,
+    speed: 300,
+    slidesToShow: 3,
+    slidesToScroll: 1,
+
+    prevArrow:
+      "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
+    nextArrow:
+      "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 3,
+          slidesToScroll: 3,
+          infinite: true,
+          dots: true,
+        },
+      },
+      {
+        breakpoint: 770,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 2,
+        },
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+        },
+      },
+      // You can unslick at a given breakpoint now by adding:
+      // settings: "unslick"
+      // instead of a settings object
+    ],
+  });
 });
 
 // Addresses Section
@@ -1214,3 +1251,16 @@ function add_address(t) {
       }
   });
 });*/
+if (window.innerWidth < 768) {
+  //  // Remove the button from the source div
+  cartsourceDiv.removeChild(cartToMove);
+
+  // Append the button to the target div
+  targetDiv.appendChild(cartToMove);
+  // ===========
+
+  catsourceDiv.removeChild(allCatToMove);
+
+  // Append the button to the target div
+  targetmenuDiv.prepend(allCatToMove);
+}
