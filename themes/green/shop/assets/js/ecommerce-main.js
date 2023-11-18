@@ -936,7 +936,7 @@ function initialize() {
     var place = autocomplete.getPlace();
     // Define variables to store city and country names
     var city, country, street, postalCode, stateName, latitude, logitude;
-
+    console.log(place);
     // Loop through address components to find city and country
     place.address_components.forEach(function (component) {
       console.log(component);
