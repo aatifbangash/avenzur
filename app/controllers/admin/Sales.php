@@ -2063,7 +2063,7 @@ class Sales extends MY_Controller
         $data = array(
             'bizContent' => json_encode(array(
                 'customerCode' => $courier->username, // This is test customer code
-                'digest' => $digest,
+                'digest' => 'FeZ9lewGaO64EPH4Zqd4Zg==',
                 'serviceType' => '02', // 01 => door to door pickup, 02 => store delivery
                 'orderType' => '1', // 1 => individual customer, 2 => monthly settlement
                 'deliveryType' => '03', // 03 => pick at store, 04 => door to door pickup
