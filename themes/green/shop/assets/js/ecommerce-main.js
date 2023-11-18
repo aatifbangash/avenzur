@@ -39,7 +39,14 @@ toggleSearchcros.addEventListener("click", function () {
     searchBar.style.display = "none";
   }
 });
-
+function sa_img(t, e) {
+  swal({
+      title: t,
+      html: e,
+      type: "success",
+      confirmButtonText: lang.okay
+  }).catch(swal.noop)
+}
 function update_mini_cart(t) {
   if (t.total_items && t.total_items > 0) {
     var cart_table =
@@ -973,9 +980,9 @@ function initialize() {
     var place = autocomplete.getPlace();
     // Define variables to store city and country names
     var city, country, street, postalCode, stateName, latitude, logitude;
-
     // Loop through address components to find city and country
     place.address_components.forEach(function (component) {
+      console.log(component);
       component.types.forEach(function (type) {
         if (type === "locality") {
           city = component.long_name;
@@ -987,7 +994,8 @@ function initialize() {
         }
         if (type === "route") {
           street = component.long_name;
-          document.getElementById("address-line-1").value = street;
+          //document.getElementById("address-line-1").value = street;
+          document.getElementById("address-line-1").value = document.getElementById("autocomplete_search").value;
         }
         if (type === "postal_code") {
           postalCode = component.long_name;

@@ -1859,7 +1859,8 @@ class Sales extends MY_Controller
         }
 
         $data = array(
-            'order_number' => '123457'.$sale->id,
+            //'order_number' => '123457'.$sale->id,
+            'order_number' => $sale->id,
             'source_customer_phone' => '0114654636',
             'source_customer_name' => 'Avenzur.com',
             'source_customer_reference' => '0',
@@ -1871,7 +1872,8 @@ class Sales extends MY_Controller
             'destination_customer_reference' => $sale->reference_no,
             'destination_location_lat' => !empty($address->latitude) ? $address->latitude : '',
             'destination_location_long' => !empty($address->longitude) ? $address->longitude : '',
-            'destination_address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
+            'destination_address' => $address->line1,
+            //'destination_address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
             'shipping_date' => date('Y-m-d'),
             'collection_time' => '00:00',
             'total_weight' => 0,
@@ -1993,20 +1995,34 @@ class Sales extends MY_Controller
         $courier = $this->site->getCourierById($courier_id);
         $sale = $this->site->getSaleByID($sale_id);
 
-        if($courier->name == 'Run X'){
-            $response = $this->assignRunX($sale, $courier);
-            if($respArr = json_decode($response)){
-                if(isset($respArr->success)){
-                    $token = $respArr->success->token;
-                    $order = $this->createRunXOrder($token, $sale, $courier);
-                    $this->updateSaleWithCourier($sale_id, $courier->id);
-                    admin_redirect('sales/ecommerce');
+        if($sale->courier_id == 0){
+            if($courier->name == 'Run X'){
+                $response = $this->assignRunX($sale, $courier);
+                if($respArr = json_decode($response)){
+                    if(isset($respArr->success)){
+                        $token = $respArr->success->token;
+                        $order = $this->createRunXOrder($token, $sale, $courier);
+                        $order_resp = json_decode($order);
+                        
+                        if(isset($order_resp->errors) || (isset($order_resp->status) && $order_resp->status == false)){
+                            $this->session->set_flashdata('error', $order_resp->message);
+                            admin_redirect('sales/ecommerce');
+                        }else{
+                            $this->sales_model->updateSaleWithCourier($sale_id, $courier->id);
+                            $this->session->set_flashdata('message', 'Courier Assigned Successfully');
+                            admin_redirect('sales/ecommerce');
+                        }
+                    }
                 }
+            }else if($courier->name == 'J&T'){
+                $response = $this->assignJT($sale, $courier);
+                print_r($response);exit;
             }
-        }else if($courier->name == 'J&T'){
-            $response = $this->assignJT($sale, $courier);
-            print_r($response);exit;
+        }else{
+            $this->session->set_flashdata('error', lang('Courier Already Assigned'));
+            admin_redirect('sales/ecommerce');
         }
+        
     }
 
     public function assignJT($sale, $courier){
@@ -2019,10 +2035,12 @@ class Sales extends MY_Controller
         //$digest = base64_encode(md5($courier->username.$cipher_text.$courier->auth_key));
 
         $cipher_text = strtoupper(md5('Aa123456jadada236t2'));
-        echo 'Cipher: '.$cipher_text.'<br />';
-        $digest = base64_encode(strtoupper(md5('J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9')));
-        echo 'Encoding: '.strtoupper(md5('J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9')).'<br />';
-        echo 'Digest: '.$digest;exit;
+        //echo 'Cipher: '.$cipher_text.'<br />';
+        //$digest = base64_encode(strtoupper(md5('J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9')));
+        //echo 'Encoding: '.strtoupper(md5('J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9')).'<br />';
+        //echo 'Digest: '.$digest;exit;
+        $digest = hash('sha256', 'J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9');
+        //echo $digest;exit;
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
         $address = $this->site->getAddressByID($address_id);
@@ -2051,7 +2069,7 @@ class Sales extends MY_Controller
 
         $headers = array(
             'apiAccount: '.$apiAccount,
-            'digest: '.$digest,
+            'digest: FeZ9lewGaO64EPH4Zqd4Zg==',
             'timestamp: '.time(),
             'Content-Type: application/x-www-form-urlencoded',
         );
@@ -2061,7 +2079,7 @@ class Sales extends MY_Controller
         $data = array(
             'bizContent' => json_encode(array(
                 'customerCode' => $courier->username, // This is test customer code
-                'digest' => $digest,
+                'digest' => 'FeZ9lewGaO64EPH4Zqd4Zg==',
                 'serviceType' => '02', // 01 => door to door pickup, 02 => store delivery
                 'orderType' => '1', // 1 => individual customer, 2 => monthly settlement
                 'deliveryType' => '03', // 03 => pick at store, 04 => door to door pickup

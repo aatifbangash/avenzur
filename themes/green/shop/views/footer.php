@@ -201,6 +201,38 @@
     update_mini_cart(cart);
     </script>
 
+<script type="text/javascript">
+<?php if ($message || $warning || $error || $reminder) {
+        ?>
+$(document).ready(function() {
+    <?php if ($message) {
+            ?>
+        sa_alert('<?=lang('success'); ?>', '<?= trim(str_replace(["\r", "\n", "\r\n"], '', addslashes($message))); ?>');
+    <?php
+        }
+        if ($warning) {
+            ?>
+        sa_alert('<?=lang('warning'); ?>', '<?= trim(str_replace(["\r", "\n", "\r\n"], '', addslashes($warning))); ?>', 'warning');
+    <?php
+        }
+        if ($error) {
+            ?>
+        sa_alert('<?=lang('error'); ?>', '<?= trim(str_replace(["\r", "\n", "\r\n"], '', addslashes($error))); ?>', 'error', 1);
+    <?php
+        }
+        if ($reminder) {
+            ?>
+        sa_alert('<?=lang('reminder'); ?>', '<?= trim(str_replace(["\r", "\n", "\r\n"], '', addslashes($reminder))); ?>', 'info');
+    <?php
+        } ?>
+});
+<?php
+    } ?>
+   
+
+
+</script>
+
     <script>
       $(document).ready(function () {
 

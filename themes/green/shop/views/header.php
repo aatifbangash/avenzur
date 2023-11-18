@@ -281,6 +281,6 @@
     </section>
     <!-- menu bar end -->
 
-    <?php if ($this->session->flashdata('error')): ?>
-        <div class="error-message"><?php echo $this->session->flashdata('error'); ?></div>
-    <?php endif; ?>
+    <?php if ($this->session->flashdata('error')){ ?>
+        <div class="error-message"><?php echo $this->session->flashdata('error');exit; ?></div>
+    <?php } ?>
