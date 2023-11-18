@@ -2000,6 +2000,7 @@ class Sales extends MY_Controller
                     if(isset($respArr->success)){
                         $token = $respArr->success->token;
                         $order = $this->createRunXOrder($token, $sale, $courier);
+                        print_r($order);exit;
                         $order_resp = json_decode($order);
                         if(isset($order_resp->errors)){
                             $this->session->set_flashdata('error', $order_resp->message);
