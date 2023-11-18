@@ -2001,9 +2001,14 @@ class Sales extends MY_Controller
                         $token = $respArr->success->token;
                         $order = $this->createRunXOrder($token, $sale, $courier);
                         $order_resp = json_decode($order);
-                        print_r($order_resp);exit;
-                        $this->updateSaleWithCourier($sale_id, $courier->id);
-                        admin_redirect('sales/ecommerce');
+                        if(isset($order_resp->errors)){
+                            $this->session->set_flashdata('error', $order_resp->message);
+                            admin_redirect('sales/ecommerce');
+                        }else{
+                            $this->updateSaleWithCourier($sale_id, $courier->id);
+                            $this->session->set_flashdata('message', 'Courier Assigned Successfully');
+                            admin_redirect('sales/ecommerce');
+                        }
                     }
                 }
             }else if($courier->name == 'J&T'){
