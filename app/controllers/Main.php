@@ -250,7 +250,6 @@ class Main extends MY_Shop_Controller
             } else {
                 $this->session->set_flashdata('error', 'Login Failed / Wrong Credentials');
                 $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
-                echo $this->session->flashdata('error');exit;
                 redirect($referrer);
                 //$this->page_construct('user/login', $this->data);
             }
