@@ -2000,7 +2000,8 @@ class Sales extends MY_Controller
                     if(isset($respArr->success)){
                         $token = $respArr->success->token;
                         $order = $this->createRunXOrder($token, $sale, $courier);
-                        print_r($order);exit;
+                        $order_resp = json_decode($order);
+                        print_r($order_resp);exit;
                         $this->updateSaleWithCourier($sale_id, $courier->id);
                         admin_redirect('sales/ecommerce');
                     }
