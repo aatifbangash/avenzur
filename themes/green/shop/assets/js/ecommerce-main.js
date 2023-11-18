@@ -936,7 +936,6 @@ function initialize() {
     var place = autocomplete.getPlace();
     // Define variables to store city and country names
     var city, country, street, postalCode, stateName, latitude, logitude;
-    console.log(place);
     // Loop through address components to find city and country
     place.address_components.forEach(function (component) {
       console.log(component);
@@ -951,7 +950,8 @@ function initialize() {
         }
         if (type === "route") {
           street = component.long_name;
-          document.getElementById("address-line-1").value = street;
+          //document.getElementById("address-line-1").value = street;
+          document.getElementById("address-line-1").value = document.getElementById("autocomplete_search").value;
         }
         if (type === "postal_code") {
           postalCode = component.long_name;
