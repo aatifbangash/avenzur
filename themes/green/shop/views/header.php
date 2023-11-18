@@ -127,7 +127,7 @@
              
 
           </div>
-          <div class="col-lg-7 col-md-8" id="searchbarmob">
+          <div class="col-lg-9 col-md-8" id="searchbarmob">
             <div id="searchtogglecros"><i class="bi bi-x-circle-fill"></i></div>
             <?= shop_form_open('products', 'class="d-flex search-bar"'); ?>
               <input name="query" class="form-control border-0 bg-transparent py-3 add_item_search"  id="product-search" type="search" placeholder="What are you looking for?" aria-label="Search">
