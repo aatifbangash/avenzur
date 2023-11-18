@@ -1584,4 +1584,7 @@ ol.list-group.list-group-numbered li:hover {
     margin: 0;
     padding-inline: 7px;
   }
+  .primary-buttonAV {
+    padding-inline: 20px;
+  }
 }
