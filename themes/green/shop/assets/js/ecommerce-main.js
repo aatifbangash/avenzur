@@ -939,6 +939,7 @@ function initialize() {
 
     // Loop through address components to find city and country
     place.address_components.forEach(function (component) {
+      console.log(component);
       component.types.forEach(function (type) {
         if (type === "locality") {
           city = component.long_name;
