@@ -2024,7 +2024,7 @@ class Sales extends MY_Controller
         //echo 'Encoding: '.strtoupper(md5('J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9')).'<br />';
         //echo 'Digest: '.$digest;exit;
         $digest = hash('sha256', 'J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9');
-        echo $digest;exit;
+        //echo $digest;exit;
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
         $address = $this->site->getAddressByID($address_id);
