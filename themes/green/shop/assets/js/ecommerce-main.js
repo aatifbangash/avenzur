@@ -42,7 +42,14 @@ toggleSearchcros.addEventListener("click", function () {
     searchBar.style.display = "none";
   }
 });
-
+function sa_img(t, e) {
+  swal({
+      title: t,
+      html: e,
+      type: "success",
+      confirmButtonText: lang.okay
+  }).catch(swal.noop)
+}
 function update_mini_cart(t) {
   if (t.total_items && t.total_items > 0) {
     var cart_table =
