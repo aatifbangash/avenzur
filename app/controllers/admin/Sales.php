@@ -2001,12 +2001,12 @@ class Sales extends MY_Controller
                         $token = $respArr->success->token;
                         $order = $this->createRunXOrder($token, $sale, $courier);
                         $order_resp = json_decode($order);
-                        print_r($order_resp);exit;
+                        
                         if(isset($order_resp->errors) || (isset($order_resp->status) && $order_resp->status == false)){
                             $this->session->set_flashdata('error', $order_resp->message);
                             admin_redirect('sales/ecommerce');
                         }else{
-                            $this->updateSaleWithCourier($sale_id, $courier->id);
+                            $this->sales_model->updateSaleWithCourier($sale_id, $courier->id);
                             $this->session->set_flashdata('message', 'Courier Assigned Successfully');
                             admin_redirect('sales/ecommerce');
                         }
