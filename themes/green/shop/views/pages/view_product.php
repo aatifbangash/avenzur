@@ -120,7 +120,7 @@
                 <form action="#" class=" quantity text-end py-2 d-flex align-items-center justify-content-md-between">
                 
 
-                <span class="qtyminus minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
+                <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
                 <input type="text" name="quantity" value="1" class="qty Qnum text-center w-100 p-0 ">
                 <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
                 
