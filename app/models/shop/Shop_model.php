@@ -372,9 +372,11 @@ class Shop_model extends CI_Model
             t.name as taxName,
             t.rate as taxPercentage,
             t.code as taxCode,
+            CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating,
             end_date, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug")
                 ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
                 ->join('brands b', 'products.brand=b.id', 'left')
+                ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
                 ->join('categories c', 'products.category_id=c.id', 'left')
                 ->where('products.category_id', $category->id)
                 ->where('hide !=', 1)
@@ -391,6 +393,7 @@ class Shop_model extends CI_Model
             if ($promo) {
                 $this->db->order_by('promotion desc');
             }
+            $this->db->group_by('products.id');
             $this->db->order_by('RAND()');
             $products = $this->db->get('products')->result();
 
