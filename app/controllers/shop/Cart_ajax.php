@@ -83,7 +83,7 @@ class Cart_ajax extends MY_Shop_Controller
             ];
 
             echo '<pre>';
-            print_r($this->cart);
+            print_r($this->cart->contents);
 
             if ($this->cart->insert($data)) {
                 if ($this->input->post('quantity')) {
