@@ -546,12 +546,11 @@ class Shop_model extends CI_Model
         c.slug as category_slug,
         t.name as taxName,
         t.rate as taxPercentage,
-        t.code as taxCode,
-        CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating")
+        t.code as taxCode
+        ")
             ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
             ->join('brands b', 'products.brand=b.id', 'left')
             ->join('categories c', 'products.category_id=c.id', 'left')
-            ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
             ->where('products.best_seller', 1)
             ->where('hide !=', 1)
             //->where('products.cf1', $countryId)
