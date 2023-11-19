@@ -75,7 +75,15 @@
                         } ?>
                         <div class="product-name">
                             <h2><?= $product->name; ?></h2>
-                        </div>		        		
+                        </div>	
+                        <div class="rating">
+                            <?php 
+                                for($i=1; $i<=5; $i++) {
+                                    $class = '';
+                                    if($i<=$sp->avg_rating) {$class = 'rated';}?>
+                            <i class="bi bi-star-fill <?php echo $class;?>" ></i>
+                            <?php }?>
+                        </div>	        		
             </div>
 
             <div class="product-price-discount"><h4 class="m-0">
