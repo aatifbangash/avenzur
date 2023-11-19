@@ -73,6 +73,9 @@
                           <a class="text-decoration-none text-dark" href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a>
                         </div>
                         <div>
+                          <a class="text-decoration-none text-dark" href="<?= shop_url('rateAndReview'); ?>"><i class="mi fa fa-building"></i>Rate and Review</a>
+                        </div>
+                        <div>
                           <a class="text-decoration-none text-dark" href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a>
                         </div>
                     </div>

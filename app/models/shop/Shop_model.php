@@ -413,6 +413,43 @@ class Shop_model extends CI_Model
         return $popular_categories;
     }
 
+    public function getOrderItemsByCustomer($customer_id)
+    {
+
+        $query = $this->db->select('sale_items.product_id, sale_items.product_code, sale_items.product_name,sales.customer_id')
+                            ->from('sale_items')
+                            ->join('sales', 'sales.id = sale_items.sale_id', 'left')
+                            ->where('sales.customer_id', $customer_id)
+                            ->group_by('sale_items.product_id');
+        $result = $query->get();                    
+                
+        if ($result) {
+        return $resultArray = $result->result();
+        } else {
+            // Handle the error, for example, show an error message
+        return false;
+        }
+           
+    }
+
+    public function getOrderItemsReviewByCustomer($customer_id)
+    {
+        $query = $this->db->select('product_reviews.*, products.code, products.name')
+                            ->from('product_reviews')
+                            ->join('products', 'products.id = product_reviews.product_id', 'left')
+                            ->where('product_reviews.customer_id', $customer_id)
+                            ;
+        $result = $query->get();    
+                
+        if ($result) {
+          
+        return $resultArray = $result->result();
+        } else {
+            return false;
+        }
+           
+    }
+
     public function getBestSellers($limit = 16, $promo = true)
     {
         $countryId = get_cookie('shop_country', true);//$this->session->userdata('country');
@@ -922,12 +959,14 @@ class Shop_model extends CI_Model
         product_details as details,
         t.name as taxName,
         t.rate as taxPercentage,
-        t.code as taxCode")
+        t.code as taxCode,
+        CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating")
             ->from('products')
             ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
             ->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
             ->join('categories', 'products.category_id=categories.id', 'left')
-            ->join('brands', 'products.brand=brands.id', 'left');
+            ->join('brands', 'products.brand=brands.id', 'left')
+            ->join('product_reviews pr', 'products.id=pr.product_id', 'left');
         if ($this->shop_settings->warehouse > 0) {
             $this->db->where('warehouses_products.warehouse_id', $this->shop_settings->warehouse);
         }

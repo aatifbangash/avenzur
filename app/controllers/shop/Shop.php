@@ -1055,6 +1055,64 @@ class Shop extends MY_Shop_Controller
         $this->page_construct('pages/view_product', $this->data);
     }
 
+    // Ratings and Reviews
+
+    public function rateAndReview()
+    {
+        if (!$this->loggedIn) {
+            redirect('login');
+        }
+        if ($this->Staff) {
+            admin_redirect('customers');
+        }
+        $this->session->set_userdata('requested_page', $this->uri->uri_string());
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        $this->data['page_title'] = lang('rate_and_review');
+        $this->data['page_desc'] = '';
+        
+        // Extract product IDs from reviewProducts
+        $products = $this->shop_model->getOrderItemsByCustomer($this->session->userdata('company_id'));
+        $reviewProducts = $this->shop_model->getOrderItemsReviewByCustomer($this->session->userdata('company_id'));
+        $reviewedProductIds = array_map(function ($reviewProduct) {
+            return $reviewProduct->product_id;
+        }, $reviewProducts);
+
+        // Filter products based on whether they have been reviewed
+        $filteredProducts = array_filter($products, function ($product) use ($reviewedProductIds) {
+            return !in_array($product->product_id, $reviewedProductIds);
+        });
+
+        $this->data['products'] = $filteredProducts;
+        $this->data['reviewProducts'] = $reviewProducts;
+    
+        $this->page_construct('pages/rate_review_products', $this->data);
+    }
+   
+    public function submit_review() {
+        $data = [];
+        $reviews = $this->input->post('reviews');
+        if(!empty($reviews)) {
+        foreach($reviews as $product_id => $review) {
+           if( isset( $reviews[$product_id]['rating'][0] ) && !empty($reviews[$product_id]['rating'][0])) {
+            $data[] = array(
+                'customer_id' =>$this->session->userdata('company_id'),
+                'product_id' => $product_id,
+                'rating' => $reviews[$product_id]['rating'][0],
+                'review' => $reviews[$product_id]['review'][0],
+            );
+           }
+        }
+       }
+       if ($this->db->insert_batch('product_reviews', $data)) {
+        $this->session->set_flashdata('submit_review_success', lang('submit_review_success'));
+      }else{
+        $this->session->set_flashdata('submit_review_error', lang('submit_review_error'));
+      }
+      
+      redirect($_SERVER['HTTP_REFERER'] ?? '/shop/rateAndReview');
+    }
+
     // Featured Products
     public function featured_products($category_slug = null, $subcategory_slug = null, $brand_slug = null, $promo = null)
     {

@@ -397,8 +397,16 @@ function gen_html(t) {
       e += '<h5 class="card-title text-start">' + r.name + "</h5>";
       e += "</a>";
       e += '<div class="row align-items-center justify-content-between">';
-      e +=
-        '<div class="col-md-6"><div class="rating"><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill rated"></i><i class="bi bi-star-fill"></i></div></div>';
+      e += '<div class="col-md-6"><div class="rating">';
+      for(i=1;i<=5;i++){
+        if(i <= r.avg_rating) {
+        e += '<i class="bi bi-star-fill rated"></i>';
+        }else{
+          e += '<i class="bi bi-star-fill"></i>';
+        }
+      }
+      e += '</div></div>';
+      
       if (r.promotion) {
         e +=
           '<div class="col-md-6"><div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">' +
