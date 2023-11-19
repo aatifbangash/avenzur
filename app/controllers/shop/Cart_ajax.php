@@ -81,6 +81,10 @@ class Cart_ajax extends MY_Shop_Controller
                 'option'     => $selected,
                 'options'    => !empty($options) ? $options : null,
             ];
+
+            echo '<pre>';
+            print_r($this->cart);
+
             if ($this->cart->insert($data)) {
                 if ($this->input->post('quantity')) {
                     $this->session->set_flashdata('message', lang('item_added_to_cart'));
