@@ -475,7 +475,7 @@ class Shop_model extends CI_Model
         t.name as taxName,
         t.rate as taxPercentage,
         t.code as taxCode,
-        CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating
+        AVG(pr.rating) as avg_rating
         ")
             ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
             ->join('brands b', 'products.brand=b.id', 'left')
