@@ -134,6 +134,9 @@ class Main extends MY_Shop_Controller
         $this->data['best_sellers'] = $this->shop_model->getBestSellers();
         $this->data['best_sellers_additional'] = $this->shop_model->getBestSellersAdditional();
         $this->data['featured_products'] = $this->shop_model->getFeaturedProducts();
+        echo '<pre>';
+        print_r($this->data['featured_products']);
+        exit;
         $this->data['special_offers']    = $this->shop_model->getSpecialOffers();
         $this->data['slider']            = json_decode($this->shop_settings->slider);
         $this->data['page_title']        = $this->shop_settings->shop_name;
