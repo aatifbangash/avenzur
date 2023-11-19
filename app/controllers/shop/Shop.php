@@ -1013,9 +1013,7 @@ class Shop extends MY_Shop_Controller
     {
 
         $product = $this->shop_model->getProductBySlug($slug);
-        echo '<pre>';
-        print_r($product);
-        exit;
+        
         if (!$slug || !$product) {
             $this->session->set_flashdata('error', lang('product_not_found'));
             $this->sma->md('/');
