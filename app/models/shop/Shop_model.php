@@ -785,9 +785,11 @@ class Shop_model extends CI_Model
             $this->db->dbprefix('brands') . '.name as brand_name,
             t.name as taxName,
             t.rate as taxPercentage,
-            t.code as taxCode'
+            t.code as taxCode',
+            'CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating'
         )
-        ->join('tax_rates t', 'products.tax_rate = t.id', 'left');
+        ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
+        ->join('product_reviews pr', 'products.id=pr.product_id', 'left');
         $sp = $this->getSpecialPrice();
         if ($sp->cgp) {
             $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
