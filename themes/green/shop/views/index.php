@@ -400,7 +400,7 @@
                                   <?php 
                                         for($i=1; $i<=5; $i++) {
                                           $class = '';
-                                          if($i<=$sp->rating) {$class = 'rated';}?>
+                                          if($i<=$sp->avg_rating) {$class = 'rated';}?>
                                   <span class="fa fa-star <?php echo $class;?>" ></span>
                                   <?php }?>
                                 </div>
