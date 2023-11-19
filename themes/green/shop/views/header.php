@@ -88,7 +88,7 @@
                         </div>
                         <div class="mb-3">
                           <label for="exampleDropdownFormPassword2" class="form-label">Password</label>
-                          <a href="#" class="float-end text-decoration-none text-dark">Forgot?</a>
+                          <!--<a href="#" class="float-end text-decoration-none text-dark">Forgot?</a>-->
                           <input type="password" id="password<?= $u; ?>" name="password" value="" class="form-control" id="exampleDropdownFormPassword2" placeholder="Password" />
                         </div>
                         <div class="mb-3">
