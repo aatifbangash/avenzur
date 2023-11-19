@@ -31,7 +31,7 @@ if ($message) {
             <input type="text" name="identity" id="username<?= $u; ?>" class="form-control" value="" required placeholder="<?= lang('email'); ?>">
         </div>
         <div class="form-group">
-            <a href="#" tabindex="-1" class="forgot-password pull-right text-blue"><?= lang('forgot?'); ?></a>
+            <!--<a href="#" tabindex="-1" class="forgot-password pull-right text-blue"><?php //echo lang('forgot?'); ?></a>-->
             <label for="password<?= $u; ?>" class="control-label"><?= lang('password'); ?></label>
             <input type="password" id="password<?= $u; ?>" name="password" class="form-control" placeholder="<?= lang('password'); ?>" value="" required>
         </div>
