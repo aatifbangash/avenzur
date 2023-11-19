@@ -617,11 +617,10 @@ class Shop_model extends CI_Model
         t.name as taxName,
         t.rate as taxPercentage,
         t.code as taxCode,
-        CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating")
+        ")
             ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
             ->join('brands b', 'products.brand=b.id', 'left')
             ->join('categories c', 'products.category_id=c.id', 'left')
-            ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
             ->where('products.featured', 1)
             ->where('hide !=', 1)
             //->where('products.cf1', $countryId)
@@ -961,12 +960,13 @@ class Shop_model extends CI_Model
         t.name as taxName,
         t.rate as taxPercentage,
         t.code as taxCode,
-        ")
+        CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating")
             ->from('products')
             ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
             ->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
             ->join('categories', 'products.category_id=categories.id', 'left')
-            ->join('brands', 'products.brand=brands.id', 'left');
+            ->join('brands', 'products.brand=brands.id', 'left')
+            ->join('product_reviews pr', 'products.id=pr.product_id', 'left');
         if ($this->shop_settings->warehouse > 0) {
             $this->db->where('warehouses_products.warehouse_id', $this->shop_settings->warehouse);
         }
