@@ -80,7 +80,7 @@
                             <?php 
                                 for($i=1; $i<=5; $i++) {
                                     $class = '';
-                                    if($i<=$sp->avg_rating) {$class = 'rated';}?>
+                                    if($i<=$product->avg_rating) {$class = 'rated';}?>
                             <i class="bi bi-star-fill <?php echo $class;?>" ></i>
                             <?php }?>
                         </div>	        		
