@@ -63,11 +63,12 @@
                                             <div class="row align-items-center justify-content-between">
                                             <div class="col-md-6">
                                                 <div class="rating">
-                                                <i class="bi bi-star-fill rated"></i>
-                                                <i class="bi bi-star-fill rated"></i>
-                                                <i class="bi bi-star-fill rated"></i>
-                                                <i class="bi bi-star-fill"></i>
-                                                
+                                                    <?php 
+                                                        for($i=1; $i<=5; $i++) {
+                                                            $class = '';
+                                                            if($i<=$sp->avg_rating) {$class = 'rated';}?>
+                                                    <i class="bi bi-star-fill <?php echo $class;?>" ></i>
+                                                    <?php }?>
                                                 </div>
                                             </div>
                                             <?php
