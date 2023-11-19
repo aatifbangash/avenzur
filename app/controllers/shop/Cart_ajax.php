@@ -82,8 +82,17 @@ class Cart_ajax extends MY_Shop_Controller
                 'options'    => !empty($options) ? $options : null,
             ];
 
-            echo '<pre>';
-            print_r($this->cart);
+            $sulfad_count = 0;
+            $sulfad_code = '06285193000301';
+            $cart_contents = $this->cart->contents();
+            foreach ($cart_contents as $item) {
+                $product_code = $item['code'];
+                if($product_code == $sulfad_code){
+                    $sulfad_count++;
+                }
+            }
+
+            echo 'Total Sulfads: '.$sulfad_count;
 
             if ($this->cart->insert($data)) {
                 if ($this->input->post('quantity')) {
