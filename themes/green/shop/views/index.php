@@ -276,12 +276,14 @@
                                                     </a>
                                                     <div class="row align-items-center justify-content-between">
                                                         <div class="col-md-6">
-                                                            <!--<div class="rating">
-                                                                <i class="bi bi-star-fill rated"></i>
-                                                                <i class="bi bi-star-fill rated"></i>
-                                                                <i class="bi bi-star-fill rated"></i>
-                                                                <i class="bi bi-star-fill"></i>
-                                                            </div>-->
+                                                        <div class="rating">
+                                                          <?php 
+                                                                for($i=1; $i<=5; $i++) {
+                                                                  $class = '';
+                                                                  if($i<=$sp->avg_rating) {$class = 'rated';}?>
+                                                          <i class="bi bi-star-fill <?php echo $class;?>" ></i>
+                                                          <?php }?>
+                                                        </div>
                                                         </div>
                                                         <?php
                                                             if ($popular_product->promotion) {
@@ -507,13 +509,14 @@
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
                             <div class="row align-items-center justify-content-between">
                                 <div class="col-md-6">
-                                <!--<div class="rating">
-                                    <i class="bi bi-star-fill rated"></i>
-                                    <i class="bi bi-star-fill rated"></i>
-                                    <i class="bi bi-star-fill rated"></i>
-                                    <i class="bi bi-star-fill"></i>
-                                    
-                                </div>-->
+                                <div class="rating">
+                                  <?php 
+                                        for($i=1; $i<=5; $i++) {
+                                          $class = '';
+                                          if($i<=$sp->avg_rating) {$class = 'rated';}?>
+                                  <i class="bi bi-star-fill <?php echo $class;?>" ></i>
+                                  <?php }?>
+                                </div>
                                 </div>
                                 <?php
                                 if ($sp->promotion) {
@@ -602,8 +605,8 @@
                                   <?php 
                                         for($i=1; $i<=5; $i++) {
                                           $class = '';
-                                          if($i<=$sp->rating) {$class = 'rated';}?>
-                                  <span class="fa fa-star <?php echo $class;?>" ></span>
+                                          if($i<=$sp->avg_rating) {$class = 'rated';}?>
+                                  <i class="bi bi-star-fill <?php echo $class;?>" ></i>
                                   <?php }?>
                                 </div>
                                 </div>
