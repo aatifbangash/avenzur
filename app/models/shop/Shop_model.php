@@ -504,7 +504,7 @@ class Shop_model extends CI_Model
         $this->db->order_by('id desc');
         $result = $this->db->get('products')->result();
 //        dd($result);
-echo $this->db->last_query();exit;
+
         array_map(function ($row) {
             if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
                 $productTaxPercent = $row->taxPercentage;
