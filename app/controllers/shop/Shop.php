@@ -1050,6 +1050,7 @@ class Shop extends MY_Shop_Controller
         $this->data['variants'] = $this->shop_model->getProductOptions($product->id);
         $this->load->helper('text');
         $this->data['page_title'] = $product->code . ' - ' . $product->name;
+        $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->data['page_desc'] = character_limiter(strip_tags($product->product_details), 160);
         $this->page_construct('pages/view_product', $this->data);
     }
