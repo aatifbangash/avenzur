@@ -501,6 +501,7 @@ class Shop_model extends CI_Model
         if ($promo) {
             $this->db->order_by('promotion desc');
         }
+        $this->db->group_by('products.id');
         $this->db->order_by('id desc');
         $result = $this->db->get('products')->result();
 //        dd($result);
