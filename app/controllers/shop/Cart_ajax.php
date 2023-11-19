@@ -68,20 +68,6 @@ class Cart_ajax extends MY_Shop_Controller
             $unit_price = $this->sma->formatDecimal($product->tax_method ? $price + $tax : $price);
             $id         = $this->Settings->item_addition ? md5($product->id) : md5(microtime());
 
-            $data = [
-                'id'         => $id,
-                'product_id' => $product->id,
-                'qty'        => ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1)),
-                'name'       => $product->name,
-                'slug'       => $product->slug,
-                'code'       => $product->code,
-                'price'      => $unit_price,
-                'tax'        => $tax,
-                'image'      => $product->image,
-                'option'     => $selected,
-                'options'    => !empty($options) ? $options : null,
-            ];
-
             $sulfad_count = 0;
             $sulfad_code = '06285193000301';
             $cart_contents = $this->cart->contents();
@@ -92,7 +78,36 @@ class Cart_ajax extends MY_Shop_Controller
                 }
             }
 
-            echo 'Total Sulfads: '.$sulfad_count;
+            if($sulfad_count > 0 && $sulfad_count %2 == 0 && $product->code == $sulfad_code){
+                $data = [
+                    'id'         => $id,
+                    'product_id' => $product->id,
+                    'qty'        => ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1)),
+                    'name'       => $product->name,
+                    'slug'       => $product->slug,
+                    'code'       => $product->code,
+                    'price'      => 0,
+                    'tax'        => 0,
+                    'image'      => $product->image,
+                    'option'     => $selected,
+                    'options'    => !empty($options) ? $options : null,
+                ];
+            }else{
+                $data = [
+                    'id'         => $id,
+                    'product_id' => $product->id,
+                    'qty'        => ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1)),
+                    'name'       => $product->name,
+                    'slug'       => $product->slug,
+                    'code'       => $product->code,
+                    'price'      => $unit_price,
+                    'tax'        => $tax,
+                    'image'      => $product->image,
+                    'option'     => $selected,
+                    'options'    => !empty($options) ? $options : null,
+                ];
+            }
+            
 
             if ($this->cart->insert($data)) {
                 if ($this->input->post('quantity')) {
