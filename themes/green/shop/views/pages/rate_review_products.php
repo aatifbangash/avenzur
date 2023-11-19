@@ -77,7 +77,7 @@
                                             <span class="fa fa-star star" onclick="rateStar(3)" onmouseover="highlightStars(3)"></span>
                                             <span class="fa fa-star star" onclick="rateStar(4)" onmouseover="highlightStars(4)"></span>
                                             <span class="fa fa-star star" onclick="rateStar(5)" onmouseover="highlightStars(5)"></span> -->
-                                            <input type="text" id="rating_<?= $rating_id; ?>" name="reviews[<?= $product->product_id; ?>][rating][]" value="">
+                                            <input type="hidden" id="rating_<?= $rating_id; ?>" name="reviews[<?= $product->product_id; ?>][rating][]" value="">
                                             
                                             <textarea class="form-control" name="reviews[<?= $product->product_id; ?>][review][]" rows="4" placeholder="Write your review"></textarea>
                                         </div>
