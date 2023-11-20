@@ -266,6 +266,9 @@ class CI_Cart {
 		// Re-create the entry, just to make sure our index contains only the data from this submission
 		$items['rowid'] = $rowid;
 		$items['qty'] += $old_quantity;
+		echo '<pre>';
+		print_r($items);
+		exit;
 		$this->_cart_contents[$rowid] = $items;
 
 		return $rowid;
@@ -397,10 +400,10 @@ class CI_Cart {
 			{
 				continue;
 			}
-			echo 'here we are...';exit;
-			$this->_cart_contents['cart_total'] += ($val['price'] * ($val['qty'] - $val['disc_qty']));
+
+			$this->_cart_contents['cart_total'] += ($val['price'] * $val['qty']);
 			$this->_cart_contents['total_items'] += $val['qty'];
-			$this->_cart_contents[$key]['subtotal'] = ($this->_cart_contents[$key]['price'] * ($this->_cart_contents[$key]['qty'] - $this->_cart_contents[$key]['disc_qty']));
+			$this->_cart_contents[$key]['subtotal'] = ($this->_cart_contents[$key]['price'] * $this->_cart_contents[$key]['qty']);
 		}
 
 		// Is our cart empty? If so we delete it from the session
