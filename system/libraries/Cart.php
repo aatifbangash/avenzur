@@ -162,10 +162,6 @@ class CI_Cart {
 			}
 		}
 
-		echo '<pre>';
-		print_r($items);
-		exit;
-
 		// Save the cart data if the insert was successful
 		if ($save_cart === TRUE)
 		{
