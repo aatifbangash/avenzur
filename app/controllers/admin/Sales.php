@@ -2026,6 +2026,107 @@ class Sales extends MY_Controller
     }
 
     public function assignJT($sale, $courier){
+        // API endpoint URL
+        $url = 'https://demoopenapi.jtjms-sa.com/webopenplatformapi/api/order/addOrder';
+
+        // Headers
+        $headers = [
+            'apiAccount: 292508153084379141',
+            'digest: tEnWMX751wCYwyChevGzyg==',
+            'timestamp: 1638428570653',
+            'Content-Type: application/x-www-form-urlencoded',
+        ];
+
+        // Request data
+        $data = [
+            'bizContent' => json_encode([
+                "customerCode" => "J0086024173",
+                "digest" => "VdlpKaoq64AZ0yEsBkvt1A==",
+                "serviceType" => "01",
+                "orderType" => "2",
+                "deliveryType" => "04",
+                "countryCode" => "KSA",
+                "receiver" => [
+                    "address" => "Riyadh, 20 st ",
+                    "street" => "",
+                    "city" => "Riyadh",
+                    "mobile" => "0533666344",
+                    "mailBox" => "customer@gmail.com",
+                    "phone" => "",
+                    "countryCode" => "KSA",
+                    "name" => "Omar Test",
+                    "company" => "company",
+                    "postCode" => "000000",
+                    "prov" => "Riyadh",
+                ],
+                "expressType" => "EZKSA",
+                "length" => 0,
+                "weight" => 15,
+                "remark" => "description goes here",
+                "txlogisticId" => "AAAA123123",
+                "goodsType" => "ITN1",
+                "priceCurrency" => "SAR",
+                "totalQuantity" => 1,
+                "sender" => [
+                    "address" => "Salasa WH Suly",
+                    "street" => "",
+                    "city" => "Riyadddh",
+                    "mobile" => "966500000000",
+                    "mailBox" => "salasa@gmail.com",
+                    "phone" => "",
+                    "countryCode" => "KSA",
+                    "name" => "Salasa Test",
+                    "company" => "company",
+                    "postCode" => "",
+                    "prov" => "Riyyyadh",
+                ],
+                "itemsValue" => 1000,
+                "offerFee" => 0,
+                "items" => [
+                    [
+                        "englishName" => "iphone",
+                        "number" => 2,
+                        "itemType" => "ITN1",
+                        "itemName" => "\u6587\u4ef6\u7c7b\u578b",
+                        "priceCurrency" => "SAR",
+                        "itemValue" => "2000",
+                        "itemUrl" => "http:\/\/www.baidu.com",
+                        "desc" => "file",
+                    ],
+                ],
+                "operateType" => 1,
+                "payType" => "PP_PM",
+                "isUnpackEnabled" => 0,
+            ]),
+        ];
+
+        // Initialize cURL session
+        $ch = curl_init($url);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        // Execute cURL session
+        $response = curl_exec($ch);
+
+        // Check for cURL errors
+        if (curl_errno($ch)) {
+            echo 'cURL error: ' . curl_error($ch);
+        }
+
+        // Close cURL session
+        curl_close($ch);
+        print_r($response);exit;
+        // Output the response
+        echo $response;
+
+    }
+
+    /*public function assignJT($sale, $courier){
         $url = $courier->url.'order/addOrder';
 
         $apiAccount = $courier->api_account;
@@ -2137,7 +2238,7 @@ class Sales extends MY_Controller
 
         return $response;
 
-    }
+    }*/
 
     public function assignRunX($sale, $courier){
         $headers = array(
