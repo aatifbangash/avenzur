@@ -76,7 +76,12 @@ class Cart_ajax extends MY_Shop_Controller
                 if($product_code == $sulfad_code){
                     $sulfad_count += $item['total_quantity'];
                 }
+
+                echo '<pre>';
+                print_r($item);
             }
+
+            echo 'Sulfad Count: '.$sulfad_count;exit;
 
             if($sulfad_count > 0 && $sulfad_count %2 == 0 && $product->code == $sulfad_code){
                 $data = [
