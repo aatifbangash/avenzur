@@ -106,7 +106,7 @@ class Cart_ajax extends MY_Shop_Controller
                     'options'    => !empty($options) ? $options : null,
                 ];
 
-                if($discounted_quantity > 0){
+                /*if($discounted_quantity > 0){
                     $data = [
                         'id'         => $id,
                         'product_id' => $product->id,
@@ -120,7 +120,7 @@ class Cart_ajax extends MY_Shop_Controller
                         'option'     => $selected,
                         'options'    => !empty($options) ? $options : null,
                     ];
-                }
+                }*/
             }
             
 
