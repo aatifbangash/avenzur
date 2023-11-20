@@ -82,16 +82,27 @@ class Cart_ajax extends MY_Shop_Controller
                 if($product_code == $sulfad_code){
                     $sulfad_count += $item['total_quantity'];
                 }
-
-                echo '<pre>';
-                print_r($item);
             }
 
-            exit;
-
             if($product->code == $sulfad_code){
-                $quantity_to_charge = floor($sulfad_in_cart / 3)*2;
-                $discounted_quantity = $sulfad_in_cart - $quantity_to_charge;
+                if($sulfad_count == 0){
+                    $quantity_to_charge = floor($sulfad_in_cart / 3)*2;
+                    $discounted_quantity = $sulfad_in_cart - $quantity_to_charge;
+                }else{
+                    $total_sulfad = $sulfad_in_cart + $sulfad_count;
+
+                    $old_quantity_charged = floor($sulfad_count / 3)*2;
+                    $old_discounted_quantity = $sulfad_count - $old_quantity_charged;
+
+                    $quantity_to_charge = floor($total_sulfad / 3)*2;
+                    $discounted_quantity = $total_sulfad - $quantity_to_charge - $old_quantity_charged;
+
+                    echo 'Total Sulfad: '.$total_sulfad.'<br />';
+                    echo 'Old Discounted Quantity: '.$old_discounted_quantity.'<br />';
+                    echo 'New Quantity to charge: '.$quantity_to_charge.'<br />';
+                    echo 'Discounted Quantity: '.$discounted_quantity.'<br />';
+                    exit;
+                }
 
                 $data = [
                     'id'         => $id,
