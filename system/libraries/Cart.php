@@ -162,6 +162,10 @@ class CI_Cart {
 			}
 		}
 
+		echo '<pre>';
+		print_r($items);
+		exit;
+
 		// Save the cart data if the insert was successful
 		if ($save_cart === TRUE)
 		{
@@ -266,9 +270,6 @@ class CI_Cart {
 		// Re-create the entry, just to make sure our index contains only the data from this submission
 		$items['rowid'] = $rowid;
 		$items['qty'] += $old_quantity;
-		echo '<pre>';
-		print_r($items);
-		exit;
 		$this->_cart_contents[$rowid] = $items;
 
 		return $rowid;
