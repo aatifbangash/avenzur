@@ -106,6 +106,7 @@ class Cart_ajax extends MY_Shop_Controller
                 ];
 
                 if($discounted_quantity > 0){
+                    $id_disc = $this->Settings->item_addition ? md5($product->id) : md5(microtime());
                     $data_discount = [
                         'id'         => $id,
                         'product_id' => $product->id,
@@ -123,7 +124,7 @@ class Cart_ajax extends MY_Shop_Controller
 
                 if ($this->cart->insert($data)) {
                     if($discounted_quantity > 0){
-                        //$this->cart->insert($data_discount);
+                        $this->cart->insert($data_discount);
                     }
 
                     if ($this->input->post('quantity')) {
