@@ -66,8 +66,7 @@ class Cart_ajax extends MY_Shop_Controller
             $tax        = $this->sma->formatDecimal($ctax['amount']);
             $price      = $this->sma->formatDecimal($price);
             $unit_price = $this->sma->formatDecimal($product->tax_method ? $price + $tax : $price);
-            //$id         = $this->Settings->item_addition ? md5($product->id) : md5(microtime());
-            $id         = md5(microtime());
+            $id         = $this->Settings->item_addition ? md5($product->id) : md5(microtime());
 
             $sulfad_count = 0;
             $sulfad_in_cart = 0;
@@ -107,8 +106,7 @@ class Cart_ajax extends MY_Shop_Controller
                 ];
 
                 if($discounted_quantity > 0){
-                    //$id_disc = $this->Settings->item_addition ? md5($product->id) : md5(microtime());
-                    $id_disc = md5(microtime());
+                    $id_disc = $this->Settings->item_addition ? md5($product->id) : md5(microtime());
                     $data_discount = [
                         'id'         => $id,
                         'product_id' => $product->id,
@@ -126,6 +124,7 @@ class Cart_ajax extends MY_Shop_Controller
 
                 if ($this->cart->insert($data)) {
                     if($discounted_quantity > 0){
+                        $this->cart->save_cart();
                         $this->cart->insert($data_discount);
                     }
 
