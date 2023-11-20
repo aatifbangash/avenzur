@@ -123,7 +123,7 @@ class Cart_ajax extends MY_Shop_Controller
 
                 if ($this->cart->insert($data)) {
                     if($discounted_quantity > 0){
-                        $this->cart->insert($data_discount);
+                        //$this->cart->insert($data_discount);
                     }
 
                     if ($this->input->post('quantity')) {
