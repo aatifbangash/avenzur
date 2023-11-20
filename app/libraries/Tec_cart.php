@@ -84,8 +84,8 @@ class Tec_cart
             $this->_cart_contents['total_items']        += $val['qty'];
             $this->_cart_contents['cart_total']         += $this->sma->formatDecimal(($val['price'] * ($val['qty'] - $val['disc_qty'])), 4);
             $this->_cart_contents['total_item_tax']     += $this->sma->formatDecimal(($val['tax'] * ($val['qty'] - $val['disc_qty'])), 4);
-            $this->_cart_contents[$key]['row_tax']  = $this->sma->formatDecimal(($this->_cart_contents[$key]['tax'] * $this->_cart_contents[$key]['qty']), 4);
-            $this->_cart_contents[$key]['subtotal'] = $this->sma->formatDecimal(($this->_cart_contents[$key]['price'] * $this->_cart_contents[$key]['qty']), 4);
+            $this->_cart_contents[$key]['row_tax']  = $this->sma->formatDecimal(($this->_cart_contents[$key]['tax'] * ($this->_cart_contents[$key]['qty'] - $this->_cart_contents[$key]['disc_qty'])), 4);
+            $this->_cart_contents[$key]['subtotal'] = $this->sma->formatDecimal(($this->_cart_contents[$key]['price'] * ($this->_cart_contents[$key]['qty'] - $this->_cart_contents[$key]['disc_qty'])), 4);
         }
 
         if (count($this->_cart_contents) <= 4) {
