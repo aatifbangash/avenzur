@@ -69,10 +69,11 @@ class Cart_ajax extends MY_Shop_Controller
             $id         = $this->Settings->item_addition ? md5($product->id) : md5(microtime());
 
             $sulfad_count = 0;
+            $sulfad_in_cart = 0;
             $sulfad_code = '06285193000301';
 
             if($product->code == '06285193000301'){
-                $sulfad_count += ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1));
+                $sulfad_in_cart += ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1));
             }
 
             $cart_contents = $this->cart->contents();
@@ -86,13 +87,15 @@ class Cart_ajax extends MY_Shop_Controller
                 print_r($item);
             }
 
-            echo 'Sulfad Count: '.$sulfad_count;exit;
+            if($sulfad_count > 0 && $product->code == $sulfad_code){
 
-            if($sulfad_count > 0 && $sulfad_count %2 == 0 && $product->code == $sulfad_code){
+                $quantity_to_charge = floor($sulfad_in_cart / 3)*2;
+                $discounted_quantity = $sulfad_in_cart - $quantity_to_charge;
+
                 $data = [
                     'id'         => $id,
                     'product_id' => $product->id,
-                    'qty'        => ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1)),
+                    'qty'        => $quantity_to_charge,
                     'name'       => $product->name,
                     'slug'       => $product->slug,
                     'code'       => $product->code,
@@ -102,20 +105,22 @@ class Cart_ajax extends MY_Shop_Controller
                     'option'     => $selected,
                     'options'    => !empty($options) ? $options : null,
                 ];
-            }else{
-                $data = [
-                    'id'         => $id,
-                    'product_id' => $product->id,
-                    'qty'        => ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1)),
-                    'name'       => $product->name,
-                    'slug'       => $product->slug,
-                    'code'       => $product->code,
-                    'price'      => $unit_price,
-                    'tax'        => $tax,
-                    'image'      => $product->image,
-                    'option'     => $selected,
-                    'options'    => !empty($options) ? $options : null,
-                ];
+
+                if($discounted_quantity > 0){
+                    $data = [
+                        'id'         => $id,
+                        'product_id' => $product->id,
+                        'qty'        => $discounted_quantity,
+                        'name'       => $product->name,
+                        'slug'       => $product->slug,
+                        'code'       => $product->code,
+                        'price'      => 0,
+                        'tax'        => 0,
+                        'image'      => $product->image,
+                        'option'     => $selected,
+                        'options'    => !empty($options) ? $options : null,
+                    ];
+                }
             }
             
 
