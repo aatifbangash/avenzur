@@ -97,11 +97,6 @@ class Cart_ajax extends MY_Shop_Controller
                     $quantity_to_charge = ceil($total_sulfad / 3)*2;
                     $discounted_quantity = $total_sulfad - $quantity_to_charge - $old_discounted_quantity;
 
-                    echo 'Total Sulfad: '.$total_sulfad.'<br />';
-                    echo 'Old Discounted Quantity: '.$old_discounted_quantity.'<br />';
-                    echo 'New Quantity to charge: '.$quantity_to_charge.'<br />';
-                    echo 'Discounted Quantity: '.$discounted_quantity.'<br />';
-                    exit;
                 }
 
                 $data = [
