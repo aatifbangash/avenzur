@@ -41,11 +41,11 @@ toggleSearchcros.addEventListener("click", function () {
 });
 function sa_img(t, e) {
   swal({
-      title: t,
-      html: e,
-      type: "success",
-      confirmButtonText: lang.okay
-  }).catch(swal.noop)
+    title: t,
+    html: e,
+    type: "success",
+    confirmButtonText: lang.okay,
+  }).catch(swal.noop);
 }
 function update_mini_cart(t) {
   if (t.total_items && t.total_items > 0) {
@@ -398,15 +398,15 @@ function gen_html(t) {
       e += "</a>";
       e += '<div class="row align-items-center justify-content-between">';
       e += '<div class="col-md-6"><div class="rating">';
-      for(i=1;i<=5;i++){
-        if(i <= r.avg_rating) {
-        e += '<i class="bi bi-star-fill rated"></i>';
-        }else{
+      for (i = 1; i <= 5; i++) {
+        if (i <= r.avg_rating) {
+          e += '<i class="bi bi-star-fill rated"></i>';
+        } else {
           e += '<i class="bi bi-star-fill"></i>';
         }
       }
-      e += '</div></div>';
-      
+      e += "</div></div>";
+
       if (r.promotion) {
         e +=
           '<div class="col-md-6"><div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">' +
@@ -958,6 +958,10 @@ $(document).ready(function () {
       // instead of a settings object
     ],
   });
+
+  $(".nav-pills .nav-item button").click(function () {
+    $(".popularCat").slick("refresh");
+  });
 });
 
 // Addresses Section
@@ -1003,7 +1007,8 @@ function initialize() {
         if (type === "route") {
           street = component.long_name;
           //document.getElementById("address-line-1").value = street;
-          document.getElementById("address-line-1").value = document.getElementById("autocomplete_search").value;
+          document.getElementById("address-line-1").value =
+            document.getElementById("autocomplete_search").value;
         }
         if (type === "postal_code") {
           postalCode = component.long_name;
@@ -1267,7 +1272,7 @@ function add_address(t) {
       }
   });
 });*/
-if (window.innerWidth < 768) {
+if (window.innerWidth < 500) {
   //  // Remove the button from the source div
   cartsourceDiv.removeChild(cartToMove);
 
@@ -1279,4 +1284,14 @@ if (window.innerWidth < 768) {
 
   // Append the button to the target div
   targetmenuDiv.prepend(allCatToMove);
+  $(".popularCat").slick({
+    infinite: false,
+    speed: 300,
+    slidesToShow: 2,
+    slidesToScroll: 1,
+    prevArrow:
+      "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
+    nextArrow:
+      "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
+  });
 }

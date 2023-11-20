@@ -252,7 +252,7 @@
                     ?>
                         <div class="tab-pane fade show <?php if($pc == 0) echo 'active'; ?>" id="pills-<?= $popular_category->name; ?>" role="tabpanel" aria-labelledby="pills-<?= $popular_category->name; ?>-tab" tabindex="0">
                             <!-- cards -->
-                            <div class="row products-card text-center gy-4">
+                            <div class="row products-card popularCat text-center gy-4">
                                 <?php
                                 foreach($popular_category->products as $popular_product){
                                 ?>
