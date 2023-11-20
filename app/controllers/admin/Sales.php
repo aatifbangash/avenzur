@@ -2070,7 +2070,7 @@ class Sales extends MY_Controller
 
         $headers = array(
             'apiAccount: '.$apiAccount,
-            'digest: '.$body_digest,
+            'digest: FeZ9lewGaO64EPH4Zqd4Zg==',
             'timestamp: '.time(),
             'Content-Type: application/x-www-form-urlencoded',
         );

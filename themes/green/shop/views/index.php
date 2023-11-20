@@ -60,7 +60,7 @@
                                 <div class="card" style="width: 100%;">
                                 <div class="cardImg">
                                 
-                                    <img src="<?= base_url('assets/uploads/thumbs/' . $fp->image); ?>" class="card-img-top" alt="..."></div>
+                                    <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" class="card-img-top" alt="..."></div>
                                 <div class="card-body">
                                     <h5 class="card-title"><?= ucfirst(strtolower($fp->name)); ?></h5>
                                 </div>
@@ -264,7 +264,7 @@
                                                         Sale 20% OFF
                                                     </span>-->
                                                     <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none">
-                                                        <img src="<?= base_url('assets/uploads/thumbs/' . $popular_product->image); ?>" class="card-img-top" alt="...">
+                                                        <img src="<?= base_url('assets/uploads/' . $popular_product->image); ?>" class="card-img-top" alt="...">
                                                     </a>
                                                 </div>
                                                 <div class="card-body px-0 text-start pb-0">
@@ -390,7 +390,7 @@
                                 Sale 20% OFF
                             </span>-->
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
-                            <img src="<?= base_url('assets/uploads/thumbs/' . $sp->image); ?>" class="card-img-top" alt="...">
+                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="...">
                             </a>
                             </div>
                             <div class="card-body px-0 text-start pb-0">
@@ -501,7 +501,7 @@
                                 Sale 20% OFF
                             </span>-->
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
-                            <img src="<?= base_url('assets/uploads/thumbs/' . $sp->image); ?>" class="card-img-top" alt="...">
+                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="...">
                             </a>
                             </div>
                             <div class="card-body px-0 text-start pb-0">
@@ -593,7 +593,7 @@
                                 Sale 20% OFF
                             </span>-->
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
-                            <img src="<?= base_url('assets/uploads/thumbs/' . $sp->image); ?>" class="card-img-top" alt="...">
+                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="...">
                             </a>
                             </div>
                             <div class="card-body px-0 text-start pb-0">
@@ -717,7 +717,7 @@
                                 <div class="col-md-5 col-sm-12">
                     
                                 <div class="cardImg rounded-3">
-                                    <a href="<?= site_url('product/' . $sp->slug); ?>"><img src="<?= base_url('assets/uploads/thumbs/' . $sp->image); ?>" class="card-img-top rounded-3" alt="..."></a>
+                                    <a href="<?= site_url('product/' . $sp->slug); ?>"><img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top rounded-3" alt="..."></a>
                                 </div>
                                 </div>
                                 <div class="col-md-7 col-sm-12 px-md-0">
