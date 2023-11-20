@@ -2035,13 +2035,13 @@ class Sales extends MY_Controller
         //$digest = base64_encode(md5($courier->username.$cipher_text.$courier->auth_key));
 
         $cipher_text = strtoupper(md5('Aa123456jadada236t2'));
-        echo $cipher_text;exit;
+        $body_digest = 'FeZ9lewGaO64EPH4Zqd4Zg==';
+        $header_digest = '';
         //echo 'Cipher: '.$cipher_text.'<br />';
         //$digest = base64_encode(strtoupper(md5('J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9')));
         //echo 'Encoding: '.strtoupper(md5('J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9')).'<br />';
         //echo 'Digest: '.$digest;exit;
-        $digest = hash('sha256', 'J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9');
-        echo $digest;exit;
+        
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
         $address = $this->site->getAddressByID($address_id);
@@ -2070,7 +2070,7 @@ class Sales extends MY_Controller
 
         $headers = array(
             'apiAccount: '.$apiAccount,
-            'digest: FeZ9lewGaO64EPH4Zqd4Zg==',
+            'digest: a0a1047cce70493c9d5d29704f05d0d9',
             'timestamp: '.time(),
             'Content-Type: application/x-www-form-urlencoded',
         );
@@ -2080,7 +2080,7 @@ class Sales extends MY_Controller
         $data = array(
             'bizContent' => json_encode(array(
                 'customerCode' => $courier->username, // This is test customer code
-                'digest' => 'FeZ9lewGaO64EPH4Zqd4Zg==',
+                'digest' => $body_digest,
                 'serviceType' => '02', // 01 => door to door pickup, 02 => store delivery
                 'orderType' => '1', // 1 => individual customer, 2 => monthly settlement
                 'deliveryType' => '03', // 03 => pick at store, 04 => door to door pickup
