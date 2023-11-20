@@ -105,8 +105,8 @@ class Cart_ajax extends MY_Shop_Controller
                     'options'    => !empty($options) ? $options : null,
                 ];
 
-                /*if($discounted_quantity > 0){
-                    $data = [
+                if($discounted_quantity > 0){
+                    $data_discount = [
                         'id'         => $id,
                         'product_id' => $product->id,
                         'qty'        => $discounted_quantity,
@@ -119,7 +119,22 @@ class Cart_ajax extends MY_Shop_Controller
                         'option'     => $selected,
                         'options'    => !empty($options) ? $options : null,
                     ];
-                }*/
+                }
+
+                if ($this->cart->insert($data)) {
+                    if($discounted_quantity > 0){
+                        $this->cart->insert($data_discount)
+                    }
+
+                    if ($this->input->post('quantity')) {
+                        $this->session->set_flashdata('message', lang('item_added_to_cart'));
+                        redirect($_SERVER['HTTP_REFERER']);
+                    } else {
+                        $this->cart->cart_data();
+                    }
+                }
+                $this->session->set_flashdata('error', lang('unable_to_add_item_to_cart'));
+                redirect($_SERVER['HTTP_REFERER']);
             }else{
                 $data = [
                     'id'         => $id,
@@ -134,19 +149,19 @@ class Cart_ajax extends MY_Shop_Controller
                     'option'     => $selected,
                     'options'    => !empty($options) ? $options : null,
                 ];
+
+                if ($this->cart->insert($data)) {
+                    if ($this->input->post('quantity')) {
+                        $this->session->set_flashdata('message', lang('item_added_to_cart'));
+                        redirect($_SERVER['HTTP_REFERER']);
+                    } else {
+                        $this->cart->cart_data();
+                    }
+                }
+                $this->session->set_flashdata('error', lang('unable_to_add_item_to_cart'));
+                redirect($_SERVER['HTTP_REFERER']);
             }
             
-
-            if ($this->cart->insert($data)) {
-                if ($this->input->post('quantity')) {
-                    $this->session->set_flashdata('message', lang('item_added_to_cart'));
-                    redirect($_SERVER['HTTP_REFERER']);
-                } else {
-                    $this->cart->cart_data();
-                }
-            }
-            $this->session->set_flashdata('error', lang('unable_to_add_item_to_cart'));
-            redirect($_SERVER['HTTP_REFERER']);
         }
     }
 
