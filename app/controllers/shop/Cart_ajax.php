@@ -77,12 +77,10 @@ class Cart_ajax extends MY_Shop_Controller
             }
 
             $cart_contents = $this->cart->contents();
-            echo '<pre>';
-            print_r($cart_contents);exit;
             foreach ($cart_contents as $item) {
                 $product_code = $item['code'];
                 if($product_code == $sulfad_code){
-                    $sulfad_count += $item['total_quantity'];
+                    $sulfad_count += $item['qty'];
                 }
             }
 
@@ -90,7 +88,6 @@ class Cart_ajax extends MY_Shop_Controller
                 if($sulfad_count == 0){
                     $quantity_to_charge = floor($sulfad_in_cart / 3)*2;
                     $discounted_quantity = $sulfad_in_cart - $quantity_to_charge;
-                    echo 'here again...';
                 }else{
                     $total_sulfad = $sulfad_in_cart + $sulfad_count;
 
