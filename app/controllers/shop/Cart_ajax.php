@@ -111,6 +111,7 @@ class Cart_ajax extends MY_Shop_Controller
                     'id'         => $id,
                     'product_id' => $product->id,
                     'qty'        => ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1)),
+                    'disc_qty'   => 0,
                     'name'       => $product->name,
                     'slug'       => $product->slug,
                     'code'       => $product->code,
