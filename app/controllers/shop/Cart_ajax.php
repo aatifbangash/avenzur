@@ -94,7 +94,7 @@ class Cart_ajax extends MY_Shop_Controller
                 $data = [
                     'id'         => $id,
                     'product_id' => $product->id,
-                    'qty'        => $quantity_to_charge,
+                    'qty'        => $sulfad_in_cart,
                     'disc_qty'   => $discounted_quantity,
                     'name'       => $product->name,
                     'slug'       => $product->slug,
