@@ -104,8 +104,6 @@ class Cart_ajax extends MY_Shop_Controller
                     exit;
                 }
 
-                exit;
-
                 $data = [
                     'id'         => $id,
                     'product_id' => $product->id,
