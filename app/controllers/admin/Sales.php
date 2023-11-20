@@ -2035,7 +2035,7 @@ class Sales extends MY_Controller
         //$digest = base64_encode(md5($courier->username.$cipher_text.$courier->auth_key));
 
         $cipher_text = strtoupper(md5('Aa123456jadada236t2'));
-        $body_digest = 'FeZ9lewGaO64EPH4Zqd4Zg==';
+        $body_digest = 'VdlpKaoq64AZ0yEsBkvt1A==';
         $header_digest = '';
         //echo 'Cipher: '.$cipher_text.'<br />';
         //$digest = base64_encode(strtoupper(md5('J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9')));
@@ -2070,7 +2070,7 @@ class Sales extends MY_Controller
 
         $headers = array(
             'apiAccount: '.$apiAccount,
-            'digest: FeZ9lewGaO64EPH4Zqd4Zg==',
+            'digest: tEnWMX751wCYwyChevGzyg==',
             'timestamp: '.time(),
             'Content-Type: application/x-www-form-urlencoded',
         );
