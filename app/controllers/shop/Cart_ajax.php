@@ -73,6 +73,7 @@ class Cart_ajax extends MY_Shop_Controller
             $cart_contents = $this->cart->contents();
             foreach ($cart_contents as $item) {
                 $product_code = $item['code'];
+                print_r($item);exit;
                 if($product_code == $sulfad_code){
                     $sulfad_count++;
                 }
