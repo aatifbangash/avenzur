@@ -398,9 +398,9 @@ class CI_Cart {
 				continue;
 			}
 
-			$this->_cart_contents['cart_total'] += ($val['price'] * $val['qty']);
+			$this->_cart_contents['cart_total'] += ($val['price'] * ($val['qty'] - $val['disc_qty']));
 			$this->_cart_contents['total_items'] += $val['qty'];
-			$this->_cart_contents[$key]['subtotal'] = ($this->_cart_contents[$key]['price'] * $this->_cart_contents[$key]['qty']);
+			$this->_cart_contents[$key]['subtotal'] = ($this->_cart_contents[$key]['price'] * ($this->_cart_contents[$key]['qty'] - $this->_cart_contents[$key]['disc_qty']));
 		}
 
 		// Is our cart empty? If so we delete it from the session

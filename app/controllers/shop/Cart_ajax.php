@@ -95,6 +95,7 @@ class Cart_ajax extends MY_Shop_Controller
                     'id'         => $id,
                     'product_id' => $product->id,
                     'qty'        => $quantity_to_charge,
+                    'disc_qty'   => $discounted_quantity,
                     'name'       => $product->name,
                     'slug'       => $product->slug,
                     'code'       => $product->code,
@@ -105,38 +106,6 @@ class Cart_ajax extends MY_Shop_Controller
                     'options'    => !empty($options) ? $options : null,
                 ];
 
-                if($discounted_quantity > 0){
-                    $id_disc = $this->Settings->item_addition ? md5($product->id) : md5(microtime());
-                    $data_discount = [
-                        'id'         => $id,
-                        'product_id' => $product->id,
-                        'qty'        => $discounted_quantity,
-                        'name'       => $product->name,
-                        'slug'       => $product->slug,
-                        'code'       => $product->code,
-                        'price'      => 0,
-                        'tax'        => 0,
-                        'image'      => $product->image,
-                        'option'     => $selected,
-                        'options'    => !empty($options) ? $options : null,
-                    ];
-                }
-
-                if ($this->cart->insert($data)) {
-                    if($discounted_quantity > 0){
-                        $this->cart->save_cart();
-                        $this->cart->insert($data_discount);
-                    }
-
-                    if ($this->input->post('quantity')) {
-                        $this->session->set_flashdata('message', lang('item_added_to_cart'));
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->cart->cart_data();
-                    }
-                }
-                $this->session->set_flashdata('error', lang('unable_to_add_item_to_cart'));
-                redirect($_SERVER['HTTP_REFERER']);
             }else{
                 $data = [
                     'id'         => $id,
@@ -152,17 +121,18 @@ class Cart_ajax extends MY_Shop_Controller
                     'options'    => !empty($options) ? $options : null,
                 ];
 
-                if ($this->cart->insert($data)) {
-                    if ($this->input->post('quantity')) {
-                        $this->session->set_flashdata('message', lang('item_added_to_cart'));
-                        redirect($_SERVER['HTTP_REFERER']);
-                    } else {
-                        $this->cart->cart_data();
-                    }
-                }
-                $this->session->set_flashdata('error', lang('unable_to_add_item_to_cart'));
-                redirect($_SERVER['HTTP_REFERER']);
             }
+
+            if ($this->cart->insert($data)) {
+                if ($this->input->post('quantity')) {
+                    $this->session->set_flashdata('message', lang('item_added_to_cart'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                } else {
+                    $this->cart->cart_data();
+                }
+            }
+            $this->session->set_flashdata('error', lang('unable_to_add_item_to_cart'));
+            redirect($_SERVER['HTTP_REFERER']);
             
         }
     }
