@@ -70,6 +70,11 @@ class Cart_ajax extends MY_Shop_Controller
 
             $sulfad_count = 0;
             $sulfad_code = '06285193000301';
+
+            if($product->code == '06285193000301'){
+                $sulfad_count += ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1));
+            }
+
             $cart_contents = $this->cart->contents();
             foreach ($cart_contents as $item) {
                 $product_code = $item['code'];
