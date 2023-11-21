@@ -2063,23 +2063,23 @@ class Sales extends MY_Controller
         $pwd  = $courier->password;
         $account = $courier->api_account;
         
-        $waybillinfo = populateShipmentParams();
-        $resp = create_order($customerCode, $pwd, $privateKey, $account, $waybillinfo, $url);
+        $waybillinfo = $this->populateShipmentParams();
+        $resp = $this->create_order($customerCode, $pwd, $privateKey, $account, $waybillinfo, $url);
         print_r($resp);exit;
         return $resp;
 
     }
 
-    function get_post_data($customerCode,$pwd,$key,$waybillinfo){
+    public function get_post_data($customerCode,$pwd,$key,$waybillinfo){
 
         $postdate = json_decode($waybillinfo,true);
         $postdate['customerCode'] = $customerCode;
-        $postdate['digest'] = get_content_digest($customerCode,$pwd,$key);
+        $postdate['digest'] = $this->get_content_digest($customerCode,$pwd,$key);
     
         return json_encode($postdate);
     }
 
-    function populateShipmentParams()
+    public function populateShipmentParams()
     {
         $waybillinfo = '{
             "serviceType":"02",
@@ -2141,14 +2141,14 @@ class Sales extends MY_Controller
         return $waybillinfo;
     }
 
-    function get_content_digest($customerCode,$pwd,$key)
+    public function get_content_digest($customerCode,$pwd,$key)
     {
         $str = strtoupper($customerCode . md5($pwd . 'jadada236t2')) . $key;
 
         return base64_encode(pack('H*', strtoupper(md5($str))));
     }
 
-    function get_header_digest($post,$key){
+    public function get_header_digest($post,$key){
         $digest = base64_encode(pack('H*',strtoupper(md5($post.$key))));
         return $digest;
     }
