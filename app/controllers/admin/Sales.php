@@ -2137,7 +2137,6 @@ class Sales extends MY_Controller
                 "prov":"Riyadh"
             },
             "itemsValue":'.$sale->paid.',
-            "items":'.$items_data.',
             "operateType":1
         }';
 
