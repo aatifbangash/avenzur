@@ -2047,6 +2047,10 @@ class Sales extends MY_Controller
                 'timeout' => 15 * 60
             )
         );
+
+        echo '<pre>';
+        print_r($options);
+
         $context = stream_context_create($options);
 
         echo '<pre>';
