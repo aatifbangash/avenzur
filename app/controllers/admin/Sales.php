@@ -2124,7 +2124,7 @@ class Sales extends MY_Controller
             },
             "expressType":"EZKSA",
             "remark":"No comments",
-            "txlogisticId":'.$sale->id.',
+            "txlogisticId":AV'.$sale->id.',
             "goodsType":"ITN4",
             "priceCurrency":"SAR",
             "sender":{
