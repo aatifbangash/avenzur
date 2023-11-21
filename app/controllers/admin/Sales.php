@@ -2031,7 +2031,7 @@ class Sales extends MY_Controller
 
 
         $cipher_text = strtoupper(md5($courier->password.'jadada236t2'));
-        echo $cipher_text;exit;
+        $body_digest = 'FeZ9lewGaO64EPH4Zqd4Zg==';
 
         // Headers
         $headers = [
