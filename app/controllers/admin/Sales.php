@@ -2047,14 +2047,7 @@ class Sales extends MY_Controller
                 'timeout' => 15 * 60
             )
         );
-
-        echo '<pre>';
-        print_r($options);
-
         $context = stream_context_create($options);
-
-        echo '<pre>';
-        print_r($post_content);exit;
     
         $result = file_get_contents($url, false, $context);
         
@@ -2114,63 +2107,46 @@ class Sales extends MY_Controller
             );
         }
 
-        $waybillinfo = '{
-            "serviceType":"02",
-            "orderType":"2",
-            "deliveryType":"04",
-            "countryCode":"KSA",
-            "receiver":{
-                "address":"Riyadh, 20 sts ",
-                "street":"",
-                "city":"Riyadh",
-                "mobile":"0533666345",
-                "mailBox":"customer@gmail.com",
-                "phone":"",
-                "countryCode":"KSA",
-                "name":"Omar Test",
-                "company":"company",
-                "postCode":"000001",
-                "prov":"Riyadh"
+        $waybillinfo = 'bizContent={
+            "serviceType": "01",
+            "orderType": "2",
+            "deliveryType": "04",
+            "expressType": "EZKSA",
+            "weight": "22.00",
+            "remark": "Citruss Order",
+            "txlogisticId": "1301099",
+            "goodsType": "ITN1",
+            "totalQuantity": "2.0",
+            "receiver": {
+              "area": "Riyadh- Riyadh",
+              "address": "Riyadh- Riyadh-3-sfsd-test-asd",
+              "city": "Riyadh",
+              "mobile": "96656666666",
+              "phone": "96656666666",
+              "countryCode": "KSA",
+              "name": "Mr. Resmi Saudi",
+              "prov": "Riyadh"
             },
-            "expressType":"EZKSA",
-            "length":0,
-            "weight":15,
-            "remark":"description goes here",
-            "txlogisticId":"tttest__2-2191982-2",
-            "goodsType":"ITN1",
-            "priceCurrency":"SAR",
-            "totalQuantity":1,
-            "sender":{
-                "address":"Salasa WH Sulyffff",
-                "street":"",
-                "city":"Riyadh",
-                "mobile":"96650000000fff0",
-                "mailBox":"salasa@gmail.com",
-                "phone":"",
-                "countryCode":"KSA",
-                "name":"Salasa Test",
-                "company":"company",
-                "postCode":"",
-                "prov":"Riyadh"
+            "sender": {
+              "area": "Hay Al Nafl",
+              "address": "Abu Baker Alseddeq Road-امتحان",
+              "street": "Hay Al Nafl",
+              "city": "Riyadh",
+              "mobile": "966 118343888",
+              "phone": "966 118343888",
+              "countryCode": "KSA",
+              "name": "CITRUSS SAUDI TRADING COMPANY LLC",
+              "prov": "Riyadh"
             },
-            "itemsValue":10,
-            "offerFee":0,
-            "items":[
-                {
-                    "englishName":"file",
-                    "number":1,
-                    "itemType":"ITN1",
-                    "itemName":"\u6587\u4ef6\u7c7b\u578b",
-                    "priceCurrency":"SAR",
-                    "itemValue":"2000",
-                    "itemUrl":"http:\/\/www.baidu.com",
-                    "desc":"file"
-                }
-            ],
-            "operateType":1,
-            "payType":"PP_PM",
-            "isUnpackEnabled":0
-        }';
+            "itemsValue": "499.95",
+            "priceCurrency": "SAR",
+            "items": [
+            {
+              "number ": "10",
+              "itemName": "675100"
+            }],
+            "operateType": "1"
+          }';
 
         /*$waybillinfo = '{
             "serviceType" => "02",
