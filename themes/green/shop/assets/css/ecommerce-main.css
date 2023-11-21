@@ -1311,6 +1311,24 @@ ol.list-group.list-group-numbered li div a {
 ol.list-group.list-group-numbered li:hover {
   background: #ddc3f4;
 }
+.suprtwidget .card {
+  min-height: 170px;
+}
+html[lang="ar"] {
+  direction: rtl;
+}
+html[lang="ar"] .text-end {
+  text-align: left !important;
+}
+html[lang="ar"] .feature_products,
+html[lang="ar"] .special_products,
+html[lang="ar"] .brands-logo,
+html[lang="ar"] .suprtwidget {
+  direction: ltr;
+}
+html[lang="ar"] .myaccountForm.cartform {
+  right: auto !important;
+}
 
 @media screen and (max-width: 500px) {
   .myaccountForm.cartform {
