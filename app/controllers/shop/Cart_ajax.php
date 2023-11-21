@@ -93,10 +93,12 @@ class Cart_ajax extends MY_Shop_Controller
                     $total_sulfad = $sulfad_in_cart + $sulfad_count;
 
                     $old_quantity_charged = ceil($sulfad_count / 3)*2;
-                    $old_discounted_quantity = $sulfad_count - $old_quantity_charged;
+                    $old_discounted_quantity = floor($sulfad_count / 3);
+                    //$old_discounted_quantity = $sulfad_count - $old_quantity_charged;
 
                     $quantity_to_charge = ceil($total_sulfad / 3)*2;
-                    $discounted_quantity = $total_sulfad - $quantity_to_charge - $old_discounted_quantity;
+                    $discounted_quantity = floor($total_sulfad / 3) - $old_discounted_quantity;
+                    //$discounted_quantity = $total_sulfad - $quantity_to_charge - $old_discounted_quantity;
 
                 }
 
