@@ -74,7 +74,7 @@ function update_mini_cart(t) {
           "/product/" +
           this.slug +
           '">' +
-          this.name +
+          this.name + '('+this.qty+')'
           "</a><br>" +
           //this.qty +
           //" x " +
