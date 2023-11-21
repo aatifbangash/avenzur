@@ -2063,7 +2063,7 @@ class Sales extends MY_Controller
         $pwd  = $courier->password;
         $account = $courier->api_account;
         
-        $waybillinfo = $this->populateShipmentParams();
+        $waybillinfo = $this->populateShipmentParams($sale);
         $resp = $this->create_order($customerCode, $pwd, $privateKey, $account, $waybillinfo, $url);
         print_r($resp);exit;
         return $resp;
@@ -2079,202 +2079,8 @@ class Sales extends MY_Controller
         return json_encode($postdate);
     }
 
-    public function populateShipmentParams()
+    public function populateShipmentParams($sale)
     {
-        $waybillinfo = '{
-            "serviceType":"02",
-            "orderType":"2",
-            "deliveryType":"04",
-            "countryCode":"KSA",
-            "receiver":{
-                "address":"Riyadh, 20 sts ",
-                "street":"",
-                "city":"Riyadh",
-                "mobile":"0533666345",
-                "mailBox":"customer@gmail.com",
-                "phone":"",
-                "countryCode":"KSA",
-                "name":"Omar Test",
-                "company":"company",
-                "postCode":"000001",
-                "prov":"Riyadh"
-            },
-            "expressType":"EZKSA",
-            "length":0,
-            "weight":15,
-            "remark":"description goes here",
-            "txlogisticId":"tttest__2-2191982-2",
-            "goodsType":"ITN1",
-            "priceCurrency":"SAR",
-            "totalQuantity":1,
-            "sender":{
-                "address":"Salasa WH Sulyffff",
-                "street":"",
-                "city":"Riyadh",
-                "mobile":"96650000000fff0",
-                "mailBox":"salasa@gmail.com",
-                "phone":"",
-                "countryCode":"KSA",
-                "name":"Salasa Test",
-                "company":"company",
-                "postCode":"",
-                "prov":"Riyadh"
-            },
-            "itemsValue":10,
-            "offerFee":0,
-            "items":[
-                {
-                    "englishName":"file",
-                    "number":1,
-                    "itemType":"ITN1",
-                    "itemName":"\u6587\u4ef6\u7c7b\u578b",
-                    "priceCurrency":"SAR",
-                    "itemValue":"2000",
-                    "itemUrl":"http:\/\/www.baidu.com",
-                    "desc":"file"
-                }
-            ],
-            "operateType":1,
-            "payType":"PP_PM",
-            "isUnpackEnabled":0
-        }';
-        return $waybillinfo;
-    }
-
-    public function get_content_digest($customerCode,$pwd,$key)
-    {
-        $str = strtoupper($customerCode . md5($pwd . 'jadada236t2')) . $key;
-
-        return base64_encode(pack('H*', strtoupper(md5($str))));
-    }
-
-    public function get_header_digest($post,$key){
-        $digest = base64_encode(pack('H*',strtoupper(md5($post.$key))));
-        return $digest;
-    }
-
-    /*public function assignJT($sale, $courier){
-        // API endpoint URL
-        $url = 'https://demoopenapi.jtjms-sa.com/webopenplatformapi/api/order/addOrder';
-
-
-        $cipher_text = strtoupper(md5($courier->password.'jadada236t2'));
-        $body_digest = 'FeZ9lewGaO64EPH4Zqd4Zg==';
-
-        // Headers
-        $headers = [
-            'apiAccount: 292508153084379141',
-            'digest: tEnWMX751wCYwyChevGzyg==',
-            'timestamp: 1638428570653',
-            'Content-Type: application/x-www-form-urlencoded',
-        ];
-
-        // Request data
-        $data = [
-            'bizContent' => json_encode([
-                "customerCode" => "J0086024173",
-                "digest" => "VdlpKaoq64AZ0yEsBkvt1A==",
-                "serviceType" => "01",
-                "orderType" => "2",
-                "deliveryType" => "04",
-                "countryCode" => "KSA",
-                "receiver" => [
-                    "address" => "Riyadh, 20 st ",
-                    "street" => "",
-                    "city" => "Riyadh",
-                    "mobile" => "0533666344",
-                    "mailBox" => "customer@gmail.com",
-                    "phone" => "",
-                    "countryCode" => "KSA",
-                    "name" => "Omar Test",
-                    "company" => "company",
-                    "postCode" => "000000",
-                    "prov" => "Riyadh",
-                ],
-                "expressType" => "EZKSA",
-                "length" => 0,
-                "weight" => 15,
-                "remark" => "description goes here",
-                "txlogisticId" => "AAAA123123",
-                "goodsType" => "ITN1",
-                "priceCurrency" => "SAR",
-                "totalQuantity" => 1,
-                "sender" => [
-                    "address" => "Salasa WH Suly",
-                    "street" => "",
-                    "city" => "Riyadddh",
-                    "mobile" => "966500000000",
-                    "mailBox" => "salasa@gmail.com",
-                    "phone" => "",
-                    "countryCode" => "KSA",
-                    "name" => "Salasa Test",
-                    "company" => "company",
-                    "postCode" => "",
-                    "prov" => "Riyyyadh",
-                ],
-                "itemsValue" => 1000,
-                "offerFee" => 0,
-                "items" => [
-                    [
-                        "englishName" => "iphone",
-                        "number" => 2,
-                        "itemType" => "ITN1",
-                        "itemName" => "\u6587\u4ef6\u7c7b\u578b",
-                        "priceCurrency" => "SAR",
-                        "itemValue" => "2000",
-                        "itemUrl" => "http:\/\/www.baidu.com",
-                        "desc" => "file",
-                    ],
-                ],
-                "operateType" => 1,
-                "payType" => "PP_PM",
-                "isUnpackEnabled" => 0,
-            ]),
-        ];
-
-        // Initialize cURL session
-        $ch = curl_init($url);
-
-        // Set cURL options
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        // Execute cURL session
-        $response = curl_exec($ch);
-
-        // Check for cURL errors
-        if (curl_errno($ch)) {
-            echo 'cURL error: ' . curl_error($ch);
-        }
-
-        // Close cURL session
-        curl_close($ch);
-        print_r($response);exit;
-        // Output the response
-        echo $response;
-
-    }*/
-
-    /*public function assignJT($sale, $courier){
-        $url = $courier->url.'order/addOrder';
-
-        $apiAccount = $courier->api_account;
-        $privateKey = $courier->auth_key;
-
-        //$cipher_text = md5($courier->password.'jadada236t2');
-        //$digest = base64_encode(md5($courier->username.$cipher_text.$courier->auth_key));
-
-        $cipher_text = strtoupper(md5('Aa123456jadada236t2'));
-        $body_digest = 'VdlpKaoq64AZ0yEsBkvt1A==';
-        $header_digest = '';
-        //echo 'Cipher: '.$cipher_text.'<br />';
-        //$digest = base64_encode(strtoupper(md5('J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9')));
-        //echo 'Encoding: '.strtoupper(md5('J008624173'.$cipher_text.'a0a1047cce70493c9d5d29704f05d0d9')).'<br />';
-        //echo 'Digest: '.$digest;exit;
-        
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
         $address = $this->site->getAddressByID($address_id);
@@ -2300,6 +2106,56 @@ class Sales extends MY_Controller
                 'desc' => $sale_item->product_name
             );
         }
+
+        $waybillinfo = '{
+            "serviceType" => "02",
+            "orderType" => "1",
+            "deliveryType" => "03",
+            "countryCode" => "KSA",
+            "receiver":{
+                "address":'.$address->line1.',
+                "city":'.$address->city.',
+                "mobile":'.$address->phone.',
+                "phone":'.$address->phone.',
+                "countryCode":'. $countryArr->iso3.',
+                "name":'.$customer->name.',
+                "postCode":'.$address->postal_code.',
+                "prov":'.$address->state'
+            },
+            "expressType":"EZKSA",
+            "remark":"No comments",
+            "txlogisticId":'.$sale->id.',
+            "goodsType":"ITN4",
+            "priceCurrency":"SAR",
+            "sender":{
+                "address":"Business Gate, Riyadh KSA",
+                "city":"Riyadh",
+                "mobile":"0114654636",
+                "phone":"0114654636",
+                "countryCode":"KSA",
+                "name":"Avenzur.com",
+                "prov":"Riyadh"
+            },
+            "itemsValue":'.$sale->paid.',
+            "items":'.$items_data.',
+            "operateType":1
+        }';
+        return $waybillinfo;
+    }
+
+    public function get_content_digest($customerCode,$pwd,$key)
+    {
+        $str = strtoupper($customerCode . md5($pwd . 'jadada236t2')) . $key;
+
+        return base64_encode(pack('H*', strtoupper(md5($str))));
+    }
+
+    public function get_header_digest($post,$key){
+        $digest = base64_encode(pack('H*',strtoupper(md5($post.$key))));
+        return $digest;
+    }
+
+    /*public function assignJT($sale, $courier){
 
         $headers = array(
             'apiAccount: '.$apiAccount,
