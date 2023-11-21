@@ -2120,7 +2120,7 @@ class Sales extends MY_Controller
                 "countryCode":'. $countryArr->iso3.',
                 "name":'.$customer->name.',
                 "postCode":'.$address->postal_code.',
-                "prov":'.$address->state'
+                "prov":'.$address->state.'
             },
             "expressType":"EZKSA",
             "remark":"No comments",
