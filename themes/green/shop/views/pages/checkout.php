@@ -505,13 +505,16 @@
                                                 <input type="hidden" id="total-price" value="<?= $total ?>"/>
                                             </td>
                                         </tr>
-                                        <?php if ($Settings->tax2 !== false) {
+                                        <?php 
+                                        /*if ($Settings->tax2 !== false) {
                                             echo '<tr><td>' . lang('order_tax') . '</td>
                                                     <td class="text-right">' . $this->sma->formatMoney($order_tax, $selected_currency->symbol) . '
                                                     <input type="hidden" id="total-order-tax" value="' . $order_tax . '"/>
                                                     </td>
                                                     </tr>';
-                                        } ?>
+                                        } */
+                                        
+                                        ?>
                                         <tr>
                                             <td><?= lang('shipping'); ?> *</td>
                                             <td class="text-right">
