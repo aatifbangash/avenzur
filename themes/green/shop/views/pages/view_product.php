@@ -123,7 +123,7 @@
 
             </div>
                     
-            <div class="product-detail product-count d-flex align-items-center card" style="width: fit-content;">
+            <div class="product-detail product-count d-flex align-items-center " style="width: fit-content;">
                         
                 <form action="#" class=" quantity text-end py-2 d-flex align-items-center justify-content-md-between">
                 
