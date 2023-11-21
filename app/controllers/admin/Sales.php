@@ -2123,10 +2123,13 @@ class Sales extends MY_Controller
                 "prov":'.$address->state.'
             },
             "expressType":"EZKSA",
+            "length":0,
+            "weight":15,
             "remark":"No comments",
-            "txlogisticId":AV'.$sale->id.',
+            "txlogisticId":"tttest__2-2191982-2",
             "goodsType":"ITN4",
             "priceCurrency":"SAR",
+            "totalQuantity":1,
             "sender":{
                 "address":"Business Gate, Riyadh KSA",
                 "city":"Riyadh",
@@ -2137,7 +2140,22 @@ class Sales extends MY_Controller
                 "prov":"Riyadh"
             },
             "itemsValue":'.$sale->paid.',
-            "operateType":1
+            "offerFee":0,
+            "items":[
+                {
+                    "englishName":"file",
+                    "number":1,
+                    "itemType":"ITN1",
+                    "itemName":"\u6587\u4ef6\u7c7b\u578b",
+                    "priceCurrency":"SAR",
+                    "itemValue":"2000",
+                    "itemUrl":"http:\/\/www.baidu.com",
+                    "desc":"file"
+                }
+            ],
+            "operateType":1,
+            "payType":"PP_PM",
+            "isUnpackEnabled":0
         }';
         return $waybillinfo;
     }
