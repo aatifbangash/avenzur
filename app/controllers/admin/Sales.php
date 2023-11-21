@@ -1858,6 +1858,8 @@ class Sales extends MY_Controller
             );
         }
 
+        echo $address->latitude;exit;
+
         $data = array(
             //'order_number' => '123457'.$sale->id,
             'order_number' => $sale->id,
