@@ -2073,7 +2073,7 @@ class Sales extends MY_Controller
     public function get_post_data($customerCode,$pwd,$key,$waybillinfo){
 
         $postdate = json_decode($waybillinfo,true);
-        //$postdate['customerCode'] = $customerCode;
+        $postdate['customerCode'] = $customerCode;
         $postdate['digest'] = $this->get_content_digest($customerCode,$pwd,$key);
     
         return json_encode($postdate);
