@@ -212,13 +212,13 @@ function update_cart(t) {
         '</td><td class="text-right">' +
         t.total +
         "</td></tr>"),
-      !1 !== site.settings.tax2 &&
+      /*!1 !== site.settings.tax2 &&
         (a +=
           "<tr><td>" +
           lang.order_tax +
           '</td><td class="text-right">' +
           t.order_tax +
-          "</td></tr>"),
+          "</td></tr>"),*/
       (a +=
         "<tr class='shipping-row'><td>" +
         lang.shipping +
