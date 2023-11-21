@@ -2064,6 +2064,7 @@ class Sales extends MY_Controller
         $account = $courier->api_account;
         
         $waybillinfo = $this->populateShipmentParams();
+        print_r($waybillinfo);exit;
         $resp = $this->create_order($customerCode, $pwd, $privateKey, $account, $waybillinfo, $url);
         print_r($resp);exit;
         return $resp;
