@@ -2184,7 +2184,7 @@ class Sales extends MY_Controller
             "length":0,
             "weight":15,
             "remark":"No comments",
-            "txlogisticId":"tttest__2-2191982-2",
+            "txlogisticId":'.$sale->id.',
             "goodsType":"ITN4",
             "priceCurrency":"SAR",
             "totalQuantity":1,
@@ -2197,7 +2197,7 @@ class Sales extends MY_Controller
                 "name":"Avenzur.com",
                 "prov":"Riyadh"
             },
-            "itemsValue":"'.$sale->paid.'",
+            "itemsValue":'.$sale->paid.',
             "offerFee":0,
             "items":[
                 {
