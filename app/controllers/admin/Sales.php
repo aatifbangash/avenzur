@@ -2025,10 +2025,10 @@ class Sales extends MY_Controller
         
     }
 
-    function create_order($customerCode,$pwd,$key,$account,$waybillinfo,$url) {
+    public function create_order($customerCode,$pwd,$key,$account,$waybillinfo,$url) {
 
-        $post_data = get_post_data($customerCode,$pwd,$key,$waybillinfo);
-        $head_dagest = get_header_digest($post_data,$key);
+        $post_data = $this->get_post_data($customerCode,$pwd,$key,$waybillinfo);
+        $head_dagest = $this->get_header_digest($post_data,$key);
         $post_content = array(
             'bizContent' => $post_data
         );
@@ -2064,7 +2064,6 @@ class Sales extends MY_Controller
         $account = $courier->api_account;
         
         $waybillinfo = $this->populateShipmentParams();
-        print_r($waybillinfo);exit;
         $resp = $this->create_order($customerCode, $pwd, $privateKey, $account, $waybillinfo, $url);
         print_r($resp);exit;
         return $resp;
