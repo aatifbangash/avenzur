@@ -2184,7 +2184,7 @@ class Sales extends MY_Controller
             "length":0,
             "weight":15,
             "remark":"No comments",
-            "txlogisticId":'.$sale->id.',
+            "txlogisticId":"'.$sale->id.'",
             "goodsType":"ITN4",
             "priceCurrency":"SAR",
             "totalQuantity":1,
