@@ -705,13 +705,13 @@
         </div>
 
         <!-- special products -->
-        <div class="special_products get-quantity">
+        <div class="special_products">
             <?php
                 $r = 0;
                 foreach (array_chunk($special_offers, 4) as $sps){
                     foreach ($sps as $sp) {
                     ?>
-                        <div class="row specialOfferP py-4">
+                        <div class="row specialOfferP py-4 get-quantity">
                             <div class="col-md-12 col-sm-12">
                             <div class="row align-items-center">
                                 <div class="col-md-5 col-sm-12">
