@@ -87,7 +87,8 @@ class Cart_ajax extends MY_Shop_Controller
             if($product->code == $sulfad_code){
                 if($sulfad_count == 0){
                     $quantity_to_charge = ceil($sulfad_in_cart / 3)*2;
-                    $discounted_quantity = $sulfad_in_cart - $quantity_to_charge;
+                    $discounted_quantity = floor($sulfad_in_cart / 3);
+                    //$discounted_quantity = $sulfad_in_cart - $quantity_to_charge;
                 }else{
                     $total_sulfad = $sulfad_in_cart + $sulfad_count;
 
