@@ -65,7 +65,7 @@ function update_mini_cart(t) {
           site.site_url +
           "/product/" +
           this.slug +
-          '"><span class="cart-item-image"><img style="width: 42px;" src="' +
+          '"><span class="cart-item-image" style="color: #000;"><img style="width: 42px;" src="' +
           site.base_url +
           "assets/uploads/thumbs/" +
           this.image +
@@ -74,7 +74,7 @@ function update_mini_cart(t) {
           "/product/" +
           this.slug +
           '">' +
-          this.name + '('+this.qty+')'
+          this.name + ' ('+this.qty+')' +
           "</a><br>" +
           //this.qty +
           //" x " +
