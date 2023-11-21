@@ -705,7 +705,7 @@
         </div>
 
         <!-- special products -->
-        <div class="special_products">
+        <div class="special_products get-quantity">
             <?php
                 $r = 0;
                 foreach (array_chunk($special_offers, 4) as $sps){
