@@ -2049,7 +2049,7 @@ class Sales extends MY_Controller
         );
         $context = stream_context_create($options);
 
-        echo $postdata;exit;
+        echo $post_content;exit;
     
         $result = file_get_contents($url, false, $context);
         
