@@ -65,11 +65,11 @@ function update_mini_cart(t) {
           site.site_url +
           "/product/" +
           this.slug +
-          '"><span class="cart-item-image" style="color: #000;"><img style="width: 42px;" src="' +
+          '"><span class="cart-item-image"><img style="width: 42px;" src="' +
           site.base_url +
           "assets/uploads/thumbs/" +
           this.image +
-          '" alt=""></span></a></td><td><a href="' +
+          '" alt=""></span></a></td><td><a style="color: #000;font-size: 14px;" href="' +
           site.site_url +
           "/product/" +
           this.slug +
@@ -79,7 +79,7 @@ function update_mini_cart(t) {
           //this.qty +
           //" x " +
           //this.price +
-          '</td><td class="text-right text-bold">' +
+          '</td><td class="text-right text-bold" style="color: #000;font-size: 14px;">' +
           this.subtotal +
           "</td>";
         //$("<tr>" + t + "</tr>").appendTo("#cart-body")
