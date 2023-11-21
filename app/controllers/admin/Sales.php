@@ -2107,7 +2107,7 @@ class Sales extends MY_Controller
             );
         }
 
-        $waybillinfo = '{
+        /*$waybillinfo = '{
             "serviceType":"02",
             "orderType":"2",
             "deliveryType":"04",
@@ -2163,9 +2163,9 @@ class Sales extends MY_Controller
             "operateType":1,
             "payType":"PP_PM",
             "isUnpackEnabled":0
-        }';
+        }';*/
 
-        /*$waybillinfo = '{
+        $waybillinfo = '{
             "serviceType" => "02",
             "orderType" => "1",
             "deliveryType" => "03",
@@ -2197,7 +2197,7 @@ class Sales extends MY_Controller
                 "name":"Avenzur.com",
                 "prov":"Riyadh"
             },
-            "itemsValue":'.$sale->paid.',
+            "itemsValue":"'.$sale->paid.'",
             "offerFee":0,
             "items":[
                 {
@@ -2214,7 +2214,7 @@ class Sales extends MY_Controller
             "operateType":1,
             "payType":"PP_PM",
             "isUnpackEnabled":0
-        }';*/
+        }';
 
         return $waybillinfo;
     }
