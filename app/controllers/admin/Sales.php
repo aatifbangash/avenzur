@@ -2025,7 +2025,135 @@ class Sales extends MY_Controller
         
     }
 
+    function create_order($customerCode,$pwd,$key,$account,$waybillinfo,$url) {
+
+        $post_data = get_post_data($customerCode,$pwd,$key,$waybillinfo);
+        $head_dagest = get_header_digest($post_data,$key);
+        $post_content = array(
+            'bizContent' => $post_data
+        );
+    
+        $postdata = http_build_query($post_content);
+    
+        $options = array(
+            'http' => array(
+                'method' => 'POST',
+                'header' =>
+                    array('Content-type: application/x-www-form-urlencoded',
+                        'apiAccount:' . $account,
+                        'digest:' . $head_dagest,
+                        'timestamp: 1638428570653'),
+                'content' => $postdata,
+                'timeout' => 15 * 60
+            )
+        );
+        $context = stream_context_create($options);
+    
+        $result = file_get_contents($url, false, $context);
+        
+        return $result;
+    }
+
     public function assignJT($sale, $courier){
+        // API endpoint URL
+        $url = 'https://demoopenapi.jtjms-sa.com/webopenplatformapi/api/order/addOrder';
+
+        $privateKey = $courier->auth_key;
+        $customerCode= $courier->username;
+        $pwd  = $courier->password;
+        $account = $courier->api_account;
+        
+        $waybillinfo = populateShipmentParams();
+        $resp = create_order($customerCode, $pwd, $privateKey, $account, $waybillinfo, $url);
+        print_r($resp);exit;
+        return $resp;
+
+    }
+
+    function get_post_data($customerCode,$pwd,$key,$waybillinfo){
+
+        $postdate = json_decode($waybillinfo,true);
+        $postdate['customerCode'] = $customerCode;
+        $postdate['digest'] = get_content_digest($customerCode,$pwd,$key);
+    
+        return json_encode($postdate);
+    }
+
+    function populateShipmentParams()
+    {
+        $waybillinfo = '{
+            "serviceType":"02",
+            "orderType":"2",
+            "deliveryType":"04",
+            "countryCode":"KSA",
+            "receiver":{
+                "address":"Riyadh, 20 sts ",
+                "street":"",
+                "city":"Riyadh",
+                "mobile":"0533666345",
+                "mailBox":"customer@gmail.com",
+                "phone":"",
+                "countryCode":"KSA",
+                "name":"Omar Test",
+                "company":"company",
+                "postCode":"000001",
+                "prov":"Riyadh"
+            },
+            "expressType":"EZKSA",
+            "length":0,
+            "weight":15,
+            "remark":"description goes here",
+            "txlogisticId":"tttest__2-2191982-2",
+            "goodsType":"ITN1",
+            "priceCurrency":"SAR",
+            "totalQuantity":1,
+            "sender":{
+                "address":"Salasa WH Sulyffff",
+                "street":"",
+                "city":"Riyadh",
+                "mobile":"96650000000fff0",
+                "mailBox":"salasa@gmail.com",
+                "phone":"",
+                "countryCode":"KSA",
+                "name":"Salasa Test",
+                "company":"company",
+                "postCode":"",
+                "prov":"Riyadh"
+            },
+            "itemsValue":10,
+            "offerFee":0,
+            "items":[
+                {
+                    "englishName":"file",
+                    "number":1,
+                    "itemType":"ITN1",
+                    "itemName":"\u6587\u4ef6\u7c7b\u578b",
+                    "priceCurrency":"SAR",
+                    "itemValue":"2000",
+                    "itemUrl":"http:\/\/www.baidu.com",
+                    "desc":"file"
+                }
+            ],
+            "operateType":1,
+            "payType":"PP_PM",
+            "isUnpackEnabled":0
+        }';
+        return $waybillinfo;
+    }
+
+    function get_content_digest($customerCode,$pwd,$key)
+    {
+        $str = strtoupper($customerCode . md5($pwd . 'jadada236t2')) . $key;
+
+        return base64_encode(pack('H*', strtoupper(md5($str))));
+    }
+
+    function get_header_digest($post,$key){
+        $digest = base64_encode(pack('H*',strtoupper(md5($post.$key))));
+        return $digest;
+    }
+
+    /*public function assignJT($sale, $courier){
         // API endpoint URL
         $url = 'https://demoopenapi.jtjms-sa.com/webopenplatformapi/api/order/addOrder';
 
@@ -2128,7 +2256,7 @@ class Sales extends MY_Controller
         // Output the response
         echo $response;
 
-    }
+    }*/
 
     /*public function assignJT($sale, $courier){
         $url = $courier->url.'order/addOrder';
