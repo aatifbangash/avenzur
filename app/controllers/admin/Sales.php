@@ -2139,8 +2139,6 @@ class Sales extends MY_Controller
             "itemsValue":'.$sale->paid.',
             "operateType":1
         }';
-
-        echo $waybillinfo;exit;
         return $waybillinfo;
     }
 
