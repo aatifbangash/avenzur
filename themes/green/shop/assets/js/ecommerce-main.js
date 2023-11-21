@@ -76,9 +76,9 @@ function update_mini_cart(t) {
           '">' +
           this.name +
           "</a><br>" +
-          this.qty +
-          " x " +
-          this.price +
+          //this.qty +
+          //" x " +
+          //this.price +
           '</td><td class="text-right text-bold">' +
           this.subtotal +
           "</td>";
