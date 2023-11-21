@@ -2063,7 +2063,7 @@ class Sales extends MY_Controller
         $pwd  = $courier->password;
         $account = $courier->api_account;
         
-        $waybillinfo = $this->populateShipmentParams($sale);
+        $waybillinfo = $this->populateShipmentParams($sale, $courier);
         $resp = $this->create_order($customerCode, $pwd, $privateKey, $account, $waybillinfo, $url);
         print_r($resp);exit;
         return $resp;
@@ -2073,13 +2073,13 @@ class Sales extends MY_Controller
     public function get_post_data($customerCode,$pwd,$key,$waybillinfo){
 
         $postdate = json_decode($waybillinfo,true);
-        $postdate['customerCode'] = $customerCode;
+        //$postdate['customerCode'] = $customerCode;
         $postdate['digest'] = $this->get_content_digest($customerCode,$pwd,$key);
     
         return json_encode($postdate);
     }
 
-    public function populateShipmentParams($sale)
+    public function populateShipmentParams($sale, $courier)
     {
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
@@ -2108,6 +2108,7 @@ class Sales extends MY_Controller
         }
 
         $waybillinfo = 'bizContent={
+            "customerCode": "J0086024173",
             "serviceType": "01",
             "orderType": "2",
             "deliveryType": "04",
