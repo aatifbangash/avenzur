@@ -760,6 +760,7 @@ $(document).ready(function () {
     var e = $(this).attr("data-id"),
       a = $(".shopping-cart:visible"),
       s = $(this).parents(".card").find("input");
+      console.log(s);
       if(!s){
         s = $(this).parents(".get-quantity").find("input");
       }
