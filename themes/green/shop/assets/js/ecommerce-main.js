@@ -761,7 +761,7 @@ $(document).ready(function () {
       a = $(".shopping-cart:visible"),
       s = $(this).parents(".card").find("input");
       console.log(s.val());
-      if(!s){
+      if(typeof s.val() !== 'undefined'){
         s = $(this).parents(".get-quantity").find("input");
       }
 
