@@ -762,6 +762,7 @@ $(document).ready(function () {
       s = $(this).parents(".card").find("input");
       console.log(s.val());
       if(typeof s.val() !== 'undefined'){
+        console.log('here we are...');
         s = $(this).parents(".get-quantity").find("input");
       }
 
