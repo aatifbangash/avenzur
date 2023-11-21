@@ -2108,6 +2108,64 @@ class Sales extends MY_Controller
         }
 
         $waybillinfo = '{
+            "serviceType":"02",
+            "orderType":"2",
+            "deliveryType":"04",
+            "countryCode":"KSA",
+            "receiver":{
+                "address":"Riyadh, 20 sts ",
+                "street":"",
+                "city":"Riyadh",
+                "mobile":"0533666345",
+                "mailBox":"customer@gmail.com",
+                "phone":"",
+                "countryCode":"KSA",
+                "name":"Omar Test",
+                "company":"company",
+                "postCode":"000001",
+                "prov":"Riyadh"
+            },
+            "expressType":"EZKSA",
+            "length":0,
+            "weight":15,
+            "remark":"description goes here",
+            "txlogisticId":"tttest__2-2191982-2",
+            "goodsType":"ITN1",
+            "priceCurrency":"SAR",
+            "totalQuantity":1,
+            "sender":{
+                "address":"Salasa WH Sulyffff",
+                "street":"",
+                "city":"Riyadh",
+                "mobile":"96650000000fff0",
+                "mailBox":"salasa@gmail.com",
+                "phone":"",
+                "countryCode":"KSA",
+                "name":"Salasa Test",
+                "company":"company",
+                "postCode":"",
+                "prov":"Riyadh"
+            },
+            "itemsValue":10,
+            "offerFee":0,
+            "items":[
+                {
+                    "englishName":"file",
+                    "number":1,
+                    "itemType":"ITN1",
+                    "itemName":"\u6587\u4ef6\u7c7b\u578b",
+                    "priceCurrency":"SAR",
+                    "itemValue":"2000",
+                    "itemUrl":"http:\/\/www.baidu.com",
+                    "desc":"file"
+                }
+            ],
+            "operateType":1,
+            "payType":"PP_PM",
+            "isUnpackEnabled":0
+        }';
+
+        /*$waybillinfo = '{
             "serviceType" => "02",
             "orderType" => "1",
             "deliveryType" => "03",
@@ -2156,7 +2214,8 @@ class Sales extends MY_Controller
             "operateType":1,
             "payType":"PP_PM",
             "isUnpackEnabled":0
-        }';
+        }';*/
+
         return $waybillinfo;
     }
 
