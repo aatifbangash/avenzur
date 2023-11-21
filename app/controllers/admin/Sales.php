@@ -1858,8 +1858,6 @@ class Sales extends MY_Controller
             );
         }
 
-        echo $address->latitude;exit;
-
         $data = array(
             //'order_number' => '123457'.$sale->id,
             'order_number' => $sale->id,
@@ -1872,8 +1870,8 @@ class Sales extends MY_Controller
             'destination_customer_phone' => $address->phone,
             'destination_customer_name' => $customer->name,
             'destination_customer_reference' => $sale->reference_no,
-            'destination_location_lat' => !empty($address->latitude) ? $address->latitude : '',
-            'destination_location_long' => !empty($address->longitude) ? $address->longitude : '',
+            'destination_location_lat' => !empty($address->latitude) ? $address->latitude : 0.0,
+            'destination_location_long' => !empty($address->longitude) ? $address->longitude : 0.0,
             'destination_address' => $address->line1,
             //'destination_address' => $address->line1.', '.$address->line2.', '.$address->state.', '.$address->city.', '.$customer->country,
             'shipping_date' => date('Y-m-d'),
