@@ -2029,6 +2029,10 @@ class Sales extends MY_Controller
         // API endpoint URL
         $url = 'https://demoopenapi.jtjms-sa.com/webopenplatformapi/api/order/addOrder';
 
+
+        $cipher_text = strtoupper(md5($courier->password.'jadada236t2'));
+        echo $cipher_text;exit;
+
         // Headers
         $headers = [
             'apiAccount: 292508153084379141',
