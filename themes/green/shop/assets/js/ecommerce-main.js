@@ -67,7 +67,7 @@ function update_mini_cart(t) {
           this.slug +
           '"><span class="cart-item-image"><img style="width: 42px;" src="' +
           site.base_url +
-          "assets/uploads/thumbs/" +
+          "assets/uploads/" +
           this.image +
           '" alt=""></span></a></td><td><a style="color: #000;font-size: 14px;" href="' +
           site.site_url +
@@ -152,7 +152,7 @@ function update_cart(t) {
           this.slug +
           '"><span class="cart-item-image pull-right"><img src="' +
           site.base_url +
-          "assets/uploads/thumbs/" +
+          "assets/uploads/" +
           this.image +
           '" alt=""></span></a>\n            </td>\n            <td><a href="' +
           site.site_url +
