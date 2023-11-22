@@ -1925,7 +1925,7 @@ class Sales extends MY_Controller
         $courier = $this->site->getCourierById($courier_id);
 
         // API endpoint URL
-        $url = $courier->url.'order/addOrder';
+        $url = $courier->url.'order/getOrders';
 
         $privateKey = $courier->auth_key;
         $customerCode= $courier->username;
