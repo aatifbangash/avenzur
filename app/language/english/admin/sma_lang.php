@@ -674,4 +674,5 @@ $lang['supplier_advance']           = 'Advance To Supplier';
 $lang['customer_payments']          = 'Customer Payments';
 $lang['credit_memo']                = 'Credit Memo';
 $lang['service_invoice']            = 'Service Invoice';
+$lang['courier_name']               = 'Courier Name';
 
