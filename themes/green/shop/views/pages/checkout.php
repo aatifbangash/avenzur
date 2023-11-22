@@ -11,10 +11,6 @@
         }
     }
 
-    if($not_express_items > 0){
-        echo 'Cart contains Amazon or Iherb items...';
-    }
-
 ?>
 
 <section class="page-contents">
