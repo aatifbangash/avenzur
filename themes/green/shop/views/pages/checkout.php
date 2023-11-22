@@ -5,7 +5,7 @@
     $cart_contents = $this->cart->contents();
     foreach($cart_contents as $cartItem){
         $cart_item_code = $cartItem->code;
-        echo 'Cart Item code: '.$cart_item_code;
+        print_r($cartItem);
     }
 
 ?>
