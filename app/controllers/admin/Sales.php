@@ -2016,7 +2016,16 @@ class Sales extends MY_Controller
                 }
             }else if($courier->name == 'J&T'){
                 $response = $this->assignJT($sale, $courier);
-                print_r($response);exit;
+                $order_resp = json_decode($response);
+
+                if((isset($order_resp->msg) && $order_resp->msg == 'success')){
+                    $this->sales_model->updateSaleWithCourier($sale_id, $courier->id);
+                    $this->session->set_flashdata('message', 'Courier Assigned Successfully');
+                    admin_redirect('sales/ecommerce');
+                }else{
+                    $this->session->set_flashdata('error', $order_resp->message);
+                    admin_redirect('sales/ecommerce');
+                }
             }
         }else{
             $this->session->set_flashdata('error', lang('Courier Already Assigned'));
@@ -2065,7 +2074,6 @@ class Sales extends MY_Controller
         
         $waybillinfo = $this->populateShipmentParams($sale, $courier);
         $resp = $this->create_order($customerCode, $pwd, $privateKey, $account, $waybillinfo, $url);
-        print_r($resp);exit;
         return $resp;
 
     }
@@ -2131,13 +2139,10 @@ class Sales extends MY_Controller
                 "prov":"'.$address->state.'"
             },
             "expressType":"EZKSA",
-            "length":0,
-            "weight":15,
-            "remark":"No comments",
+            "remark":"",
             "txlogisticId":"'.$sale->id.'",
             "goodsType":"ITN4",
             "priceCurrency":"SAR",
-            "totalQuantity":1,
             "sender":{
                 "address":"Business Gate, Riyadh KSA",
                 "city":"Riyadh",
@@ -2148,11 +2153,9 @@ class Sales extends MY_Controller
                 "prov":"Riyadh"
             },
             "itemsValue":'.$sale->paid.',
-            "offerFee":0,
             "items":['.$items_str.'],
             "operateType":1,
-            "payType":"PP_PM",
-            "isUnpackEnabled":0
+            "payType":"PP_PM"
         }';
 
         return $waybillinfo;
