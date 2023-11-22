@@ -539,7 +539,13 @@
                                             <td><?= lang('Delivery'); ?> *</td>
                                             <td class="text-right">
                                                 <span id="delivery-days">
-                                                Not Available
+                                                <?php 
+                                                    if($not_express_items > 0){
+                                                        echo '4 to 6 Days';
+                                                    }else{
+                                                        echo 'Not Available';
+                                                    }
+                                                ?> 
                                                 </span>
                                             </td>
                                         </tr>
