@@ -1329,7 +1329,71 @@ html[lang="ar"] .suprtwidget {
 html[lang="ar"] .myaccountForm.cartform {
   right: auto !important;
 }
+html[lang="ar"] input.Qnum {
+  text-align: center !important;
+}
+html[lang="ar"] .suprtwidget .card h3,
+html[lang="ar"] .suprtwidget .card .card-body h5,
+html[lang="ar"] .suprtwidget .card .card-body p {
+  text-align: center !important;
+}
 
+html[lang="ar"] .offcanvas.offcanvas-start {
+  transform: translateX(100%);
+  right: 0;
+}
+html[lang="ar"] .offcanvas.show:not(.hiding),
+html[lang="ar"] .offcanvas.showing {
+  transform: none;
+}
+
+html[lang="ar"] .product-cat-title {
+  text-align: right;
+}
+html[lang="ar"] .rating {
+  text-align: right;
+}
+html[lang="ar"] button.add-to-cart {
+  text-align: center !important;
+}
+html[lang="ar"] .products-card .card .card-body,
+html[lang="ar"] .specialOfferP .card-body {
+  direction: rtl !important;
+}
+html[lang="ar"] .products-card .card .card-body .discountPrice h4 {
+  text-align: left !important;
+}
+html[lang="ar"] section.join-container h2,
+html[lang="ar"] section.join-container p {
+  text-align: center !important;
+}
+html[lang="ar"] div#slider {
+  direction: ltr;
+}
+html[lang="ar"] .view_product_ar {
+  padding-right: 0 !important;
+}
+html[lang="ar"] .myaccountForm label.form-label {
+  display: block;
+}
+
+html[lang="ar"] .form-check {
+  text-align: right;
+  display: flex;
+}
+html[lang="ar"] label.form-check-label {
+  margin-right: 30px;
+}
+html[lang="ar"] .dropdown-menu.loggedin {
+  text-align: right;
+}
+html[lang="ar"] ul.nav.nav-tabs {
+  padding-right: 0 !important;
+}
+html[lang="ar"] ul.nav.nav-tabs li {
+  margin-right: 0 !important;
+  margin-left: 10px !important;
+}
 @media screen and (max-width: 500px) {
   .myaccountForm.cartform {
     left: -9px !important;

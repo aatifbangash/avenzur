@@ -16,7 +16,7 @@
         
         <div class="row">
         <!-- product image col and thumb slider -->
-            <div class="col-md-5 col-12 pe-md-5">
+            <div class="col-md-5 col-12 pe-md-5 view_product_ar">
                 <div id="slider" class="owl-carousel product-slider">
                     <?php
                         if(isset($product->image)){
