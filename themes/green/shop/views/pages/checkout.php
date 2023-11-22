@@ -639,6 +639,7 @@
 
             if(non_express_items > 0){
                 deliveryDays = '4 to 6 days';
+                $("#express-delivery-check").prop("disabled", true);
             }
 
             $('#delivery-days').text(deliveryDays);
