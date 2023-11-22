@@ -27,23 +27,22 @@
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0, paid = 0, balance = 0;
                 for (var i = 0; i < aaData.length; i++) {
-                    gtotal += parseFloat(aaData[aiDisplay[i]][7]);
-                    paid += parseFloat(aaData[aiDisplay[i]][8]);
-                    balance += parseFloat(formatDecimals(aaData[aiDisplay[i]][9]));
+                    gtotal += parseFloat(aaData[aiDisplay[i]][6]);
+                    paid += parseFloat(aaData[aiDisplay[i]][7]);
+                    balance += parseFloat(formatDecimals(aaData[aiDisplay[i]][8]));
                 }
                 var nCells = nRow.getElementsByTagName('th');
-                nCells[7].innerHTML = currencyFormat(parseFloat(gtotal));
-                nCells[8].innerHTML = currencyFormat(parseFloat(paid));
-                nCells[9].innerHTML = currencyFormat(parseFloat(balance));
+                nCells[6].innerHTML = currencyFormat(parseFloat(gtotal));
+                nCells[7].innerHTML = currencyFormat(parseFloat(paid));
+                nCells[8].innerHTML = currencyFormat(parseFloat(balance));
             }
         }).fnSetFilteringDelay().dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
             {column_number: 2, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
-            {column_number: 3, filter_default_label: "[<?=lang('courier_name');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('biller');?>]", filter_type: "text", data: []},
-            {column_number: 5, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
-            {column_number: 6, filter_default_label: "[<?=lang('sale_status');?>]", filter_type: "text", data: []},
-            {column_number: 10, filter_default_label: "[<?=lang('payment_status');?>]", filter_type: "text", data: []},
+            {column_number: 3, filter_default_label: "[<?=lang('biller');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('sale_status');?>]", filter_type: "text", data: []},
+            {column_number: 9, filter_default_label: "[<?=lang('payment_status');?>]", filter_type: "text", data: []},
         ], "footer");
 
         if (localStorage.getItem('remove_slls')) {
@@ -314,7 +313,6 @@
                             <th><?= lang('date'); ?></th>
                             <th><?= lang('reference_no'); ?></th>
                             <th>Code</th>
-                            <th><?= lang('courier_name'); ?></th>
                             <th><?= lang('biller'); ?></th>
                             <th><?= lang('customer'); ?></th>
                             <th><?= lang('sale_status'); ?></th>
