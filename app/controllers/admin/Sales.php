@@ -1962,7 +1962,7 @@ class Sales extends MY_Controller
     
         $result = file_get_contents($url, false, $context);
         
-        print_r($result);
+        echo $result;
     }
 
     private function getBearerToken($courier) {
