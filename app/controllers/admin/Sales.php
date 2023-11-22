@@ -2171,14 +2171,14 @@ class Sales extends MY_Controller
             "deliveryType": "03",
             "countryCode": "KSA",
             "receiver":{
-                "address":'.$address->line1.',
-                "city":'.$address->city.',
-                "mobile":'.$address->phone.',
-                "phone":'.$address->phone.',
-                "countryCode":'. $countryArr->iso3.',
-                "name":'.$customer->name.',
-                "postCode":'.$address->postal_code.',
-                "prov":'.$address->state.'
+                "address":"'.$address->line1.'",
+                "city":"'.$address->city.'",
+                "mobile":"'.$address->phone.'",
+                "phone":"'.$address->phone.'",
+                "countryCode":"'. $countryArr->iso3.'",
+                "name":"'.$customer->name.'",
+                "postCode":"'.$address->postal_code.'",
+                "prov":"'.$address->state.'"
             },
             "expressType":"EZKSA",
             "length":0,
@@ -2215,8 +2215,6 @@ class Sales extends MY_Controller
             "payType":"PP_PM",
             "isUnpackEnabled":0
         }';
-
-        echo $waybillinfo;exit;
 
         return $waybillinfo;
     }
