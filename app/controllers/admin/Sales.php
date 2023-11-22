@@ -2198,7 +2198,7 @@ class Sales extends MY_Controller
                 "name":"Avenzur.com",
                 "prov":"Riyadh"
             },
-            "itemsValue":'.$sale->paid.',
+            "itemsValue":"0",
             "items":['.$items_str.'],
             "operateType":1
         }';
