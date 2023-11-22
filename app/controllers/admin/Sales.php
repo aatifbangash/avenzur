@@ -1920,6 +1920,52 @@ class Sales extends MY_Controller
         // Process $orderResponse as needed
     }
 
+    public function getJTOrders(){
+        $courier_id = 2;
+        $courier = $this->site->getCourierById($courier_id);
+
+        // API endpoint URL
+        $url = $courier->url.'order/addOrder';
+
+        $privateKey = $courier->auth_key;
+        $customerCode= $courier->username;
+        $pwd  = $courier->password;
+        $account = $courier->api_account;
+
+        $bizContent = '{
+            "command": "1",
+            "serialNumber": ["33"],
+            "customerCode": "'.$customerCode.'",
+            "digest": "'.$body_digest.'"
+        }';
+
+        $post_data = $this->get_post_data($customerCode,$pwd,$privateKey,$bizContent);
+        $head_dagest = $this->get_header_digest($post_data,$privateKey);
+        $post_content = array(
+            'bizContent' => $post_data
+        );
+    
+        $postdata = http_build_query($post_content);
+    
+        $options = array(
+            'http' => array(
+                'method' => 'POST',
+                'header' =>
+                    array('Content-type: application/x-www-form-urlencoded',
+                        'apiAccount:' . $account,
+                        'digest:' . $head_dagest,
+                        'timestamp: 1638428570653'),
+                'content' => $postdata,
+                'timeout' => 15 * 60
+            )
+        );
+        $context = stream_context_create($options);
+    
+        $result = file_get_contents($url, false, $context);
+        
+        print_r($result);
+    }
+
     private function getBearerToken($courier) {
         $headers = array(
             'Accept: application/json',
@@ -2065,7 +2111,7 @@ class Sales extends MY_Controller
 
     public function assignJT($sale, $courier){
         // API endpoint URL
-        $url = 'https://demoopenapi.jtjms-sa.com/webopenplatformapi/api/order/addOrder';
+        $url = $courier->url.'order/addOrder';
 
         $privateKey = $courier->auth_key;
         $customerCode= $courier->username;
