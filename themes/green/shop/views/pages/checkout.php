@@ -1,15 +1,15 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
-<?php 
+<?php
 
-    $cart_contents = $this->cart->contents();
-    $not_express_items = 0;
-    foreach($cart_contents as $cartItem){
-        $cart_item_code = $cartItem['code'];
-        if (strpos($cart_item_code, 'AM-') !== false || strpos($cart_item_code, 'IH-') !== false) {
-            $not_express_items++;
-        }
+$cart_contents = $this->cart->contents();
+$not_express_items = 0;
+foreach ($cart_contents as $cartItem) {
+    $cart_item_code = $cartItem['code'];
+    if (strpos($cart_item_code, 'AM-') !== false || strpos($cart_item_code, 'IH-') !== false) {
+        $not_express_items++;
     }
+}
 
 ?>
 
@@ -177,7 +177,8 @@
                                             <?php
                                             if (!empty($addresses) && !$this->Staff) {
                                             ?>
-                                            <input type="hidden" name="express_delivery" id="express_delivery" value="Standard" />
+                                            <input type="hidden" name="express_delivery" id="express_delivery"
+                                                   value="Standard"/>
                                             <input type="hidden" id="shipping-input" name="shipping"
                                                    value="<?= $calculateShipping ?>"/>
                                             <?php
@@ -385,9 +386,10 @@
                                                     </div>
                                                 </div>
 
-                                                <input type="hidden" id="shipping_latitude" name="shipping_latitude" value="" />
-                                                <input type="hidden" id="shipping_longitude" name="shipping_longitude" value="" />
-
+                                                <input type="hidden" id="shipping_latitude" name="shipping_latitude"
+                                                       value=""/>
+                                                <input type="hidden" id="shipping_longitude" name="shipping_longitude"
+                                                       value=""/>
 
 
                                                 <div class="col-md-6">
@@ -449,8 +451,9 @@
                                                     } ?>
 
                                                     <label style="display: inline-block; width: auto;">
-                                                        <input type="hidden" name="payment_method" value="directpay" id="directpay" required="required">
-                                                        
+                                                        <input type="hidden" name="payment_method" value="directpay"
+                                                               id="directpay" required="required">
+
                                                         <!--<input type="radio" name="payment_method" value="directpay" id="directpay" required="required">-->
                                                         <!--<span>-->
                                                         <!--    <i class="fa fa-bank margin-right-md"></i> Direct Pay-->
@@ -475,7 +478,8 @@
                                                 </div>
 
                                             </div>
-                                            <input type="hidden" name="express_delivery" id="express_delivery" value="Standard" />
+                                            <input type="hidden" name="express_delivery" id="express_delivery"
+                                                   value="Standard"/>
                                             <input type="hidden" id="shipping-input" name="shipping"
                                                    value="<?= $calculateShipping ?>"/>
                                             <?= form_submit('guest_order', lang('Proceed to Payment'), 'class="btn btn-lg btn-primary payment-k" disabled'); ?>
@@ -499,12 +503,12 @@
                                     <?php
                                     $total = $this->sma->convertMoney($this->cart->total(), false, false);
 
-                                    if($not_express_items > 0){
+                                    if ($not_express_items > 0) {
                                         $shipping = $this->sma->convertMoney(32, false, false);
-                                    }else{
+                                    } else {
                                         $shipping = $this->sma->convertMoney($calculateShipping, false, false);
                                     }
-                                    
+
                                     $order_tax = $this->sma->convertMoney($this->cart->order_tax(), false, false);
                                     ?>
                                     <table class="table table-striped table-borderless cart-totals margin-bottom-no">
@@ -515,7 +519,8 @@
                                         <tr>
                                             <td><?= lang('product_tax'); ?></td>
                                             <td class="text-right"><?= $this->sma->convertMoney($this->cart->total_item_tax()); ?>
-                                                <input type="hidden" id="total-order-tax" value="<?php echo $this->cart->total_item_tax(); ?>"/>
+                                                <input type="hidden" id="total-order-tax"
+                                                       value="<?php echo $this->cart->total_item_tax(); ?>"/>
                                             </td>
                                         </tr>
                                         <tr>
@@ -525,7 +530,7 @@
                                                 <input type="hidden" id="total-price" value="<?= $total ?>"/>
                                             </td>
                                         </tr>
-                                        <?php 
+                                        <?php
                                         /*if ($Settings->tax2 !== false) {
                                             echo '<tr><td>' . lang('order_tax') . '</td>
                                                     <td class="text-right">' . $this->sma->formatMoney($order_tax, $selected_currency->symbol) . '
@@ -533,7 +538,7 @@
                                                     </td>
                                                     </tr>';
                                         } */
-                                        
+
                                         ?>
                                         <tr>
                                             <td><?= lang('shipping'); ?> *</td>
@@ -546,12 +551,12 @@
                                             <td><?= lang('Delivery'); ?> *</td>
                                             <td class="text-right">
                                                 <span id="delivery-days">
-                                                <?php 
-                                                    if($not_express_items > 0){
-                                                        echo '4 to 6 Days';
-                                                    }else{
-                                                        echo 'Not Available';
-                                                    }
+                                                <?php
+                                                if ($not_express_items > 0) {
+                                                    echo '4 to 6 Days';
+                                                } else {
+                                                    echo 'Not Available';
+                                                }
                                                 ?> 
                                                 </span>
                                             </td>
@@ -595,17 +600,27 @@
 
         var shipping = parseInt('<?= round($calculateShipping); ?>');
         var deliveryDays = "Not Available";
-        if(non_express_items > 0){
+        if (non_express_items > 0) {
             deliveryDays = '4 to 6 days';
         }
 
         if (city != '' || country != '') {
 
-            if (country.toLowerCase() === 'saudi arabia') {
+            if (country.toLowerCase() === 'saudi arabia' || [
+                'سعودی عرب',
+                'آلسعوديه',
+                'سعودی',
+                'السعودية',
+                'المملكة العربية السعودية'
+            ].includes(country)) {
                 $('.payment-k').prop('disabled', false)
                 shipping = 19
                 deliveryDays = "2 to 4 days"
-                if (city.toLowerCase() === 'riyadh') {
+
+                if (city.toLowerCase() === 'riyadh' || [
+                    'الرياض',
+                    'ریاض'
+                ].includes(city)) {
                     shipping = 16
                     deliveryDays = "1 to 2 days"
                     $("#express-delivery-check").prop("disabled", false);
@@ -616,7 +631,9 @@
                     }
                 }
 
-                if (city.toLowerCase() === 'jeddah') {
+                if (city.toLowerCase() === 'jeddah' || [
+                    'جده'
+                ].includes(city)) {
                     shipping = 16
                     deliveryDays = "1 to 2 days"
                 }
@@ -628,7 +645,16 @@
                 'qatar',
                 'united arab emirates',
                 'uae']
-                .includes(country.toLowerCase())) { //GCC
+                .includes(country.toLowerCase()) || [
+                'البحرين',
+                'دولة قطر',
+                'قطر',
+                'سلطنة عمان',
+                'عمان',
+                'الكويت',
+                'الإمارات العربية المتحدة',
+                'الإمارات'
+            ].includes(country)) { //GCC
                 $('.payment-k').prop('disabled', false)
                 {
                     shipping = 32
@@ -640,7 +666,7 @@
             var totalOrderTax = parseFloat($('#total-order-tax').val());
             var grandTotalPrice = totalPrice + totalOrderTax + shipping;
 
-            if(non_express_items > 0){
+            if (non_express_items > 0) {
                 deliveryDays = '4 to 6 days';
                 shipping = 32;
                 $("#express-delivery-check").prop("disabled", true);
@@ -685,9 +711,9 @@
                 var country = $('#shipping_country').val();
             }
 
-            if($(this).prop('checked') == true){
+            if ($(this).prop('checked') == true) {
                 document.getElementById('express_delivery').value = 'Express';
-            }else{
+            } else {
                 document.getElementById('express_delivery').value = 'Standard';
             }
 
@@ -770,7 +796,6 @@
 
                 // Loop through address components to find city and country
                 placeShipping.address_components.forEach(function (component) {
-
                     component.types.forEach(function (type) {
                         if (type === 'locality') {
                             cityShipping = component.long_name;
