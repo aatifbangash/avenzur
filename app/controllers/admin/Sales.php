@@ -2110,7 +2110,7 @@ class Sales extends MY_Controller
 
     public function assignJT($sale, $courier){
         // API endpoint URL
-        $url = $courier->url.'order/addOrder?uuid=3c201038f68747128c8a49c793747a02';
+        $url = $courier->url.'order/addOrder';
 
         $privateKey = $courier->auth_key;
         $customerCode= $courier->username;
