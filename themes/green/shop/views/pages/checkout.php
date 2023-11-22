@@ -609,7 +609,9 @@ foreach ($cart_contents as $cartItem) {
             if (country.toLowerCase() === 'saudi arabia' || [
                 'سعودی عرب',
                 'آلسعوديه',
-                'سعودی'
+                'سعودی',
+                'السعودية',
+                'المملكة العربية السعودية'
             ].includes(country)) {
                 $('.payment-k').prop('disabled', false)
                 shipping = 19
