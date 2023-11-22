@@ -25,7 +25,7 @@
                                                class="table table-condensed table-striped table-cart margin-bottom-no">
                                             <thead>
                                             <tr>
-                                                <th><i class="text-grey fa fa-trash-o"></i></th>
+                                                <!--<th><i class="text-grey fa fa-trash-o"></i></th>-->
                                                 <th>#</th>
                                                 <th class="col-xs-4" colspan="2"><?= lang('product'); ?></th>
                                                 <th class="col-xs-3"><?= lang('option'); ?></th>
