@@ -2204,8 +2204,6 @@ class Sales extends MY_Controller
             "payType":"PP_PM"
         }';
 
-        echo $waybillinfo;exit;
-
         return $waybillinfo;
     }
 
