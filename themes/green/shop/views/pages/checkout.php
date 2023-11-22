@@ -635,9 +635,6 @@
             var totalOrderTax = parseFloat($('#total-order-tax').val());
             var grandTotalPrice = totalPrice + totalOrderTax + shipping;
 
-            console.log(totalPrice);
-            console.log(totalOrderTax);
-            console.log(shipping);
 
             $('#shipping-price').text(parseFloat(shipping).toFixed(2))
             $('#grand-total-price').text(parseFloat(grandTotalPrice).toFixed(2))
@@ -645,6 +642,7 @@
 
             if(non_express_items > 0){
                 deliveryDays = '4 to 6 days';
+                shipping = 32;
                 $("#express-delivery-check").prop("disabled", true);
             }
 
