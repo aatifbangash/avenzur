@@ -1944,7 +1944,7 @@ class Sales extends MY_Controller
             'bizContent' => $post_data
         );
 
-        print_r($post_content);exxit;
+        print_r($post_content);exit;
     
         $postdata = http_build_query($post_content);
     
