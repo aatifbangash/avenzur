@@ -314,6 +314,7 @@
                             <th><?= lang('reference_no'); ?></th>
                             <th>Code</th>
                             <th><?= lang('biller'); ?></th>
+                            <th><?= lang('courier_name'); ?></th>
                             <th><?= lang('customer'); ?></th>
                             <th><?= lang('sale_status'); ?></th>
                             <th><?= lang('grand_total'); ?></th>
