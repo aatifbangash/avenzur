@@ -2175,7 +2175,7 @@ class Sales extends MY_Controller
             "deliveryType": "03",
             "countryCode": "KSA",
             "receiver":{
-                "address":"'.$address->line1.'",
+                "address":"'.$address->line1.' '.$address->line2.'",
                 "city":"'.$address->city.'",
                 "mobile":"'.$address->phone.'",
                 "phone":"'.$address->phone.'",
