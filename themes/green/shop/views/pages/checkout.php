@@ -3,9 +3,10 @@
 <?php 
 
     $cart_contents = $this->cart->contents();
-    echo '<pre>';
-    print_r($cart_contents);
-    exit;
+    foreach($cart_contents as $cartItem){
+        $cart_item_code = $cartItem->code;
+        echo 'Cart Item code: '.$cart_item_code;
+    }
 
 ?>
 
