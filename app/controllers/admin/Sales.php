@@ -2119,6 +2119,8 @@ class Sales extends MY_Controller
         
         $waybillinfo = $this->populateShipmentParams($sale, $courier);
         $resp = $this->create_order($customerCode, $pwd, $privateKey, $account, $waybillinfo, $url);
+
+        echo $resp;exit;
         
         return $resp;
 
