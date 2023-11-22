@@ -616,9 +616,10 @@ foreach ($cart_contents as $cartItem) {
                 $('.payment-k').prop('disabled', false)
                 shipping = 19
                 deliveryDays = "2 to 4 days"
+
                 if (city.toLowerCase() === 'riyadh' || [
                     'الرياض',
-                    'رياض'
+                    'ریاض'
                 ].includes(city)) {
                     shipping = 16
                     deliveryDays = "1 to 2 days"
