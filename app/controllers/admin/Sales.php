@@ -1916,7 +1916,7 @@ class Sales extends MY_Controller
         $token = $this->getBearerToken($courier);
         // Step 2: Make API request with Bearer token
         $orderResponse = $this->makeOrderRequest($courier->url, $token);
-        print_r($orderResponse);
+        echo $orderResponse;
         // Process $orderResponse as needed
     }
 
