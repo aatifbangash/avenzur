@@ -2105,7 +2105,7 @@ class Sales extends MY_Controller
                 "itemValue":"'.$sale_item->subtotal.'",
                 "itemUrl":"https:\/\/www.avenzur.com/product/'.$product->slug.'",
                 "desc":"'.$sale_item->product_name.'"
-            },';
+            }';
         }
 
         $waybillinfo = '{
