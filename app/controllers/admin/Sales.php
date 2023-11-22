@@ -2172,7 +2172,7 @@ class Sales extends MY_Controller
         $waybillinfo = '{
             "serviceType": "02",
             "orderType": "1",
-            "deliveryType": "03",
+            "deliveryType": "04",
             "countryCode": "KSA",
             "receiver":{
                 "address":"'.$address->line1.' '.$address->line2.'",
@@ -2200,8 +2200,7 @@ class Sales extends MY_Controller
             },
             "itemsValue":'.$sale->paid.',
             "items":['.$items_str.'],
-            "operateType":1,
-            "payType":"PP_PM"
+            "operateType":1
         }';
 
         return $waybillinfo;
