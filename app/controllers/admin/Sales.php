@@ -2148,6 +2148,8 @@ class Sales extends MY_Controller
             "isUnpackEnabled":0
         }';
 
+        echo $waybillinfo;exit;
+
         return $waybillinfo;
     }
 
