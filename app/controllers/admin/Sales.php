@@ -1935,10 +1935,9 @@ class Sales extends MY_Controller
         $bizContent = '{
             "command": "1",
             "serialNumber": ["33"],
-            "customerCode": "'.$customerCode.'",
             "digest": "'.$body_digest.'"
         }';
-
+        echo 'Customer Code: '.$customerCode;exit;
         $post_data = $this->get_post_data($customerCode,$pwd,$privateKey,$bizContent);
         $head_dagest = $this->get_header_digest($post_data,$privateKey);
         $post_content = array(
