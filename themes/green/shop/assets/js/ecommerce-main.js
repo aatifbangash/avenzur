@@ -569,6 +569,12 @@ $(document).ready(function () {
       );
   });
 
+  $(document).on("click", ".remove-item", function(t) {
+      t.preventDefault();
+      var e = {};
+      e.rowid = $(this).attr("data-rowid"),
+      saa_alert(site.site_url + "cart/remove", !1, "post", e)
+  }),
   $("#empty-cart").click(function (t) {
     t.preventDefault(), saa_alert($(this).attr("href"));
   });
