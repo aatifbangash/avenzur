@@ -2090,12 +2090,17 @@ class Sales extends MY_Controller
 
         $items_data = array();
         $items_str = '';
+        $count = 0;
         foreach ($sale_items as $sale_item){
 
             $product = $this->site->getProductByID($sale_item->product_id);
             $strippedDescription = str_replace('<p><strong>Product Description:</strong></p>', '', $product->product_details);
             $strippedDescription = strip_tags($strippedDescription, '<ul><li><strong>');
             // Remove additional line
+
+            if($count > 0){
+                $items_str .= ',';
+            }
 
             $items_str .= '{
                 "number":"'.$sale_item->product_id.'",
@@ -2106,6 +2111,8 @@ class Sales extends MY_Controller
                 "itemUrl":"https:\/\/www.avenzur.com/product/'.$product->slug.'",
                 "desc":"'.$sale_item->product_name.'"
             }';
+
+            $count++;
         }
 
         $waybillinfo = '{
