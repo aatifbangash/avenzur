@@ -3,9 +3,12 @@
 <?php 
 
     $cart_contents = $this->cart->contents();
+    $not_express_items = 0;
     foreach($cart_contents as $cartItem){
-        $cart_item_code = $cartItem->code;
-        print_r($cartItem);
+        $cart_item_code = $cartItem['code'];
+        if($cart_item_code){
+
+        }
     }
 
 ?>
