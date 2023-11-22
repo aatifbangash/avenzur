@@ -181,7 +181,7 @@ function update_cart(t) {
         (a +=
           '</td>\n            <td><input type="text" name="' +
           e +
-          '[qty]" class="form-control text-center input-qty cart-item-qty" value="' +
+          '[qty]" class="form-control text-center input-qty cart-item-qty" readonly value="' +
           this.qty +
           '"></td>\n            <td class="text-right">' +
           this.price +
