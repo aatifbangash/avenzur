@@ -1921,7 +1921,7 @@ class Sales extends MY_Controller
     }
 
     public function getJTOrders(){
-        $courier_id = 2;
+        $courier_id = 3;
         $courier = $this->site->getCourierById($courier_id);
 
         // API endpoint URL
@@ -1937,7 +1937,7 @@ class Sales extends MY_Controller
             "serialNumber": ["33"],
             "digest": "'.$body_digest.'"
         }';
-        echo 'Customer Code: '.$customerCode;exit;
+        
         $post_data = $this->get_post_data($customerCode,$pwd,$privateKey,$bizContent);
         $head_dagest = $this->get_header_digest($post_data,$privateKey);
         $post_content = array(
