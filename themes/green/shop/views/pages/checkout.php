@@ -499,7 +499,12 @@
                                     <?php
                                     $total = $this->sma->convertMoney($this->cart->total(), false, false);
 
-                                    $shipping = $this->sma->convertMoney($calculateShipping, false, false);
+                                    if($not_express_items > 0){
+                                        $shipping = $this->sma->convertMoney(32, false, false);
+                                    }else{
+                                        $shipping = $this->sma->convertMoney($calculateShipping, false, false);
+                                    }
+                                    
                                     $order_tax = $this->sma->convertMoney($this->cart->order_tax(), false, false);
                                     ?>
                                     <table class="table table-striped table-borderless cart-totals margin-bottom-no">
@@ -635,17 +640,15 @@
             var totalOrderTax = parseFloat($('#total-order-tax').val());
             var grandTotalPrice = totalPrice + totalOrderTax + shipping;
 
-
-            $('#shipping-price').text(parseFloat(shipping).toFixed(2))
-            $('#grand-total-price').text(parseFloat(grandTotalPrice).toFixed(2))
-            $('#shipping-input').val(parseFloat(shipping).toFixed(2));
-
             if(non_express_items > 0){
                 deliveryDays = '4 to 6 days';
                 shipping = 32;
                 $("#express-delivery-check").prop("disabled", true);
             }
 
+            $('#shipping-price').text(parseFloat(shipping).toFixed(2))
+            $('#grand-total-price').text(parseFloat(grandTotalPrice).toFixed(2))
+            $('#shipping-input').val(parseFloat(shipping).toFixed(2));
             $('#delivery-days').text(deliveryDays);
         }
     }
