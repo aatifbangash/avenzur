@@ -27,14 +27,14 @@
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0, paid = 0, balance = 0;
                 for (var i = 0; i < aaData.length; i++) {
-                    gtotal += parseFloat(aaData[aiDisplay[i]][6]);
-                    paid += parseFloat(aaData[aiDisplay[i]][7]);
-                    balance += parseFloat(formatDecimals(aaData[aiDisplay[i]][8]));
+                    gtotal += parseFloat(aaData[aiDisplay[i]][7]);
+                    paid += parseFloat(aaData[aiDisplay[i]][8]);
+                    balance += parseFloat(formatDecimals(aaData[aiDisplay[i]][9]));
                 }
                 var nCells = nRow.getElementsByTagName('th');
-                nCells[6].innerHTML = currencyFormat(parseFloat(gtotal));
-                nCells[7].innerHTML = currencyFormat(parseFloat(paid));
-                nCells[8].innerHTML = currencyFormat(parseFloat(balance));
+                nCells[7].innerHTML = currencyFormat(parseFloat(gtotal));
+                nCells[8].innerHTML = currencyFormat(parseFloat(paid));
+                nCells[9].innerHTML = currencyFormat(parseFloat(balance));
             }
         }).fnSetFilteringDelay().dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
