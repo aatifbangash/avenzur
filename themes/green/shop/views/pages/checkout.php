@@ -6,9 +6,13 @@
     $not_express_items = 0;
     foreach($cart_contents as $cartItem){
         $cart_item_code = $cartItem['code'];
-        if($cart_item_code){
-
+        if (strpos($cart_item_code, 'AM-') !== false || strpos($cart_item_code, 'IH-') !== false) {
+            $not_express_items++;
         }
+    }
+
+    if($not_express_items > 0){
+        echo 'Cart contains Amazon or Iherb items...';
     }
 
 ?>
