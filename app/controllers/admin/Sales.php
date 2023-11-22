@@ -1934,7 +1934,7 @@ class Sales extends MY_Controller
 
         $bizContent = '{
             "command": "1",
-            "serialNumber": ["33"],
+            "serialNumber": ["33", "30", "28"],
             "digest": "'.$body_digest.'"
         }';
         
