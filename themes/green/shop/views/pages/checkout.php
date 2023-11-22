@@ -1,5 +1,14 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
+<?php 
+
+    $cart_contents = $this->cart->contents();
+    echo '<pre>';
+    print_r($cart_contents);
+    exit;
+
+?>
+
 <section class="page-contents">
 
     <div class="container container-max-width">
@@ -685,13 +694,11 @@
                 document.getElementById('billing_state').value = "";
 
                 var place = autocomplete.getPlace();
-                console.log(place);
                 // Define variables to store city and country names
                 var city, country, street, postalCode, stateName;
 
                 // Loop through address components to find city and country
                 place.address_components.forEach(function (component) {
-                    console.log(component);
                     component.types.forEach(function (type) {
                         if (type === 'locality') {
                             city = component.long_name;
