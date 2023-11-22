@@ -322,6 +322,7 @@
                             <th><?= lang('payment_status'); ?></th>
                             <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i></th>
                             <th></th>
+                            <th><?= lang('courier_name'); ?></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
                         </thead>
