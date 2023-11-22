@@ -576,6 +576,7 @@
 <script>
     // Vanilla Javascript
     var input = document.querySelector("#phone");
+    var non_express_items = '<?php echo $not_express_items; ?>';
     window.intlTelInput(input, ({
         // options here
     }));
@@ -587,6 +588,10 @@
 
         var shipping = parseInt('<?= round($calculateShipping); ?>');
         var deliveryDays = "Not Available";
+        if(non_express_items > 0){
+            deliveryDays = '4 to 6 days';
+        }
+
         if (city != '' || country != '') {
 
             if (country.toLowerCase() === 'saudi arabia') {
@@ -631,6 +636,10 @@
             $('#shipping-price').text(parseFloat(shipping).toFixed(2))
             $('#grand-total-price').text(parseFloat(grandTotalPrice).toFixed(2))
             $('#shipping-input').val(parseFloat(shipping).toFixed(2));
+
+            if(non_express_items > 0){
+                deliveryDays = '4 to 6 days';
+            }
 
             $('#delivery-days').text(deliveryDays);
         }
