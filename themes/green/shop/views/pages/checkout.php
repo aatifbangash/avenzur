@@ -510,7 +510,7 @@
                                         <tr>
                                             <td><?= lang('product_tax'); ?></td>
                                             <td class="text-right"><?= $this->sma->convertMoney($this->cart->total_item_tax()); ?>
-                                                <input type="hidden" id="total-order-tax" value="' . $this->cart->total_item_tax() . '"/>
+                                                <input type="hidden" id="total-order-tax" value="<?php echo $this->cart->total_item_tax(); ?>"/>
                                             </td>
                                         </tr>
                                         <tr>
