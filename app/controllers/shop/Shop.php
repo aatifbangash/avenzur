@@ -368,7 +368,7 @@ class Shop extends MY_Shop_Controller
                     }
                     // $this->load->library('sms');
                     // $this->sms->newSale($sale_id);
-                    $this->cart->destroy();
+                    // $this->cart->destroy();
                     $this->session->set_flashdata('info', lang('order_added_make_payment'));
                     if ($this->input->post('payment_method') == 'paypal') {
                         redirect('pay/paypal/' . $sale_id);
