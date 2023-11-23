@@ -606,10 +606,11 @@ foreach ($cart_contents as $cartItem) {
 
         if (city != '' || country != '') {
 
-            if (country.toLowerCase() === 'saudi arabia' || [
+            if (country.toLowerCase() === 'saudi arabia' || country.toLowerCase() === 'saudi' || country.toLowerCase() === 'saudia' || country.toLowerCase() === 'al saudi arabia' || country.toLowerCase() === 'al-saudi arabia' || country.toLowerCase() === 'al-saudi' || country.toLowerCase() === 'ksa' || country.toLowerCase() === 'kingdom of saudi arabia' || [
                 'سعودی عرب',
                 'آلسعوديه',
                 'سعودی',
+                'سعودية',
                 'السعودية',
                 'المملكة العربية السعودية'
             ].includes(country)) {
@@ -617,7 +618,7 @@ foreach ($cart_contents as $cartItem) {
                 shipping = 19
                 deliveryDays = "2 to 4 days"
 
-                if (city.toLowerCase() === 'riyadh' || [
+                if (city.toLowerCase() === 'riyadh' || city.toLowerCase() === 'al riyadh' || city.toLowerCase() === 'al-riyadh' || [
                     'الرياض',
                     'ریاض'
                 ].includes(city)) {
@@ -631,7 +632,7 @@ foreach ($cart_contents as $cartItem) {
                     }
                 }
 
-                if (city.toLowerCase() === 'jeddah' || [
+                if (city.toLowerCase() === 'jeddah' || city.toLowerCase() === 'al jeddah' || city.toLowerCase() === 'al-jeddah' || [
                     'جده'
                 ].includes(city)) {
                     shipping = 16
