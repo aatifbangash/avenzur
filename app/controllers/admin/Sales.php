@@ -2215,8 +2215,6 @@ class Sales extends MY_Controller
             "operateType":1
         }';
 
-        echo $waybillinfo;exit;
-
         return $waybillinfo;
     }
 
