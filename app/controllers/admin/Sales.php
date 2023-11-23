@@ -2133,12 +2133,24 @@ class Sales extends MY_Controller
         return json_encode($postdate);
     }
 
+    public function arabicToEnglishNumber($arabicNumber)
+    {
+        $arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+        $englishNumerals = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+        $englishNumber = str_replace($arabicNumerals, $englishNumerals, $arabicNumber);
+
+        return $englishNumber;
+    }
+
     public function populateShipmentParams($sale, $courier)
     {
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
         $address = $this->site->getAddressByID($address_id);
         $sale_items = $this->site->getAllSaleItems($sale->id);
+
+        $address->phone = $this->arabicToEnglishNumber($address->phone);
 
         $countryArr = $this->site->getCountryByName($address->country);
 
@@ -2202,6 +2214,8 @@ class Sales extends MY_Controller
             "items":['.$items_str.'],
             "operateType":1
         }';
+
+        echo $waybillinfo;exit;
 
         return $waybillinfo;
     }
