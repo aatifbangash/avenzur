@@ -109,6 +109,15 @@
                     echo '</p>';
                     echo lang('tel') . ': ' . $customer->phone . '<br>' . lang('email') . ': ' . $customer->email;
                     ?>
+                    <h5><strong>Shipping to:</strong></h5>
+                    <?php //echo $customer->company ? '' : $customer->name ?>
+                    <p>
+                        <?= $address->line1; ?><br>
+                        <?= $address->line2; ?><br>
+                        <?= $address->city; ?> <?= $address->state; ?><br>
+                        <?= $address->postal_code; ?> <?= $address->country; ?><br>
+                        <?= lang('phone') . ': ' . $address->phone; ?>
+                    </p>
                 </div>
 
                 <div class="col-xs-6">
