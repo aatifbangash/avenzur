@@ -291,9 +291,9 @@
                             <tr>
                                 <td style="text-align:center; width:40px; vertical-align:middle;"><?= $r; ?></td>
                                 <td style="vertical-align:middle;">
-                                    <?= $row->product_code . ' - ' . $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
-                                    <?= $row->second_name ? '<br>' . $row->second_name : ''; ?>
-                                    <?= $row->details ? '<br>' . $row->details : ''; ?>
+                                    <?= $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
+                                    <?php // $row->second_name ? '<br>' . $row->second_name : ''; ?>
+                                    <?php // $row->details ? '<br>' . $row->details : ''; ?>
                                 </td>
                                 <?php if ($Settings->indian_gst) {
                                     ?>
@@ -333,9 +333,9 @@
                                 <tr class="warning">
                                     <td style="text-align:center; width:40px; vertical-align:middle;"><?= $r; ?></td>
                                     <td style="vertical-align:middle;">
-                                        <?= $row->product_code . ' - ' . $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
-                                        <?= $row->second_name ? '<br>' . $row->second_name : ''; ?>
-                                        <?= $row->details ? '<br>' . $row->details : ''; ?>
+                                        <?= $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
+                                        <?php // $row->second_name ? '<br>' . $row->second_name : ''; ?>
+                                        <?php // $row->details ? '<br>' . $row->details : ''; ?>
                                     </td>
                                     <?php if ($Settings->indian_gst) {
                                         ?>
