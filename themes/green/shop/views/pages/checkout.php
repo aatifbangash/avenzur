@@ -606,7 +606,7 @@ foreach ($cart_contents as $cartItem) {
 
         if (city != '' || country != '') {
 
-            if (country.toLowerCase() === 'saudi arabia' || country.toLowerCase() === 'saudi' || country.toLowerCase() === 'saudia' || country.toLowerCase() === 'al saudi arabia' || country.toLowerCase() === 'al-saudi arabia' || country.toLowerCase() === 'al-saudi' || country.toLowerCase() === 'ksa' || country.toLowerCase() === 'kingdom of saudi arabia' || [
+            if (country.toLowerCase() === 'saudi arabia' || country.toLowerCase() === 'saudi' || country.toLowerCase() === 'saudia' || country.toLowerCase() === 'al saudi arabia' || country.toLowerCase() === 'al-saudi arabia' || country.toLowerCase() === 'al-saudi' || country.toLowerCase() === 'ksa' || country.toLowerCase() === 'kingdom of saudi arabia' || country.toLowerCase() === 'al saudi' || country.toLowerCase() === 'al saudia' || country.toLowerCase() === 'al-saudia' || [
                 'سعودی عرب',
                 'آلسعوديه',
                 'سعودی',
