@@ -2170,7 +2170,7 @@ class Sales extends MY_Controller
         }
 
         $waybillinfo = '{
-            "serviceType": "02",
+            "serviceType": "01",
             "orderType": "1",
             "deliveryType": "04",
             "countryCode": "KSA",
