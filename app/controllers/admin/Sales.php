@@ -2179,7 +2179,7 @@ class Sales extends MY_Controller
                 "city":"'.$address->city.'",
                 "mobile":"'.$address->phone.'",
                 "phone":"'.$address->phone.'",
-                "countryCode":"'. $countryArr->iso3.'",
+                "countryCode":"KSA",
                 "name":"'.$customer->name.'",
                 "postCode":"'.$address->postal_code.'",
                 "prov":"'.$address->state.'"
@@ -2202,9 +2202,6 @@ class Sales extends MY_Controller
             "items":['.$items_str.'],
             "operateType":1
         }';
-
-        echo $waybillinfo;
-        exit;
 
         return $waybillinfo;
     }
