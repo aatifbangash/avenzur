@@ -234,10 +234,10 @@ table.table {
                     $qty = 0;
                     foreach ($rows as $row) { ?>
 						  <tr>
-							<td> <?= $row->product_code . ' - ' . $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
-                                    <?= $row->second_name ? '<br>' . $row->second_name : ''; ?>
-                                    <?= $row->details ? '<br>' . $row->details : ''; ?>
-                                    <?= $row->serial_no ? '<br>' . $row->serial_no : ''; ?>
+							<td> <?= $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
+                                    <?php // $row->second_name ? '<br>' . $row->second_name : ''; ?>
+                                    <?php // $row->details ? '<br>' . $row->details : ''; ?>
+                                    <?php // $row->serial_no ? '<br>' . $row->serial_no : ''; ?>
 							<span class="dis">Discount</span>
 						
 						
