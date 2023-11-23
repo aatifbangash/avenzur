@@ -109,7 +109,7 @@
                     echo '</p>';
                     echo lang('tel') . ': ' . $customer->phone . '<br>' . lang('email') . ': ' . $customer->email;
                     ?>
-                    <h5><strong>Shipping to:</strong></h5>
+                    <h2 style="margin-top:10px;">Shipping to:</h2>
                     <?php //echo $customer->company ? '' : $customer->name ?>
                     <p>
                         <?= $address->line1; ?><br>
