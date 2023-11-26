@@ -114,7 +114,7 @@
 <!-- products end -->
 
 
-<!--<section class="page-contents">
+<section class="page-contents">
     <div class="container">
         <div class="row">
             <div class="col-xs-12">
@@ -125,10 +125,10 @@
                         <h4>Categories</h4>
                         <ul style="list-style-type: none;padding: 0px;">
                         <?php
-                        /*foreach($categories as $cat)
+                        foreach($categories as $cat)
                         {
                                 echo '<li class="category-side"><a href="' . site_url('category/' . $cat->slug) . '">' . ucfirst(strtolower($cat->name)) . '</a></li>';
-                        }*/
+                        }
                             
                         ?>
                         </ul>
@@ -159,4 +159,4 @@
             </div>
         </div>
     </div>
-</section>-->
+</section>
