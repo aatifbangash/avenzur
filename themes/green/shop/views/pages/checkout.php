@@ -347,13 +347,13 @@ foreach ($cart_contents as $cartItem) {
                                                     </div>
                                                     <div class="form-group">
                                                         <?= lang('line1', 'shipping_line1'); ?> *
-                                                        <?= form_input('shipping_line1', set_value('shipping_line1'), 'class="form-control" id="shipping_line1" required="required"'); ?>
+                                                        <?= form_input('shipping_line1', set_value('shipping_line1'), 'class="form-control" id="shipping_line1" required="required"  disabled'); ?>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-12">
                                                     <div class="form-group">
                                                         <?= lang('line2', 'shipping_line2'); ?>
-                                                        <?= form_input('shipping_line2', set_value('shipping_line2'), 'class="form-control" id="shipping_line2"'); ?>
+                                                        <?= form_input('shipping_line2', set_value('shipping_line2'), 'class="form-control" id="shipping_line2"  disabled'); ?>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-12">
@@ -361,7 +361,7 @@ foreach ($cart_contents as $cartItem) {
                                                         <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <?= lang('city', 'shipping_city'); ?> *
-                                                                <?= form_input('shipping_city', set_value('shipping_city'), 'class="form-control" id="shipping_city" required="required"'); ?>
+                                                                <?= form_input('shipping_city', set_value('shipping_city'), 'class="form-control" id="shipping_city" required="required"  disabled'); ?>
                                                             </div>
                                                         </div>
                                                         <div class="col-md-6">
@@ -378,7 +378,7 @@ foreach ($cart_contents as $cartItem) {
                                                         <?php
                                                         if ($Settings->indian_gst) {
                                                             $states = $this->gst->getIndianStates();
-                                                            echo form_dropdown('shipping_state', $states, '', 'class="form-control selectpicker mobile-device" id="shipping_state" title="Select" required="required"');
+                                                            echo form_dropdown('shipping_state', $states, '', 'class="form-control selectpicker mobile-device" id="shipping_state" title="Select" required="required"  disabled');
                                                         } else {
                                                             echo form_input('shipping_state', '', 'class="form-control" id="shipping_state"');
                                                         }
@@ -396,7 +396,7 @@ foreach ($cart_contents as $cartItem) {
 
                                                     <div class="form-group">
                                                         <?= lang('country', 'shipping_country'); ?> *
-                                                        <?= form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required"'); ?>
+                                                        <?= form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required"  disabled'); ?>
                                                         <!--<select name="shipping_country" id="shipping_country" class="form-control"  required="required">-->
                                                         <!--  <option value="SA">Saudi Arabia</option>-->
                                                         <!--  <option value="AE">UAE</option>-->
