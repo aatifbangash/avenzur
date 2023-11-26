@@ -408,7 +408,7 @@ foreach ($cart_contents as $cartItem) {
                                                 <div class="col-md-12">
                                                     <div class="form-group">
                                                         <?= lang('phone', 'shipping_phone'); ?> *
-                                                        <?= form_input('shipping_phone', set_value('shipping_phone'), 'class="form-control" id="shipping_phone" required="required"'); ?>
+                                                        <?= form_input('shipping_phone', set_value('shipping_phone'), 'class="form-control" id="shipping_phone" type="tel" required="required"'); ?>
                                                     </div>
                                                 </div>
 
