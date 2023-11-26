@@ -1146,7 +1146,7 @@ function add_address(t) {
       window.intlTelInput(input_address_phone, ({
           initialCountry: "SA"
       }));
-      input_address_phone.val("+966");
+      $("#address-phone").val("+966");
       initialize();
     },
   })
