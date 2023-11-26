@@ -675,4 +675,5 @@ $lang['customer_payments']          = 'Customer Payments';
 $lang['credit_memo']                = 'Credit Memo';
 $lang['service_invoice']            = 'Service Invoice';
 $lang['courier_name']               = 'Courier Name';
+$lang['express']                    = 'Express';
 
