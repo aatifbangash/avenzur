@@ -700,6 +700,7 @@ foreach ($cart_contents as $cartItem) {
             var parentOfParent = $(this).closest('.iti--allow-dropdown');
             var telInput = parentOfParent.find('input[type="tel"]');
             telInput.val("");
+            console.log(countryCode);
             telInput.val("+" + countryCode + " " + telInput.val());
         });
 
