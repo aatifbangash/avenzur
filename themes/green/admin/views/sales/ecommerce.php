@@ -327,8 +327,8 @@
                             <th></th>
                             <th><?= lang('courier_name'); ?></th>
                             <th><?= lang('city'); ?></th>
-                            <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                             <th><?= lang('express'); ?></th>
+                            <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
                         </thead>
                         <tbody>
