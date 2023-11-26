@@ -599,6 +599,9 @@ foreach ($cart_contents as $cartItem) {
         initialCountry: "SA"
     }));
 
+    $('#phone').val("+966");
+    $('#shipping_phone').val("+966");
+
     function calCulateShipping(city, country, isExpressDelivery = false) {
 
         $("#express-delivery-check").prop("disabled", true);
