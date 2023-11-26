@@ -243,7 +243,7 @@ foreach ($cart_contents as $cartItem) {
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <div class="form-group">
+                                                    <div class="form-group" id="account-phone">
                                                         <?= lang('phone', 'phone'); ?> * <br>
                                                         <input type="tel" id="phone" name="phone" class="form-control"
                                                                required="required"/>
@@ -406,7 +406,7 @@ foreach ($cart_contents as $cartItem) {
                                                     </div>
                                                 </div>
                                                 <div class="col-md-12">
-                                                    <div class="form-group">
+                                                    <div class="form-group" id="shipping-phone">
                                                         <?= lang('phone', 'shipping_phone'); ?> *
                                                         <input type="tel" name="shipping_phone" value="" class="form-control" id="shipping_phone" required="required" />
                                                         <?php // form_input('shipping_phone', set_value('shipping_phone'), 'class="form-control" id="shipping_phone" required="required"'); ?>
@@ -692,16 +692,18 @@ foreach ($cart_contents as $cartItem) {
     }
 
     $(document).ready(function () {
-        $('.iti__flag-container').click(function () {
-            var countryCode = $('.iti__selected-flag').attr('title');
+        $('#shipping-phone.iti__flag-container').click(function () {
+            var countryCode = $('#shipping-phone.iti__selected-flag').attr('title');
             var countryCode = countryCode.replace(/[^0-9]/g, '')
-            //$('#phone').val("");
-            //$('#phone').val("+" + countryCode + " " + $('#phone').val());
-            var parentOfParent = $(this).closest('.iti--allow-dropdown');
-            var telInput = parentOfParent.find('input[type="tel"]');
-            telInput.val("");
-            console.log(countryCode);
-            telInput.val("+" + countryCode + " " + telInput.val());
+            $('#shipping_phone').val("");
+            $('#shipping_phone').val("+" + countryCode + " " + $('#shipping_phone').val());
+        });
+
+        $('#account-phone.iti__flag-container').click(function () {
+            var countryCode = $('#account-phone.iti__selected-flag').attr('title');
+            var countryCode = countryCode.replace(/[^0-9]/g, '')
+            $('#phone').val("");
+            $('#phone').val("+" + countryCode + " " + $('#phone').val());
         });
 
         $('#shipping_country').blur(function () {
