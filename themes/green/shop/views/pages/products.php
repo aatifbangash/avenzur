@@ -122,16 +122,16 @@
                 <div class="row">
 
                     <div class="col-sm-3 col-md-2">
-                        <h4>Categories</h4>
-                        <ul style="list-style-type: none;padding: 0px;">
+                        <!--<h4>Categories</h4>
+                        <ul style="list-style-type: none;padding: 0px;">-->
                         <?php
-                        foreach($categories as $cat)
+                        /*foreach($categories as $cat)
                         {
                                 echo '<li class="category-side"><a href="' . site_url('category/' . $cat->slug) . '">' . ucfirst(strtolower($cat->name)) . '</a></li>';
-                        }
+                        }*/
                             
                         ?>
-                        </ul>
+                        <!--</ul>-->
                     </div>
 
                     <div class="col-sm-9 col-md-10">
