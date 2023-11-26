@@ -170,11 +170,11 @@
 
     var input = document.querySelector("#phone");
     /*window.intlTelInput(input,({
-        initialCountry: "<?= trim($country_code); ?>"
+        initialCountry: "<?php //echo trim($country_code); ?>"
     }));*/
 
     window.intlTelInput(input,({
-        initialCountry: "<?= trim($country_code); ?>"
+        initialCountry: "SA"
     }));
 
     $(document).ready(function() {
