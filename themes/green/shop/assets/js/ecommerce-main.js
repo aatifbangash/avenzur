@@ -1143,6 +1143,7 @@ function add_address(t) {
           $(".selectpickerstate").selectpicker("val", t.state ? t.state : "");
       }
 
+      console.log(t.phone);
       if(t.phone){
         var input_address_phone = document.querySelector("#address-phone");
         window.intlTelInput(input_address_phone, ({
@@ -1150,7 +1151,7 @@ function add_address(t) {
         }));
         $("#address-phone").val("+966");
       }
-      
+
       initialize();
     },
   })
