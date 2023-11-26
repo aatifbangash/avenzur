@@ -182,7 +182,7 @@ foreach ($cart_contents as $cartItem) {
                                             <input type="hidden" id="shipping-input" name="shipping"
                                                    value="<?= $calculateShipping ?>"/>
                                             <?php
-                                            echo form_submit('add_order', lang('Proceed to Payment'), 'class="btn btn-theme payment-k" disabled ');
+                                            echo form_submit('add_order', lang('Proceed to Payment'), 'class="btn btn-theme payment-k" ');
                                             } elseif ($this->Staff) {
                                                 echo '<div class="alert alert-warning margin-bottom-no">' . lang('staff_not_allowed') . '</div>';
                                             } else {
@@ -482,7 +482,7 @@ foreach ($cart_contents as $cartItem) {
                                                    value="Standard"/>
                                             <input type="hidden" id="shipping-input" name="shipping"
                                                    value="<?= $calculateShipping ?>"/>
-                                            <?= form_submit('guest_order', lang('Proceed to Payment'), 'class="btn btn-lg btn-primary payment-k" disabled'); ?>
+                                            <?= form_submit('guest_order', lang('Proceed to Payment'), 'class="btn btn-lg btn-primary payment-k" '); ?>
                                             <?= form_close(); ?>
                                         </div>
                                     </div>
@@ -596,7 +596,7 @@ foreach ($cart_contents as $cartItem) {
     function calCulateShipping(city, country, isExpressDelivery = false) {
 
         $("#express-delivery-check").prop("disabled", true);
-        $('.payment-k').prop('disabled', true);
+        //$('.payment-k').prop('disabled', true);
 
         var shipping = parseInt('<?= round($calculateShipping); ?>');
         var deliveryDays = "Not Available";
