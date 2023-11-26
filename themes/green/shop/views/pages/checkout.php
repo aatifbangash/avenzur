@@ -589,9 +589,14 @@ foreach ($cart_contents as $cartItem) {
 <script>
     // Vanilla Javascript
     var input = document.querySelector("#phone");
+    var input_shipping_phone = document.querySelector("#shipping_phone");
     var non_express_items = '<?php echo $not_express_items; ?>';
     window.intlTelInput(input, ({
-        // options here
+        initialCountry: "SA"
+    }));
+
+    window.intlTelInput(input_shipping_phone, ({
+        initialCountry: "SA"
     }));
 
     function calCulateShipping(city, country, isExpressDelivery = false) {
