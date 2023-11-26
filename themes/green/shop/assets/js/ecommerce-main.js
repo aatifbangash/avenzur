@@ -1153,6 +1153,10 @@ function add_address(t) {
         }),
           $(".selectpickerstate").selectpicker("val", t.state ? t.state : "");
       }
+      var input_address_phone = document.querySelector("#address-phone");
+      window.intlTelInput(input_address_phone,({
+        initialCountry: "SA"
+      }));
       initialize();
     },
   })
