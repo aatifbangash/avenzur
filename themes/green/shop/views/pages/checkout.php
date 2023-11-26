@@ -639,8 +639,7 @@ foreach ($cart_contents as $cartItem) {
                     deliveryDays = "1 to 2 days"
                 }
 
-            }
-            if (['bahrain',
+            }else if (['bahrain',
                 'kuwait',
                 'oman',
                 'qatar',
@@ -661,6 +660,9 @@ foreach ($cart_contents as $cartItem) {
                     shipping = 32
                     deliveryDays = "4 to 6 days"
                 }
+            } else{
+                shipping = 38
+                deliveryDays = "5 to 8 days"
             }
 
             var totalPrice = parseFloat($('#total-price').val());
