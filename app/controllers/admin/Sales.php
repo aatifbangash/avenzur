@@ -2434,17 +2434,16 @@ class Sales extends MY_Controller
                 ->from('sales')
                 ->where('warehouse_id', $warehouse_id)
                 ->where('shop', 1);
-                //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
         } else {
             $this->datatables
                 ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id, {$this->db->dbprefix('courier')}.name as courier_name, {$this->db->dbprefix('addresses')}.city")
                 ->from('sales')
                 ->where('shop', 1);
-                
-                
         }
+
+        $subquery = "(SELECT COUNT(*) FROM sale_items WHERE sale_items.sale_id = sales.id AND (sale_items.product_code LIKE 'AM-%' OR sale_items.product_code LIKE 'IH-%'))";
+        $this->datatables->select("{$subquery} > 0 AS global_product", false); // Use a subquery to determine global_product
         
-        // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
         if ($this->input->get('shop') == 'yes') {
             $this->datatables->where('shop', 1);
         } elseif ($this->input->get('shop') == 'no') {
@@ -2462,7 +2461,7 @@ class Sales extends MY_Controller
         if ($this->input->get('attachment') == 'yes') {
             $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
         }
-        $this->datatables->where('pos !=', 1); // ->where('sale_status !=', 'returned');
+        $this->datatables->where('pos !=', 1);
         if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
         } elseif ($this->Customer) {
