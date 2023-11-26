@@ -592,11 +592,11 @@ foreach ($cart_contents as $cartItem) {
     var input_shipping_phone = document.querySelector("#shipping_phone");
     var non_express_items = '<?php echo $not_express_items; ?>';
     window.intlTelInput(input, ({
-        initialCountry: "SA"
+        //initialCountry: "SA"
     }));
 
     window.intlTelInput(input_shipping_phone, ({
-        initialCountry: "SA"
+        //initialCountry: "SA"
     }));
 
     function calCulateShipping(city, country, isExpressDelivery = false) {
