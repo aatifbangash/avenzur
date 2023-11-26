@@ -2443,6 +2443,10 @@ class Sales extends MY_Controller
                 
                 
         }
+
+        $subquery = "(SELECT COUNT(*) FROM sma_sale_items WHERE sma_sale_items.sale_id = sma_sales.id AND (sma_sale_items.product_code LIKE 'AM-%' OR sma_sale_items.product_code LIKE 'IH-%'))";
+        $this->datatables
+            ->select("{$subquery} > 0 AS global_product", false); // Use a subquery to determine global_product
         
         // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
         if ($this->input->get('shop') == 'yes') {
