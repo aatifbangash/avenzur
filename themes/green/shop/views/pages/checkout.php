@@ -694,10 +694,10 @@ foreach ($cart_contents as $cartItem) {
             var countryCode = countryCode.replace(/[^0-9]/g, '')
             //$('#phone').val("");
             //$('#phone').val("+" + countryCode + " " + $('#phone').val());
-            var parentOfParent = $(this).closest('input[type="tel"]');
-            console.log(parentOfParent);
-            parentOfParent.val("");
-            parentOfParent.val("+" + countryCode + " " + parentOfParent.val());
+            var parentOfParent = $(this).closest('.iti--allow-dropdown');
+            var telInput = parentOfParent.find('input[type="tel"]');
+            telInput.val("");
+            telInput.val("+" + countryCode + " " + telInput.val());
         });
 
         $('#shipping_country').blur(function () {
