@@ -592,11 +592,11 @@ foreach ($cart_contents as $cartItem) {
     var input_shipping_phone = document.querySelector("#shipping_phone");
     var non_express_items = '<?php echo $not_express_items; ?>';
     window.intlTelInput(input, ({
-        //initialCountry: "SA"
+        initialCountry: "SA"
     }));
 
     window.intlTelInput(input_shipping_phone, ({
-        //initialCountry: "SA"
+        initialCountry: "SA"
     }));
 
     function calCulateShipping(city, country, isExpressDelivery = false) {
@@ -692,8 +692,11 @@ foreach ($cart_contents as $cartItem) {
         $('.iti__flag-container').click(function () {
             var countryCode = $('.iti__selected-flag').attr('title');
             var countryCode = countryCode.replace(/[^0-9]/g, '')
-            $('#phone').val("");
-            $('#phone').val("+" + countryCode + " " + $('#phone').val());
+            //$('#phone').val("");
+            //$('#phone').val("+" + countryCode + " " + $('#phone').val());
+            var parentOfParent = $(this).closest('input[type="tel"]');
+            parentOfParent.val("");
+            parentOfParent.val("+" + countryCode + " " + parentOfParent.val());
         });
 
         $('#shipping_country').blur(function () {
