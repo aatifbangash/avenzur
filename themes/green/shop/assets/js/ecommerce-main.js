@@ -1149,6 +1149,11 @@ function add_address(t) {
             initialCountry: "SA"
         }));
         $("#address-phone").val("+966");
+      }else{
+        var input_address_phone = document.querySelector("#address-phone");
+        window.intlTelInput(input_address_phone, ({
+            //initialCountry: "SA"
+        }));
       }
 
       initialize();
