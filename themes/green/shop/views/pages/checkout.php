@@ -695,6 +695,7 @@ foreach ($cart_contents as $cartItem) {
             //$('#phone').val("");
             //$('#phone').val("+" + countryCode + " " + $('#phone').val());
             var parentOfParent = $(this).closest('input[type="tel"]');
+            console.log(parentOfParent);
             parentOfParent.val("");
             parentOfParent.val("+" + countryCode + " " + parentOfParent.val());
         });
