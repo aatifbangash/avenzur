@@ -1099,7 +1099,7 @@ function add_address(t) {
       (t.country ? t.country : "") +
       '" id="address-country" class="form-control" placeholder="' +
       lang.country +
-      '"></div><div class="form-group col-sm-12 margin-bottom-no"><input type="tel" name="phone" value="' +
+      '"></div><div class="form-group col-sm-12 margin-bottom-no"><input name="phone" value="' +
       (t.phone ? t.phone : "") +
       '" id="address-phone" class="form-control" placeholder="' +
       lang.phone +
@@ -1142,20 +1142,6 @@ function add_address(t) {
         }),
           $(".selectpickerstate").selectpicker("val", t.state ? t.state : "");
       }
-      var input_address_phone = document.querySelector("#address-phone");
-      window.intlTelInput(input_address_phone,({
-        initialCountry: "SA"
-      }));
-
-      $(document).ready(function() {
-        $('.iti__flag-container').click(function() { 
-          var countryCode = $('.iti__selected-flag').attr('title');
-          var countryCode = countryCode.replace(/[^0-9]/g,'')
-          $('#address-phone').val("");
-          $('#address-phone').val("+"+countryCode+" "+ $('#address-phone').val());
-       }); 
-      });
-
       initialize();
     },
   })
