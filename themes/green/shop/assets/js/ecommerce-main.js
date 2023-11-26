@@ -1085,7 +1085,7 @@ function add_address(t) {
       (t.line2 ? t.line2 : "") +
       '" class="form-control" placeholder="' +
       lang.line_2 +
-      '"></div></div><div class="row"><div class="form-group col-sm-6"><input name="city" value="' +
+      '"></div></div><div class="row"><div class="form-group col-sm-6"><input name="city" readonly value="' +
       (t.city ? t.city : "") +
       '" id="address-city" class="form-control" placeholder="' +
       lang.city +
@@ -1095,7 +1095,7 @@ function add_address(t) {
       (t.postal_code ? t.postal_code : "") +
       '" id="address-postal-code" class="form-control" placeholder="' +
       lang.postal_code +
-      '"></div><div class="form-group col-sm-6"><input name="country" value="' +
+      '"></div><div class="form-group col-sm-6"><input name="country" readonly value="' +
       (t.country ? t.country : "") +
       '" id="address-country" class="form-control" placeholder="' +
       lang.country +
