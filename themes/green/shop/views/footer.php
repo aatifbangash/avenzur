@@ -113,10 +113,12 @@
     var currentLanguage = Weglot.getCurrentLang();
     if (currentLanguage === 'en') {
         // Change banner for English
+        console.log('Current Language: '+currentLanguage);
         //alert('Current Language: '+currentLanguage);
         
-    } else if (currentLanguage === 'fr') {
+    } else if (currentLanguage === ar') {
         // Change banner for French
+        console.log('Current Language: '+currentLanguage);
         //alert('Current Language: '+currentLanguage);
     }
 
