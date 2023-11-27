@@ -36,12 +36,12 @@
               <div class="col-md-6 d-flex justify-content-end topbarBtns">
                 <div class="dropdown me-2">
                     <a class="btn  dropdown-toggle text-white moblang" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-globe-americas me-1"></i> EN <i class="bi bi-chevron-down ms-2"></i>
+                        <i class="bi bi-globe-americas me-1"></i> ENGLISH <i class="bi bi-chevron-down ms-2"></i>
                     </a>
                   
                     <ul class="dropdown-menu" id="languageDropdown">
-                      <li><a class="dropdown-item" href="#" data-lang="en">EN</a></li>
-                      <li><a class="dropdown-item" href="#" data-lang="ar">AR</a></li>
+                      <li><a class="dropdown-item" href="#" data-lang="en">ENGLISH</a></li>
+                      <li><a class="dropdown-item" href="#" data-lang="ar">عربي</a></li>
                     </ul>
                 </div>
                 <div class="dropdown me-2">
