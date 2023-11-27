@@ -14,26 +14,14 @@
     <script src="<?= $assets; ?>build/js/intlTelInput.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0GGN9ELJJG"></script>
-
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0GGN9ELJJG">
+    </script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
       gtag('config', 'G-0GGN9ELJJG');
-    </script>
-
-    <!--<script type="text/javascript" src="https://cdn.weglot.com/weglot.min.js"></script>-->
-    <script src="<?php echo $assets; ?>js/weglot.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof Weglot !== 'undefined') {
-                Weglot.initialize({
-                    api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55'
-                });
-            }
-        });
     </script>
 </head>
   
@@ -48,7 +36,7 @@
               <div class="col-md-6 d-flex justify-content-end topbarBtns">
                 <div class="dropdown me-2">
                     <a class="btn  dropdown-toggle text-white moblang" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-globe-americas me-1"></i> AR <i class="bi bi-chevron-down ms-2"></i>
+                        <i class="bi bi-globe-americas me-1"></i> EN <i class="bi bi-chevron-down ms-2"></i>
                     </a>
                   
                     <ul class="dropdown-menu" id="languageDropdown">
