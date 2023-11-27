@@ -18,28 +18,6 @@
 
     <script type="text/javascript" src="https://cdn.weglot.com/weglot.min.js"></script>
     <!--<script src="<?php //echo $assets; ?>js/weglot.min.js"></script>-->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      Weglot.initialize({
-          api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55',
-          originalLanguage: 'en',
-          destinationLanguages: ['ar'],
-          autoSwitch: false,
-          hide_switcher: true
-      });
-
-      Weglot.on("languageChanged", function(newLang, prevLang) {
-          console.log("The language on the page just changed to (code): " + newLang)
-          console.log("The full name of the language is: " + Weglot.getLanguageName(newLang))
-      });
-
-      function switchToArabic() {
-        Weglot.switchTo('ar');
-      }
-
-      switchToArabic();
-    });
-    </script>
 
     <script>
       window.dataLayer = window.dataLayer || [];

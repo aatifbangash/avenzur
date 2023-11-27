@@ -104,6 +104,28 @@
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
     <!--<link href="<?php //echo $assets; ?>css/owl.theme.default.min.css" rel="stylesheet">-->
     
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      Weglot.initialize({
+          api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55',
+          originalLanguage: 'en',
+          destinationLanguages: ['ar'],
+          autoSwitch: false,
+          hide_switcher: true
+      });
+
+      Weglot.on("languageChanged", function(newLang, prevLang) {
+          console.log("The language on the page just changed to (code): " + newLang)
+          console.log("The full name of the language is: " + Weglot.getLanguageName(newLang))
+      });
+
+      function switchToArabic() {
+        Weglot.switchTo('ar');
+      }
+
+      switchToArabic();
+    });
+    </script>
     <style> 
       .pac-container{
           z-index: 9999 !important;
