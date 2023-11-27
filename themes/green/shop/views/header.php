@@ -40,8 +40,8 @@
                     </a>
                   
                     <ul class="dropdown-menu" id="languageDropdown">
-                      <li><a class="dropdown-item" href="#" data-lang="en">EN</a></li>
-                      <li><a class="dropdown-item" href="#" data-lang="ar">AR</a></li>
+                      <li><a class="dropdown-item" href="#" data-lang="en">ENGLISH</a></li>
+                      <li><a class="dropdown-item" href="#" data-lang="ar">ARABIC</a></li>
                     </ul>
                 </div>
                 <div class="dropdown me-2">
