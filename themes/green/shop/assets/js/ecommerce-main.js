@@ -1143,8 +1143,6 @@ function add_address(t) {
           $(".selectpickerstate").selectpicker("val", t.state ? t.state : "");
       }
 
-      console.log('Here Iti clicked....');
-
       $('.iti__flag-container').click(function () {
         console.log('Here Iti clicked....');
         var countryCode = $('.iti__selected-flag').attr('title');
@@ -1161,9 +1159,9 @@ function add_address(t) {
         $("#address-phone").val("+966");
       }else{
         var input_address_phone = document.querySelector("#address-phone");
-        window.intlTelInput(input_address_phone, ({
+        //window.intlTelInput(input_address_phone, ({
             //initialCountry: "SA"
-        }));
+        //}));
       }
 
       initialize();
