@@ -236,7 +236,7 @@ $(document).ready(function() {
     <script>
       $(document).ready(function () {
 
-        /*const dropdown = document.getElementById('languageDropdown');
+        const dropdown = document.getElementById('languageDropdown');
         dropdown.addEventListener('click', function (event) {
           const target = event.target;
         
@@ -249,7 +249,7 @@ $(document).ready(function() {
               Weglot.switchTo(selectedLang);
             }
           }
-        });*/
+        });
 
         const currencydropdown = document.getElementById('currencyDropdown');
         currencydropdown.addEventListener('click', function (event) {
