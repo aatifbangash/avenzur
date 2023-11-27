@@ -27,27 +27,16 @@
         hide_switcher: true
     });
 
-    var currentLanguage = Weglot.getCurrentLang();
-    if (currentLanguage === 'en') {
-        // Change banner for English
-        //alert('Current Language: '+currentLanguage);
-        
-    } else if (currentLanguage === 'fr') {
-        // Change banner for French
-        //alert('Current Language: '+currentLanguage);
-    }
-
     Weglot.on("languageChanged", function(newLang, prevLang) {
         console.log("The language on the page just changed to (code): " + newLang)
         console.log("The full name of the language is: " + Weglot.getLanguageName(newLang))
     });
 
     function switchToArabic() {
-  Weglot.switchTo('ar');
-}
+      Weglot.switchTo('ar');
+    }
 
-// Example usage
-switchToArabic();
+    switchToArabic();
     </script>
 
     <script>
@@ -70,12 +59,12 @@ switchToArabic();
               <div class="col-md-6 d-flex justify-content-end topbarBtns">
                 <div class="dropdown me-2">
                     <a class="btn  dropdown-toggle text-white moblang" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-globe-americas me-1"></i> ARABIC <i class="bi bi-chevron-down ms-2"></i>
+                        <i class="bi bi-globe-americas me-1"></i> AR <i class="bi bi-chevron-down ms-2"></i>
                     </a>
                   
                     <ul class="dropdown-menu" id="languageDropdown">
-                      <li><a class="dropdown-item" href="#" data-lang="en">ENGLISH</a></li>
-                      <li><a class="dropdown-item" href="#" data-lang="ar">ARABIC</a></li>
+                      <li><a class="dropdown-item" href="#" data-lang="en">EN</a></li>
+                      <li><a class="dropdown-item" href="#" data-lang="ar">AR</a></li>
                     </ul>
                 </div>
                 <div class="dropdown me-2">
