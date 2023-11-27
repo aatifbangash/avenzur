@@ -116,7 +116,7 @@
         console.log('Current Language: '+currentLanguage);
         //alert('Current Language: '+currentLanguage);
         
-    } else if (currentLanguage === ar') {
+    } else if (currentLanguage === 'ar') {
         // Change banner for French
         console.log('Current Language: '+currentLanguage);
         //alert('Current Language: '+currentLanguage);
