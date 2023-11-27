@@ -96,7 +96,7 @@
                     <div class="col-lg-7 col-md-6">
                       <p class="m-0 py-2"><span class="boom-parag"></span></p>
                       <span class="btitle py-3"><span style="font-weight: bold;">Ghali'or</span> Collection</span>
-                      <a href="https://avenzur.com/brand/ghalior-paris"><button type="button" class="btn primary-buttonAV mt-4 pt-1">Buy now <i class="bi bi-chevron-right ms-1"></i></button></a>
+                      <a href="https://avenzur.com/brand/ghalior-paris1"><button type="button" class="btn primary-buttonAV mt-4 pt-1">Buy now <i class="bi bi-chevron-right ms-1"></i></button></a>
 
                     </div>
                   </div>
@@ -109,7 +109,7 @@
                     <div class="col-md-12">
                       <p class="m-0 py-2"><span class="boom-parag"></span></p>
                       <span class="btitle py-3"><span style="font-weight: bold;">Artelac</span> Advanced Eye Drops</span>
-                      <a href="https://avenzur.com/product/1110033321">
+                      <a href="https://avenzur.com/product/artelac-advanced-eye-drops-111003332">
                         <button type="button" class="btn primary-buttonAV mt-3 pt-1">Buy now <i class="bi bi-chevron-right ms-1s"></i></button>
                       </a>
 
@@ -152,7 +152,7 @@
                       <span class="bigsale"></span>
                       <p class="m-0 py-2"><span class="boom-parag"></span></p>
                       <span class="btitle "><span style="font-weight: bold;">Mavala Scientifique K+Pro</span> Keratin Nail Hardener 5ml</span>
-                      <a href="https://avenzur.com/product/1210173541">
+                      <a href="https://avenzur.com/product/mavala-scientifique-k-pro-keratin-nail-hardener-5ml-121017354">
                       <button type="button" class="btn primary-buttonAV mt-3 pt-1">Buy now <i class="bi bi-chevron-right ms-1"></i></button>
                       </a>
                     </div>
