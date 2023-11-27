@@ -236,21 +236,20 @@ $(document).ready(function() {
     <script>
       $(document).ready(function () {
 
-        const dropdown = document.getElementById('languageDropdown');
+        /*const dropdown = document.getElementById('languageDropdown');
         dropdown.addEventListener('click', function (event) {
           const target = event.target;
-          
-          // Check if the clicked element is a list item with data-lang attribute
+        
           if (target.tagName === 'A' && target.hasAttribute('data-lang')) {
             const selectedLang = target.getAttribute('data-lang');
-            // Perform your actions based on the selected language (EN or AR)
+            
             if (selectedLang === 'en') {
               Weglot.switchTo(selectedLang);
             } else if (selectedLang === 'ar') {
               Weglot.switchTo(selectedLang);
             }
           }
-        });
+        });*/
 
         const currencydropdown = document.getElementById('currencyDropdown');
         currencydropdown.addEventListener('click', function (event) {
