@@ -26,9 +26,9 @@
 
     <script type="text/javascript" src="https://cdn.weglot.com/weglot.min.js"></script>
     <script>
-        Weglot.initialize({
+        /*Weglot.initialize({
             api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55'
-        });
+        });*/
     </script>
 </head>
   
