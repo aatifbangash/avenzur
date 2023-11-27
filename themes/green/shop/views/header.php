@@ -29,7 +29,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof Weglot !== 'undefined') {
-                console.log('Weglot has loaded...');
                 Weglot.initialize({
                     api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55'
                 });
