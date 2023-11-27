@@ -1144,6 +1144,7 @@ function add_address(t) {
       }
 
       $('.iti__flag-container').click(function () {
+        console.log('Here Iti clicked....');
         var countryCode = $('.iti__selected-flag').attr('title');
         var countryCode = countryCode.replace(/[^0-9]/g, '')
         $('#address-phone').val("");
