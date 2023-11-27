@@ -1163,7 +1163,7 @@ function add_address(t) {
             //initialCountry: "SA"
         }));
 
-        var address_phone_val = $("#address-phone").val("+966");
+        var address_phone_val = $("#address-phone").val();
 
         var countryCode = $('.iti__selected-flag').attr('title');
         var countryCode = countryCode.replace(/[^0-9]/g, '')
