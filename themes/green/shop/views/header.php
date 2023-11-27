@@ -16,15 +16,19 @@
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-0GGN9ELJJG"></script>
 
-    <script type="text/javascript" src="https://cdn.weglot.com/weglot.min.js"></script>
-    <!--<script src="<?php //echo $assets; ?>js/weglot.min.js"></script>-->
-
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
       gtag('config', 'G-0GGN9ELJJG');
+    </script>
+
+    <script type="text/javascript" src="https://cdn.weglot.com/weglot.min.js"></script>
+    <script>
+        Weglot.initialize({
+            api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55'
+        });
     </script>
 </head>
   

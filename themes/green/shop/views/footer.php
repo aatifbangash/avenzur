@@ -105,7 +105,7 @@
     <!--<link href="<?php //echo $assets; ?>css/owl.theme.default.min.css" rel="stylesheet">-->
     
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    /*document.addEventListener('DOMContentLoaded', function() {
       Weglot.initialize({
           api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55',
           originalLanguage: 'en',
@@ -124,7 +124,7 @@
       }
 
       switchToArabic();
-    });
+    });*/
     </script>
     <style> 
       .pac-container{
