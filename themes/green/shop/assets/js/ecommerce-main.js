@@ -1038,6 +1038,14 @@ function initialize() {
   });
 }
 
+$('.iti__flag-container').click(function () {
+  console.log('Here Iti clicked....');
+  var countryCode = $('.iti__selected-flag').attr('title');
+  var countryCode = countryCode.replace(/[^0-9]/g, '')
+  $('#address-phone').val("");
+  $('#address-phone').val("+" + countryCode + " " + $('#address-phone').val());
+});
+
 function add_address(t) {
   t = t || {};
   var e = "";
@@ -1142,14 +1150,6 @@ function add_address(t) {
         }),
           $(".selectpickerstate").selectpicker("val", t.state ? t.state : "");
       }
-
-      $('.iti__flag-container').click(function () {
-        console.log('Here Iti clicked....');
-        var countryCode = $('.iti__selected-flag').attr('title');
-        var countryCode = countryCode.replace(/[^0-9]/g, '')
-        $('#address-phone').val("");
-        $('#address-phone').val("+" + countryCode + " " + $('#address-phone').val());
-      });
 
       if(!t.phone){
         var input_address_phone = document.querySelector("#address-phone");
