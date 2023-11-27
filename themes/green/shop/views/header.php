@@ -173,12 +173,12 @@
               </div>
               <div class="offcanvas-body">           
             
-                <ol class="list-group list-group-numbered">
+                <ol class="list-group list-group-numbered ar-ol">
                   <?php
                     foreach($all_categories as $category){
                       ?>
                         <li class="list-group-item d-flex justify-content-between align-items-start">
-                          <div class="ms-2 me-auto">
+                          <div class="ms-2 me-auto ar-catL">
                             <div class="fw-bold"><a href="<?= site_url('category/'.$category->slug) ?>"><?= $category->name; ?></a></div>
                             <?php //echo $category->description; ?>
                           </div>
@@ -192,7 +192,7 @@
               </div>
             </div>
           </div>
-          <div class="col-md-6 col-sm-2 mob-menu">
+          <div class="col-md-7 col-sm-2 mob-menu">
             <nav class="navbar navbar-expand-lg navbar-expand-md  container-max-width">
               <div class="container-fluid">
                 
@@ -235,7 +235,7 @@
               </div>
             </nav>
           </div>
-          <div class="col-md-4 col-sm-2 shop-icons">
+          <div class="col-md-3 col-sm-2 shop-icons">
             <div class="text-end" id="cartdiv">
 
               <!--<span class="shuffleIcon me-2">
@@ -273,12 +273,12 @@
                           
                         </tr>
                     </thead>
-                    <tbody id="cart-body"></tbody>
+                    <tbody id="cart-body" ></tbody>
                     <tfoot id="cart-foot"></tfoot>
                   </table>
                 <div class="d-flex">
-                  <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 me-2">View Cart</a>
-                  <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 ms-2">Checkout</a>
+                  <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">View Cart</a>
+                  <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">Checkout</a>
                 </div>
               </div>
 
