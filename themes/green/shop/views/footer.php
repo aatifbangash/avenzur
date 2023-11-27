@@ -107,17 +107,19 @@
     <!--<script src="<?php //echo $assets; ?>js/weglot.min.js"></script>-->
     <script>
     Weglot.initialize({
-        api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55'
+        api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55',
+        originalLanguage: 'en',
+        destinationLanguages: ['ar']
     });
 
     var currentLanguage = Weglot.getCurrentLang();
     if (currentLanguage === 'en') {
         // Change banner for English
-        alert('Current Language: '+currentLanguage);
+        //alert('Current Language: '+currentLanguage);
         
     } else if (currentLanguage === 'fr') {
         // Change banner for French
-        alert('Current Language: '+currentLanguage);
+        //alert('Current Language: '+currentLanguage);
     }
 
     Weglot.on("languageChanged", function(newLang, prevLang) {
