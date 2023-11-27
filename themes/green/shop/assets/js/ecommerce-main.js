@@ -1163,9 +1163,16 @@ function add_address(t) {
             //initialCountry: "SA"
         }));
 
+        var address_phone_val = $("#address-phone").val("+966");
+
         var countryCode = $('.iti__selected-flag').attr('title');
         var countryCode = countryCode.replace(/[^0-9]/g, '')
-        console.log(countryCode);
+        
+        if (address_phone_val.startsWith('0')) {
+          address_phone_val = address_phone_val.substr(1);
+
+          $("#address-phone").val('+' + countryCode + ' ' + address_phone_val);
+        }
       }
 
       initialize();
