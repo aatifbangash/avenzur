@@ -103,30 +103,7 @@
     <link href="<?php echo $assets; ?>css/owl.carousel.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
     <!--<link href="<?php //echo $assets; ?>css/owl.theme.default.min.css" rel="stylesheet">-->
-    <script type="text/javascript" src="https://cdn.weglot.com/weglot.min.js"></script>
-    <!--<script src="<?php //echo $assets; ?>js/weglot.min.js"></script>-->
-    <script>
-    Weglot.initialize({
-        api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55',
-        originalLanguage: 'en',
-        destinationLanguages: ['ar']
-    });
-
-    var currentLanguage = Weglot.getCurrentLang();
-    if (currentLanguage === 'en') {
-        // Change banner for English
-        //alert('Current Language: '+currentLanguage);
-        
-    } else if (currentLanguage === 'fr') {
-        // Change banner for French
-        //alert('Current Language: '+currentLanguage);
-    }
-
-    Weglot.on("languageChanged", function(newLang, prevLang) {
-        console.log("The language on the page just changed to (code): " + newLang)
-        console.log("The full name of the language is: " + Weglot.getLanguageName(newLang))
-    })
-    </script>
+    
     <style> 
       .pac-container{
           z-index: 9999 !important;
