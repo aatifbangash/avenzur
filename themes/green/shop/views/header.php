@@ -27,8 +27,13 @@
     <!--<script type="text/javascript" src="https://cdn.weglot.com/weglot.min.js"></script>-->
     <script src="<?php echo $assets; ?>js/weglot.min.js"></script>
     <script>
-        Weglot.initialize({
-            api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55'
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof Weglot !== 'undefined') {
+                console.log('Weglot has loaded...');
+                Weglot.initialize({
+                    api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55'
+                });
+            }
         });
     </script>
 </head>
