@@ -32,7 +32,7 @@
     <section class="top-bar py-1 ">
         <div class="container container-max-width">
             <div class="row align-items-center">
-              <div class="col-md-6 topBartxt">
+              <div class="col-md-6 topBartxt" style="font-weight: bold;font-size: medium;">
                 Free delivery above SAR 200
               </div>
               <div class="col-md-6 d-flex justify-content-end topbarBtns">
