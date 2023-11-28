@@ -74,7 +74,10 @@ function update_mini_cart(t) {
           "/product/" +
           this.slug +
           '">' +
-          this.name + ' ('+this.qty+')' +
+          this.name +
+          " (" +
+          this.qty +
+          ")" +
           "</a><br>" +
           //this.qty +
           //" x " +
@@ -86,7 +89,7 @@ function update_mini_cart(t) {
         $("#cart-body").append("<tr>" + t + "</tr>");
       });
     var e =
-      '\n  <tr><td colspan="2">' +
+      '\n  <tr><td class="ar-colCart" colspan="2">' +
       lang.total_items +
       '</td><td class="text-end fw-bold">' +
       t.total_items +
@@ -136,11 +139,11 @@ function update_cart(t) {
     var e = 1;
     $.each(t.contents, function () {
       var t = this,
-        
-          /*'\n            <td class="text-center">\n            <a href="#" class="text-red remove-item" data-rowid="' +
+        /*'\n            <td class="text-center">\n            <a href="#" class="text-red remove-item" data-rowid="' +
           this.rowid +
           '"><i class="fa fa-trash-o"></i><a>\n            </td>*/
-          a =  '\n            <td><input type="hidden" name="' +
+        a =
+          '\n            <td><input type="hidden" name="' +
           e +
           '[rowid]" value="' +
           this.rowid +
@@ -570,15 +573,15 @@ $(document).ready(function () {
       );
   });
 
-  $(document).on("click", ".remove-item", function(t) {
-      t.preventDefault();
-      var e = {};
-      e.rowid = $(this).attr("data-rowid"),
-      saa_alert(site.site_url + "cart/remove", !1, "post", e)
+  $(document).on("click", ".remove-item", function (t) {
+    t.preventDefault();
+    var e = {};
+    (e.rowid = $(this).attr("data-rowid")),
+      saa_alert(site.site_url + "cart/remove", !1, "post", e);
   }),
-  $("#empty-cart").click(function (t) {
-    t.preventDefault(), saa_alert($(this).attr("href"));
-  });
+    $("#empty-cart").click(function (t) {
+      t.preventDefault(), saa_alert($(this).attr("href"));
+    });
 
   update_cart(cart);
 
@@ -767,10 +770,10 @@ $(document).ready(function () {
     var e = $(this).attr("data-id"),
       a = $(".shopping-cart:visible"),
       s = $(this).parents(".card").find("input");
-      console.log(s.val());
-      if(typeof s.val() === 'undefined'){
-        s = $(this).parents(".get-quantity").find("input");
-      }
+    console.log(s.val());
+    if (typeof s.val() === "undefined") {
+      s = $(this).parents(".get-quantity").find("input");
+    }
 
     //, s = $(this).parents(".product-bottom").find(".quantity-input");
     /*,i=$(this).parents(".product").find("img").eq(0);if(i){i.clone().offset({top:i.offset().top,left:i.offset().left}).css({opacity:"0.5",position:"absolute",height:"150px",width:"150px","z-index":"1000"}).appendTo($("body")).animate({top:a.offset().top+10,left:a.offset().left+10,width:"50px",height:"50px"},400).animate({width:0,height:0},function(){$(this).detach()})}*/
@@ -1099,7 +1102,7 @@ function add_address(t) {
       (t.country ? t.country : "") +
       '" id="address-country" class="form-control" placeholder="' +
       lang.country +
-      '"></div><div class="form-group col-sm-12 margin-bottom-no"><input type="tel" name="phone" value="' +
+      '"></div><div class="form-group col-sm-12 margin-bottom-no text-left ar-addr"><input type="tel" name="phone" value="' +
       (t.phone ? t.phone : "") +
       '" id="address-phone" class="form-control" placeholder="' +
       lang.phone +
@@ -1143,27 +1146,27 @@ function add_address(t) {
           $(".selectpickerstate").selectpicker("val", t.state ? t.state : "");
       }
 
-      if(!t.phone){
+      if (!t.phone) {
         var input_address_phone = document.querySelector("#address-phone");
-        window.intlTelInput(input_address_phone, ({
-            initialCountry: "SA"
-        }));
+        window.intlTelInput(input_address_phone, {
+          initialCountry: "SA",
+        });
         $("#address-phone").val("+966");
-      }else{
+      } else {
         var input_address_phone = document.querySelector("#address-phone");
-        window.intlTelInput(input_address_phone, ({
-            //initialCountry: "SA"
-        }));
+        window.intlTelInput(input_address_phone, {
+          //initialCountry: "SA"
+        });
 
         var address_phone_val = $("#address-phone").val();
 
-        var countryCode = $('.iti__selected-flag').attr('title');
-        var countryCode = countryCode.replace(/[^0-9]/g, '')
-        
-        if (address_phone_val.startsWith('0')) {
+        var countryCode = $(".iti__selected-flag").attr("title");
+        var countryCode = countryCode.replace(/[^0-9]/g, "");
+
+        if (address_phone_val.startsWith("0")) {
           address_phone_val = address_phone_val.substr(1);
 
-          $("#address-phone").val('+' + countryCode + ' ' + address_phone_val);
+          $("#address-phone").val("+" + countryCode + " " + address_phone_val);
         }
       }
 
@@ -1321,6 +1324,17 @@ if (window.innerWidth < 500) {
   // Append the button to the target div
   targetmenuDiv.prepend(allCatToMove);
   $(".popularCat").slick({
+    infinite: false,
+    speed: 300,
+    slidesToShow: 2,
+    slidesToScroll: 1,
+    prevArrow:
+      "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
+    nextArrow:
+      "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
+  });
+
+  $(".feature-cards").slick({
     infinite: false,
     speed: 300,
     slidesToShow: 2,
