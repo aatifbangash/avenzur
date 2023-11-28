@@ -43,9 +43,6 @@ class Cart_ajax extends MY_Shop_Controller
                 $sulfad_in_cart = 0;
                 $sulfad_code = '06285193000301';
                 $item = $this->cart->get_item($rowid);
-                echo '<pre>';
-                print_r($item);
-                exit;
                 $sulfad_to_remove = $item['qty'];
                 $product = $this->shop_model->getProductForCart($item['product_id']);
 
@@ -57,6 +54,13 @@ class Cart_ajax extends MY_Shop_Controller
                             $sulfad_in_cart += $itm['qty'];
                         }
                     }
+
+                    $old_quantity_charged = ceil($sulfad_in_cart / 3)*2;
+                    $old_discounted_quantity = floor($sulfad_in_cart / 3);
+
+                    $new_quantity_charged = ceil(($sulfad_in_cart - $sulfad_to_remove) / 3)*2;
+                    $new_discounted_quantity = floor(($sulfad_in_cart - $sulfad_to_remove) / 3);
+
                 }else{
                     if ($this->cart->remove($rowid)) {
                         $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_item_deleted')]);
