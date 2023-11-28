@@ -278,6 +278,8 @@ $(document).ready(function() {
                 console.log(imageName_1);
               }
 
+              console.log(imageName_1);
+
               Weglot.switchTo(selectedLang);
             }
           }
