@@ -245,9 +245,15 @@ $(document).ready(function() {
           if (target.tagName === 'A' && target.hasAttribute('data-lang')) {
             const selectedLang = target.getAttribute('data-lang');
             
+            var carouselItems = document.querySelectorAll('.carousel-item');
+
             if (selectedLang === 'en') {
+              var imgname1 = carouselItems[0].querySelector('img').src;
+              var imgname2 = carouselItems[1].querySelector('img').src;
               Weglot.switchTo(selectedLang);
             } else if (selectedLang === 'ar') {
+              var imgname1 = carouselItems[0].querySelector('img').src;
+              var imgname2 = carouselItems[1].querySelector('img').src;
               Weglot.switchTo(selectedLang);
             }
           }
