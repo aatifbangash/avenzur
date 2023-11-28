@@ -259,8 +259,10 @@ $(document).ready(function() {
               var imageName_2 = lastPart2.split('?')[0];
 
               if(imageName_1.endsWith('-ar')){
-                console.log(imageName_1);
+                imageName_1 = imageName.slice(0, -3);
               }
+
+              console.log(imageName_1);
 
               Weglot.switchTo(selectedLang);
             } else if (selectedLang === 'ar') {
@@ -275,7 +277,9 @@ $(document).ready(function() {
               var imageName_2 = lastPart2.split('?')[0];
 
               if(imageName_1.endsWith('-ar')){
-                console.log(imageName_1);
+                
+              }else{
+                imageName_1 += '-ar';
               }
 
               console.log(imageName_1);
