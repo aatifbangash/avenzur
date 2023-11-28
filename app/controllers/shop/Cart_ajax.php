@@ -32,6 +32,40 @@ class Cart_ajax extends MY_Shop_Controller
         }
     }
 
+    public function remove($rowid = null)
+    {
+        if ($rowid) {
+            return $this->cart->remove($rowid);
+        }
+        if ($this->input->is_ajax_request()) {
+            if ($rowid = $this->input->post('rowid', true)) {
+
+                $sulfad_in_cart = 0;
+                $sulfad_code = '06285193000301';
+                $item = $this->cart->get_item($rowid);
+                echo '<pre>';
+                print_r($item);
+                exit;
+                $sulfad_to_remove = $item['qty'];
+                $product = $this->shop_model->getProductForCart($item['product_id']);
+
+                if($product->code == '06285193000301'){
+                    $cart_contents = $this->cart->contents();
+                    foreach ($cart_contents as $itm) {
+                        $product_code = $itm['code'];
+                        if($product_code == $sulfad_code){
+                            $sulfad_in_cart += $itm['qty'];
+                        }
+                    }
+                }else{
+                    if ($this->cart->remove($rowid)) {
+                        $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_item_deleted')]);
+                    }
+                }
+            }
+        }
+    }
+
     public function add($product_id)
     {
         if ($this->input->is_ajax_request() || $this->input->post('quantity')) {
@@ -204,20 +238,6 @@ class Cart_ajax extends MY_Shop_Controller
         $this->data['page_title'] = lang('shopping_cart');
         $this->data['all_categories']    = $this->shop_model->getAllCategories();
         $this->page_construct('pages/cart', $this->data);
-    }
-
-    public function remove($rowid = null)
-    {
-        if ($rowid) {
-            return $this->cart->remove($rowid);
-        }
-        if ($this->input->is_ajax_request()) {
-            if ($rowid = $this->input->post('rowid', true)) {
-                if ($this->cart->remove($rowid)) {
-                    $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_item_deleted')]);
-                }
-            }
-        }
     }
 
     public function remove_wishlist($product_id)
