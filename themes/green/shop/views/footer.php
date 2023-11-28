@@ -123,8 +123,49 @@
     }
 
     Weglot.on("languageChanged", function(newLang, prevLang) {
+        
         console.log("The language on the page just changed to (code): " + newLang)
         console.log("The full name of the language is: " + Weglot.getLanguageName(newLang))
+
+        var carouselItems = document.querySelectorAll('.carousel-item');
+
+        if (newLang === 'en') {
+          var imgname1 = carouselItems[0].querySelector('img').src;
+          var imgname2 = carouselItems[1].querySelector('img').src;
+          
+          var parts1 = imgname1.split('/');
+          var lastPart1 = parts1[parts1.length - 1];
+          var imageName_1 = lastPart1.split('?')[0];
+          var parts2 = imgname2.split('/');
+          var lastPart2 = parts2[parts2.length - 1];
+          var imageName_2 = lastPart2.split('?')[0];
+
+          if(imageName_1.endsWith('-ar')){
+            imageName_1 = imageName.slice(0, -3);
+          }
+
+          console.log(imageName_1);
+
+        } else if (newLang === 'ar') {
+          var imgname1 = carouselItems[0].querySelector('img').src;
+          var imgname2 = carouselItems[1].querySelector('img').src;
+          
+          var parts1 = imgname1.split('/');
+          var lastPart1 = parts1[parts1.length - 1];
+          var imageName_1 = lastPart1.split('?')[0];
+          var parts2 = imgname2.split('/');
+          var lastPart2 = parts2[parts2.length - 1];
+          var imageName_2 = lastPart2.split('?')[0];
+
+          if(imageName_1.endsWith('-ar')){
+            
+          }else{
+            imageName_1 += '-ar';
+          }
+
+          console.log(imageName_1);
+        }
+
     })
     </script>
     <style> 
@@ -248,41 +289,9 @@ $(document).ready(function() {
             var carouselItems = document.querySelectorAll('.carousel-item');
 
             if (selectedLang === 'en') {
-              var imgname1 = carouselItems[0].querySelector('img').src;
-              var imgname2 = carouselItems[1].querySelector('img').src;
-              
-              var parts1 = imgname1.split('/');
-              var lastPart1 = parts1[parts1.length - 1];
-              var imageName_1 = lastPart1.split('?')[0];
-              var parts2 = imgname2.split('/');
-              var lastPart2 = parts2[parts2.length - 1];
-              var imageName_2 = lastPart2.split('?')[0];
-
-              if(imageName_1.endsWith('-ar')){
-                imageName_1 = imageName.slice(0, -3);
-              }
-
-              console.log(imageName_1);
 
               Weglot.switchTo(selectedLang);
             } else if (selectedLang === 'ar') {
-              var imgname1 = carouselItems[0].querySelector('img').src;
-              var imgname2 = carouselItems[1].querySelector('img').src;
-              
-              var parts1 = imgname1.split('/');
-              var lastPart1 = parts1[parts1.length - 1];
-              var imageName_1 = lastPart1.split('?')[0];
-              var parts2 = imgname2.split('/');
-              var lastPart2 = parts2[parts2.length - 1];
-              var imageName_2 = lastPart2.split('?')[0];
-
-              if(imageName_1.endsWith('-ar')){
-                
-              }else{
-                imageName_1 += '-ar';
-              }
-
-              console.log(imageName_1);
 
               Weglot.switchTo(selectedLang);
             }
