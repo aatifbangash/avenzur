@@ -1413,21 +1413,17 @@ html[lang="ar"] .ar-addr {
 }
 html[lang="ar"] .ar-addr .iti__flag-container {
   right: 0 !important;
-  left: auto !important;
 }
 html[lang="ar"] .ar-addr .iti__selected-flag {
   flex-direction: row-reverse;
 }
 html[lang="ar"] .ar-addr input#address-phone {
-  padding-right: 52px;
-  padding-left: 6px;
+  text-align: left !important;
 }
 html[lang="ar"] .ar-addr .iti__country {
   text-align: right;
 }
-html[lang="ar"] .ar-addr .iti__flag-box {
-  margin-left: 8px;
-}
+
 html[lang="ar"] .ar-catL {
   margin-left: auto !important;
   margin-right: 15px !important;
@@ -1435,6 +1431,7 @@ html[lang="ar"] .ar-catL {
 html[lang="ar"] ol.ar-ol {
   padding-right: 0;
 }
+
 @media screen and (max-width: 500px) {
   .myaccountForm.cartform {
     left: -9px !important;
