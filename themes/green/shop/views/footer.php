@@ -143,10 +143,15 @@
           imageName_2 = imageName_2.slice(0, -4);
 
           if(imageName_1.endsWith('-ar')){
-            imageName_1 = imageName.slice(0, -3);
+            imageName_1 = imageName_1.slice(0, -3);
           }
 
-          console.log(imageName_1);
+          if(imageName_2.endsWith('-ar')){
+            imageName_2 = imageName_1.slice(0, -3);
+          }
+
+          carouselItems[0].querySelector('img').src = site.site_url+'/assets/uploads/'+imageName_1+'.jpg?timestamp='+Date.now();
+          carouselItems[1].querySelector('img').src = site.site_url+'/assets/uploads/'+imageName_2+'.jpg?timestamp='+Date.now();
 
         } else if (newLang === 'ar') {
           var imgname1 = carouselItems[0].querySelector('img').src;
