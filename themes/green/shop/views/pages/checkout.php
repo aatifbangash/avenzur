@@ -613,6 +613,11 @@ foreach ($cart_contents as $cartItem) {
             deliveryDays = '4 to 6 days';
         }
 
+        var totalPrice = parseFloat($('#total-price').val());
+        var totalOrderTax = parseFloat($('#total-order-tax').val());
+        var orderWithTax = totalPrice + totalOrderTax;
+        var saudiOrder = 0;
+
         if (city != '' || country != '') {
 
             if (country.toLowerCase() === 'saudi arabia' || country.toLowerCase() === 'saudi' || country.toLowerCase() === 'saudia' || country.toLowerCase() === 'al saudi arabia' || country.toLowerCase() === 'al-saudi arabia' || country.toLowerCase() === 'al-saudi' || country.toLowerCase() === 'ksa' || country.toLowerCase() === 'kingdom of saudi arabia' || country.toLowerCase() === 'al saudi' || country.toLowerCase() === 'al saudia' || country.toLowerCase() === 'al-saudia' || [
@@ -648,6 +653,12 @@ foreach ($cart_contents as $cartItem) {
                     deliveryDays = "1 to 2 days"
                 }
 
+                if(orderWithTax > 200){
+                    shipping = 0;
+                }
+
+                saudiOrder = 1;
+
             }else if (['bahrain',
                 'kuwait',
                 'oman',
@@ -674,13 +685,16 @@ foreach ($cart_contents as $cartItem) {
                 deliveryDays = "5 to 8 days"
             }
 
-            var totalPrice = parseFloat($('#total-price').val());
-            var totalOrderTax = parseFloat($('#total-order-tax').val());
             var grandTotalPrice = totalPrice + totalOrderTax + shipping;
 
             if (non_express_items > 0) {
+                if(saudiOrder == 1 && orderWithTax > 200){
+                    shipping = 0;
+                }else{
+                    shipping = 32;
+                }
                 deliveryDays = '4 to 6 days';
-                shipping = 32;
+                
                 $("#express-delivery-check").prop("disabled", true);
             }
 
