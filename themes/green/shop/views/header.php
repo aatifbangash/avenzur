@@ -33,7 +33,7 @@
         <div class="container container-max-width">
             <div class="row align-items-center">
               <div class="col-md-6 topBartxt">
-                Avenzur will deliver fast with safe packing in all over the country
+                Free delivery above SAR 200
               </div>
               <div class="col-md-6 d-flex justify-content-end topbarBtns">
                 <div class="dropdown me-2">
