@@ -250,14 +250,34 @@ $(document).ready(function() {
             if (selectedLang === 'en') {
               var imgname1 = carouselItems[0].querySelector('img').src;
               var imgname2 = carouselItems[1].querySelector('img').src;
-              console.log(imgname1);
-              console.log(imgname2);
+              
+              var parts1 = imgname1.split('/');
+              var lastPart1 = parts1[parts1.length - 1];
+              var imageName_1 = lastPart1.split('?')[0];
+              var parts2 = imgname2.split('/');
+              var lastPart2 = parts2[parts2.length - 1];
+              var imageName_2 = lastPart2.split('?')[0];
+
+              if(imageName_1.endsWith('-ar')){
+                console.log(imageName_1);
+              }
+
               Weglot.switchTo(selectedLang);
             } else if (selectedLang === 'ar') {
               var imgname1 = carouselItems[0].querySelector('img').src;
               var imgname2 = carouselItems[1].querySelector('img').src;
-              console.log(imgname1);
-              console.log(imgname2);
+              
+              var parts1 = imgname1.split('/');
+              var lastPart1 = parts1[parts1.length - 1];
+              var imageName_1 = lastPart1.split('?')[0];
+              var parts2 = imgname2.split('/');
+              var lastPart2 = parts2[parts2.length - 1];
+              var imageName_2 = lastPart2.split('?')[0];
+
+              if(imageName_1.endsWith('-ar')){
+                console.log(imageName_1);
+              }
+
               Weglot.switchTo(selectedLang);
             }
           }
