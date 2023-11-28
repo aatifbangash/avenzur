@@ -1408,22 +1408,28 @@ html[lang="ar"] td.ar-colCart {
 .ar-addr {
   text-align: left;
 }
-html[lang="ar"] .ar-addr {
+/* html[lang="ar"] .ar-addr {
   text-align: right;
-}
-html[lang="ar"] .ar-addr .iti__flag-container {
+} */
+/* html[lang="ar"] .ar-addr .iti__flag-container {
   right: 0 !important;
-}
-html[lang="ar"] .ar-addr .iti__selected-flag {
-  flex-direction: row-reverse;
-}
+} */
+
 html[lang="ar"] .ar-addr input#address-phone {
   text-align: left !important;
 }
-html[lang="ar"] .ar-addr .iti__country {
+/* html[lang="ar"] .ar-addr .iti__country {
   text-align: right;
+} */
+html[lang="ar"] form#address-form input {
+  direction: ltr !important;
 }
-
+html[lang="ar"] form#address-form {
+  direction: ltr !important;
+}
+html[lang="ar"] h2#modalTitleId {
+  text-align: center !important;
+}
 html[lang="ar"] .ar-catL {
   margin-left: auto !important;
   margin-right: 15px !important;
@@ -1431,7 +1437,30 @@ html[lang="ar"] .ar-catL {
 html[lang="ar"] ol.ar-ol {
   padding-right: 0;
 }
+ul.pagination li {
+  background: #ddc3f4;
+  margin-inline: 3px;
+  padding: 1px 9px;
+  border-radius: 3px;
+  font-size: 18px;
+}
 
+ul.pagination li.page a,
+ul.pagination li.next a,
+ul.pagination li.last a,
+ul.pagination li.prev a,
+ul.pagination li.first a {
+  color: black;
+  text-decoration: none;
+}
+ul.pagination li.active,
+ul.pagination li:hover {
+  background: #662d91 !important;
+  color: white !important;
+}
+ul.pagination li:hover a {
+  color: white !important;
+}
 @media screen and (max-width: 500px) {
   .myaccountForm.cartform {
     left: -9px !important;

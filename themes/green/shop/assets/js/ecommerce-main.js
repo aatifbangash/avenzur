@@ -1102,7 +1102,7 @@ function add_address(t) {
       (t.country ? t.country : "") +
       '" id="address-country" class="form-control" placeholder="' +
       lang.country +
-      '"></div><div class="form-group col-sm-6 margin-bottom-no text-left ar-addr"><input type="tel" name="phone" value="' +
+      '"></div><div class="form-group col-md-6 margin-bottom-no text-left ar-addr"><input type="tel" name="phone" value="' +
       (t.phone ? t.phone : "") +
       '" id="address-phone" class="form-control" placeholder="' +
       lang.phone +
