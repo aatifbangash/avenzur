@@ -1431,6 +1431,7 @@ html[lang="ar"] .ar-catL {
 html[lang="ar"] ol.ar-ol {
   padding-right: 0;
 }
+
 @media screen and (max-width: 500px) {
   .myaccountForm.cartform {
     left: -9px !important;
