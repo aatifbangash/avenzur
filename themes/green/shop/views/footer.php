@@ -136,9 +136,11 @@
           var parts1 = imgname1.split('/');
           var lastPart1 = parts1[parts1.length - 1];
           var imageName_1 = lastPart1.split('?')[0];
+          imageName_1 = imageName_1.slice(0, -3);
           var parts2 = imgname2.split('/');
           var lastPart2 = parts2[parts2.length - 1];
           var imageName_2 = lastPart2.split('?')[0];
+          imageName_2 = imageName_2.slice(0, -3);
 
           if(imageName_1.endsWith('-ar')){
             imageName_1 = imageName.slice(0, -3);
@@ -153,9 +155,11 @@
           var parts1 = imgname1.split('/');
           var lastPart1 = parts1[parts1.length - 1];
           var imageName_1 = lastPart1.split('?')[0];
+          imageName_1 = imageName_1.slice(0, -3);
           var parts2 = imgname2.split('/');
           var lastPart2 = parts2[parts2.length - 1];
           var imageName_2 = lastPart2.split('?')[0];
+          imageName_2 = imageName_2.slice(0, -3);
 
           if(imageName_1.endsWith('-ar')){
             
