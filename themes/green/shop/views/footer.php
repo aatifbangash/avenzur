@@ -142,6 +142,8 @@
           var imageName_2 = lastPart2.split('?')[0];
           imageName_2 = imageName_2.slice(0, -4);
 
+          console.log(imageName_1);
+
           if(imageName_1.endsWith('-ar')){
             imageName_1 = imageName_1.slice(0, -3);
           }
