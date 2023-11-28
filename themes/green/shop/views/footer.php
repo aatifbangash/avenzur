@@ -250,10 +250,14 @@ $(document).ready(function() {
             if (selectedLang === 'en') {
               var imgname1 = carouselItems[0].querySelector('img').src;
               var imgname2 = carouselItems[1].querySelector('img').src;
+              console.log(imgname1);
+              console.log(imgname2);
               Weglot.switchTo(selectedLang);
             } else if (selectedLang === 'ar') {
               var imgname1 = carouselItems[0].querySelector('img').src;
               var imgname2 = carouselItems[1].querySelector('img').src;
+              console.log(imgname1);
+              console.log(imgname2);
               Weglot.switchTo(selectedLang);
             }
           }
