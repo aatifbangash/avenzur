@@ -66,7 +66,7 @@
                       <i class="bi bi-person-fill"></i>&nbsp; <?= lang('hi') . ' ' . $loggedInUser->first_name; ?>
                     <?php }else{
                       ?>
-                        <i class="bi bi-person-fill"></i>&nbsp; My Account
+                        <i class="bi bi-person-fill"></i>&nbsp; Login
                       <?php
                     }
                     ?>
