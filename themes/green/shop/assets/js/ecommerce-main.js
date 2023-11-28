@@ -139,10 +139,9 @@ function update_cart(t) {
     var e = 1;
     $.each(t.contents, function () {
       var t = this,
-        /*'\n            <td class="text-center">\n            <a href="#" class="text-red remove-item" data-rowid="' +
+        a = '\n            <td class="text-center">\n            <a href="#" class="text-red remove-item" data-rowid="' +
           this.rowid +
-          '"><i class="fa fa-trash-o"></i><a>\n            </td>*/
-        a =
+          '"><i class="fa fa-trash-o"></i><a>\n            </td>' +
           '\n            <td><input type="hidden" name="' +
           e +
           '[rowid]" value="' +
