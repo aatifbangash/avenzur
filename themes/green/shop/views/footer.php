@@ -149,7 +149,7 @@
           }
 
           if(imageName_2.endsWith('-ar')){
-            imageName_2 = imageName_1.slice(0, -3);
+            imageName_2 = imageName_2.slice(0, -3);
           }
 
           carouselItems[0].querySelector('img').src = site.site_url+'/assets/uploads/'+imageName_1+'.jpg?timestamp='+Date.now();
