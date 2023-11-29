@@ -1290,9 +1290,7 @@ class Shop extends MY_Shop_Controller
         $total_rows = $this->shop_model->getProductsCount($filters);
         $filters['limit'] = $limit;
         $filters['offset'] = isset($filters['page']) && !empty($filters['page']) && ($filters['page'] > 1) ? (($filters['page'] * $limit) - $limit) : null;
-        echo '<pre>';
-        print_r($filters);
-        exit;
+
         if ($products = $this->shop_model->getProducts($filters)) {
             $this->load->helper(['text', 'pagination']);
             foreach ($products as &$value) {
