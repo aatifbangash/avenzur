@@ -494,7 +494,7 @@ function searchProducts(t) {
       }, "", e)
   }*/
 
-  console.log(filters);
+  console.log(t);
 
   var promo = 0;
   var callUrl;
