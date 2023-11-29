@@ -50,13 +50,13 @@ class Ion_auth
                         'email'               => $user->email,
                         'reset_password_link' => anchor('reset_password/' . $user->forgotten_password_code, lang('reset_password')),
                         'site_link'           => base_url(),
-                        'site_name'           => $this->Settings->site_name,
+                        'site_name'           => 'Avenzur',
                         'logo'                => '<img src="' . base_url() . 'assets/uploads/logos/' . $this->Settings->logo . '" alt="' . $this->Settings->site_name . '"/>',
                     ];
                     $msg     = file_get_contents('./themes/' . $this->Settings->theme . '/admin/views/email_templates/forgot_password.html');
                     $message = $this->parser->parse_string($msg, $parse_data);
                     $message = $message . '<br>' . lang('reset_password_link_alt') . '<br>' . site_url('reset_password/' . $user->forgotten_password_code);
-                    $subject = lang('email_forgotten_password_subject') . ' - ' . $this->Settings->site_name;
+                    $subject = lang('email_forgotten_password_subject') . ' - ' . 'Avenzur';
 
                     try {
                         if ($this->sma->send_email($user->email, $subject, $message)) {
