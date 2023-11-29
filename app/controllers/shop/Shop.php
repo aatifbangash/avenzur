@@ -1176,11 +1176,9 @@ class Shop extends MY_Shop_Controller
     public function products($category_slug = null, $subcategory_slug = null, $brand_slug = null, $promo = null)
     {
 
-        echo $this->input->get('category');exit;
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
         if ($this->input->get('category')) {
             $category_slug = $this->input->get('category', true);
-            echo 'Category: '.$category_slug;exit;
 
         }
         if ($this->input->get('brand')) {
@@ -1194,7 +1192,7 @@ class Shop extends MY_Shop_Controller
             $this->data['featureImage'] = $this->shop_model->getCategoryBySlug($category_slug);
         }
         $reset = $category_slug || $subcategory_slug || $brand_slug ? true : false;
-
+        echo $category_slug;exit;
         $filters = [
             'query' => $this->input->post('query'),
             'category' => $category_slug ? $this->shop_model->getCategoryBySlug($category_slug) : null,
