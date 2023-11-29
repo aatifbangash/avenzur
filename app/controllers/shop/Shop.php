@@ -1176,7 +1176,7 @@ class Shop extends MY_Shop_Controller
     public function products($category_slug = null, $subcategory_slug = null, $brand_slug = null, $promo = null)
     {
 
-        echo 'Here in Category code....';exit;
+        echo $this->input->get('category');exit;
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
         if ($this->input->get('category')) {
             $category_slug = $this->input->get('category', true);
