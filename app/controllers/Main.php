@@ -462,7 +462,8 @@ class Main extends MY_Shop_Controller
         $user = $this->ion_auth->forgotten_password_check($code);
 
         if ($user) {
-            $this->form_validation->set_rules('new', lang('password'), 'required|min_length[8]|max_length[25]|matches[new_confirm]');
+            //required|min_length[5]|max_length[20]|matches[password_confirm]
+            $this->form_validation->set_rules('new', lang('password'), 'required|min_length[5]|max_length[20]|matches[new_confirm]');
             $this->form_validation->set_rules('new_confirm', lang('confirm_password'), 'required');
 
             if ($this->form_validation->run() == false) {
