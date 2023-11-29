@@ -635,8 +635,6 @@ function gen_html(products) {
 
 // Seach products
 function searchProducts(link) {
-
-    console.log('Here in this part:'+link);
     if (history.pushState) {
         var newurl = window.location.origin + window.location.pathname + '?page=' + filters.page;
         // var newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?page=' + filters.page;
