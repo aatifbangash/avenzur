@@ -87,7 +87,7 @@ class Tec_mail
             }
 
             $mail->addAddress($to);
-            if ($cc) {
+            /*if ($cc) {
                 try {
                     if (is_array($cc)) {
                         foreach ($cc as $cc_email) {
@@ -112,7 +112,7 @@ class Tec_mail
                 } catch (\Exception $e) {
                     log_message('info', 'PHPMailer Error: ' . $e->getMessage());
                 }
-            }
+            }*/
             $mail->Subject = $subject;
             $mail->isHTML(true);
             $mail->Body    = $body;
