@@ -338,7 +338,12 @@ function get(t) {
   if ("undefined" != typeof Storage) return localStorage.getItem(t);
   alert("Please use a modern browser as this site needs localstroage!");
 }
-
+function store(t, e) {
+  "undefined" != typeof Storage ? localStorage.setItem(t, e) : alert("Please use a modern browser as this site needs localstroage!")
+}
+function remove(t) {
+  "undefined" != typeof Storage ? localStorage.removeItem(t) : alert("Please use a modern browser as this site needs localstroage!")
+}
 function gen_html(t) {
   var e = "";
   if (get_width() > 992)
@@ -561,6 +566,19 @@ $(document).ready(function () {
   if (curr_url != "https://avenzur.com/") {
     searchProducts();
   }
+
+  $(document).on("click", "#pagination a", function(t) {
+      t.preventDefault();
+      var e = $(this).attr("href")
+        , a = e.split("page=");
+      if (a[1]) {
+          var s = a[1].split("&");
+          filters.page = s[0]
+      } else
+          filters.page = 1;
+      return searchProducts(e),
+      !1
+  });
 
   $(".product").each(function (t, e) {
     $(e)
