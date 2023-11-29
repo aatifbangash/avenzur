@@ -499,8 +499,6 @@ function searchProducts(t) {
       }, "", e)
   }*/
 
-  console.log(t);
-
   var promo = 0;
   var callUrl;
   var currentURL = window.location.href;
