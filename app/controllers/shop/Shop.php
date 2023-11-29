@@ -1286,7 +1286,7 @@ class Shop extends MY_Shop_Controller
     public function search()
     {
         $filters = $this->input->post('filters') ? $this->input->post('filters', true) : [];
-        $limit = 50;
+        $limit = 52;
         $total_rows = $this->shop_model->getProductsCount($filters);
         $filters['limit'] = $limit;
         $filters['offset'] = isset($filters['page']) && !empty($filters['page']) && ($filters['page'] > 1) ? (($filters['page'] * $limit) - $limit) : null;
