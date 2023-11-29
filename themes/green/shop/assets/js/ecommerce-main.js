@@ -334,6 +334,42 @@ function saa_alert(t, e, a, s) {
     }).catch(swal.noop);
 }
 
+function prompt(t, e, a) {
+  t = t || "Reset Password",
+  e = e || "Please type your email address",
+  a = a || {},
+  a[site.csrf_token] = site.csrf_token_value,
+  swal({
+      title: t,
+      html: e,
+      input: "email",
+      showCancelButton: !0,
+      allowOutsideClick: !1,
+      showLoaderOnConfirm: !0,
+      cancelButtonText: lang.cancel,
+      confirmButtonText: lang.submit,
+      preConfirm: function(t) {
+          return a.email = t,
+          new Promise(function(t, e) {
+              $.ajax({
+                  url: site.base_url + "forgot_password",
+                  type: "POST",
+                  data: a,
+                  success: function(a) {
+                      a.status ? t(a) : e(a)
+                  },
+                  error: function() {
+                      sa_alert("Error!", "Ajax call failed, please try again or contact site owner.", "error", !0)
+                  }
+              })
+          }
+          )
+      }
+  }).then(function(t) {
+      sa_alert(t.status, t.message)
+  })
+}
+
 function get(t) {
   if ("undefined" != typeof Storage) return localStorage.getItem(t);
   alert("Please use a modern browser as this site needs localstroage!");
@@ -1009,6 +1045,10 @@ $(".edit-address").click(function (t) {
     $.each(addresses, function () {
       this.id == e && add_address(this);
     });
+}),
+$(document).on("click", ".forgot-password", function(t) {
+  t.preventDefault(),
+  prompt(lang.reset_pw, lang.type_email)
 });
 
 function initialize() {
