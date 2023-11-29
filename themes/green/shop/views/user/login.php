@@ -103,12 +103,12 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-sm-6">
+                                    <!--<div class="col-sm-6">
                                         <div class="form-group">
-                                            <?= lang('username', 'username'); ?>
-                                            <?= form_input('username', set_value('username'), 'class="form-control tip" id="username" required="required"'); ?>
+                                            <?php //echo lang('username', 'username'); ?>
+                                            <?php //echo form_input('username', set_value('username'), 'class="form-control tip" id="username" required="required"'); ?>
                                         </div>
-                                    </div>
+                                    </div>-->
                                     <div class="col-sm-6">
                                         <div class="form-group">
                                             <?= lang('password', 'passwordr'); ?>
@@ -176,6 +176,7 @@
     window.intlTelInput(input,({
         initialCountry: "SA"
     }));
+    $('#phone').val("+966");
 
     $(document).ready(function() {
         $('.iti__flag-container').click(function() { 
