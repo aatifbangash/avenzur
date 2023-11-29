@@ -326,16 +326,16 @@ foreach ($cart_contents as $cartItem) {
                                                 </div>
 
                                                 <div class="col-md-12">
-                                                    <!--<div class="checkbox bg pull-right"
+                                                    <div class="checkbox bg pull-right"
                                                          style="margin-top: 0; margin-bottom: 0;">
                                                         <label>
                                                             <input type="checkbox" name="same" value="1"
                                                                    id="same_as_billing">
                                                             <span>
-                                                                <?php //echo lang('same_as_billing'); ?>
+                                                                <?php echo lang('same_as_billing'); ?>
                                                             </span>
                                                         </label>
-                                                    </div>-->
+                                                    </div>
                                                     <h5><strong><?= lang('shipping_address'); ?></strong></h5>
                                                     <input type="hidden" value="new" name="address">
                                                     <hr>

@@ -857,6 +857,17 @@ $(document).ready(function () {
     });
   });
 
+  $("#same_as_billing").change(function(t) {
+      $(this).is(":checked") && ($("#shipping_line1").val($("#billing_line1").val()).change(),
+      $("#shipping_line2").val($("#billing_line2").val()).change(),
+      $("#shipping_city").val($("#billing_city").val()).change(),
+      $("#shipping_state").val($("#billing_state").val()).change(),
+      $("#shipping_postal_code").val($("#billing_postal_code").val()).change(),
+      $("#shipping_country").val($("#billing_country").val()).change(),
+      $("#shipping_phone").val($("#phone").val()).change(),
+      $("#guest-checkout").data("formValidation").resetForm())
+  });
+
   $(document).on("click", ".btn-minus", function (t) {
     var e = $(this).parent().find("input");
     parseInt(e.val()) > 1 && e.val(parseInt(e.val()) - 1);
