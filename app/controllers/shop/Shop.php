@@ -1179,8 +1179,8 @@ class Shop extends MY_Shop_Controller
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
         if ($this->input->get('category')) {
             $category_slug = $this->input->get('category', true);
-            echo $category_slug;exit;
         }
+        echo $category_slug;exit;
         if ($this->input->get('brand')) {
             $brand_slug = $this->input->get('brand', true);
         }
