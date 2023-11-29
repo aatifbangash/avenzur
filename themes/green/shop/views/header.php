@@ -97,7 +97,7 @@
                       <?= form_open('login', 'class="dropdown-menu p-3 myaccountForm validate"'); ?>
                         <div class="mb-3">
                         <?php $u = mt_rand(); ?>
-                          <label for="exampleDropdownFormEmail2" class="form-label">Username/Email</label>
+                          <label for="exampleDropdownFormEmail2" class="form-label">Email</label>
                           <a href="<?= site_url().'/login#register'; ?>" class="float-end text-decoration-none text-dark">Register</a>
                           <input type="email" name="identity" class="form-control" id="username<?= $u; ?>" value="" placeholder="Email" />
                         </div>
