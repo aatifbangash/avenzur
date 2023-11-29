@@ -438,7 +438,7 @@ class Main extends MY_Shop_Controller
                 admin_redirect($referrer);
             } else {
                 $this->session->set_flashdata('error', $this->ion_auth->errors());
-                admin_redirect('login');
+                admin_redirect('profile');
             }
             
             //$this->session->set_flashdata('message', lang('account_created'));
