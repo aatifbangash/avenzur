@@ -1079,7 +1079,6 @@ function initialize() {
     document.getElementById("address-line-1").value = "";
     document.getElementById("address-postal-code").value = "";
     document.getElementById("address-state").value = "";
-    document.getElementById("address-phone").value = "";
 
     var place = autocomplete.getPlace();
     // Define variables to store city and country names
