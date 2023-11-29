@@ -335,11 +335,11 @@ function saa_alert(t, e, a, s) {
 }
 
 function prompt(t, e, a) {
-  t = t || "Reset Password",
-  e = e || "Please type your email address",
-  a = a || {},
-  a[site.csrf_token] = site.csrf_token_value,
-  swal({
+  (t = t || "Reset Password"),
+    (e = e || "Please type your email address"),
+    (a = a || {}),
+    (a[site.csrf_token] = site.csrf_token_value),
+    swal({
       title: t,
       html: e,
       input: "email",
@@ -348,26 +348,32 @@ function prompt(t, e, a) {
       showLoaderOnConfirm: !0,
       cancelButtonText: lang.cancel,
       confirmButtonText: lang.submit,
-      preConfirm: function(t) {
-          return a.email = t,
-          new Promise(function(t, e) {
-              $.ajax({
-                  url: site.base_url + "forgot_password",
-                  type: "POST",
-                  data: a,
-                  success: function(a) {
-                      a.status ? t(a) : e(a)
-                  },
-                  error: function() {
-                      sa_alert("Error!", "Ajax call failed, please try again or contact site owner.", "error", !0)
-                  }
-              })
-          }
-          )
-      }
-  }).then(function(t) {
-      sa_alert(t.status, t.message)
-  })
+      preConfirm: function (t) {
+        return (
+          (a.email = t),
+          new Promise(function (t, e) {
+            $.ajax({
+              url: site.base_url + "forgot_password",
+              type: "POST",
+              data: a,
+              success: function (a) {
+                a.status ? t(a) : e(a);
+              },
+              error: function () {
+                sa_alert(
+                  "Error!",
+                  "Ajax call failed, please try again or contact site owner.",
+                  "error",
+                  !0
+                );
+              },
+            });
+          })
+        );
+      },
+    }).then(function (t) {
+      sa_alert(t.status, t.message);
+    });
 }
 
 function get(t) {
@@ -375,10 +381,14 @@ function get(t) {
   alert("Please use a modern browser as this site needs localstroage!");
 }
 function store(t, e) {
-  "undefined" != typeof Storage ? localStorage.setItem(t, e) : alert("Please use a modern browser as this site needs localstroage!")
+  "undefined" != typeof Storage
+    ? localStorage.setItem(t, e)
+    : alert("Please use a modern browser as this site needs localstroage!");
 }
 function remove(t) {
-  "undefined" != typeof Storage ? localStorage.removeItem(t) : alert("Please use a modern browser as this site needs localstroage!")
+  "undefined" != typeof Storage
+    ? localStorage.removeItem(t)
+    : alert("Please use a modern browser as this site needs localstroage!");
 }
 function gen_html(t) {
   var e = "";
@@ -601,17 +611,15 @@ $(document).ready(function () {
     searchProducts();
   }
 
-  $(document).on("click", "#pagination a", function(t) {
-      t.preventDefault();
-      var e = $(this).attr("href")
-        , a = e.split("page=");
-      if (a[1]) {
-          var s = a[1].split("&");
-          filters.page = s[0]
-      } else
-          filters.page = 1;
-      return searchProducts(e),
-      !1
+  $(document).on("click", "#pagination a", function (t) {
+    t.preventDefault();
+    var e = $(this).attr("href"),
+      a = e.split("page=");
+    if (a[1]) {
+      var s = a[1].split("&");
+      filters.page = s[0];
+    } else filters.page = 1;
+    return searchProducts(e), !1;
   });
 
   $(".product").each(function (t, e) {
@@ -857,15 +865,16 @@ $(document).ready(function () {
     });
   });
 
-  $("#same_as_billing").change(function(t) {
-      $(this).is(":checked") && ($("#shipping_line1").val($("#billing_line1").val()).change(),
+  $("#same_as_billing").change(function (t) {
+    $(this).is(":checked") &&
+      ($("#shipping_line1").val($("#billing_line1").val()).change(),
       $("#shipping_line2").val($("#billing_line2").val()).change(),
       $("#shipping_city").val($("#billing_city").val()).change(),
       $("#shipping_state").val($("#billing_state").val()).change(),
       $("#shipping_postal_code").val($("#billing_postal_code").val()).change(),
       $("#shipping_country").val($("#billing_country").val()).change(),
       $("#shipping_phone").val($("#phone").val()).change(),
-      $("#guest-checkout").data("formValidation").resetForm())
+      $("#guest-checkout").data("formValidation").resetForm());
   });
 
   $(document).on("click", ".btn-minus", function (t) {
@@ -1057,10 +1066,9 @@ $(".edit-address").click(function (t) {
       this.id == e && add_address(this);
     });
 }),
-$(document).on("click", ".forgot-password", function(t) {
-  t.preventDefault(),
-  prompt(lang.reset_pw, lang.type_email)
-});
+  $(document).on("click", ".forgot-password", function (t) {
+    t.preventDefault(), prompt(lang.reset_pw, lang.type_email);
+  });
 
 function initialize() {
   var input = document.getElementById("autocomplete_search");
@@ -1071,6 +1079,7 @@ function initialize() {
     document.getElementById("address-line-1").value = "";
     document.getElementById("address-postal-code").value = "";
     document.getElementById("address-state").value = "";
+    document.getElementById("address-phone").value = "";
 
     var place = autocomplete.getPlace();
     // Define variables to store city and country names
