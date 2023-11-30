@@ -101,6 +101,18 @@ class Cart_ajax extends MY_Shop_Controller
         if ($this->input->is_ajax_request() || $this->input->post('quantity')) {
             
             $product = $this->shop_model->getProductForCart($product_id);
+
+            $product_to_add_quantity = 0;
+            $cart_contents = $this->cart->contents();
+            foreach ($cart_contents as $item) {
+
+                if($product->code == $item['code']){
+                    $product_to_add_quantity += $item['qty'];
+                }
+            }
+
+            $quantity_added = $this->input->get('qty') + $product_to_add_quantity;
+
             $options = $this->shop_model->getProductVariants($product_id);
             $price   = $this->sma->setCustomerGroupPrice((isset($product->special_price) && !empty($product->special_price) ? $product->special_price : $product->price), $this->customer_group);
             $price   = $this->sma->isPromo($product) ? $product->promo_price : $price;
@@ -118,7 +130,7 @@ class Cart_ajax extends MY_Shop_Controller
                 $price = $option['price'] + $price;
             }
             $selected = $option ? $option['id'] : false;
-            if (!$this->Settings->overselling && $this->checkProductStock($product, $this->input->get('qty'), $selected)) {
+            if (!$this->Settings->overselling && $this->checkProductStock($product, $quantity_added, $selected)) {
                 if ($this->input->is_ajax_request()) {
                     $this->sma->send_json(['error' => 1, 'message' => lang('item_out_of_stock')]);
                 } else {
