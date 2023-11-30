@@ -685,8 +685,6 @@ foreach ($cart_contents as $cartItem) {
                 deliveryDays = "5 to 8 days"
             }
 
-            var grandTotalPrice = totalPrice + totalOrderTax + shipping;
-
             if (non_express_items > 0) {
                 if(saudiOrder == 1 && orderWithTax > 200){
                     shipping = 0;
@@ -697,6 +695,8 @@ foreach ($cart_contents as $cartItem) {
                 
                 $("#express-delivery-check").prop("disabled", true);
             }
+
+            var grandTotalPrice = totalPrice + totalOrderTax + shipping;
 
             $('#shipping-price').text(parseFloat(shipping).toFixed(2))
             $('#grand-total-price').text(parseFloat(grandTotalPrice).toFixed(2))
