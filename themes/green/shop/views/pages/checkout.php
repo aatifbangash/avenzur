@@ -688,7 +688,7 @@ foreach ($cart_contents as $cartItem) {
             console.log('Total Price: '+totalPrice);
             console.log('Total Tax: '+totalOrderTax);
             console.log('Shipping: '+shipping);
-            var grandTotalPrice = totalPrice + totalOrderTax + shipping;
+            var grandTotalPrice = totalPrice + shipping;
 
             if (non_express_items > 0) {
                 if(saudiOrder == 1 && orderWithTax > 200){
