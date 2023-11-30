@@ -55,11 +55,37 @@ class Cart_ajax extends MY_Shop_Controller
                         }
                     }
 
-                    $old_quantity_charged = ceil($sulfad_in_cart / 3)*2;
-                    $old_discounted_quantity = floor($sulfad_in_cart / 3);
+                    if(($sulfad_in_cart - $sulfad_to_remove) > 0){
+                        $old_quantity_charged = ceil($sulfad_in_cart / 3)*2;
+                        $old_discounted_quantity = floor($sulfad_in_cart / 3);
 
-                    $new_quantity_charged = ceil(($sulfad_in_cart - $sulfad_to_remove) / 3)*2;
-                    $new_discounted_quantity = floor(($sulfad_in_cart - $sulfad_to_remove) / 3);
+                        $new_quantity_charged = ceil(($sulfad_in_cart - $sulfad_to_remove) / 3)*2;
+                        $new_discounted_quantity = floor(($sulfad_in_cart - $sulfad_to_remove) / 3);
+
+                        $disc_to_remove = $old_discounted_quantity - $new_discounted_quantity;
+                        if ($this->cart->remove($rowid)) {
+                            foreach ($cart_contents as $itm) {
+                                $product_code = $itm['code'];
+                                if($product_code == $sulfad_code){
+                                    $data = [
+                                        'rowid'  => $rowid,
+                                        'qty'    => $this->input->post('qty', true)
+                                    ];
+
+                                    $this->cart->update($data);
+                                }
+                            } 
+                        }
+
+                    }else{
+                        // remove all sulfad if qty becomes zero
+                        foreach ($cart_contents as $itm) {
+                            $product_code = $itm['code'];
+                            if($product_code == $sulfad_code){
+                                $this->cart->remove($itm['rowid']);
+                            }
+                        }
+                    }
 
                 }else{
                     if ($this->cart->remove($rowid)) {
@@ -91,7 +117,7 @@ class Cart_ajax extends MY_Shop_Controller
                 $price = $option['price'] + $price;
             }
             $selected = $option ? $option['id'] : false;
-            if (!$this->Settings->overselling && $this->checkProductStock($product, 1, $selected)) {
+            if (!$this->Settings->overselling && $this->checkProductStock($product, $this->input->post('quantity'), $selected)) {
                 if ($this->input->is_ajax_request()) {
                     $this->sma->send_json(['error' => 1, 'message' => lang('item_out_of_stock')]);
                 } else {
