@@ -99,7 +99,7 @@ class Cart_ajax extends MY_Shop_Controller
     public function add($product_id)
     {
         if ($this->input->is_ajax_request() || $this->input->post('quantity')) {
-            echo 'Quantity: '.$this->input->post('quantity');exit;
+            
             $product = $this->shop_model->getProductForCart($product_id);
             $options = $this->shop_model->getProductVariants($product_id);
             $price   = $this->sma->setCustomerGroupPrice((isset($product->special_price) && !empty($product->special_price) ? $product->special_price : $product->price), $this->customer_group);
@@ -118,7 +118,7 @@ class Cart_ajax extends MY_Shop_Controller
                 $price = $option['price'] + $price;
             }
             $selected = $option ? $option['id'] : false;
-            if (!$this->Settings->overselling && $this->checkProductStock($product, $this->input->post('quantity'), $selected)) {
+            if (!$this->Settings->overselling && $this->checkProductStock($product, $this->input->get('qty'), $selected)) {
                 if ($this->input->is_ajax_request()) {
                     $this->sma->send_json(['error' => 1, 'message' => lang('item_out_of_stock')]);
                 } else {
