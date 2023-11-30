@@ -23,7 +23,7 @@
                                             <p class="card-text"><?= $address->city; ?>, <?= $this->Settings->indian_gst && isset($istates[$address->state]) ? $istates[$address->state] . ' - ' . $address->state : $address->state; ?></p>
                                             <p class="card-text">Postal Code: <?= $address->postal_code; ?></p>
                                             <p class="card-text">Country: <?= $address->country; ?></p>
-                                            <p class="card-text"><?= lang('phone') . ': ' . $address->phone; ?></p>
+                                            <p class="card-text addPhone-k"><?= lang('phone') . ': '?>  <span class="phonear-k"><?= $address->phone; ?></span></p>
                                             <button type="button" class="btn btn-primary edit-address" data-bs-toggle="modal" data-bs-target="#editAddressModal" data-id="<?= $address->id; ?>">Edit</button>
                                         </div>
                                     </div>
