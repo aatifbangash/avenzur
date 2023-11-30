@@ -476,7 +476,7 @@ class Main extends MY_Shop_Controller
                     'type'                   => 'password',
                     'class'                  => 'form-control',
                     'required'               => 'required',
-                    'pattern'                => '(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}',
+                    'pattern'                => '.{5,20}',
                     'data-fv-regexp-message' => lang('pasword_hint'),
                     'placeholder'            => lang('new_password'),
                 ];
