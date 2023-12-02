@@ -1,6 +1,6 @@
 <?php
 echo 'a';exit;
-$mysqli = new mysqli("localhost", "root", "", "avenzur");
+$mysqli = new mysqli("localhost", "user", "pass", "db");
 
 // Check connection
 if ($mysqli->connect_errno) {
