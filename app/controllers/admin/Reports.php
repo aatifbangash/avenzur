@@ -138,7 +138,7 @@ class Reports extends MY_Controller
         $item = $this->input->post('item') ? $this->input->post('item') : null;
 
         if(isset($_POST['submit'])){
-            $organizedResults = $this->reports_model->getPharmacyStockData($item);
+            $rows = $this->reports_model->getPharmacyStockData($item);
 
             foreach ($rows as $row) {
                 $productId = $row['id'];
