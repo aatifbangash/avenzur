@@ -147,6 +147,10 @@ class Reports extends MY_Controller
                 $batchNo = $row['batch_no'];
                 $quantity = $row['quantity'];
                 $expiry = $row['expiry'];
+
+                echo '<pre>';
+                print_r($row);
+                exit;
             
                 // Check if the product is already in the organized array
                 if (!isset($organizedResults[$productId])) {
