@@ -30,7 +30,7 @@
         <div class="row">
             <?php
             $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            echo admin_form_open_multipart('reports/stock', $attrib)
+            echo admin_form_open_multipart('reports/pharmacy_stock', $attrib)
             ?>
             <div class="col-lg-12">
                 
