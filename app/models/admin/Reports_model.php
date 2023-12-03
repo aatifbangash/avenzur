@@ -993,7 +993,7 @@ class Reports_model extends CI_Model
             $totalPurchasesQuery .= "AND (p.id = '{$item}') ";
         }
 
-        $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.batchno, pi.warehouse_id
+        $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.warehouse_id
                                 ORDER BY p.id ASC, w.id ASC";
 
         $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
