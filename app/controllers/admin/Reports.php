@@ -141,12 +141,12 @@ class Reports extends MY_Controller
             $rows = $this->reports_model->getPharmacyStockData($item);
 
             foreach ($rows as $row) {
-                $productId = $row['id'];
-                $productName = $row['name'];
-                $warehouseName = $row['warehouse_name'];
-                $batchNo = $row['batch_no'];
-                $quantity = $row['quantity'];
-                $expiry = $row['expiry'];
+                $productId = $row->id;
+                $productName = $row->name;
+                $warehouseName = $row->warehouse_name;
+                $batchNo = $row->batch_no;
+                $quantity = $row->quantity;
+                $expiry = $row->expiry;
 
                 echo '<pre>';
                 print_r($row);
