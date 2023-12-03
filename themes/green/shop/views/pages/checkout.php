@@ -685,6 +685,10 @@ foreach ($cart_contents as $cartItem) {
                 deliveryDays = "5 to 8 days"
             }
 
+            if(orderWithTax > 200){
+                shipping = 0;
+            }
+
             console.log('Total Price: '+totalPrice);
             console.log('Total Tax: '+totalOrderTax);
             console.log('Shipping: '+shipping);
