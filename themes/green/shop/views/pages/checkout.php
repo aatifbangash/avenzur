@@ -691,7 +691,7 @@ foreach ($cart_contents as $cartItem) {
             var grandTotalPrice = totalPrice + shipping;
 
             if (non_express_items > 0) {
-                if(saudiOrder == 1 && orderWithTax > 200){
+                if(orderWithTax > 200){
                     shipping = 0;
                 }
                 /*else{
