@@ -974,6 +974,7 @@ class Reports_model extends CI_Model
                                     p.id, 
                                     p.code item_code, 
                                     p.name name, 
+                                    w.name as warehouse_name,
                                     pi.batchno batch_no, 
                                     pi.expiry expiry, 
                                     round(sum(pi.quantity)) quantity,
@@ -984,6 +985,7 @@ class Reports_model extends CI_Model
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
                                 INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id
+                                INNER JOIN sma_warehouses w ON w.id = pi.warehouse_id
                                 WHERE pi.purchase_item_id IS NULL AND pc.status = 'received'";
 
         if ($item) {
