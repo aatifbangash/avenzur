@@ -16,11 +16,13 @@
                 
               
                   <h6>CR:1010160412</h6>
-                  <h6>Pharma Medical Company</h6>
-                  <h6>6675, Olaya, Olaya District, 2628</h6>
+                  <h6>شركة فرماء الطبية</h6>
+                  <h6>٦٦٧٥ ، العليا، حي العليا، ٢٦٢٨</h6>
+                  <h6>الرياض</h6>
+                  <h6>12241</h6>
                   <!--<h6>KSA ,Riyadh ,Olaya main road,Mousa bin nosair street.</h6>
                   <h6>Silicon building no.1, Office 7</h6>-->
-                  <h6>Phone No. 0114654636</h6>
+                  <h6>Phone No. 114654636</h6>
                   <h6><a href="mailto:Email info@avenzur.com" class="text-dark text-decoration-none">Email: info@avenzur.com</a></h6>
               
                
