@@ -109,7 +109,7 @@
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <th colspan="15">No records to show.</th>
+                                    <th colspan="<?= sizeOf($warehouses) + 3; ?>">No records to show.</th>
                                 </tr>
                             <?php endif; ?>
 
