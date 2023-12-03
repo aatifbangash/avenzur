@@ -693,9 +693,10 @@ foreach ($cart_contents as $cartItem) {
             if (non_express_items > 0) {
                 if(saudiOrder == 1 && orderWithTax > 200){
                     shipping = 0;
-                }else{
-                    shipping = 32;
                 }
+                /*else{
+                    shipping = 32;
+                }*/
                 deliveryDays = '4 to 6 days';
                 
                 $("#express-delivery-check").prop("disabled", true);
