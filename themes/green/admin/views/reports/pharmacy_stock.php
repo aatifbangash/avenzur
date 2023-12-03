@@ -42,12 +42,6 @@
                             <input type="hidden" name="item" value="<?= isset($_POST['item']) ? $_POST['item'] : 0 ?>" id="report_product_id2" />
                         </div>
                     </div>
-                    <!--<div class="col-md-4">
-                        <div class="form-group">
-                            <?php //echo lang('Item', 'item'); ?>
-                            <?php //echo form_input('item', set_value('item'), 'class="form-control input-tip" id="item"'); ?>
-                        </div>
-                    </div>-->
                 </div>
                 <div class="row">
                     <div class="col-md-4">
@@ -67,15 +61,18 @@
                                 <th>#</th>
                                 <th><?= lang('Item Code'); ?></th>
                                 <th><?= lang('Item Name'); ?></th>
-                                <th><?= lang('Batch No'); ?></th>
-                                <th><?= lang('Expiry'); ?></th>
-                                <th><?= lang('Quantity Balance'); ?></th>
-                                <th><?= lang('Sale Price'); ?></th>
-                                <th><?= lang('Total Sale Price'); ?></th>
-                                <th><?= lang('Purchase Price'); ?></th>
-                                <th><?= lang('Total Purchase Price'); ?></th>
-                                <th><?= lang('Cost Price'); ?></th>
-                                <th><?= lang('Total Cost Price'); ?></th>
+                                <th><?= lang('PH1 Batch'); ?></th>
+                                <th><?= lang('PH1 Stock'); ?></th>
+                                <th><?= lang('PH1 Expiry'); ?></th>
+                                <th><?= lang('PH2 Batch'); ?></th>
+                                <th><?= lang('PH2 Stock'); ?></th>
+                                <th><?= lang('PH2 Expiry'); ?></th>
+                                <th><?= lang('PH3 Batch'); ?></th>
+                                <th><?= lang('PH3 Stock'); ?></th>
+                                <th><?= lang('PH3 Expiry'); ?></th>
+                                <th><?= lang('PH4 Batch'); ?></th>
+                                <th><?= lang('PH4 Stock'); ?></th>
+                                <th><?= lang('PH4 Expiry'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
@@ -95,32 +92,27 @@
                                         <td><?= $row->item_code ?></td>
                                         <td><?= $row->name ?></td>
                                         <td><?= $row->batch_no ?></td>
+                                        <td><?= $row->quantity ?></td>
                                         <td><?= $row->expiry ?></td>
 
+                                        <td><?= $row->batch_no ?></td>
                                         <td><?= $row->quantity ?></td>
+                                        <td><?= $row->expiry ?></td>
+
+                                        <td><?= $row->batch_no ?></td>
+                                        <td><?= $row->quantity ?></td>
+                                        <td><?= $row->expiry ?></td>
+
+                                        <td><?= $row->batch_no ?></td>
+                                        <td><?= $row->quantity ?></td>
+                                        <td><?= $row->expiry ?></td>
+
                                         <?php $totalQuantity += $row->quantity; ?>
-
-                                        <td><?= number_format($row->sale_price, 2, '.', ',') ?></td>
-                                        <?php $totalSalePrice += $row->sale_price; ?>
-
-                                        <td><?= number_format($row->sale_price * $row->quantity, 2, '.', ',') ?></td>
-                                        <?php $grandTotalSalePrice += $row->sale_price * $row->quantity; ?>
-
-                                        <td><?= number_format($row->purchase_price, 2, '.', ',') ?></td>
-                                        <?php $totalPurchasePrice += $row->purchase_price; ?>
-
-                                        <td><?= number_format($row->purchase_price * $row->quantity, 2, '.', ',') ?></td>
-                                        <?php $grandTotalPurchasePrice += $row->purchase_price * $row->quantity; ?>
-
-                                        <td><?= number_format($row->cost_price, 2, '.', ',') ?></td>
-                                        <?php $totalCostPrice += $row->cost_price; ?>
-                                        <td><?= number_format($row->cost_price * $row->quantity, 2, '.', ',') ?></td>
-                                        <?php $grandTotalCostPrice += $row->cost_price * $row->quantity; ?>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <th colspan="12">No records to show.</th>
+                                    <th colspan="14">No records to show.</th>
                                 </tr>
                             <?php endif; ?>
 
@@ -131,14 +123,20 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
+                                <th><?= $totalQuantity ?></th>
+
+                                <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th><?= $totalQuantity ?></th>
-                                <th><?= number_format($totalSalePrice, 2, '.', ',') ?></th>
-                                <th><?= number_format($grandTotalSalePrice, 2, '.', ',') ?></th>
-                                <th><?= number_format($totalPurchasePrice, 2, '.', ',') ?></th>
-                                <th><?= number_format($grandTotalPurchasePrice, 2, '.', ',') ?></th>
-                                <th><?= number_format($totalCostPrice, 2, '.', ',') ?></th>
-                                <th><?= number_format($grandTotalCostPrice, 2, '.', ',') ?></th>
+
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th><?= $totalQuantity ?></th>
+
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th><?= $totalQuantity ?></th>
+                                
                             </tr>
                             </tfoot>
                         </table>
