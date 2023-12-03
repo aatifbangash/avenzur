@@ -86,23 +86,18 @@
                                 <?php foreach ($stock_data as $index => $row): ?>
                                     <tr>
                                         <td><?= $index + 1 ?></td>
-                                        <td><?= $row->item_code ?></td>
-                                        <td><?= $row->name ?></td>
-                                        <td><?= $row->batch_no ?></td>
-                                        <td><?= $row->quantity ?></td>
-                                        <td><?= $row->expiry ?></td>
+                                        <td><?= $row['item_code'] ?></td>
+                                        <td><?= $row['name'] ?></td>
 
-                                        <td><?= $row->batch_no ?></td>
-                                        <td><?= $row->quantity ?></td>
-                                        <td><?= $row->expiry ?></td>
-
-                                        <td><?= $row->batch_no ?></td>
-                                        <td><?= $row->quantity ?></td>
-                                        <td><?= $row->expiry ?></td>
-
-                                        <td><?= $row->batch_no ?></td>
-                                        <td><?= $row->quantity ?></td>
-                                        <td><?= $row->expiry ?></td>
+                                        <?php
+                                            foreach ($row['warehouses'] as $warehouse_data){
+                                                ?>
+                                                    <td><?= $warehouse_data['batch_no'] ?></td>
+                                                    <td><?= $warehouse_data['quantity'] ?></td>
+                                                    <td><?= $warehouse_data['expiry'] ?></td>
+                                                <?php
+                                            }
+                                        ?>
 
                                         <?php $totalQuantity += $row->quantity; ?>
                                     </tr>
