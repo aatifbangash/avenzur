@@ -134,6 +134,28 @@ class Reports extends MY_Controller
         $this->page_construct('reports/customer_report', $meta, $this->data);
     }
 
+    public function pharmacy_stock(){
+        $item = $this->input->post('item') ? $this->input->post('item') : null;
+
+        if(isset($_POST['submit'])){
+            $this->data['stock_data'] = $this->reports_model->getPharmacyStockData($item);
+        }else{
+            $this->data['stock_data'] = [];
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => lang('pharmacy_stock_report')]
+        ];
+
+        $meta = [
+            'page_title' => lang('pharmacy_stock_report'),
+            'bc' => $bc
+        ];
+        $this->page_construct('reports/pharmacy_stock', $meta, $this->data);
+    }
+
     public function stock()
     {
 
