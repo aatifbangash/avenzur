@@ -963,7 +963,7 @@ class Reports_model extends CI_Model
         return $data;
     }
 
-    public function getPharmacyStockData($item)
+    public function getPharmacyStockData($item = null)
     {
         $totalPurchases = [];
         $finalResponse = [];
