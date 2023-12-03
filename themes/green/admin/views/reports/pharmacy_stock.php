@@ -112,7 +112,7 @@
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <th colspan="14">No records to show.</th>
+                                    <th colspan="15">No records to show.</th>
                                 </tr>
                             <?php endif; ?>
 
