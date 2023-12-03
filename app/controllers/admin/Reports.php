@@ -157,6 +157,7 @@ class Reports extends MY_Controller
             if (!isset($organizedResults[$productId.$batchNo])) {
                 // If not, initialize the product information
                 $organizedResults[$productId.$batchNo] = [
+                    'id' => $productId,
                     'product_name' => $productName,
                     'product_code' => $productCode,
                     'warehouses' => [],
