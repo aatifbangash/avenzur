@@ -603,7 +603,7 @@ foreach ($cart_contents as $cartItem) {
     $('#shipping_phone').val("+966");
 
     function calCulateShipping(city, country, isExpressDelivery = false) {
-
+        console.log('Here in calculate shipping...');
         $("#express-delivery-check").prop("disabled", true);
         //$('.payment-k').prop('disabled', true);
 
