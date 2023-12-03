@@ -13,7 +13,7 @@
 </script>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('stock_report'); ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('pharmacy_stock_report'); ?></h2>
 
         <div class="box-icon">
             <ul class="btn-tasks">
@@ -33,63 +33,8 @@
             echo admin_form_open_multipart('reports/stock', $attrib)
             ?>
             <div class="col-lg-12">
+                
                 <div class="row">
-                    <div class="col-lg-12">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <?= lang('At Date', 'at_date'); ?>
-                                <?php echo form_input('at_date', ($at_date ?? ''), 'class="form-control input-tip date" id="at_date"'); ?>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <?= lang('Store', 'warehouse'); ?>
-                                <?php
-                                $optionsWarehouse[0] = 'Select';
-                                if (!empty($warehouses)) {
-                                    foreach ($warehouses as $warehouse) {
-                                        $optionsWarehouse[$warehouse->id] = $warehouse->name;
-                                    }
-                                }
-
-                                ?>
-                                <?php echo form_dropdown('warehouse', $optionsWarehouse, set_value('warehouse'), array('class' => 'form-control disable-select'), array('none')); ?>
-
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <?= lang('Supplier', 'supplier'); ?>
-                                <?php
-                                $optionsSuppliers[0] = 'Select';
-                                if (!empty($suppliers)) {
-                                    foreach ($suppliers as $sup) {
-                                        $optionsSuppliers[$sup->id] = $sup->name;
-                                    }
-                                }
-                                ?>
-                                <?php echo form_dropdown('supplier', $optionsSuppliers, set_value('supplier'), array('class' => 'form-control disable-select'), array('none')); ?>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4" style="margin-left: 15px; width: 32.6%">
-                        <div class="form-group">
-                            <?= lang('Item Group', 'item_group'); ?>
-                            <?php
-                            $optionsCategories[0] = 'Select';
-                            if (!empty($categories)) {
-                                foreach ($categories as $cat) {
-                                    $optionsCategories[$cat->id] = $cat->name;
-                                }
-                            }
-                            ?>
-                            <?php echo form_dropdown('item_group', $optionsCategories, set_value('item_group'), array('class' => 'form-control disable-select'), array('none')); ?>
-
-                        </div>
-                    </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <?php echo lang('Item', 'item'); ?>
