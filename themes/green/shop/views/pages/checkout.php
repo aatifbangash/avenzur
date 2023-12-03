@@ -545,7 +545,6 @@ foreach ($cart_contents as $cartItem) {
                                 <div class="panel-body total-k">
                                     <?php
                                     $total = $this->sma->convertMoney($this->cart->total(), false, false);
-<<<<<<< HEAD
 
                                     if ($not_express_items > 0) {
                                     $shipping = $this->sma->convertMoney(32, false, false);
@@ -553,8 +552,6 @@ foreach ($cart_contents as $cartItem) {
                                     $shipping = $this->sma->convertMoney($calculateShipping, false, false);
                                     }
 
-=======
->>>>>>> 4919772eb1c69de910a8cb3b9d4f85b434ac9213
                                     $order_tax = $this->sma->convertMoney($this->cart->order_tax(), false, false);
                                                     
                                     if(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($order_tax)) > 200){
@@ -858,7 +855,6 @@ foreach ($cart_contents as $cartItem) {
                 deliveryDays = "5 to 8 days"
             }
 
-<<<<<<< HEAD
             console.log('Total Price: ' + totalPrice);
             console.log('Total Tax: ' + totalOrderTax);
             console.log('Shipping: ' + shipping);
@@ -869,20 +865,6 @@ foreach ($cart_contents as $cartItem) {
                     shipping = 0;
                 } else {
                     shipping = 32;
-=======
-            if(orderWithTax > 200){
-                shipping = 0;
-            }
-
-            console.log('Total Price: '+totalPrice);
-            console.log('Total Tax: '+totalOrderTax);
-            console.log('Shipping: '+shipping);
-            var grandTotalPrice = totalPrice + shipping;
-
-            if (non_express_items > 0) {
-                if(orderWithTax > 200){
-                    shipping = 0;
->>>>>>> 4919772eb1c69de910a8cb3b9d4f85b434ac9213
                 }
                 /*else{
                     shipping = 32;
