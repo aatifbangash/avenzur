@@ -76,7 +76,7 @@
             </div>
           </div>
           <div class="text-center border-top pt-3 pb-2">
-            <p class="m-0 fw-bold copyr">All Rights Reserved Avenzur.com By Pharma Medcial Company</p>
+            <p class="m-0 fw-bold copyr">جميع الحقوق محفوظة شركة فرماء الطبية</p>
           </div>
         </footer>
       </div>
