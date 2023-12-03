@@ -97,6 +97,17 @@
                                                     <td><?= $warehouse_data['expiry'] ?></td>
                                                 <?php
                                             }
+
+                                            $missing_warehouses = sizeOf($warehouses) - sizeOf($row['warehouses']);
+
+                                            for($i=0;$i<$missing_warehouses;$i++){
+                                                ?>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                    <td>-</td>
+                                                <?php
+                                            }
+
                                         ?>
 
                                         <?php $totalQuantity += $row->quantity; ?>
