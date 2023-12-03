@@ -1045,6 +1045,11 @@
                                             <i class="fa fa-money"></i><span class="text"> <?= lang('payments_report'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="reports_pharmacy_stocks">
+                                        <a href="<?= admin_url('reports/pharmacy_stock') ?>">
+                                            <i class="fa fa-money"></i><span class="text"> <?= lang('pharmacy_stock_report'); ?></span>
+                                        </a>
+                                    </li>
                                     <li id="reports_stocks">
                                         <a href="<?= admin_url('reports/stock') ?>">
                                             <i class="fa fa-money"></i><span class="text"> <?= lang('Stock_report'); ?></span>
