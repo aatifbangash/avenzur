@@ -138,7 +138,38 @@ class Reports extends MY_Controller
         $item = $this->input->post('item') ? $this->input->post('item') : null;
 
         if(isset($_POST['submit'])){
-            $this->data['stock_data'] = $this->reports_model->getPharmacyStockData($item);
+            $organizedResults = $this->reports_model->getPharmacyStockData($item);
+
+            foreach ($rows as $row) {
+                $productId = $row['id'];
+                $productName = $row['name'];
+                $warehouseName = $row['warehouse_name'];
+                $batchNo = $row['batch_no'];
+                $quantity = $row['quantity'];
+                $expiry = $row['expiry'];
+            
+                // Check if the product is already in the organized array
+                if (!isset($organizedResults[$productId])) {
+                    // If not, initialize the product information
+                    $organizedResults[$productId] = [
+                        'product_name' => $productName,
+                        'warehouses' => [],
+                    ];
+                }
+            
+                // Add warehouse information to the product
+                $organizedResults[$productId]['warehouses'][] = [
+                    'warehouse_name' => $warehouseName,
+                    'batch_no' => $batchNo,
+                    'quantity' => $quantity,
+                    'expiry'   => $expiry
+                ];
+            }
+
+            $this->data['stock_data'] = $organizedResults;
+            echo '<pre>';
+            print_r($this->data['stock_data']);
+            exit;
         }else{
             $this->data['stock_data'] = [];
         }
