@@ -993,7 +993,6 @@ class Reports_model extends CI_Model
 
         $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.batchno, pi.warehouse_id
                                 ORDER BY p.id DESC";
-        echo $totalPurchasesQuery;exit;
 
         $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
         
