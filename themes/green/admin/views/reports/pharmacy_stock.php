@@ -84,6 +84,7 @@
                                 $grandTotalCostPrice = 0;
                                 ?>
                                 <?php foreach ($stock_data as $index => $row): ?>
+                                    <?php echo '<pre>';print_r($row); ?>
                                     <tr>
                                         <td><?= $index + 1 ?></td>
                                         <td><?= $row['item_code'] ?></td>
