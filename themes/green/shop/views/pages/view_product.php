@@ -106,7 +106,7 @@
             <div class="product-desc border-top" id="show_desc" style="min-height: 220px;line-height: 28px;">
                 <p class="m-0 py-3">
                     <span><?php 
-                        echo mb_strimwidth($product->details, 0, 350, ''); 
+                        echo $product->details; 
                         //if(strlen($product->details) > 350){
                             //echo mb_strimwidth($product->details, 0, 350, ''); 
                         //}else{
