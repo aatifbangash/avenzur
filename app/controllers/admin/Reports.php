@@ -154,9 +154,9 @@ class Reports extends MY_Controller
             $expiry = $row->expiry;
         
             // Check if the product is already in the organized array
-            if (!isset($organizedResults[$productId])) {
+            if (!isset($organizedResults[$productId.$batchNo])) {
                 // If not, initialize the product information
-                $organizedResults[$productId] = [
+                $organizedResults[$productId.$batchNo] = [
                     'product_name' => $productName,
                     'product_code' => $productCode,
                     'warehouses' => [],
@@ -164,7 +164,7 @@ class Reports extends MY_Controller
             }
         
             // Add warehouse information to the product
-            $organizedResults[$productId]['warehouses'][] = [
+            $organizedResults[$productId.$batchNo]['warehouses'][] = [
                 'warehouse_name' => $warehouseName,
                 'batch_no' => $batchNo,
                 'quantity' => $quantity,
