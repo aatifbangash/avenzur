@@ -134,6 +134,61 @@ class Reports extends MY_Controller
         $this->page_construct('reports/customer_report', $meta, $this->data);
     }
 
+    public function pharmacy_stock(){
+        $item = $this->input->post('item') ? $this->input->post('item') : null;
+
+        if(isset($_POST['submit'])){
+            $rows = $this->reports_model->getPharmacyStockData($item);
+
+        }else{
+            $rows = $this->reports_model->getPharmacyStockData();
+        }
+
+        foreach ($rows as $row) {
+            $productId = $row->id;
+            $productCode = $row->item_code;
+            $productName = $row->name;
+            $warehouseName = $row->warehouse_name;
+            $batchNo = $row->batch_no;
+            $quantity = $row->quantity;
+            $expiry = $row->expiry;
+        
+            // Check if the product is already in the organized array
+            if (!isset($organizedResults[$productId.$batchNo])) {
+                // If not, initialize the product information
+                $organizedResults[$productId.$batchNo] = [
+                    'id' => $productId,
+                    'product_name' => $productName,
+                    'product_code' => $productCode,
+                    'warehouses' => [],
+                ];
+            }
+        
+            // Add warehouse information to the product
+            $organizedResults[$productId.$batchNo]['warehouses'][] = [
+                'warehouse_name' => $warehouseName,
+                'batch_no' => $batchNo,
+                'quantity' => $quantity,
+                'expiry'   => $expiry
+            ];
+        }
+
+        $this->data['stock_data'] = $organizedResults;
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => lang('pharmacy_stock_report')]
+        ];
+
+        $meta = [
+            'page_title' => lang('pharmacy_stock_report'),
+            'bc' => $bc
+        ];
+        $this->page_construct('reports/pharmacy_stock', $meta, $this->data);
+    }
+
     public function stock()
     {
 

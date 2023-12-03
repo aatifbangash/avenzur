@@ -127,6 +127,15 @@ class Main extends MY_Shop_Controller
         if ($this->shop_settings->private && !$this->loggedIn) {
             redirect('/login');
         }
+        /*else if(!$this->loggedIn){
+
+            $cookies = get_cookie();
+            foreach ($cookies as $cookie_name => $cookie_value) {
+                delete_cookie($cookie_name);
+            }
+
+            $this->session->sess_destroy();
+        }*/
         $this->data['all_categories']    = $this->shop_model->getAllCategories();
         $this->data['featured_categories'] = $this->shop_model->getFeaturedCategories();
         $this->data['popular_categories'] = $this->shop_model->getPopularCategories();
