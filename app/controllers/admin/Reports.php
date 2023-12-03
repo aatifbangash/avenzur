@@ -142,6 +142,7 @@ class Reports extends MY_Controller
 
             foreach ($rows as $row) {
                 $productId = $row->id;
+                $productCode = $row->item_code;
                 $productName = $row->name;
                 $warehouseName = $row->warehouse_name;
                 $batchNo = $row->batch_no;
@@ -153,6 +154,7 @@ class Reports extends MY_Controller
                     // If not, initialize the product information
                     $organizedResults[$productId] = [
                         'product_name' => $productName,
+                        'product_code' => $productCode,
                         'warehouses' => [],
                     ];
                 }
@@ -167,11 +169,10 @@ class Reports extends MY_Controller
             }
 
             $this->data['stock_data'] = $organizedResults;
-            echo '<pre>';
-            print_r($this->data['stock_data']);
-            exit;
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
         }else{
             $this->data['stock_data'] = [];
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
         }
 
         $bc = [

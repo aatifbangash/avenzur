@@ -61,18 +61,15 @@
                                 <th>#</th>
                                 <th><?= lang('Item Code'); ?></th>
                                 <th><?= lang('Item Name'); ?></th>
-                                <th><?= lang('PH1 Batch'); ?></th>
-                                <th><?= lang('PH1 Stock'); ?></th>
-                                <th><?= lang('PH1 Expiry'); ?></th>
-                                <th><?= lang('PH2 Batch'); ?></th>
-                                <th><?= lang('PH2 Stock'); ?></th>
-                                <th><?= lang('PH2 Expiry'); ?></th>
-                                <th><?= lang('PH3 Batch'); ?></th>
-                                <th><?= lang('PH3 Stock'); ?></th>
-                                <th><?= lang('PH3 Expiry'); ?></th>
-                                <th><?= lang('PH4 Batch'); ?></th>
-                                <th><?= lang('PH4 Stock'); ?></th>
-                                <th><?= lang('PH4 Expiry'); ?></th>
+                                <?php 
+                                    foreach($warehouses as $warehouse){
+                                        ?>
+                                            <th><?= lang($warehouse->name.' Batch'); ?></th>
+                                            <th><?= lang($warehouse->name.' Stock'); ?></th>
+                                            <th><?= lang($warehouse->name.' Expiry'); ?></th>
+                                        <?php
+                                    }   
+                                ?>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
