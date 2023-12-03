@@ -618,6 +618,10 @@ foreach ($cart_contents as $cartItem) {
         var orderWithTax = totalPrice + totalOrderTax;
         var saudiOrder = 0;
 
+        if(orderWithTax > 200){
+            shipping = 0;
+        }
+
         if (city != '' || country != '') {
 
             if (country.toLowerCase() === 'saudi arabia' || country.toLowerCase() === 'saudi' || country.toLowerCase() === 'saudia' || country.toLowerCase() === 'al saudi arabia' || country.toLowerCase() === 'al-saudi arabia' || country.toLowerCase() === 'al-saudi' || country.toLowerCase() === 'ksa' || country.toLowerCase() === 'kingdom of saudi arabia' || country.toLowerCase() === 'al saudi' || country.toLowerCase() === 'al saudia' || country.toLowerCase() === 'al-saudia' || [
