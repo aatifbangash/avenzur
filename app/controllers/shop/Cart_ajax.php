@@ -136,6 +136,7 @@ class Cart_ajax extends MY_Shop_Controller
             $selected = $option ? $option['id'] : false;
             if (!$this->Settings->overselling && $this->checkProductStock($product, $quantity_added, $selected)) {
                 if ($this->input->is_ajax_request()) {
+                    
                     $this->sma->send_json(['error' => 1, 'message' => lang('item_out_of_stock')]);
                 } else {
                     $this->session->set_flashdata('error', lang('item_out_of_stock'));
@@ -357,29 +358,37 @@ class Cart_ajax extends MY_Shop_Controller
         if ($product->type == 'service' || $product->type == 'digital') {
             return false;
         }
+       
         $chcek = [];
         if ($product->type == 'standard') {
             $quantity = 0;
-            if ($pis = $this->site->getPurchasedItems($product->id, $this->shop_settings->warehouse, $option_id)) {
-                foreach ($pis as $pi) {
-                    $quantity += $pi->quantity_balance;
-                }
-            }
+            /* GET QUANTITY FROM PRODUCT */
+            // if ($pis = $this->site->getPurchasedItems($product->id, $this->shop_settings->warehouse, $option_id)) {
+            //     foreach ($pis as $pi) {
+            //         $quantity += $pi->quantity_balance;
+            //     }
+            // }
+            $product_quantity =  $this->shop_model->getProductOnholdQty($product->id);
+            $quantity =  intval($product->quantity) - $product_quantity;
+           //echo $quantity;exit;
             $chcek[] = ($qty <= $quantity);
         } elseif ($product->type == 'combo') {
             $combo_items = $this->site->getProductComboItems($product->id, $this->shop_settings->warehouse);
             foreach ($combo_items as $combo_item) {
                 if ($combo_item->type == 'standard') {
                     $quantity = 0;
-                    if ($pis = $this->site->getPurchasedItems($combo_item->id, $this->shop_settings->warehouse, $option_id)) {
-                        foreach ($pis as $pi) {
-                            $quantity += $pi->quantity_balance;
-                        }
-                    }
+                    // if ($pis = $this->site->getPurchasedItems($combo_item->id, $this->shop_settings->warehouse, $option_id)) {
+                    //     foreach ($pis as $pi) {
+                    //         $quantity += $pi->quantity_balance;
+                    //     }
+                    // }
+                    $product_quantity =  $this->shop_model->getProductOnholdQty($product->id);
+                    $quantity =  intval($product->quantity) - $product_quantity;
                     $chcek[] = (($combo_item->qty * $qty) <= $quantity);
                 }
             }
         }
+      
         return empty($chcek) || in_array(false, $chcek);
     }
 }

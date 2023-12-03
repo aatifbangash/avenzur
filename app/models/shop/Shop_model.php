@@ -1452,4 +1452,14 @@ class Shop_model extends CI_Model
         return $this->db->get_where('sma_aramex', ['id' => 1])->row();
     }
 
+    public function getProductOnholdQty($product_id=null) {
+       // return $product_id; 
+       $this->db->select('SUM(quantity) AS total_quantity')
+       ->where('product_id', $product_id)
+       ->where('status', 'onhold');
+    $row =  $this->db->get('product_qty_onhold_request')->row();
+    return $row->total_quantity;
+     
+         }
+
 }
