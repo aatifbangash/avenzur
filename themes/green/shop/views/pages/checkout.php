@@ -503,14 +503,18 @@ foreach ($cart_contents as $cartItem) {
                                 <div class="panel-body total-k">
                                     <?php
                                     $total = $this->sma->convertMoney($this->cart->total(), false, false);
-
-                                    if ($not_express_items > 0) {
-                                        $shipping = $this->sma->convertMoney(32, false, false);
-                                    } else {
-                                        $shipping = $this->sma->convertMoney($calculateShipping, false, false);
-                                    }
-
                                     $order_tax = $this->sma->convertMoney($this->cart->order_tax(), false, false);
+                                                    
+                                    if(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($order_tax)) > 200){
+                                        $shipping = $this->sma->convertMoney(0, false, false);
+                                    }else{
+                                        if ($not_express_items > 0) {
+                                            $shipping = $this->sma->convertMoney(32, false, false);
+                                        } else {
+                                            $shipping = $this->sma->convertMoney($calculateShipping, false, false);
+                                        }
+                                    }
+                                    
                                     ?>
                                     <table class="table table-striped table-borderless cart-totals margin-bottom-no">
                                         <tr>
@@ -603,7 +607,6 @@ foreach ($cart_contents as $cartItem) {
     $('#shipping_phone').val("+966");
 
     function calCulateShipping(city, country, isExpressDelivery = false) {
-        console.log('Here in calculate shipping...');
         $("#express-delivery-check").prop("disabled", true);
         //$('.payment-k').prop('disabled', true);
 
