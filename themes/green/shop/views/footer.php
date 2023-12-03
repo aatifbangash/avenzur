@@ -10,11 +10,11 @@
                 <a class="navbar-brand" href="#"><img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="logo" ></a>
               </div>
             </div>
-    
+
             <div class="row pt-5">
               <div class="col-md-5 col-sm-12">
-                
-              
+
+
                   <h6>CR:1010160412</h6>
                   <h6>Pharma Medical Company</h6>
                   <h6>6675, Olaya, Olaya District, 2628</h6>
@@ -22,8 +22,8 @@
                   <h6>Silicon building no.1, Office 7</h6>-->
                   <h6>Phone No. 0114654636</h6>
                   <h6><a href="mailto:Email info@avenzur.com" class="text-dark text-decoration-none">Email: info@avenzur.com</a></h6>
-              
-               
+
+
               </div>
               <div class="col-md-2 col-sm-12">
                 <div>
@@ -39,14 +39,14 @@
               <div class="col-md-2 col-sm-12">
                 <div>
                   <h6><a class="text-dark text-decoration-none" ><b>Store Policies</b></a></h6>
-                  
+
                   <h6><a href="<?= site_url('shop/page/privacy-policy'); ?>" class="text-dark text-decoration-none"> Privacy Policy</a></h6>
                   <h6> <a href="<?= site_url('shop/page/Terms-Conditions'); ?>" class="text-dark text-decoration-none">Terms & Conditions</a></h6>
                   <h6> <a href="<?= site_url('shop/page/exchange-return-policy'); ?>" class="text-dark text-decoration-none">Refund & Return</a></h6>
                   <h6> <a href="<?= site_url('shop/page/delivery'); ?>" class="text-dark text-decoration-none">Delivery Information</a></h6>
                 </div>
               </div>
-              
+
               <div class="col-md-2 col-sm-12">
                 <div class="footer-icons">
                   <h6><a class="text-dark text-decoration-none" ><b>About Us</b></a></h6>
@@ -63,11 +63,11 @@
               <div class="col-md-5 col-sm-12">
                 <div class="mobficon text-center">
                   <h6 class="m-0">
-                    <a href="https://www.facebook.com/people/Avenzur/61551081317111/" class="text-dark text-decoration-none mx-2"> <i class="bi bi-facebook"></i></a> 
+                    <a href="https://www.facebook.com/people/Avenzur/61551081317111/" class="text-dark text-decoration-none mx-2"> <i class="bi bi-facebook"></i></a>
                     <a href="https://www.linkedin.com/company/avenzur/?viewAsMember=true" class="text-dark text-decoration-none mx-2"> <i class="bi bi-linkedin"></i></a>
-                    <a href="https://www.youtube.com/channel/UCrzcYJ1xERstbhGunjgWDLA" class="text-dark text-decoration-none mx-2"> <i class="bi bi-youtube"></i></a> 
+                    <a href="https://www.youtube.com/channel/UCrzcYJ1xERstbhGunjgWDLA" class="text-dark text-decoration-none mx-2"> <i class="bi bi-youtube"></i></a>
                     <a href="https://twitter.com/aveznur" class="text-dark text-decoration-none mx-2"> <i class="bi bi-twitter"></i></a>
-                    <a href="https://instagram.com/avenzurksa?igshid=NTc4MTIwNjQ2YQ==" class="text-dark text-decoration-none mx-2"><i class="bi bi-instagram"></i></a> 
+                    <a href="https://instagram.com/avenzurksa?igshid=NTc4MTIwNjQ2YQ==" class="text-dark text-decoration-none mx-2"><i class="bi bi-instagram"></i></a>
                     <a href="tiktok.com/@avenzur" class="text-dark text-decoration-none mx-2"><i class="bi bi-tiktok"></i></a></h6>
               </div>
               </div>
@@ -78,7 +78,7 @@
           </div>
         </footer>
       </div>
-      
+
   </section>
     <!-- footer end -->
     <link href="<?= $assets; ?>css/fontfamily.css" rel="stylesheet">
@@ -115,7 +115,7 @@
         // Change banner for English
         console.log('Current Language: '+currentLanguage);
         //alert('Current Language: '+currentLanguage);
-        
+
     } else if (currentLanguage === 'ar') {
         // Change banner for French
         console.log('Current Language: '+currentLanguage);
@@ -123,7 +123,7 @@
     }
 
     Weglot.on("languageChanged", function(newLang, prevLang) {
-        
+
         console.log("The language on the page just changed to (code): " + newLang)
         console.log("The full name of the language is: " + Weglot.getLanguageName(newLang))
 
@@ -132,7 +132,7 @@
         if (newLang === 'en') {
           var imgname1 = carouselItems[0].querySelector('img').src;
           var imgname2 = carouselItems[1].querySelector('img').src;
-          
+
           var parts1 = imgname1.split('/');
           var lastPart1 = parts1[parts1.length - 1];
           var imageName_1 = lastPart1.split('?')[0];
@@ -158,7 +158,7 @@
         } else if (newLang === 'ar') {
           var imgname1 = carouselItems[0].querySelector('img').src;
           var imgname2 = carouselItems[1].querySelector('img').src;
-          
+
           var parts1 = imgname1.split('/');
           var lastPart1 = parts1[parts1.length - 1];
           var imageName_1 = lastPart1.split('?')[0];
@@ -169,13 +169,13 @@
           imageName_2 = imageName_2.slice(0, -4);
 
           if(imageName_1.endsWith('-ar')){
-            
+
           }else{
             imageName_1 += '-ar';
           }
 
           if(imageName_2.endsWith('-ar')){
-            
+
           }else{
             imageName_2 += '-ar';
           }
@@ -186,7 +186,7 @@
 
     })
     </script>
-    <style> 
+    <style>
       .pac-container{
           z-index: 9999 !important;
       }
@@ -198,7 +198,11 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>-->
     <script src="<?= $assets; ?>js/libs.min.js"></script>
     <script src="<?= $assets; ?>js/jquery.toast.min.js"></script>
-    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9B2FB0OWZb_CrS8Njrdgek7djxBagYek&libraries=places"></script>
+<?php if($v == 'addresses' || $v == 'checkout') { ?>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9B2FB0OWZb_CrS8Njrdgek7djxBagYek&libraries=places&callback=initMap"></script>
+<?php } ?>
+<scrip<!--t async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9B2FB0OWZb_CrS8Njrdgek7djxBagYek&callback=initMap"></script>-->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
     <!--<script  src="<?php //echo $assets; ?>js/slick.min.js"></script>-->
     <script  src="<?= $assets; ?>js/ecommerce-main.js"></script>
@@ -289,7 +293,7 @@ $(document).ready(function() {
 });
 <?php
     } ?>
-   
+
 
 
 </script>
@@ -300,10 +304,10 @@ $(document).ready(function() {
         const dropdown = document.getElementById('languageDropdown');
         dropdown.addEventListener('click', function (event) {
           const target = event.target;
-        
+
           if (target.tagName === 'A' && target.hasAttribute('data-lang')) {
             const selectedLang = target.getAttribute('data-lang');
-            
+
             var carouselItems = document.querySelectorAll('.carousel-item');
 
             if (selectedLang === 'en') {
@@ -319,7 +323,7 @@ $(document).ready(function() {
         const currencydropdown = document.getElementById('currencyDropdown');
         currencydropdown.addEventListener('click', function (event) {
           const target = event.target;
-          
+
           // Check if the clicked element is a list item with data-lang attribute
           if (target.tagName === 'A' && target.hasAttribute('data-lang')) {
             const selectedCurrency = target.getAttribute('data-lang');
@@ -328,7 +332,7 @@ $(document).ready(function() {
                 url: '<?php echo base_url();?>shop/currencyupdate',
                 data: {
                     currencyName: selectedCurrency,
-                    
+
                 },
                 success: function (data) {
                   location.reload();
@@ -339,12 +343,12 @@ $(document).ready(function() {
 
         $(".add_item_search").autocomplete({
             source: function (request, response) {
-                
+
                    // $('#add_item').val('').removeClass('ui-autocomplete-loading');
                     //bootbox.alert('<?=lang('select_above');?>');
                    // $('#add_item').focus();
-                    
-                
+
+
                 $.ajax({
                     type: 'get',
                     url: '<?php echo base_url();?>shop/suggestions',
@@ -366,7 +370,7 @@ $(document).ready(function() {
                 event.preventDefault();
                 if (ui.item.id !== 0) {
                    // var row = add_invoice_item(ui.item);
-                   
+
                    window.open(ui.item.plink,'_self');
                     if (row)
                         $(this).val('');
@@ -377,22 +381,22 @@ $(document).ready(function() {
         }).data('ui-autocomplete')._renderItem = function(ul, item){
             return $("<li class='ui-autocomplete-row'></li>")
               .data("item.autocomplete", item)
-              //.append( "<a>" + "<img style='width:35px;height:35px' src='" +site.site_url+"assets/uploads/"+ item.image + "' /> " + item.label+ "</a>" )  
+              //.append( "<a>" + "<img style='width:35px;height:35px' src='" +site.site_url+"assets/uploads/"+ item.image + "' /> " + item.label+ "</a>" )
               .append( "<a style='text-decoration:none;color:#000;padding:6px;'>" + item.label + "</a><hr />" )
               .appendTo(ul);
           };
 
         $('.ui-autocomplete-input').keydown(function(event)
-        { 
-          if(event.keyCode == 13) 
+        {
+          if(event.keyCode == 13)
           {
           $('form#product-search-form').submit();
-          return false; 
+          return false;
           }
         });
 
         var $uiIdElement = $("#ui-id-1").detach();
-    
+
         // Append the detached element to the form with the class "d-flex search-bar"
         $("#autocomplete-suggestions").append($uiIdElement);
       });

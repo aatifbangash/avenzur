@@ -1070,6 +1070,97 @@ $(".edit-address").click(function (t) {
     t.preventDefault(), prompt(lang.reset_pw, lang.type_email);
   });
 
+function initMap() {
+  let map = new google.maps.Map(document.getElementById('map'), {
+    center: {lat: 23.8859, lng: 45.0792}, // Example coordinates (San Francisco)
+    zoom: 18, // Adjust the zoom level
+  });
+
+  // Try to get the user's current location
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+        function (position) {
+          const userLocation = {
+            lat: 24.7136, //position.coords.latitude,
+            lng: 46.6753 //position.coords.longitude
+          };
+
+          // Center the map at the user's location
+
+          document.getElementById('latitude').value = position.coords.latitude;
+          document.getElementById('longitude').value = position.coords.longitude;
+          map.setCenter(userLocation);
+
+          // Add a marker at the user's location
+          const marker = new google.maps.Marker({
+            position: userLocation,
+            map: map,
+            title: 'Your Location',
+            draggable: true
+          });
+          document.getElementById('manual-shipping-check').checked = false;
+          document.getElementById('manual-shipping-address').style.display = 'none';
+          geocodeLatLng(userLocation);
+
+          marker.addListener('dragend', function () {
+
+            document.getElementById('manual-shipping-check').checked = false;
+            document.getElementById('manual-shipping-address').style.display = 'none';
+
+            const newPosition = marker.getPosition();
+            document.getElementById('latitude').value = newPosition.lat();
+            document.getElementById('longitude').value = newPosition.lng();
+            geocodeLatLng(newPosition);
+          });
+        },
+        function (error) {
+          console.error('Error getting user location:', error);
+        },
+        {
+          enableHighAccuracy: true
+        }
+    );
+  } else {
+    console.error('Geolocation is not supported by this browser.');
+  }
+}
+
+function geocodeLatLng(latLng) {
+  const geocoder = new google.maps.Geocoder();
+  geocoder.geocode({'location': latLng}, function (results, status) {
+    if (status === 'OK') {
+      if (results[0]) {
+        const addressComponents = results[0].address_components;
+        const formattedAddress = results[0].formatted_address;
+        document.getElementById('google-map-selected-address').value = formattedAddress;
+        let city, country, state, street;
+
+        for (const component of addressComponents) {
+          const types = component.types;
+          if (types.includes('locality')) {
+            city = component.long_name;
+            document.getElementById('address-city').value = city;
+          } else if (types.includes('country')) {
+            country = component.long_name;
+            document.getElementById('address-country').value = country;
+          } else if (types.includes('route')) {
+            street = component.long_name;
+            document.getElementById('address-line-1').value = street;
+          } else if (types.includes('administrative_area_level_1')) {
+            state = component.long_name;
+            document.getElementById('address-state').value = state;
+          }
+        }
+console.log(city, country)
+
+      } else {
+        console.log('No results found');
+      }
+    } else {
+      console.log('Geocoder failed due to: ' + status);
+    }
+  });
+}
 function initialize() {
   var input = document.getElementById("autocomplete_search");
   var autocomplete = new google.maps.places.Autocomplete(input);
@@ -1085,7 +1176,6 @@ function initialize() {
     var city, country, street, postalCode, stateName, latitude, logitude;
     // Loop through address components to find city and country
     place.address_components.forEach(function (component) {
-      console.log(component);
       component.types.forEach(function (type) {
         if (type === "locality") {
           city = component.long_name;
@@ -1157,14 +1247,10 @@ function add_address(t) {
       (t.longitude ? t.longitude : "") +
       '"><input type="hidden" id="latitude" name="latitude" value="' +
       (t.latitude ? t.latitude : "") +
-      '"><div class="row"><div class="form-group col-sm-12"><input id="autocomplete_search"  class="form-control" placeholder="Type for the address..." autocomplete="on" /></div></div><div class="row"><div class="form-group col-sm-12"><input name="line1" id="address-line-1" value="' +
+      '"><div class="row"><div class="form-group col-sm-12"><div style="height: 350px; z-index: 99999;" id="map"></div><input id="google-map-selected-address" type="text" readonly  class="form-control" /><input id="autocomplete_search" type="hidden"  class="form-control" placeholder="Type for the address..." autocomplete="on" /></div></div>OR<br /><h5><input type="checkbox" id="manual-shipping-check"/> Check the box to type the address manually</h5><div id="manual-shipping-address" style="display: none;"><div class="row"><div class="form-group col-sm-12"><input name="line1" id="address-line-1" value="' +
       (t.line1 ? t.line1 : "") +
       '" class="form-control" placeholder="' +
       lang.line_1 +
-      '"></div></div><div class="row"><div class="form-group col-sm-12"><input name="line2" id="address-line-2" value="' +
-      (t.line2 ? t.line2 : "") +
-      '" class="form-control" placeholder="' +
-      lang.line_2 +
       '"></div></div><div class="row"><div class="form-group col-sm-6"><input name="city" readonly value="' +
       (t.city ? t.city : "") +
       '" id="address-city" class="form-control" placeholder="' +
@@ -1183,7 +1269,7 @@ function add_address(t) {
       (t.phone ? t.phone : "") +
       '" id="address-phone" class="form-control" placeholder="' +
       lang.phone +
-      '"></div></form></div>',
+      '"></div></div></form></div>',
     showCancelButton: !0,
     allowOutsideClick: !1,
     cancelButtonText: lang.cancel,
@@ -1247,7 +1333,24 @@ function add_address(t) {
         }
       }
 
-      initialize();
+      // initialize();
+      initMap();
+      document.getElementById('manual-shipping-check').onchange = function (e) {
+
+        document.getElementById('address-line-1').value = '';
+        document.getElementById('address-city').value = '';
+        document.getElementById('address-country').value = '';
+        document.getElementById('address-state').value = '';
+        document.getElementById('latitude').value = '';
+        document.getElementById('longitude').value = '';
+
+        let manualMapBlock = document.getElementById('manual-shipping-address')
+        if (e.target.checked === true) {
+          manualMapBlock.style.display = 'block';
+        } else {
+          manualMapBlock.style.display = 'none';
+        }
+      }
     },
   })
     .then(function (e) {
