@@ -87,7 +87,7 @@
                                     <tr>
                                         <td><?= $index + 1 ?></td>
                                         <td><?= $row['product_code'] ?></td>
-                                        <td><?= $row['warehouses'] ?></td>
+                                        <td><?= $row['product_name'] ?></td>
 
                                         <?php
                                             foreach ($row['warehouses'] as $warehouse_data){
@@ -110,26 +110,7 @@
 
                             </tbody>
                             <tfoot>
-                            <tr>
-                                <th>Total</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th><?= $totalQuantity ?></th>
-
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th><?= $totalQuantity ?></th>
-
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th><?= $totalQuantity ?></th>
-
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th><?= $totalQuantity ?></th>
-                                
-                            </tr>
+                            
                             </tfoot>
                         </table>
                     </div>
