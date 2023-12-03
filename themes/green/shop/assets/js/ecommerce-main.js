@@ -1081,8 +1081,8 @@ function initMap() {
     navigator.geolocation.getCurrentPosition(
         function (position) {
           const userLocation = {
-            lat: 24.7136, //position.coords.latitude,
-            lng: 46.6753 //position.coords.longitude
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
           };
 
           // Center the map at the user's location
@@ -1100,7 +1100,7 @@ function initMap() {
           });
           document.getElementById('manual-shipping-check').checked = false;
           document.getElementById('manual-shipping-address').style.display = 'none';
-          geocodeLatLng(userLocation);
+          geocodeLatLng2(userLocation);
 
           marker.addListener('dragend', function () {
 
@@ -1110,7 +1110,7 @@ function initMap() {
             const newPosition = marker.getPosition();
             document.getElementById('latitude').value = newPosition.lat();
             document.getElementById('longitude').value = newPosition.lng();
-            geocodeLatLng(newPosition);
+            geocodeLatLng2(newPosition);
           });
         },
         function (error) {
@@ -1125,7 +1125,7 @@ function initMap() {
   }
 }
 
-function geocodeLatLng(latLng) {
+function geocodeLatLng2(latLng) {
   const geocoder = new google.maps.Geocoder();
   geocoder.geocode({'location': latLng}, function (results, status) {
     if (status === 'OK') {

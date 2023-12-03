@@ -1,5 +1,14 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<style>
+    #map {
+        height: 100%;
+        width: 100%;
+    }
 
+    #map-container {
+        height: 350px;
+    }
+</style>
 <?php
 
 $cart_contents = $this->cart->contents();
@@ -337,39 +346,55 @@ foreach ($cart_contents as $cartItem) {
                                                         </label>
                                                     </div>-->
                                                     <h5><strong><?= lang('shipping_address'); ?></strong></h5>
+                                                    <?= lang('Look_For_The_Shipping_Address', ''); ?>
+                                                    (drag the marker to set your address)
+                                                    <div id="map-container">
+                                                        <div id="map"></div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <input
+                                                                type="text"
+                                                                readonly="readonly"
+                                                                id="google-map-selected-address"
+                                                                value="Note:- Allow the browser to access your location."
+                                                                class="form-control"
+                                                        />
+                                                    </div>
                                                     <input type="hidden" value="new" name="address">
                                                     <hr>
-                                                    <div class="form-group">
-                                                        <?= lang('Search_For_The_Shipping_Address', ''); ?>
+                                                    <strong>OR</strong>
+                                                    <br/>
+                                                    <input type="checkbox" id="manual-shipping-check"/> Check the box to
+                                                    type the address manually
+                                                    <!--<div class="form-group">
+                                                        <?/*= lang('Search_For_The_Shipping_Address', ''); */?>
                                                         <input id="autocomplete_search_shipping" type="text"
                                                                class="form-control"
                                                                placeholder=""/>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <?= lang('line1', 'shipping_line1'); ?> *
-                                                        <?= form_input('shipping_line1', set_value('shipping_line1'), 'class="form-control" id="shipping_line1" required="required"'); ?>
-                                                    </div>
+                                                    </div>-->
+
                                                 </div>
-                                                <div class="col-md-12">
-                                                    <div class="form-group">
-                                                        <?= lang('line2', 'shipping_line2'); ?>
-                                                        <?= form_input('shipping_line2', set_value('shipping_line2'), 'class="form-control" id="shipping_line2"'); ?>
-                                                    </div>
+                                                <div id="manual-shipping-address" style="display: none;">
+                                               <div class="col-md-12">
+                                                   <div class="form-group">
+                                                       <?= lang('line1', 'shipping_line1'); ?> *
+                                                       <?= form_input('shipping_line1', set_value('shipping_line1'), 'class="form-control" id="shipping_line1" '); ?>
+                                                   </div>
                                                 </div>
                                                 <div class="col-md-12">
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <?= lang('city', 'shipping_city'); ?> *
-                                                                <?= form_input('shipping_city', set_value('shipping_city'), 'class="form-control" id="shipping_city" required="required" readonly'); ?>
+                                                                <?= form_input('shipping_city', set_value('shipping_city'), 'class="form-control" id="shipping_city" required="required"'); ?>
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-6">
+                                                        <!--<div class="col-md-6">
                                                             <div class="form-group">
-                                                                <?= lang('postal_code', 'shipping_postal_code'); ?>
-                                                                <?= form_input('shipping_postal_code', set_value('shipping_postal_code'), 'class="form-control" id="shipping_postal_code"'); ?>
+                                                                <?/*= lang('postal_code', 'shipping_postal_code'); */?>
+                                                                <?/*= form_input('shipping_postal_code', set_value('shipping_postal_code'), 'class="form-control" id="shipping_postal_code"'); */?>
                                                             </div>
-                                                        </div>
+                                                        </div>-->
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
@@ -396,7 +421,7 @@ foreach ($cart_contents as $cartItem) {
 
                                                     <div class="form-group">
                                                         <?= lang('country', 'shipping_country'); ?> *
-                                                        <?= form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required" readonly'); ?>
+                                                        <?= form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required" '); ?>
                                                         <!--<select name="shipping_country" id="shipping_country" class="form-control"  required="required">-->
                                                         <!--  <option value="SA">Saudi Arabia</option>-->
                                                         <!--  <option value="AE">UAE</option>-->
@@ -412,7 +437,7 @@ foreach ($cart_contents as $cartItem) {
                                                         <?php // form_input('shipping_phone', set_value('shipping_phone'), 'class="form-control" id="shipping_phone" required="required"'); ?>
                                                     </div>
                                                 </div>
-
+                                                </div>
                                                 <div class="col-md-12">
                                                     <!--<h5><strong><?= lang('payment_method'); ?></strong></h5>-->
                                                     <!--<hr>-->
@@ -591,6 +616,101 @@ foreach ($cart_contents as $cartItem) {
     </div>
 </section>
 <script>
+    let map;
+
+    function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: {lat: 23.8859, lng: 45.0792}, // Example coordinates (San Francisco)
+            zoom: 18, // Adjust the zoom level
+        });
+
+        // Try to get the user's current location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    // Center the map at the user's location
+
+                    document.getElementById('shipping_latitude').value = position.coords.latitude;
+                    document.getElementById('shipping_longitude').value = position.coords.longitude;
+                    map.setCenter(userLocation);
+
+                    // Add a marker at the user's location
+                    const marker = new google.maps.Marker({
+                        position: userLocation,
+                        map: map,
+                        title: 'Your Location',
+                        draggable: true
+                    });
+                    document.getElementById('manual-shipping-check').checked = false;
+                    document.getElementById('manual-shipping-address').style.display = 'none';
+                    geocodeLatLng(userLocation);
+
+                    marker.addListener('dragend', function () {
+
+                        document.getElementById('manual-shipping-check').checked = false;
+                        document.getElementById('manual-shipping-address').style.display = 'none';
+
+                        const newPosition = marker.getPosition();
+                        document.getElementById('shipping_latitude').value = newPosition.lat();
+                        document.getElementById('shipping_longitude').value = newPosition.lng();
+                        geocodeLatLng(newPosition);
+                    });
+                },
+                function (error) {
+                    console.error('Error getting user location:', error);
+                },
+                {
+                    enableHighAccuracy: true
+                }
+            );
+        } else {
+            console.error('Geolocation is not supported by this browser.');
+        }
+    }
+
+    function geocodeLatLng(latLng) {
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({'location': latLng}, function (results, status) {
+            if (status === 'OK') {
+                if (results[0]) {
+                    const addressComponents = results[0].address_components;
+                    const formattedAddress = results[0].formatted_address;
+                    document.getElementById('google-map-selected-address').value = formattedAddress;
+                    let city, country, state, street;
+
+                    for (const component of addressComponents) {
+                        const types = component.types;
+                        if (types.includes('locality')) {
+                            city = component.long_name;
+                            document.getElementById('shipping_city').value = city;
+                        } else if (types.includes('country')) {
+                            country = component.long_name;
+                            document.getElementById('shipping_country').value = country;
+                        } else if (types.includes('route')) {
+                            street = component.long_name;
+                            document.getElementById('shipping_line1').value = street;
+                        } else if (types.includes('administrative_area_level_1')) {
+                            state = component.long_name;
+                            document.getElementById('shipping_state').value = state;
+                        }
+                    }
+
+                    calCulateShipping(city, country)
+                } else {
+                    console.log('No results found');
+                }
+            } else {
+                console.log('Geocoder failed due to: ' + status);
+            }
+        });
+    }
+</script>
+<script>
     // Vanilla Javascript
     var input = document.querySelector("#phone");
     var input_shipping_phone = document.querySelector("#shipping_phone");
@@ -605,6 +725,23 @@ foreach ($cart_contents as $cartItem) {
 
     $('#phone').val("+966");
     $('#shipping_phone').val("+966");
+
+    document.getElementById('manual-shipping-check').onchange = function (e) {
+
+        document.getElementById('shipping_line1').value = '';
+        document.getElementById('shipping_city').value = '';
+        document.getElementById('shipping_country').value = '';
+        document.getElementById('shipping_state').value = '';
+        document.getElementById('shipping_latitude').value = '';
+        document.getElementById('shipping_longitude').value = '';
+
+        let manualMapBlock = document.getElementById('manual-shipping-address')
+        if (e.target.checked === true) {
+            manualMapBlock.style.display = 'block';
+        } else {
+            manualMapBlock.style.display = 'none';
+        }
+    }
 
     function calCulateShipping(city, country, isExpressDelivery = false) {
         $("#express-delivery-check").prop("disabled", true);
@@ -660,13 +797,13 @@ foreach ($cart_contents as $cartItem) {
                     deliveryDays = "1 to 2 days"
                 }
 
-                if(orderWithTax > 200){
+                if (orderWithTax > 200) {
                     shipping = 0;
                 }
 
                 saudiOrder = 1;
 
-            }else if (['bahrain',
+            } else if (['bahrain',
                 'kuwait',
                 'oman',
                 'qatar',
@@ -687,23 +824,18 @@ foreach ($cart_contents as $cartItem) {
                     shipping = 32
                     deliveryDays = "4 to 6 days"
                 }
-            } else{
+            } else {
                 shipping = 38
                 deliveryDays = "5 to 8 days"
             }
 
-            if(orderWithTax > 200){
-                shipping = 0;
-            }
-
-            console.log('Total Price: '+totalPrice);
-            console.log('Total Tax: '+totalOrderTax);
-            console.log('Shipping: '+shipping);
             var grandTotalPrice = totalPrice + shipping;
 
             if (non_express_items > 0) {
-                if(orderWithTax > 200){
+                if (saudiOrder == 1 && orderWithTax > 200) {
                     shipping = 0;
+                } else {
+                    shipping = 32;
                 }
                 /*else{
                     shipping = 32;
@@ -784,6 +916,7 @@ foreach ($cart_contents as $cartItem) {
         google.maps.event.addDomListener(window, 'load', initialize);
 
         function initialize() {
+            return true;
             var input = document.getElementById('autocomplete_search_billing');
             var autocomplete = new google.maps.places.Autocomplete(input);
             autocomplete.addListener('place_changed', function () {
