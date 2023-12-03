@@ -140,40 +140,40 @@ class Reports extends MY_Controller
         if(isset($_POST['submit'])){
             $rows = $this->reports_model->getPharmacyStockData($item);
 
-            foreach ($rows as $row) {
-                $productId = $row->id;
-                $productCode = $row->item_code;
-                $productName = $row->name;
-                $warehouseName = $row->warehouse_name;
-                $batchNo = $row->batch_no;
-                $quantity = $row->quantity;
-                $expiry = $row->expiry;
-            
-                // Check if the product is already in the organized array
-                if (!isset($organizedResults[$productId])) {
-                    // If not, initialize the product information
-                    $organizedResults[$productId] = [
-                        'product_name' => $productName,
-                        'product_code' => $productCode,
-                        'warehouses' => [],
-                    ];
-                }
-            
-                // Add warehouse information to the product
-                $organizedResults[$productId]['warehouses'][] = [
-                    'warehouse_name' => $warehouseName,
-                    'batch_no' => $batchNo,
-                    'quantity' => $quantity,
-                    'expiry'   => $expiry
+        }else{
+            $rows = $this->reports_model->getPharmacyStockData();
+        }
+
+        foreach ($rows as $row) {
+            $productId = $row->id;
+            $productCode = $row->item_code;
+            $productName = $row->name;
+            $warehouseName = $row->warehouse_name;
+            $batchNo = $row->batch_no;
+            $quantity = $row->quantity;
+            $expiry = $row->expiry;
+        
+            // Check if the product is already in the organized array
+            if (!isset($organizedResults[$productId])) {
+                // If not, initialize the product information
+                $organizedResults[$productId] = [
+                    'product_name' => $productName,
+                    'product_code' => $productCode,
+                    'warehouses' => [],
                 ];
             }
-
-            $this->data['stock_data'] = $organizedResults;
-            $this->data['warehouses'] = $this->site->getAllWarehouses();
-        }else{
-            $this->data['stock_data'] = [];
-            $this->data['warehouses'] = $this->site->getAllWarehouses();
+        
+            // Add warehouse information to the product
+            $organizedResults[$productId]['warehouses'][] = [
+                'warehouse_name' => $warehouseName,
+                'batch_no' => $batchNo,
+                'quantity' => $quantity,
+                'expiry'   => $expiry
+            ];
         }
+
+        $this->data['stock_data'] = $organizedResults;
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
 
         $bc = [
             ['link' => base_url(), 'page' => lang('home')],
