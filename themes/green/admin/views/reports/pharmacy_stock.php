@@ -85,7 +85,7 @@
                                 ?>
                                 <?php foreach ($stock_data as $index => $row): ?>
                                     <tr>
-                                        <td><?= $index + 1 ?></td>
+                                        <td><?= $row['id'] ?></td>
                                         <td><?= $row['product_code'] ?></td>
                                         <td><?= $row['product_name'] ?></td>
 
