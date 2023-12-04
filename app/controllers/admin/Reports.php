@@ -144,6 +144,8 @@ class Reports extends MY_Controller
             $rows = $this->reports_model->getPharmacyStockData();
         }
 
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+
         foreach ($rows as $row) {
             $productId = $row->id;
             $productCode = $row->item_code;
@@ -162,19 +164,35 @@ class Reports extends MY_Controller
                     'product_code' => $productCode,
                     'warehouses' => [],
                 ];
+
+                foreach($this->data['warehouses'] as $ware_house){
+                    $organizedResults[$productId.$batchNo]['warehouses'][] = [
+                        'warehouse_name' => $ware_house->name,
+                        'batch_no' => '-',
+                        'quantity' => '-',
+                        'expiry' => '-'
+                    ];
+                }
+            }
+
+            foreach($organizedResults[$productId.$batchNo]['warehouses'] as $ware_house){
+                if($ware_house['warehouse_name'] == $warehouseName){
+                    $ware_house['batch_no'] = $batchNo;
+                    $ware_house['quantity'] = $quantity;
+                    $ware_house['expiry'] = $expiry;
+                }
+                // Add warehouse information to the product
+                /*$organizedResults[$productId.$batchNo]['warehouses'][] = [
+                    'warehouse_name' => $warehouseName,
+                    'batch_no' => $batchNo,
+                    'quantity' => $quantity,
+                    'expiry'   => $expiry
+                ];*/
             }
         
-            // Add warehouse information to the product
-            $organizedResults[$productId.$batchNo]['warehouses'][] = [
-                'warehouse_name' => $warehouseName,
-                'batch_no' => $batchNo,
-                'quantity' => $quantity,
-                'expiry'   => $expiry
-            ];
         }
 
         $this->data['stock_data'] = $organizedResults;
-        $this->data['warehouses'] = $this->site->getAllWarehouses();
 
         $bc = [
             ['link' => base_url(), 'page' => lang('home')],
