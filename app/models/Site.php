@@ -66,7 +66,9 @@ class Site extends CI_Model
         $real_item_qty = $quantity;
         $quantity      = $item_quantity;
         $balance_qty   = $quantity;
+        echo '<pre>';
         foreach ($pis as $pi) {
+            print_r($pi);
             $cost_row = null;
             if (!empty($pi) && $balance_qty <= $quantity && $quantity != 0) {
                 $purchase_unit_cost = $pi->base_unit_cost ?? ($pi->unit_cost ?? ($pi->net_unit_cost + ($pi->item_tax / $pi->quantity)));
@@ -85,7 +87,7 @@ class Site extends CI_Model
                 break;
             }
         }
-        
+        exit;
         if ($quantity > 0) {
             $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), ($pi->product_name ?? $product_name)));
             redirect($_SERVER['HTTP_REFERER']);
@@ -1098,7 +1100,6 @@ public function getallCountry()
                     $unit                   = $this->getUnitByID($item['product_unit_id']);
                     $item['net_unit_price'] = $this->convertToBase($unit, $item['net_unit_price']);
                     $item['unit_price']     = $this->convertToBase($unit, $item['unit_price']);
-                    print_r($item);exit;
                     $cost                   = $this->calculateCost($item['product_id'], $item['warehouse_id'], $item['net_unit_price'], $item['unit_price'], $item['quantity'], $item['product_name'], $item['option_id'], $item_quantity);
                 } elseif ($item['product_type'] == 'combo') {
                     $combo_items = $this->getProductComboItems($item['product_id'], $item['warehouse_id']);
