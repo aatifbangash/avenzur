@@ -50,10 +50,6 @@ class Site extends CI_Model
                 }
             }
         }
-
-        echo 'Quantity: '.$quantity.' - Overselling: '.$this->Settings->overselling;
-        exit;
-
         if ($quantity > 0 && !$this->Settings->overselling) {
             $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), $product_name));
             redirect($_SERVER['HTTP_REFERER']);
@@ -1711,24 +1707,5 @@ public function getallCountry()
             return $data;
         }
         return false;
-    }
-    public function addProdQuantityOnholdRequest($sale_id, $items){
-
-        if(isset($items) && !empty($items)) {
-        
-            foreach ($items as $item) {
-                $this->db->insert('product_qty_onhold_request',
-                 ['sale_id' => $sale_id, 
-                 'product_id' => $item->product_id, 
-                 'quantity' => intval($item->quantity), 
-                 'product_code' => $item->product_code,
-                 'product_name' => $item->product_name,
-                 'customer_id' => $item->customer_id,
-                 'customer_name' => $item->customer_name,
-                 'status' => 'onhold',
-                 'date_created' => NOW()
-                ]);
-            }
-        }
     }
 }
