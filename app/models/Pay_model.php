@@ -117,7 +117,8 @@ class Pay_model extends CI_Model
                 }
             }
 
-            if (!empty($cost)) {
+            // Deduct from balance quantity except for ecommerce sales
+            if (!empty($cost) && $sale->shop == 0) {
                 $this->site->syncPurchaseItems($cost);
             }
             /* COMMENTED QTY DEDUCTION FROM HERE. 
