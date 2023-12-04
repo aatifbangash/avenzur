@@ -1709,6 +1709,7 @@ public function getallCountry()
         return false;
     }
     public function addProdQuantityOnholdRequest($sale_id, $items){
+        echo 'Here in onhold quantity entry....';
 
         if(isset($items) && !empty($items)) {
         

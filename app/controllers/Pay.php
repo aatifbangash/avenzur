@@ -545,6 +545,7 @@ class Pay extends MY_Shop_Controller
                     //$address = $this->pay_model->getCompanyAddress($customer->id);
                     $address = $this->pay_model->getAddressByID($address_id);
                     $this->pay_model->updateStatus($inv->id, 'completed');
+                    echo 'here we are....';exit;
                     $ipnstatus = true;
                     $sale_items = $this->pay_model->getSaleItems($invoice_no);
 

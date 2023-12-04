@@ -86,6 +86,7 @@ class Pay_model extends CI_Model
 
     public function updateStatus($id, $status, $note = null)
     {
+        echo 'here in update status...';
         $sale  = $this->getSaleByID($id);
         $items = $this->getSaleItems($id);
         if ($note) {
@@ -100,6 +101,7 @@ class Pay_model extends CI_Model
         }
 
         if ($this->db->update('sales', ['sale_status' => $status, 'note' => $note], ['id' => $id])) {
+            echo 'here in updating sales....';
             if ($status == 'completed' && $status != $sale->sale_status) {
                 foreach ($items as $item) {
                     $item = (array) $item;
@@ -125,10 +127,14 @@ class Pay_model extends CI_Model
             AS QTY WILL BE ADJUSTED THROUGH POS */
             //$this->site->syncQuantity($id);
             $this->site->addProdQuantityOnholdRequest($id, $items);
+            echo 'Entry done for onhold....';
             $this->site->syncSalePayments($id);
             $this->sma->update_award_points($sale->grand_total, $sale->customer_id);
+            exit;
             return true;
         }
+
+        exit;
         return false;
     }
 }
