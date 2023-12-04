@@ -70,7 +70,7 @@ class Pay_model extends CI_Model
             ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
             ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
             ->join('sales', 'sales.id=sale_items.sale_id', 'left')
-            ->where('sales.sale_id', $sale_id)->group_by('sale_items.id')->order_by('id', 'asc');
+            ->where('sales.id', $sale_id)->group_by('sale_items.id')->order_by('id', 'asc');
         return $this->db->get('sale_items')->result();
     }
 
@@ -88,7 +88,6 @@ class Pay_model extends CI_Model
     {
         $sale  = $this->getSaleByID($id);
         $items = $this->getSaleItems($id);
-        print_r($items);
         if ($note) {
             $note = $sale->note . '<p>' . $note . '</p>';
         }
@@ -125,8 +124,6 @@ class Pay_model extends CI_Model
             INSTEAD ADD QTY ONHOLD REQUEST TO PHARMACY FOR QTY RELEASE AFTER POS
             AS QTY WILL BE ADJUSTED THROUGH POS */
             //$this->site->syncQuantity($id);
-            echo 'Passing Items: ';
-            print_r($items);exit;
             $this->site->addProdQuantityOnholdRequest($id, $items);
             $this->site->syncSalePayments($id);
             $this->sma->update_award_points($sale->grand_total, $sale->customer_id);
