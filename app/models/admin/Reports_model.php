@@ -986,7 +986,7 @@ class Reports_model extends CI_Model
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
                                 LEFT JOIN sma_purchases pc ON pc.id = pi.purchase_id
                                 INNER JOIN sma_warehouses w ON w.id = pi.warehouse_id
-                                WHERE pi.purchase_item_id IS NULL AND (pc.status = 'received' OR sma_purchase_items.purchase_id IS NULL)";
+                                WHERE pi.purchase_item_id IS NULL AND (pc.status = 'received' OR pi.purchase_id IS NULL)";
 
         if ($item) {
             //$totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
@@ -995,7 +995,6 @@ class Reports_model extends CI_Model
 
         $totalPurchasesQuery .= "GROUP BY p.code, p.name, pi.batchno, pi.warehouse_id
                                 ORDER BY p.id ASC, w.id ASC";
-        echo $totalPurchasesQuery;exit;
 
         $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
         
