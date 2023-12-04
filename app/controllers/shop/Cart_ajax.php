@@ -101,6 +101,8 @@ class Cart_ajax extends MY_Shop_Controller
         if ($this->input->is_ajax_request() || $this->input->post('quantity')) {
             
             $product = $this->shop_model->getProductForCart($product_id);
+            $product_quantity_onhold =  $this->shop_model->getProductOnholdQty($product_id);
+            $quantity_in_stock =  intval($product->quantity) - $product_quantity_onhold;
 
             $product_to_add_quantity = 0;
             $cart_contents = $this->cart->contents();
@@ -136,8 +138,11 @@ class Cart_ajax extends MY_Shop_Controller
             $selected = $option ? $option['id'] : false;
             if (!$this->Settings->overselling && $this->checkProductStock($product, $quantity_added, $selected)) {
                 if ($this->input->is_ajax_request()) {
-                    
-                    $this->sma->send_json(['error' => 1, 'message' => lang('item_out_of_stock')]);
+                    if($quantity_in_stock > 0){
+                        $this->sma->send_json(['error' => 1, 'message' => lang('Only '.$quantity_in_stock.' pieces remaining')]);
+                    }else{
+                        $this->sma->send_json(['error' => 1, 'message' => lang('item_out_of_stock')]);
+                    } 
                 } else {
                     $this->session->set_flashdata('error', lang('item_out_of_stock'));
                     redirect($_SERVER['HTTP_REFERER']);
