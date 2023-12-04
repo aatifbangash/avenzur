@@ -145,7 +145,7 @@ class Reports extends MY_Controller
         }
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-
+        echo '<pre>';
         foreach ($rows as $row) {
             $productId = $row->id;
             $productCode = $row->item_code;
@@ -175,7 +175,10 @@ class Reports extends MY_Controller
                 }
             }
 
+            print_r($organizedResults);
+
             foreach($organizedResults[$productId.$batchNo]['warehouses'] as $ware_house){
+                print_r($ware_house);
                 if($ware_house['warehouse_name'] == $warehouseName){
                     $ware_house['batch_no'] = $batchNo;
                     $ware_house['quantity'] = $quantity;
