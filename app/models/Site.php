@@ -50,6 +50,10 @@ class Site extends CI_Model
                 }
             }
         }
+
+        echo 'Quantity: '.$quantity.' - Overselling: '.$this->Settings->overselling;
+        exit;
+
         if ($quantity > 0 && !$this->Settings->overselling) {
             $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), $product_name));
             redirect($_SERVER['HTTP_REFERER']);
