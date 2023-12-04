@@ -1461,6 +1461,9 @@ ul.pagination li:hover {
 ul.pagination li:hover a {
   color: white !important;
 }
+.cardImg img {
+  margin: 0 auto;
+}
 @media screen and (max-width: 500px) {
   .myaccountForm.cartform {
     left: -9px !important;
@@ -1745,5 +1748,46 @@ ul.pagination li:hover a {
   }
   .products-card .card .cardImg img {
     height: 150px;
+  }
+  div#sourcedivmob {
+    width: 100%;
+  }
+  nav .menu-av li.nav-item {
+    margin-right: 0;
+  }
+  div#results.products-card {
+    gap: 30px;
+  }
+  .productzoomImg {
+    height: 100%;
+  }
+  .product-info {
+    margin-top: 35px;
+  }
+  html[lang="ar"] .heroSlider .carousel-indicators {
+    width: 21%;
+    margin: 0;
+    margin-left: 0px;
+    position: absolute;
+    bottom: 0px;
+    left: 0;
+    margin-left: 0;
+    right: auto;
+  }
+  .feature-cards h5.card-title {
+    text-align: center !important;
+  }
+  html[lang="ar"] .popularTitle h2,
+  html[lang="ar"] .featureTitle h2 {
+    text-align: center !important;
+  }
+  html[lang="ar"] div#sourcedivmob {
+    width: 100% !important;
+  }
+  html[lang="ar"] ul.navbar-nav {
+    padding: 0 !important;
+  }
+  html[lang="ar"] nav .menu-av li.nav-item {
+    margin: 0 !important;
   }
 }
