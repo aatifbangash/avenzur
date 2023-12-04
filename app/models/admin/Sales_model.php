@@ -268,7 +268,11 @@ class Sales_model extends CI_Model
     }
 
     public function delete_onhold_qty($id){
-        $this->db->delete('sma_product_qty_onhold_request', ['id' => $id]);
+        if ($this->db->delete('sma_product_qty_onhold_request', ['id' => $id])) {
+            return true;
+        }else{
+            return false;
+        }
     }
 
     public function deleteSale($id)
