@@ -3880,4 +3880,19 @@ class Sales extends MY_Controller
         $this->page_construct('sales/qty_onhold_requests', $meta, $this->data);
     } 
 
+    public function delete_qty_onhold($id = null){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        if($this->sales_model->delete_onhold_qty($id)){
+            $this->session->set_flashdata('message', lang('onhold_request_deleted'));
+            admin_redirect('sales/qty_onhold_requests');
+        }else{
+            $this->session->set_flashdata('error', lang('Could not delete request'));
+            admin_redirect('sales/qty_onhold_requests');
+        }
+    }
+
 }
