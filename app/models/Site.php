@@ -68,7 +68,6 @@ class Site extends CI_Model
         $balance_qty   = $quantity;
         echo '<pre>';
         foreach ($pis as $pi) {
-            print_r($pi);
             $cost_row = null;
             if (!empty($pi) && $balance_qty <= $quantity && $quantity != 0) {
                 $purchase_unit_cost = $pi->base_unit_cost ?? ($pi->unit_cost ?? ($pi->net_unit_cost + ($pi->item_tax / $pi->quantity)));
@@ -87,7 +86,6 @@ class Site extends CI_Model
                 break;
             }
         }
-        exit;
         if ($quantity > 0) {
             $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), ($pi->product_name ?? $product_name)));
             redirect($_SERVER['HTTP_REFERER']);
