@@ -145,7 +145,7 @@ class Reports extends MY_Controller
         }
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        echo '<pre>';
+        
         foreach ($rows as $row) {
             $productId = $row->id;
             $productCode = $row->item_code;
@@ -175,25 +175,12 @@ class Reports extends MY_Controller
                 }
             }
 
-            print_r($organizedResults);
-
-            foreach($organizedResults[$productId.$batchNo]['warehouses'] as $ware_house){
-                echo 'Warehouse Name: '.$warehouseName;
-                print_r($ware_house);
-                if($ware_house['warehouse_name'] == $warehouseName){
-                    echo 'Here in setting block...';
-                    $ware_house['batch_no'] = $batchNo;
-                    $ware_house['quantity'] = $quantity;
-                    $ware_house['expiry'] = $expiry;
+            foreach ($organizedResults[$productId.$batchNo]['warehouses'] as $key => $ware_house) {
+                if ($ware_house['warehouse_name'] == $warehouseName) {
+                    $organizedResults[$productId.$batchNo]['warehouses'][$key]['batch_no'] = $batchNo;
+                    $organizedResults[$productId.$batchNo]['warehouses'][$key]['quantity'] = $quantity;
+                    $organizedResults[$productId.$batchNo]['warehouses'][$key]['expiry'] = $expiry;
                 }
-                print_r($ware_house);
-                // Add warehouse information to the product
-                /*$organizedResults[$productId.$batchNo]['warehouses'][] = [
-                    'warehouse_name' => $warehouseName,
-                    'batch_no' => $batchNo,
-                    'quantity' => $quantity,
-                    'expiry'   => $expiry
-                ];*/
             }
         
         }
