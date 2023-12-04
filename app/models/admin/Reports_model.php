@@ -984,9 +984,9 @@ class Reports_model extends CI_Model
                                     round(avg(pi.unit_cost), 2) purchase_price
                                 FROM sma_products p
                                 INNER JOIN sma_purchase_items pi ON p.id = pi.product_id
-                                INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id
+                                LEFT JOIN sma_purchases pc ON pc.id = pi.purchase_id
                                 INNER JOIN sma_warehouses w ON w.id = pi.warehouse_id
-                                WHERE pi.purchase_item_id IS NULL AND pc.status = 'received'";
+                                WHERE pi.purchase_item_id IS NULL AND (pc.status = 'received' OR sma_purchase_items.purchase_id IS NULL)";
 
         if ($item) {
             //$totalPurchasesQuery .= "AND (p.code = '{$item}' OR p.name LIKE '%{$item}%') ";
