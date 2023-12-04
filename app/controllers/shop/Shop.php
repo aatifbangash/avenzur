@@ -311,6 +311,16 @@ class Shop extends MY_Shop_Controller
 
                 $order_tax = $this->site->calculateOrderTax($this->Settings->default_tax_rate2, ($total + $product_tax));
                 $total_tax = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
+                //$grand_total = $this->sma->formatDecimal(($total + $total_tax + $shipping), 4);
+
+                $total = !empty($this->input->post('total_price'))
+                    ? $this->input->post('total_price')
+                    : $total;
+
+                $total_tax = !empty($this->input->post('total_order_tax'))
+                    ? $this->input->post('total_order_tax')
+                    : $total_tax;
+
                 $grand_total = $this->sma->formatDecimal(($total + $total_tax + $shipping), 4);
 
                 $data = [
