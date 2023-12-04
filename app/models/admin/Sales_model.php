@@ -1183,4 +1183,15 @@ class Sales_model extends CI_Model
         }
         return false;
     }
+
+    public function getQtyOnholdRequests($id=null) {
+        $q = $this->db->get_where('product_qty_onhold_request', ['status' => 'onhold']);
+        if ($q->num_rows() > 0) {
+            
+            return $q->result();
+        }
+        return false;
+
+    }
+
 }

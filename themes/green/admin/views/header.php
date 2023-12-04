@@ -506,6 +506,12 @@
                                             <span class="text"> <?= lang('Refund_Request'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="qty_onhold">
+                                        <a class="submenu" href="<?= admin_url('sales/qty_onhold_requests'); ?>">
+                                            <i class="fa fa-gift"></i>
+                                            <span class="text"> <?= 'Qty Onhold' ?></span>
+                                        </a>
+                                    </li>
                                 </ul>
                             </li>
 

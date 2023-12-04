@@ -3865,4 +3865,20 @@ class Sales extends MY_Controller
         $this->data['topups']     = $this->sales_model->getAllGCTopups($id);
         $this->load->view($this->theme . 'sales/view_gift_card', $this->data);
     }
+
+    public function qty_onhold_requests($id=null){
+      
+        $this->sma->checkPermissions();
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+       
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('sales')]];
+        $meta = ['page_title' => lang('sales'), 'bc' => $bc];
+       //echo 'test';exit;
+       
+        $this->data['results'] =  $this->sales_model->getQtyOnholdRequests();
+        //print_r($this->data);
+        $this->page_construct('sales/qty_onhold_requests', $meta, $this->data);
+    } 
+
 }
