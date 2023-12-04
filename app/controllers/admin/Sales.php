@@ -3877,7 +3877,6 @@ class Sales extends MY_Controller
        //echo 'test';exit;
        
         $this->data['results'] =  $this->sales_model->getQtyOnholdRequests();
-        //print_r($this->data);
         $this->page_construct('sales/qty_onhold_requests', $meta, $this->data);
     } 
 

@@ -51,7 +51,7 @@
                             <td><?php echo $item->customer_name;?></td>
                             <td><?php echo $item->quantity;?></td>
                             <td><?php echo $item->status;?></td>
-                            <td>Action</td>
+                            <td><a href="<?php echo admin_url('sales/delete_qty_onhold/' . $item->id); ?>" class="tip" title="" data-original-title="Delete Request"><i class="fa fa-trash-o"></i></a></td>
                            
                         </tr>
                         <?php } }else {?>
