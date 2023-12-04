@@ -313,14 +313,12 @@ class Shop extends MY_Shop_Controller
                 $total_tax = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
                 //$grand_total = $this->sma->formatDecimal(($total + $total_tax + $shipping), 4);
 
-                $total = !empty($this->input->post('total_price'))
-                    ? $this->input->post('total_price')
+                $total = !empty($this->cart->total())
+                    ? $this->cart->total()
                     : $total;
-
-                echo 'Total Price: '.$this->input->post('total_price');exit;
-
-                $total_tax = !empty($this->input->post('total_order_tax'))
-                    ? $this->input->post('total_order_tax')
+                    
+                $total_tax = !empty($this->cart->total_item_tax())
+                    ? $this->cart->total_item_tax()
                     : $total_tax;
 
                 $grand_total = $this->sma->formatDecimal(($total + $shipping), 4);
