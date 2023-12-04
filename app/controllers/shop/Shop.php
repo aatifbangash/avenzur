@@ -317,11 +317,13 @@ class Shop extends MY_Shop_Controller
                     ? $this->input->post('total_price')
                     : $total;
 
+                echo 'Total Price: '.$this->input->post('total_price');exit;
+
                 $total_tax = !empty($this->input->post('total_order_tax'))
                     ? $this->input->post('total_order_tax')
                     : $total_tax;
 
-                $grand_total = $this->sma->formatDecimal(($total + $total_tax + $shipping), 4);
+                $grand_total = $this->sma->formatDecimal(($total + $shipping), 4);
 
                 $data = [
                     'date' => date('Y-m-d H:i:s'),
