@@ -977,7 +977,7 @@ class Reports_model extends CI_Model
                                     w.name as warehouse_name,
                                     pi.batchno batch_no, 
                                     pi.expiry expiry, 
-                                    round(sum(pi.quantity)) quantity,
+                                    round(sum(pi.quantity_balance)) quantity,
                                     round(avg(pi.sale_price), 2) sale_price,
                                     round(avg(pi.net_unit_cost), 2) cost_price,
                                     round(sum(pi.net_unit_cost * pi.quantity), 2) total_cost_price,
