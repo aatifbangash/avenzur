@@ -178,6 +178,7 @@ class Reports extends MY_Controller
             print_r($organizedResults);
 
             foreach($organizedResults[$productId.$batchNo]['warehouses'] as $ware_house){
+                echo 'Warehouse Name: '.$warehouseName;
                 print_r($ware_house);
                 if($ware_house['warehouse_name'] == $warehouseName){
                     $ware_house['batch_no'] = $batchNo;
