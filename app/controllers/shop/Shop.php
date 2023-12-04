@@ -172,16 +172,16 @@ class Shop extends MY_Shop_Controller
             $this->form_validation->set_rules('name', lang('name'), 'trim|required');
             $this->form_validation->set_rules('email', lang('email'), 'trim|required|valid_email');
             $this->form_validation->set_rules('phone', lang('phone'), 'trim|required');
-            $this->form_validation->set_rules('billing_line1', lang('billing_address') . ' ' . lang('line1'), 'trim|required');
-            $this->form_validation->set_rules('billing_city', lang('billing_address') . ' ' . lang('city'), 'trim|required');
-            $this->form_validation->set_rules('billing_country', lang('billing_address') . ' ' . lang('country'), 'trim|required');
+//            $this->form_validation->set_rules('billing_line1', lang('billing_address') . ' ' . lang('line1'), 'trim|required');
+//            $this->form_validation->set_rules('billing_city', lang('billing_address') . ' ' . lang('city'), 'trim|required');
+//            $this->form_validation->set_rules('billing_country', lang('billing_address') . ' ' . lang('country'), 'trim|required');
             $this->form_validation->set_rules('shipping_line1', lang('shipping_address') . ' ' . lang('line1'), 'trim|required');
             $this->form_validation->set_rules('shipping_city', lang('shipping_address') . ' ' . lang('city'), 'trim|required');
             $this->form_validation->set_rules('shipping_country', lang('shipping_address') . ' ' . lang('country'), 'trim|required');
             $this->form_validation->set_rules('shipping_phone', lang('shipping_address') . ' ' . lang('phone'), 'trim|required');
         }
         if ($guest_checkout && $this->Settings->indian_gst) {
-            $this->form_validation->set_rules('billing_state', lang('billing_address') . ' ' . lang('state'), 'trim|required');
+//            $this->form_validation->set_rules('billing_state', lang('billing_address') . ' ' . lang('state'), 'trim|required');
             $this->form_validation->set_rules('shipping_state', lang('shipping_address') . ' ' . lang('state'), 'trim|required');
         }
 

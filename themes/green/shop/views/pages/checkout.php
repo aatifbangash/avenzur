@@ -259,6 +259,7 @@ foreach ($cart_contents as $cartItem) {
                                                         <!--<?= form_input('phone', set_value('phone'), 'class="form-control" id="phone" required="required"'); ?>-->
                                                     </div>
                                                 </div>
+                                                <div id="billing-address-container" style="display: none;">
                                                 <div class="col-md-12">
                                                     <h5><strong><?= lang('billing_address'); ?></strong></h5>
                                                     <input type="hidden" value="new" name="address">
@@ -273,7 +274,7 @@ foreach ($cart_contents as $cartItem) {
                                                     </div>
                                                     <div class="form-group">
                                                         <?= lang('line1', 'billing_line1'); ?> *
-                                                        <?= form_input('billing_line1', set_value('billing_line1'), 'class="form-control" id="billing_line1" required="required"'); ?>
+                                                        <?= form_input('billing_line1', set_value('billing_line1'), 'class="form-control" id="billing_line1"'); ?>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-12">
@@ -287,7 +288,7 @@ foreach ($cart_contents as $cartItem) {
                                                         <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <?= lang('city', 'billing_city'); ?> *
-                                                                <?= form_input('billing_city', set_value('billing_city'), 'class="form-control" id="billing_city" required="required"'); ?>
+                                                                <?= form_input('billing_city', set_value('billing_city'), 'class="form-control" id="billing_city" '); ?>
                                                             </div>
                                                         </div>
                                                         <div class="col-md-6">
@@ -304,7 +305,7 @@ foreach ($cart_contents as $cartItem) {
                                                         <?php
                                                         if ($Settings->indian_gst) {
                                                             $states = $this->gst->getIndianStates();
-                                                            echo form_dropdown('billing_state', $states, '', 'class="form-control selectpicker mobile-device" id="billing_state" title="Select" required="required"');
+                                                            echo form_dropdown('billing_state', $states, '', 'class="form-control selectpicker mobile-device" id="billing_state" title="Select" ');
                                                         } else {
                                                             echo form_input('billing_state', '', 'class="form-control" id="billing_state"');
                                                         }
@@ -316,7 +317,7 @@ foreach ($cart_contents as $cartItem) {
                                                     <div class="form-group">
                                                         <?= lang('country', 'country'); ?> *
 
-                                                        <?= form_input('billing_country', set_value('billing_country'), 'class="form-control" id="billing_country" required="required"'); ?>
+                                                        <?= form_input('billing_country', set_value('billing_country'), 'class="form-control" id="billing_country" '); ?>
                                                         <!--<select class="form-control" id="billing_country"
                                                                 name="billing_country">
 
@@ -333,7 +334,7 @@ foreach ($cart_contents as $cartItem) {
                                                         <!--form_input('billing_country', set_value('billing_country'), 'class="form-control" id="billing_country" required="required"')-->
                                                     </div>
                                                 </div>
-
+                                                </div>
                                                 <div class="col-md-12">
                                                     <!--<div class="checkbox bg pull-right"
                                                          style="margin-top: 0; margin-bottom: 0;">
@@ -389,25 +390,25 @@ foreach ($cart_contents as $cartItem) {
                                                                 <?= form_input('shipping_city', set_value('shipping_city'), 'class="form-control" id="shipping_city" required="required"'); ?>
                                                             </div>
                                                         </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <?= lang('state', 'shipping_state'); ?>
+                                                                <?php
+                                                                if ($Settings->indian_gst) {
+                                                                    $states = $this->gst->getIndianStates();
+                                                                    echo form_dropdown('shipping_state', $states, '', 'class="form-control selectpicker mobile-device" id="shipping_state" title="Select" required="required"');
+                                                                } else {
+                                                                    echo form_input('shipping_state', '', 'class="form-control" id="shipping_state"');
+                                                                }
+                                                                ?>
+                                                            </div>
+                                                        </div>
                                                         <!--<div class="col-md-6">
                                                             <div class="form-group">
                                                                 <?/*= lang('postal_code', 'shipping_postal_code'); */?>
                                                                 <?/*= form_input('shipping_postal_code', set_value('shipping_postal_code'), 'class="form-control" id="shipping_postal_code"'); */?>
                                                             </div>
                                                         </div>-->
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <?= lang('state', 'shipping_state'); ?>
-                                                        <?php
-                                                        if ($Settings->indian_gst) {
-                                                            $states = $this->gst->getIndianStates();
-                                                            echo form_dropdown('shipping_state', $states, '', 'class="form-control selectpicker mobile-device" id="shipping_state" title="Select" required="required"');
-                                                        } else {
-                                                            echo form_input('shipping_state', '', 'class="form-control" id="shipping_state"');
-                                                        }
-                                                        ?>
                                                     </div>
                                                 </div>
 
@@ -417,8 +418,9 @@ foreach ($cart_contents as $cartItem) {
                                                        value=""/>
 
 
-                                                <div class="col-md-6">
-
+                                                <div class="col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
                                                     <div class="form-group">
                                                         <?= lang('country', 'shipping_country'); ?> *
                                                         <?= form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required" '); ?>
@@ -428,6 +430,8 @@ foreach ($cart_contents as $cartItem) {
 
                                                         <!--</select>-->
                                                         <!--form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required"'); ?>-->
+                                                    </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-12">
