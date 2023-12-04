@@ -88,6 +88,7 @@ class Pay_model extends CI_Model
     {
         $sale  = $this->getSaleByID($id);
         $items = $this->getSaleItems($id);
+        print_r($items);
         if ($note) {
             $note = $sale->note . '<p>' . $note . '</p>';
         }
@@ -124,6 +125,8 @@ class Pay_model extends CI_Model
             INSTEAD ADD QTY ONHOLD REQUEST TO PHARMACY FOR QTY RELEASE AFTER POS
             AS QTY WILL BE ADJUSTED THROUGH POS */
             //$this->site->syncQuantity($id);
+            echo 'Passing Items: ';
+            print_r($items);exit;
             $this->site->addProdQuantityOnholdRequest($id, $items);
             $this->site->syncSalePayments($id);
             $this->sma->update_award_points($sale->grand_total, $sale->customer_id);

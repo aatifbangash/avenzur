@@ -1710,6 +1710,8 @@ public function getallCountry()
     }
     public function addProdQuantityOnholdRequest($sale_id, $items){
 
+        echo 'In adding onhold request';
+        print_r($items);
         if(isset($items) && !empty($items)) {
             print_r($items);
             echo 'SaleId: '.$sale_id;
@@ -1728,6 +1730,7 @@ public function getallCountry()
                 ]);
             }
         }
+        echo 'Did not come in check...';
         exit;
     }
 }
