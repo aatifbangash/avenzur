@@ -300,7 +300,6 @@ class Shop extends MY_Shop_Controller
                         $products[] = ($product + $gst_data);
                         $total += $this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
                     } else {
-                        echo 'Here in this error:';exit;
                         $this->session->set_flashdata('error', lang('product_x_found') . ' (' . $item['name'] . ')');
                         redirect($_SERVER['HTTP_REFERER'] ?? 'cart');
                     }
@@ -368,9 +367,9 @@ class Shop extends MY_Shop_Controller
                     $customer = (array)$customer;
                 }
                 // $this->sma->print_arrays($data, $products, $customer, $address);
-                echo 'Here adding sale....';exit;
-                if ($sale_id = $this->shop_model->addSale($data, $products, $customer, $address)) {
 
+                if ($sale_id = $this->shop_model->addSale($data, $products, $customer, $address)) {
+                    echo 'Sale added: '.$sale_id;exit;
                     //$added_record = $this->aramexshipment($sale_id, $data, $products, $customer, $address,$pro_weight);
                     //$email = $this->order_received($sale_id, $data['hash'], $added_record);
 
