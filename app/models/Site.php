@@ -1709,11 +1709,12 @@ public function getallCountry()
         return false;
     }
     public function addProdQuantityOnholdRequest($sale_id, $items){
-        echo 'Here in onhold quantity entry....';
 
         if(isset($items) && !empty($items)) {
-        
+            print_r($items);
+            echo 'SaleId: '.$sale_id;
             foreach ($items as $item) {
+                print_r($item);
                 $this->db->insert('product_qty_onhold_request',
                  ['sale_id' => $sale_id, 
                  'product_id' => $item->product_id, 
@@ -1727,5 +1728,6 @@ public function getallCountry()
                 ]);
             }
         }
+        exit;
     }
 }
