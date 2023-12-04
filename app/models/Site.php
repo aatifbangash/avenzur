@@ -85,6 +85,9 @@ class Site extends CI_Model
                 break;
             }
         }
+
+        echo 'Quantity: '.$quantity;exit;
+
         if ($quantity > 0) {
             $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), ($pi->product_name ?? $product_name)));
             redirect($_SERVER['HTTP_REFERER']);
