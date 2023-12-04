@@ -186,6 +186,7 @@ class Reports extends MY_Controller
                     $ware_house['quantity'] = $quantity;
                     $ware_house['expiry'] = $expiry;
                 }
+                print_r($ware_house);
                 // Add warehouse information to the product
                 /*$organizedResults[$productId.$batchNo]['warehouses'][] = [
                     'warehouse_name' => $warehouseName,
