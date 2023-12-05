@@ -260,7 +260,7 @@ class Pay extends MY_Shop_Controller
                 $currencyCode = $currencyCode;//'682';
                 //$totalAmount = intval(number_format($this->sma->convertMoney($inv->grand_total), 2,'',''));
                 $totalAmount = (float) preg_replace('/[^0-9.]/', '', $this->sma->convertMoney($inv->grand_total));
-                echo 'Total Amount: '.$totalAmount;exit;
+                
                 $channel = 0; //E-Commerce channel in STS
                 $messageId = $paymentMsg;//'1'; 
                 
