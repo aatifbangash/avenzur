@@ -1353,6 +1353,26 @@ public function getallCountry()
         return false;
     }
 
+    public function addProdQuantityOnholdRequest($sale_id, $items){
+
+        if(isset($items) && !empty($items)) {
+
+            foreach ($items as $item) {
+                $this->db->insert('product_qty_onhold_request',
+                 ['sale_id' => $sale_id, 
+                 'product_id' => $item->product_id, 
+                 'quantity' => intval($item->quantity), 
+                 'product_code' => $item->product_code,
+                 'product_name' => $item->product_name,
+                 'customer_id' => $item->customer_id,
+                 'customer_name' => $item->customer_name,
+                 'status' => 'onhold',
+                 'date_created' => NOW()
+                ]);
+            }
+        }
+    }
+
     public function syncPurchasePayments($id)
     {
         $purchase = $this->getPurchaseByID($id);

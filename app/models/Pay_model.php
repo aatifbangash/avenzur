@@ -126,7 +126,6 @@ class Pay_model extends CI_Model
             AS QTY WILL BE ADJUSTED THROUGH POS */
             //$this->site->syncQuantity($id);
             $this->site->addProdQuantityOnholdRequest($id, $items);
-            echo 'Here also we are....';exit;
             $this->site->syncSalePayments($id);
             $this->sma->update_award_points($sale->grand_total, $sale->customer_id);
             return true;
