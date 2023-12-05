@@ -43,7 +43,7 @@ class Cart_ajax extends MY_Shop_Controller
                 $sulfad_in_cart = 0;
                 $sulfad_code = '06285193000301';
                 $item = $this->cart->get_item($rowid);
-                $this->cart->cart_data();
+
                 // remove row
                 $this->cart->remove($rowid);
 
@@ -57,7 +57,6 @@ class Cart_ajax extends MY_Shop_Controller
                         if($product_code == $sulfad_code){
                             $sulfad_in_cart += $itm['qty'];
                             $this->cart->remove($itm['id']);
-                            $this->cart->cart_data();
                         }
                     }
 
