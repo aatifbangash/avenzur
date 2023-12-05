@@ -542,7 +542,6 @@ class Pay extends MY_Shop_Controller
                     'type'           => 'received',
                     'note'           => $_POST['Response_CurrencyISOCode'] . ' ' . $_POST['Response_Amount'] . ' had been paid for the Sale Reference No ' . $inv->reference_no,
                 ];
-                print_r($payment);exit;
                 if ($this->pay_model->addPayment($payment)) {
                     $address_id = $inv->address_id;
                     $customer = $this->pay_model->getCompanyByID($inv->customer_id);
@@ -682,7 +681,7 @@ class Pay extends MY_Shop_Controller
 
                         /* Shipway Order Generation Ends */
                     }
-
+                    echo 'Good till here....';exit;
                     $email = $this->order_received($invoice_no);
                     $this->sma->log_payment('SUCCESS', 'Payment has been made for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));
                     $this->session->set_flashdata('message', lang('payment_added'));
