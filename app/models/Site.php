@@ -66,12 +66,6 @@ class Site extends CI_Model
         $real_item_qty = $quantity;
         $quantity      = $item_quantity;
         $balance_qty   = $quantity;
-        echo '<pre>';
-        print_r($pis);
-        echo 'Realtime Qty: '.$real_item_qty.'<br />';
-        echo 'Qty: '.$quantity.'<br />';
-        echo 'Balance Qty: '.$balance_qty.'<br />';
-        exit;
         foreach ($pis as $pi) {
             $cost_row = null;
             if (!empty($pi) && $balance_qty <= $quantity && $quantity != 0) {
@@ -772,6 +766,7 @@ public function getallCountry()
 
     public function getPurchasedItems($product_id, $warehouse_id, $option_id = null, $nonPurchased = false)
     {
+        echo $nonPurchased;exit;
         $orderby = empty($this->Settings->accounting_method) ? 'asc' : 'desc';
         $this->db->select('id, purchase_id, transfer_id, quantity, quantity_balance, batchno, net_unit_cost, unit_cost, item_tax, base_unit_cost,expiry');
         $this->db->where('product_id', $product_id)->where('warehouse_id', $warehouse_id)->where('quantity_balance !=', 0); 
@@ -789,9 +784,6 @@ public function getallCountry()
         $this->db->order_by('expiry', $orderby);
         $this->db->order_by('purchase_id', $orderby);
         $q = $this->db->get('purchase_items');
-        echo '<pre>';
-        print_r($q->result());
-        echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
