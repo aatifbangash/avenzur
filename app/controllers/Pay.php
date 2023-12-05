@@ -521,7 +521,7 @@ class Pay extends MY_Shop_Controller
         if($response_status == '00000')
         {
             $amount = $_POST['Response_Amount'] / 100;
-            echo 'Amount'. $amount;exit;
+            
             $reference  = $_POST['Response_ApprovalCode'];
             /*if ($_POST['Response_CurrencyISOCode'] == '682') {
                             $amount = $_POST['Response_Amount'];
