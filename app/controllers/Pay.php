@@ -259,6 +259,7 @@ class Pay extends MY_Shop_Controller
                 $themeId = '1000000001';
                 $currencyCode = $currencyCode;//'682';
                 $totalAmount = intval(number_format($this->sma->convertMoney($inv->grand_total), 2,'',''));
+                echo 'Total Amount: '.$totalAmount;exit;
                 $channel = 0; //E-Commerce channel in STS
                 $messageId = $paymentMsg;//'1'; 
                 
@@ -312,9 +313,7 @@ class Pay extends MY_Shop_Controller
                  
                             
                             $data["formdata"] = $finalData;
-                        echo '<pre>';
-                        print_r($data["formdata"]);
-                        exit;
+                        
                       
                $this->load->view('green/directpay', $data);
             }
