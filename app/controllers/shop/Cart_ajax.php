@@ -104,11 +104,13 @@ class Cart_ajax extends MY_Shop_Controller
                     ];
 
                     if ($this->cart->insert($data)) {
-                        $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_item_deleted')]);
+                        return true;
+                        //$this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_item_deleted')]);
                     }
 
                 }else{
-                    $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_item_deleted')]);
+                    return true;
+                    //$this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_item_deleted')]);
                 }
                 
                 /*else{
