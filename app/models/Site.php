@@ -790,7 +790,7 @@ public function getallCountry()
         $this->db->order_by('purchase_id', $orderby);
         $q = $this->db->get('purchase_items');
         echo '<pre>';
-        print_r($q);
+        print_r($q->result());
         echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
