@@ -531,6 +531,8 @@ class Pay extends MY_Shop_Controller
                         }
               */          
             if ($inv = $this->pay_model->getSaleByID($invoice_no)) {
+                echo 'here in invoice...';
+                print_r($inv);exit;
                 $this->cart->destroy();
                 $payment = [
                     'date'           => date('Y-m-d H:i:s'),
