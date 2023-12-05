@@ -851,10 +851,10 @@ public function getallCountry(){
 
     }
 
-    public function getCities(){
+    public function getCities($id){
 
-        $query = $this->db->query('select * from sma_cities');
-        return $query->result();
+        $query = $this->db->query('select id, name from sma_cities where city_id = ' . $id);
+        return $query->result_array();
 
     }
 	

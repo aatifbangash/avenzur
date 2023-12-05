@@ -277,6 +277,11 @@ class Cart_ajax extends MY_Shop_Controller
         }
     }
 
+    public function get_cities_by_country_id($id) {
+        $this->data['cities'] = $this->settings_model->getCities($id);
+        echo json_encode($this->data['cities']);
+        exit;
+    }
     public function checkout()
     {
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
