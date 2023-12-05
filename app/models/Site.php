@@ -63,6 +63,8 @@ class Site extends CI_Model
     public function calculateCost($product_id, $warehouse_id, $net_unit_price, $unit_price, $quantity, $product_name, $option_id, $item_quantity)
     {
         $pis           = $this->getPurchasedItems($product_id, $warehouse_id, $option_id);
+        echo '<pre>';
+        print_r($pis);
         $real_item_qty = $quantity;
         $quantity      = $item_quantity;
         $balance_qty   = $quantity;
@@ -85,6 +87,10 @@ class Site extends CI_Model
                 break;
             }
         }
+
+        echo 'Quantity: '.$quantity;
+        print_r($cost);
+        exit;
         if ($quantity > 0) {
             $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), ($pi->product_name ?? $product_name)));
             redirect($_SERVER['HTTP_REFERER']);
