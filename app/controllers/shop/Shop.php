@@ -338,7 +338,7 @@ class Shop extends MY_Shop_Controller
                     'order_discount_id' => null,
                     'order_discount' => 0,
                     'total_discount' => 0,
-                    'product_tax' => $product_tax,
+                    'product_tax' => $total_tax,
                     'order_tax_id' => $this->Settings->default_tax_rate2,
                     'order_tax' => $order_tax,
                     'total_tax' => $total_tax,

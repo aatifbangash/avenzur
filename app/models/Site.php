@@ -66,9 +66,7 @@ class Site extends CI_Model
         $real_item_qty = $quantity;
         $quantity      = $item_quantity;
         $balance_qty   = $quantity;
-        echo '<pre>';
         foreach ($pis as $pi) {
-            print_r($pi);
             $cost_row = null;
             if (!empty($pi) && $balance_qty <= $quantity && $quantity != 0) {
                 $purchase_unit_cost = $pi->base_unit_cost ?? ($pi->unit_cost ?? ($pi->net_unit_cost + ($pi->item_tax / $pi->quantity)));
@@ -87,7 +85,6 @@ class Site extends CI_Model
                 break;
             }
         }
-        exit;
         if ($quantity > 0) {
             $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), ($pi->product_name ?? $product_name)));
             redirect($_SERVER['HTTP_REFERER']);
@@ -772,11 +769,11 @@ public function getallCountry()
         $orderby = empty($this->Settings->accounting_method) ? 'asc' : 'desc';
         $this->db->select('id, purchase_id, transfer_id, quantity, quantity_balance, batchno, net_unit_cost, unit_cost, item_tax, base_unit_cost,expiry');
         $this->db->where('product_id', $product_id)->where('warehouse_id', $warehouse_id)->where('quantity_balance !=', 0); 
-        if (!isset($option_id) || empty($option_id)) {
+        /*if (!isset($option_id) || empty($option_id)) {
             $this->db->group_start()->where('option_id', null)->or_where('option_id', 0)->group_end();
         } else {
             $this->db->where('option_id', $option_id);
-        }
+        }*/
         if ($nonPurchased) {
             $this->db->group_start()->where('purchase_id !=', null)->or_where('transfer_id !=', null)->group_end();
         }
@@ -1354,6 +1351,26 @@ public function getallCountry()
             return true;
         }
         return false;
+    }
+
+    public function addProdQuantityOnholdRequest($sale_id, $items){
+
+        if(isset($items) && !empty($items)) {
+
+            foreach ($items as $item) {
+                $this->db->insert('product_qty_onhold_request',
+                 ['sale_id' => $sale_id, 
+                 'product_id' => $item->product_id, 
+                 'quantity' => intval($item->quantity), 
+                 'product_code' => $item->product_code,
+                 'product_name' => $item->product_name,
+                 'customer_id' => $item->customer_id,
+                 'customer_name' => $item->customer_name,
+                 'status' => 'onhold',
+                 'date_created' => NOW()
+                ]);
+            }
+        }
     }
 
     public function syncPurchasePayments($id)

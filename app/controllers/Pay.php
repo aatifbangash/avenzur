@@ -258,7 +258,9 @@ class Pay extends MY_Shop_Controller
                 $quantity =$inv->total_items;
                 $themeId = '1000000001';
                 $currencyCode = $currencyCode;//'682';
-                $totalAmount = intval(number_format($this->sma->convertMoney($inv->grand_total), 2,'',''));
+                //$totalAmount = intval(number_format($this->sma->convertMoney($inv->grand_total), 2,'',''));
+                $totalAmount = number_format(preg_replace('/[^0-9.]/', '', $this->sma->convertMoney($inv->grand_total)), 2,'','');
+                
                 $channel = 0; //E-Commerce channel in STS
                 $messageId = $paymentMsg;//'1'; 
                 
@@ -519,6 +521,7 @@ class Pay extends MY_Shop_Controller
         if($response_status == '00000')
         {
             $amount = $_POST['Response_Amount'] / 100;
+            
             $reference  = $_POST['Response_ApprovalCode'];
             /*if ($_POST['Response_CurrencyISOCode'] == '682') {
                             $amount = $_POST['Response_Amount'];
@@ -678,7 +681,7 @@ class Pay extends MY_Shop_Controller
 
                         /* Shipway Order Generation Ends */
                     }
-
+                    
                     $email = $this->order_received($invoice_no);
                     $this->sma->log_payment('SUCCESS', 'Payment has been made for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));
                     $this->session->set_flashdata('message', lang('payment_added'));

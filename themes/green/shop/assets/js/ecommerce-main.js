@@ -452,7 +452,7 @@ function gen_html(t) {
       e += '<h5 class="card-title text-start">' + r.name + "</h5>";
       e += "</a>";
       e += '<div class="row align-items-center justify-content-between">';
-      e += '<div class="col-md-6"><div class="rating">';
+      e += '<div class="col-md-6 col-6"><div class="rating">';
       for (i = 1; i <= 5; i++) {
         if (i <= r.avg_rating) {
           e += '<i class="bi bi-star-fill rated"></i>';
@@ -464,21 +464,21 @@ function gen_html(t) {
 
       if (r.promotion) {
         e +=
-          '<div class="col-md-6"><div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">' +
+          '<div class="col-md-6 col-6"><div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">' +
           l +
           "</h4></div></div>";
       }
       e += "</div>";
       e += '<div class="row align-items-center justify-content-between">';
       e +=
-        '<div class="col-md-6 "><div class="price text-start  py-2"><h4 class="m-0 fw-bold">';
+        '<div class="col-md-6 col-6"><div class="price text-start  py-2"><h4 class="m-0 fw-bold">';
       if (r.promotion) {
         e += r.formated_promo_price;
       } else {
         e += l;
       }
       e += "</h4></div></div>";
-      e += '<div class="col-md-6">';
+      e += '<div class="col-md-6 col-6">';
       e +=
         '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between">';
       e +=
@@ -1071,93 +1071,94 @@ $(".edit-address").click(function (t) {
   });
 
 function initMap() {
-  let map = new google.maps.Map(document.getElementById('map'), {
-    center: {lat: 23.8859, lng: 45.0792}, // Example coordinates (San Francisco)
+  let map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 23.8859, lng: 45.0792 }, // Example coordinates (San Francisco)
     zoom: 18, // Adjust the zoom level
   });
 
   // Try to get the user's current location
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-        function (position) {
-          const userLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
+      function (position) {
+        const userLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
 
-          // Center the map at the user's location
+        // Center the map at the user's location
 
-          document.getElementById('latitude').value = position.coords.latitude;
-          document.getElementById('longitude').value = position.coords.longitude;
-          map.setCenter(userLocation);
+        document.getElementById("latitude").value = position.coords.latitude;
+        document.getElementById("longitude").value = position.coords.longitude;
+        map.setCenter(userLocation);
 
-          // Add a marker at the user's location
-          const marker = new google.maps.Marker({
-            position: userLocation,
-            map: map,
-            title: 'Your Location',
-            draggable: true
-          });
-          document.getElementById('manual-shipping-check').checked = false;
-          document.getElementById('manual-shipping-address').style.display = 'none';
-          geocodeLatLng2(userLocation);
+        // Add a marker at the user's location
+        const marker = new google.maps.Marker({
+          position: userLocation,
+          map: map,
+          title: "Your Location",
+          draggable: true,
+        });
+        document.getElementById("manual-shipping-check").checked = false;
+        document.getElementById("manual-shipping-address").style.display =
+          "none";
+        geocodeLatLng2(userLocation);
 
-          marker.addListener('dragend', function () {
+        marker.addListener("dragend", function () {
+          document.getElementById("manual-shipping-check").checked = false;
+          document.getElementById("manual-shipping-address").style.display =
+            "none";
 
-            document.getElementById('manual-shipping-check').checked = false;
-            document.getElementById('manual-shipping-address').style.display = 'none';
-
-            const newPosition = marker.getPosition();
-            document.getElementById('latitude').value = newPosition.lat();
-            document.getElementById('longitude').value = newPosition.lng();
-            geocodeLatLng2(newPosition);
-          });
-        },
-        function (error) {
-          console.error('Error getting user location:', error);
-        },
-        {
-          enableHighAccuracy: true
-        }
+          const newPosition = marker.getPosition();
+          document.getElementById("latitude").value = newPosition.lat();
+          document.getElementById("longitude").value = newPosition.lng();
+          geocodeLatLng2(newPosition);
+        });
+      },
+      function (error) {
+        console.error("Error getting user location:", error);
+      },
+      {
+        enableHighAccuracy: true,
+      }
     );
   } else {
-    console.error('Geolocation is not supported by this browser.');
+    console.error("Geolocation is not supported by this browser.");
   }
 }
 
 function geocodeLatLng2(latLng) {
   const geocoder = new google.maps.Geocoder();
-  geocoder.geocode({'location': latLng}, function (results, status) {
-    if (status === 'OK') {
+  geocoder.geocode({ location: latLng }, function (results, status) {
+    if (status === "OK") {
       if (results[0]) {
         const addressComponents = results[0].address_components;
         const formattedAddress = results[0].formatted_address;
-        document.getElementById('google-map-selected-address').value = formattedAddress;
+        document.getElementById("google-map-selected-address").value =
+          formattedAddress;
         let city, country, state, street;
 
         for (const component of addressComponents) {
           const types = component.types;
-          if (types.includes('locality')) {
+          if (types.includes("locality")) {
             city = component.long_name;
-            document.getElementById('address-city').value = city;
-          } else if (types.includes('country')) {
+            document.getElementById("address-city").value = city;
+          } else if (types.includes("country")) {
             country = component.long_name;
-            document.getElementById('address-country').value = country;
-          } else if (types.includes('route')) {
+            document.getElementById("address-country").value = country;
+          } else if (types.includes("route")) {
             street = component.long_name;
-            document.getElementById('address-line-1').value = street;
-          } else if (types.includes('administrative_area_level_1')) {
+            document.getElementById("address-line-1").value = street;
+          } else if (types.includes("administrative_area_level_1")) {
             state = component.long_name;
-            document.getElementById('address-state').value = state;
+            document.getElementById("address-state").value = state;
           }
         }
-console.log(city, country)
-
+        console.log(city, country);
       } else {
-        console.log('No results found');
+        console.log("No results found");
       }
     } else {
-      console.log('Geocoder failed due to: ' + status);
+      console.log("Geocoder failed due to: " + status);
     }
   });
 }
@@ -1335,22 +1336,21 @@ function add_address(t) {
 
       // initialize();
       initMap();
-      document.getElementById('manual-shipping-check').onchange = function (e) {
+      document.getElementById("manual-shipping-check").onchange = function (e) {
+        document.getElementById("address-line-1").value = "";
+        document.getElementById("address-city").value = "";
+        document.getElementById("address-country").value = "";
+        document.getElementById("address-state").value = "";
+        document.getElementById("latitude").value = "";
+        document.getElementById("longitude").value = "";
 
-        document.getElementById('address-line-1').value = '';
-        document.getElementById('address-city').value = '';
-        document.getElementById('address-country').value = '';
-        document.getElementById('address-state').value = '';
-        document.getElementById('latitude').value = '';
-        document.getElementById('longitude').value = '';
-
-        let manualMapBlock = document.getElementById('manual-shipping-address')
+        let manualMapBlock = document.getElementById("manual-shipping-address");
         if (e.target.checked === true) {
-          manualMapBlock.style.display = 'block';
+          manualMapBlock.style.display = "block";
         } else {
-          manualMapBlock.style.display = 'none';
+          manualMapBlock.style.display = "none";
         }
-      }
+      };
     },
   })
     .then(function (e) {
