@@ -232,7 +232,7 @@ class Pay extends MY_Shop_Controller
             //$currencyCode = $dp->currencyISOCode;
             $currencyCode = $currencyObj->isocode;
             $paymentMsg = $dp->payment_message_id;
-
+        print_r($inv);exit;
         if ($inv = $this->pay_model->getSaleByID($id)) {
             //$paypal = $this->pay_model->getPaypalSettings();
             if ((($inv->grand_total - $inv->paid) > 0)) {
