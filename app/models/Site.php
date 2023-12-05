@@ -769,18 +769,14 @@ public function getallCountry()
         $orderby = empty($this->Settings->accounting_method) ? 'asc' : 'desc';
         $this->db->select('id, purchase_id, transfer_id, quantity, quantity_balance, batchno, net_unit_cost, unit_cost, item_tax, base_unit_cost,expiry');
         $this->db->where('product_id', $product_id)->where('warehouse_id', $warehouse_id)->where('quantity_balance !=', 0); 
-        if (!isset($option_id) || empty($option_id)) {
-            echo 'here1';
+        /*if (!isset($option_id) || empty($option_id)) {
             $this->db->group_start()->where('option_id', null)->or_where('option_id', 0)->group_end();
         } else {
-            echo 'here2';
             $this->db->where('option_id', $option_id);
-        }
+        }*/
         if ($nonPurchased) {
-            echo 'here3';
             $this->db->group_start()->where('purchase_id !=', null)->or_where('transfer_id !=', null)->group_end();
         }
-        exit;
         $this->db->group_start()->where('status', 'received')->or_where('status', 'partial')->group_end();
         $this->db->group_by('id');
         // $this->db->order_by('date', $orderby);
