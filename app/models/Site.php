@@ -789,6 +789,8 @@ public function getallCountry()
         $this->db->order_by('expiry', $orderby);
         $this->db->order_by('purchase_id', $orderby);
         $q = $this->db->get('purchase_items');
+        echo '<pre>';
+        print_r($q);
         echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
