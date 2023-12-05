@@ -423,12 +423,20 @@ foreach ($cart_contents as $cartItem) {
                                                         <div class="col-md-6">
                                                     <div class="form-group">
                                                         <?= lang('country', 'shipping_country'); ?> *
-                                                        <?= form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required" '); ?>
-                                                        <!--<select name="shipping_country" id="shipping_country" class="form-control"  required="required">-->
-                                                        <!--  <option value="SA">Saudi Arabia</option>-->
-                                                        <!--  <option value="AE">UAE</option>-->
+                                                       <!-- --><?/*= form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required" '); */?>
+                                                        <select name="shipping_country" id="shipping_country" class="form-control" >
+                                                            <option value="0">--SELECT--</option>
+                                                            <?php
+                                                            if(!empty($countries) && sizeof($countries) > 0){
+                                                                foreach($countries as $country){
+                                                                    ?>
+                                                                    <option value="<?= $country->id ?>"><?= $country->name ?></option>
+                                                            <?php
+                                                                }
+                                                            }
+                                                            ?>
 
-                                                        <!--</select>-->
+                                                        </select>
                                                         <!--form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required"'); ?>-->
                                                     </div>
                                                         </div>
@@ -695,6 +703,8 @@ foreach ($cart_contents as $cartItem) {
                         } else if (types.includes('country')) {
                             country = component.long_name;
                             document.getElementById('shipping_country').value = country;
+
+                            // $("#shipping_country option:contains('" + country + "')").prop("selected", true);
                         } else if (types.includes('route')) {
                             street = component.long_name;
                             document.getElementById('shipping_line1').value = street;
