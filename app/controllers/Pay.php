@@ -531,8 +531,6 @@ class Pay extends MY_Shop_Controller
                         }
               */          
             if ($inv = $this->pay_model->getSaleByID($invoice_no)) {
-                echo 'here in invoice...';
-                print_r($inv);exit;
                 $this->cart->destroy();
                 $payment = [
                     'date'           => date('Y-m-d H:i:s'),
@@ -544,6 +542,7 @@ class Pay extends MY_Shop_Controller
                     'type'           => 'received',
                     'note'           => $_POST['Response_CurrencyISOCode'] . ' ' . $_POST['Response_Amount'] . ' had been paid for the Sale Reference No ' . $inv->reference_no,
                 ];
+                print_r($payment);exit;
                 if ($this->pay_model->addPayment($payment)) {
                     $address_id = $inv->address_id;
                     $customer = $this->pay_model->getCompanyByID($inv->customer_id);
