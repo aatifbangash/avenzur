@@ -234,9 +234,6 @@ class Pay extends MY_Shop_Controller
             $paymentMsg = $dp->payment_message_id;
 
         if ($inv = $this->pay_model->getSaleByID($id)) {
-            echo '<pre>';
-            print_r($inv);
-            exit;
             //$paypal = $this->pay_model->getPaypalSettings();
             if ((($inv->grand_total - $inv->paid) > 0)) {
                 
@@ -315,7 +312,9 @@ class Pay extends MY_Shop_Controller
                  
                             
                             $data["formdata"] = $finalData;
-                        
+                        echo '<pre>';
+                        print_r($data["formdata"]);
+                        exit;
                       
                $this->load->view('green/directpay', $data);
             }
