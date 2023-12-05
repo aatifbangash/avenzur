@@ -86,7 +86,6 @@ class Pay_model extends CI_Model
 
     public function updateStatus($id, $status, $note = null)
     {
-        echo 'Here we are in update status';exit;
         $sale  = $this->getSaleByID($id);
         $items = $this->getSaleItems($id);
         if ($note) {
@@ -126,6 +125,7 @@ class Pay_model extends CI_Model
             INSTEAD ADD QTY ONHOLD REQUEST TO PHARMACY FOR QTY RELEASE AFTER POS
             AS QTY WILL BE ADJUSTED THROUGH POS */
             //$this->site->syncQuantity($id);
+            echo 'Done till here...';exit;
             $this->site->addProdQuantityOnholdRequest($id, $items);
             $this->site->syncSalePayments($id);
             $this->sma->update_award_points($sale->grand_total, $sale->customer_id);
