@@ -50,7 +50,7 @@ class Cart_ajax extends MY_Shop_Controller
                 //$sulfad_to_remove = $item['qty'];
                 $product = $this->shop_model->getProductForCart($item['product_id']);
 
-                if($product->code == '06285193000301'){
+                if($product->code == '06285193000301' || $product->code == '19752342'){
                     $cart_contents = $this->cart->contents();
                     foreach ($cart_contents as $itm) {
                         $product_code = $itm['code'];
