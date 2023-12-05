@@ -86,6 +86,7 @@ class Pay_model extends CI_Model
 
     public function updateStatus($id, $status, $note = null)
     {
+        echo 'Here we are in update status';exit;
         $sale  = $this->getSaleByID($id);
         $items = $this->getSaleItems($id);
         if ($note) {
