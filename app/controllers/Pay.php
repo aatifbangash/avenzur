@@ -517,6 +517,8 @@ class Pay extends MY_Shop_Controller
         $this->sma->log_payment('INFO', 'DirectPay Payment Request', $req);
         $invoice_no = substr($_POST['Response_TransactionID'],13);
         $response_status = $_POST['Response_StatusCode'];
+
+        echo $response_status;exit;
         
         if($response_status == '00000')
         {
