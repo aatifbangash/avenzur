@@ -66,6 +66,12 @@ class Site extends CI_Model
         $real_item_qty = $quantity;
         $quantity      = $item_quantity;
         $balance_qty   = $quantity;
+        echo '<pre>';
+        print_r($pis);
+        echo 'Realtime Qty: '.$real_item_qty.'<br />';
+        echo 'Qty: '.$quantity.'<br />';
+        echo 'Balance Qty: '.$balance_qty.'<br />';
+        exit;
         foreach ($pis as $pi) {
             $cost_row = null;
             if (!empty($pi) && $balance_qty <= $quantity && $quantity != 0) {
