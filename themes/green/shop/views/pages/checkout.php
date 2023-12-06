@@ -231,10 +231,16 @@ foreach ($cart_contents as $cartItem) {
                                             <div class="row">
                                                 <div class="col-md-12">
                                                     <div class="row">
-                                                        <div class="col-md-12">
+                                                        <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <?= lang('name', 'name'); ?> *
+                                                                <?= lang('First Name', 'name'); ?> *
                                                                 <?= form_input('name', set_value('name'), 'class="form-control" id="name" required="required"'); ?>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <?= lang('Last_name', 'name'); ?>
+                                                                <?= form_input('last_name', set_value('last_name'), 'class="form-control" id="last_name"'); ?>
                                                             </div>
                                                         </div>
                                                         <!--<div class="col-md-6">-->
@@ -378,7 +384,7 @@ foreach ($cart_contents as $cartItem) {
                                                 <div id="manual-shipping-address" style="display: none;">
                                                <div class="col-md-12">
                                                    <div class="form-group">
-                                                       <?= lang('line1', 'shipping_line1'); ?> *
+                                                       <?= lang('Address', 'shipping_line1'); ?> *
                                                        <?= form_input('shipping_line1', set_value('shipping_line1'), 'class="form-control" id="shipping_line1" '); ?>
                                                    </div>
                                                 </div>
@@ -439,7 +445,7 @@ foreach ($cart_contents as $cartItem) {
                                                        value=""/>
 
 
-                                                <div class="col-md-12">
+                                                <div class="col-md-12 d-none" >
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <div class="form-group">
@@ -456,7 +462,7 @@ foreach ($cart_contents as $cartItem) {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-12">
+                                                <div class="col-md-12 d-none">
                                                     <div class="form-group" id="shipping-phone">
                                                         <?= lang('phone', 'shipping_phone'); ?> *
                                                         <input type="tel" name="shipping_phone" value="" class="form-control" id="shipping_phone" required="required" />
@@ -642,8 +648,9 @@ foreach ($cart_contents as $cartItem) {
     </div>
 </section>
 <script>
-    let map;
 
+<?php if (!$this->loggedIn) { ?>
+let map;
     function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
             center: {lat: 23.8859, lng: 45.0792}, // Example coordinates (San Francisco)
@@ -707,6 +714,7 @@ foreach ($cart_contents as $cartItem) {
                     const addressComponents = results[0].address_components;
                     const formattedAddress = results[0].formatted_address;
                     document.getElementById('google-map-selected-address').value = formattedAddress;
+                    document.getElementById('shipping_line1').value = formattedAddress;
                     let city, country, state, street;
 
                     for (const component of addressComponents) {
@@ -721,7 +729,7 @@ foreach ($cart_contents as $cartItem) {
                             // $("#shipping_country option:contains('" + country + "')").prop("selected", true);
                         } else if (types.includes('route')) {
                             street = component.long_name;
-                            document.getElementById('shipping_line1').value = street;
+                            // document.getElementById('shipping_line1').value = street;
                         } else if (types.includes('administrative_area_level_1')) {
                             state = component.long_name;
                             document.getElementById('shipping_state').value = state;
@@ -737,6 +745,7 @@ foreach ($cart_contents as $cartItem) {
             }
         });
     }
+    <?php } ?>
 </script>
 <script>
     // Vanilla Javascript

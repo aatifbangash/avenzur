@@ -1071,7 +1071,7 @@ $(".edit-address").click(function (t) {
   });
 
 function initMap() {
-  let map = new google.maps.Map(document.getElementById("map"), {
+  let map = new google.maps.Map(document.getElementById("load_map"), {
     center: { lat: 23.8859, lng: 45.0792 }, // Example coordinates (San Francisco)
     zoom: 18, // Adjust the zoom level
   });
@@ -1098,14 +1098,14 @@ function initMap() {
           title: "Your Location",
           draggable: true,
         });
-        document.getElementById("manual-shipping-check").checked = false;
-        document.getElementById("manual-shipping-address").style.display =
+        document.getElementById("manual-shipping-check-2").checked = false;
+        document.getElementById("manual-shipping-address-2").style.display =
           "none";
         geocodeLatLng2(userLocation);
 
         marker.addListener("dragend", function () {
-          document.getElementById("manual-shipping-check").checked = false;
-          document.getElementById("manual-shipping-address").style.display =
+          document.getElementById("manual-shipping-check-2").checked = false;
+          document.getElementById("manual-shipping-address-2").style.display =
             "none";
 
           const newPosition = marker.getPosition();
@@ -1133,8 +1133,10 @@ function geocodeLatLng2(latLng) {
       if (results[0]) {
         const addressComponents = results[0].address_components;
         const formattedAddress = results[0].formatted_address;
-        document.getElementById("google-map-selected-address").value =
+        document.getElementById("google-map-selected-address-2").value =
           formattedAddress;
+        document.getElementById("address-line-1").value =
+            formattedAddress;
         let city, country, state, street;
 
         for (const component of addressComponents) {
@@ -1147,7 +1149,7 @@ function geocodeLatLng2(latLng) {
             document.getElementById("address-country").value = country;
           } else if (types.includes("route")) {
             street = component.long_name;
-            document.getElementById("address-line-1").value = street;
+            // document.getElementById("address-line-1").value = street;
           } else if (types.includes("administrative_area_level_1")) {
             state = component.long_name;
             document.getElementById("address-state").value = state;
@@ -1248,11 +1250,9 @@ function add_address(t) {
       (t.longitude ? t.longitude : "") +
       '"><input type="hidden" id="latitude" name="latitude" value="' +
       (t.latitude ? t.latitude : "") +
-      '"><div class="row"><div class="form-group col-sm-12"><div style="height: 350px; z-index: 99999;" id="map"></div><input id="google-map-selected-address" type="text" readonly  class="form-control" /><input id="autocomplete_search" type="hidden"  class="form-control" placeholder="Type for the address..." autocomplete="on" /></div></div>OR<br /><h5><input type="checkbox" id="manual-shipping-check"/> Check the box to type the address manually</h5><div id="manual-shipping-address" style="display: none;"><div class="row"><div class="form-group col-sm-12"><input name="line1" id="address-line-1" value="' +
+      '"><div class="row"><div class="form-group col-sm-12"><div style="height: 350px; z-index: 99999;" id="load_map"></div><input id="google-map-selected-address-2" type="text" readonly  class="form-control" /><input id="autocomplete_search" type="hidden"  class="form-control" placeholder="Type for the address..." autocomplete="on" /></div></div>OR<br /><h5><input type="checkbox" id="manual-shipping-check-2"/> Check the box to type the address manually</h5><div id="manual-shipping-address-2" style="display: none;"><div class="row"><div class="form-group col-sm-12"><input name="line1" id="address-line-1" value="' +
       (t.line1 ? t.line1 : "") +
-      '" class="form-control" placeholder="' +
-      lang.line_1 +
-      '"></div></div><div class="row"><div class="form-group col-sm-6">' +
+      '" class="form-control" placeholder="Address"></div></div><div class="row"><div class="form-group col-sm-6">' +
         '' +
 
         '<select id="address-country-dropdown" class="form-control">' +
@@ -1281,13 +1281,13 @@ function add_address(t) {
         '">' +
 
 
-        '</div><div class="form-group col-sm-6"><input name="postal_code" value="' +
+        '</div><div class="form-group col-sm-6 d-none"><input name="postal_code" value="' +
       (t.postal_code ? t.postal_code : "") +
       '" id="address-postal-code" class="form-control" placeholder="' +
       lang.postal_code +
-      '"></div><div class="form-group col-sm-6" id="istates">' +
+      '"></div><div class="form-group col-sm-6 d-none" id="istates">' +
         e +
-        '</div><div class="form-group col-md-6 margin-bottom-no text-left ar-addr"><input type="tel" name="phone" value="' +
+        '</div><div class="form-group col-md-6 margin-bottom-no text-left ar-addr d-none"><input type="tel" name="phone" value="' +
       (t.phone ? t.phone : "") +
       '" id="address-phone" class="form-control" placeholder="' +
       lang.phone +
@@ -1300,7 +1300,7 @@ function add_address(t) {
       return new Promise(function (t, e) {
         $("#address-line-1").val() || e(lang.line_1 + " " + lang.is_required),
           $("#address-city").val() || e(lang.city + " " + lang.is_required),
-          $("#address-state").val() || e(lang.state + " " + lang.is_required),
+          // $("#address-state").val() || e(lang.state + " " + lang.is_required),
           $("#address-country").val() ||
             e(lang.country + " " + lang.is_required),
           $("#address-phone").val() || e(lang.phone + " " + lang.is_required),
@@ -1357,7 +1357,7 @@ function add_address(t) {
 
       // initialize();
       initMap();
-      document.getElementById("manual-shipping-check").onchange = function (e) {
+      document.getElementById("manual-shipping-check-2").onchange = function (e) {
         document.getElementById("address-line-1").value = "";
         document.getElementById("address-city").value = "";
         document.getElementById("address-country").value = "";
@@ -1367,7 +1367,7 @@ function add_address(t) {
         document.getElementById("latitude").value = "";
         document.getElementById("longitude").value = "";
 
-        let manualMapBlock = document.getElementById("manual-shipping-address");
+        let manualMapBlock = document.getElementById("manual-shipping-address-2");
         if (e.target.checked === true) {
           manualMapBlock.style.display = "block";
         } else {
