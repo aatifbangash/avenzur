@@ -1790,4 +1790,21 @@ ul.pagination li:hover a {
   html[lang="ar"] nav .menu-av li.nav-item {
     margin: 0 !important;
   }
+  html[lang="ar"] footer .row div h6,
+  html[lang="ar"] p.copyr,
+  html[lang="ar"] h4.contleftsocial,
+  html[lang="ar"] .specialOfferpopularTitle h2,
+  html[lang="ar"] button.catsidebarmob {
+    text-align: center !important;
+  }
+  h4.contleftsocial a {
+    margin: 5px !important;
+  }
+  html[lang="ar"] .dropdown-menu.myaccountForm.cartform {
+    left: 0 !important;
+  }
+  html[lang="ar"] .registertab-k a.btn.btn-theme {
+    float: left;
+    margin-bottom: 11px;
+  }
 }

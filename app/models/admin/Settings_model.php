@@ -838,11 +838,25 @@ class Settings_model extends CI_Model
     
 	}
 public function getallCountry(){
-        
+
         $query = $this->db->get('countries');
         return $query->result();
-    
-	}	
+
+	}
+
+    public function getCountries(){
+
+        $query = $this->db->query('select * from sma_countries');
+        return $query->result();
+
+    }
+
+    public function getCities($id){
+
+        $query = $this->db->query('select id, name from sma_cities where city_id = ' . $id);
+        return $query->result_array();
+
+    }
 	
    public function deleteCountry($id)
     {

@@ -1252,21 +1252,42 @@ function add_address(t) {
       (t.line1 ? t.line1 : "") +
       '" class="form-control" placeholder="' +
       lang.line_1 +
-      '"></div></div><div class="row"><div class="form-group col-sm-6"><input name="city" readonly value="' +
-      (t.city ? t.city : "") +
-      '" id="address-city" class="form-control" placeholder="' +
-      lang.city +
-      '"></div><div class="form-group col-sm-6" id="istates">' +
-      e +
-      '</div><div class="form-group col-sm-6"><input name="postal_code" value="' +
+      '"></div></div><div class="row"><div class="form-group col-sm-6">' +
+        '' +
+
+        '<select id="address-country-dropdown" class="form-control">' +
+          '<option value="0">--SELECT--</option>' +
+        '</select>' +
+
+        '<input type="hidden" name="country" value="' +
+        (t.country ? t.country : "") +
+        '" id="address-country" class="form-control" placeholder="' +
+        lang.country +
+        '">' +
+        '' +
+
+
+        '</div><div class="form-group col-sm-6">' +
+        '' +
+
+        '<select id="address-city-dropdown" class="form-control">' +
+        '<option value="0">--SELECT--</option>' +
+        '</select>' +
+
+        '<input type="hidden" name="city" value="' +
+        (t.city ? t.city : "") +
+        '" id="address-city" class="form-control" placeholder="' +
+        lang.city +
+        '">' +
+
+
+        '</div><div class="form-group col-sm-6"><input name="postal_code" value="' +
       (t.postal_code ? t.postal_code : "") +
       '" id="address-postal-code" class="form-control" placeholder="' +
       lang.postal_code +
-      '"></div><div class="form-group col-sm-6"><input name="country" readonly value="' +
-      (t.country ? t.country : "") +
-      '" id="address-country" class="form-control" placeholder="' +
-      lang.country +
-      '"></div><div class="form-group col-md-6 margin-bottom-no text-left ar-addr"><input type="tel" name="phone" value="' +
+      '"></div><div class="form-group col-sm-6" id="istates">' +
+        e +
+        '</div><div class="form-group col-md-6 margin-bottom-no text-left ar-addr"><input type="tel" name="phone" value="' +
       (t.phone ? t.phone : "") +
       '" id="address-phone" class="form-control" placeholder="' +
       lang.phone +
@@ -1340,6 +1361,8 @@ function add_address(t) {
         document.getElementById("address-line-1").value = "";
         document.getElementById("address-city").value = "";
         document.getElementById("address-country").value = "";
+        document.getElementById('address-city-dropdown').value = $("#address-city-dropdown option:first").val();
+        document.getElementById('address-country-dropdown').value = $("#address-country-dropdown option:first").val();
         document.getElementById("address-state").value = "";
         document.getElementById("latitude").value = "";
         document.getElementById("longitude").value = "";
@@ -1351,6 +1374,65 @@ function add_address(t) {
           manualMapBlock.style.display = "none";
         }
       };
+
+      //load countries
+      $.ajax({
+        url: site.base_url + "cart/get_countries",
+        method: "GET",
+        success: function(jsonResponse) {
+          var response = JSON.parse(jsonResponse);
+          $("#address-country-dropdown").empty();
+          if(response.length > 0) {
+            $("#address-country-dropdown").append('<option value="0">--SELECT--</option>');
+            response.forEach(function(city) {
+              $("#address-country-dropdown").append('<option value="' + city.id + '">' + city.name + '</option>');
+            });
+          }
+        },
+        error: function() {
+          console.error("Failed to fetch cities.");
+        }
+      });
+
+      $("#address-country-dropdown").on("change", function() {
+        $('#address-city').val('');
+
+        let countryId = $(this).val();
+        let selectedOption = $(this).find(":selected").text();
+        if(selectedOption != '--SELECT--') {
+          $("#address-country").val(selectedOption);
+        } else {
+          $("#address-country").val('');
+        }
+
+        //load cities
+        $.ajax({
+          url: site.base_url + "cart/get_cities_by_country_id/" + countryId, // Replace with the actual endpoint to fetch cities
+          method: "GET",
+          success: function(jsonResponse) {
+            var response = JSON.parse(jsonResponse);
+            $("#address-city-dropdown").empty();
+            if(response.length > 0) {
+              $("#address-city-dropdown").append('<option value="0">--SELECT--</option>');
+              response.forEach(function(city) {
+                $("#address-city-dropdown").append('<option value="' + city.id + '">' + city.name + '</option>');
+              });
+            }
+          },
+          error: function() {
+            console.error("Failed to fetch cities.");
+          }
+        });
+      });
+
+      $("#address-city-dropdown").on("change", function() {
+        let selectedOption = $(this).find(":selected").text();
+        if(selectedOption != '--SELECT--') {
+          $("#address-city").val(selectedOption);
+        } else {
+          $("#address-city").val('');
+        }
+      });
     },
   })
     .then(function (e) {

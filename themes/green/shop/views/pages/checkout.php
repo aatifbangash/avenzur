@@ -386,21 +386,42 @@ foreach ($cart_contents as $cartItem) {
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <?= lang('city', 'shipping_city'); ?> *
-                                                                <?= form_input('shipping_city', set_value('shipping_city'), 'class="form-control" id="shipping_city" required="required"'); ?>
+                                                                <?= lang('country', 'shipping_country'); ?> *
+                                                                <input
+                                                                        type="hidden"
+                                                                        class="form-control"
+                                                                        name="shipping_country"
+                                                                        id="shipping_country"
+                                                                        required="required"
+                                                                />
+                                                                <select id="shipping_country_dropdown" class="form-control" >
+                                                                    <option value="0">--SELECT--</option>
+                                                                    <?php
+                                                                    if(!empty($countries) && sizeof($countries) > 0){
+                                                                        foreach($countries as $country){
+                                                                            ?>
+                                                                            <option value="<?= $country->id ?>"><?= $country->name ?></option>
+                                                                            <?php
+                                                                        }
+                                                                    }
+                                                                    ?>
+                                                                </select>
+                                                                <!--form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required"'); ?>-->
                                                             </div>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <?= lang('state', 'shipping_state'); ?>
-                                                                <?php
-                                                                if ($Settings->indian_gst) {
-                                                                    $states = $this->gst->getIndianStates();
-                                                                    echo form_dropdown('shipping_state', $states, '', 'class="form-control selectpicker mobile-device" id="shipping_state" title="Select" required="required"');
-                                                                } else {
-                                                                    echo form_input('shipping_state', '', 'class="form-control" id="shipping_state"');
-                                                                }
-                                                                ?>
+                                                                <?= lang('city', 'shipping_city'); ?> *
+                                                                <input
+                                                                        type="hidden"
+                                                                        class="form-control"
+                                                                        name="shipping_city"
+                                                                        id="shipping_city"
+                                                                        required="required"
+                                                                />
+                                                                <select id="shipping_city_dropdown" class="form-control" >
+                                                                    <option value="0">--SELECT--</option>
+                                                                </select>
                                                             </div>
                                                         </div>
                                                         <!--<div class="col-md-6">
@@ -421,16 +442,17 @@ foreach ($cart_contents as $cartItem) {
                                                 <div class="col-md-12">
                                                     <div class="row">
                                                         <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <?= lang('country', 'shipping_country'); ?> *
-                                                        <?= form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required" '); ?>
-                                                        <!--<select name="shipping_country" id="shipping_country" class="form-control"  required="required">-->
-                                                        <!--  <option value="SA">Saudi Arabia</option>-->
-                                                        <!--  <option value="AE">UAE</option>-->
-
-                                                        <!--</select>-->
-                                                        <!--form_input('shipping_country', set_value('shipping_country'), 'class="form-control" id="shipping_country" required="required"'); ?>-->
-                                                    </div>
+                                                            <div class="form-group">
+                                                                <?= lang('state', 'shipping_state'); ?>
+                                                                <?php
+                                                                if ($Settings->indian_gst) {
+                                                                    $states = $this->gst->getIndianStates();
+                                                                    echo form_dropdown('shipping_state', $states, '', 'class="form-control selectpicker mobile-device" id="shipping_state" title="Select" required="required"');
+                                                                } else {
+                                                                    echo form_input('shipping_state', '', 'class="form-control" id="shipping_state"');
+                                                                }
+                                                                ?>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -695,6 +717,8 @@ foreach ($cart_contents as $cartItem) {
                         } else if (types.includes('country')) {
                             country = component.long_name;
                             document.getElementById('shipping_country').value = country;
+
+                            // $("#shipping_country option:contains('" + country + "')").prop("selected", true);
                         } else if (types.includes('route')) {
                             street = component.long_name;
                             document.getElementById('shipping_line1').value = street;
@@ -735,6 +759,8 @@ foreach ($cart_contents as $cartItem) {
         document.getElementById('shipping_line1').value = '';
         document.getElementById('shipping_city').value = '';
         document.getElementById('shipping_country').value = '';
+        document.getElementById('shipping_country_dropdown').value = $("#shipping_country_dropdown option:first").val();
+        document.getElementById('shipping_city_dropdown').value = $("#shipping_city_dropdown option:first").val();
         document.getElementById('shipping_state').value = '';
         document.getElementById('shipping_latitude').value = '';
         document.getElementById('shipping_longitude').value = '';
@@ -1014,6 +1040,49 @@ foreach ($cart_contents as $cartItem) {
                 calCulateShipping(cityShipping, countryShipping)
             });
         }
-    })
+    });
+
+    $(document).ready(function() {
+        $("#shipping_country_dropdown").on("change", function() {
+            $('#shipping_city').val('');
+
+            let countryId = $(this).val();
+            let selectedOption = $(this).find(":selected").text();
+            if(selectedOption != '--SELECT--') {
+                $("#shipping_country").val(selectedOption);
+            } else {
+                $("#shipping_country").val('');
+            }
+            $("#shipping_country").trigger('blur');
+
+            $.ajax({
+                url: "get_cities_by_country_id/" + countryId, // Replace with the actual endpoint to fetch cities
+                method: "GET",
+                success: function(jsonResponse) {
+                    var response = JSON.parse(jsonResponse);
+                    $("#shipping_city_dropdown").empty();
+                    if(response.length > 0) {
+                        $("#shipping_city_dropdown").append('<option value="0">--SELECT--</option>');
+                        response.forEach(function(city) {
+                            $("#shipping_city_dropdown").append('<option value="' + city.id + '">' + city.name + '</option>');
+                        });
+                    }
+                },
+                error: function() {
+                    console.error("Failed to fetch cities.");
+                }
+            });
+        });
+
+        $("#shipping_city_dropdown").on("change", function() {
+            let selectedOption = $(this).find(":selected").text();
+            if(selectedOption != '--SELECT--') {
+                $("#shipping_city").val(selectedOption);
+            } else {
+                $("#shipping_city").val('');
+            }
+            $("#shipping_city").trigger('blur');
+        });
+    });
 
 </script>

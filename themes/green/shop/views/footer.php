@@ -203,8 +203,7 @@
 <?php if($v == 'addresses' || $v == 'checkout') { ?>
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9B2FB0OWZb_CrS8Njrdgek7djxBagYek&libraries=places&callback=initMap"></script>
 <?php } ?>
-<scrip<!--t async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9B2FB0OWZb_CrS8Njrdgek7djxBagYek&callback=initMap"></script>-->
+<!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9B2FB0OWZb_CrS8Njrdgek7djxBagYek&callback=initMap"></script> -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
     <!--<script  src="<?php //echo $assets; ?>js/slick.min.js"></script>-->
     <script  src="<?= $assets; ?>js/ecommerce-main.js"></script>
