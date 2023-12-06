@@ -355,6 +355,7 @@ foreach ($cart_contents as $cartItem) {
                                                     <h5><strong><?= lang('shipping_address'); ?></strong></h5>
                                                     <?= lang('Look_For_The_Shipping_Address', ''); ?>
                                                     (drag the marker to set your address)
+                                                    <button type="button" id="load_current_location">Current Location</button>
                                                     <div id="map-container">
                                                         <div id="map"></div>
                                                     </div>
@@ -648,14 +649,16 @@ foreach ($cart_contents as $cartItem) {
     </div>
 </section>
 <script>
+    let map;
 
 <?php if (!$this->loggedIn) { ?>
-let map;
+
     function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
             center: {lat: 23.8859, lng: 45.0792}, // Example coordinates (San Francisco)
             zoom: 18, // Adjust the zoom level
         });
+
 
         // Try to get the user's current location
         if (navigator.geolocation) {
@@ -693,6 +696,33 @@ let map;
                         document.getElementById('shipping_longitude').value = newPosition.lng();
                         geocodeLatLng(newPosition);
                     });
+
+                    $('#load_current_location').on('click', function(e) {
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                                function (position) {
+                                    const userLocation = {
+                                        lat: position.coords.latitude,
+                                        lng: position.coords.longitude
+                                    };
+
+                                    document.getElementById('shipping_latitude').value = position.coords.latitude;
+                                    document.getElementById('shipping_longitude').value = position.coords.longitude;
+                                    marker.setPosition(userLocation);
+                                    map.setCenter(userLocation);
+                                    document.getElementById('manual-shipping-check').checked = false;
+                                    document.getElementById('manual-shipping-address').style.display = 'none';
+                                    geocodeLatLng(userLocation);
+                                },
+                                function (error) {
+                                    console.error('Error getting user location:', error);
+                                },
+                                {
+                                    enableHighAccuracy: true
+                                }
+                            );
+                        }
+                    })
                 },
                 function (error) {
                     console.error('Error getting user location:', error);
@@ -764,7 +794,7 @@ let map;
     $('#shipping_phone').val("+966");
 
     document.getElementById('manual-shipping-check').onchange = function (e) {
-
+        document.getElementById('google-map-selected-address').value = '';
         document.getElementById('shipping_line1').value = '';
         document.getElementById('shipping_city').value = '';
         document.getElementById('shipping_country').value = '';
