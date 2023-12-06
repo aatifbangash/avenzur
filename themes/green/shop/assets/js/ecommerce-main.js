@@ -1259,7 +1259,7 @@ function add_address(t) {
           '<option value="0">--SELECT--</option>' +
         '</select>' +
 
-        '<input name="country" value="' +
+        '<input type="hidden" name="country" value="' +
         (t.country ? t.country : "") +
         '" id="address-country" class="form-control" placeholder="' +
         lang.country +
@@ -1274,7 +1274,7 @@ function add_address(t) {
         '<option value="0">--SELECT--</option>' +
         '</select>' +
 
-        '<input name="city" value="' +
+        '<input type="hidden" name="city" value="' +
         (t.city ? t.city : "") +
         '" id="address-city" class="form-control" placeholder="' +
         lang.city +
