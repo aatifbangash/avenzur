@@ -139,7 +139,8 @@ function update_cart(t) {
     var e = 1;
     $.each(t.contents, function () {
       var t = this,
-        a = '\n            <td class="text-center">\n            <a href="#" class="text-red remove-item" data-rowid="' +
+        a =
+          '\n            <td class="text-center">\n            <a href="#" class="text-red remove-item" data-rowid="' +
           this.rowid +
           '"><i class="fa fa-trash-o"></i><a>\n            </td>' +
           '\n            <td><input type="hidden" name="' +
@@ -1113,32 +1114,38 @@ function initMap() {
           geocodeLatLng2(newPosition);
         });
 
-        $('#load_current_location-2').on('click', function(e) {
+        $("#load_current_location-2").on("click", function (e) {
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                function (position) {
-                  const userLocation = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                  };
+              function (position) {
+                const userLocation = {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                };
 
-                  document.getElementById('latitude').value = position.coords.latitude;
-                  document.getElementById('longitude').value = position.coords.longitude;
-                  marker.setPosition(userLocation);
-                  map.setCenter(userLocation);
-                  document.getElementById('manual-shipping-check-2').checked = false;
-                  document.getElementById('manual-shipping-address-2').style.display = 'none';
-                  geocodeLatLng2(userLocation);
-                },
-                function (error) {
-                  console.error('Error getting user location:', error);
-                },
-                {
-                  enableHighAccuracy: true
-                }
+                document.getElementById("latitude").value =
+                  position.coords.latitude;
+                document.getElementById("longitude").value =
+                  position.coords.longitude;
+                marker.setPosition(userLocation);
+                map.setCenter(userLocation);
+                document.getElementById(
+                  "manual-shipping-check-2"
+                ).checked = false;
+                document.getElementById(
+                  "manual-shipping-address-2"
+                ).style.display = "none";
+                geocodeLatLng2(userLocation);
+              },
+              function (error) {
+                console.error("Error getting user location:", error);
+              },
+              {
+                enableHighAccuracy: true,
+              }
             );
           }
-        })
+        });
       },
       function (error) {
         console.error("Error getting user location:", error);
@@ -1161,8 +1168,7 @@ function geocodeLatLng2(latLng) {
         const formattedAddress = results[0].formatted_address;
         document.getElementById("google-map-selected-address-2").value =
           formattedAddress;
-        document.getElementById("address-line-1").value =
-            formattedAddress;
+        document.getElementById("address-line-1").value = formattedAddress;
         let city, country, state, street;
 
         for (const component of addressComponents) {
@@ -1276,44 +1282,36 @@ function add_address(t) {
       (t.longitude ? t.longitude : "") +
       '"><input type="hidden" id="latitude" name="latitude" value="' +
       (t.latitude ? t.latitude : "") +
-      '"><div class="row"><div class="form-group col-sm-12"><button type="button" id="load_current_location-2">Current Location</button><div style="height: 350px; z-index: 99999;" id="load_map"></div><input id="google-map-selected-address-2" type="text" readonly  class="form-control" /><input id="autocomplete_search" type="hidden"  class="form-control" placeholder="Type for the address..." autocomplete="on" /></div></div>OR<br /><h5><input type="checkbox" id="manual-shipping-check-2"/> Check the box to type the address manually</h5><div id="manual-shipping-address-2" style="display: none;"><div class="row"><div class="form-group col-sm-12"><input name="line1" id="address-line-1" value="' +
+      '"><div class="row"><div class="form-group col-sm-12"><button type="button" id="load_current_location-2">Current Location</button><div style="height: 350px; z-index: 99999;" id="load_map"></div><input id="google-map-selected-address-2" type="text" readonly  class="form-control" /><input id="autocomplete_search" type="hidden"  class="form-control" placeholder="Type for the address..." autocomplete="on" /></div></div><h4 class="or">OR</h4><h5 class="orcheckbox"><input type="checkbox" id="manual-shipping-check-2"/> Check the box to type the address manually</h5><div id="manual-shipping-address-2" style="display: none;"><div class="row"><div class="form-group col-sm-12"><input name="line1" id="address-line-1" value="' +
       (t.line1 ? t.line1 : "") +
       '" class="form-control" placeholder="Address"></div></div><div class="row"><div class="form-group col-sm-6">' +
-        '' +
-
-        '<select id="address-country-dropdown" class="form-control">' +
-          '<option value="0">--SELECT--</option>' +
-        '</select>' +
-
-        '<input type="hidden" name="country" value="' +
-        (t.country ? t.country : "") +
-        '" id="address-country" class="form-control" placeholder="' +
-        lang.country +
-        '">' +
-        '' +
-
-
-        '</div><div class="form-group col-sm-6">' +
-        '' +
-
-        '<select id="address-city-dropdown" class="form-control">' +
-        '<option value="0">--SELECT--</option>' +
-        '</select>' +
-
-        '<input type="hidden" name="city" value="' +
-        (t.city ? t.city : "") +
-        '" id="address-city" class="form-control" placeholder="' +
-        lang.city +
-        '">' +
-
-
-        '</div><div class="form-group col-sm-6 d-none"><input name="postal_code" value="' +
+      "" +
+      '<select id="address-country-dropdown" class="form-control">' +
+      '<option value="0">--SELECT--</option>' +
+      "</select>" +
+      '<input type="hidden" name="country" value="' +
+      (t.country ? t.country : "") +
+      '" id="address-country" class="form-control" placeholder="' +
+      lang.country +
+      '">' +
+      "" +
+      '</div><div class="form-group col-sm-6">' +
+      "" +
+      '<select id="address-city-dropdown" class="form-control">' +
+      '<option value="0">--SELECT--</option>' +
+      "</select>" +
+      '<input type="hidden" name="city" value="' +
+      (t.city ? t.city : "") +
+      '" id="address-city" class="form-control" placeholder="' +
+      lang.city +
+      '">' +
+      '</div><div class="form-group col-sm-6 d-none"><input name="postal_code" value="' +
       (t.postal_code ? t.postal_code : "") +
       '" id="address-postal-code" class="form-control" placeholder="' +
       lang.postal_code +
       '"></div><div class="form-group col-sm-6 d-none" id="istates">' +
-        e +
-        '</div><div class="form-group col-md-6 margin-bottom-no text-left ar-addr d-none"><input type="tel" name="phone" value="' +
+      e +
+      '</div><div class="form-group col-md-6 margin-bottom-no text-left ar-addr d-none"><input type="tel" name="phone" value="' +
       (t.phone ? t.phone : "") +
       '" id="address-phone" class="form-control" placeholder="' +
       lang.phone +
@@ -1324,7 +1322,7 @@ function add_address(t) {
     confirmButtonText: lang.submit,
     preConfirm: function () {
       return new Promise(function (t, e) {
-        $("#address-line-1").val() || e('Address' + " " + lang.is_required),
+        $("#address-line-1").val() || e("Address" + " " + lang.is_required),
           $("#address-city").val() || e(lang.city + " " + lang.is_required),
           // $("#address-state").val() || e(lang.state + " " + lang.is_required),
           $("#address-country").val() ||
@@ -1383,7 +1381,9 @@ function add_address(t) {
 
       // initialize();
       initMap();
-      document.getElementById("manual-shipping-check-2").onchange = function (e) {
+      document.getElementById("manual-shipping-check-2").onchange = function (
+        e
+      ) {
         document.getElementById("google-map-selected-address-2").value = "";
         document.getElementById("address-line-1").value = "";
         document.getElementById("address-city").value = "";
@@ -1392,7 +1392,9 @@ function add_address(t) {
         document.getElementById("latitude").value = "";
         document.getElementById("longitude").value = "";
 
-        let manualMapBlock = document.getElementById("manual-shipping-address-2");
+        let manualMapBlock = document.getElementById(
+          "manual-shipping-address-2"
+        );
         if (e.target.checked === true) {
           manualMapBlock.style.display = "block";
         } else {
