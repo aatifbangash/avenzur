@@ -107,9 +107,9 @@ class Cart_ajax extends MY_Shop_Controller
 
             $sulfad_count = 0;
             $sulfad_in_cart = 0;
-            $sulfad_code = '06285193000301';
+            $sulfad_code = '111002959';
 
-            if($product->code == '06285193000301'){
+            if($product->code == '111002959'){
                 $sulfad_in_cart += ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1));
             }
 
@@ -282,7 +282,7 @@ class Cart_ajax extends MY_Shop_Controller
                 $unit_price = $this->sma->formatDecimal($product->tax_method ? $price + $tax : $price);
 
                 /* Sulfad Code For Update Starts */
-                $sulfad_code = '06285193000301';
+                $sulfad_code = '111002959';
                 $sulfad_new_quantity = $this->input->post('qty', true);
 
                 if($product->code == $sulfad_code){
