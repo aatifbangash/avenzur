@@ -222,7 +222,7 @@ function update_cart(t) {
           '</td><td class="text-right">' +
           t.order_tax +
           "</td></tr>"),*/
-      (a +=
+      /*(a +=
         "<tr class='shipping-row'><td>" +
         lang.shipping +
         ' *</td><td class="text-right">' +
@@ -234,7 +234,7 @@ function update_cart(t) {
         lang.grand_total +
         '</td><td class="text-right">' +
         t.grand_total +
-        "</td></tr>"),
+        "</td></tr>"),*/
       $("<tbody>" + a + "</tbody>").appendTo("#cart-totals"),
       $("#total-items").text(t.total_items + "(" + t.total_unique_items + ")"),
       //$(".cart-item-option").selectpicker("refresh"),
