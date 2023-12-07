@@ -195,6 +195,8 @@ class Cart_ajax extends MY_Shop_Controller
                 }
             }
 
+            echo 'Sulfad Count: '.$sulfad_count;exit;
+
             if($product->code == $sulfad_code){
                 if($sulfad_count == 0){
                     $quantity_to_charge = ceil($sulfad_in_cart / 3)*2;
