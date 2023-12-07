@@ -26,10 +26,10 @@ class Shop extends MY_Shop_Controller
         $this->form_validation->set_rules('line1', lang('line1'), 'trim|required');
         // $this->form_validation->set_rules('line2', lang("line2"), 'trim|required');
         $this->form_validation->set_rules('city', lang('city'), 'trim|required');
-        $this->form_validation->set_rules('state', lang('state'), 'trim|required');
+//        $this->form_validation->set_rules('state', lang('state'), 'trim|required');
         // $this->form_validation->set_rules('postal_code', lang("postal_code"), 'trim|required');
         $this->form_validation->set_rules('country', lang('country'), 'trim|required');
-        $this->form_validation->set_rules('phone', lang('phone'), 'trim|required');
+//        $this->form_validation->set_rules('phone', lang('phone'), 'trim|required');
 
         if ($this->form_validation->run() == true) {
             $user_addresses = $this->shop_model->getAddresses();
@@ -159,7 +159,7 @@ class Shop extends MY_Shop_Controller
     // Add new Order form shop
     public function order()
     {
-        
+
         $guest_checkout = $this->input->post('guest_checkout');
         if (!$guest_checkout && !$this->loggedIn) {
             redirect('login');
@@ -206,7 +206,7 @@ class Shop extends MY_Shop_Controller
                 } else {
                     if (!($customer = $this->shop_model->getCompanyByEmail($this->input->post('email')))) {
                         $customer = new stdClass();
-                        $customer->name = $this->input->post('name');
+                        $customer->name = $this->input->post('name') . ($this->input->post('last_name') ?: '');
                         $customer->company = 'Pharma Drug Store';//$this->input->post('company');
                         $customer->phone = $this->input->post('phone');
                         $customer->email = $this->input->post('email');
@@ -316,7 +316,7 @@ class Shop extends MY_Shop_Controller
                 $total = !empty($this->cart->total())
                     ? $this->cart->total()
                     : $total;
-                    
+
                 $total_tax = !empty($this->cart->total_item_tax())
                     ? $this->cart->total_item_tax()
                     : $total_tax;
@@ -1022,7 +1022,7 @@ class Shop extends MY_Shop_Controller
     {
 
         $product = $this->shop_model->getProductBySlug($slug);
-        
+
         if (!$slug || !$product) {
             $this->session->set_flashdata('error', lang('product_not_found'));
             $this->sma->md('/');
@@ -1036,7 +1036,7 @@ class Shop extends MY_Shop_Controller
         if ($product->tax_method == '1' && $product->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
             $productTaxPercent = $product->taxPercentage;
 
-            if($product->promotion == 1){
+            if ($product->promotion == 1) {
                 $productPromoPrice = $product->promo_price;
                 $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
                 $product->promo_price = $productPromoPrice + $promoProductTaxAmount;
@@ -1077,10 +1077,10 @@ class Shop extends MY_Shop_Controller
         }
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        
+
         $this->data['page_title'] = lang('rate_and_review');
         $this->data['page_desc'] = '';
-        
+
         // Extract product IDs from reviewProducts
         $products = $this->shop_model->getOrderItemsByCustomer($this->session->userdata('company_id'));
         $reviewProducts = $this->shop_model->getOrderItemsReviewByCustomer($this->session->userdata('company_id'));
@@ -1095,32 +1095,33 @@ class Shop extends MY_Shop_Controller
 
         $this->data['products'] = $filteredProducts;
         $this->data['reviewProducts'] = $reviewProducts;
-    
+
         $this->page_construct('pages/rate_review_products', $this->data);
     }
-   
-    public function submit_review() {
+
+    public function submit_review()
+    {
         $data = [];
         $reviews = $this->input->post('reviews');
-        if(!empty($reviews)) {
-        foreach($reviews as $product_id => $review) {
-           if( isset( $reviews[$product_id]['rating'][0] ) && !empty($reviews[$product_id]['rating'][0])) {
-            $data[] = array(
-                'customer_id' =>$this->session->userdata('company_id'),
-                'product_id' => $product_id,
-                'rating' => $reviews[$product_id]['rating'][0],
-                'review' => $reviews[$product_id]['review'][0],
-            );
-           }
+        if (!empty($reviews)) {
+            foreach ($reviews as $product_id => $review) {
+                if (isset($reviews[$product_id]['rating'][0]) && !empty($reviews[$product_id]['rating'][0])) {
+                    $data[] = array(
+                        'customer_id' => $this->session->userdata('company_id'),
+                        'product_id' => $product_id,
+                        'rating' => $reviews[$product_id]['rating'][0],
+                        'review' => $reviews[$product_id]['review'][0],
+                    );
+                }
+            }
         }
-       }
-       if ($this->db->insert_batch('product_reviews', $data)) {
-        $this->session->set_flashdata('submit_review_success', lang('submit_review_success'));
-      }else{
-        $this->session->set_flashdata('submit_review_error', lang('submit_review_error'));
-      }
-      
-      redirect($_SERVER['HTTP_REFERER'] ?? '/shop/rateAndReview');
+        if ($this->db->insert_batch('product_reviews', $data)) {
+            $this->session->set_flashdata('submit_review_success', lang('submit_review_success'));
+        } else {
+            $this->session->set_flashdata('submit_review_error', lang('submit_review_error'));
+        }
+
+        redirect($_SERVER['HTTP_REFERER'] ?? '/shop/rateAndReview');
     }
 
     // Featured Products
@@ -1173,7 +1174,8 @@ class Shop extends MY_Shop_Controller
         $this->page_construct('pages/featured_products', $this->data);
     }
 
-    public function bestsellers(){
+    public function bestsellers()
+    {
         $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->data['location'] = $this->shop_model->getProductLocation();
         $this->data['best_sellers'] = $this->shop_model->getBestSellers(100);
@@ -1189,7 +1191,7 @@ class Shop extends MY_Shop_Controller
         if ($this->input->get('category')) {
             $category_slug = $this->input->get('category', true);
         }
-        
+
         if ($this->input->get('brand')) {
             $brand_slug = $this->input->get('brand', true);
         }
@@ -1201,7 +1203,7 @@ class Shop extends MY_Shop_Controller
             $this->data['featureImage'] = $this->shop_model->getCategoryBySlug($category_slug);
         }
         $reset = $category_slug || $subcategory_slug || $brand_slug ? true : false;
-        
+
         $filters = [
             'query' => $this->input->post('query'),
             'category' => $category_slug ? $this->shop_model->getCategoryBySlug($category_slug) : null,

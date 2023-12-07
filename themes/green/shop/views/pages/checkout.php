@@ -231,10 +231,16 @@ foreach ($cart_contents as $cartItem) {
                                             <div class="row">
                                                 <div class="col-md-12">
                                                     <div class="row">
-                                                        <div class="col-md-12">
+                                                        <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <?= lang('name', 'name'); ?> *
+                                                                <?= lang('First Name', 'name'); ?> *
                                                                 <?= form_input('name', set_value('name'), 'class="form-control" id="name" required="required"'); ?>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <?= lang('Last_name', 'name'); ?>
+                                                                <?= form_input('last_name', set_value('last_name'), 'class="form-control" id="last_name"'); ?>
                                                             </div>
                                                         </div>
                                                         <!--<div class="col-md-6">-->
@@ -349,6 +355,7 @@ foreach ($cart_contents as $cartItem) {
                                                     <h5><strong><?= lang('shipping_address'); ?></strong></h5>
                                                     <?= lang('Look_For_The_Shipping_Address', ''); ?>
                                                     (drag the marker to set your address)
+                                                    <button type="button" id="load_current_location">Current Location</button>
                                                     <div id="map-container">
                                                         <div id="map"></div>
                                                     </div>
@@ -378,7 +385,7 @@ foreach ($cart_contents as $cartItem) {
                                                 <div id="manual-shipping-address" style="display: none;">
                                                <div class="col-md-12">
                                                    <div class="form-group">
-                                                       <?= lang('line1', 'shipping_line1'); ?> *
+                                                       <?= lang('Address', 'shipping_line1'); ?> *
                                                        <?= form_input('shipping_line1', set_value('shipping_line1'), 'class="form-control" id="shipping_line1" '); ?>
                                                    </div>
                                                 </div>
@@ -439,7 +446,7 @@ foreach ($cart_contents as $cartItem) {
                                                        value=""/>
 
 
-                                                <div class="col-md-12">
+                                                <div class="col-md-12 d-none" >
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <div class="form-group">
@@ -456,7 +463,7 @@ foreach ($cart_contents as $cartItem) {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-12">
+                                                <div class="col-md-12 d-none">
                                                     <div class="form-group" id="shipping-phone">
                                                         <?= lang('phone', 'shipping_phone'); ?> *
                                                         <input type="tel" name="shipping_phone" value="" class="form-control" id="shipping_phone" required="required" />
@@ -644,11 +651,14 @@ foreach ($cart_contents as $cartItem) {
 <script>
     let map;
 
+<?php if (!$this->loggedIn) { ?>
+
     function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
             center: {lat: 23.8859, lng: 45.0792}, // Example coordinates (San Francisco)
             zoom: 18, // Adjust the zoom level
         });
+
 
         // Try to get the user's current location
         if (navigator.geolocation) {
@@ -686,6 +696,33 @@ foreach ($cart_contents as $cartItem) {
                         document.getElementById('shipping_longitude').value = newPosition.lng();
                         geocodeLatLng(newPosition);
                     });
+
+                    $('#load_current_location').on('click', function(e) {
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                                function (position) {
+                                    const userLocation = {
+                                        lat: position.coords.latitude,
+                                        lng: position.coords.longitude
+                                    };
+
+                                    document.getElementById('shipping_latitude').value = position.coords.latitude;
+                                    document.getElementById('shipping_longitude').value = position.coords.longitude;
+                                    marker.setPosition(userLocation);
+                                    map.setCenter(userLocation);
+                                    document.getElementById('manual-shipping-check').checked = false;
+                                    document.getElementById('manual-shipping-address').style.display = 'none';
+                                    geocodeLatLng(userLocation);
+                                },
+                                function (error) {
+                                    console.error('Error getting user location:', error);
+                                },
+                                {
+                                    enableHighAccuracy: true
+                                }
+                            );
+                        }
+                    })
                 },
                 function (error) {
                     console.error('Error getting user location:', error);
@@ -707,6 +744,7 @@ foreach ($cart_contents as $cartItem) {
                     const addressComponents = results[0].address_components;
                     const formattedAddress = results[0].formatted_address;
                     document.getElementById('google-map-selected-address').value = formattedAddress;
+                    document.getElementById('shipping_line1').value = formattedAddress;
                     let city, country, state, street;
 
                     for (const component of addressComponents) {
@@ -721,7 +759,7 @@ foreach ($cart_contents as $cartItem) {
                             // $("#shipping_country option:contains('" + country + "')").prop("selected", true);
                         } else if (types.includes('route')) {
                             street = component.long_name;
-                            document.getElementById('shipping_line1').value = street;
+                            // document.getElementById('shipping_line1').value = street;
                         } else if (types.includes('administrative_area_level_1')) {
                             state = component.long_name;
                             document.getElementById('shipping_state').value = state;
@@ -737,6 +775,7 @@ foreach ($cart_contents as $cartItem) {
             }
         });
     }
+    <?php } ?>
 </script>
 <script>
     // Vanilla Javascript
@@ -755,7 +794,7 @@ foreach ($cart_contents as $cartItem) {
     $('#shipping_phone').val("+966");
 
     document.getElementById('manual-shipping-check').onchange = function (e) {
-
+        document.getElementById('google-map-selected-address').value = '';
         document.getElementById('shipping_line1').value = '';
         document.getElementById('shipping_city').value = '';
         document.getElementById('shipping_country').value = '';
