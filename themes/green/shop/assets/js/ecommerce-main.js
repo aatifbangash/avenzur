@@ -1280,7 +1280,7 @@ function add_address(t) {
       (t.line1 ? t.line1 : "") +
       '" class="form-control" placeholder="Address"></div></div><div class="row"><div class="form-group col-sm-6">' +
       "" +
-      '<select id="address-country-dropdown" class="form-control">' +
+      '<select id="address-country-dropdown-2" class="form-control">' +
       '<option value="0">--SELECT--</option>' +
       "</select>" +
       '<input type="hidden" name="country" value="' +
@@ -1291,7 +1291,7 @@ function add_address(t) {
       "" +
       '</div><div class="form-group col-sm-6">' +
       "" +
-      '<select id="address-city-dropdown" class="form-control">' +
+      '<select id="address-city-dropdown-2" class="form-control">' +
       '<option value="0">--SELECT--</option>' +
       "</select>" +
       '<input type="hidden" name="city" value="' +
@@ -1378,6 +1378,8 @@ function add_address(t) {
 
       document.getElementById("manual-shipping-check-2").onchange = function (e) {
         document.getElementById("google-map-selected-address-2").value = "";
+        document.getElementById('address-country-dropdown-2').value = $("#address-country-dropdown-2 option:first").val();
+        document.getElementById('address-city-dropdown-2').value = $("#address-city-dropdown-2 option:first").val();
         document.getElementById("address-line-1").value = "";
         document.getElementById("address-city").value = "";
         document.getElementById("address-country").value = "";
@@ -1401,11 +1403,11 @@ function add_address(t) {
         method: "GET",
         success: function(jsonResponse) {
           var response = JSON.parse(jsonResponse);
-          $("#address-country-dropdown").empty();
+          $("#address-country-dropdown-2").empty();
           if(response.length > 0) {
-            $("#address-country-dropdown").append('<option value="0">--SELECT--</option>');
+            $("#address-country-dropdown-2").append('<option value="0">--SELECT--</option>');
             response.forEach(function(city) {
-              $("#address-country-dropdown").append('<option value="' + city.id + '">' + city.name + '</option>');
+              $("#address-country-dropdown-2").append('<option value="' + city.id + '">' + city.name + '</option>');
             });
           }
         },
@@ -1414,7 +1416,7 @@ function add_address(t) {
         }
       });
 
-      $("#address-country-dropdown").on("change", function() {
+      $("#address-country-dropdown-2").on("change", function() {
         $('#address-city').val('');
 
         let countryId = $(this).val();
@@ -1431,11 +1433,11 @@ function add_address(t) {
           method: "GET",
           success: function(jsonResponse) {
             var response = JSON.parse(jsonResponse);
-            $("#address-city-dropdown").empty();
+            $("#address-city-dropdown-2").empty();
             if(response.length > 0) {
-              $("#address-city-dropdown").append('<option value="0">--SELECT--</option>');
+              $("#address-city-dropdown-2").append('<option value="0">--SELECT--</option>');
               response.forEach(function(city) {
-                $("#address-city-dropdown").append('<option value="' + city.id + '">' + city.name + '</option>');
+                $("#address-city-dropdown-2").append('<option value="' + city.id + '">' + city.name + '</option>');
               });
             }
           },
@@ -1445,7 +1447,7 @@ function add_address(t) {
         });
       });
 
-      $("#address-city-dropdown").on("change", function() {
+      $("#address-city-dropdown-2").on("change", function() {
         let selectedOption = $(this).find(":selected").text();
         if(selectedOption != '--SELECT--') {
           $("#address-city").val(selectedOption);
