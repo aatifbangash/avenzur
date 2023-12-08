@@ -1394,6 +1394,65 @@ function add_address(t) {
           manualMapBlock.style.display = "none";
         }
       };
+
+      //load countries
+      $.ajax({
+        url: site.base_url + "cart/get_countries",
+        method: "GET",
+        success: function(jsonResponse) {
+          var response = JSON.parse(jsonResponse);
+          $("#address-country-dropdown").empty();
+          if(response.length > 0) {
+            $("#address-country-dropdown").append('<option value="0">--SELECT--</option>');
+            response.forEach(function(city) {
+              $("#address-country-dropdown").append('<option value="' + city.id + '">' + city.name + '</option>');
+            });
+          }
+        },
+        error: function() {
+          console.error("Failed to fetch cities.");
+        }
+      });
+
+      $("#address-country-dropdown").on("change", function() {
+        $('#address-city').val('');
+
+        let countryId = $(this).val();
+        let selectedOption = $(this).find(":selected").text();
+        if(selectedOption != '--SELECT--') {
+          $("#address-country").val(selectedOption);
+        } else {
+          $("#address-country").val('');
+        }
+
+        //load cities
+        $.ajax({
+          url: site.base_url + "cart/get_cities_by_country_id/" + countryId, // Replace with the actual endpoint to fetch cities
+          method: "GET",
+          success: function(jsonResponse) {
+            var response = JSON.parse(jsonResponse);
+            $("#address-city-dropdown").empty();
+            if(response.length > 0) {
+              $("#address-city-dropdown").append('<option value="0">--SELECT--</option>');
+              response.forEach(function(city) {
+                $("#address-city-dropdown").append('<option value="' + city.id + '">' + city.name + '</option>');
+              });
+            }
+          },
+          error: function() {
+            console.error("Failed to fetch cities.");
+          }
+        });
+      });
+
+      $("#address-city-dropdown").on("change", function() {
+        let selectedOption = $(this).find(":selected").text();
+        if(selectedOption != '--SELECT--') {
+          $("#address-city").val(selectedOption);
+        } else {
+          $("#address-city").val('');
+        }
+      });
     },
   })
     .then(function (e) {
