@@ -190,6 +190,17 @@ class Cart_ajax extends MY_Shop_Controller
         }
     }
 
+    public function get_countries() {
+        $countries = $this->settings_model->getCountries();
+        echo json_encode($countries);
+        exit;
+    }
+
+    public function get_cities_by_country_id($id) {
+        $this->data['cities'] = $this->settings_model->getCities($id);
+        echo json_encode($this->data['cities']);
+        exit;
+    }
     public function checkout()
     {
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
@@ -200,6 +211,12 @@ class Cart_ajax extends MY_Shop_Controller
         $this->data['paypal']     = $this->shop_model->getPaypalSettings();
         $this->data['skrill']     = $this->shop_model->getSkrillSettings();
         $this->data['country'] = $this->settings_model->getallCountry();
+        $this->data['countries'] = $this->settings_model->getCountries();
+
+
+//        $this->data['cities'] = $this->settings_model->getCities();
+//
+//        dd($this->data['cities']);
         $this->data['addresses']  = $this->loggedIn ? $this->shop_model->getAddresses() : false;
         $this->data['page_title'] = lang('checkout');
         $this->data['all_categories']    = $this->shop_model->getAllCategories();
