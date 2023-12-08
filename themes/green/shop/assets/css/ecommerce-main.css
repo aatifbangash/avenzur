@@ -1464,6 +1464,23 @@ ul.pagination li:hover a {
 .cardImg img {
   margin: 0 auto;
 }
+html[lang="ar"] .featureTitle h2,
+html[lang="ar"] .popularTitle h2 {
+  text-align: center !important;
+}
+h4.or {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 700;
+}
+h5.orcheckbox {
+  font-weight: 600;
+  font-size: 17px;
+}
+table.table.table-striped.cart-totals tbody tr:last-child {
+  font-size: 17px;
+  font-weight: 600;
+}
 @media screen and (max-width: 500px) {
   .myaccountForm.cartform {
     left: -9px !important;

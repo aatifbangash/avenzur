@@ -649,14 +649,16 @@ foreach ($cart_contents as $cartItem) {
     </div>
 </section>
 <script>
+    let map;
 
 <?php if (!$this->loggedIn) { ?>
-let map;
+
     function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
             center: {lat: 23.8859, lng: 45.0792}, // Example coordinates (San Francisco)
             zoom: 18, // Adjust the zoom level
         });
+
 
         // Try to get the user's current location
         if (navigator.geolocation) {

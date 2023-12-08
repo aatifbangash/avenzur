@@ -5,7 +5,7 @@
             <div class="col-xs-12">
 
                 <div class="row">
-                    <div class="col-sm-9 col-md-10">
+                    <div class="col-sm-9 col-md-12">
 
                         <ul class="nav nav-tabs" role="tablist">
                             <li role="presentation" class="active"><a href="#user" aria-controls="user" role="tab" data-toggle="tab"><?= lang('details'); ?></a></li>

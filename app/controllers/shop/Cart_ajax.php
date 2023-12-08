@@ -34,88 +34,14 @@ class Cart_ajax extends MY_Shop_Controller
 
     public function remove($rowid = null)
     {
-        /*if ($rowid) {
+        if ($rowid) {
             return $this->cart->remove($rowid);
-        }*/
+        }
         if ($this->input->is_ajax_request()) {
             if ($rowid = $this->input->post('rowid', true)) {
-
-                $sulfad_in_cart = 0;
-                $sulfad_code = '06285193000301';
-                $item = $this->cart->get_item($rowid);
-
-                // remove row
-                $this->cart->remove($rowid);
-
-                //$sulfad_to_remove = $item['qty'];
-                $product = $this->shop_model->getProductForCart($item['product_id']);
-
-                if($product->code == '06285193000301'){
-                    $cart_contents = $this->cart->contents();
-                    foreach ($cart_contents as $itm) {
-                        $product_code = $itm['code'];
-                        if($product_code == $sulfad_code){
-                            $sulfad_in_cart += $itm['qty'];
-                            $this->cart->remove($itm['rowid']);
-                        }
-                    }
-
-                    $quantity_to_charge = ceil($sulfad_in_cart / 3)*2;
-                    $discounted_quantity = floor($sulfad_in_cart / 3);
-
-                    $options = $this->shop_model->getProductVariants($product->id);
-                    $price   = $this->sma->setCustomerGroupPrice((isset($product->special_price) && !empty($product->special_price) ? $product->special_price : $product->price), $this->customer_group);
-                    $price   = $this->sma->isPromo($product) ? $product->promo_price : $price;
-                    $option  = false;
-                    if (!empty($options)) {
-                        if ($this->input->post('option')) {
-                            foreach ($options as $op) {
-                                if ($op['id'] == $this->input->post('option')) {
-                                    $option = $op;
-                                }
-                            }
-                        } else {
-                            $option = array_values($options)[0];
-                        }
-                        $price = $option['price'] + $price;
-                    }
-                    $selected = $option ? $option['id'] : false;
-
-                    $tax_rate   = $this->site->getTaxRateByID($product->tax_rate);
-                    $ctax       = $this->site->calculateTax($product, $tax_rate, $price);
-                    $tax        = $this->sma->formatDecimal($ctax['amount']);
-                    $price      = $this->sma->formatDecimal($price);
-                    $unit_price = $this->sma->formatDecimal($product->tax_method ? $price + $tax : $price);
-                    $id         = $this->Settings->item_addition ? md5($product->id) : md5(microtime());
-
-                    $data = [
-                        'id'         => $id,
-                        'product_id' => $product->id,
-                        'qty'        => $sulfad_in_cart,
-                        'disc_qty'   => $discounted_quantity,
-                        'name'       => $product->name,
-                        'slug'       => $product->slug,
-                        'code'       => $product->code,
-                        'price'      => $unit_price,
-                        'tax'        => $tax,
-                        'image'      => $product->image,
-                        'option'     => $selected,
-                        'options'    => !empty($options) ? $options : null,
-                    ];
-
-                    if ($this->cart->insert($data)) {
-                        $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_item_deleted')]);
-                    }
-
-                }else{
+                if ($this->cart->remove($rowid)) {
                     $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_item_deleted')]);
                 }
-                
-                /*else{
-                    if ($this->cart->remove($rowid)) {
-                        $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_item_deleted')]);
-                    }
-                }*/
             }
         }
     }
@@ -181,9 +107,9 @@ class Cart_ajax extends MY_Shop_Controller
 
             $sulfad_count = 0;
             $sulfad_in_cart = 0;
-            $sulfad_code = '06285193000301';
+            $sulfad_code = '111002959';
 
-            if($product->code == '06285193000301'){
+            if($product->code == '111002959'){
                 $sulfad_in_cart += ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1));
             }
 
@@ -192,31 +118,18 @@ class Cart_ajax extends MY_Shop_Controller
                 $product_code = $item['code'];
                 if($product_code == $sulfad_code){
                     $sulfad_count += $item['qty'];
+                    $this->cart->remove($item['rowid']);
                 }
             }
 
             if($product->code == $sulfad_code){
-                if($sulfad_count == 0){
-                    $quantity_to_charge = ceil($sulfad_in_cart / 3)*2;
-                    $discounted_quantity = floor($sulfad_in_cart / 3);
-                    //$discounted_quantity = $sulfad_in_cart - $quantity_to_charge;
-                }else{
-                    $total_sulfad = $sulfad_in_cart + $sulfad_count;
-
-                    $old_quantity_charged = ceil($sulfad_count / 3)*2;
-                    $old_discounted_quantity = floor($sulfad_count / 3);
-                    //$old_discounted_quantity = $sulfad_count - $old_quantity_charged;
-
-                    $quantity_to_charge = ceil($total_sulfad / 3)*2;
-                    $discounted_quantity = floor($total_sulfad / 3) - $old_discounted_quantity;
-                    //$discounted_quantity = $total_sulfad - $quantity_to_charge - $old_discounted_quantity;
-
-                }
+                $total_sulfad = $sulfad_in_cart + $sulfad_count;
+                $discounted_quantity = floor($total_sulfad / 3);
 
                 $data = [
                     'id'         => $id,
                     'product_id' => $product->id,
-                    'qty'        => $sulfad_in_cart,
+                    'qty'        => $total_sulfad,
                     'disc_qty'   => $discounted_quantity,
                     'name'       => $product->name,
                     'slug'       => $product->slug,
@@ -277,17 +190,6 @@ class Cart_ajax extends MY_Shop_Controller
         }
     }
 
-    public function get_countries() {
-        $countries = $this->settings_model->getCountries();
-        echo json_encode($countries);
-        exit;
-    }
-
-    public function get_cities_by_country_id($id) {
-        $this->data['cities'] = $this->settings_model->getCities($id);
-        echo json_encode($this->data['cities']);
-        exit;
-    }
     public function checkout()
     {
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
@@ -298,12 +200,6 @@ class Cart_ajax extends MY_Shop_Controller
         $this->data['paypal']     = $this->shop_model->getPaypalSettings();
         $this->data['skrill']     = $this->shop_model->getSkrillSettings();
         $this->data['country'] = $this->settings_model->getallCountry();
-        $this->data['countries'] = $this->settings_model->getCountries();
-
-
-//        $this->data['cities'] = $this->settings_model->getCities();
-//
-//        dd($this->data['cities']);
         $this->data['addresses']  = $this->loggedIn ? $this->shop_model->getAddresses() : false;
         $this->data['page_title'] = lang('checkout');
         $this->data['all_categories']    = $this->shop_model->getAllCategories();
@@ -385,16 +281,38 @@ class Cart_ajax extends MY_Shop_Controller
                 $price      = $this->sma->formatDecimal($price);
                 $unit_price = $this->sma->formatDecimal($product->tax_method ? $price + $tax : $price);
 
-                $data = [
-                    'rowid'  => $rowid,
-                    'price'  => $unit_price,
-                    'tax'    => $tax,
-                    'qty'    => $this->input->post('qty', true),
-                    'option' => $selected,
-                ];
-                if ($this->cart->update($data)) {
-                    $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_updated')]);
+                /* Sulfad Code For Update Starts */
+                $sulfad_code = '111002959';
+                $sulfad_new_quantity = $this->input->post('qty', true);
+
+                if($product->code == $sulfad_code){
+                    $discounted_quantity = floor($sulfad_new_quantity / 3);
+
+                    $data = [
+                        'rowid'  => $rowid,
+                        'price'  => $unit_price,
+                        'tax'    => $tax,
+                        'qty'    => $this->input->post('qty', true),
+                        'disc_qty'   => $discounted_quantity,
+                        'option' => $selected,
+                    ];
+                    if ($this->cart->update($data)) {
+                        $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_updated')]);
+                    }
+                }else{
+                    $data = [
+                        'rowid'  => $rowid,
+                        'price'  => $unit_price,
+                        'tax'    => $tax,
+                        'qty'    => $this->input->post('qty', true),
+                        'option' => $selected,
+                    ];
+                    if ($this->cart->update($data)) {
+                        $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_updated')]);
+                    }
                 }
+
+                /* Sulfad Code For Update Ends */
             }
         }
     }
