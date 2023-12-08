@@ -19,7 +19,7 @@ class Shop extends MY_Shop_Controller
     // Add/edit customer address
     public function address($id = null)
     {
-
+        $this->load->admin_model('companies_model');
         if (!$this->loggedIn) {
             $this->sma->send_json(['status' => 'error', 'message' => lang('please_login')]);
         }
@@ -39,7 +39,7 @@ class Shop extends MY_Shop_Controller
 
             $data = ['line1' => $this->input->post('line1'),
                 'line2' => $this->input->post('line2'),
-                'phone' => $this->input->post('phone'),
+                'phone' => $this->companies_model->getCompanyByEmail($this->session->userdata('email'))->phone, //$this->input->post('phone'),
                 'city' => $this->input->post('city'),
                 'state' => $this->input->post('state'),
                 'postal_code' => $this->input->post('postal_code'),

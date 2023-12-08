@@ -1113,6 +1113,33 @@ function initMap() {
           document.getElementById("longitude").value = newPosition.lng();
           geocodeLatLng2(newPosition);
         });
+
+        $('#load_current_location-2').on('click', function(e) {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                  const userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                  };
+
+                  document.getElementById('latitude').value = position.coords.latitude;
+                  document.getElementById('longitude').value = position.coords.longitude;
+                  marker.setPosition(userLocation);
+                  map.setCenter(userLocation);
+                  document.getElementById('manual-shipping-check-2').checked = false;
+                  document.getElementById('manual-shipping-address-2').style.display = 'none';
+                  geocodeLatLng2(userLocation);
+                },
+                function (error) {
+                  console.error('Error getting user location:', error);
+                },
+                {
+                  enableHighAccuracy: true
+                }
+            );
+          }
+        })
       },
       function (error) {
         console.error("Error getting user location:", error);
@@ -1250,7 +1277,7 @@ function add_address(t) {
       (t.longitude ? t.longitude : "") +
       '"><input type="hidden" id="latitude" name="latitude" value="' +
       (t.latitude ? t.latitude : "") +
-      '"><div class="row"><div class="form-group col-sm-12"><div style="height: 350px; z-index: 99999;" id="load_map"></div><input id="google-map-selected-address-2" type="text" readonly  class="form-control" /><input id="autocomplete_search" type="hidden"  class="form-control" placeholder="Type for the address..." autocomplete="on" /></div></div>OR<br /><h5><input type="checkbox" id="manual-shipping-check-2"/> Check the box to type the address manually</h5><div id="manual-shipping-address-2" style="display: none;"><div class="row"><div class="form-group col-sm-12"><input name="line1" id="address-line-1" value="' +
+      '"><div class="row"><div class="form-group col-sm-12"><button type="button" id="load_current_location-2">Current Location</button><div style="height: 350px; z-index: 99999;" id="load_map"></div><input id="google-map-selected-address-2" type="text" readonly  class="form-control" /><input id="autocomplete_search" type="hidden"  class="form-control" placeholder="Type for the address..." autocomplete="on" /></div></div>OR<br /><h5><input type="checkbox" id="manual-shipping-check-2"/> Check the box to type the address manually</h5><div id="manual-shipping-address-2" style="display: none;"><div class="row"><div class="form-group col-sm-12"><input name="line1" id="address-line-1" value="' +
       (t.line1 ? t.line1 : "") +
       '" class="form-control" placeholder="Address"></div></div><div class="row"><div class="form-group col-sm-6">' +
         '' +
@@ -1298,7 +1325,7 @@ function add_address(t) {
     confirmButtonText: lang.submit,
     preConfirm: function () {
       return new Promise(function (t, e) {
-        $("#address-line-1").val() || e(lang.line_1 + " " + lang.is_required),
+        $("#address-line-1").val() || e('Address' + " " + lang.is_required),
           $("#address-city").val() || e(lang.city + " " + lang.is_required),
           // $("#address-state").val() || e(lang.state + " " + lang.is_required),
           $("#address-country").val() ||
@@ -1358,6 +1385,7 @@ function add_address(t) {
       // initialize();
       initMap();
       document.getElementById("manual-shipping-check-2").onchange = function (e) {
+        document.getElementById("google-map-selected-address-2").value = "";
         document.getElementById("address-line-1").value = "";
         document.getElementById("address-city").value = "";
         document.getElementById("address-country").value = "";
