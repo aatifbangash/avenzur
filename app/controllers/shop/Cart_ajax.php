@@ -276,18 +276,7 @@ class Cart_ajax extends MY_Shop_Controller
                 $price   = $this->sma->isPromo($product) ? $product->promo_price : $price;
                 // $price = $this->sma->isPromo($product) ? $product->promo_price : $product->price;
 
-                $product_to_add_quantity = 0;
-                $cart_contents = $this->cart->contents();
-                foreach ($cart_contents as $item) {
-
-                    if($product->code == $item['code']){
-                        $product_to_add_quantity += $item['qty'];
-                    }
-                }
-
-                $quantity_added = $this->input->post('qty', true) + $product_to_add_quantity;
-
-                if($quantity_added > 3){
+                if($this->input->post('qty', true) > 3){
                     $this->sma->send_json(['error' => 1, 'message' => 'Maximum allowed order 3 pieces']);
                 }
 
