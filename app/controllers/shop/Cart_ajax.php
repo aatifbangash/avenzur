@@ -275,6 +275,22 @@ class Cart_ajax extends MY_Shop_Controller
                 $price   = $this->sma->setCustomerGroupPrice(($product->special_price ?? $product->price), $this->customer_group);
                 $price   = $this->sma->isPromo($product) ? $product->promo_price : $price;
                 // $price = $this->sma->isPromo($product) ? $product->promo_price : $product->price;
+
+                $product_to_add_quantity = 0;
+                $cart_contents = $this->cart->contents();
+                foreach ($cart_contents as $item) {
+
+                    if($product->code == $item['code']){
+                        $product_to_add_quantity += $item['qty'];
+                    }
+                }
+
+                $quantity_added = $this->input->post('qty', true) + $product_to_add_quantity;
+
+                if($quantity_added > 3){
+                    $this->sma->send_json(['error' => 1, 'message' => 'Maximum allowed order 3 pieces']);
+                }
+
                 if ($option = $this->input->post('option')) {
                     foreach ($options as $op) {
                         if ($op['id'] == $option) {
