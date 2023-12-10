@@ -374,35 +374,50 @@ class Main extends MY_Shop_Controller
         $this->page_construct('user/profile', $this->data);
     }
 
+    public function sendOTP($company_id, $email, $medium){
+
+        $otp = mt_rand(100000, 999999);
+
+        $otp_data = [
+            'medium' => $medium,
+            'identifier' => $email,
+            'otp' => $otp,
+            'user_id' => $company_id,
+            'date_updated' => date('Y-m-d h:i:s')
+        ];
+
+        $opt_id = $this->shop_model->addOTPData($otp_data);
+    }
+
     public function register()
     {
         if ($this->shop_settings->private) {
             redirect('/login');
         }
-        $this->form_validation->set_rules('first_name', lang('first_name'), 'required');
-        $this->form_validation->set_rules('last_name', lang('last_name'), 'required');
-        $this->form_validation->set_rules('phone', lang('phone'), 'required');
+        //$this->form_validation->set_rules('first_name', lang('first_name'), 'required');
+        //$this->form_validation->set_rules('last_name', lang('last_name'), 'required');
+        //$this->form_validation->set_rules('phone', lang('phone'), 'required');
         $this->form_validation->set_rules('email', lang('email_address'), 'required|is_unique[users.email]');
         //$this->form_validation->set_rules('username', lang('username'), 'required|is_unique[users.username]');
-        $this->form_validation->set_rules('password', lang('password'), 'required|min_length[5]|max_length[20]|matches[password_confirm]');
-        $this->form_validation->set_rules('password_confirm', lang('confirm_password'), 'required');
-        $this->form_validation->set_rules('country', lang('country'), 'required');
+        //$this->form_validation->set_rules('password', lang('password'), 'required|min_length[5]|max_length[20]|matches[password_confirm]');
+        //$this->form_validation->set_rules('password_confirm', lang('confirm_password'), 'required');
+        //$this->form_validation->set_rules('country', lang('country'), 'required');
 
         if ($this->form_validation->run('') == true) {
             $email    = strtolower($this->input->post('email'));
             //$username = strtolower($this->input->post('username'));
             $username = strtolower($this->input->post('email'));
-            $password = $this->input->post('password');
+            //$password = $this->input->post('password');
 
             $customer_group = $this->shop_model->getCustomerGroup($this->Settings->customer_group);
             $price_group    = $this->shop_model->getPriceGroup($this->Settings->price_group);
                        // $this->data['country'] = $this->shop_->getallCountry();
 
             $company_data = [
-                'country'             => $this->input->post('country') ? $this->input->post('country') : '-',
-                'name'                => $this->input->post('first_name') . ' ' . $this->input->post('last_name'),
+                //'country'             => $this->input->post('country') ? $this->input->post('country') : '-',
+                //'name'                => $this->input->post('first_name') . ' ' . $this->input->post('last_name'),
                 'email'               => $this->input->post('email'),
-                'phone'               => $this->input->post('phone'),
+                //'phone'               => $this->input->post('phone'),
                 'group_id'            => 3,
                 'group_name'          => 'customer',
                 'customer_group_id'   => (!empty($customer_group)) ? $customer_group->id : null,
@@ -415,18 +430,22 @@ class Main extends MY_Shop_Controller
             $company_id = $this->shop_model->addCustomer($company_data);
          
             $additional_data = [
-                'first_name' => $this->input->post('first_name'),
-                'last_name'  => $this->input->post('last_name'),
-                'phone'      => $this->input->post('phone'),
-                'country'    => $this->input->post('country'),
+                //'first_name' => $this->input->post('first_name'),
+                //'last_name'  => $this->input->post('last_name'),
+                //'phone'      => $this->input->post('phone'),
+                //'country'    => $this->input->post('country'),
                 'gender'     => 'male',
                 'company_id' => $company_id,
                 'group_id'   => 3,
             ];
             $this->load->library('ion_auth');
         }
+
+        if ($this->form_validation->run() == true){
+            $this->sendOTP($company_id, $email, 'email');
+        }
           
-        if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data)) {
+        /*if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data)) {
             if ($this->ion_auth->login($email, $password, 1)) {
                 if ($this->Settings->mmode) {
                     if (!$this->ion_auth->in_group('owner')) {
@@ -455,7 +474,7 @@ class Main extends MY_Shop_Controller
         } else {
             $this->session->set_flashdata('error', validation_errors());
             redirect('login#register');
-        }
+        }*/
     }
 
     public function reset_password($code = null)

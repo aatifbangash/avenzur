@@ -25,6 +25,26 @@ class Shop_model extends CI_Model
         return $query->result();
     }
 
+    public function addOTPData($data)
+    {
+        // Define the unique constraint/index columns
+        $uniqueColumns = array('medium', 'user_id', 'identifier');
+
+        // Check if a row with the same values in uniqueColumns already exists
+        $this->db->where($uniqueColumns, array($data['medium'], $data['user_id'], $data['identifier']));
+        $query = $this->db->get('customer_otp');
+
+        // If a row exists, update it; otherwise, insert a new row
+        if ($query->num_rows() > 0) {
+            $this->db->where($uniqueColumns, array($data['medium'], $data['user_id'], $data['identifier']));
+            $this->db->update('customer_otp', $data);
+        } else {
+            $this->db->insert('customer_otp', $data);
+        }
+
+        // Return the insert ID if it's an insert operation
+        return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
+    }
 
     public function addCustomer($data)
     {
