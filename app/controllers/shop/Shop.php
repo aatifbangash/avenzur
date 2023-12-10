@@ -33,9 +33,6 @@ class Shop extends MY_Shop_Controller
 
         if ($this->form_validation->run() == true) {
             $user_addresses = $this->shop_model->getAddresses();
-            if (count($user_addresses) >= 7) {
-                $this->sma->send_json(['status' => 'error', 'message' => lang('already_have_max_addresses'), 'level' => 'error']);
-            }
 
             $data = ['line1' => $this->input->post('line1'),
                 'line2' => $this->input->post('line2'),
@@ -53,6 +50,9 @@ class Shop extends MY_Shop_Controller
                 $this->session->set_flashdata('message', lang('address_updated'));
                 $this->sma->send_json(['redirect' => $_SERVER['HTTP_REFERER']]);
             } else {
+                if (count($user_addresses) >= 6) {
+                    $this->sma->send_json(['status' => 'error', 'message' => lang('already_have_max_addresses'), 'level' => 'error']);
+                }
                 $this->db->insert('addresses', $data);
                 $this->session->set_flashdata('message', lang('address_added'));
                 $this->sma->send_json(['redirect' => $_SERVER['HTTP_REFERER']]);
