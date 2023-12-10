@@ -65,9 +65,9 @@ class Cart_ajax extends MY_Shop_Controller
 
             $quantity_added = $this->input->get('qty') + $product_to_add_quantity;
 
-            if($quantity_added > 3){
+            /*if($quantity_added > 3){
                 $this->sma->send_json(['error' => 1, 'message' => 'Maximum allowed order 3 pieces']);
-            }
+            }*/
 
             $options = $this->shop_model->getProductVariants($product_id);
             $price   = $this->sma->setCustomerGroupPrice((isset($product->special_price) && !empty($product->special_price) ? $product->special_price : $product->price), $this->customer_group);
