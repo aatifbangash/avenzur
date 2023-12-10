@@ -235,7 +235,6 @@ class Pay extends MY_Shop_Controller
 
         if ($inv = $this->pay_model->getSaleByID($id)) {
             //$paypal = $this->pay_model->getPaypalSettings();
-            echo 'Paid: '.$inv->paid;exit;
             if ((($inv->grand_total - $inv->paid) > 0)) {
                 
                 
@@ -743,6 +742,9 @@ class Pay extends MY_Shop_Controller
     public function order_received($id = null, $hash = null)
     {
         if ($inv = $this->shop_model->getOrder(['id' => $id])) {
+            echo '<pre>';
+            print_r($inv);
+            exit;
             $user     = $inv->created_by ? $this->site->getUser($inv->created_by) : null;
             $customer = $this->site->getCompanyByID($inv->customer_id);
             $biller   = $this->site->getCompanyByID($inv->biller_id);
