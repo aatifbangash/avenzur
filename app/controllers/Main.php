@@ -388,7 +388,12 @@ class Main extends MY_Shop_Controller
 
         $opt_id = $this->shop_model->addOTPData($otp_data);
         if($opt_id){
-            
+            $attachment = null;
+            $message = 'Your One Time Password for Avenzur.com is '.$otp;
+            $this->sma->send_email($email, 'OTP Avenzur.com', $message, null, null, $attachment, [], []);
+            return true;
+        }else{
+            return false;
         }
     }
 
@@ -445,7 +450,18 @@ class Main extends MY_Shop_Controller
         }
 
         if ($this->form_validation->run() == true){
-            $this->sendOTP($company_id, $email, 'email');
+            $otp_sent = $this->sendOTP($company_id, $email, 'email');
+
+            if($otp_sent){
+                $this->session->set_flashdata('message', 'An OTP is sent to your email');
+                admin_redirect('login');
+            }else{
+                $this->session->set_flashdata('error', 'Could not send OTP at this time');
+                admin_redirect('login');
+            }
+        }else{
+            $this->session->set_flashdata('error', 'Email Validation Failed');
+            admin_redirect('login');
         }
           
         /*if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data)) {
