@@ -33,7 +33,7 @@ class Shop extends MY_Shop_Controller
 
         if ($this->form_validation->run() == true) {
             $user_addresses = $this->shop_model->getAddresses();
-            if (count($user_addresses) >= 6) {
+            if (count($user_addresses) >= 7) {
                 $this->sma->send_json(['status' => 'error', 'message' => lang('already_have_max_addresses'), 'level' => 'error']);
             }
 
