@@ -454,14 +454,14 @@ class Main extends MY_Shop_Controller
 
             if($otp_sent){
                 $this->session->set_flashdata('message', 'An OTP is sent to your email');
-                admin_redirect('login');
+                redirect('login');
             }else{
                 $this->session->set_flashdata('error', 'Could not send OTP at this time');
-                admin_redirect('login');
+                redirect('login#register');
             }
         }else{
             $this->session->set_flashdata('error', 'Email Validation Failed');
-            admin_redirect('login');
+            redirect('login#register');
         }
           
         /*if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data)) {
