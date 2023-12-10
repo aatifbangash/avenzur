@@ -53,7 +53,7 @@
                                         <div class="form-group">
                                             <?= lang('first_name', 'first_name'); ?>
                                             <div class="controls">
-                                                <?= form_input('first_name', '', 'class="form-control" id="first_name" required="required" pattern=".{3,10}"'); ?>
+                                                <?= form_input('first_name', '', 'class="form-control" id="first_name" pattern=".{3,10}"'); ?>
                                             </div>
                                         </div>
                                     </div>
@@ -61,7 +61,7 @@
                                         <div class="form-group">
                                             <?= lang('last_name', 'last_name'); ?>
                                             <div class="controls">
-                                                <?= form_input('last_name', '', 'class="form-control" id="last_name" required="required"'); ?>
+                                                <?= form_input('last_name', '', 'class="form-control" id="last_name"'); ?>
                                             </div>
                                         </div>
                                     </div>
@@ -113,7 +113,7 @@
                                         <div class="form-group">
                                             <?= lang('password', 'passwordr'); ?>
                                             <div class="controls">
-                                                <?= form_password('password', '', 'class="form-control tip" id="passwordr" required="required" pattern=".{5,20}"'); ?>
+                                                <?= form_password('password', '', 'class="form-control tip" id="passwordr" pattern=".{5,20}"'); ?>
                                                 <span class="help-block"><?= lang('pasword_hint'); ?></span>
                                             </div>
                                         </div>
@@ -122,7 +122,7 @@
                                         <div class="form-group">
                                             <?= lang('confirm_password', 'password_confirm'); ?>
                                             <div class="controls">
-                                                <?= form_password('password_confirm', '', 'class="form-control" id="password_confirm" required="required" pattern=".{5,20}" data-bv-identical="true" data-bv-identical-field="password" data-bv-identical-message="' . lang('pw_not_same') . '"'); ?>
+                                                <?= form_password('password_confirm', '', 'class="form-control" id="password_confirm" pattern=".{5,20}" data-bv-identical="true" data-bv-identical-field="password" data-bv-identical-message="' . lang('pw_not_same') . '"'); ?>
                                             </div>
                                         </div>
                                     </div>
