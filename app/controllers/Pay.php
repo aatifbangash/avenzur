@@ -235,6 +235,7 @@ class Pay extends MY_Shop_Controller
 
         if ($inv = $this->pay_model->getSaleByID($id)) {
             //$paypal = $this->pay_model->getPaypalSettings();
+            echo 'Paid: '.$inv->paid;exit;
             if ((($inv->grand_total - $inv->paid) > 0)) {
                 
                 
