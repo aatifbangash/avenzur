@@ -111,14 +111,14 @@ class Cart_ajax extends MY_Shop_Controller
 
             if($product->code == '111002959'){
                 $sulfad_in_cart += ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1));
-            }
-
-            $cart_contents = $this->cart->contents();
-            foreach ($cart_contents as $item) {
-                $product_code = $item['code'];
-                if($product_code == $sulfad_code){
-                    $sulfad_count += $item['qty'];
-                    $this->cart->remove($item['rowid']);
+                
+                $cart_contents = $this->cart->contents();
+                foreach ($cart_contents as $item) {
+                    $product_code = $item['code'];
+                    if($product_code == $sulfad_code){
+                        $sulfad_count += $item['qty'];
+                        $this->cart->remove($item['rowid']);
+                    }
                 }
             }
 
