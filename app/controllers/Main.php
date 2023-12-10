@@ -387,6 +387,9 @@ class Main extends MY_Shop_Controller
         ];
 
         $opt_id = $this->shop_model->addOTPData($otp_data);
+        if($opt_id){
+            
+        }
     }
 
     public function register()

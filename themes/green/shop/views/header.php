@@ -2,6 +2,9 @@
 <!doctype html>
 <html lang="en">
   <head>
+  <?php
+    if (strpos($currentUrl, 'avenzur.com') !== false) {
+    ?>
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -9,6 +12,9 @@
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-ML8N7LRG');</script>
     <!-- End Google Tag Manager -->
+    <?php
+    }
+    ?>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Avenzur</title>
@@ -20,6 +26,9 @@
 
     <script src="<?= $assets; ?>build/js/intlTelInput.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <?php
+    if (strpos($currentUrl, 'avenzur.com') !== false) {
+    ?>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-0GGN9ELJJG">
     </script>
@@ -30,33 +39,55 @@
 
       gtag('config', 'G-0GGN9ELJJG');
     </script>
+    <?php
+    }
+    ?>
+    <?php
 
+    if (strpos($currentUrl, 'avenzur.com') !== false) {
+    ?>
     <!-- Meta Pixel Code --><script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js'); fbq('init', '674586174823661'); fbq('track', 'PageView');</script><noscript> <img height="1" width="1" src="https://www.facebook.com/tr?id=674586174823661&ev=PageView&noscript=1"/></noscript><!-- End Meta Pixel Code -->
+      <?php
+    }
+    ?>
+    <?php
 
-    <!-- Meta Pixel Code -->
-    <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '768269778475763');
-    fbq('track', 'PageView');
-    </script>
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=768269778475763&ev=PageView&noscript=1"
-    /></noscript>
-    <!-- End Meta Pixel Code -->
+    if (strpos($currentUrl, 'avenzur.com') !== false) {
+      ?>
+        <!-- Meta Pixel Code -->
+        <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '768269778475763');
+        fbq('track', 'PageView');
+        </script>
+        <noscript><img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=768269778475763&ev=PageView&noscript=1"
+        /></noscript>
+        <!-- End Meta Pixel Code -->
+      <?php
+    }
+    ?>
 </head>
   
   <body>
+  <?php
+
+    if (strpos($currentUrl, 'avenzur.com') !== false) {
+      ?>
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-ML8N7LRG"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
+    <?php
+    }
+    ?>
     <!-- top bar -->
     <section class="top-bar py-1 ">
         <div class="container container-max-width">
