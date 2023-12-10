@@ -390,7 +390,7 @@ class Main extends MY_Shop_Controller
         if($opt_id){
             $attachment = null;
             $message = 'Your One Time Password for Avenzur.com is '.$otp;
-            $this->sma->send_email($email, 'OTP Avenzur.com', $message, null, null, $attachment, [], []);
+            //$this->sma->send_email($email, 'OTP Avenzur.com', $message, null, null, $attachment, [], []);
             return true;
         }else{
             return false;
@@ -453,11 +453,11 @@ class Main extends MY_Shop_Controller
             $otp_sent = $this->sendOTP($company_id, $email, 'email');
 
             if($otp_sent){
-                echo 'Here OTP sent success...';exit;
+                
                 $this->session->set_flashdata('message', 'An OTP is sent to your email');
                 redirect('login');
             }else{
-                echo 'Could not send OTP...';exit;
+                
                 $this->session->set_flashdata('error', 'Could not send OTP at this time');
                 redirect('login#register');
             }
