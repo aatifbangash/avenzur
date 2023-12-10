@@ -31,12 +31,12 @@ class Shop_model extends CI_Model
         $uniqueColumns = array('medium', 'user_id', 'identifier');
 
         // Check if a row with the same values in uniqueColumns already exists
-        $this->db->where($uniqueColumns, array($data['medium'], $data['user_id'], $data['identifier']));
+        $this->db->where($uniqueColumns, array($data['medium'], $data['userid'], $data['identifier']));
         $query = $this->db->get('customer_otp');
 
         // If a row exists, update it; otherwise, insert a new row
         if ($query->num_rows() > 0) {
-            $this->db->where($uniqueColumns, array($data['medium'], $data['user_id'], $data['identifier']));
+            $this->db->where($uniqueColumns, array($data['medium'], $data['userid'], $data['identifier']));
             $this->db->update('customer_otp', $data);
         } else {
             $this->db->insert('customer_otp', $data);

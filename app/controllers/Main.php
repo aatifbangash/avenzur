@@ -382,7 +382,7 @@ class Main extends MY_Shop_Controller
             'medium' => $medium,
             'identifier' => $email,
             'otp' => $otp,
-            'user_id' => $company_id,
+            'userid' => $company_id,
             'date_updated' => date('Y-m-d h:i:s')
         ];
 
