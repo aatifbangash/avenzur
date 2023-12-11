@@ -34,6 +34,12 @@ class Shop_model extends CI_Model
         if ($query->num_rows() > 0) {
             $this->db->where($uniqueColumns);
             $this->db->update('customer_otp', $data);
+            
+            $query = $this->db->get('customer_otp');
+            $result = $query->result_array();
+            $updated_id = $result[0]['stid'];
+
+            return $updated_id;
         } else {
             $this->db->insert('customer_otp', $data);
         }
