@@ -63,8 +63,9 @@
                                     <div class="clearfix"></div>
                                 </div>
                                 <div class="mt-2">
-                                <input type="submit" name="register" class="btn btn-primary" id="registerBtn" value="Register" >
-                               <a   id="login" onclick="LoginFn()" name="login" value="Login" class="btn btn-secondary">Already have an account</a>
+                                <!--<input type="submit" name="register" class="btn btn-primary" id="registerBtn" value="Register" >-->
+                                <button type="button" class="btn btn-primary" id="registerBtn">Register</button>
+                                <a id="login" onclick="LoginFn()" name="login" value="Login" class="btn btn-secondary">Already have an account</a>
                                </div>
                                 <?= form_close(); ?>
                             </div>
@@ -117,16 +118,16 @@
           $('#phone').val("+"+countryCode+" "+ $('#phone').val());
        });
 
-       $('#registrationForm').submit(function (e) {
+       $('#registrationForm').click(function (e) {
             e.preventDefault(); // Prevent the default form submission
 
             // Serialize the form data
-            var formData = $(this).serialize();
+            var formData = $('#registrationForm').serialize();
 
             // Send the data to the server using AJAX
             $.ajax({
                 type: 'POST',
-                url: $(this).attr('action'),
+                url: $('#registrationForm').attr('action'),
                 data: formData,
                 success: function (response) {
                     // Handle the success response
