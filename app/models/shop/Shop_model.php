@@ -48,6 +48,15 @@ class Shop_model extends CI_Model
         return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
     }
 
+    public function getUniqueCustomer($type, $identifier){
+        if($type == 'email'){
+            return $this->db->get_where('companies', ['email' => $identifier], 1)->row();
+        }else{
+            return $this->db->get_where('companies', ['phone' => $identifier], 1)->row();
+        }
+        
+    }
+
     public function addUniqueCustomer($data){
         $uniqueColumns = array('email');
         $query = $this->db->get_where('companies', ['email' => $data['email']]);

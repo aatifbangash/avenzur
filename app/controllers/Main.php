@@ -408,7 +408,9 @@ class Main extends MY_Shop_Controller
         }
 
         if ($this->form_validation->run() == true){
-            $otp_sent = $this->sendOTP($company_id, $email, 'email');
+            $company_data = $this->shop_model->getUniqueCustomer('email', $identity);
+
+            $otp_sent = $this->sendOTP($company_data->id, $identity, 'email');
 
             if($otp_sent){
                 echo json_encode(['status' => 'success', 'message' => 'OTP is sent for verification']);
