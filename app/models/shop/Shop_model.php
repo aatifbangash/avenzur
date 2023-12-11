@@ -38,7 +38,7 @@ class Shop_model extends CI_Model
             $this->db->where($uniqueColumns);
             $query = $this->db->get('customer_otp');
             $result = $query->result_array();
-            $updated_id = $result[0]['stid'];
+            $updated_id = $result[0]['id'];
 
             return $updated_id;
         } else {
