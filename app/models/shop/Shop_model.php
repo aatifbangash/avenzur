@@ -53,9 +53,11 @@ class Shop_model extends CI_Model
         $query = $this->db->get('companies');
 
         if ($query->num_rows() > 0) {
+            echo 'here in 1';exit;
             $row = $this->db->get_where('companies', ['email' => $data['email']], 1)->row();
             return $row->id;
         } else {
+            echo 'here in 2';exit;
             $this->db->insert('companies', $data);
             return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
         }
