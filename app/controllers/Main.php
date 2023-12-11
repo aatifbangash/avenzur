@@ -435,7 +435,8 @@ class Main extends MY_Shop_Controller
                 'sequence_code'                => $this->sequenceCode->generate('CUS', 5)
             ];
            
-            $company_id = $this->shop_model->addCustomer($company_data);
+            //$company_id = $this->shop_model->addCustomer($company_data);
+            $company_id = $this->shop_model->addUniqueCustomer($company_data);
          
             $additional_data = [
                 //'first_name' => $this->input->post('first_name'),

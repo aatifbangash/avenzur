@@ -28,7 +28,7 @@ class Shop_model extends CI_Model
     public function addOTPData($data)
     {
         // Define the unique constraint/index columns
-        $uniqueColumns = array('medium', 'user_id', 'identifier');
+        $uniqueColumns = array('medium', 'userid', 'identifier');
 
         // Check if a row with the same values in uniqueColumns already exists
         $this->db->where($uniqueColumns, array($data['medium'], $data['userid'], $data['identifier']));
@@ -43,6 +43,22 @@ class Shop_model extends CI_Model
         }
 
         // Return the insert ID if it's an insert operation
+        return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
+    }
+
+    public function addUniqueCustomer($data){
+        $uniqueColumns = array('email');
+
+        $this->db->where($uniqueColumns, array($data['email']));
+        $query = $this->db->get('companies');
+
+        if ($query->num_rows() > 0) {
+            $this->db->where($uniqueColumns, array($data['email']));
+            $this->db->update('companies', $data);
+        } else {
+            $this->db->insert('companies', $data);
+        }
+
         return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
     }
 
