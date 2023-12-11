@@ -29,7 +29,7 @@ class Shop_model extends CI_Model
     {
         $uniqueColumns = array('medium', 'userid', 'identifier');
 
-        $query = $this->db->get_where('customer_otp', ['medium' => $data['medium'], 'email' => $data['email'], 'identifier' => $data['identifier']]);
+        $query = $this->db->get_where('customer_otp', ['medium' => $data['medium'], 'identifier' => $data['identifier'], 'userid' => $data['userid']]);
 
         echo 'Number of rows: '.$query->num_rows();exit;
 
