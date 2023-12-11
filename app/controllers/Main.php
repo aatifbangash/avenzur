@@ -387,7 +387,7 @@ class Main extends MY_Shop_Controller
         ];
 
         $opt_id = $this->shop_model->addOTPData($otp_data);
-        echo 'OTP Id: '.$opt_id;exit;
+        
         if($opt_id){
             $attachment = null;
             $message = 'Your One Time Password for Avenzur.com is '.$otp;
