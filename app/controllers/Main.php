@@ -455,17 +455,18 @@ class Main extends MY_Shop_Controller
             $otp_sent = $this->sendOTP($company_id, $email, 'email');
 
             if($otp_sent){
-                
-                $this->session->set_flashdata('message', 'An OTP is sent to your email');
-                redirect('login');
+                echo json_encode(['status' => 'success', 'message' => 'An OTP is sent to your email']);
+                //$this->session->set_flashdata('message', 'An OTP is sent to your email');
+                //redirect('login');
             }else{
-                
-                $this->session->set_flashdata('error', 'Could not send OTP at this time');
-                redirect('login#register');
+                echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
+                //$this->session->set_flashdata('error', 'Could not send OTP at this time');
+                //redirect('login#register');
             }
         }else{
-            $this->session->set_flashdata('error', 'Email Validation Failed');
-            redirect('login#register');
+            echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
+            //$this->session->set_flashdata('error', 'Email Validation Failed');
+            //redirect('login#register');
         }
           
         /*if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data)) {

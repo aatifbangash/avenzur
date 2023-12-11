@@ -116,20 +116,17 @@
        });*/
 
        $('#registerBtnCall').click(function (e) {
-            e.preventDefault(); // Prevent the default form submission
+            e.preventDefault(); 
 
-            console.log('Here we are in registration...');
             var formData = $('#registrationForm').serialize();
             $.ajax({
                 type: 'POST',
                 url: $('#registrationForm').attr('action'),
                 data: formData,
                 success: function (response) {
-                    // Handle the success response
                     console.log(response);
                 },
                 error: function (error) {
-                    // Handle the error response
                     console.error(error);
                 }
             });
