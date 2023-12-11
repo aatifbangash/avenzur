@@ -118,7 +118,7 @@
           $('#phone').val("+"+countryCode+" "+ $('#phone').val());
        });
 
-       $('#registrationForm').click(function (e) {
+       $('#registerBtn').click(function (e) {
             e.preventDefault(); // Prevent the default form submission
 
             console.log('Here we are in registration...');
