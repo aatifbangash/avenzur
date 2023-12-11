@@ -416,7 +416,7 @@ class Main extends MY_Shop_Controller
                 echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
             }
         }else{
-            echo json_encode(['status' => 'error', 'message' => 'Validation Failed']);
+            $this->page_construct('user/login', $this->data);
         }
     }
 
