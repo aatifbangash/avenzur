@@ -53,13 +53,12 @@ class Shop_model extends CI_Model
         $query = $this->db->get('companies');
 
         if ($query->num_rows() > 0) {
-            $this->db->where($uniqueColumns, array($data['email']));
-            $this->db->update('companies', $data);
+            $row = $this->db->get_where('companies', ['email' => $data['email']], 1)->row();
+            return $row->id;
         } else {
             $this->db->insert('companies', $data);
+            return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
         }
-
-        return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
     }
 
     public function addCustomer($data)
