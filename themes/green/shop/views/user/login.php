@@ -121,10 +121,8 @@
        $('#registrationForm').click(function (e) {
             e.preventDefault(); // Prevent the default form submission
 
-            // Serialize the form data
+            console.log('Here we are in registration...');
             var formData = $('#registrationForm').serialize();
-
-            // Send the data to the server using AJAX
             $.ajax({
                 type: 'POST',
                 url: $('#registrationForm').attr('action'),
