@@ -46,7 +46,7 @@
                             ?>
                             <div id="register">
                                 <?php 
-                                    $attrib = ['class' => 'validate', 'role' => 'form'];
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
                                     echo form_open('register', $attrib); 
                                 ?>
                                 <div class="row">
