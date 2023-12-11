@@ -64,7 +64,7 @@
                                 </div>
                                 <div class="mt-2">
                                 <!--<input type="submit" name="register" class="btn btn-primary" id="registerBtn" value="Register" >-->
-                                <button type="button" class="btn btn-primary" id="registerBtn">Register</button>
+                                <button type="button" class="btn btn-primary" id="registerBtnCall">Register</button>
                                 <a id="login" onclick="LoginFn()" name="login" value="Login" class="btn btn-secondary">Already have an account</a>
                                </div>
                                 <?= form_close(); ?>
@@ -118,7 +118,7 @@
           $('#phone').val("+"+countryCode+" "+ $('#phone').val());
        });
 
-       $('#registerBtn').click(function (e) {
+       $('#registerBtnCall').click(function (e) {
             e.preventDefault(); // Prevent the default form submission
 
             console.log('Here we are in registration...');
