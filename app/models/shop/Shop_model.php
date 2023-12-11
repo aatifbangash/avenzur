@@ -48,11 +48,7 @@ class Shop_model extends CI_Model
 
     public function addUniqueCustomer($data){
         $uniqueColumns = array('email');
-
-        echo $data['email'];exit;
-
-        $this->db->where($uniqueColumns, array($data['email']));
-        $query = $this->db->get('companies');
+        $query = $this->db->get_where('companies', ['email' => $data['email']], 1)->row();
 
         if ($query->num_rows() > 0) {
             echo 'here in 1';exit;
