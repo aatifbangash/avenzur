@@ -27,14 +27,12 @@ class Shop_model extends CI_Model
 
     public function addOTPData($data)
     {
-        $uniqueColumns = array('medium', 'userid', 'identifier');
+        $uniqueColumns = array('medium' => $data['medium'], 'userid' => $data['userid'], 'identifier' => $data['identifier']);
 
         $query = $this->db->get_where('customer_otp', ['medium' => $data['medium'], 'identifier' => $data['identifier'], 'userid' => $data['userid']]);
 
-        echo 'Number of rows: '.$query->num_rows();exit;
-
         if ($query->num_rows() > 0) {
-            $this->db->where($uniqueColumns, array($data['medium'], $data['userid'], $data['identifier']));
+            $this->db->where($uniqueColumns);
             $this->db->update('customer_otp', $data);
         } else {
             $this->db->insert('customer_otp', $data);
