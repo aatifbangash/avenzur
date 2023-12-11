@@ -100,23 +100,20 @@
         $("#register").show();  
     }
 
-    var input = document.querySelector("#phone");
-    /*window.intlTelInput(input,({
-        initialCountry: "<?php //echo trim($country_code); ?>"
-    }));*/
+    /*var input = document.querySelector("#phone");
 
     window.intlTelInput(input,({
         initialCountry: "SA"
     }));
-    $('#phone').val("+966");
+    $('#phone').val("+966");*/
 
     $(document).ready(function() {
-        $('.iti__flag-container').click(function() { 
+        /*$('.iti__flag-container').click(function() { 
           var countryCode = $('.iti__selected-flag').attr('title');
           var countryCode = countryCode.replace(/[^0-9]/g,'')
           $('#phone').val("");
           $('#phone').val("+"+countryCode+" "+ $('#phone').val());
-       });
+       });*/
 
        $('#registerBtnCall').click(function (e) {
             e.preventDefault(); // Prevent the default form submission
@@ -138,6 +135,5 @@
             });
         });
     });
-         
-
+        
   </script>
