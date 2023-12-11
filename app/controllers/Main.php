@@ -177,7 +177,7 @@ class Main extends MY_Shop_Controller
         return $response;
     }
 
-    public function login($m = null)
+    /*public function login($m = null)
     {
         $country_code = $this->get_country_by_ip();
         
@@ -263,7 +263,7 @@ class Main extends MY_Shop_Controller
                 $this->page_construct('user/login', $this->data);
             }
         }
-    }
+    }*/
 
     public function logout($m = null)
     {
@@ -395,6 +395,28 @@ class Main extends MY_Shop_Controller
             return true;
         }else{
             return false;
+        }
+    }
+
+    public function login(){
+        $this->form_validation->set_rules('identity', lang('Email or Mobile'), 'required');
+
+        if ($this->form_validation->run('') == true) {
+            $identity    = strtolower($this->input->post('identity'));
+
+            $this->load->library('ion_auth');
+        }
+
+        if ($this->form_validation->run() == true){
+            $otp_sent = $this->sendOTP($company_id, $email, 'email');
+
+            if($otp_sent){
+                echo json_encode(['status' => 'success', 'message' => 'OTP is sent for verification']);
+            }else{
+                echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
+            }
+        }else{
+            echo json_encode(['status' => 'error', 'message' => 'Validation Failed']);
         }
     }
 
