@@ -46,54 +46,11 @@
         ?>
                             <div id="register">
                                   
-                                <?php $attrib = ['class' => 'validate', 'role' => 'form'];
-                                                echo form_open('register', $attrib); ?>
+                                <?php 
+                                    $attrib = ['class' => 'validate', 'role' => 'form'];
+                                    echo form_open('register', $attrib); 
+                                ?>
                                 <div class="row">
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <?= lang('first_name', 'first_name'); ?>
-                                            <div class="controls">
-                                                <?= form_input('first_name', '', 'class="form-control" id="first_name" pattern=".{3,10}"'); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <?= lang('last_name', 'last_name'); ?>
-                                            <div class="controls">
-                                                <?= form_input('last_name', '', 'class="form-control" id="last_name"'); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                        <?= lang('Country', 'Country'); ?>
-                                        <select class="form-control" id="country" name="country" >
-                                        <option value="">Select Country</option>
-                                        <?php
-                                            foreach($country as $country)
-                                            {
-                                                $selected = (trim($country->code) == trim($country_code)) ? 'selected' : '';
-                                                echo '<option value="'.$country->code.'"' . $selected . '>'.$country->name.'</option>';
-                                            }
-                                        ?>                    
-                                        </select>
-                            
-
-                                        </div>
-                                    </div>
-                                 
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <?= lang('phone ', 'phone '); ?>
-                                            <div class="controls">
-                                                  <input type="tel" id="phone" name="phone" class="form-control" />
-                                                <!--<?= form_input('phone', '', 'class="form-control" id="phone" '); ?>-->
-                                            </div>
-                                        </div>
-                                    </div>
-                               
-                             
                                     
                                     <div class="col-sm-6">
                                         <div class="form-group">
@@ -103,29 +60,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <!--<div class="col-sm-6">
-                                        <div class="form-group">
-                                            <?php //echo lang('username', 'username'); ?>
-                                            <?php //echo form_input('username', set_value('username'), 'class="form-control tip" id="username" required="required"'); ?>
-                                        </div>
-                                    </div>-->
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <?= lang('password', 'passwordr'); ?>
-                                            <div class="controls">
-                                                <?= form_password('password', '', 'class="form-control tip" id="passwordr" pattern=".{5,20}"'); ?>
-                                                <span class="help-block"><?= lang('pasword_hint'); ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <?= lang('confirm_password', 'password_confirm'); ?>
-                                            <div class="controls">
-                                                <?= form_password('password_confirm', '', 'class="form-control" id="password_confirm" pattern=".{5,20}" data-bv-identical="true" data-bv-identical-field="password" data-bv-identical-message="' . lang('pw_not_same') . '"'); ?>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    
                                     <div class="clearfix"></div>
                                 </div>
                                 <div class="mt-2">
