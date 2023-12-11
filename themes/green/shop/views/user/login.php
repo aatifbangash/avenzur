@@ -43,9 +43,8 @@
                             </div>
 
                             <?php if (!$shop_settings->private) {
-        ?>
+                            ?>
                             <div id="register">
-                                  
                                 <?php 
                                     $attrib = ['class' => 'validate', 'role' => 'form'];
                                     echo form_open('register', $attrib); 
@@ -64,17 +63,14 @@
                                     <div class="clearfix"></div>
                                 </div>
                                 <div class="mt-2">
-                                <input type="submit" name="register" class="btn btn-primary" id="register" value="Register" >
-                                <!--<h5>For Login  <a href="<?= site_url('login_form.php'); ?>">Click Here</a></h5>-->
-                                 <!--<?= form_submit('register', lang('register'), 'class="btn btn-primary"'); ?>-->
+                                <input type="submit" name="register" class="btn btn-primary" id="registerBtn" value="Register" >
                                <a   id="login" onclick="LoginFn()" name="login" value="Login" class="btn btn-secondary">Already have an account</a>
                                </div>
                                 <?= form_close(); ?>
-                           
                             </div>
                             
                             <?php
-    } ?>
+                            } ?>
                         </div>
                       
                       
@@ -120,8 +116,28 @@
           $('#phone').val("");
           $('#phone').val("+"+countryCode+" "+ $('#phone').val());
        });
- 
-         
+
+       $('#registrationForm').submit(function (e) {
+            e.preventDefault(); // Prevent the default form submission
+
+            // Serialize the form data
+            var formData = $(this).serialize();
+
+            // Send the data to the server using AJAX
+            $.ajax({
+                type: 'POST',
+                url: $(this).attr('action'),
+                data: formData,
+                success: function (response) {
+                    // Handle the success response
+                    console.log(response);
+                },
+                error: function (error) {
+                    // Handle the error response
+                    console.error(error);
+                }
+            });
+        });
     });
          
 
