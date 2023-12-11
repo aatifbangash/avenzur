@@ -78,7 +78,30 @@
                         
                     </div>
 
-                    <div class="col-sm-3 col-md-2"></div>
+                    <div class="col-sm-3 col-md-12">
+                        <div class="loginRCard px-5">
+                        <div class="logo-k mb-5"> 
+                            <a class="navbar-brand" href="http://localhost/avenzur/">
+                                <img src="http://localhost/avenzur/assets/uploads/logos/avenzur-logov2-024.png" alt="AVENZUR">
+                            </a>
+                        </div>
+                        <h4 class="fw-bold letstart">Let's get started</h4>
+                        <div class="logsignBtns mt-3 d-flex justify-content-center">
+                            <button type="button" class="btn  text-white  active">Log in</button>
+                            <button type="button" class="btn  text-white px-4">Sign up</button>
+                        </div>
+                        <div>
+                            <div class="controls logcardinput">
+                             
+                            <input type="email" id="email" name="email" class="form-control" placeholder="Please enter mobile or phone number" required="required"/>
+                            
+                            </div>
+
+                            <button type="button" class="btn  text-white continueBtn">Continue</button>
+                        </div>
+
+                        </div>
+                    </div>
                 </div>
                 
             </div>
