@@ -64,13 +64,13 @@ class Cron extends MY_Controller
 echo $body;
                 // Send the email notification
                 $sent = true;
-              $sent = $this->sma->send_email(
-                    $row->email,
-                    $subject,
-                    $body,
-                    "info@avenzur.com",
-                    "Avenzur"
-                );
+//              $sent = $this->sma->send_email(
+//                    $row->email,
+//                    $subject,
+//                    $body,
+//                    "info@avenzur.com",
+//                    "Avenzur"
+//                );
 
                 if($sent) {
                     $this->db
