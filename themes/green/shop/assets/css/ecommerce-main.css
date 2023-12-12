@@ -1481,6 +1481,49 @@ table.table.table-striped.cart-totals tbody tr:last-child {
   font-size: 17px;
   font-weight: 600;
 }
+h4.letstart {
+  font-size: 20px;
+}
+.loginRCard {
+  background: #f1f1f1;
+  width: 35% !important;
+  margin-inline: auto;
+  text-align: center;
+  padding-block: 30px;
+  border-radius: 10px;
+  margin-top: 25px;
+}
+.logsignBtns {
+  background: #662d91;
+  width: fit-content;
+  margin-inline: auto;
+  border-radius: 30px;
+  padding: 5px;
+}
+.logsignBtns button {
+  background: transparent;
+  padding-inline: 35px;
+  border-radius: 43px;
+}
+.logsignBtns button.active {
+  background-color: white;
+  color: #662d91 !important;
+}
+.controls.logcardinput input {
+  margin-top: 20px;
+  border: 1px solid #662d918c;
+  border-radius: 8px;
+  padding: 9px 12px;
+}
+button.continueBtn,
+button.continueBtn:hover {
+  width: 100%;
+  background: #662d91;
+  margin-top: 20px;
+  border-radius: 0;
+  font-size: 19px;
+  padding-block: 10px;
+}
 @media screen and (max-width: 500px) {
   .myaccountForm.cartform {
     left: -9px !important;

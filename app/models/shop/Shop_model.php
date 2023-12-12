@@ -27,23 +27,47 @@ class Shop_model extends CI_Model
 
     public function addOTPData($data)
     {
-        // Define the unique constraint/index columns
-        $uniqueColumns = array('medium', 'user_id', 'identifier');
+        $uniqueColumns = array('medium' => $data['medium'], 'userid' => $data['userid'], 'identifier' => $data['identifier']);
 
-        // Check if a row with the same values in uniqueColumns already exists
-        $this->db->where($uniqueColumns, array($data['medium'], $data['userid'], $data['identifier']));
-        $query = $this->db->get('customer_otp');
+        $query = $this->db->get_where('customer_otp', ['medium' => $data['medium'], 'identifier' => $data['identifier'], 'userid' => $data['userid']]);
 
-        // If a row exists, update it; otherwise, insert a new row
         if ($query->num_rows() > 0) {
-            $this->db->where($uniqueColumns, array($data['medium'], $data['userid'], $data['identifier']));
+            $this->db->where($uniqueColumns);
             $this->db->update('customer_otp', $data);
+            
+            $this->db->where($uniqueColumns);
+            $query = $this->db->get('customer_otp');
+            $result = $query->result_array();
+            $updated_id = $result[0]['id'];
+
+            return $updated_id;
         } else {
             $this->db->insert('customer_otp', $data);
         }
 
-        // Return the insert ID if it's an insert operation
         return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
+    }
+
+    public function getUniqueCustomer($type, $identifier){
+        if($type == 'email'){
+            return $this->db->get_where('companies', ['email' => $identifier], 1)->row();
+        }else{
+            return $this->db->get_where('companies', ['phone' => $identifier], 1)->row();
+        }
+        
+    }
+
+    public function addUniqueCustomer($data){
+        $uniqueColumns = array('email');
+        $query = $this->db->get_where('companies', ['email' => $data['email']]);
+
+        if ($query->num_rows() > 0) {
+            $row = $this->db->get_where('companies', ['email' => $data['email']], 1)->row();
+            return $row->id;
+        } else {
+            $this->db->insert('companies', $data);
+            return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
+        }
     }
 
     public function addCustomer($data)

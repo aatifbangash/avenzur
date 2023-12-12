@@ -177,7 +177,7 @@ class Main extends MY_Shop_Controller
         return $response;
     }
 
-    public function login($m = null)
+    /*public function login($m = null)
     {
         $country_code = $this->get_country_by_ip();
         
@@ -263,7 +263,7 @@ class Main extends MY_Shop_Controller
                 $this->page_construct('user/login', $this->data);
             }
         }
-    }
+    }*/
 
     public function logout($m = null)
     {
@@ -387,6 +387,7 @@ class Main extends MY_Shop_Controller
         ];
 
         $opt_id = $this->shop_model->addOTPData($otp_data);
+        
         if($opt_id){
             $attachment = null;
             $message = 'Your One Time Password for Avenzur.com is '.$otp;
@@ -394,6 +395,30 @@ class Main extends MY_Shop_Controller
             return true;
         }else{
             return false;
+        }
+    }
+
+    public function login(){
+        $this->form_validation->set_rules('identity', lang('Email or Mobile'), 'required');
+
+        if ($this->form_validation->run('') == true) {
+            $identity    = strtolower($this->input->post('identity'));
+
+            $this->load->library('ion_auth');
+        }
+
+        if ($this->form_validation->run() == true){
+            $company_data = $this->shop_model->getUniqueCustomer('email', $identity);
+
+            $otp_sent = $this->sendOTP($company_data->id, $identity, 'email');
+
+            if($otp_sent){
+                echo json_encode(['status' => 'success', 'message' => 'OTP is sent for verification']);
+            }else{
+                echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
+            }
+        }else{
+            $this->page_construct('user/login', $this->data);
         }
     }
 
@@ -435,7 +460,8 @@ class Main extends MY_Shop_Controller
                 'sequence_code'                => $this->sequenceCode->generate('CUS', 5)
             ];
            
-            $company_id = $this->shop_model->addCustomer($company_data);
+            //$company_id = $this->shop_model->addCustomer($company_data);
+            $company_id = $this->shop_model->addUniqueCustomer($company_data);
          
             $additional_data = [
                 //'first_name' => $this->input->post('first_name'),
@@ -453,17 +479,18 @@ class Main extends MY_Shop_Controller
             $otp_sent = $this->sendOTP($company_id, $email, 'email');
 
             if($otp_sent){
-                
-                $this->session->set_flashdata('message', 'An OTP is sent to your email');
-                redirect('login');
+                echo json_encode(['status' => 'success', 'message' => 'An OTP is sent to your email']);
+                //$this->session->set_flashdata('message', 'An OTP is sent to your email');
+                //redirect('login');
             }else{
-                
-                $this->session->set_flashdata('error', 'Could not send OTP at this time');
-                redirect('login#register');
+                echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
+                //$this->session->set_flashdata('error', 'Could not send OTP at this time');
+                //redirect('login#register');
             }
         }else{
-            $this->session->set_flashdata('error', 'Email Validation Failed');
-            redirect('login#register');
+            echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
+            //$this->session->set_flashdata('error', 'Email Validation Failed');
+            //redirect('login#register');
         }
           
         /*if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data)) {

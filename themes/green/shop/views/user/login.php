@@ -43,57 +43,13 @@
                             </div>
 
                             <?php if (!$shop_settings->private) {
-        ?>
+                            ?>
                             <div id="register">
-                                  
-                                <?php $attrib = ['class' => 'validate', 'role' => 'form'];
-                                                echo form_open('register', $attrib); ?>
+                                <?php 
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
+                                    echo form_open('register', $attrib); 
+                                ?>
                                 <div class="row">
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <?= lang('first_name', 'first_name'); ?>
-                                            <div class="controls">
-                                                <?= form_input('first_name', '', 'class="form-control" id="first_name" pattern=".{3,10}"'); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <?= lang('last_name', 'last_name'); ?>
-                                            <div class="controls">
-                                                <?= form_input('last_name', '', 'class="form-control" id="last_name"'); ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                        <?= lang('Country', 'Country'); ?>
-                                        <select class="form-control" id="country" name="country" >
-                                        <option value="">Select Country</option>
-                                        <?php
-                                            foreach($country as $country)
-                                            {
-                                                $selected = (trim($country->code) == trim($country_code)) ? 'selected' : '';
-                                                echo '<option value="'.$country->code.'"' . $selected . '>'.$country->name.'</option>';
-                                            }
-                                        ?>                    
-                                        </select>
-                            
-
-                                        </div>
-                                    </div>
-                                 
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <?= lang('phone ', 'phone '); ?>
-                                            <div class="controls">
-                                                  <input type="tel" id="phone" name="phone" class="form-control" />
-                                                <!--<?= form_input('phone', '', 'class="form-control" id="phone" '); ?>-->
-                                            </div>
-                                        </div>
-                                    </div>
-                               
-                             
                                     
                                     <div class="col-sm-6">
                                         <div class="form-group">
@@ -103,50 +59,49 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <!--<div class="col-sm-6">
-                                        <div class="form-group">
-                                            <?php //echo lang('username', 'username'); ?>
-                                            <?php //echo form_input('username', set_value('username'), 'class="form-control tip" id="username" required="required"'); ?>
-                                        </div>
-                                    </div>-->
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <?= lang('password', 'passwordr'); ?>
-                                            <div class="controls">
-                                                <?= form_password('password', '', 'class="form-control tip" id="passwordr" pattern=".{5,20}"'); ?>
-                                                <span class="help-block"><?= lang('pasword_hint'); ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <?= lang('confirm_password', 'password_confirm'); ?>
-                                            <div class="controls">
-                                                <?= form_password('password_confirm', '', 'class="form-control" id="password_confirm" pattern=".{5,20}" data-bv-identical="true" data-bv-identical-field="password" data-bv-identical-message="' . lang('pw_not_same') . '"'); ?>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    
                                     <div class="clearfix"></div>
                                 </div>
                                 <div class="mt-2">
-                                <input type="submit" name="register" class="btn btn-primary" id="register" value="Register" >
-                                <!--<h5>For Login  <a href="<?= site_url('login_form.php'); ?>">Click Here</a></h5>-->
-                                 <!--<?= form_submit('register', lang('register'), 'class="btn btn-primary"'); ?>-->
-                               <a   id="login" onclick="LoginFn()" name="login" value="Login" class="btn btn-secondary">Already have an account</a>
+                                <!--<input type="submit" name="register" class="btn btn-primary" id="registerBtn" value="Register" >-->
+                                <button type="button" class="btn btn-primary" id="registerBtnCall">Register</button>
+                                <a id="login" onclick="LoginFn()" name="login" value="Login" class="btn btn-secondary">Already have an account</a>
                                </div>
                                 <?= form_close(); ?>
-                           
                             </div>
                             
                             <?php
-    } ?>
+                            } ?>
                         </div>
                       
                       
                         
                     </div>
 
-                    <div class="col-sm-3 col-md-2"></div>
+                    <div class="col-sm-3 col-md-12">
+                        <div class="loginRCard px-5">
+                        <div class="logo-k mb-5"> 
+                            <a class="navbar-brand" href="http://localhost/avenzur/">
+                                <img src="http://localhost/avenzur/assets/uploads/logos/avenzur-logov2-024.png" alt="AVENZUR">
+                            </a>
+                        </div>
+                        <h4 class="fw-bold letstart">Let's get started</h4>
+                        <div class="logsignBtns mt-3 d-flex justify-content-center">
+                            <button type="button" class="btn  text-white  active">Log in</button>
+                            <button type="button" class="btn  text-white px-4">Sign up</button>
+                        </div>
+                        <div>
+                            <div class="controls logcardinput">
+                             
+                            <input type="email" id="email" name="email" class="form-control" placeholder="Please enter mobile or phone number" required="required"/>
+                            
+                            </div>
+
+                            <button type="button" class="btn  text-white continueBtn">Continue</button>
+                        </div>
+
+                        </div>
+                    </div>
                 </div>
                 
             </div>
@@ -168,26 +123,37 @@
         $("#register").show();  
     }
 
-    var input = document.querySelector("#phone");
-    /*window.intlTelInput(input,({
-        initialCountry: "<?php //echo trim($country_code); ?>"
-    }));*/
+    /*var input = document.querySelector("#phone");
 
     window.intlTelInput(input,({
         initialCountry: "SA"
     }));
-    $('#phone').val("+966");
+    $('#phone').val("+966");*/
 
     $(document).ready(function() {
-        $('.iti__flag-container').click(function() { 
+        /*$('.iti__flag-container').click(function() { 
           var countryCode = $('.iti__selected-flag').attr('title');
           var countryCode = countryCode.replace(/[^0-9]/g,'')
           $('#phone').val("");
           $('#phone').val("+"+countryCode+" "+ $('#phone').val());
-       });
- 
-         
-    });
-         
+       });*/
 
+       $('#registerBtnCall').click(function (e) {
+            e.preventDefault(); 
+
+            var formData = $('#registrationForm').serialize();
+            $.ajax({
+                type: 'POST',
+                url: $('#registrationForm').attr('action'),
+                data: formData,
+                success: function (response) {
+                    console.log(response);
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+        });
+    });
+        
   </script>
