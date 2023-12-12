@@ -16,17 +16,18 @@ class Cart_ajax extends MY_Shop_Controller
         if ($this->shop_settings->private && !$this->loggedIn) {
             redirect('/login');
         }
-            $this->load->admin_model('settings_model');
+        $this->load->admin_model('settings_model');
     }
 
-    public function subscribe_newsletter(){
+    public function subscribe_newsletter()
+    {
         if ($_GET['newsletterEmail']) {
             $subscription = $this->settings_model->add_newsletter_subscription($_GET['newsletterEmail']);
-            if($subscription == 'failed'){
+            if ($subscription == 'failed') {
                 $this->sma->send_json(['status' => lang('error'), 'message' => 'Unable to add subscription']);
-            }else if($subscription == 'added'){
+            } else if ($subscription == 'added') {
                 $this->sma->send_json(['status' => lang('success'), 'message' => 'Subscription added successfully']);
-            }else if($subscription == 'exists'){
+            } else if ($subscription == 'exists') {
                 $this->sma->send_json(['status' => lang('error'), 'message' => 'Subscription already exists']);
             }
         }
@@ -46,19 +47,48 @@ class Cart_ajax extends MY_Shop_Controller
         }
     }
 
+    public function add_notification()
+    {
+        $this->load->library('ion_auth');
+//        $this->input->is_ajax_request() &&
+        if ($this->loggedIn) {
+            $productId = $this->input->get('product_id');
+            $userId = $this->ion_auth->user()->row()->id;
+
+            $isAlreadyExists = $this->db
+                ->where(['product_id' => $productId, 'user_id' => $userId])
+                ->count_all_results('products_notification');
+            if ($isAlreadyExists) {
+                echo json_encode(['success' => true, 'message' => 'Notification already added.']);
+                return true;
+            }
+
+            if ($this->db->insert('products_notification', [
+                'product_id' => $productId,
+                'user_id' => $userId,
+            ])) {
+                echo json_encode(['success' => true, 'message' => 'Notification added successfully.']);
+                return true;
+            }
+        }
+
+        echo json_encode(['success' => false, 'message' => 'You have to login first.']);
+        return true;
+    }
+
     public function add($product_id)
     {
         if ($this->input->is_ajax_request() || $this->input->post('quantity')) {
-            
+
             $product = $this->shop_model->getProductForCart($product_id);
-            $product_quantity_onhold =  $this->shop_model->getProductOnholdQty($product_id);
-            $quantity_in_stock =  intval($product->quantity) - $product_quantity_onhold;
+            $product_quantity_onhold = $this->shop_model->getProductOnholdQty($product_id);
+            $quantity_in_stock = intval($product->quantity) - $product_quantity_onhold;
 
             $product_to_add_quantity = 0;
             $cart_contents = $this->cart->contents();
             foreach ($cart_contents as $item) {
 
-                if($product->code == $item['code']){
+                if ($product->code == $item['code']) {
                     $product_to_add_quantity += $item['qty'];
                 }
             }
@@ -70,9 +100,9 @@ class Cart_ajax extends MY_Shop_Controller
             }*/
 
             $options = $this->shop_model->getProductVariants($product_id);
-            $price   = $this->sma->setCustomerGroupPrice((isset($product->special_price) && !empty($product->special_price) ? $product->special_price : $product->price), $this->customer_group);
-            $price   = $this->sma->isPromo($product) ? $product->promo_price : $price;
-            $option  = false;
+            $price = $this->sma->setCustomerGroupPrice((isset($product->special_price) && !empty($product->special_price) ? $product->special_price : $product->price), $this->customer_group);
+            $price = $this->sma->isPromo($product) ? $product->promo_price : $price;
+            $option = false;
             if (!empty($options)) {
                 if ($this->input->post('option')) {
                     foreach ($options as $op) {
@@ -88,73 +118,73 @@ class Cart_ajax extends MY_Shop_Controller
             $selected = $option ? $option['id'] : false;
             if (!$this->Settings->overselling && $this->checkProductStock($product, $quantity_added, $selected)) {
                 if ($this->input->is_ajax_request()) {
-                    if($quantity_in_stock > 0){
-                        $this->sma->send_json(['error' => 1, 'message' => lang('Only '.$quantity_in_stock.' pieces remaining')]);
-                    }else{
+                    if ($quantity_in_stock > 0) {
+                        $this->sma->send_json(['error' => 1, 'message' => lang('Only ' . $quantity_in_stock . ' pieces remaining')]);
+                    } else {
                         $this->sma->send_json(['error' => 1, 'message' => lang('item_out_of_stock')]);
-                    } 
+                    }
                 } else {
                     $this->session->set_flashdata('error', lang('item_out_of_stock'));
                     redirect($_SERVER['HTTP_REFERER']);
                 }
             }
-            $tax_rate   = $this->site->getTaxRateByID($product->tax_rate);
-            $ctax       = $this->site->calculateTax($product, $tax_rate, $price);
-            $tax        = $this->sma->formatDecimal($ctax['amount']);
-            $price      = $this->sma->formatDecimal($price);
+            $tax_rate = $this->site->getTaxRateByID($product->tax_rate);
+            $ctax = $this->site->calculateTax($product, $tax_rate, $price);
+            $tax = $this->sma->formatDecimal($ctax['amount']);
+            $price = $this->sma->formatDecimal($price);
             $unit_price = $this->sma->formatDecimal($product->tax_method ? $price + $tax : $price);
-            $id         = $this->Settings->item_addition ? md5($product->id) : md5(microtime());
+            $id = $this->Settings->item_addition ? md5($product->id) : md5(microtime());
 
             $sulfad_count = 0;
             $sulfad_in_cart = 0;
             $sulfad_code = '06285193000301';
 
-            if($product->code == '06285193000301'){
+            if ($product->code == '06285193000301') {
                 $sulfad_in_cart += ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1));
-                
+
                 $cart_contents = $this->cart->contents();
                 foreach ($cart_contents as $item) {
                     $product_code = $item['code'];
-                    if($product_code == $sulfad_code){
+                    if ($product_code == $sulfad_code) {
                         $sulfad_count += $item['qty'];
                         $this->cart->remove($item['rowid']);
                     }
                 }
             }
 
-            if($product->code == $sulfad_code){
+            if ($product->code == $sulfad_code) {
                 $total_sulfad = $sulfad_in_cart + $sulfad_count;
                 $discounted_quantity = floor($total_sulfad / 3);
 
                 $data = [
-                    'id'         => $id,
+                    'id' => $id,
                     'product_id' => $product->id,
-                    'qty'        => $total_sulfad,
-                    'disc_qty'   => $discounted_quantity,
-                    'name'       => $product->name,
-                    'slug'       => $product->slug,
-                    'code'       => $product->code,
-                    'price'      => $unit_price,
-                    'tax'        => $tax,
-                    'image'      => $product->image,
-                    'option'     => $selected,
-                    'options'    => !empty($options) ? $options : null,
+                    'qty' => $total_sulfad,
+                    'disc_qty' => $discounted_quantity,
+                    'name' => $product->name,
+                    'slug' => $product->slug,
+                    'code' => $product->code,
+                    'price' => $unit_price,
+                    'tax' => $tax,
+                    'image' => $product->image,
+                    'option' => $selected,
+                    'options' => !empty($options) ? $options : null,
                 ];
 
-            }else{
+            } else {
                 $data = [
-                    'id'         => $id,
+                    'id' => $id,
                     'product_id' => $product->id,
-                    'qty'        => ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1)),
-                    'disc_qty'   => 0,
-                    'name'       => $product->name,
-                    'slug'       => $product->slug,
-                    'code'       => $product->code,
-                    'price'      => $unit_price,
-                    'tax'        => $tax,
-                    'image'      => $product->image,
-                    'option'     => $selected,
-                    'options'    => !empty($options) ? $options : null,
+                    'qty' => ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1)),
+                    'disc_qty' => 0,
+                    'name' => $product->name,
+                    'slug' => $product->slug,
+                    'code' => $product->code,
+                    'price' => $unit_price,
+                    'tax' => $tax,
+                    'image' => $product->image,
+                    'option' => $selected,
+                    'options' => !empty($options) ? $options : null,
                 ];
 
             }
@@ -169,7 +199,7 @@ class Cart_ajax extends MY_Shop_Controller
             }
             $this->session->set_flashdata('error', lang('unable_to_add_item_to_cart'));
             redirect($_SERVER['HTTP_REFERER']);
-            
+
         }
     }
 
@@ -190,17 +220,20 @@ class Cart_ajax extends MY_Shop_Controller
         }
     }
 
-    public function get_countries() {
+    public function get_countries()
+    {
         $countries = $this->settings_model->getCountries();
         echo json_encode($countries);
         exit;
     }
 
-    public function get_cities_by_country_id($id) {
+    public function get_cities_by_country_id($id)
+    {
         $this->data['cities'] = $this->settings_model->getCities($id);
         echo json_encode($this->data['cities']);
         exit;
     }
+
     public function checkout()
     {
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
@@ -208,8 +241,8 @@ class Cart_ajax extends MY_Shop_Controller
             $this->session->set_flashdata('reminder', lang('cart_is_empty'));
             shop_redirect('products');
         }
-        $this->data['paypal']     = $this->shop_model->getPaypalSettings();
-        $this->data['skrill']     = $this->shop_model->getSkrillSettings();
+        $this->data['paypal'] = $this->shop_model->getPaypalSettings();
+        $this->data['skrill'] = $this->shop_model->getSkrillSettings();
         $this->data['country'] = $this->settings_model->getallCountry();
         $this->data['countries'] = $this->settings_model->getCountries();
 
@@ -217,9 +250,9 @@ class Cart_ajax extends MY_Shop_Controller
 //        $this->data['cities'] = $this->settings_model->getCities();
 //
 //        dd($this->data['cities']);
-        $this->data['addresses']  = $this->loggedIn ? $this->shop_model->getAddresses() : false;
+        $this->data['addresses'] = $this->loggedIn ? $this->shop_model->getAddresses() : false;
         $this->data['page_title'] = lang('checkout');
-        $this->data['all_categories']    = $this->shop_model->getAllCategories();
+        $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->page_construct('pages/checkout', $this->data);
     }
 
@@ -243,7 +276,7 @@ class Cart_ajax extends MY_Shop_Controller
             shop_redirect('products');
         }
         $this->data['page_title'] = lang('shopping_cart');
-        $this->data['all_categories']    = $this->shop_model->getAllCategories();
+        $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->page_construct('pages/cart', $this->data);
     }
 
@@ -272,11 +305,11 @@ class Cart_ajax extends MY_Shop_Controller
                 // $product = $this->site->getProductByID($item['product_id']);
                 $product = $this->shop_model->getProductForCart($item['product_id']);
                 $options = $this->shop_model->getProductVariants($product->id);
-                $price   = $this->sma->setCustomerGroupPrice(($product->special_price ?? $product->price), $this->customer_group);
-                $price   = $this->sma->isPromo($product) ? $product->promo_price : $price;
+                $price = $this->sma->setCustomerGroupPrice(($product->special_price ?? $product->price), $this->customer_group);
+                $price = $this->sma->isPromo($product) ? $product->promo_price : $price;
                 // $price = $this->sma->isPromo($product) ? $product->promo_price : $product->price;
 
-                if($this->input->post('qty', true) > 3){
+                if ($this->input->post('qty', true) > 3) {
                     $this->sma->send_json(['error' => 1, 'message' => 'Maximum allowed order 3 pieces']);
                 }
 
@@ -297,36 +330,36 @@ class Cart_ajax extends MY_Shop_Controller
                     }
                 }
 
-                $tax_rate   = $this->site->getTaxRateByID($product->tax_rate);
-                $ctax       = $this->site->calculateTax($product, $tax_rate, $price);
-                $tax        = $this->sma->formatDecimal($ctax['amount']);
-                $price      = $this->sma->formatDecimal($price);
+                $tax_rate = $this->site->getTaxRateByID($product->tax_rate);
+                $ctax = $this->site->calculateTax($product, $tax_rate, $price);
+                $tax = $this->sma->formatDecimal($ctax['amount']);
+                $price = $this->sma->formatDecimal($price);
                 $unit_price = $this->sma->formatDecimal($product->tax_method ? $price + $tax : $price);
 
                 /* Sulfad Code For Update Starts */
                 $sulfad_code = '06285193000301';
                 $sulfad_new_quantity = $this->input->post('qty', true);
 
-                if($product->code == $sulfad_code){
+                if ($product->code == $sulfad_code) {
                     $discounted_quantity = floor($sulfad_new_quantity / 3);
 
                     $data = [
-                        'rowid'  => $rowid,
-                        'price'  => $unit_price,
-                        'tax'    => $tax,
-                        'qty'    => $this->input->post('qty', true),
-                        'disc_qty'   => $discounted_quantity,
+                        'rowid' => $rowid,
+                        'price' => $unit_price,
+                        'tax' => $tax,
+                        'qty' => $this->input->post('qty', true),
+                        'disc_qty' => $discounted_quantity,
                         'option' => $selected,
                     ];
                     if ($this->cart->update($data)) {
                         $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_updated')]);
                     }
-                }else{
+                } else {
                     $data = [
-                        'rowid'  => $rowid,
-                        'price'  => $unit_price,
-                        'tax'    => $tax,
-                        'qty'    => $this->input->post('qty', true),
+                        'rowid' => $rowid,
+                        'price' => $unit_price,
+                        'tax' => $tax,
+                        'qty' => $this->input->post('qty', true),
                         'option' => $selected,
                     ];
                     if ($this->cart->update($data)) {
@@ -344,7 +377,7 @@ class Cart_ajax extends MY_Shop_Controller
         if ($product->type == 'service' || $product->type == 'digital') {
             return false;
         }
-       
+
         $chcek = [];
         if ($product->type == 'standard') {
             $quantity = 0;
@@ -354,9 +387,9 @@ class Cart_ajax extends MY_Shop_Controller
             //         $quantity += $pi->quantity_balance;
             //     }
             // }
-            $product_quantity =  $this->shop_model->getProductOnholdQty($product->id);
-            $quantity =  intval($product->quantity) - $product_quantity;
-           //echo $quantity;exit;
+            $product_quantity = $this->shop_model->getProductOnholdQty($product->id);
+            $quantity = intval($product->quantity) - $product_quantity;
+            //echo $quantity;exit;
             $chcek[] = ($qty <= $quantity);
         } elseif ($product->type == 'combo') {
             $combo_items = $this->site->getProductComboItems($product->id, $this->shop_settings->warehouse);
@@ -368,13 +401,13 @@ class Cart_ajax extends MY_Shop_Controller
                     //         $quantity += $pi->quantity_balance;
                     //     }
                     // }
-                    $product_quantity =  $this->shop_model->getProductOnholdQty($product->id);
-                    $quantity =  intval($product->quantity) - $product_quantity;
+                    $product_quantity = $this->shop_model->getProductOnholdQty($product->id);
+                    $quantity = intval($product->quantity) - $product_quantity;
                     $chcek[] = (($combo_item->qty * $qty) <= $quantity);
                 }
             }
         }
-      
+
         return empty($chcek) || in_array(false, $chcek);
     }
 }

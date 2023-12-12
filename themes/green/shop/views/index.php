@@ -452,8 +452,20 @@
                             
                                 
                             </div>
-                            
-                            <div> <button type="button" data-id="<?= $sp->id; ?>" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
+
+                            <div>
+                                <?php if ($sp->quantity == 0): ?>
+                                <button type="button" data-id="<?= $sp->id; ?>"
+                                        class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark out-of-stock-notification">Out of stock
+                                    <span class="plus btn-plus"><i class="bi bi-bell-fill" style="font-size: 18px;"></i></span>
+                                </button>
+                                <?php else: ?>
+                                <button type="button" data-id="<?= $sp->id; ?>"
+                                        class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add
+                                    to cart
+                                </button>
+                                <?php endif; ?>
+                            </div>
                         </div> 
                         </div> 
                         

@@ -865,6 +865,45 @@ $(document).ready(function () {
     });
   });
 
+  $(document).on("click", ".out-of-stock-notification", function (t) {
+      t.preventDefault();
+      var productId = $(this).attr("data-id");
+      swal({
+          title: "Notification Confirmation",
+          text: "Are you sure you to receive the notification when the product is available in the stock?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes"
+      }).then((result) => {
+          if (result === true) {
+              $.ajax({
+                  url: site.site_url + "cart/add_notification",
+                  type: "GET",
+                  dataType: "json",
+                  data: {
+                      product_id: productId,
+                  },
+              }).done(function (response) {
+                if(response.success === true) {
+                  $.toast({
+                    heading: "Success",
+                    text: "Subscribed to notification.",
+                    position: "top-right",
+                    showHideTransition: "slide",
+                    icon: "success",
+                  });
+                } else {
+                  sa_alert("Error!", response.message, "error", !0)
+                }
+              });
+          }
+      }).catch(function (error) {
+          console.log("Canceled");
+      });
+  });
+
   $("#same_as_billing").change(function (t) {
     $(this).is(":checked") &&
       ($("#shipping_line1").val($("#billing_line1").val()).change(),

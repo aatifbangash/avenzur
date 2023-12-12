@@ -34,4 +34,10 @@ class Cron extends MY_Controller
             }
         }
     }
+
+    public function products_notification()
+    {
+//        SET CRONJOB:- php index.php admin/cron products_notification
+        dd('Product notifications');
+    }
 }
