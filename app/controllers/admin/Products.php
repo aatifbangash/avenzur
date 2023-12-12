@@ -29,8 +29,9 @@ class Products extends MY_Controller
         $upload_path = $this->upload_path.'temp/';
 
         $excelFile = $upload_path.'internation_bcs.xlsx';
+        echo $excelFile;exit;
         $spreadsheet = $this->excel->load($excelFile);
-        print_r($spreadsheet);exit;
+        
         // Get the active sheet
         $sheet = $spreadsheet->getActiveSheet();
 
