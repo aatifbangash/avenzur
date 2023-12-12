@@ -11,10 +11,10 @@
 } ?>
             <?php $u = mt_rand(); ?>
             <label for="username<?= $u; ?>" class="control-label"><?= lang('identity'); ?></label>
-            <input type="button" name="identity" id="username<?= $u; ?>" class="form-control" value="" required placeholder="<?= lang('Email or Mobile'); ?>">
+            <input type="text" name="identity" id="username<?= $u; ?>" class="form-control" value="" required placeholder="<?= lang('Email or Mobile'); ?>">
         </div>
         
-        <button type="submit" value="login" name="login" class="btn btn-block btn-success"><?= lang('login'); ?></button>
+        <button id="loginBtnCall" value="login" name="login" class="btn btn-block btn-success"><?= lang('login'); ?></button>
     </div>
 </div>
 <?= form_close(); ?>
