@@ -26,39 +26,44 @@ class Products extends MY_Controller
     }
 
     public function update_intl_barcode(){
-        $this->load->library('excel');
-        $upload_path = $this->upload_path.'temp/';
 
-        $excelFile = 'https://tododev.xyz/pharmacy/'.$upload_path.'internation_bcs.xlsx';
-        
-        $spreadsheet = $this->excel->load($excelFile);
-        
-        // Get the active sheet
-        $sheet = $spreadsheet->getActiveSheet();
+        $csvFile = $this->upload_path . 'temp/internation_bcs.csv';
 
-        // Iterate through rows starting from the second row (assuming the first row contains headers)
-        foreach ($sheet->getRowIterator(2) as $row) {
-            echo '<pre>';
-            print_r($row);
-            exit;
-            $rowData = $row->getValues();
-
-            // Get the code and ic values from the Excel row
-            $excelCode = $rowData['B']; // Assuming 'B' is the column for the code in your Excel file
-            $ic = $rowData['C']; // Assuming 'C' is the column for the ic in your Excel file
-
+        if (!file_exists($csvFile)) {
+            echo 'CSV file not found.';
+            return;
+        }
+    
+        // Read the CSV file
+        $handle = fopen($csvFile, 'r');
+    
+        // Check if the file was opened successfully
+        if ($handle === false) {
+            echo 'Error opening CSV file.';
+            return;
+        }
+    
+        // Iterate through rows in the CSV file
+        while (($rowData = fgetcsv($handle)) !== false) {
+            // Assuming 'B' and 'C' are the columns for 'code' and 'ic' respectively
+            $excelCode = $rowData[1]; // CSV is 0-indexed
+            $ic = $rowData[2];
+    
             // Find the product in the database based on the code
             $product = $this->db->get_where('sma_products', ['code' => $excelCode])->row();
-
+    
             if ($product) {
-                // Update the code in the database with the ic from Excel
-                $this->db->where('id', $product->id); // Assuming 'id' is the primary key column
+                // Update the code in the database with the ic from CSV
+                $this->db->where('id', $product->id);
                 $this->db->update('sma_products', ['code' => $ic]);
                 echo "Updated product with code $excelCode. New code: $ic<br>";
             } else {
                 echo "Product with code $excelCode not found in the database.<br>";
             }
         }
+    
+        // Close the file handle
+        fclose($handle);
     }
 
     public function setProductSlugs(){
