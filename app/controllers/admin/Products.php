@@ -26,6 +26,7 @@ class Products extends MY_Controller
     }
 
     public function update_intl_barcode(){
+        $this->load->library('excel');
         $upload_path = $this->upload_path.'temp/';
 
         $excelFile = $upload_path.'internation_bcs.xlsx';
