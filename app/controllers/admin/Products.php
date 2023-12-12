@@ -25,6 +25,38 @@ class Products extends MY_Controller
         $this->popup_attributes    = ['width' => '900', 'height' => '600', 'window_name' => 'sma_popup', 'menubar' => 'yes', 'scrollbars' => 'yes', 'status' => 'no', 'resizable' => 'yes', 'screenx' => '0', 'screeny' => '0'];
     }
 
+    public function update_intl_barcode(){
+        $upload_path = $this->upload_path;
+        echo 'Upload Path: '.$upload_path;exit;
+
+        $excelFile = 'path/to/your/excel/file.xlsx';
+        $spreadsheet = $this->excel->load($excelFile);
+
+        // Get the active sheet
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Iterate through rows starting from the second row (assuming the first row contains headers)
+        foreach ($sheet->getRowIterator(2) as $row) {
+            $rowData = $row->getValues();
+
+            // Get the code and ic values from the Excel row
+            $excelCode = $rowData['B']; // Assuming 'B' is the column for the code in your Excel file
+            $ic = $rowData['C']; // Assuming 'C' is the column for the ic in your Excel file
+
+            // Find the product in the database based on the code
+            $product = $this->db->get_where('sma_products', ['code' => $excelCode])->row();
+
+            if ($product) {
+                // Update the code in the database with the ic from Excel
+                $this->db->where('id', $product->id); // Assuming 'id' is the primary key column
+                $this->db->update('sma_products', ['code' => $ic]);
+                echo "Updated product with code $excelCode. New code: $ic<br>";
+            } else {
+                echo "Product with code $excelCode not found in the database.<br>";
+            }
+        }
+    }
+
     public function setProductSlugs(){
         $products = $this->products_model->getAllProducts();
 
