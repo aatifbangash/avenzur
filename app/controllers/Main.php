@@ -393,9 +393,9 @@ class Main extends MY_Shop_Controller
             $message = 'Your One Time Password for Avenzur.com is '.$otp;
 
             if($medium == 'email'){
-                $this->sma->send_sms($identifier, $opt);
-            }else{
                 $this->sma->send_email($email, 'OTP Avenzur.com', $message, null, null, $attachment, [], []);
+            }else{
+                $this->sma->send_sms($identifier, $opt);
             }
 
             return true;
