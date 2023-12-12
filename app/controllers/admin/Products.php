@@ -27,8 +27,8 @@ class Products extends MY_Controller
 
     public function update_intl_barcode(){
 
-        $csvFile = $this->upload_path . 'temp/internation_bcs.csv';
-
+        $csvFile = 'https://avenzur.com/assets/uploads/temp/internation_bcs.csv';
+        
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
             return;
