@@ -759,7 +759,7 @@ input.qty.Qnum {
 }
 
 .dropdown-menu.myaccountForm {
-  min-width: 240px !important;
+  min-width: 394px !important;
 }
 #ui-id-1 li {
   list-style-type: none;
@@ -1486,7 +1486,7 @@ h4.letstart {
 }
 .loginRCard {
   background: #f1f1f1;
-  width: 35% !important;
+  width: 35%;
   margin-inline: auto;
   text-align: center;
   padding-block: 30px;
@@ -1523,6 +1523,22 @@ button.continueBtn:hover {
   border-radius: 0;
   font-size: 19px;
   padding-block: 10px;
+}
+.inputs input {
+  width: 40px;
+  height: 40px;
+  border-color: #662d9178;
+}
+button.modalcloseBtn {
+  position: absolute;
+  right: -15px;
+  top: -13px;
+  border: none;
+  background: #c1c1c1;
+  color: white;
+  padding: 6px 11px;
+  border-radius: 30px;
+  font-size: 20px;
 }
 @media screen and (max-width: 500px) {
   .myaccountForm.cartform {
