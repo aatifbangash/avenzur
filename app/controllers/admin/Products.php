@@ -29,7 +29,6 @@ class Products extends MY_Controller
         $upload_path = $this->upload_path.'temp/';
 
         $excelFile = $upload_path.'internation_bcs.xlsx';
-        echo $excelFile;exit;
         $spreadsheet = $this->excel->load($excelFile);
         
         // Get the active sheet
@@ -37,7 +36,9 @@ class Products extends MY_Controller
 
         // Iterate through rows starting from the second row (assuming the first row contains headers)
         foreach ($sheet->getRowIterator(2) as $row) {
-
+            echo '<pre>';
+            print_r($row);
+            exit;
             $rowData = $row->getValues();
 
             // Get the code and ic values from the Excel row
