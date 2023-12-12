@@ -157,12 +157,11 @@
 
         $('#loginBtnCall').click(function (e) {
             e.preventDefault(); 
-            console.log('Here we are....');
 
-            /*var formData = $('#registrationForm').serialize();
+            var formData = $('#loginForm').serialize();
             $.ajax({
                 type: 'POST',
-                url: $('#registrationForm').attr('action'),
+                url: $('#loginForm').attr('action'),
                 data: formData,
                 success: function (response) {
                     console.log(response);
@@ -170,7 +169,7 @@
                 error: function (error) {
                     console.error(error);
                 }
-            });*/
+            });
         });
     });
         

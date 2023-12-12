@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
-<?= form_open('login', 'class="validate"'); ?>
+<?= form_open('login', 'class="validate" id="loginForm"'); ?>
 <div class="row" id="login">
     <div class="col-md-12">
         <div class="form-group">
