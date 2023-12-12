@@ -79,7 +79,7 @@
                     </div>
 
                     <div class="col-sm-3 col-md-12">
-                        <div class="loginRCard px-5">
+                    <div class="loginRCard px-5">
                             <div class="logo-k mb-5"> 
                                 <a class="navbar-brand" href="http://localhost/avenzur/">
                                     <img src="http://localhost/avenzur/assets/uploads/logos/avenzur-logov2-024.png" alt="AVENZUR">
