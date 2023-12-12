@@ -38,6 +38,45 @@ class Cron extends MY_Controller
     public function products_notification()
     {
 //        SET CRONJOB:- php index.php admin/cron products_notification
-        dd('Product notifications');
+        $this->db->select('pn.id, u.email, u.first_name, u.last_name, p.id as pid, p.name as pname, p.slug pslug, p.quantity, pn.is_notified');
+        $this->db->from('sma_products p');
+        $this->db->join('sma_products_notification pn', 'p.id = pn.product_id');
+        $this->db->join('sma_users u', 'u.id = pn.user_id');
+        $this->db->where('pn.is_notified', 0);
+//        $this->db->where('p.quantity >', 0);
+
+        $query = $this->db->get();
+
+        $result = $query->result();
+        if (!empty($result)) {
+            $subject = "New Products Added to Stock";
+
+            foreach ($result as $row) {
+
+                $body = "<p>Hello {$row->first_name} {$row->last_name},</p>";
+                $body .= "<p>We are excited to inform you that new products have been added to our stock. You can now visit our website and explore the latest additions to our inventory.</p>";
+                $body .= "<p><strong>Product Information:</strong></p>";
+                $body .= "<ul>";
+                $body .= "<li><strong>Product Name:</strong> {$row->pname}</li>";
+                $body .= "</ul>";
+                $body .= "<p>Click the following link to view the products and make a purchase or add them to your cart: <a href='" . site_url("product/{$row->pslug}") . "'>View Product</a></p>";
+                $body .= "<p>Thank you for choosing our services!</p>";
+echo $body;
+                // Send the email notification
+                $sent = true;
+//              $sent = $this->sma->send_email(
+//                    $row->email,
+//                    $subject,
+//                    $body
+//                );
+
+                if($sent) {
+                    $this->db
+                        ->set('is_notified', 1)
+                        ->where(['id' => $row->id, 'is_notified' => 0])
+                        ->update('products_notification');
+                }
+            }
+        }
     }
 }

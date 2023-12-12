@@ -56,7 +56,7 @@ class Cart_ajax extends MY_Shop_Controller
             $userId = $this->ion_auth->user()->row()->id;
 
             $isAlreadyExists = $this->db
-                ->where(['product_id' => $productId, 'user_id' => $userId])
+                ->where(['product_id' => $productId, 'user_id' => $userId, 'is_notified' => 0])
                 ->count_all_results('products_notification');
             if ($isAlreadyExists) {
                 echo json_encode(['success' => true, 'message' => 'Notification already added.']);
