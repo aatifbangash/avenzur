@@ -26,10 +26,9 @@ class Products extends MY_Controller
     }
 
     public function update_intl_barcode(){
-        $upload_path = $this->upload_path;
-        echo 'Upload Path: '.$upload_path;exit;
+        $upload_path = $this->upload_path.'temp/';
 
-        $excelFile = 'path/to/your/excel/file.xlsx';
+        $excelFile = $upload_path.'internation_bcs.xlsx';
         $spreadsheet = $this->excel->load($excelFile);
 
         // Get the active sheet
