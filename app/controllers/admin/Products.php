@@ -29,8 +29,8 @@ class Products extends MY_Controller
         $this->load->library('excel');
         $upload_path = $this->upload_path.'temp/';
 
-        $excelFile = $upload_path.'internation_bcs.xlsx';
-        echo $excelFile;exit;
+        $excelFile = 'https://tododev.xyz/pharmacy/'.$upload_path.'internation_bcs.xlsx';
+        
         $spreadsheet = $this->excel->load($excelFile);
         
         // Get the active sheet
