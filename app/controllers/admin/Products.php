@@ -25,6 +25,47 @@ class Products extends MY_Controller
         $this->popup_attributes    = ['width' => '900', 'height' => '600', 'window_name' => 'sma_popup', 'menubar' => 'yes', 'scrollbars' => 'yes', 'status' => 'no', 'resizable' => 'yes', 'screenx' => '0', 'screeny' => '0'];
     }
 
+    public function update_intl_barcode(){
+
+        $csvFile = 'https://avenzur.com/assets/uploads/temp/internation_bcs.csv';
+        
+        if (!file_exists($csvFile)) {
+            echo 'CSV file not found.';
+            return;
+        }
+    
+        // Read the CSV file
+        $handle = fopen($csvFile, 'r');
+    
+        // Check if the file was opened successfully
+        if ($handle === false) {
+            echo 'Error opening CSV file.';
+            return;
+        }
+    
+        // Iterate through rows in the CSV file
+        while (($rowData = fgetcsv($handle)) !== false) {
+            // Assuming 'B' and 'C' are the columns for 'code' and 'ic' respectively
+            $excelCode = $rowData[1]; // CSV is 0-indexed
+            $ic = $rowData[2];
+    
+            // Find the product in the database based on the code
+            $product = $this->db->get_where('sma_products', ['code' => $excelCode])->row();
+    
+            if ($product) {
+                // Update the code in the database with the ic from CSV
+                $this->db->where('id', $product->id);
+                $this->db->update('sma_products', ['code' => $ic]);
+                echo "Updated product with code $excelCode. New code: $ic<br>";
+            } else {
+                echo "Product with code $excelCode not found in the database.<br>";
+            }
+        }
+    
+        // Close the file handle
+        fclose($handle);
+    }
+
     public function setProductSlugs(){
         $products = $this->products_model->getAllProducts();
 

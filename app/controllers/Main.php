@@ -374,13 +374,13 @@ class Main extends MY_Shop_Controller
         $this->page_construct('user/profile', $this->data);
     }
 
-    public function sendOTP($company_id, $email, $medium){
+    public function sendOTP($company_id, $identifier, $medium){
 
         $otp = mt_rand(100000, 999999);
 
         $otp_data = [
             'medium' => $medium,
-            'identifier' => $email,
+            'identifier' => $identifier,
             'otp' => $otp,
             'userid' => $company_id,
             'date_updated' => date('Y-m-d h:i:s')
@@ -391,7 +391,13 @@ class Main extends MY_Shop_Controller
         if($opt_id){
             $attachment = null;
             $message = 'Your One Time Password for Avenzur.com is '.$otp;
-            //$this->sma->send_email($email, 'OTP Avenzur.com', $message, null, null, $attachment, [], []);
+
+            if($medium == 'email'){
+                $this->sma->send_email($email, 'OTP Avenzur.com', $message, null, null, $attachment, [], []);
+            }else{
+                $this->sma->send_sms($identifier, $otp);
+            }
+
             return true;
         }else{
             return false;
@@ -408,9 +414,15 @@ class Main extends MY_Shop_Controller
         }
 
         if ($this->form_validation->run() == true){
-            $company_data = $this->shop_model->getUniqueCustomer('email', $identity);
-
-            $otp_sent = $this->sendOTP($company_data->id, $identity, 'email');
+            if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+                $type = 'email';
+                $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
+            }else{
+                $type = 'mobile';
+                $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
+            }
+            
+            $otp_sent = $this->sendOTP($company_data->id, $identity, $type);
 
             if($otp_sent){
                 echo json_encode(['status' => 'success', 'message' => 'OTP is sent for verification']);

@@ -450,6 +450,36 @@ class Sma
         return $rn;
     }
 
+    public function send_sms($receiver_number, $variable){
+        $data = [
+            'userName' => 'phmc',
+            'numbers' => $receiver_number,
+            'userSender' => 'phmc',
+            'apiKey' => 'd3a916960217e3c7bc0af6ed80d1435c',
+            'msg' => 'Your OTP verification code is '.$variable,
+        ];
+
+        // Convert the data to JSON format
+        $jsonData = json_encode($data);
+
+        // Initialize cURL session
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://www.msegat.com/gw/sendsms.php');
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+        ]);
+
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            echo 'cURL Error: ' . curl_error($ch);
+        }
+
+        curl_close($ch);
+    }
+
     public function send_email($to, $subject, $message, $from = null, $from_name = null, $attachment = null, $cc = null, $bcc = null)
     {
         // if (DEMO) {

@@ -204,6 +204,23 @@
                 }
             });
         });
+
+        $('#loginBtnCall').click(function (e) {
+            e.preventDefault(); 
+
+            var formData = $('#loginForm').serialize();
+            $.ajax({
+                type: 'POST',
+                url: $('#loginForm').attr('action'),
+                data: formData,
+                success: function (response) {
+                    console.log(response);
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+        });
     });
         
   </script>
