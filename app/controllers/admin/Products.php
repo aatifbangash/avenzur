@@ -30,12 +30,13 @@ class Products extends MY_Controller
 
         $excelFile = $upload_path.'internation_bcs.xlsx';
         $spreadsheet = $this->excel->load($excelFile);
-
+        print_r($spreadsheet);exit;
         // Get the active sheet
         $sheet = $spreadsheet->getActiveSheet();
 
         // Iterate through rows starting from the second row (assuming the first row contains headers)
         foreach ($sheet->getRowIterator(2) as $row) {
+
             $rowData = $row->getValues();
 
             // Get the code and ic values from the Excel row
