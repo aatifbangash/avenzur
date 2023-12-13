@@ -30,29 +30,79 @@
 
 
                     <div class="col-sm-3 col-md-12">
-                        <div class="loginRCard px-5">
-                        <div class="logo-k mb-5"> 
-                            <a class="navbar-brand" href="http://localhost/avenzur/">
-                                <img src="http://localhost/avenzur/assets/uploads/logos/avenzur-logov2-024.png" alt="AVENZUR">
-                            </a>
-                        </div>
-                        <h4 class="fw-bold letstart">Let's get started</h4>
-                        <div class="logsignBtns mt-3 d-flex justify-content-center">
-                            <button type="button" class="btn  text-white  active" onclick="LoginFn(this);" >Log in</button>
-                            <button type="button" class="btn  text-white px-4" onclick="registerBtn(this);" >Sign up</button>
-                        </div>
-                        <div>
-                            <div class="controls logcardinput">
-                             
-                            <input type="email" id="email" name="email" class="form-control" placeholder="Please enter mobile or phone number" required="required"/>
-                            
+                    <div class="loginRCard px-5">
+                            <div class="logo-k mb-5"> 
+                                <a class="navbar-brand" href="http://localhost/avenzur/">
+                                    <img src="http://localhost/avenzur/assets/uploads/logos/avenzur-logov2-024.png" alt="AVENZUR">
+                                </a>
                             </div>
+                            <h4 class="fw-bold letstart">Let's get started</h4>
+                            <div class="logsignBtns mt-3 d-flex justify-content-center">
+                                <button type="button" class="btn  text-white  ">Log in</button>
+                                <button type="button" class="btn  text-white px-4 active">Sign up</button>
+                            </div>
+                            <div>
+                                <div class="controls logcardinput">
+                                
+                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter mobile or phone number" required="required"/>
+                                
+                                </div>
 
-                            <button type="button" class="btn  text-white continueBtn">Continue</button>
-                        </div>
+                                <button type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#exampleModal">Continue</button>
+                            </div>
+                            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content px-4 rounded-4">
+                                        <div class="modal-header border-0">
+                                            
+                                            <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+                                        </div>
+                                        <div class="modal-body ">
+                                            <div class="smsOTP">
+                                                <div class="text-center px-5">
+                                                    <h2>Verify your phone</h2>
+                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to +921234567 Via SMS</h5>
+                                                </div>
+                                                <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="first" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="second" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="third" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="fourth" maxlength="1" /> 
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="fifth" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="sixth" maxlength="1" />
+                                                </div>
+                                                <div  class="text-center">
+                                                    <h6 class="m-0 mt-2">0.13 <span class="ms-2 fw-semibold opacity-50">Resend OTP Via SMS</span></h6>
+                                                </div>
+                                            </div>
 
+                                            <div class="emailOTP">
+                                                <div class="text-center px-5">
+                                                    <h2>Verify your email</h2>
+                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to example@gmail.com</h5>
+                                                </div>
+                                                <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="first" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="second" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="third" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="fourth" maxlength="1" /> 
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="fifth" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="sixth" maxlength="1" />
+                                                </div>
+                                                <div  class="text-center">
+                                                    <h6 class="m-0 mt-2">0.13 <span class="ms-2 fw-semibold opacity-50">Resend OTP </span></h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-0 pb-4">
+                                        
+                                        <button type="button" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
                 </div>
                 
             </div>
