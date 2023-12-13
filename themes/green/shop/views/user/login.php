@@ -42,6 +42,10 @@
                                 <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerBtn(this);">Sign up</button>
                             </div>
                             <div>
+                                <?php 
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
+                                    echo form_open('register', $attrib); 
+                                ?>
                                 <div class="controls logcardinput">
                                 
                                 <input type="email" id="email" name="email" class="form-control" placeholder="Please enter mobile or phone number" required="required"/>
@@ -49,7 +53,11 @@
                                 </div>
 
                                 <button type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#exampleModal">Continue</button>
+                                <?= form_close(); ?>
                             </div>
+
+                            
+                            <!-- Modal Starts -->
                             <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-dialog-centered">
                                     <div class="modal-content px-4 rounded-4">
@@ -101,6 +109,7 @@
                                     </div>
                                 </div>
                                 </div>
+                                <!-- Modal Ends -->
                             </div>
                         </div>
                 </div>
