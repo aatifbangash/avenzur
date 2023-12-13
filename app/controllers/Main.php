@@ -408,7 +408,7 @@ class Main extends MY_Shop_Controller
         $this->form_validation->set_rules('identity', lang('Email or Mobile'), 'required');
 
         if ($this->form_validation->run('') == true) {
-            $identity    = strtolower($this->input->post('identity'));
+            $identity    = strtolower($this->input->post('identifier_input'));
             $opt_part1    = strtolower($this->input->post('opt_part1'));
             $opt_part2    = strtolower($this->input->post('opt_part2'));
             $opt_part3    = strtolower($this->input->post('opt_part3'));

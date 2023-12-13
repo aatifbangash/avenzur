@@ -221,6 +221,8 @@
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
                         $('#loginModal').modal('show');
+                        document.getElementById('identifier').value = document.getElementById('identity').value;
+                        document.getElementById('identifier_input').value = document.getElementById('identity').value;
                     } else {
                         alert('Login failed. Please try again.');
                     }
