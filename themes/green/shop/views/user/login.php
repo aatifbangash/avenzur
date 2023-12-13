@@ -140,7 +140,7 @@
                                     </div>
                                 </div>
                                 </div>
-                                <!-- Modal Ends -->
+                                <!-- Login Modal Ends -->
                             </div>
                         </div>
                 </div>
@@ -207,7 +207,11 @@
                 url: $('#loginForm').attr('action'),
                 data: formData,
                 success: function (response) {
-                    console.log(response);
+                    if (response.success) {
+                        $('#loginModal').modal('show');
+                    } else {
+                        alert('Login failed. Please try again.');
+                    }
                 },
                 error: function (error) {
                     console.error(error);
