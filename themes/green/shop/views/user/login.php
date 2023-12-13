@@ -41,18 +41,33 @@
                                 <button type="button" id="loginBtn" class="btn  text-white  " onclick="LoginFn(this);">Log in</button>
                                 <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerBtn(this);">Sign up</button>
                             </div>
-                            <div>
+                            <div id="registerBlock">
                                 <?php 
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
                                     echo form_open('register', $attrib); 
                                 ?>
                                 <div class="controls logcardinput">
                                 
-                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter mobile or phone number" required="required"/>
+                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email" required="required"/>
                                 
                                 </div>
 
-                                <button type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#exampleModal">Continue</button>
+                                <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#exampleModal">Continue</button>
+                                <?= form_close(); ?>
+                            </div>
+
+                            <div id="loginBlock">
+                                <?php 
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
+                                    echo form_open('login', $attrib); 
+                                ?>
+                                <div class="controls logcardinput">
+                                
+                                <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
+                                
+                                </div>
+
+                                <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#exampleModal">Continue</button>
                                 <?= form_close(); ?>
                             </div>
 
