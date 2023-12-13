@@ -212,10 +212,8 @@
                 url: $('#loginForm').attr('action'),
                 data: formData,
                 success: function (response) {
-                    console.log(response);
                     var respObj = JSON.parse(response);
-                    console.log(respObj);
-                    if (respObj.status == 'success') {
+                    if (respObj.status == 'success' || respObj.code == 1) {
                         $('#loginModal').modal('show');
                     } else {
                         alert('Login failed. Please try again.');
