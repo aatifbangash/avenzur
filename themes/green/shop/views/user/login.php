@@ -190,7 +190,12 @@
                 url: $('#registrationForm').attr('action'),
                 data: formData,
                 success: function (response) {
-                    console.log(response);
+                    var respObj = JSON.parse(response);
+                    if (respObj.status == 'success') {
+                        $('#registerModal').modal('show');
+                    } else {
+                        alert('Signup failed. Please try again.');
+                    }
                 },
                 error: function (error) {
                     console.error(error);
