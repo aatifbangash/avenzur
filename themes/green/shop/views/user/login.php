@@ -131,7 +131,7 @@
                                                     <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
                                                     <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
                                                     <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
-                                                    <input type="hidden" name="identifier_input" value="" />
+                                                    <input type="hidden" id="identifier_input" name="identifier_input" value="" />
                                                 </div>
                                                 <?= form_close(); ?>
                                                 <div  class="text-center">
