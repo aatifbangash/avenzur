@@ -38,8 +38,8 @@
                             </div>
                             <h4 class="fw-bold letstart">Let's get started</h4>
                             <div class="logsignBtns mt-3 d-flex justify-content-center">
-                                <button type="button" class="btn  text-white  " onclick="LoginFn(this);">Log in</button>
-                                <button type="button" class="btn  text-white px-4 active" onclick="registerBtn(this);">Sign up</button>
+                                <button type="button" id="loginBtn" class="btn  text-white  " onclick="LoginFn(this);">Log in</button>
+                                <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerBtn(this);">Sign up</button>
                             </div>
                             <div>
                                 <div class="controls logcardinput">
@@ -112,18 +112,14 @@
  <script>
     // Vanilla Javascript
 
-    function LoginFn(){ 
-        alert('Login Now');
-        //$(".register").hide();
-        //$("#register").hide();
-        //$(".loginform").show();
+    function LoginFn(obj){ 
+        $('#loginBtn').addClass("active");
+        $('#registerBtn').removeClass("active");
     }
 
-    function registerBtn(){
-        alert('Register Now');
-        //$(".loginform").hide();
-        //$(".register").show();
-        //$("#register").show();  
+    function registerBtn(obj){
+        $('#loginBtn').removeClass("active");
+        $('#registerBtn').addClass("active");
     }
 
     /*var input = document.querySelector("#phone");
