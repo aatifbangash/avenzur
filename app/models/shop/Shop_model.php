@@ -48,6 +48,18 @@ class Shop_model extends CI_Model
         return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
     }
 
+    public function validate_otp($identifer, $otp){
+        $uniqueColumns = array('identifer' => $identifer, 'otp' => $otp);
+        $this->db->where($uniqueColumns);
+        $query = $this->db->get('customer_otp');
+        $result = $query->result_array();
+        if($result){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
     public function getUniqueCustomer($type, $identifier){
         if($type == 'email'){
             return $this->db->get_where('companies', ['email' => $identifier], 1)->row();

@@ -404,6 +404,49 @@ class Main extends MY_Shop_Controller
         }
     }
 
+    public function login_otp(){
+        $this->form_validation->set_rules('identity', lang('Email or Mobile'), 'required');
+
+        if ($this->form_validation->run('') == true) {
+            $identity    = strtolower($this->input->post('identity'));
+            $opt_part1    = strtolower($this->input->post('opt_part1'));
+            $opt_part2    = strtolower($this->input->post('opt_part2'));
+            $opt_part3    = strtolower($this->input->post('opt_part3'));
+            $opt_part4    = strtolower($this->input->post('opt_part4'));
+            $opt_part5    = strtolower($this->input->post('opt_part5'));
+            $opt_part6    = strtolower($this->input->post('opt_part6'));
+
+            $this->load->library('ion_auth');
+        }
+
+        if ($this->form_validation->run() == true){
+            if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+                $type = 'email';
+                $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
+            }else{
+                $type = 'mobile';
+                $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
+            }
+            
+            if($company_data){
+
+                $otp = $opt_part1.$opt_part2.$opt_part3.$opt_part4.$opt_part5.$opt_part6;
+
+                $validate = $this->shop_model->validate_otp($identifer, $otp);
+                if($validate){
+                    echo json_encode(['status' => 'success', 'message' => 'OTP verification successfull']);
+                }else{
+                    echo json_encode(['status' => 'error', 'message' => 'OTP verification failed']);
+                }
+                
+            }else{
+                echo json_encode(['status' => 'error', 'message' => 'Data not found in system']);
+            }
+        }else{
+            $this->page_construct('user/login', $this->data);
+        }
+    }
+
     public function login(){
         $this->form_validation->set_rules('identity', lang('Email or Mobile'), 'required');
 
