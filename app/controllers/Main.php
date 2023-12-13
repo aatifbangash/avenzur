@@ -422,7 +422,11 @@ class Main extends MY_Shop_Controller
                 $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             }
             
-            $otp_sent = $this->sendOTP($company_data->id, $identity, $type);
+            if($company_data){
+                $otp_sent = $this->sendOTP($company_data->id, $identity, $type);
+            }else{
+                echo json_encode(['status' => 'error', 'message' => 'Data not found in system']);
+            }
 
             if($otp_sent){
                 echo json_encode(['status' => 'success', 'message' => 'OTP is sent for verification']);
