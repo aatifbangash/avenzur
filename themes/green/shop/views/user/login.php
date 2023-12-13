@@ -133,7 +133,7 @@
                                                     <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
                                                     <input type="hidden" id="identifier_input" name="identifier_input" value="" />
                                                 </div>
-                                                <?= form_close(); ?>
+                                                
                                                 <div  class="text-center">
                                                     <h6 class="m-0 mt-2">0.13 <span class="ms-2 fw-semibold opacity-50">Resend OTP Via SMS</span></h6>
                                                 </div>
@@ -141,8 +141,9 @@
 
                                         </div>
                                         <div class="modal-footer border-0 pb-4">
-                                            <button type="button" id="loginOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
+                                            <button type="submut" id="loginOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
                                         </div>
+                                        <?= form_close(); ?>
                                     </div>
                                 </div>
                                 </div>
@@ -233,7 +234,7 @@
             });
         });
 
-        $('#loginOtpBtn').click(function (e) {
+        /*$('#loginOtpBtn').click(function (e) {
             e.preventDefault(); 
 
             var formData = $('#loginOtpForm').serialize();
@@ -253,7 +254,7 @@
                     console.error(error);
                 }
             });
-        });
+        });*/
     });
         
   </script>

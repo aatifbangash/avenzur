@@ -405,7 +405,7 @@ class Main extends MY_Shop_Controller
     }
 
     public function login_otp(){
-        $this->form_validation->set_rules('identity', lang('Email or Mobile'), 'required');
+        $this->form_validation->set_rules('identifier_input', lang('Email or Mobile'), 'required');
 
         if ($this->form_validation->run('') == true) {
             $identity    = strtolower($this->input->post('identifier_input'));
