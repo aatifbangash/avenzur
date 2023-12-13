@@ -1539,6 +1539,11 @@ button.modalcloseBtn {
   border-radius: 30px;
   font-size: 20px;
 }
+.cartQuantity {
+  background: white;
+  padding: 4px 13px !important;
+  border-radius: 30px;
+}
 @media screen and (max-width: 500px) {
   .myaccountForm.cartform {
     left: -9px !important;

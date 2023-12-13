@@ -1114,32 +1114,38 @@ function initMap() {
           geocodeLatLng2(newPosition);
         });
 
-        $('#load_current_location-2').on('click', function(e) {
+        $("#load_current_location-2").on("click", function (e) {
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                function (position) {
-                  const userLocation = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                  };
+              function (position) {
+                const userLocation = {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                };
 
-                  document.getElementById('latitude').value = position.coords.latitude;
-                  document.getElementById('longitude').value = position.coords.longitude;
-                  marker.setPosition(userLocation);
-                  map.setCenter(userLocation);
-                  document.getElementById('manual-shipping-check-2').checked = false;
-                  document.getElementById('manual-shipping-address-2').style.display = 'none';
-                  geocodeLatLng2(userLocation);
-                },
-                function (error) {
-                  console.error('Error getting user location:', error);
-                },
-                {
-                  enableHighAccuracy: true
-                }
+                document.getElementById("latitude").value =
+                  position.coords.latitude;
+                document.getElementById("longitude").value =
+                  position.coords.longitude;
+                marker.setPosition(userLocation);
+                map.setCenter(userLocation);
+                document.getElementById(
+                  "manual-shipping-check-2"
+                ).checked = false;
+                document.getElementById(
+                  "manual-shipping-address-2"
+                ).style.display = "none";
+                geocodeLatLng2(userLocation);
+              },
+              function (error) {
+                console.error("Error getting user location:", error);
+              },
+              {
+                enableHighAccuracy: true,
+              }
             );
           }
-        })
+        });
       },
       function (error) {
         console.error("Error getting user location:", error);
@@ -1376,10 +1382,16 @@ function add_address(t) {
       // initialize();
       initMap();
 
-      document.getElementById("manual-shipping-check-2").onchange = function (e) {
+      document.getElementById("manual-shipping-check-2").onchange = function (
+        e
+      ) {
         document.getElementById("google-map-selected-address-2").value = "";
-        document.getElementById('address-country-dropdown-2').value = $("#address-country-dropdown-2 option:first").val();
-        document.getElementById('address-city-dropdown-2').value = $("#address-city-dropdown-2 option:first").val();
+        document.getElementById("address-country-dropdown-2").value = $(
+          "#address-country-dropdown-2 option:first"
+        ).val();
+        document.getElementById("address-city-dropdown-2").value = $(
+          "#address-city-dropdown-2 option:first"
+        ).val();
         document.getElementById("address-line-1").value = "";
         document.getElementById("address-city").value = "";
         document.getElementById("address-country").value = "";
@@ -1401,58 +1413,66 @@ function add_address(t) {
       $.ajax({
         url: site.base_url + "cart/get_countries",
         method: "GET",
-        success: function(jsonResponse) {
+        success: function (jsonResponse) {
           var response = JSON.parse(jsonResponse);
           $("#address-country-dropdown-2").empty();
-          if(response.length > 0) {
-            $("#address-country-dropdown-2").append('<option value="0">--SELECT--</option>');
-            response.forEach(function(city) {
-              $("#address-country-dropdown-2").append('<option value="' + city.id + '">' + city.name + '</option>');
+          if (response.length > 0) {
+            $("#address-country-dropdown-2").append(
+              '<option value="0">--SELECT--</option>'
+            );
+            response.forEach(function (city) {
+              $("#address-country-dropdown-2").append(
+                '<option value="' + city.id + '">' + city.name + "</option>"
+              );
             });
           }
         },
-        error: function() {
+        error: function () {
           console.error("Failed to fetch cities.");
-        }
+        },
       });
 
-      $("#address-country-dropdown-2").on("change", function() {
-        $('#address-city').val('');
+      $("#address-country-dropdown-2").on("change", function () {
+        $("#address-city").val("");
 
         let countryId = $(this).val();
         let selectedOption = $(this).find(":selected").text();
-        if(selectedOption != '--SELECT--') {
+        if (selectedOption != "--SELECT--") {
           $("#address-country").val(selectedOption);
         } else {
-          $("#address-country").val('');
+          $("#address-country").val("");
         }
 
         //load cities
         $.ajax({
           url: site.base_url + "cart/get_cities_by_country_id/" + countryId, // Replace with the actual endpoint to fetch cities
           method: "GET",
-          success: function(jsonResponse) {
+          success: function (jsonResponse) {
             var response = JSON.parse(jsonResponse);
             $("#address-city-dropdown-2").empty();
-            if(response.length > 0) {
-              $("#address-city-dropdown-2").append('<option value="0">--SELECT--</option>');
-              response.forEach(function(city) {
-                $("#address-city-dropdown-2").append('<option value="' + city.id + '">' + city.name + '</option>');
+            if (response.length > 0) {
+              $("#address-city-dropdown-2").append(
+                '<option value="0">--SELECT--</option>'
+              );
+              response.forEach(function (city) {
+                $("#address-city-dropdown-2").append(
+                  '<option value="' + city.id + '">' + city.name + "</option>"
+                );
               });
             }
           },
-          error: function() {
+          error: function () {
             console.error("Failed to fetch cities.");
-          }
+          },
         });
       });
 
-      $("#address-city-dropdown-2").on("change", function() {
+      $("#address-city-dropdown-2").on("change", function () {
         let selectedOption = $(this).find(":selected").text();
-        if(selectedOption != '--SELECT--') {
+        if (selectedOption != "--SELECT--") {
           $("#address-city").val(selectedOption);
         } else {
-          $("#address-city").val('');
+          $("#address-city").val("");
         }
       });
     },
