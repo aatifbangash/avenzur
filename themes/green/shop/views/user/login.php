@@ -56,7 +56,7 @@
                                 <?= form_close(); ?>
                             </div>
 
-                            <div id="loginBlock">
+                            <div id="loginBlock" style="display:none;">
                                 <?php 
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
                                     echo form_open('login', $attrib); 
@@ -139,11 +139,15 @@
     function LoginFn(obj){ 
         $('#loginBtn').addClass("active");
         $('#registerBtn').removeClass("active");
+        $('#loginBlock').show();
+        $('#registerBlock').hide();
     }
 
     function registerBtn(obj){
         $('#loginBtn').removeClass("active");
         $('#registerBtn').addClass("active");
+        $('#loginBlock').hide();
+        $('#registerBlock').show();
     }
 
     /*var input = document.querySelector("#phone");
