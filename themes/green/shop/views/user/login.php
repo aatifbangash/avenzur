@@ -52,7 +52,7 @@
                                 
                                 </div>
 
-                                <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#registerModal">Continue</button>
+                                <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
                                 <?= form_close(); ?>
                             </div>
 
@@ -67,7 +67,7 @@
                                 
                                 </div>
 
-                                <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#loginModal">Continue</button>
+                                <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
                                 <?= form_close(); ?>
                             </div>
 
