@@ -443,6 +443,7 @@ class Main extends MY_Shop_Controller
                 echo json_encode(['status' => 'error', 'message' => 'Data not found in system']);
             }
         }else{
+            echo 'here validation failed...';exit;
             $this->page_construct('user/login', $this->data);
         }
     }
