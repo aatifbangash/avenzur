@@ -52,7 +52,7 @@
                                 
                                 </div>
 
-                                <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#exampleModal">Continue</button>
+                                <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#registerModal">Continue</button>
                                 <?= form_close(); ?>
                             </div>
 
@@ -67,13 +67,47 @@
                                 
                                 </div>
 
-                                <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#exampleModal">Continue</button>
+                                <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#loginModal">Continue</button>
                                 <?= form_close(); ?>
                             </div>
 
-                            
-                            <!-- Modal Starts -->
-                            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+                            <!-- Register Modal Starts -->
+                            <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content px-4 rounded-4">
+                                        <div class="modal-header border-0">
+                                            <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+                                        </div>
+                                        <div class="modal-body ">
+                                            <div class="emailOTP">
+                                                <div class="text-center px-5">
+                                                    <h2>Verify your email</h2>
+                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to example@gmail.com</h5>
+                                                </div>
+                                                <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="first" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="second" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="third" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="fourth" maxlength="1" /> 
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="fifth" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" id="sixth" maxlength="1" />
+                                                </div>
+                                                <div  class="text-center">
+                                                    <h6 class="m-0 mt-2">0.13 <span class="ms-2 fw-semibold opacity-50">Resend OTP </span></h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-0 pb-4">
+                                            <button type="button" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Register Modal Ends -->
+
+                            <!-- Login Modal Starts -->
+                            <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-dialog-centered">
                                     <div class="modal-content px-4 rounded-4">
                                         <div class="modal-header border-0">
@@ -99,27 +133,9 @@
                                                 </div>
                                             </div>
 
-                                            <div class="emailOTP">
-                                                <div class="text-center px-5">
-                                                    <h2>Verify your email</h2>
-                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to example@gmail.com</h5>
-                                                </div>
-                                                <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="first" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="second" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="third" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="fourth" maxlength="1" /> 
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="fifth" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="sixth" maxlength="1" />
-                                                </div>
-                                                <div  class="text-center">
-                                                    <h6 class="m-0 mt-2">0.13 <span class="ms-2 fw-semibold opacity-50">Resend OTP </span></h6>
-                                                </div>
-                                            </div>
                                         </div>
                                         <div class="modal-footer border-0 pb-4">
-                                        
-                                        <button type="button" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
+                                            <button type="button" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
                                         </div>
                                     </div>
                                 </div>
