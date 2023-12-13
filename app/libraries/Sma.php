@@ -473,10 +473,6 @@ class Sma
 
         $response = curl_exec($ch);
 
-        if (curl_errno($ch)) {
-            echo 'cURL Error: ' . curl_error($ch);
-        }
-
         curl_close($ch);
     }
 
