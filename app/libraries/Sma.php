@@ -474,6 +474,7 @@ class Sma
         $response = curl_exec($ch);
 
         curl_close($ch);
+        return $response;
     }
 
     public function send_email($to, $subject, $message, $from = null, $from_name = null, $attachment = null, $cc = null, $bcc = null)
