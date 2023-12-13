@@ -212,7 +212,9 @@
                 url: $('#loginForm').attr('action'),
                 data: formData,
                 success: function (response) {
+                    console.log(response);
                     var respObj = JSON.parse(response);
+                    console.log(respObj);
                     if (respObj.status == 'success') {
                         $('#loginModal').modal('show');
                     } else {
