@@ -207,7 +207,8 @@
                 url: $('#loginForm').attr('action'),
                 data: formData,
                 success: function (response) {
-                    if (response.status == 'success') {
+                    var respObj = JSON.parse(response);
+                    if (respObj.status == 'success') {
                         $('#loginModal').modal('show');
                     } else {
                         alert('Login failed. Please try again.');
