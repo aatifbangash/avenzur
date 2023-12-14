@@ -508,7 +508,7 @@ class Main extends MY_Shop_Controller
         }else{
             $this->page_construct('user/login', $this->data);
         }
-    }*
+    }*/
 
     public function register()
     {
