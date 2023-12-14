@@ -22,8 +22,8 @@
     }
 
     #load_current_location-2 {
-        top: 89%;
-        right: 50px;
+        right: 62px;
+        bottom: 22px;
         /* Adjust the left position as needed */
     }
 
@@ -41,7 +41,7 @@
 <section class=" py-1 ">
     <div class="container container-max-width">
         <div class=" my-4">
-            <div class="addressbar">
+            <div class="addressbar rounded-0">
                 <div class="w-100 addtitle">
                     <h5><i class="bi bi-map-fill me-2"></i>
                         <?= lang('address'); ?>
@@ -61,11 +61,10 @@
                         ?>
                         <div class="col-md-6 mb-4" id="<?= $address->id; ?>" style="margin-right:25px;">
                             <div class="card" id="map-container">
-                                <input id="autocomplete_search" type="text" class="form-control"
+                                <input id="autocomplete_search" type="text" class="form-control bg-white border-0 py-2" style="box-shadow: 0px 1px 5px #b2b2b2;"
                                     placeholder="Type for the address..." autocomplete="on">
-                                <div id="load_map" style="height: 400px; width: 100%;"></div>
-                                <button type="button" id="load_current_location-2" style="width:100px">Locate
-                                    Me</button>
+                                <div id="load_map" style="height: 100%; width: 100%;"></div>
+                                <button type="button" id="load_current_location-2" class="bg-white rounded-5 border-0 py-2" style="width:100px;box-shadow: 0px 1px 5px #b2b2b2;">Locate Me</button>
 
                             </div>
                         </div>
@@ -73,9 +72,7 @@
 
                         <div class="col-md-5 mb-4" id="<?= $address->id; ?>">
                             <div class="card" style="border:none">
-                                <span class="text-bold padding-bottom-md" style="    font-size: 17px;
-    font-weight: bold;
-    color: #662d91;">
+                                <span class="text-bold padding-bottom-md fw-bold mb-3" style="font-size:20px;font-weight: bold;color: #662d91;">
                                     New Address Details
                                 </span>
                                 <form action="[your_shop_url]address" id="address-form" class="padding-bottom-md">
@@ -84,58 +81,63 @@
                                         value="[t.longitude ? t.longitude : '']">
                                     <input type="hidden" id="latitude" name="latitude"
                                         value="[t.latitude ? t.latitude : '']">
-                                    <span class="text-bold padding-bottom-md">
+                                    <span class=" padding-bottom-md fw-bold" style="font-size:17px;">
                                         LOCATION INFORMATION
                                     </span>
-                                    <div class="form-group">
-                                        <label for="exampleFormControlInput1">Additional Address Details</label>
-                                        <input type="email" class="form-control checkout_address"
+                                    <div class="form-row">
+                                    <div class="form-group col-md-8">
+                                        <label for="exampleFormControlInput1" class=" fw-bold fs-6">Additional Address Details</label>
+                                        <input type="email" class="form-control checkout_address ps-0"
                                             id="exampleFormControlInput1"
                                             placeholder="Building No, Floor, Flate No etc">
+                                    </div>
                                     </div>
 
                                     <div class="form-row">
                                         <div class="form-group col-md-3" style="float: left">
-                                            <label for="inputEmail4">Mobile Number</label>
-                                            <select class="form-control checkout_address"
+                                            <label for="inputEmail4" class=" fw-bold fs-6">Mobile Number</label>
+                                            <select class="form-control checkout_address py-1 px-0"
                                                 id="exampleFormControlSelect1">
                                                 <option>+966</option>
                                                 < </select>
                                         </div>
-                                        <div class="form-group col-md-4" style="float: left; margin-left:5px;">
+                                        <div class="form-group col-md-5 col-7" style="float: left; margin-left:0px; margin-top:11px">
                                             <label for="inputPassword4">&nbsp;</label>
-                                            <input type="text" class="form-control checkout_address" id="inputPassword4"
+                                            <input type="text" class="form-control checkout_address px-0 pt-1 " id="inputPassword4"
                                                 placeholder="Mobile Number">
                                         </div>
                                     </div>
 
 
-                                    <div class="text-bold padding-bottom-md" style="clear:both">
+                                    <div class=" padding-bottom-md fw-bold fs-6" style="clear:both">
                                         PERSONAL INFORMATION
                                     </div>
 
                                     <div class="form-row">
-                                        <div class="form-group col-md-4" style="float: left">
-                                            <label for="inputEmail4">First Name</label>
-                                            <input type="email" class="form-control checkout_address" id="inputEmail4"
+                                        <div class="form-group col-md-4 col-12" style="float: left">
+                                            <label for="inputEmail4" class=" fw-bold fs-6">First Name</label>
+                                            <input type="email" class="form-control checkout_address ps-0" id="inputEmail4"
                                                 placeholder="Enter First Name">
                                         </div>
-                                        <div class="form-group col-md-4" style="float: left; margin-left:20px;">
-                                            <label for="inputPassword4">Last Name</label>
-                                            <input type="text" class="form-control checkout_address" id="inputPassword4"
-                                                placeholder="Enter Last Name">
+                                        <div class="form-group col-md-4 col-12 ms-md-4" style="float: left;">
+                                            <label for="inputPassword4" class=" fw-bold fs-6">Last Name</label>
+                                            <input type="text" class="form-control checkout_address ps-0" id="inputPassword4"
+                                            placeholder="Enter Last Name">
                                         </div>
                                     </div>
 
                                     <div class="custom-control custom-switch" style="clear: both">
-                                        <input type="checkbox" class="custom-control-input" name="default_address"
-                                            value="1">
-                                        <label class="custom-control-label" for="customSwitch1">Set as default
-                                            address</label>
+                                        
+                                    <div class="form-check form-switch d-flex align-items-center  ps-0 pe-3 w-100">
+                                        <label class="form-check-label  mt-2" for="flexSwitchCheckDefault"  style="width: 200px;">Set as default address</label>
+                                        <input class="form-check-input fs-5 " type="checkbox" role="switch" id="flexSwitchCheckDefault">
+                                    
                                     </div>
+                                    </div>
+                                    
                                     <div>
                                         <button type="button" class="btn primary-buttonAV  rounded-1 pb-2"
-                                            style="margin-top:30px;" data-bs-toggle="modal"
+                                            style="margin-top:25px;" data-bs-toggle="modal"
                                             data-bs-target="#addAddressModal">
                                             <?= lang('Confirm_&_Save_Address'); ?>
                                         </button>
