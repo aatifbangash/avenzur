@@ -536,7 +536,25 @@ class Main extends MY_Shop_Controller
 
             $company_found = $this->shop_model->getUniqueCustomer('email', $email);
             if($company_found){
-                echo json_encode(['status' => 'error', 'message' => 'Email already exists']);
+                $user_data = $this->shop_model->getUserByEmail($email);
+
+                if($user_data->active == 1){
+                    echo json_encode(['status' => 'error', 'message' => 'Email already exists']);
+                }else{
+                    $this->load->library('ion_auth');
+
+                    if ($this->form_validation->run() == true){
+                        $otp_sent = $this->sendOTP($company_found->id, $email, 'email');
+            
+                        if($otp_sent){
+                            echo json_encode(['status' => 'success', 'message' => 'An OTP is sent to your email']);  
+                        }else{
+                            echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
+                        }
+                    }else{
+                        echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
+                    }
+                }
             }else{
                 $company_data = [
                     //'country'             => $this->input->post('country') ? $this->input->post('country') : '-',

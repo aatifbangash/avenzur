@@ -85,13 +85,18 @@
                                                     <h2>Verify your email</h2>
                                                     <h5 class="fs-4 px-5 lh-base">OTP has been sent to example@gmail.com</h5>
                                                 </div>
+                                                <?php 
+                                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registerOtpForm'];
+                                                    echo form_open('register_otp', $attrib); 
+                                                ?>
                                                 <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="first" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="second" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="third" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="fourth" maxlength="1" /> 
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="fifth" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="sixth" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
+                                                    <input type="hidden" id="identifier_input" name="identifier_input" value="" />
                                                 </div>
                                                 <div  class="text-center">
                                                     <h6 class="m-0 mt-2">0.13 <span class="ms-2 fw-semibold opacity-50">Resend OTP </span></h6>
@@ -99,8 +104,9 @@
                                             </div>
                                         </div>
                                         <div class="modal-footer border-0 pb-4">
-                                            <button type="button" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
+                                            <button type="submit" id="registerOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
                                         </div>
+                                        <?= form_close(); ?>
                                     </div>
                                 </div>
                             </div>
@@ -118,7 +124,7 @@
                                             <div class="smsOTP">
                                                 <div class="text-center px-5">
                                                     <h2>Verify your phone</h2>
-                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span> Via SMS</h5>
+                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span></h5>
                                                 </div>
                                                 <?php 
                                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginOtpForm'];
