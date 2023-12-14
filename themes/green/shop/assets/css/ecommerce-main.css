@@ -1539,14 +1539,24 @@ button.modalcloseBtn {
   border-radius: 30px;
   font-size: 20px;
 }
+
+.form-check-input:checked {
+  background-color: #662d91 !important;
+  border-color: #662d91 !important;
+
 .cartQuantity {
   background: white;
   padding: 4px 13px !important;
   border-radius: 30px;
+
 }
 @media screen and (max-width: 500px) {
   .myaccountForm.cartform {
     left: -9px !important;
+  }
+  #load_map {
+    height: 400px !important;
+    width: 100%;
   }
   .dropdown-menu.myaccountForm.cartform {
     right: 0 !important;
