@@ -570,6 +570,8 @@ class Main extends MY_Shop_Controller
                     $otp_sent = $this->sendOTP($company_id, $email, 'email');
         
                     if($otp_sent){
+                        $this->ion_auth->register($username, '12345', $email, $additional_data);
+
                         echo json_encode(['status' => 'success', 'message' => 'An OTP is sent to your email']);  
                     }else{
                         echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
