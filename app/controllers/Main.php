@@ -460,11 +460,13 @@ class Main extends MY_Shop_Controller
                         
                     }
                 }else{
-                    echo json_encode(['status' => 'error', 'message' => 'OTP verification failed']);
+                    $this->session->set_flashdata('error', 'OTP verification failed');
+                    redirect('login');
                 }
                 
             }else{
-                echo json_encode(['status' => 'error', 'message' => 'Data not found in system']);
+                $this->session->set_flashdata('error', 'Data not found in system');
+                redirect('login');
             }
         }else{
             $this->page_construct('user/login', $this->data);
@@ -531,11 +533,13 @@ class Main extends MY_Shop_Controller
                         
                     }
                 }else{
-                    echo json_encode(['status' => 'error', 'message' => 'OTP verification failed']);
+                    $this->session->set_flashdata('error', 'OTP verification failed');
+                    redirect('login');
                 }
                 
             }else{
-                echo json_encode(['status' => 'error', 'message' => 'Data not found in system']);
+                $this->session->set_flashdata('error', 'Data not found in system');
+                redirect('login');
             }
         }else{
             $this->page_construct('user/login', $this->data);
