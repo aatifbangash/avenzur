@@ -247,7 +247,7 @@ class Ion_auth
         if (!$email_activation || $active == '1') { //true 
             $id = $this->auth_model->register($username, $password, $email, $additional_data, $active);
             if ($id !== false) {
-                if ($notify) {
+                /*if ($notify) {
                     $this->load->library('parser');
                     $parse_data = [
                         'client_name' => $additional_data['first_name'] . ' ' . $additional_data['last_name'],
@@ -268,7 +268,7 @@ class Ion_auth
                     }
                 }
 
-                $this->set_message('account_creation_successful');
+                $this->set_message('account_creation_successful');*/
                 $this->auth_model->trigger_events(['post_account_creation', 'post_account_creation_successful']);
                 return $id;
             } else {
