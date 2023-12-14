@@ -432,7 +432,7 @@ class Main extends MY_Shop_Controller
 
                 $otp = $opt_part1.$opt_part2.$opt_part3.$opt_part4.$opt_part5.$opt_part6;
 
-                $validate = $this->shop_model->validate_otp($identifer, $otp);
+                $validate = $this->shop_model->validate_otp($identity, $otp);
                 if($validate){
                     echo json_encode(['status' => 'success', 'message' => 'OTP verification successfull']);
                 }else{

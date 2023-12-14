@@ -49,7 +49,7 @@ class Shop_model extends CI_Model
     }
 
     public function validate_otp($identifer, $otp){
-        $uniqueColumns = array('identifer' => $identifer, 'otp' => $otp);
+        $uniqueColumns = array('identifier' => $identifer, 'otp' => $otp);
         $this->db->where($uniqueColumns);
         $query = $this->db->get('customer_otp');
         $result = $query->result_array();
