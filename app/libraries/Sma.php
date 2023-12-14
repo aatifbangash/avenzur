@@ -458,10 +458,10 @@ class Sma
             'apiKey' => 'd3a916960217e3c7bc0af6ed80d1435c',
             'msg' => 'Your OTP verification code is '.$variable,
         ];
-
+    
         // Convert the data to JSON format
         $jsonData = json_encode($data);
-
+    
         // Initialize cURL session
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, 'https://www.msegat.com/gw/sendsms.php');
@@ -470,14 +470,20 @@ class Sma
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
         ]);
-
+    
+        // Capture the cURL response
         $response = curl_exec($ch);
-
+    
+        // Check for cURL errors
         if (curl_errno($ch)) {
-            echo 'cURL Error: ' . curl_error($ch);
+            // Handle cURL error here
+            return ['code' => 'error', 'message' => 'cURL Error: ' . curl_error($ch)];
         }
-
+    
         curl_close($ch);
+    
+        // Return the captured response
+        return json_decode($response, true); // Assuming the response is in JSON format
     }
 
     public function send_email($to, $subject, $message, $from = null, $from_name = null, $attachment = null, $cc = null, $bcc = null)

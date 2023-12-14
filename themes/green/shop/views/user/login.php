@@ -7,76 +7,27 @@
                     <div class="row">
                     <div class="col-sm-9 col-md-12">
 
-                        <ul class="nav nav-tabs" role="tablist">
-                            
-                            <li role="" >  </li>
-                            <?php if (!$shop_settings->private) {
-    ?>
-                            <!--<li role="presentation" class="active"  ><a href="#register" class="register" aria-controls="register" role="tab" data-toggle="tab"><?= lang('register'); ?></a></li>-->
-                            <?php
-} ?>
-                        </ul>
-
                         <div class="tab-content padding-lg white bordered-light"  style="margin-top:-1px;">
-                            <div class="loginform" style="display:none;" >
-                            
-                                <div class="row w-100 m-auto">
-                                    <div class="col-sm-5">
-                                        <div class="well margin-bottom-no">
-                                          
-                                         <?php include 'login_form.php'; ?>
-                                        </div>
-                                    </div>
-                             <?php if (!$shop_settings->private) {
-     ?>
-                                    <div class="col-sm-7 px-md-5">
-                                        <h4 class="title"><span><?= lang('register_new_account'); ?></span></h4>
-                                        <p>
-                                            <?= lang('register_account_info'); ?>
-                                        </p>
-                                        <a  class="btn btn-primary" id="registerbtn" onclick="registerBtn()" ><?= lang('register'); ?></a>
-                                        
-                                    </div>
-                             <?php
- } ?>
-                                </div>
-                            </div>
 
-                            <?php if (!$shop_settings->private) {
-                            ?>
-                            <div id="register">
-                                <?php 
-                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
-                                    echo form_open('register', $attrib); 
-                                ?>
-                                <div class="row">
-                                    
-                                    <div class="col-sm-6">
-                                        <div class="form-group">
-                                            <?= lang('email', 'email'); ?>
-                                            <div class="controls">
-                                                <input type="email" id="email" name="email" class="form-control" required="required"/>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="clearfix"></div>
-                                </div>
-                                <div class="mt-2">
-                                <!--<input type="submit" name="register" class="btn btn-primary" id="registerBtn" value="Register" >-->
-                                <button type="button" class="btn btn-primary" id="registerBtnCall">Register</button>
-                                <a id="login" onclick="LoginFn()" name="login" value="Login" class="btn btn-secondary">Already have an account</a>
-                               </div>
-                                <?= form_close(); ?>
-                            </div>
-                            
-                            <?php
-                            } ?>
-                        </div>
-                      
-                      
-                        
+
+
+
+
+
+                            <!-- Paste here -->
+
+
+
+
+
+
+
+                        </div>  
                     </div>
+
+
+
+
 
                     <div class="col-sm-3 col-md-12">
                     <div class="loginRCard px-5">
@@ -87,19 +38,82 @@
                             </div>
                             <h4 class="fw-bold letstart">Let's get started</h4>
                             <div class="logsignBtns mt-3 d-flex justify-content-center">
-                                <button type="button" class="btn  text-white  ">Log in</button>
-                                <button type="button" class="btn  text-white px-4 active">Sign up</button>
+                                <button type="button" id="loginBtn" class="btn  text-white  " onclick="LoginFn(this);">Log in</button>
+                                <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerBtn(this);">Sign up</button>
                             </div>
-                            <div>
+                            <div id="registerBlock">
+                                <?php 
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
+                                    echo form_open('register', $attrib); 
+                                ?>
                                 <div class="controls logcardinput">
                                 
-                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter mobile or phone number" required="required"/>
+                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email" required="required"/>
                                 
                                 </div>
 
-                                <button type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#exampleModal">Continue</button>
+                                <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
+                                <?= form_close(); ?>
                             </div>
-                            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+                            <div id="loginBlock" style="display:none;">
+                                <?php 
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
+                                    echo form_open('login', $attrib); 
+                                ?>
+                                <div class="controls logcardinput">
+                                
+                                <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
+                                
+                                </div>
+
+                                <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
+                                <?= form_close(); ?>
+                            </div>
+
+
+                            <!-- Register Modal Starts -->
+                            <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content px-4 rounded-4">
+                                        <div class="modal-header border-0">
+                                            <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+                                        </div>
+                                        <div class="modal-body ">
+                                            <div class="emailOTP">
+                                                <div class="text-center px-5">
+                                                    <h2>Verify your email</h2>
+                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span></h5>
+                                                </div>
+                                                <?php 
+                                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registerOtpForm'];
+                                                    echo form_open('register_otp', $attrib); 
+                                                ?>
+                                                <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
+                                                    <input type="hidden" id="identifier_input" name="identifier_input" value="" />
+                                                </div>
+                                                <div  class="text-center">
+                                                    <h6 class="m-0 mt-2">0.13 <span class="ms-2 fw-semibold opacity-50">Resend OTP </span></h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-0 pb-4">
+                                            <button type="submit" id="registerOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
+                                        </div>
+                                        <?= form_close(); ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Register Modal Ends -->
+
+                            <!-- Login Modal Starts -->
+                            <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-dialog-centered">
                                     <div class="modal-content px-4 rounded-4">
                                         <div class="modal-header border-0">
@@ -110,46 +124,36 @@
                                             <div class="smsOTP">
                                                 <div class="text-center px-5">
                                                     <h2>Verify your phone</h2>
-                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to +921234567 Via SMS</h5>
+                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span></h5>
                                                 </div>
+                                                <?php 
+                                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginOtpForm'];
+                                                    echo form_open('login_otp', $attrib); 
+                                                ?>
                                                 <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="first" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="second" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="third" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="fourth" maxlength="1" /> 
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="fifth" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="sixth" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
+                                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
+                                                    <input type="hidden" id="identifier_input" name="identifier_input" value="" />
                                                 </div>
+                                                
                                                 <div  class="text-center">
                                                     <h6 class="m-0 mt-2">0.13 <span class="ms-2 fw-semibold opacity-50">Resend OTP Via SMS</span></h6>
                                                 </div>
                                             </div>
 
-                                            <div class="emailOTP">
-                                                <div class="text-center px-5">
-                                                    <h2>Verify your email</h2>
-                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to example@gmail.com</h5>
-                                                </div>
-                                                <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="first" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="second" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="third" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="fourth" maxlength="1" /> 
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="fifth" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="sixth" maxlength="1" />
-                                                </div>
-                                                <div  class="text-center">
-                                                    <h6 class="m-0 mt-2">0.13 <span class="ms-2 fw-semibold opacity-50">Resend OTP </span></h6>
-                                                </div>
-                                            </div>
                                         </div>
                                         <div class="modal-footer border-0 pb-4">
-                                        
-                                        <button type="button" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
+                                            <button type="submit" id="loginOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0">Login</button>
                                         </div>
+                                        <?= form_close(); ?>
                                     </div>
                                 </div>
                                 </div>
+                                <!-- Login Modal Ends -->
                             </div>
                         </div>
                 </div>
@@ -161,16 +165,18 @@
  <script>
     // Vanilla Javascript
 
-    function LoginFn(){ 
-        $(".register").hide();
-        $("#register").hide();
-        $(".loginform").show();
+    function LoginFn(obj){ 
+        $('#loginBtn').addClass("active");
+        $('#registerBtn').removeClass("active");
+        $('#loginBlock').show();
+        $('#registerBlock').hide();
     }
 
-    function registerBtn(){
-        $(".loginform").hide();
-        $(".register").show();
-        $("#register").show();  
+    function registerBtn(obj){
+        $('#loginBtn').removeClass("active");
+        $('#registerBtn').addClass("active");
+        $('#loginBlock').hide();
+        $('#registerBlock').show();
     }
 
     /*var input = document.querySelector("#phone");
@@ -197,7 +203,14 @@
                 url: $('#registrationForm').attr('action'),
                 data: formData,
                 success: function (response) {
-                    console.log(response);
+                    var respObj = JSON.parse(response);
+                    if (respObj.status == 'success' || respObj.code == 1) {
+                        $('#registerModal').modal('show');
+                        document.getElementById('identifier').value = document.getElementById('email').value;
+                        document.getElementById('identifier_input').value = document.getElementById('email').value;
+                    } else {
+                        alert('Signup failed. Please try again.');
+                    }
                 },
                 error: function (error) {
                     console.error(error);
@@ -214,13 +227,42 @@
                 url: $('#loginForm').attr('action'),
                 data: formData,
                 success: function (response) {
-                    console.log(response);
+                    var respObj = JSON.parse(response);
+                    if (respObj.status == 'success' || respObj.code == 1) {
+                        $('#loginModal').modal('show');
+                        document.getElementById('identifier').value = document.getElementById('identity').value;
+                        document.getElementById('identifier_input').value = document.getElementById('identity').value;
+                    } else {
+                        alert('Login failed. Please try again.');
+                    }
                 },
                 error: function (error) {
                     console.error(error);
                 }
             });
         });
+
+        /*$('#loginOtpBtn').click(function (e) {
+            e.preventDefault(); 
+
+            var formData = $('#loginOtpForm').serialize();
+            $.ajax({
+                type: 'POST',
+                url: $('#loginOtpForm').attr('action'),
+                data: formData,
+                success: function (response) {
+                    var respObj = JSON.parse(response);
+                    if (respObj.status == 'success' || respObj.code == 1) {
+                        alert('Login Success');
+                    } else {
+                        alert('Login failed. Please try again.');
+                    }
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+        });*/
     });
         
   </script>

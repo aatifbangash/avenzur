@@ -247,7 +247,7 @@ class Ion_auth
         if (!$email_activation || $active == '1') { //true 
             $id = $this->auth_model->register($username, $password, $email, $additional_data, $active);
             if ($id !== false) {
-                if ($notify) {
+                /*if ($notify) {
                     $this->load->library('parser');
                     $parse_data = [
                         'client_name' => $additional_data['first_name'] . ' ' . $additional_data['last_name'],
@@ -268,8 +268,8 @@ class Ion_auth
                     }
                 }
 
-                $this->set_message('account_creation_successful');
-                $this->auth_model->trigger_events(['post_account_creation', 'post_account_creation_successful']);
+                $this->set_message('account_creation_successful');*/
+                //$this->auth_model->trigger_events(['post_account_creation', 'post_account_creation_successful']);
                 return $id;
             } else {
                 $this->set_error('account_creation_unsuccessful');
@@ -317,7 +317,7 @@ class Ion_auth
                     'logo'            => '<img src="' . base_url() . 'assets/uploads/logos/' . $this->Settings->logo . '" alt="' . $this->Settings->site_name . '"/>',
                 ];
 
-                $msg     = file_get_contents('./themes/' . $this->Settings->theme . '/admin/views/email_templates/activate_email.html');
+                /*$msg     = file_get_contents('./themes/' . $this->Settings->theme . '/admin/views/email_templates/activate_email.html');
                 $message = $this->parser->parse_string($msg, $parse_data);
                 $subject = $this->lang->line('email_activation_subject') . ' - ' . $this->Settings->site_name;
 
@@ -330,11 +330,11 @@ class Ion_auth
                 } catch (Exception $e) {
                     $this->set_error($e->getMessage());
                     return false;
-                }
+                }*/
             }
 
-            $this->auth_model->trigger_events(['post_account_creation', 'post_account_creation_unsuccessful', 'activation_email_unsuccessful']);
-            $this->set_error('activation_email_unsuccessful');
+            //$this->auth_model->trigger_events(['post_account_creation', 'post_account_creation_unsuccessful', 'activation_email_unsuccessful']);
+            //$this->set_error('activation_email_unsuccessful');
             return false;
         }
     }

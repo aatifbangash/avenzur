@@ -33,9 +33,11 @@ $route['shop/(:any)/(:any)/(:any)'] = 'shop/shop/$1/$2/$3';
 
 // Auth routes
 $route['login']                  = 'main/login';
+$route['login_otp']              = 'main/login_otp';
 $route['logout']                 = 'main/logout';
 $route['profile']                = 'main/profile';
 $route['register']               = 'main/register';
+$route['register_otp']           = 'main/register_otp';
 $route['login/(:any)']           = 'main/login/$1';
 $route['logout/(:any)']          = 'main/logout/$1';
 $route['profile/(:any)']         = 'main/profile/$1';
