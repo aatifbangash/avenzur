@@ -565,27 +565,22 @@ class Main extends MY_Shop_Controller
                     'group_id'   => 3,
                 ];
                 $this->load->library('ion_auth');
+
+                if ($this->form_validation->run() == true){
+                    $otp_sent = $this->sendOTP($company_id, $email, 'email');
+        
+                    if($otp_sent){
+                        echo json_encode(['status' => 'success', 'message' => 'An OTP is sent to your email']);  
+                    }else{
+                        echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
+                    }
+                }else{
+                    echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
+                }
             }
             
         }
 
-        if ($this->form_validation->run() == true){
-            $otp_sent = $this->sendOTP($company_id, $email, 'email');
-
-            if($otp_sent){
-                echo json_encode(['status' => 'success', 'message' => 'An OTP is sent to your email']);
-                //$this->session->set_flashdata('message', 'An OTP is sent to your email');
-                //redirect('login');
-            }else{
-                echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
-                //$this->session->set_flashdata('error', 'Could not send OTP at this time');
-                //redirect('login#register');
-            }
-        }else{
-            echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
-            //$this->session->set_flashdata('error', 'Email Validation Failed');
-            //redirect('login#register');
-        }
           
         /*if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data)) {
             if ($this->ion_auth->login($email, $password, 1)) {
