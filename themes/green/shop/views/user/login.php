@@ -83,7 +83,7 @@
                                             <div class="emailOTP">
                                                 <div class="text-center px-5">
                                                     <h2>Verify your email</h2>
-                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to example@gmail.com</h5>
+                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span></h5>
                                                 </div>
                                                 <?php 
                                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registerOtpForm'];
@@ -204,8 +204,10 @@
                 data: formData,
                 success: function (response) {
                     var respObj = JSON.parse(response);
-                    if (respObj.status == 'success') {
+                    if (respObj.status == 'success' || respObj.code == 1) {
                         $('#registerModal').modal('show');
+                        document.getElementById('identifier').value = document.getElementById('email').value;
+                        document.getElementById('identifier_input').value = document.getElementById('email').value;
                     } else {
                         alert('Signup failed. Please try again.');
                     }

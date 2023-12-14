@@ -404,6 +404,71 @@ class Main extends MY_Shop_Controller
         }
     }
 
+    public function register_otp(){
+        $this->form_validation->set_rules('identifier_input', lang('Email or Mobile'), 'required');
+
+        if ($this->form_validation->run('') == true) {
+            $identity    = strtolower($this->input->post('identifier_input'));
+            $opt_part1    = strtolower($this->input->post('opt_part1'));
+            $opt_part2    = strtolower($this->input->post('opt_part2'));
+            $opt_part3    = strtolower($this->input->post('opt_part3'));
+            $opt_part4    = strtolower($this->input->post('opt_part4'));
+            $opt_part5    = strtolower($this->input->post('opt_part5'));
+            $opt_part6    = strtolower($this->input->post('opt_part6'));
+
+            $this->load->library('ion_auth');
+        }
+
+        if ($this->form_validation->run() == true){
+            $company_data = $this->shop_model->getUniqueCustomer('email', $identity);
+
+            if($company_data){
+
+                $otp = $opt_part1.$opt_part2.$opt_part3.$opt_part4.$opt_part5.$opt_part6;
+
+                $validate = $this->shop_model->validate_otp($identity, $otp);
+                if($validate){
+                    if ($this->form_validation->run('auth/login') == true) {
+                        $remember = true;
+                        if ($this->ion_auth->login($company_data->email, '12345', $remember)) {
+                            if ($this->Settings->mmode) {
+                                if (!$this->ion_auth->in_group('owner')) {
+                                    $this->session->set_flashdata('error', lang('site_is_offline_plz_try_later'));
+                                    redirect('logout');
+                                }
+                            }
+            
+                            $this->session->set_flashdata('message', $this->ion_auth->messages());
+                            $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
+                            redirect($referrer);
+                        } else {
+                            $this->session->set_flashdata('error', $this->ion_auth->errors());
+                            redirect('login');
+                        }
+                    } else{
+                        $this->data['error']      = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+                        $this->data['message']    = $m ? lang('password_changed') : $this->session->flashdata('message');
+                        $this->data['page_title'] = lang('login');
+                        $this->data['page_desc']  = $this->shop_settings->description;
+                        //$this->data['country'] = $this->shop_model->getallCountryR();
+                        //$this->data['country_code'] = $country_code;
+                        $this->data['all_categories']    = $this->shop_model->getAllCategories();
+                        
+                        $this->page_construct('user/login', $this->data);
+                        
+                    }
+                }else{
+                    echo json_encode(['status' => 'error', 'message' => 'OTP verification failed']);
+                }
+                
+            }else{
+                echo json_encode(['status' => 'error', 'message' => 'Data not found in system']);
+            }
+        }else{
+            $this->page_construct('user/login', $this->data);
+        }
+    }
+
     public function login_otp(){
         $this->form_validation->set_rules('identifier_input', lang('Email or Mobile'), 'required');
 
