@@ -200,7 +200,7 @@
                         </div>-->
                       <?= form_close(); ?>
 
-                      <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                      <!--<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-dialog-centered">
                                     <div class="modal-content px-4 rounded-4">
                                         <div class="modal-header border-0">
@@ -251,7 +251,7 @@
                                     </div>
                                 </div>
                                 </div>
-                            </div>
+                            </div>-->
                       <?php
                     }
                   ?>
