@@ -534,33 +534,39 @@ class Main extends MY_Shop_Controller
             $price_group    = $this->shop_model->getPriceGroup($this->Settings->price_group);
                        // $this->data['country'] = $this->shop_->getallCountry();
 
-            $company_data = [
-                //'country'             => $this->input->post('country') ? $this->input->post('country') : '-',
-                //'name'                => $this->input->post('first_name') . ' ' . $this->input->post('last_name'),
-                'email'               => $this->input->post('email'),
-                //'phone'               => $this->input->post('phone'),
-                'group_id'            => 3,
-                'group_name'          => 'customer',
-                'customer_group_id'   => (!empty($customer_group)) ? $customer_group->id : null,
-                'customer_group_name' => (!empty($customer_group)) ? $customer_group->name : null,
-                'price_group_id'      => (!empty($price_group)) ? $price_group->id : null,
-                'price_group_name'    => (!empty($price_group)) ? $price_group->name : null,
-                'sequence_code'                => $this->sequenceCode->generate('CUS', 5)
-            ];
-           
-            //$company_id = $this->shop_model->addCustomer($company_data);
-            $company_id = $this->shop_model->addUniqueCustomer($company_data);
-         
-            $additional_data = [
-                //'first_name' => $this->input->post('first_name'),
-                //'last_name'  => $this->input->post('last_name'),
-                //'phone'      => $this->input->post('phone'),
-                //'country'    => $this->input->post('country'),
-                'gender'     => 'male',
-                'company_id' => $company_id,
-                'group_id'   => 3,
-            ];
-            $this->load->library('ion_auth');
+            $company_found = $this->shop_model->getUniqueCustomer('email', $email);
+            if($company_found){
+                echo json_encode(['status' => 'error', 'message' => 'Email already exists']);
+            }else{
+                $company_data = [
+                    //'country'             => $this->input->post('country') ? $this->input->post('country') : '-',
+                    //'name'                => $this->input->post('first_name') . ' ' . $this->input->post('last_name'),
+                    'email'               => $this->input->post('email'),
+                    //'phone'               => $this->input->post('phone'),
+                    'group_id'            => 3,
+                    'group_name'          => 'customer',
+                    'customer_group_id'   => (!empty($customer_group)) ? $customer_group->id : null,
+                    'customer_group_name' => (!empty($customer_group)) ? $customer_group->name : null,
+                    'price_group_id'      => (!empty($price_group)) ? $price_group->id : null,
+                    'price_group_name'    => (!empty($price_group)) ? $price_group->name : null,
+                    'sequence_code'                => $this->sequenceCode->generate('CUS', 5)
+                ];
+               
+                //$company_id = $this->shop_model->addCustomer($company_data);
+                $company_id = $this->shop_model->addUniqueCustomer($company_data);
+             
+                $additional_data = [
+                    //'first_name' => $this->input->post('first_name'),
+                    //'last_name'  => $this->input->post('last_name'),
+                    //'phone'      => $this->input->post('phone'),
+                    //'country'    => $this->input->post('country'),
+                    'gender'     => 'male',
+                    'company_id' => $company_id,
+                    'group_id'   => 3,
+                ];
+                $this->load->library('ion_auth');
+            }
+            
         }
 
         if ($this->form_validation->run() == true){
