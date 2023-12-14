@@ -436,7 +436,7 @@ class Main extends MY_Shop_Controller
                 if($validate){
                     if ($this->form_validation->run('auth/login') == true) {
                         $remember = true;
-                        if ($this->ion_auth->login($company_data->email, 'Abc123_@', $remember)) {
+                        if ($this->ion_auth->login($company_data->email, 'dd15f052ed1b6246403623dc42a83bcdfff230e1', $remember)) {
                             if ($this->Settings->mmode) {
                                 if (!$this->ion_auth->in_group('owner')) {
                                     $this->session->set_flashdata('error', lang('site_is_offline_plz_try_later'));
