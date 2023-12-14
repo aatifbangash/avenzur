@@ -269,7 +269,7 @@ class Ion_auth
                 }
 
                 $this->set_message('account_creation_successful');*/
-                $this->auth_model->trigger_events(['post_account_creation', 'post_account_creation_successful']);
+                //$this->auth_model->trigger_events(['post_account_creation', 'post_account_creation_successful']);
                 return $id;
             } else {
                 $this->set_error('account_creation_unsuccessful');
