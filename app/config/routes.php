@@ -33,6 +33,7 @@ $route['shop/(:any)/(:any)/(:any)'] = 'shop/shop/$1/$2/$3';
 
 // Auth routes
 $route['login']                  = 'main/login';
+$route['login_otp']              = 'main/login_otp';
 $route['logout']                 = 'main/logout';
 $route['profile']                = 'main/profile';
 $route['register']               = 'main/register';
