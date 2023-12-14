@@ -177,7 +177,7 @@ class Main extends MY_Shop_Controller
         return $response;
     }
 
-    public function login($m = null)
+    /*public function login($m = null)
     {
         $country_code = $this->get_country_by_ip();
         
@@ -263,7 +263,7 @@ class Main extends MY_Shop_Controller
                 $this->page_construct('user/login', $this->data);
             }
         }
-    }
+    }*/
 
     public function logout($m = null)
     {
@@ -436,7 +436,7 @@ class Main extends MY_Shop_Controller
                 if($validate){
                     if ($this->form_validation->run('auth/login') == true) {
                         $remember = true;
-                        if ($this->ion_auth->login($company_data->email, 'Abc123_@', $remember)) {
+                        if ($this->ion_auth->login($company_data->email, 'abc123', $remember)) {
                             if ($this->Settings->mmode) {
                                 if (!$this->ion_auth->in_group('owner')) {
                                     $this->session->set_flashdata('error', lang('site_is_offline_plz_try_later'));
@@ -475,7 +475,7 @@ class Main extends MY_Shop_Controller
         }
     }
 
-    /*public function login(){
+    public function login(){
         $this->form_validation->set_rules('identity', lang('Email or Mobile'), 'required');
 
         if ($this->form_validation->run('') == true) {
@@ -508,7 +508,7 @@ class Main extends MY_Shop_Controller
         }else{
             $this->page_construct('user/login', $this->data);
         }
-    }*/
+    }
 
     public function register()
     {
