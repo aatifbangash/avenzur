@@ -488,6 +488,8 @@ class Main extends MY_Shop_Controller
             $this->load->library('ion_auth');
         }
 
+        echo $identity;exit;
+
         if ($this->form_validation->run() == true){
             if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
                 $type = 'email';
