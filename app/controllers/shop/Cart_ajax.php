@@ -208,19 +208,30 @@ class Cart_ajax extends MY_Shop_Controller
             $this->session->set_flashdata('reminder', lang('cart_is_empty'));
             shop_redirect('products');
         }
-        $this->data['paypal']     = $this->shop_model->getPaypalSettings();
-        $this->data['skrill']     = $this->shop_model->getSkrillSettings();
-        $this->data['country'] = $this->settings_model->getallCountry();
-        $this->data['countries'] = $this->settings_model->getCountries();
 
-
-//        $this->data['cities'] = $this->settings_model->getCities();
-//
-//        dd($this->data['cities']);
+        $action = $this->input->get('action');
         $this->data['addresses']  = $this->loggedIn ? $this->shop_model->getAddresses() : false;
-        $this->data['page_title'] = lang('checkout');
-        $this->data['all_categories']    = $this->shop_model->getAllCategories();
-        $this->page_construct('pages/checkout', $this->data);
+        //if($this->loggedIn && ($action == 'changeaddress' || empty($this->data['addresses'])) ) {
+        if($action == 'changeaddress' || empty($this->data['addresses']))  {  
+            $this->page_construct('pages/checkout_address', $this->data);    
+        }
+        else{
+
+            $this->data['paypal']     = $this->shop_model->getPaypalSettings();
+            $this->data['skrill']     = $this->shop_model->getSkrillSettings();
+            $this->data['country'] = $this->settings_model->getallCountry();
+            $this->data['countries'] = $this->settings_model->getCountries();
+    
+    
+    //        $this->data['cities'] = $this->settings_model->getCities();
+    //
+    //        dd($this->data['cities']);
+            $this->data['page_title'] = lang('checkout');
+            $this->data['all_categories']    = $this->shop_model->getAllCategories();
+            $this->page_construct('pages/checkout', $this->data);
+
+        }
+
     }
 
     public function destroy()

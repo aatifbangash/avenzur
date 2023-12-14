@@ -112,6 +112,7 @@ foreach ($cart_contents as $cartItem) {
                                             if (count($addresses) < 6 && !$this->Staff) {
                                                 echo '<div class="row margin-bottom-lg">';
                                                 echo '<div class="col-sm-12"><a href="#" id="add-address" class="btn btn-primary btn-sm">' . lang('add_new_address') . '</a></div>';
+                                                echo '<div class="col-sm-12"><a href="?action=changeaddress" id="change-address" class="btn btn-primary btn-sm">' . lang('change_address') . '</a></div>';
                                                 echo '</div>';
                                             }
                                             if ($this->Settings->indian_gst && (isset($istates))) {

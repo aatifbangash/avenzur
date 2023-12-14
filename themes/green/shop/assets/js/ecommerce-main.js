@@ -1160,7 +1160,7 @@ function geocodeLatLng2(latLng) {
       if (results[0]) {
         const addressComponents = results[0].address_components;
         const formattedAddress = results[0].formatted_address;
-        document.getElementById("google-map-selected-address-2").value =
+        document.getElementById("autocomplete_search").value =
           formattedAddress;
         document.getElementById("address-line-1").value = formattedAddress;
         let city, country, state, street;
