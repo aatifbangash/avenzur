@@ -48,6 +48,10 @@ class Shop_model extends CI_Model
         return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
     }
 
+    public function activate_user($email){
+        return $this->db->update('users', ['active' => 1], ['email' => $email]);
+    }
+
     public function validate_otp($identifer, $otp){
         $uniqueColumns = array('identifier' => $identifer, 'otp' => $otp);
         $this->db->where($uniqueColumns);

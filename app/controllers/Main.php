@@ -430,6 +430,8 @@ class Main extends MY_Shop_Controller
                 if($validate){
                     if ($this->form_validation->run('auth/login') == true) {
                         $remember = true;
+                        $this->shop_model->activate_user($company_data->email);
+
                         if ($this->ion_auth->login($company_data->email, '12345', $remember)) {
                             if ($this->Settings->mmode) {
                                 if (!$this->ion_auth->in_group('owner')) {
