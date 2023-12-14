@@ -436,7 +436,6 @@ class Main extends MY_Shop_Controller
                 if($validate){
                     if ($this->form_validation->run('auth/login') == true) {
                         $remember = true;
-                        echo $company_data->email;exit;
                         if ($this->ion_auth->login($company_data->email, null, $remember)) {
                             if ($this->Settings->mmode) {
                                 if (!$this->ion_auth->in_group('owner')) {
