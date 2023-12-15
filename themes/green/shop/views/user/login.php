@@ -124,7 +124,7 @@
                                             <div class="smsOTP">
                                                 <div class="text-center px-5">
                                                     <h2>Verify your phone</h2>
-                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span></h5>
+                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifierl"></span></h5>
                                                 </div>
                                                 <?php 
                                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginOtpForm'];
@@ -220,7 +220,6 @@
 
         $('#loginBtnCall').click(function (e) {
             e.preventDefault(); 
-            console.log(document.getElementById('identity').value);
             var formData = $('#loginForm').serialize();
             $.ajax({
                 type: 'POST',
@@ -230,7 +229,7 @@
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
                         $('#loginModal').modal('show');
-                        document.getElementById('identifier').value = document.getElementById('identity').value;
+                        document.getElementById('identifierl').value = document.getElementById('identity').value;
                         document.getElementById('identifierl_input').value = document.getElementById('identity').value;
                     } else {
                         alert('Login failed. Please try again.');
