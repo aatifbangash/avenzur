@@ -137,7 +137,7 @@
                                                     <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
                                                     <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
                                                     <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
-                                                    <input type="hidden" id="identifier_input" name="identifier_input" value="" />
+                                                    <input type="hidden" id="identifier_inputl" name="identifier_input" value="" />
                                                 </div>
                                                 
                                                 <div  class="text-center">
@@ -231,7 +231,7 @@
                     if (respObj.status == 'success' || respObj.code == 1) {
                         $('#loginModal').modal('show');
                         document.getElementById('identifier').value = document.getElementById('identity').value;
-                        document.getElementById('identifier_input').value = document.getElementById('identity').value;
+                        document.getElementById('identifierl_input').value = document.getElementById('identity').value;
                     } else {
                         alert('Login failed. Please try again.');
                     }
