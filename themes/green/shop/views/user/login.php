@@ -220,7 +220,7 @@
 
         $('#loginBtnCall').click(function (e) {
             e.preventDefault(); 
-
+            console.log(document.getElementById('identity').value);
             var formData = $('#loginForm').serialize();
             $.ajax({
                 type: 'POST',
