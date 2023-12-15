@@ -130,8 +130,6 @@ class Tec_mail
                 }
             }
 
-            print_r($mail);exit;
-
             if (!$mail->send()) {
                 log_message('error', 'Mail Error: ' . $mail->ErrorInfo);
                 throw new Exception($mail->ErrorInfo);
