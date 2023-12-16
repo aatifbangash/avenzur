@@ -38,9 +38,9 @@
                                             <?= form_input('phone', set_value('phone', $customer->phone), 'class="form-control tip" id="phone" required="required"'); ?>
                                             <?php 
                                                 if($customer->mobile_verified == 1){
-                                                    echo '<a style="color: green;">Verified</a>';
+                                                    echo '<a style="color: green;">Verified Number</a>';
                                                 }else{
-                                                    echo '<a style="color: blue;text-decoration: underline;cursor: pointer;" onclick="verifyNumber();">Verify</a>';
+                                                    echo '<a style="color: blue;text-decoration: underline;cursor: pointer;" onclick="verifyNumber();">Verify Number</a>';
                                                 }
                                             ?>
                                         </div>
