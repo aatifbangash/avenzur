@@ -135,6 +135,38 @@ function update_cart_item(t, e, a, s, i) {
 
 function update_cart(t) {
   if (t.total_items && t.total_items > 0) {
+    $("#cart-table-new").empty();
+    var e = 1;
+    $.each(t.contents, function () {
+      var t = this,
+      a = 
+        '<div class="col-md-2"><span class="cart-item-image">' +
+        '<img style="width: 100px;height: 90px;object-fit: contain;" src="' +
+        site.base_url +
+        "assets/uploads/" +
+        this.image +
+        '" class="card-img-top" alt="...">' +
+        '</span></div>' +
+        '<div class="col-md-10 d-flex flex-column justify-content-between"><div class="d-flex justify-content-between ">' +
+        '<h5 class="m-0">'+ this.name +'</h5>' + 
+        '<div>' +
+        '<h4 class="m-0 fw-semibold fs-5" >SAR 65</h4>' +
+        '<p class="m-0 text-decoration-line-through text-danger text-center fw-semibold mb-4">SAR 10</p>' +
+        '</div></div>' +
+        '<div class="d-flex justify-content-between align-items-center"><div>' + 
+        '<a href="#" class="text-red remove-item text-decoration-none text-dark"><i class="fa fa-trash-o"></i> Remove</a></div>' +
+        '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between cartQuantity"><h6 class="my-1 me-2">Quantity</h6>' +
+        '<span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>' +
+        '<span class="fs-6 px-2">1</span>' + 
+        '<span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>' +
+        '</div></div></div>';
+
+        $('#cart-table-new').html(a);
+    });
+
+
+
+
     $("#cart-table tbody").empty();
     var e = 1;
     $.each(t.contents, function () {

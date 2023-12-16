@@ -8,46 +8,48 @@
                 <div class="row justify-content-between ">
 
                     <div class="col-sm-7">
-                    <h3>Shopping Cart</h3>
-                    <div class="row bg-light ps-1 mt-5" style="margin-inline: 3px;padding: 25px;">
-                        <div class="col-md-2">
-                        
-                        <span class="cart-item-image">
-                        
-                        <img style="width: 100px;height: 90px;object-fit: contain;" src="/assets/uploads/121020919.jpg" class="card-img-top" alt="...">
-                        
-                        </span>
-                        </div>
-                        <div class="col-md-10 d-flex flex-column justify-content-between">
-                        <div class="d-flex justify-content-between ">
-                            <h5 class="m-0">Sulfad 1 gm 30 Tab</h5>
-                            <div>
-                            <h4 class="m-0 fw-semibold fs-5" >SAR 65</h4>
-                            <p class="m-0 text-decoration-line-through text-danger text-center fw-semibold mb-4">SAR 10</p>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                            <a href="#" class="text-red remove-item text-decoration-none text-dark">
-                                <i class="fa fa-trash-o"></i> Remove
-                            </a>
-                            </div>
-                            <div class="quantity text-end py-2 d-flex align-items-center justify-content-between cartQuantity">
-                            <h6 class="my-1 me-2">Quantity</h6>
-                            <span class="plus btn-plus">
-                                <i class="bi bi-plus-circle-fill"></i>
-                            </span>
-                            <span class="fs-6 px-2">1</span>
+                        <h3>Shopping Cart</h3>
+                        <div class="row bg-light ps-1 mt-5" id="cart-table-new" style="margin-inline: 3px;padding: 25px;">
+                            <div class="col-md-2">
                             
-                            <span class="minus btn-minus">
-                                <i class="bi bi-dash-circle-fill"></i>
+                            <span class="cart-item-image">
+                            
+                            <img style="width: 100px;height: 90px;object-fit: contain;" src="/assets/uploads/121020919.jpg" class="card-img-top" alt="...">
+                            
                             </span>
                             </div>
-                        </div>
+                            <div class="col-md-10 d-flex flex-column justify-content-between">
+                            <div class="d-flex justify-content-between ">
+                                <h5 class="m-0">Sulfad 1 gm 30 Tab</h5>
+                                <div>
+                                <h4 class="m-0 fw-semibold fs-5" >SAR 65</h4>
+                                <p class="m-0 text-decoration-line-through text-danger text-center fw-semibold mb-4">SAR 10</p>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                <a href="#" class="text-red remove-item text-decoration-none text-dark">
+                                    <i class="fa fa-trash-o"></i> Remove
+                                </a>
+                                </div>
+                                <div class="quantity text-end py-2 d-flex align-items-center justify-content-between cartQuantity">
+                                <h6 class="my-1 me-2">Quantity</h6>
+                                <span class="plus btn-plus">
+                                    <i class="bi bi-plus-circle-fill"></i>
+                                </span>
+                                <span class="fs-6 px-2">1</span>
+                                
+                                <span class="minus btn-minus">
+                                    <i class="bi bi-dash-circle-fill"></i>
+                                </span>
+                                </div>
+                            </div>
+                            </div>
                         </div>
                     </div>
-                    </div>
+
+
                     <div class="col-sm-5">
                     <div class="text-end">
                         <!--<a class="navbar-brand" href="#">
