@@ -35,6 +35,7 @@ $route['shop/(:any)/(:any)/(:any)'] = 'shop/shop/$1/$2/$3';
 $route['login']                  = 'main/login';
 $route['login_otp']              = 'main/login_otp';
 $route['verify_phone']           = 'main/verify_phone';
+$route['mobile_verify_otp']      = 'main/mobile_verify_otp';
 $route['logout']                 = 'main/logout';
 $route['profile']                = 'main/profile';
 $route['register']               = 'main/register';
