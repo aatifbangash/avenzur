@@ -218,9 +218,9 @@
 
     function verifyNumber(){
         $.ajax({
-            type: 'POST',
+            type: 'GET',
             url: '<?= base_url(); ?>verify_phone',
-            data: {phone: document.getElementById('phone').value},
+            //data: {phone: document.getElementById('phone').value},
             success: function (response) {
                 var respObj = JSON.parse(response);
                 if (respObj.status == 'success' || respObj.code == 1) {
