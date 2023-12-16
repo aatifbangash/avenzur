@@ -204,7 +204,7 @@
                             </div>
                         </div>
                         <div class="modal-footer border-0 pb-4">
-                            <button type="submit" id="registerOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
+                            <button type="submit" id="registerOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Verify</button>
                         </div>
                         <?= form_close(); ?>
                     </div>
