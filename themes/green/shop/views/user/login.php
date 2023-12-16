@@ -195,8 +195,6 @@
        });*/
 
        function handleRegisterOTPClick(){
-            e.preventDefault(); 
-
             var formData = $('#registrationForm').serialize();
             $.ajax({
                 type: 'POST',
@@ -206,6 +204,8 @@
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
                         $('#registerOTP').off('click', handleRegisterOTPClick);
+                        document.getElementById('registerOTP').style.color = 'grey';
+                        document.getElementById('registerOTP').style.cursor = 'none';
                         $('#registerModal').modal('show');
                         document.getElementById('identifier').value = document.getElementById('email').value;
                         document.getElementById('identifier_input').value = document.getElementById('email').value;
@@ -223,6 +223,7 @@
                             if (--timer < 0) {
                                 clearInterval(intervalId);
                                 document.getElementById('registerOTP').style.color = '#662d91';
+                                document.getElementById('registerOTP').style.cursor = 'pointer';
                                 $('#registerOTP').click(handleRegisterOTPClick);
                             }
                         }, 1000);
@@ -249,6 +250,8 @@
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
                         $('#registerOTP').off('click', handleRegisterOTPClick);
+                        document.getElementById('registerOTP').style.color = 'grey';
+                        document.getElementById('registerOTP').style.cursor = 'none';
                         $('#registerModal').modal('show');
                         document.getElementById('identifier').value = document.getElementById('email').value;
                         document.getElementById('identifier_input').value = document.getElementById('email').value;
@@ -266,6 +269,7 @@
                             if (--timer < 0) {
                                 clearInterval(intervalId);
                                 document.getElementById('registerOTP').style.color = '#662d91';
+                                document.getElementById('registerOTP').style.cursor = 'pointer';
                                 $('#registerOTP').click(handleRegisterOTPClick);
                             }
                         }, 1000);
