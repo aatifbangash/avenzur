@@ -265,7 +265,7 @@
         $.ajax({
             type: 'POST',
             url: '<?= base_url(); ?>verify_phone',
-            data: {phone: document.getElementById('phone').value, csrf_token: csrf_token},
+            //data: {phone: document.getElementById('phone').value, csrf_token: csrf_token},
             success: function (response) {
                 var respObj = JSON.parse(response);
                 if (respObj.status == 'success' || respObj.code == 1) {
