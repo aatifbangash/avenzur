@@ -136,7 +136,7 @@ function update_cart_item(t, e, a, s, i) {
 
 function update_cart(t) {
   if (t.total_items && t.total_items > 0) {
-    /*$("#cart-table-new").empty();
+    $("#cart-table-new").empty();
     var e = 1;
     $.each(t.contents, function () {
       var t = this,
@@ -166,14 +166,14 @@ function update_cart(t) {
         '<span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>' +
         '</div></div></div><hr />';
 
-        $(a).appendTo('#cart-table-new');
+        $('<div id="' + this.rowid + '">' + a + '</div>').appendTo('#cart-table-new');
     });
 
     $('#total-unique_items').html(t.total_unique_items);
     $('#total-price').html(t.total);
-    $('#total-after_discount').html(t.total);*/
+    $('#total-after_discount').html(t.total);
 
-    $("#cart-table tbody").empty();
+    /*$("#cart-table tbody").empty();
     var e = 1;
     $.each(t.contents, function () {
       var t = this,
@@ -234,7 +234,7 @@ function update_cart(t) {
         $('<tr id="' + this.rowid + '">' + a + "</tr>").appendTo(
           "#cart-table tbody"
         );
-    }),
+    }),*/
       $("#cart-totals").empty();
     var a =
       "<tr><td>" +
