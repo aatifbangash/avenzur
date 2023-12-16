@@ -136,7 +136,7 @@ function update_cart_item(t, e, a, s, i) {
 
 function update_cart(t) {
   if (t.total_items && t.total_items > 0) {
-    $("#cart-table-new").empty();
+    /*$("#cart-table-new").empty();
     var e = 1;
     $.each(t.contents, function () {
       var t = this,
@@ -171,9 +171,9 @@ function update_cart(t) {
 
     $('#total-unique_items').html(t.total_unique_items);
     $('#total-price').html(t.total);
-    $('#total-after_discount').html(t.total);
+    $('#total-after_discount').html(t.total);*/
 
-    /*$("#cart-table tbody").empty();
+    $("#cart-table tbody").empty();
     var e = 1;
     $.each(t.contents, function () {
       var t = this,
@@ -258,7 +258,7 @@ function update_cart(t) {
       $("#total-items").text(t.total_items + "(" + t.total_unique_items + ")"),
       //$(".cart-item-option").selectpicker("refresh"),
       $(".cart-empty-msg").hide(),
-      $(".cart-contents").show();*/
+      $(".cart-contents").show();
   } else
     $("#total-items").text(t.total_items),
       $(".cart-contents").hide(),
