@@ -234,6 +234,41 @@ class Cart_ajax extends MY_Shop_Controller
 
     }
 
+    // ----------test page
+    public function checkout_html()
+    {
+        $this->session->set_userdata('requested_page', $this->uri->uri_string());
+        if ($this->cart->total_items() < 1) {
+            $this->session->set_flashdata('reminder', lang('cart_is_empty'));
+            // shop_redirect('products');
+        }
+
+        $action = $this->input->get('action');
+        $this->data['addresses']  = $this->loggedIn ? $this->shop_model->getAddresses() : false;
+        //if($this->loggedIn && ($action == 'changeaddress' || empty($this->data['addresses'])) ) {
+        if($action == 'changeaddress' || empty($this->data['addresses']))  {  
+            $this->page_construct('pages/checkout-html', $this->data);    
+        }
+        else{
+
+            $this->data['paypal']     = $this->shop_model->getPaypalSettings();
+            $this->data['skrill']     = $this->shop_model->getSkrillSettings();
+            $this->data['country'] = $this->settings_model->getallCountry();
+            $this->data['countries'] = $this->settings_model->getCountries();
+    
+    
+    //        $this->data['cities'] = $this->settings_model->getCities();
+    //
+    //        dd($this->data['cities']);
+            $this->data['page_title'] = lang('checkout');
+            $this->data['all_categories']    = $this->shop_model->getAllCategories();
+            $this->page_construct('pages/checkout-html', $this->data);
+
+        }
+
+    }
+    // ------end
+
     public function destroy()
     {
         if ($this->input->is_ajax_request()) {
