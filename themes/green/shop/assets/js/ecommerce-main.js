@@ -161,11 +161,12 @@ function update_cart(t) {
         '<span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>' +
         '</div></div></div>';
 
-        $('#cart-table-new').html(a);
+        $(a).appendTo('#cart-table-new');
     });
 
-
-
+    $('#total-unique_items').html(t.total_unique_items);
+    $('#total-price').html(t.total);
+    $('#total-after_discount').html(t.total);
 
     $("#cart-table tbody").empty();
     var e = 1;
@@ -248,26 +249,6 @@ function update_cart(t) {
         '</td><td class="text-right">' +
         t.total +
         "</td></tr>"),
-      /*!1 !== site.settings.tax2 &&
-        (a +=
-          "<tr><td>" +
-          lang.order_tax +
-          '</td><td class="text-right">' +
-          t.order_tax +
-          "</td></tr>"),*/
-      /*(a +=
-        "<tr class='shipping-row'><td>" +
-        lang.shipping +
-        ' *</td><td class="text-right">' +
-        t.shipping +
-        "</td></tr>"),
-      (a += '<tr class="shipping-row"><td colspan="2"></td></tr>'),
-      (a +=
-        '<tr class="active text-bold shipping-row"><td>' +
-        lang.grand_total +
-        '</td><td class="text-right">' +
-        t.grand_total +
-        "</td></tr>"),*/
       $("<tbody>" + a + "</tbody>").appendTo("#cart-totals"),
       $("#total-items").text(t.total_items + "(" + t.total_unique_items + ")"),
       //$(".cart-item-option").selectpicker("refresh"),

@@ -10,73 +10,37 @@
                     <div class="col-sm-7">
                         <h3>Shopping Cart</h3>
                         <div class="row bg-light ps-1 mt-5" id="cart-table-new" style="margin-inline: 3px;padding: 25px;">
-                            <div class="col-md-2">
                             
-                            <span class="cart-item-image">
-                            
-                            <img style="width: 100px;height: 90px;object-fit: contain;" src="/assets/uploads/121020919.jpg" class="card-img-top" alt="...">
-                            
-                            </span>
-                            </div>
-                            <div class="col-md-10 d-flex flex-column justify-content-between">
-                            <div class="d-flex justify-content-between ">
-                                <h5 class="m-0">Sulfad 1 gm 30 Tab</h5>
-                                <div>
-                                <h4 class="m-0 fw-semibold fs-5" >SAR 65</h4>
-                                <p class="m-0 text-decoration-line-through text-danger text-center fw-semibold mb-4">SAR 10</p>
-                                </div>
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                <a href="#" class="text-red remove-item text-decoration-none text-dark">
-                                    <i class="fa fa-trash-o"></i> Remove
-                                </a>
-                                </div>
-                                <div class="quantity text-end py-2 d-flex align-items-center justify-content-between cartQuantity">
-                                <h6 class="my-1 me-2">Quantity</h6>
-                                <span class="plus btn-plus">
-                                    <i class="bi bi-plus-circle-fill"></i>
-                                </span>
-                                <span class="fs-6 px-2">1</span>
-                                
-                                <span class="minus btn-minus">
-                                    <i class="bi bi-dash-circle-fill"></i>
-                                </span>
-                                </div>
-                            </div>
-                            </div>
                         </div>
                     </div>
 
 
                     <div class="col-sm-5">
-                    <div class="text-end">
-                        <!--<a class="navbar-brand" href="#">
-                        <img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="logo" >
-                        </a>-->
-                        
-                    </div>
-                        <div class="border p-3 px-4 mt-5 pb-5">
-                        <h2>Order Summary</h2>
-                        
-                        <h4>Coupon Code</h4>
-                        <div class="d-flex">
-                        <input type="text"  class="form-control  rounded-0" placeholder="Welcom20">
-                        <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> Code applied!</button>
+                        <div class="text-end">
+                            <!--<a class="navbar-brand" href="#">
+                            <img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="logo" >
+                            </a>-->
                         </div>
-                            <div class="d-flex justify-content-between align-items-center my-3">
-                            <h4 class="m-0 fw-semibold">Subtotal (3 items)</h4>
-                            <h4 class="m-0 fw-semibold">SAR 265</h4>
+                        <div class="border p-3 px-4 mt-5 pb-5">
+                            <h2>Order Summary</h2>
+                        
+                            <h4>Coupon Code</h4>
+                            <div class="d-flex">
+                                <input type="text"  class="form-control  rounded-0" placeholder="Welcom20">
+                                <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> Code applied!</button>
                             </div>
                             <div class="d-flex justify-content-between align-items-center my-3">
-                            <h4 class="m-0 ">Discount</h4>
-                            <h4 class="m-0 ">SAR 25</h4>
+                                <h4 class="m-0 fw-semibold">Subtotal (<span id="total-unique_items">0</spam> items)</h4>
+                                <h4 class="m-0 fw-semibold"><span id="total-price">0 SAR</span></h4>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center my-3">
+                                <h4 class="m-0 ">Discount</h4>
+                                <h4 class="m-0 "><span id="total-discount">SAR 0</span></h4>
                             </div>
                             <h4 class="m-0 opacity-50 border-bottom pb-1">Shipping fee will be calculated at checkout</h4>
                             <div class="d-flex justify-content-between align-items-center my-3">
-                            <h4 class="m-0 fw-bold fs-5">Total <span class="fs-6 opacity-50">(Include of VAT)</span></h4>
-                            <h4 class="m-0 fw-bold fs-5">SAR 200</h4>
+                                <h4 class="m-0 fw-bold fs-5">Total <span class="fs-6 opacity-50">(Inclusive of VAT)</span></h4>
+                                <h4 class="m-0 fw-bold fs-5"><span id="total-after_discount">SAR 0</span></h4>
                             </div>
 
                             <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 " style="font-size:18px !important;"> Checkout</button>
