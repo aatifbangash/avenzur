@@ -674,10 +674,10 @@ $(document).ready(function () {
     (o[site.csrf_token] = site.csrf_token_value),
       (o.rowid = s),
       (o.qty = a.find(".cart-item-qty").val()),
-      (o.option = a
+      /*(o.option = a
         .find(".cart-item-option")
         .children("option:selected")
-        .val()),
+        .val()),*/
       update_cart_item(i, o, e, $(this), t.target.type);
   });
 
