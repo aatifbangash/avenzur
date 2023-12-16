@@ -263,9 +263,8 @@
     function verifyNumber(){
         var csrf_token = '<?= $this->security->get_csrf_hash(); ?>';
         $.ajax({
-            type: 'POST',
+            type: 'GET',
             url: '<?= base_url(); ?>verify_phone',
-            //data: {phone: document.getElementById('phone').value, csrf_token: csrf_token},
             success: function (response) {
                 var respObj = JSON.parse(response);
                 if (respObj.status == 'success' || respObj.code == 1) {
