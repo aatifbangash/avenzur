@@ -219,7 +219,7 @@
     function verifyNumber(){
         $.ajax({
             type: 'POST',
-            url: '<?= base_url(); ?>/verify_phone',
+            url: '<?= base_url(); ?>verify_phone',
             data: {phone: document.getElementById('phone').value},
             success: function (response) {
                 var respObj = JSON.parse(response);
