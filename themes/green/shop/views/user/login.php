@@ -207,7 +207,7 @@
                         document.getElementById('registerOTP').style.color = 'grey';
                         document.getElementById('registerOTP').style.cursor = 'none';
                         $('#registerModal').modal('show');
-                        document.getElementById('identifier').value = document.getElementById('email').value;
+                        document.getElementById('identifier').innerHTML = document.getElementById('email').value;
                         document.getElementById('identifier_input').value = document.getElementById('email').value;
 
                         const countdownDuration = 60; // Duration in seconds
@@ -299,7 +299,7 @@
                         document.getElementById('loginOTP').style.cursor = 'none';
                         $('#loginModal').modal('show');
                         document.getElementById('identifierl').innerHTML = document.getElementById('identity').value;
-                        document.getElementById('identifierl_input').innerHTML = document.getElementById('identity').value;
+                        document.getElementById('identifierl_input').value = document.getElementById('identity').value;
 
                         const countdownDuration = 60; // Duration in seconds
                         const countdownDisplay = document.getElementById("login-clock");
@@ -343,7 +343,7 @@
                         document.getElementById('loginOTP').style.cursor = 'none';
                         $('#loginModal').modal('show');
                         document.getElementById('identifierl').innerHTML = document.getElementById('identity').value;
-                        document.getElementById('identifierl_input').innerHTML = document.getElementById('identity').value;
+                        document.getElementById('identifierl_input').value = document.getElementById('identity').value;
 
                         const countdownDuration = 60; // Duration in seconds
                         const countdownDisplay = document.getElementById("login-clock");
