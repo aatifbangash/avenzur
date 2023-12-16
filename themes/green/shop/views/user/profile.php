@@ -261,7 +261,6 @@
     }
 
     function verifyNumber(){
-        var csrf_token = '<?= $this->security->get_csrf_hash(); ?>';
         $.ajax({
             type: 'GET',
             url: '<?= base_url(); ?>verify_phone',

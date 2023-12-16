@@ -282,7 +282,18 @@ class Main extends MY_Shop_Controller
     }
 
     public function verify_phone(){
-        echo json_encode(['status' => 'success', 'message' => 'OTP is sent for verification']);
+        $company_id = $this->session->userdata('company_id');
+        $company_data = $this->shop_model->getCompanyByID($company_id);
+
+        if($company_data->mobile_verified == 0){
+            $mobile = $company_data->phone;
+
+            $otp_sent = $this->sendOTP($company_id, $mobile, 'mobile');
+
+        }else{
+            echo json_encode(['status' => 'error', 'message' => 'Mobile already verified']);
+        }
+
     }
 
     public function profile($act = null)
