@@ -230,7 +230,7 @@
                     document.getElementById('registerOTP').style.color = 'grey';
                     document.getElementById('registerOTP').style.cursor = 'none';
                     $('#registerModal').modal('show');
-                    document.getElementById('identifier').value = document.getElementById('phone').value;
+                    document.getElementById('identifier').innerHTML = document.getElementById('phone').value;
                     document.getElementById('identifier_input').value = document.getElementById('phone').value;
 
                     const countdownDuration = 60; // Duration in seconds
@@ -272,7 +272,7 @@
                     document.getElementById('registerOTP').style.color = 'grey';
                     document.getElementById('registerOTP').style.cursor = 'none';
                     $('#registerModal').modal('show');
-                    document.getElementById('identifier').value = document.getElementById('phone').value;
+                    document.getElementById('identifier').innerHTML = document.getElementById('phone').value;
                     document.getElementById('identifier_input').value = document.getElementById('phone').value;
 
                     const countdownDuration = 60; // Duration in seconds

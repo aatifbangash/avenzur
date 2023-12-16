@@ -419,6 +419,45 @@ class Main extends MY_Shop_Controller
         }
     }
 
+    public function mobile_verify_otp(){
+        $this->form_validation->set_rules('identifier_input', lang('Mobile'), 'required');
+
+        if ($this->form_validation->run('') == true) {
+            $identity    = strtolower($this->input->post('identifier_input'));
+            $opt_part1    = strtolower($this->input->post('opt_part1'));
+            $opt_part2    = strtolower($this->input->post('opt_part2'));
+            $opt_part3    = strtolower($this->input->post('opt_part3'));
+            $opt_part4    = strtolower($this->input->post('opt_part4'));
+            $opt_part5    = strtolower($this->input->post('opt_part5'));
+            $opt_part6    = strtolower($this->input->post('opt_part6'));
+
+            $this->load->library('ion_auth');
+        }
+
+        if ($this->form_validation->run() == true){
+            $company_data = $this->shop_model->getUniqueCustomer('mobile', $identity);
+
+            if($company_data){
+
+                $otp = $opt_part1.$opt_part2.$opt_part3.$opt_part4.$opt_part5.$opt_part6;
+
+                $validate = $this->shop_model->validate_otp($identity, $otp);
+                if($validate){
+                    $is_verified = $this->shop_model->verify_success_mobile($company_data->id);
+                    if($is_verified){
+                        echo json_encode(['status' => 'success', 'message' => 'Mobile verified successfully']);
+                    }else{
+                        echo json_encode(['status' => 'error', 'message' => 'Mobile verification failed']);
+                    }
+                }else{
+                    echo json_encode(['status' => 'error', 'message' => 'OTP verification failed']);
+                }
+            }else{
+                echo json_encode(['status' => 'error', 'message' => 'Customer data not found']);
+            }
+        }
+    }
+
     public function register_otp(){
         $this->form_validation->set_rules('identifier_input', lang('Email or Mobile'), 'required');
 
