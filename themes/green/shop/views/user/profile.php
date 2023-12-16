@@ -52,6 +52,47 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Register Modal Starts -->
+                                <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content px-4 rounded-4">
+                                            <div class="modal-header border-0">
+                                                <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+                                            </div>
+                                            <div class="modal-body ">
+                                                <div class="emailOTP">
+                                                    <div class="text-center px-5">
+                                                        <h2>Verify your email</h2>
+                                                        <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span></h5>
+                                                    </div>
+                                                    <?php 
+                                                        $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registerOtpForm'];
+                                                        echo form_open('register_otp', $attrib); 
+                                                    ?>
+                                                    <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
+                                                        <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
+                                                        <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
+                                                        <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
+                                                        <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
+                                                        <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
+                                                        <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
+                                                        <input type="hidden" id="identifier_input" name="identifier_input" value="" />
+                                                    </div>
+                                                    <div  class="text-center">
+                                                        <h6 class="m-0 mt-2"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="registerOTP">Resend OTP </span></h6>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-0 pb-4">
+                                                <button type="submit" id="registerOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
+                                            </div>
+                                            <?= form_close(); ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Register Modal Ends -->
+
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
@@ -174,7 +215,47 @@
     </div>
 </section>
 <script type="text/javascript">
+
     function verifyNumber(){
-        alert('Phone to verify...');
+        $.ajax({
+            type: 'POST',
+            url: '/verify_phone',
+            data: {phone: document.getElementById('phone').value},
+            success: function (response) {
+                var respObj = JSON.parse(response);
+                if (respObj.status == 'success' || respObj.code == 1) {
+                    $('#registerOTP').off('click', handleRegisterOTPClick);
+                    document.getElementById('registerOTP').style.color = 'grey';
+                    document.getElementById('registerOTP').style.cursor = 'none';
+                    $('#registerModal').modal('show');
+                    document.getElementById('identifier').value = document.getElementById('phone').value;
+                    document.getElementById('identifier_input').value = document.getElementById('phone').value;
+
+                    const countdownDuration = 60; // Duration in seconds
+                    const countdownDisplay = document.getElementById("register-clock");
+                    
+                    let timer = countdownDuration, minutes, seconds;
+                    const intervalId = setInterval(function () {
+                        minutes = parseInt(timer / 60, 10);
+                        seconds = parseInt(timer % 60, 10);
+
+                        countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                        if (--timer < 0) {
+                            clearInterval(intervalId);
+                            document.getElementById('registerOTP').style.color = '#662d91';
+                            document.getElementById('registerOTP').style.cursor = 'pointer';
+                            $('#registerOTP').click(handleRegisterOTPClick);
+                        }
+                    }, 1000);
+
+                } else {
+                    alert('Signup failed. Please try again.');
+                }
+            },
+            error: function (error) {
+                console.error(error);
+            }
+        });
     }
 </script>

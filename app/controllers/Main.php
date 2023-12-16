@@ -281,6 +281,10 @@ class Main extends MY_Shop_Controller
         redirect($m ? 'login/m' : $referrer);
     }
 
+    public function verify_phone(){
+        echo json_encode(['status' => 'success', 'message' => 'OTP is sent for verification']);
+    }
+
     public function profile($act = null)
     {
         if (!$this->loggedIn) {
