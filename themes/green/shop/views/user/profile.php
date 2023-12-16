@@ -216,11 +216,56 @@
 </section>
 <script type="text/javascript">
 
-    function verifyNumber(){
+    function handleRegisterOTPClick(){
+        var formData = $('#registrationForm').serialize();
         $.ajax({
-            type: 'GET',
+            type: 'POST',
+            url: $('#registrationForm').attr('action'),
+            data: formData,
+            success: function (response) {
+                var respObj = JSON.parse(response);
+                if (respObj.status == 'success' || respObj.code == 1) {
+                    $('#registerOTP').off('click', handleRegisterOTPClick);
+                    document.getElementById('registerOTP').style.color = 'grey';
+                    document.getElementById('registerOTP').style.cursor = 'none';
+                    $('#registerModal').modal('show');
+                    document.getElementById('identifier').value = document.getElementById('email').value;
+                    document.getElementById('identifier_input').value = document.getElementById('email').value;
+
+                    const countdownDuration = 60; // Duration in seconds
+                    const countdownDisplay = document.getElementById("register-clock");
+                    
+                    let timer = countdownDuration, minutes, seconds;
+                    const intervalId = setInterval(function () {
+                        minutes = parseInt(timer / 60, 10);
+                        seconds = parseInt(timer % 60, 10);
+
+                        countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                        if (--timer < 0) {
+                            clearInterval(intervalId);
+                            document.getElementById('registerOTP').style.color = '#662d91';
+                            document.getElementById('registerOTP').style.cursor = 'pointer';
+                            $('#registerOTP').click(handleRegisterOTPClick);
+                        }
+                    }, 1000);
+
+                } else {
+                    alert('Signup failed. Please try again.');
+                }
+            },
+            error: function (error) {
+                console.error(error);
+            }
+        });
+    }
+
+    function verifyNumber(){
+        var csrf_token = '<?= $this->security->get_csrf_hash(); ?>';
+        $.ajax({
+            type: 'POST',
             url: '<?= base_url(); ?>verify_phone',
-            //data: {phone: document.getElementById('phone').value},
+            data: {phone: document.getElementById('phone').value, csrf_token: csrf_token},
             success: function (response) {
                 var respObj = JSON.parse(response);
                 if (respObj.status == 'success' || respObj.code == 1) {
