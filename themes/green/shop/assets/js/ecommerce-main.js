@@ -110,7 +110,7 @@ function update_mini_cart(t) {
 }
 
 function update_cart_item(t, e, a, s, i) {
-  console.log(s);
+  console.log(e);
   $.ajax({
     url: t,
     type: "POST",
