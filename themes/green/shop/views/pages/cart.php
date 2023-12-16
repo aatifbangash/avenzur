@@ -10,7 +10,8 @@
                     <div class="col-sm-7">
                         <h3>Shopping Cart</h3>
                         <div class="row bg-light ps-1 mt-5" id="cart-table-new" style="margin-inline: 3px;padding: 25px;">
-                            
+                            <table>
+                            </table>
                         </div>
                     </div>
 
