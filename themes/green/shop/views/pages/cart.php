@@ -19,13 +19,15 @@
                                 <div class="cart-empty-msg <?= ($this->cart->total_items() > 1) ? 'hide' : ''; ?>">
                                     <?= '<h4 class="text-bold">' . lang('empty_cart') . '</h4>'; ?>
                                 </div>
-                                <div class="cart-contents">
+
+
+                                <!--<div class="cart-contents">
                                     <div class="table-responsive">
                                         <table id="cart-table"
                                                class="table table-condensed table-striped table-cart margin-bottom-no">
                                             <thead>
                                             <tr>
-                                                <!--<th><i class="text-grey fa fa-trash-o"></i></th>-->
+                                                <th><i class="text-grey fa fa-trash-o"></i></th>
                                                 <th>#</th>
                                                 <th class="col-xs-4" colspan="2"><?= lang('product'); ?></th>
                                                 <th class="col-xs-3"><?= lang('option'); ?></th>
@@ -37,7 +39,9 @@
                                             <tbody></tbody>
                                         </table>
                                     </div>
-                                </div>
+                                </div>-->
+
+
                             </div>
                             <div class="cart-contents">
                                 <div id="cart-helper" class="panel panel-footer margin-bottom-no">
@@ -75,6 +79,7 @@
                     </div>
 
                 </div>
+
 
                 <!-- cart new dsign -->
                 <div class="row justify-content-between ">
