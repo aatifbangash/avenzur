@@ -150,14 +150,14 @@ function update_cart(t) {
         '<div class="col-md-10 d-flex flex-column justify-content-between"><div class="d-flex justify-content-between ">' +
         '<h5 class="m-0">'+ this.name +'</h5>' + 
         '<div>' +
-        '<h4 class="m-0 fw-semibold fs-5" >SAR 65</h4>' +
-        '<p class="m-0 text-decoration-line-through text-danger text-center fw-semibold mb-4">SAR 10</p>' +
+        '<h4 class="m-0 fw-semibold fs-5" >'+ this.price +'</h4>' +
+        //'<p class="m-0 text-decoration-line-through text-danger text-center fw-semibold mb-4">SAR 10</p>' +
         '</div></div>' +
         '<div class="d-flex justify-content-between align-items-center"><div>' + 
-        '<a href="#" class="text-red remove-item text-decoration-none text-dark"><i class="fa fa-trash-o"></i> Remove</a></div>' +
+        '<a href="#"data-rowid="' + this.rowid + '" class="text-red remove-item text-decoration-none text-dark"><i class="fa fa-trash-o"></i> Remove</a></div>' +
         '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between cartQuantity"><h6 class="my-1 me-2">Quantity</h6>' +
         '<span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>' +
-        '<span class="fs-6 px-2">1</span>' + 
+        '<span class="fs-6 px-2">'+ this.qty +'</span>' + 
         '<span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>' +
         '</div></div></div>';
 
