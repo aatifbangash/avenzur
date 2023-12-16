@@ -18,13 +18,13 @@
                                 <!--<p><?php //echo lang('fill_form'); ?></p>-->
                                 <?= form_open('profile/user', 'class="validate" id="user-profile"'); ?>
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
                                         <div class="form-group">
                                             <?= lang('first_name', 'first_name'); ?>
                                             <?= form_input('first_name', set_value('first_name', $user->first_name), 'class="form-control tip" id="first_name" required="required"'); ?>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
                                         <div class="form-group">
                                             <?= lang('last_name', 'last_name'); ?>
                                             <?= form_input('last_name', set_value('last_name', $user->last_name), 'class="form-control tip" id="last_name" required="required"'); ?>
@@ -32,13 +32,13 @@
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
                                         <div class="form-group">
                                             <?= lang('phone', 'phone'); ?>
                                             <?= form_input('phone', set_value('phone', $customer->phone), 'class="form-control tip" id="phone" required="required"'); ?>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
                                         <div class="form-group">
                                             <?= lang('email', 'email'); ?>
                                             <?= form_input('email', set_value('email', $customer->email), 'class="form-control tip" id="email" required="required"'); ?>
@@ -46,13 +46,13 @@
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
                                         <div class="form-group">
                                             <?= lang('company', 'company'); ?>
                                             <?= form_input('company', set_value('company', $customer->company), 'class="form-control tip" id="company"'); ?>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
                                         <div class="form-group">
                                             <?= lang('vat_no', 'vat_no'); ?>
                                             <?= form_input('vat_no', set_value('vat_no', $customer->vat_no), 'class="form-control tip" id="vat_no"'); ?>
@@ -60,13 +60,13 @@
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
                                         <div class="form-group">
                                             <?= lang('billing_address', 'address'); ?>
                                             <?= form_input('address', set_value('address', $customer->address), 'class="form-control tip" id="address" required="required"'); ?>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
                                         <div class="form-group">
                                             <?= lang('city', 'city'); ?>
                                             <?= form_input('city', set_value('city', $customer->city), 'class="form-control tip" id="city" required="required"'); ?>
@@ -75,7 +75,7 @@
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
                                         <div class="form-group">
                                             <?= lang('state', 'state'); ?>
                                             <?php
@@ -88,7 +88,7 @@
                                             ?>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
                                         <div class="form-group">
                                             <?= lang('postal_code', 'postal_code'); ?>
                                             <?= form_input('postal_code', set_value('postal_code', $customer->postal_code), 'class="form-control tip" id="postal_code" required="required"'); ?>
@@ -97,7 +97,7 @@
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-5">
                                         <div class="form-group">
                                             <?= lang('country', 'country'); ?>
                                             <?php  //var_dump($customer);?>
