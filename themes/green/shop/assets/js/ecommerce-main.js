@@ -157,7 +157,11 @@ function update_cart(t) {
         '<a href="#"data-rowid="' + this.rowid + '" class="text-red remove-item text-decoration-none text-dark"><i class="fa fa-trash-o"></i> Remove</a></div>' +
         '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between cartQuantity"><h6 class="my-1 me-2">Quantity</h6>' +
         '<span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>' +
-        '<span class="fs-6 px-2">'+ this.qty +'</span>' + 
+        '<span class="fs-6 px-2"><input type="text" name="' +
+        e +
+        '[qty]" class="form-control text-center input-qty cart-item-qty" value="' +
+        this.qty +
+        '">'+ this.qty +'</span>' + 
         '<span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>' +
         '</div></div></div><hr />';
 
