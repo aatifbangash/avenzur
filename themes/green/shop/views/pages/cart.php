@@ -50,9 +50,9 @@
                     </div>
                     <div class="col-sm-5">
                     <div class="text-end">
-                        <a class="navbar-brand" href="#">
+                        <!--<a class="navbar-brand" href="#">
                         <img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="logo" >
-                        </a>
+                        </a>-->
                         
                     </div>
                         <div class="border p-3 px-4 mt-5 pb-5">
