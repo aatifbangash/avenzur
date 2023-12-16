@@ -436,6 +436,7 @@ class Main extends MY_Shop_Controller
 
         if ($this->form_validation->run() == true){
             $company_data = $this->shop_model->getUniqueCustomer('mobile', $identity);
+            $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
 
             if($company_data){
 
@@ -445,15 +446,19 @@ class Main extends MY_Shop_Controller
                 if($validate){
                     $is_verified = $this->shop_model->verify_success_mobile($company_data->id);
                     if($is_verified){
-                        echo json_encode(['status' => 'success', 'message' => 'Mobile verified successfully']);
+                        $this->session->set_flashdata('message', 'Mobile verified successfully');
+                        redirect($referrer);
                     }else{
-                        echo json_encode(['status' => 'error', 'message' => 'Mobile verification failed']);
+                        $this->session->set_flashdata('message', 'Mobile verification failed');
+                        redirect($referrer);
                     }
                 }else{
-                    echo json_encode(['status' => 'error', 'message' => 'OTP verification failed']);
+                    $this->session->set_flashdata('message', 'OTP verification failed');
+                    redirect($referrer);
                 }
             }else{
-                echo json_encode(['status' => 'error', 'message' => 'Customer data not found']);
+                $this->session->set_flashdata('message', 'Customer data not found');
+                redirect($referrer);
             }
         }
     }
