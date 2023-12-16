@@ -166,7 +166,7 @@ function update_cart(t) {
         '<span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>' +
         '</div></div></div><hr />';
 
-        $('<tr id="' + this.rowid + '">' + a + '</tr>').appendTo('#cart-table-new');
+        $('<div class="row-class" id="' + this.rowid + '">' + a + '</div>').appendTo('#cart-table-new');
     });
 
     $('#total-unique_items').html(t.total_unique_items);
@@ -668,7 +668,7 @@ $(document).ready(function () {
   $(document).on("change", ".cart-item-option, .cart-item-qty", function (t) {
     t.preventDefault();
     var e = this.defaultValue,
-      a = $(this).closest("tr"),
+      a = $(this).closest("div.row-class"),
       s = a.attr("id"),
       i = site.site_url + "cart/update",
       o = {};
