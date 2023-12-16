@@ -565,15 +565,20 @@ class Main extends MY_Shop_Controller
             }
             
             if($company_data){
-                $otp_sent = $this->sendOTP($company_data->id, $identity, $type);
-
-                if($otp_sent){
-                    if($type = 'email'){
-                        echo json_encode(['status' => 'success', 'message' => 'OTP is sent for verification']);
-                    }
+                if($type == 'mobile' && $company_data->mobile_verified == 0){
+                    echo json_encode(['status' => 'error', 'message' => 'Mobile Number Not verified']);
                 }else{
-                    echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
+                    $otp_sent = $this->sendOTP($company_data->id, $identity, $type);
+
+                    if($otp_sent){
+                        if($type = 'email'){
+                            echo json_encode(['status' => 'success', 'message' => 'OTP is sent for verification']);
+                        }
+                    }else{
+                        echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
+                    }
                 }
+                
             }else{
                 echo json_encode(['status' => 'error', 'message' => 'Data not found in system']);
             }
