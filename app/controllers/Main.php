@@ -447,18 +447,18 @@ class Main extends MY_Shop_Controller
                     $is_verified = $this->shop_model->verify_success_mobile($company_data->id);
                     if($is_verified){
                         $this->session->set_flashdata('message', 'Mobile verified successfully');
-                        redirect($referrer);
+                        redirect('profile');
                     }else{
                         $this->session->set_flashdata('message', 'Mobile verification failed');
-                        redirect($referrer);
+                        redirect('profile');
                     }
                 }else{
                     $this->session->set_flashdata('message', 'OTP verification failed');
-                    redirect($referrer);
+                    redirect('profile');
                 }
             }else{
                 $this->session->set_flashdata('message', 'Customer data not found');
-                redirect($referrer);
+                redirect('profile');
             }
         }
     }
