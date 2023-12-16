@@ -161,7 +161,7 @@ function update_cart(t) {
         e +
         '[qty]" class="form-control text-center input-qty cart-item-qty" value="' +
         this.qty +
-        '">'+ this.qty +'</span>' + 
+        '"></span>' + 
         '<span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>' +
         '</div></div></div><hr />';
 
