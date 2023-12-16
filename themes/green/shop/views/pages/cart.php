@@ -43,7 +43,7 @@
                                 <h4 class="m-0 fw-bold fs-5"><span id="total-after_discount">SAR 0</span></h4>
                             </div>
 
-                            <a href="<?= site_url('cart/destroy'); ?>" id="empty-cart" class="btn btn-danger btn-sm">
+                            <a href="<?= site_url('cart/destroy'); ?>" id="empty-cart" style="border:0px;background: none;" class="btn btn-danger btn-sm">
                                 <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 " style="font-size:18px !important;"> Checkout</button>
                             </a>
                             
