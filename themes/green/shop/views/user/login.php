@@ -99,7 +99,7 @@
                                                     <input type="hidden" id="identifier_input" name="identifier_input" value="" />
                                                 </div>
                                                 <div  class="text-center">
-                                                    <h6 class="m-0 mt-2"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50">Resend OTP </span></h6>
+                                                    <h6 class="m-0 mt-2"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="registerOTP">Resend OTP </span></h6>
                                                 </div>
                                             </div>
                                         </div>
@@ -194,6 +194,49 @@
           $('#phone').val("+"+countryCode+" "+ $('#phone').val());
        });*/
 
+       function handleRegisterOTPClick(){
+            e.preventDefault(); 
+
+            var formData = $('#registrationForm').serialize();
+            $.ajax({
+                type: 'POST',
+                url: $('#registrationForm').attr('action'),
+                data: formData,
+                success: function (response) {
+                    var respObj = JSON.parse(response);
+                    if (respObj.status == 'success' || respObj.code == 1) {
+                        $('#registerOTP').off('click', handleRegisterOTPClick);
+                        $('#registerModal').modal('show');
+                        document.getElementById('identifier').value = document.getElementById('email').value;
+                        document.getElementById('identifier_input').value = document.getElementById('email').value;
+
+                        const countdownDuration = 60; // Duration in seconds
+                        const countdownDisplay = document.getElementById("register-clock");
+                        
+                        let timer = countdownDuration, minutes, seconds;
+                        const intervalId = setInterval(function () {
+                            minutes = parseInt(timer / 60, 10);
+                            seconds = parseInt(timer % 60, 10);
+
+                            countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                            if (--timer < 0) {
+                                clearInterval(intervalId);
+                                document.getElementById('registerOTP').style.color = '#662d91';
+                                $('#registerOTP').click(handleRegisterOTPClick);
+                            }
+                        }, 1000);
+
+                    } else {
+                        alert('Signup failed. Please try again.');
+                    }
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+       }
+
        $('#registerBtnCall').click(function (e) {
             e.preventDefault(); 
 
@@ -205,13 +248,28 @@
                 success: function (response) {
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
+                        $('#registerOTP').off('click', handleRegisterOTPClick);
                         $('#registerModal').modal('show');
                         document.getElementById('identifier').value = document.getElementById('email').value;
                         document.getElementById('identifier_input').value = document.getElementById('email').value;
 
                         const countdownDuration = 60; // Duration in seconds
                         const countdownDisplay = document.getElementById("register-clock");
-                        startCountdown(countdownDuration, countdownDisplay);
+                        
+                        let timer = countdownDuration, minutes, seconds;
+                        const intervalId = setInterval(function () {
+                            minutes = parseInt(timer / 60, 10);
+                            seconds = parseInt(timer % 60, 10);
+
+                            countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                            if (--timer < 0) {
+                                clearInterval(intervalId);
+                                document.getElementById('registerOTP').style.color = '#662d91';
+                                $('#registerOTP').click(handleRegisterOTPClick);
+                            }
+                        }, 1000);
+
                     } else {
                         alert('Signup failed. Please try again.');
                     }
@@ -236,9 +294,6 @@
                         document.getElementById('identifierl').value = document.getElementById('identity').value;
                         document.getElementById('identifierl_input').value = document.getElementById('identity').value;
 
-                        const countdownDuration = 60; // Duration in seconds
-                        const countdownDisplay = document.getElementById("login-clock");
-                        startCountdown(countdownDuration, countdownDisplay);
                     } else {
                         alert('Login failed. Please try again.');
                     }
@@ -248,23 +303,6 @@
                 }
             });
         });
-
-        function startCountdown(durationInSeconds, displayElement) {
-            let timer = durationInSeconds, minutes, seconds;
-
-            // Update the display every second
-            setInterval(function () {
-                minutes = parseInt(timer / 60, 10);
-                seconds = parseInt(timer % 60, 10);
-
-                // Format the time as "mm.ss"
-                displayElement.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
-
-                if (--timer < 0) {
-                    timer = durationInSeconds; // Reset the timer after reaching 0
-                }
-            }, 1000);
-        }
 
         /*$('#loginOtpBtn').click(function (e) {
             e.preventDefault(); 
