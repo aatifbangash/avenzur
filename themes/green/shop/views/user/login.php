@@ -141,7 +141,7 @@
                                                 </div>
                                                 
                                                 <div  class="text-center">
-                                                    <h6 class="m-0 mt-2"><span id="login-clock"></span> <span class="ms-2 fw-semibold opacity-50">Resend OTP Via SMS</span></h6>
+                                                    <h6 class="m-0 mt-2"><span id="login-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="registerOTP">Resend OTP Via SMS</span></h6>
                                                 </div>
                                             </div>
 
