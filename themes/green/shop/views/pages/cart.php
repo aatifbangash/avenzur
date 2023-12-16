@@ -7,14 +7,14 @@
 
                     <div class="col-sm-8">
                         <div class="panel panel-default margin-top-lg">
-                            <div class="panel-heading text-bold">
+                            <!--<div class="panel-heading text-bold">
                                 <i class="fa fa-shopping-cart margin-right-sm"></i> <?= lang('shopping_cart'); ?>
                                 [ <?= lang('items'); ?>: <span id="total-items"></span> ]
                                 <a href="<?= shop_url('products'); ?>" class="pull-right hidden-xs continushopingtxt">
                                     <i class="fa fa-share"></i>
                                     <?= lang('continue_shopping'); ?>
                                 </a>
-                            </div>
+                            </div>-->
                             <div class="panel-body" style="padding:0;">
                                 <!--<div class="cart-empty-msg <?= ($this->cart->total_items() > 1) ? 'hide' : ''; ?>">
                                     <?= '<h4 class="text-bold">' . lang('empty_cart') . '</h4>'; ?>
