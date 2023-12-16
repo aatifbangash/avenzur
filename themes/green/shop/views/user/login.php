@@ -253,7 +253,7 @@
                         document.getElementById('registerOTP').style.color = 'grey';
                         document.getElementById('registerOTP').style.cursor = 'none';
                         $('#registerModal').modal('show');
-                        document.getElementById('identifier').value = document.getElementById('email').value;
+                        document.getElementById('identifier').innerHTML = document.getElementById('email').value;
                         document.getElementById('identifier_input').value = document.getElementById('email').value;
 
                         const countdownDuration = 60; // Duration in seconds
@@ -294,9 +294,30 @@
                 success: function (response) {
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
+                        $('#loginOTP').off('click', handleLoginOTPClick);
+                        document.getElementById('loginOTP').style.color = 'grey';
+                        document.getElementById('loginOTP').style.cursor = 'none';
                         $('#loginModal').modal('show');
-                        document.getElementById('identifierl').value = document.getElementById('identity').value;
-                        document.getElementById('identifierl_input').value = document.getElementById('identity').value;
+                        document.getElementById('identifierl').innerHTML = document.getElementById('identity').value;
+                        document.getElementById('identifierl_input').innerHTML = document.getElementById('identity').value;
+
+                        const countdownDuration = 60; // Duration in seconds
+                        const countdownDisplay = document.getElementById("login-clock");
+                        
+                        let timer = countdownDuration, minutes, seconds;
+                        const intervalId = setInterval(function () {
+                            minutes = parseInt(timer / 60, 10);
+                            seconds = parseInt(timer % 60, 10);
+
+                            countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                            if (--timer < 0) {
+                                clearInterval(intervalId);
+                                document.getElementById('loginOTP').style.color = '#662d91';
+                                document.getElementById('loginOTP').style.cursor = 'pointer';
+                                $('#loginOTP').click(handleLoginOTPClick);
+                            }
+                        }, 1000);
 
                     } else {
                         alert('Login failed. Please try again.');
@@ -307,6 +328,50 @@
                 }
             });
         });
+
+        function handleLoginOTPClick(){
+            var formData = $('#loginForm').serialize();
+            $.ajax({
+                type: 'POST',
+                url: $('#loginForm').attr('action'),
+                data: formData,
+                success: function (response) {
+                    var respObj = JSON.parse(response);
+                    if (respObj.status == 'success' || respObj.code == 1) {
+                        $('#loginOTP').off('click', handleLoginOTPClick);
+                        document.getElementById('loginOTP').style.color = 'grey';
+                        document.getElementById('loginOTP').style.cursor = 'none';
+                        $('#loginModal').modal('show');
+                        document.getElementById('identifierl').innerHTML = document.getElementById('identity').value;
+                        document.getElementById('identifierl_input').innerHTML = document.getElementById('identity').value;
+
+                        const countdownDuration = 60; // Duration in seconds
+                        const countdownDisplay = document.getElementById("login-clock");
+                        
+                        let timer = countdownDuration, minutes, seconds;
+                        const intervalId = setInterval(function () {
+                            minutes = parseInt(timer / 60, 10);
+                            seconds = parseInt(timer % 60, 10);
+
+                            countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                            if (--timer < 0) {
+                                clearInterval(intervalId);
+                                document.getElementById('loginOTP').style.color = '#662d91';
+                                document.getElementById('loginOTP').style.cursor = 'pointer';
+                                $('#loginOTP').click(handleLoginOTPClick);
+                            }
+                        }, 1000);
+
+                    } else {
+                        alert('Login failed. Please try again.');
+                    }
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+        }
 
         /*$('#loginOtpBtn').click(function (e) {
             e.preventDefault(); 
