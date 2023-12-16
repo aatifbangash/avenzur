@@ -16,9 +16,9 @@
                                 </a>
                             </div>
                             <div class="panel-body" style="padding:0;">
-                                <div class="cart-empty-msg <?= ($this->cart->total_items() > 1) ? 'hide' : ''; ?>">
+                                <!--<div class="cart-empty-msg <?= ($this->cart->total_items() > 1) ? 'hide' : ''; ?>">
                                     <?= '<h4 class="text-bold">' . lang('empty_cart') . '</h4>'; ?>
-                                </div>
+                                </div>-->
 
 
                                 <!--<div class="cart-contents">
