@@ -155,7 +155,7 @@ function update_cart(t) {
         //'<p class="m-0 text-decoration-line-through text-danger text-center fw-semibold mb-4">SAR 10</p>' +
         '</div></div>' +
         '<div class="d-flex justify-content-between align-items-center"><div>' + 
-        '<a href="#"data-rowid="' + this.rowid + '" class="text-red remove-item text-decoration-none text-dark"><i class="fa fa-trash-o"></i> Remove</a></div>' +
+        '<a href="#" data-rowid="' + this.rowid + '" class="text-red remove-item text-decoration-none text-dark"><i class="fa fa-trash-o"></i> Remove</a></div>' +
         '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between cartQuantity"><h6 class="my-1 me-2">Quantity</h6>' +
         '<span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>' +
         '<span class="fs-6 px-2"><input type="text" style="width: 50px;" name="' +
@@ -166,7 +166,7 @@ function update_cart(t) {
         '<span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>' +
         '</div></div></div><hr />';
 
-        $('<div id="' + this.rowid + '">' + a + '</div>').appendTo('#cart-table-new');
+        $('<tr id="' + this.rowid + '">' + a + '</tr>').appendTo('#cart-table-new');
     });
 
     $('#total-unique_items').html(t.total_unique_items);
