@@ -159,7 +159,7 @@ function update_cart(t) {
         '<span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>' +
         '<span class="fs-6 px-2">'+ this.qty +'</span>' + 
         '<span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>' +
-        '</div></div></div>';
+        '</div></div></div><hr />';
 
         $(a).appendTo('#cart-table-new');
     });
