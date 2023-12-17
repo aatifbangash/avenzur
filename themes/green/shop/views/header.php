@@ -176,7 +176,7 @@
                         </div>
                         <button type="submit" value="login" name="login" class="btn primary-buttonAV w-100 rounded-1 pb-2">Login</button>
 
-                        <!--<div class="loginRCard px-4 w-100">
+                        <div class="loginRCard px-4 w-100">
                             <div class="logo-k mb-5"> 
                                 <a class="navbar-brand" href="http://localhost/avenzur/">
                                     <img src="http://localhost/avenzur/assets/uploads/logos/avenzur-logov2-024.png" alt="AVENZUR">
@@ -197,7 +197,7 @@
                                 <button type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#exampleModal">Continue</button>
                             </div>
                             
-                        </div>-->
+                        </div>
                       <?= form_close(); ?>
 
                       <!--<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
