@@ -154,7 +154,7 @@
                       <?php
                     }else{
                       ?>
-                      <?= form_open('login', 'class="dropdown-menu p-3 myaccountForm validate"'); ?>
+                      <?php //echo form_open('login', 'class="dropdown-menu p-3 myaccountForm validate"'); ?>
                         <!--<div class="mb-3">
                         <?php $u = mt_rand(); ?>
                           <label for="exampleDropdownFormEmail2" class="form-label">Email</label>
