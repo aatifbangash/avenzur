@@ -255,6 +255,20 @@ class Cart_ajax extends MY_Shop_Controller
         }
         else{
 
+            $referrer = $this->input->server('HTTP_REFERER');
+            $urlComponents = parse_url($referrer);
+      
+        // Check if the query string is present
+        if (isset($urlComponents['query'])) {
+            // Parse the query string to get individual parameters
+            parse_str($urlComponents['query'], $queryParams);
+         
+            // Check if the 'action' parameter is present
+            if (isset($queryParams['action']) &&  trim($queryParams['action']) == 'changeaddress') {
+                $this->data['defaultAddress']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress($lastAddress = true) : false;
+            }
+        } 
+
             $this->data['paypal']     = $this->shop_model->getPaypalSettings();
             $this->data['skrill']     = $this->shop_model->getSkrillSettings();
             $this->data['country'] = $this->settings_model->getallCountry();
@@ -273,9 +287,6 @@ class Cart_ajax extends MY_Shop_Controller
     }
     // ------end
 
-    function saveCheckoutAddress() {
-
-    }
 
     public function destroy()
     {
