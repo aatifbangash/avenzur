@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); 
 
-$coupon_disc = $this->cart->coupon_disc();
+$cart_contents = $this->cart->contents();
 
 ?>
 
@@ -38,7 +38,7 @@ $coupon_disc = $this->cart->coupon_disc();
                                 <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="Welcom20">
                                 <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> 
                                     <?php 
-                                        if($coupon_disc){
+                                        if(isset($cart_contents['coupon_disc'])){
                                             echo 'Code applied!';
                                         }else{
                                             echo 'Apply Code';
