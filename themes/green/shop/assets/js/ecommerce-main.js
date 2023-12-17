@@ -1774,6 +1774,7 @@ $('#registerBtnCall').click(function (e) {
         success: function (response) {
             var respObj = JSON.parse(response);
             if (respObj.status == 'success' || respObj.code == 1) {
+                $('.myaccountForm').removeClass('show');
                 $('#registerOTP').off('click', handleRegisterOTPClick);
                 document.getElementById('registerOTP').style.color = 'grey';
                 document.getElementById('registerOTP').style.cursor = 'none';
@@ -1820,6 +1821,7 @@ $('#loginBtnCall').click(function (e) {
             var respObj = JSON.parse(response);
             if (respObj.status == 'success' || respObj.code == 1) {
                 $('#loginOTP').off('click', handleLoginOTPClick);
+                $('.myaccountForm').removeClass('show');
                 document.getElementById('loginOTP').style.color = 'grey';
                 document.getElementById('loginOTP').style.cursor = 'none';
                 $('#loginModal').modal('show');
