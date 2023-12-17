@@ -434,7 +434,7 @@
               <div class="modal-body ">
                   <div class="smsOTP">
                       <div class="text-center px-5">
-                          <h2>Verify your phone</h2>
+                          <h2>Verify OTP</h2>
                           <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifierl"></span></h5>
                       </div>
                       <?php 
@@ -452,7 +452,7 @@
                       </div>
                       
                       <div  class="text-center">
-                          <h6 class="m-0 mt-2"><span id="login-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="loginOTP">Resend OTP Via SMS</span></h6>
+                          <h6 class="m-0 mt-2"><span id="login-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="loginOTP">Resend OTP</span></h6>
                       </div>
                   </div>
 
