@@ -85,7 +85,9 @@ if ($this->Settings->indian_gst) {
                             foreach($cart_contents as $key => $item) {?>
                         <div class="addressDetail row align-items-center">
                             <div class="addicon col-md-2">
-                                <img src="https://avenzur.com/assets/uploads/60351288cf21fffc3ce3d6f8d67ea568.jpg" class="w-100">
+                                <?php $image = $item['image'] != '' ? $item['image'] : 'https://avenzur.com/assets/uploads/60351288cf21fffc3ce3d6f8d67ea568.jpg';?>
+                                    
+                                <img src="<?php echo $image; ?>" class="w-100">
                             </div>
                             <div class="ms-2 col-md-4">
                                 <p class="m-0 fs-6 fw-semibold">
