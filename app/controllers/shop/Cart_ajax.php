@@ -51,7 +51,7 @@ class Cart_ajax extends MY_Shop_Controller
     
         if($coupon_code == 'welcom20'){
 
-            $cart_contents = $this->cart->contents();
+            $cart_contents = $this->cart->total();
             echo '<pre>';
             print_r($cart_contents);
             exit;
