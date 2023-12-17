@@ -47,6 +47,23 @@ function sa_img(t, e) {
     confirmButtonText: lang.okay,
   }).catch(swal.noop);
 }
+
+function update_popup_cart(t){
+  if (t.total_items && t.total_items > 0) {
+    $.each(t.contents, function () {
+      var t = 
+        '<div class=" row align-items-center">' +
+        '<div class="addicon col-md-3 px-0">' +
+        '<img src="' + site.base_url + "assets/uploads/" + this.image + '" class="w-100">' + 
+        '</div>' + 
+        '<div class=" col-md-9">' + 
+        '<p class="m-0 fs-5 fw-semibold text-start">' + this.name + '</p>' +
+        '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4">' + this.subtotal + '</p>' + 
+        '</div></div><hr>';
+    });
+    $("#product-popup-modal-body").html(t);
+  }
+}
 function update_mini_cart(t) {
   if (t.total_items && t.total_items > 0) {
     var cart_table =
@@ -856,8 +873,6 @@ $(document).ready(function () {
       s = $(this).parents(".get-quantity").find("input");
     }
 
-    $('#productPop').modal('show');
-
     //, s = $(this).parents(".product-bottom").find(".quantity-input");
     /*,i=$(this).parents(".product").find("img").eq(0);if(i){i.clone().offset({top:i.offset().top,left:i.offset().left}).css({opacity:"0.5",position:"absolute",height:"150px",width:"150px","z-index":"1000"}).appendTo($("body")).animate({top:a.offset().top+10,left:a.offset().left+10,width:"50px",height:"50px"},400).animate({width:0,height:0},function(){$(this).detach()})}*/
     $.ajax({
@@ -876,6 +891,8 @@ $(document).ready(function () {
         ? sa_alert("Error!", t.message, "error", !0)
         : ((a = t),
           update_mini_cart(t),
+          update_popup_cart(t),
+          $('#productPop').modal('show'),
           $.toast({
             heading: "Success",
             text: "Product Added To The Cart.",

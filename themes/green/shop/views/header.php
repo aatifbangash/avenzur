@@ -472,34 +472,18 @@
                 
                 <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
             </div>
-            <div class="modal-body ">
-            <div class=" row align-items-center">
-                <div class="addicon col-md-3 px-0">
-                    <img src="https://avenzur.com/assets/uploads/60351288cf21fffc3ce3d6f8d67ea568.jpg" class="w-100">
-                </div>
-                <div class=" col-md-9">
-                    <p class="m-0 fs-5 fw-semibold text-start">
-                    Bioderma Sebium Gel Moussant 500ml  
-                    </p>
-                    <p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4"> SAR 180</p>  
-                </div>                                                             
-            </div>
-            <hr>
-
-            <!-- cart total -->
-            <div class=" row align-items-center mt-4">
+            <div class="modal-body" id="product-popup-modal-body">
+              
+              <div class=" row align-items-center mt-4">
                 <div class="addicon col-md-3 px-0">
                     <p class="m-0 fs-5 fw-semibold text-start text-dark">
                         Cart Total  
                     </p>
                 </div>
                 <div class=" col-md-9">
-                    
                     <p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark"> SAR 190</p>  
                 </div>                                                             
-            </div>
-            <!-- cart total end-->
-
+              </div>
             </div>
             <div class="modal-footer border-0 pb-4 d-flex flex-nowrap">
                 <button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0">Checkout</button>
