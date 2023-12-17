@@ -1,4 +1,10 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); 
+
+$cart_contents = $this->cart->contents();
+print_r($cart_contents);exit;
+
+?>
+
 <section class="page-contents" style="background:white !important;">
     <div class="container container-max-width cartpage">
         <div class="row">
@@ -27,7 +33,9 @@
                             <h4>Coupon Code</h4>
                             <div class="d-flex">
                                 <input type="text"  class="form-control  rounded-0" placeholder="Welcom20">
-                                <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> Code applied!</button>
+                                <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> 
+                                    Code applied!
+                                </button>
                             </div>
                             <div class="d-flex justify-content-between align-items-center my-3">
                                 <h4 class="m-0 fw-semibold">Subtotal (<span id="total-unique_items">0</spam> items)</h4>
