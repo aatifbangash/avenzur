@@ -155,7 +155,7 @@
                     }else{
                       ?>
                       <?= form_open('login', 'class="dropdown-menu p-3 myaccountForm validate"'); ?>
-                        <div class="mb-3">
+                        <!--<div class="mb-3">
                         <?php $u = mt_rand(); ?>
                           <label for="exampleDropdownFormEmail2" class="form-label">Email</label>
                           <a href="<?= site_url().'/login#register'; ?>" class="float-end text-decoration-none text-dark">Register</a>
@@ -174,84 +174,50 @@
                             </label>
                           </div>
                         </div>
-                        <button type="submit" value="login" name="login" class="btn primary-buttonAV w-100 rounded-1 pb-2">Login</button>
+                        <button type="submit" value="login" name="login" class="btn primary-buttonAV w-100 rounded-1 pb-2">Login</button>-->
 
-                        <!--<div class="loginRCard px-4 w-100">
+                        <div class="loginRCard px-4 w-100">
                             <div class="logo-k mb-5"> 
                                 <a class="navbar-brand" href="http://localhost/avenzur/">
-                                    <img src="http://localhost/avenzur/assets/uploads/logos/avenzur-logov2-024.png" alt="AVENZUR">
+                                    <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVENZUR">
                                 </a>
                             </div>
                             <h4 class="fw-bold letstart">Let's get started</h4>
                             <div class="logsignBtns mt-3 d-flex justify-content-center">
-                                <button type="button" class="btn  text-white  active">Log in</button>
-                                <button type="button" class="btn  text-white px-4 ">Sign up</button>
+                                <button type="button" id="loginBtn" class="btn  text-white" onclick="LoginFn(this);">Log in</button>
+                                <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerFnBtn(this);">Sign up</button>
                             </div>
-                            <div>
+                            <div id="registerBlock">
+                                <?php 
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
+                                    echo form_open('register', $attrib); 
+                                ?>
                                 <div class="controls logcardinput">
                                 
-                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter mobile or phone number" required="required"/>
+                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email" required="required"/>
                                 
                                 </div>
 
-                                <button type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#exampleModal">Continue</button>
+                                <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
+                                <?= form_close(); ?>
                             </div>
-                            
-                        </div>-->
-                      <?= form_close(); ?>
 
-                      <!--<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content px-4 rounded-4">
-                                        <div class="modal-header border-0">
-                                            
-                                            <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-                                        </div>
-                                        <div class="modal-body ">
-                                            <div class="smsOTP text-dark">
-                                                <div class="text-center px-5">
-                                                    <h2>Verify your phone</h2>
-                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to +921234567 Via SMS</h5>
-                                                </div>
-                                                <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="first" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="second" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="third" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="fourth" maxlength="1" /> 
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="fifth" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="sixth" maxlength="1" />
-                                                </div>
-                                                <div class="text-center">
-                                                    <h6 class="m-0 mt-2">0.13 <span class="ms-2 fw-semibold opacity-50">Resend OTP Via SMS</span></h6>
-                                                </div>
-                                            </div>
+                            <div id="loginBlock" style="display:none;">
+                                <?php 
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
+                                    echo form_open('login', $attrib); 
+                                ?>
+                                <div class="controls logcardinput">
+                                
+                                <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
+                                
+                                </div>
 
-                                            <div class="emailOTP text-dark">
-                                                <div class="text-center px-5">
-                                                    <h2>Verify your email</h2>
-                                                    <h5 class="fs-4 px-5 lh-base">OTP has been sent to example@gmail.com</h5>
-                                                </div>
-                                                <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="first" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="second" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="third" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="fourth" maxlength="1" /> 
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="fifth" maxlength="1" />
-                                                    <input class="m-1 text-center form-control rounded" type="text" id="sixth" maxlength="1" />
-                                                </div>
-                                                <div  class="text-center">
-                                                    <h6 class="m-0 mt-2">0.13 <span class="ms-2 fw-semibold opacity-50">Resend OTP </span></h6>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer border-0 pb-4">
-                                        
-                                        <button type="button" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                </div>
-                            </div>-->
+                                <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
+                                <?= form_close(); ?>
+                            </div>
+                          <div>
+
                       <?php
                     }
                   ?>
@@ -375,23 +341,6 @@
           </div>
           <div class="col-md-3 col-sm-2 shop-icons">
             <div class="text-end" id="cartdiv">
-
-              <!--<span class="shuffleIcon me-2">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <g id="Frame">
-                  <path id="Vector" d="M8.8 23.2H6.4C5.76348 23.2 5.15303 22.9471 4.70294 22.497C4.25286 22.047 4 21.4365 4 20.8L4 11.2C4 10.5635 4.25286 9.95302 4.70294 9.50293C5.15303 9.05284 5.76348 8.79999 6.4 8.79999L20 8.79999" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10"/>
-                  <path id="Vector_2" d="M23.2 8.79999H25.6C26.2365 8.79999 26.847 9.05284 27.2971 9.50293C27.7471 9.95302 28 10.5635 28 11.2L28 20.8C28 21.4365 27.7471 22.047 27.2971 22.497C26.847 22.9471 26.2365 23.2 25.6 23.2L12 23.2" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10"/>
-                  <path id="Vector_3" d="M16 4.79999L20 8.79999L16 12.8" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10" stroke-linecap="square"/>
-                  <path id="Vector_4" d="M16 19.2L12 23.2L16 27.2" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10" stroke-linecap="square"/>
-                  </g>
-                  </svg>
-                  
-              </span>
-              <span class="heartIcon me-2">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M26.0832 7.51679C23.5272 4.96079 19.3824 4.96079 16.8264 7.51679C16.5112 7.83199 16.2376 8.17199 16 8.52879C15.7624 8.17199 15.4888 7.83199 15.1736 7.51759C12.6176 4.96159 8.47282 4.96159 5.91682 7.51759C3.36082 10.0736 3.36082 14.2184 5.91682 16.7744L16 26.8568L26.0832 16.7736C28.6392 14.2176 28.6392 10.0736 26.0832 7.51679Z" stroke="#171A1F" stroke-width="1.92" stroke-miterlimit="10" stroke-linecap="square"/>
-                </svg>
-              </span>-->
             
               <span class="cartIcon" id="cart-items">
                 <a class="btn  dropdown-toggle border-0" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -431,6 +380,126 @@
       </div>
     </section>
     <!-- menu bar end -->
+
+    <!-- Register Modal Starts -->
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content px-4 rounded-4">
+              <div class="modal-header border-0">
+                  <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+              </div>
+              <div class="modal-body ">
+                  <div class="emailOTP">
+                      <div class="text-center px-5">
+                          <h2>Verify your email</h2>
+                          <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span></h5>
+                      </div>
+                      <?php 
+                          $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registerOtpForm'];
+                          echo form_open('register_otp', $attrib); 
+                      ?>
+                      <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
+                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
+                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
+                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
+                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
+                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
+                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
+                          <input type="hidden" id="identifier_input" name="identifier_input" value="" />
+                      </div>
+                      <div  class="text-center">
+                          <h6 class="m-0 mt-2"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="registerOTP">Resend OTP </span></h6>
+                      </div>
+                  </div>
+              </div>
+              <div class="modal-footer border-0 pb-4">
+                  <button type="submit" id="registerOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
+              </div>
+              <?= form_close(); ?>
+          </div>
+      </div>
+  </div>
+  <!-- Register Modal Ends -->
+
+  <!-- Login Modal Starts -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content px-4 rounded-4">
+              <div class="modal-header border-0">
+                  
+                  <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+              </div>
+              <div class="modal-body ">
+                  <div class="smsOTP">
+                      <div class="text-center px-5">
+                          <h2>Verify your phone</h2>
+                          <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifierl"></span></h5>
+                      </div>
+                      <?php 
+                          $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginOtpForm'];
+                          echo form_open('login_otp', $attrib); 
+                      ?>
+                      <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
+                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
+                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
+                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
+                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
+                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
+                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
+                          <input type="hidden" id="identifierl_input" name="identifier_input" value="" />
+                      </div>
+                      
+                      <div  class="text-center">
+                          <h6 class="m-0 mt-2"><span id="login-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="loginOTP">Resend OTP Via SMS</span></h6>
+                      </div>
+                  </div>
+
+              </div>
+              <div class="modal-footer border-0 pb-4">
+                  <button type="submit" id="loginOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0">Login</button>
+              </div>
+              <?= form_close(); ?>
+          </div>
+      </div>
+  </div>
+  <!-- Login Modal Ends -->
+
+  <!-- product popup start -->
+  <div class="modal fade" id="productPop" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content px-4 rounded-4">
+            <div class="modal-header border-0">
+                
+                <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="modal-body" id="product-popup-modal-body">
+              
+              <!--<div class=" row align-items-center mt-4">
+                <div class="addicon col-md-3 px-0">
+                    <p class="m-0 fs-5 fw-semibold text-start text-dark">
+                        Cart Total  
+                    </p>
+                </div>
+                <div class=" col-md-9">
+                    <p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark"> SAR 190</p>  
+                </div>                                                             
+              </div>-->
+            </div>
+            <div class="modal-footer border-0 pb-4 d-flex flex-nowrap">
+                <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0">
+                <a href="<?= site_url('cart/checkout'); ?>" style="color: #fff;text-decoration: none;">
+                  Checkout
+                </a>
+                </button>
+                <button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0" data-bs-dismiss="modal">Continue Shopping</button>
+            </div>
+            
+        </div>
+    </div>
+  </div>
+
+</div>
+<!-- product popup end -->
 
     <?php if ($this->session->flashdata('error')){ ?>
         <div class="error-message"><?php echo $this->session->flashdata('error');exit; ?></div>

@@ -47,6 +47,34 @@ function sa_img(t, e) {
     confirmButtonText: lang.okay,
   }).catch(swal.noop);
 }
+
+function update_popup_cart(t){
+  if (t.total_items && t.total_items > 0) {
+    $.each(t.contents, function () {
+      var t = 
+        '<div class=" row align-items-center">' +
+        '<div class="addicon col-md-3 px-0">' +
+        '<img src="' + site.base_url + "assets/uploads/" + this.image + '" class="w-100">' + 
+        '</div>' + 
+        '<div class=" col-md-9">' + 
+        '<p class="m-0 fs-5 fw-semibold text-start">' + this.name + '</p>' +
+        '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4">' + this.subtotal + '</p>' + 
+        '</div></div><hr>';
+
+        $("#product-popup-modal-body").append(t);
+    });
+
+    var e = 
+      '<div class=" row align-items-center mt-4">' +
+      '<div class="addicon col-md-3 px-0">' + 
+      '<p class="m-0 fs-5 fw-semibold text-start text-dark">Cart Total</p>' + 
+      '</div>' + 
+      '<div class=" col-md-9">' +
+      '<p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark">' + t.total + '</p>' +
+      '</div></div>'; 
+      $("#product-popup-modal-body").append(e);
+  }
+}
 function update_mini_cart(t) {
   if (t.total_items && t.total_items > 0) {
     var cart_table =
@@ -851,7 +879,7 @@ $(document).ready(function () {
     var e = $(this).attr("data-id"),
       a = $(".shopping-cart:visible"),
       s = $(this).parents(".card").find("input");
-    console.log(s.val());
+    
     if (typeof s.val() === "undefined") {
       s = $(this).parents(".get-quantity").find("input");
     }
@@ -874,6 +902,8 @@ $(document).ready(function () {
         ? sa_alert("Error!", t.message, "error", !0)
         : ((a = t),
           update_mini_cart(t),
+          update_popup_cart(t),
+          $('#productPop').modal('show'),
           $.toast({
             heading: "Success",
             text: "Product Added To The Cart.",
@@ -908,30 +938,35 @@ $(document).ready(function () {
 
   $(document).on("click", ".btn-minus-update", function (t) {
     var e = $(this).parent().find("input");
-    parseInt(e.val()) > 1 && e.val(parseInt(e.val()) - 1);
+    if(e.val() > 1){
+      parseInt(e.val()) > 1 && e.val(parseInt(e.val()) - 1);
 
-    var a = $(this).closest("div.row-class"),
+      var a = $(this).closest("div.row-class"),
       s = a.attr("id"),
       i = site.site_url + "cart/update",
       o = {};
-    (o[site.csrf_token] = site.csrf_token_value),
-      (o.rowid = s),
-      (o.qty = e.val()),
-      update_cart_item(i, o, e, $(this), t.target.type);
+      (o[site.csrf_token] = site.csrf_token_value),
+        (o.rowid = s),
+        (o.qty = e.val()),
+        update_cart_item(i, o, e, $(this), t.target.type);
+    }
   });
 
   $(document).on("click", ".btn-plus-update", function (t) {
     var e = $(this).parent().find("input");
-    e.val(parseInt(e.val()) + 1);
+    if(e.val() < 3){
+      e.val(parseInt(e.val()) + 1);
 
-    var a = $(this).closest("div.row-class"),
-      s = a.attr("id"),
-      i = site.site_url + "cart/update",
-      o = {};
-    (o[site.csrf_token] = site.csrf_token_value),
-      (o.rowid = s),
-      (o.qty = e.val()),
-      update_cart_item(i, o, e, $(this), t.target.type);
+      var a = $(this).closest("div.row-class"),
+        s = a.attr("id"),
+        i = site.site_url + "cart/update",
+        o = {};
+      (o[site.csrf_token] = site.csrf_token_value),
+        (o.rowid = s),
+        (o.qty = e.val()),
+        update_cart_item(i, o, e, $(this), t.target.type);
+    }
+    
   });
 
   $(".feature_products").slick({
@@ -1696,3 +1731,202 @@ if (window.innerWidth < 500) {
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
   });
 }
+
+// New login workflow functionality
+
+function LoginFn(obj){ 
+  $('#loginBtn').addClass("active");
+  $('#registerBtn').removeClass("active");
+  $('#loginBlock').show();
+  $('#registerBlock').hide();
+}
+
+function registerFnBtn(obj){
+  $('#loginBtn').removeClass("active");
+  $('#registerBtn').addClass("active");
+  $('#loginBlock').hide();
+  $('#registerBlock').show();
+}
+
+$(document).ready(function() {
+  function handleRegisterOTPClick(){
+    var formData = $('#registrationForm').serialize();
+    $.ajax({
+        type: 'POST',
+        url: $('#registrationForm').attr('action'),
+        data: formData,
+        success: function (response) {
+            var respObj = JSON.parse(response);
+            if (respObj.status == 'success' || respObj.code == 1) {
+                $('#registerOTP').off('click', handleRegisterOTPClick);
+                document.getElementById('registerOTP').style.color = 'grey';
+                document.getElementById('registerOTP').style.cursor = 'none';
+                $('#registerModal').modal('show');
+                document.getElementById('identifier').innerHTML = document.getElementById('email').value;
+                document.getElementById('identifier_input').value = document.getElementById('email').value;
+
+                const countdownDuration = 60; // Duration in seconds
+                const countdownDisplay = document.getElementById("register-clock");
+                
+                let timer = countdownDuration, minutes, seconds;
+                const intervalId = setInterval(function () {
+                    minutes = parseInt(timer / 60, 10);
+                    seconds = parseInt(timer % 60, 10);
+
+                    countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                    if (--timer < 0) {
+                        clearInterval(intervalId);
+                        document.getElementById('registerOTP').style.color = '#662d91';
+                        document.getElementById('registerOTP').style.cursor = 'pointer';
+                        $('#registerOTP').click(handleRegisterOTPClick);
+                    }
+                }, 1000);
+
+            } else {
+                alert('Signup failed. Please try again.');
+            }
+        },
+        error: function (error) {
+            console.error(error);
+        }
+    });
+}
+
+$('#registerBtnCall').click(function (e) {
+    e.preventDefault(); 
+
+    var formData = $('#registrationForm').serialize();
+    $.ajax({
+        type: 'POST',
+        url: $('#registrationForm').attr('action'),
+        data: formData,
+        success: function (response) {
+            var respObj = JSON.parse(response);
+            if (respObj.status == 'success' || respObj.code == 1) {
+                $('.myaccountForm').removeClass('show');
+                $('#registerOTP').off('click', handleRegisterOTPClick);
+                document.getElementById('registerOTP').style.color = 'grey';
+                document.getElementById('registerOTP').style.cursor = 'none';
+                $('#registerModal').modal('show');
+                document.getElementById('identifier').innerHTML = document.getElementById('email').value;
+                document.getElementById('identifier_input').value = document.getElementById('email').value;
+
+                const countdownDuration = 60; // Duration in seconds
+                const countdownDisplay = document.getElementById("register-clock");
+                
+                let timer = countdownDuration, minutes, seconds;
+                const intervalId = setInterval(function () {
+                    minutes = parseInt(timer / 60, 10);
+                    seconds = parseInt(timer % 60, 10);
+
+                    countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                    if (--timer < 0) {
+                        clearInterval(intervalId);
+                        document.getElementById('registerOTP').style.color = '#662d91';
+                        document.getElementById('registerOTP').style.cursor = 'pointer';
+                        $('#registerOTP').click(handleRegisterOTPClick);
+                    }
+                }, 1000);
+
+            } else {
+                alert('Signup failed. Please try again.');
+            }
+        },
+        error: function (error) {
+            console.error(error);
+        }
+    });
+});
+
+$('#loginBtnCall').click(function (e) {
+    e.preventDefault(); 
+    var formData = $('#loginForm').serialize();
+    $.ajax({
+        type: 'POST',
+        url: $('#loginForm').attr('action'),
+        data: formData,
+        success: function (response) {
+            var respObj = JSON.parse(response);
+            if (respObj.status == 'success' || respObj.code == 1) {
+                $('#loginOTP').off('click', handleLoginOTPClick);
+                $('.myaccountForm').removeClass('show');
+                document.getElementById('loginOTP').style.color = 'grey';
+                document.getElementById('loginOTP').style.cursor = 'none';
+                $('#loginModal').modal('show');
+                document.getElementById('identifierl').innerHTML = document.getElementById('identity').value;
+                document.getElementById('identifierl_input').value = document.getElementById('identity').value;
+
+                const countdownDuration = 60; // Duration in seconds
+                const countdownDisplay = document.getElementById("login-clock");
+                
+                let timer = countdownDuration, minutes, seconds;
+                const intervalId = setInterval(function () {
+                    minutes = parseInt(timer / 60, 10);
+                    seconds = parseInt(timer % 60, 10);
+
+                    countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                    if (--timer < 0) {
+                        clearInterval(intervalId);
+                        document.getElementById('loginOTP').style.color = '#662d91';
+                        document.getElementById('loginOTP').style.cursor = 'pointer';
+                        $('#loginOTP').click(handleLoginOTPClick);
+                    }
+                }, 1000);
+
+            } else {
+                alert('Login failed. Please try again.');
+            }
+        },
+        error: function (error) {
+            console.error(error);
+        }
+    });
+});
+
+function handleLoginOTPClick(){
+    var formData = $('#loginForm').serialize();
+    $.ajax({
+        type: 'POST',
+        url: $('#loginForm').attr('action'),
+        data: formData,
+        success: function (response) {
+            var respObj = JSON.parse(response);
+            if (respObj.status == 'success' || respObj.code == 1) {
+                $('#loginOTP').off('click', handleLoginOTPClick);
+                document.getElementById('loginOTP').style.color = 'grey';
+                document.getElementById('loginOTP').style.cursor = 'none';
+                $('#loginModal').modal('show');
+                document.getElementById('identifierl').innerHTML = document.getElementById('identity').value;
+                document.getElementById('identifierl_input').value = document.getElementById('identity').value;
+
+                const countdownDuration = 60; // Duration in seconds
+                const countdownDisplay = document.getElementById("login-clock");
+                
+                let timer = countdownDuration, minutes, seconds;
+                const intervalId = setInterval(function () {
+                    minutes = parseInt(timer / 60, 10);
+                    seconds = parseInt(timer % 60, 10);
+
+                    countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                    if (--timer < 0) {
+                        clearInterval(intervalId);
+                        document.getElementById('loginOTP').style.color = '#662d91';
+                        document.getElementById('loginOTP').style.cursor = 'pointer';
+                        $('#loginOTP').click(handleLoginOTPClick);
+                    }
+                }, 1000);
+
+            } else {
+                alert('Login failed. Please try again.');
+            }
+        },
+        error: function (error) {
+            console.error(error);
+        }
+    });
+}
+});
