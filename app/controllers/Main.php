@@ -519,13 +519,16 @@ class Main extends MY_Shop_Controller
                         
                     }
                 }else{
-                    $this->session->set_flashdata('error', 'OTP verification failed');
-                    redirect('login');
+                    //$this->session->set_flashdata('error', 'OTP verification failed');
+                    //redirect('login');
+
+                    echo json_encode(['status' => 'error', 'message' => 'OTP verification failed']);
                 }
                 
             }else{
-                $this->session->set_flashdata('error', 'Data not found in system');
-                redirect('login');
+                echo json_encode(['status' => 'error', 'message' => 'Data not found in system']);
+                //$this->session->set_flashdata('error', 'Data not found in system');
+                //redirect('login');
             }
         }else{
             $this->page_construct('user/login', $this->data);
