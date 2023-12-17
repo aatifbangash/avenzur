@@ -155,7 +155,7 @@
                     }else{
                       ?>
                       <?= form_open('login', 'class="dropdown-menu p-3 myaccountForm validate"'); ?>
-                        <div class="mb-3">
+                        <!--<div class="mb-3">
                         <?php $u = mt_rand(); ?>
                           <label for="exampleDropdownFormEmail2" class="form-label">Email</label>
                           <a href="<?= site_url().'/login#register'; ?>" class="float-end text-decoration-none text-dark">Register</a>
@@ -174,7 +174,7 @@
                             </label>
                           </div>
                         </div>
-                        <button type="submit" value="login" name="login" class="btn primary-buttonAV w-100 rounded-1 pb-2">Login</button>
+                        <button type="submit" value="login" name="login" class="btn primary-buttonAV w-100 rounded-1 pb-2">Login</button>-->
 
                         <div class="loginRCard px-4 w-100">
                             <div class="logo-k mb-5"> 
