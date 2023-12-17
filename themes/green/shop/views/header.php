@@ -487,7 +487,7 @@
             </div>
             <div class="modal-footer border-0 pb-4 d-flex flex-nowrap">
                 <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0">
-                <a href="<?= site_url('cart/checkout'); ?>">
+                <a href="<?= site_url('cart/checkout'); ?>" style="color: #fff;text-decoration: none;">
                   Checkout
                 </a>
                 </button>
