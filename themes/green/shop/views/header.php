@@ -486,7 +486,11 @@
               </div>-->
             </div>
             <div class="modal-footer border-0 pb-4 d-flex flex-nowrap">
-                <a href="<?= site_url('cart/checkout'); ?>"><button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0">Checkout</button></a>
+                <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0">
+                <a href="<?= site_url('cart/checkout'); ?>">
+                  Checkout
+                </a>
+                </button>
                 <button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0" data-bs-dismiss="modal">Continue Shopping</button>
             </div>
             
