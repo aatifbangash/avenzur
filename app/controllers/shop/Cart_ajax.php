@@ -48,7 +48,28 @@ class Cart_ajax extends MY_Shop_Controller
 
     public function apply_coupon(){
         $coupon_code    = strtolower($this->input->post('coupon_code'));
-        echo $coupon_code;exit;
+    
+        if($coupon_code == 'welcom20'){
+
+            $cart_contents = $this->cart->contents();
+            echo '<pre>';
+            print_r($cart_contents);
+            exit;
+
+            $data = [
+                'coupon_disc' => 25
+            ];
+            if ($this->cart->update($data)) {
+                $this->session->set_flashdata('message', 'Coupon Code Applied');
+                redirect('cart');
+            }else{
+                $this->session->set_flashdata('error', 'Could not add code');
+                redirect('cart');
+            }
+        }else{
+            $this->session->set_flashdata('error', 'Invalid Coupon Code');
+            redirect('cart');
+        }
     }
 
     public function add($product_id)
