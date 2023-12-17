@@ -909,11 +909,31 @@ $(document).ready(function () {
   $(document).on("click", ".btn-minus-update", function (t) {
     var e = $(this).parent().find("input");
     parseInt(e.val()) > 1 && e.val(parseInt(e.val()) - 1);
+
+    var e = this.defaultValue,
+      a = $(this).closest("div.row-class"),
+      s = a.attr("id"),
+      i = site.site_url + "cart/update",
+      o = {};
+    (o[site.csrf_token] = site.csrf_token_value),
+      (o.rowid = s),
+      (o.qty = e.val()),
+      update_cart_item(i, o, e, $(this), t.target.type);
   });
 
   $(document).on("click", ".btn-plus-update", function (t) {
     var e = $(this).parent().find("input");
     e.val(parseInt(e.val()) + 1);
+
+    var e = this.defaultValue,
+      a = $(this).closest("div.row-class"),
+      s = a.attr("id"),
+      i = site.site_url + "cart/update",
+      o = {};
+    (o[site.csrf_token] = site.csrf_token_value),
+      (o.rowid = s),
+      (o.qty = e.val()),
+      update_cart_item(i, o, e, $(this), t.target.type);
   });
 
   $(".feature_products").slick({
