@@ -135,7 +135,67 @@
                 
                 
                 </form>
-                <button type="button" data-id="<?= $product->id; ?>" class="btn primary-buttonAV ms-2 py-1 addtocart  text-dark add-to-cart"><i class="bi bi-cart3 me-2"></i> Add to cart </button>
+                <button type="button" data-id="<?= $product->id; ?>" class="btn primary-buttonAV ms-2 py-1 addtocart  text-dark add-to-cart" data-bs-toggle="modal" data-bs-target="#productPop"><i class="bi bi-cart3 me-2"></i> Add to cart </button>
+               
+                <!-- product popup start -->
+                    <div class="modal fade" id="productPop" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content px-4 rounded-4">
+                                <div class="modal-header border-0">
+                                    
+                                    <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+                                </div>
+                                <div class="modal-body ">
+                                <div class=" row align-items-center">
+                                    <div class="addicon col-md-3 px-0">
+                                        <img src="https://avenzur.com/assets/uploads/60351288cf21fffc3ce3d6f8d67ea568.jpg" class="w-100">
+                                    </div>
+                                    <div class=" col-md-9">
+                                        <p class="m-0 fs-5 fw-semibold text-start">
+                                        Bioderma Sebium Gel Moussant 500ml  
+                                        </p>
+                                        <p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4"> SAR 180</p>  
+                                    </div>                                                             
+                                </div>
+                                <hr>
+                                <div class=" row align-items-center">
+                                    <div class="addicon col-md-3 px-0">
+                                        <img src="https://avenzur.com/assets/uploads/60351288cf21fffc3ce3d6f8d67ea568.jpg" class="w-100">
+                                    </div>
+                                    <div class=" col-md-9">
+                                        <p class="m-0 fs-5 fw-semibold text-start">
+                                        Bioderma Sebium Gel Moussant 500ml  
+                                        </p>
+                                        <p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4"> SAR 180</p>  
+                                    </div>                                                             
+                                </div>
+
+                                <!-- cart total -->
+                                <div class=" row align-items-center mt-4">
+                                    <div class="addicon col-md-3 px-0">
+                                        <p class="m-0 fs-5 fw-semibold text-start text-dark">
+                                            Cart Total  
+                                        </p>
+                                    </div>
+                                    <div class=" col-md-9">
+                                        
+                                        <p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark"> SAR 190</p>  
+                                    </div>                                                             
+                                </div>
+                                <!-- cart total end-->
+
+                                </div>
+                                <div class="modal-footer border-0 pb-4 d-flex flex-nowrap">
+                                    <button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0">Checkout</button>
+                                    <button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0">Continue Shopping</button>
+                                </div>
+                               
+                            </div>
+                        </div>
+                        </div>
+                    
+                    </div>
+                <!-- product popup end -->
             </div>
             <!-- <div class="product_meta pt-4">
                 <p class="sku_wrapper m-0">SKU: <span class="sku">10007095</span></p>
