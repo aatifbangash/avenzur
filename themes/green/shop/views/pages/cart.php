@@ -31,8 +31,12 @@ $cart_contents = $this->cart->contents();
                         
                             <h4>Coupon Code</h4>
                             <div class="d-flex">
-                                <input type="text"  class="form-control  rounded-0" placeholder="Welcom20">
-                                <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> 
+                                <?php
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registerOtpForm'];
+                                    echo form_open('apply_coupon', $attrib); 
+                                ?>
+                                <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="Welcom20">
+                                <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> 
                                     <?php 
                                         if(isset($cart_contents['coupon_disc'])){
                                             echo 'Code applied!';
@@ -42,6 +46,9 @@ $cart_contents = $this->cart->contents();
                                     ?>   
                                 
                                 </button>
+                                <?php 
+                                    echo form_close();
+                                ?>
                             </div>
                             <div class="d-flex justify-content-between align-items-center my-3">
                                 <h4 class="m-0 fw-semibold">Subtotal (<span id="total-unique_items">0</spam> items)</h4>

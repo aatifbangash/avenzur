@@ -46,6 +46,11 @@ class Cart_ajax extends MY_Shop_Controller
         }
     }
 
+    public function apply_coupon(){
+        $coupon_code    = strtolower($this->input->post('coupon_code'));
+        echo $coupon_code;exit;
+    }
+
     public function add($product_id)
     {
         if ($this->input->is_ajax_request() || $this->input->post('quantity')) {
