@@ -154,8 +154,11 @@
                       <?php
                     }else{
                       ?>  
-                        <?php $u = mt_rand(); ?>
-                          
+                        <?php $u = mt_rand();
+                          $currentUri = $this->uri->uri_string(); 
+                          if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
+                        ?>
+                        
                         <div class="dropdown-menu p-3 myaccountForm validate">
                         <div class="loginRCard px-4 w-100">
                             <div class="logo-k mb-5"> 
@@ -202,6 +205,7 @@
                           <span id="register-message" style="color: blue;"></span>
                         </div>
                       <?php
+                          }
                     }
                   ?>
                 </div>
@@ -367,7 +371,7 @@
     <?php 
       
       $currentUri = $this->uri->uri_string(); 
-      if ($currentUri !== 'profile') {
+      if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
         ?>
           <!-- Register Modal Starts -->
           <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
