@@ -51,14 +51,11 @@ class Cart_ajax extends MY_Shop_Controller
     
         if($coupon_code == 'welcom20'){
 
-            $cart_contents = $this->cart->total();
-            echo '<pre>';
-            print_r($cart_contents);
-            exit;
+            $cart_total = $this->cart->total();
+            $discount = 25;
+            $coupon_disc = ($cart_total*25)/100;
+            $cart_total = $cart_total - $coupon_disc;
 
-            $data = [
-                'coupon_disc' => 25
-            ];
             if ($this->cart->update($data)) {
                 $this->session->set_flashdata('message', 'Coupon Code Applied');
                 redirect('cart');
