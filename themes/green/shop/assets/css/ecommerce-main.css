@@ -1543,14 +1543,22 @@ button.modalcloseBtn {
 .form-check-input:checked {
   background-color: #662d91 !important;
   border-color: #662d91 !important;
-
+}
 .cartQuantity {
   background: white;
   padding: 4px 13px !important;
   border-radius: 30px;
-
+}
+.purpColor {
+  color: #662d91;
+}
+.standard-div {
+  gap: 15rem;
 }
 @media screen and (max-width: 500px) {
+  .standard-div {
+    gap: 6rem;
+  }
   .myaccountForm.cartform {
     left: -9px !important;
   }
