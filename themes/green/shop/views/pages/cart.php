@@ -33,7 +33,7 @@ $cart_contents = $this->cart->contents();
                             <div class="d-flex">
                                 <?php
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'coupon_form'];
-                                    echo form_open('apply_coupon', $attrib); 
+                                    //echo form_open('apply_coupon', $attrib); 
                                 ?>
                                 <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="Welcom20">
                                 <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> 
@@ -47,7 +47,7 @@ $cart_contents = $this->cart->contents();
                                 
                                 </button>
                                 <?php 
-                                    echo form_close();
+                                    //echo form_close();
                                 ?>
                             </div>
                             <div class="d-flex justify-content-between align-items-center my-3">
