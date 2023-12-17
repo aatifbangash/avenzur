@@ -1711,7 +1711,7 @@ function LoginFn(obj){
   $('#registerBlock').hide();
 }
 
-function registerBtn(obj){
+function registerFnBtn(obj){
   $('#loginBtn').removeClass("active");
   $('#registerBtn').addClass("active");
   $('#loginBlock').hide();
