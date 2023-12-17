@@ -37,6 +37,25 @@
         border-bottom: 1px solid #ccc;
         border-radius: 0;
     }
+
+    .error {
+        border: 2px solid red !important; /* Set the initial border color to red for error */
+        animation: blink 2s infinite !important; /* Apply the blink animation */
+    }
+
+    @keyframes blink {
+        0% {
+            border-color: red;
+        }
+        50% {
+            border-color: transparent;
+        }
+        100% {
+            border-color: red;
+        }
+    }
+
+
 </style>
 <section class=" py-1 ">
     <div class="container container-max-width">
@@ -74,40 +93,57 @@
                             <div class="card" style="border:none">
                                 <span class="text-bold padding-bottom-md fw-bold mb-3" style="font-size:20px;font-weight: bold;color: #662d91;">
                                     New Address Details
-                                </span>
-                                <form action="[your_shop_url]address" id="address-form" class="padding-bottom-md">
-                                    <input type="hidden" name="[your_csrf_token]" value="[your_csrf_token_value]">
-                                    <input type="hidden" id="longitude" name="longitude"
-                                        value="[t.longitude ? t.longitude : '']">
-                                    <input type="hidden" id="latitude" name="latitude"
-                                        value="[t.latitude ? t.latitude : '']">
+                                    <?php 
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'checkoutAddress'];
+                                    echo form_open('shop/saveCheckoutAddress', $attrib); 
+                                ?>
+                                    <input type="hidden" id="longitude" name="longitude" value="">
+                                    <input type="hidden" id="latitude" name="latitude" value="">
+                                    <input type="hidden" id="address-line-1" name="address_line_1" value="">
+                                    <input type="hidden" id="address-city" name="city" value="">
+                                    <input type="hidden" id="address-state" name="state" value="">
+                                    <input type="hidden" id="address-country" name="country" value="">
                                     <span class=" padding-bottom-md fw-bold" style="font-size:17px;">
                                         LOCATION INFORMATION
                                     </span>
                                     <div class="form-row">
                                     <div class="form-group col-md-8">
                                         <label for="exampleFormControlInput1" class=" fw-bold fs-6">Additional Address Details</label>
-                                        <input type="email" class="form-control checkout_address ps-0"
+                                        <input type="text" class="form-control checkout_address ps-0" name="address_line_2"
                                             id="exampleFormControlInput1"
                                             placeholder="Building No, Floor, Flate No etc">
                                     </div>
                                     </div>
 
-                                    <div class="form-row">
+                                    <!-- <div class="form-row">
                                         <div class="form-group col-md-3" style="float: left">
                                             <label for="inputEmail4" class=" fw-bold fs-6">Mobile Number</label>
                                             <select class="form-control checkout_address py-1 px-0"
                                                 id="exampleFormControlSelect1">
                                                 <option>+966</option>
-                                                < </select>
+                                                </select>
                                         </div>
                                         <div class="form-group col-md-5 col-7" style="float: left; margin-left:0px; margin-top:11px">
                                             <label for="inputPassword4">&nbsp;</label>
-                                            <input type="text" class="form-control checkout_address px-0 pt-1 " id="inputPassword4"
+                                            <input type="text" class="form-control required checkout_address px-0 pt-1 " id="mobile_number" name="mobile_number"
+                                                placeholder="Mobile Number">
+                                        </div>
+                                    </div> -->
+
+                                    <div class="form-row">
+                                        <div class="form-group col-md-4 col-12" style="float: left">
+                                            <label for="mobile_number" class=" fw-bold fs-6">Mobile Number</label>
+                                            <select class="form-control checkout_address py-1 px-0"
+                                                id="exampleFormControlSelect1">
+                                                <option>+966</option>
+                                                </select>
+                                        </div>
+                                        <div class="form-group col-md-4 col-12 ms-md-4" style="float: left;">
+                                            <label for="mobile_number" class=" fw-bold fs-6">&nbsp;</label>
+                                            <input type="text" class="form-control required checkout_address px-0 pt-1 " id="mobile_number" name="mobile_number"
                                                 placeholder="Mobile Number">
                                         </div>
                                     </div>
-
 
                                     <div class=" padding-bottom-md fw-bold fs-6" style="clear:both">
                                         PERSONAL INFORMATION
@@ -115,13 +151,13 @@
 
                                     <div class="form-row">
                                         <div class="form-group col-md-4 col-12" style="float: left">
-                                            <label for="inputEmail4" class=" fw-bold fs-6">First Name</label>
-                                            <input type="email" class="form-control checkout_address ps-0" id="inputEmail4"
+                                            <label for="first_name" class=" fw-bold fs-6">First Name</label>
+                                            <input type="text" class="form-control checkout_address ps-0" id="first_name" name="first_name"
                                                 placeholder="Enter First Name">
                                         </div>
                                         <div class="form-group col-md-4 col-12 ms-md-4" style="float: left;">
-                                            <label for="inputPassword4" class=" fw-bold fs-6">Last Name</label>
-                                            <input type="text" class="form-control checkout_address ps-0" id="inputPassword4"
+                                            <label for="last_name" class=" fw-bold fs-6">Last Name</label>
+                                            <input type="text" class="form-control checkout_address ps-0" id="last_name" name="last_name"
                                             placeholder="Enter Last Name">
                                         </div>
                                     </div>
@@ -129,20 +165,19 @@
                                     <div class="custom-control custom-switch" style="clear: both">
                                         
                                     <div class="form-check form-switch d-flex align-items-center  ps-0 pe-3 w-100">
-                                        <label class="form-check-label  mt-2" for="flexSwitchCheckDefault"  style="width: 200px;">Set as default address</label>
-                                        <input class="form-check-input fs-5 " type="checkbox" role="switch" id="flexSwitchCheckDefault">
+                                        <label class="form-check-label  mt-2" for="flexSwitchCheckDefault"  style="width: 200px; font-size: 18px;">Set as default address</label>
+                                        <input class="form-check-input fs-5 " type="checkbox" role="switch" id="flexSwitchCheckDefault" checked="checked" name="is_default" style="margin-top:12px; margin-left: 12px;">
                                     
                                     </div>
                                     </div>
                                     
                                     <div>
-                                        <button type="button" class="btn primary-buttonAV  rounded-1 pb-2"
-                                            style="margin-top:25px;" data-bs-toggle="modal"
-                                            data-bs-target="#addAddressModal">
+                                        <button type="submit" class="btn primary-buttonAV  rounded-1 pb-2"
+                                            style="margin-top:25px;">
                                             <?= lang('Confirm_&_Save_Address'); ?>
                                         </button>
                                     </div>
-                                </form>
+                                <?= form_close(); ?>
 
                             </div>
                         </div>
@@ -174,6 +209,79 @@
 
 
 <script>
+
+$(document).ready(function() {
+
+    var autocomplete_search = $('#autocomplete_search');
+
+    // Remove the error class when the input field is focused
+    autocomplete_search.focus(function() {
+        autocomplete_search.removeClass('error');
+    });
+
+    // Remove the error class when the input value changes
+    autocomplete_search.on('change', function() {
+        autocomplete_search.removeClass('error');
+    });
+    const mobile_number = $('#mobile_number');
+    mobile_number.focus(function() {
+        mobile_number.removeClass('error');
+    });
+
+    const first_name = $('#first_name');
+    first_name.focus(function() {
+        first_name.removeClass('error');
+    });
+
+    const last_name = $('#last_name');
+    last_name.focus(function() {
+        last_name.removeClass('error');
+    });
+
+
+
+
+        $('#checkoutAddress').submit(function(event) {
+            // Remove previous error highlights
+            $('.error').removeClass('error');
+
+            // Perform validation
+            var autocomplete_search = $('#autocomplete_search').val();
+           
+            if (autocomplete_search === '') {
+               
+                // Highlight the input field with an error
+                $('#autocomplete_search').addClass('error');
+                event.preventDefault(); // Prevent form submission
+            }
+            var mobile_number = $('#mobile_number').val();
+
+            if (mobile_number === '') {
+                // Highlight the input field with an error
+                $('#mobile_number').addClass('error');
+                event.preventDefault(); // Prevent form submission
+            }
+
+            var first_name = $('#first_name');
+
+            if (first_name.val() === '') {
+                // Highlight the input field with an error
+                first_name.addClass('error');
+                event.preventDefault(); // Prevent form submission
+            }
+
+            var last_name = $('#last_name');
+
+            if (last_name.val() === '') {
+                // Highlight the input field with an error
+                last_name.addClass('error');
+                event.preventDefault(); // Prevent form submission
+            }
+
+            // Add more validation for other fields as needed
+        });
+    });
+
     function initMap() {
         console.log('test');
         let map = new google.maps.Map(document.getElementById("load_map"), {
@@ -239,6 +347,7 @@
                                     map.setCenter(userLocation);
                                     //updateLocation(userLocation);
                                     geocodeLatLng2(userLocation);
+                                    //$('#autocomplete_search').removeClass('error');
                                 },
                                 function (error) {
                                     console.error('Error getting user location:', error);

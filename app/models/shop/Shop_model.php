@@ -199,6 +199,11 @@ class Shop_model extends CI_Model
         return $this->db->get_where('addresses', ['company_id' => $this->session->userdata('company_id')])->result();
     }
 
+    public function getDefaultChechoutAddress()
+    {
+        return $this->db->get_where('addresses', ['company_id' => $this->session->userdata('company_id'), 'is_default' => 1])->result();
+    }
+
     public function getAllBrands()
     {
         if ($this->shop_settings->hide0) {
