@@ -175,7 +175,7 @@
                           </div>
                         </div>
                         <button type="submit" value="login" name="login" class="btn primary-buttonAV w-100 rounded-1 pb-2">Login</button>-->
-
+                        <div class="dropdown-menu p-3 myaccountForm validate">
                         <div class="loginRCard px-4 w-100">
                             <div class="logo-k mb-5"> 
                                 <a class="navbar-brand" href="http://localhost/avenzur/">
@@ -217,7 +217,7 @@
                                 <?= form_close(); ?>
                             </div>
                           <div>
-
+                        </div>
                       <?php
                     }
                   ?>
