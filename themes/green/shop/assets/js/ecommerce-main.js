@@ -1705,7 +1705,6 @@ if (window.innerWidth < 500) {
 // New login workflow functionality
 
 function LoginFn(obj){ 
-  alert('Here we are active....');
   $('#loginBtn').addClass("active");
   $('#registerBtn').removeClass("active");
   $('#loginBlock').show();

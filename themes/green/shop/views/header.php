@@ -184,8 +184,8 @@
                             </div>
                             <h4 class="fw-bold letstart">Let's get started</h4>
                             <div class="logsignBtns mt-3 d-flex justify-content-center">
-                                <button type="button" id="loginBtn" class="btn  text-white  active">Log in</button>
-                                <button type="button" id="registerBtn" class="btn  text-white px-4 ">Sign up</button>
+                                <button type="button" id="loginBtn" class="btn  text-white" onclick="LoginFn(this);">Log in</button>
+                                <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerBtn(this);">Sign up</button>
                             </div>
                             <div id="registerBlock">
                                 <?php 
