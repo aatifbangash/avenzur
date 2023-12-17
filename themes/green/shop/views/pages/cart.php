@@ -56,7 +56,7 @@
 
 
 
-                <div class="row">
+                <!--<div class="row">
 
                     <div class="col-sm-8">
                         <div class="panel panel-default margin-top-lg">
@@ -127,7 +127,7 @@
                         </div>
                     </div>
 
-                </div>
+                </div>-->
 
 
                 
