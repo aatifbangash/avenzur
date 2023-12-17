@@ -153,29 +153,13 @@
                     </div>
                       <?php
                     }else{
-                      ?>
-                      <?= form_open('login', 'class="dropdown-menu p-3 myaccountForm validate"'); ?>
-                        <!--<div class="mb-3">
-                        <?php $u = mt_rand(); ?>
-                          <label for="exampleDropdownFormEmail2" class="form-label">Email</label>
-                          <a href="<?= site_url().'/login#register'; ?>" class="float-end text-decoration-none text-dark">Register</a>
-                          <input type="email" name="identity" class="form-control" id="username<?= $u; ?>" value="" placeholder="Email" />
-                        </div>
-                        <div class="mb-3">
-                          <label for="exampleDropdownFormPassword2" class="form-label">Password</label>
-                          <a class="float-end text-decoration-none text-dark forgot-password" style="cursor: pointer;">Forgot?</a>
-                          <input type="password" id="password<?= $u; ?>" name="password" value="" class="form-control" id="exampleDropdownFormPassword2" placeholder="Password" />
-                        </div>
-                        <div class="mb-3">
-                          <div class="form-check">
-                            <input type="checkbox" value="1" name="remember_me" class="form-check-input" id="dropdownCheck2">
-                            <label class="form-check-label" for="dropdownCheck2">
-                              Remember me
-                            </label>
-                          </div>
-                        </div>
-                        <button type="submit" value="login" name="login" class="btn primary-buttonAV w-100 rounded-1 pb-2">Login</button>-->
-
+                      ?>  
+                        <?php $u = mt_rand();
+                          $currentUri = $this->uri->uri_string(); 
+                          if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
+                        ?>
+                        
+                        <div class="dropdown-menu p-3 myaccountForm validate">
                         <div class="loginRCard px-4 w-100">
                             <div class="logo-k mb-5"> 
                                 <a class="navbar-brand" href="http://localhost/avenzur/">
@@ -216,9 +200,12 @@
                                 <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
                                 <?= form_close(); ?>
                             </div>
+                            
                           <div>
-
+                          <span id="register-message" style="color: blue;"></span>
+                        </div>
                       <?php
+                          }
                     }
                   ?>
                 </div>
@@ -381,88 +368,96 @@
     </section>
     <!-- menu bar end -->
 
-    <!-- Register Modal Starts -->
-    <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content px-4 rounded-4">
-              <div class="modal-header border-0">
-                  <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-              </div>
-              <div class="modal-body ">
-                  <div class="emailOTP">
-                      <div class="text-center px-5">
-                          <h2>Verify your email</h2>
-                          <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span></h5>
-                      </div>
-                      <?php 
-                          $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registerOtpForm'];
-                          echo form_open('register_otp', $attrib); 
-                      ?>
-                      <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
-                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
-                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
-                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
-                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
-                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
-                          <input type="hidden" id="identifier_input" name="identifier_input" value="" />
-                      </div>
-                      <div  class="text-center">
-                          <h6 class="m-0 mt-2"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="registerOTP">Resend OTP </span></h6>
-                      </div>
-                  </div>
-              </div>
-              <div class="modal-footer border-0 pb-4">
-                  <button type="submit" id="registerOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
-              </div>
-              <?= form_close(); ?>
-          </div>
-      </div>
-  </div>
-  <!-- Register Modal Ends -->
+    <?php 
+      
+      $currentUri = $this->uri->uri_string(); 
+      if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
+        ?>
+          <!-- Register Modal Starts -->
+          <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content px-4 rounded-4">
+                    <div class="modal-header border-0">
+                        <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                    <div class="modal-body ">
+                        <div class="emailOTP">
+                            <div class="text-center px-5">
+                                <h2>Verify your email</h2>
+                                <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span></h5>
+                            </div>
+                            <?php 
+                                $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registerOtpForm'];
+                                echo form_open('register_otp', $attrib); 
+                            ?>
+                            <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
+                                <input type="hidden" id="identifier_input" name="identifier_input" value="" />
+                            </div>
+                            <div  class="text-center">
+                                <h6 class="m-0 mt-2"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="registerOTP">Resend OTP </span></h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pb-4">
+                        <button type="submit" id="registerOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Login</button>
+                    </div>
+                    <?= form_close(); ?>
+                </div>
+            </div>
+        </div>
+        <!-- Register Modal Ends -->
 
-  <!-- Login Modal Starts -->
-  <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content px-4 rounded-4">
-              <div class="modal-header border-0">
-                  
-                  <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-              </div>
-              <div class="modal-body ">
-                  <div class="smsOTP">
-                      <div class="text-center px-5">
-                          <h2>Verify your phone</h2>
-                          <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifierl"></span></h5>
-                      </div>
-                      <?php 
-                          $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginOtpForm'];
-                          echo form_open('login_otp', $attrib); 
-                      ?>
-                      <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
-                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
-                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
-                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
-                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
-                          <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
-                          <input type="hidden" id="identifierl_input" name="identifier_input" value="" />
-                      </div>
-                      
-                      <div  class="text-center">
-                          <h6 class="m-0 mt-2"><span id="login-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="loginOTP">Resend OTP Via SMS</span></h6>
-                      </div>
-                  </div>
+        <!-- Login Modal Starts -->
+        <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content px-4 rounded-4">
+                    <div class="modal-header border-0">
+                        
+                        <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                    <div class="modal-body ">
+                        <div class="smsOTP">
+                            <div class="text-center px-5">
+                                <h2>Verify OTP</h2>
+                                <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifierl"></span></h5>
+                            </div>
+                            <?php 
+                                $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginOtpForm'];
+                                echo form_open('login_otp', $attrib); 
+                            ?>
+                            <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
+                                <input type="hidden" id="identifierl_input" name="identifier_input" value="" />
+                            </div>
+                            
+                            <div  class="text-center">
+                                <h6 class="m-0 mt-2"><span id="login-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="loginOTP">Resend OTP</span></h6>
+                            </div>
+                        </div>
 
-              </div>
-              <div class="modal-footer border-0 pb-4">
-                  <button type="submit" id="loginOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0">Login</button>
-              </div>
-              <?= form_close(); ?>
-          </div>
-      </div>
-  </div>
-  <!-- Login Modal Ends -->
+                    </div>
+                    <div class="modal-footer border-0 pb-4">
+                        <button type="submit" id="loginOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0">Login</button>
+                    </div>
+                    <?= form_close(); ?>
+                </div>
+            </div>
+        </div>
+        <!-- Login Modal Ends -->
+        <?php
+      }
+    ?>
 
   <!-- product popup start -->
   <div class="modal fade" id="productPop" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
