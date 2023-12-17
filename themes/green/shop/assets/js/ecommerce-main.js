@@ -166,8 +166,8 @@ function update_cart(t) {
         '<span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>' +
         '</div></div></div><hr />';
 
-        //$('<div class="row-class" id="' + this.rowid + '">' + a + '</div>').appendTo('#cart-table-new');
-        $(a).appendTo('#cart-table-new');
+        $('<div class="row row-class" id="' + this.rowid + '">' + a + '</div>').appendTo('#cart-table-new');
+        //$(a).appendTo('#cart-table-new');
     });
 
     $('#total-unique_items').html(t.total_unique_items);
