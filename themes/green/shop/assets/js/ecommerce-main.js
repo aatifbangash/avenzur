@@ -910,8 +910,7 @@ $(document).ready(function () {
     var e = $(this).parent().find("input");
     parseInt(e.val()) > 1 && e.val(parseInt(e.val()) - 1);
 
-    var e = this.defaultValue,
-      a = $(this).closest("div.row-class"),
+    var a = $(this).closest("div.row-class"),
       s = a.attr("id"),
       i = site.site_url + "cart/update",
       o = {};
@@ -925,8 +924,7 @@ $(document).ready(function () {
     var e = $(this).parent().find("input");
     e.val(parseInt(e.val()) + 1);
 
-    var e = this.defaultValue,
-      a = $(this).closest("div.row-class"),
+    var a = $(this).closest("div.row-class"),
       s = a.attr("id"),
       i = site.site_url + "cart/update",
       o = {};
