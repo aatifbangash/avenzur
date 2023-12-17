@@ -1784,7 +1784,7 @@ $(document).ready(function() {
                 }, 1000);
 
             } else {
-                alert('Signup failed. Please try again.');
+                $('#register-message').html(respObj.message);
             }
         },
         error: function (error) {
