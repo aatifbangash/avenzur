@@ -60,8 +60,9 @@ function update_popup_cart(t){
         '<p class="m-0 fs-5 fw-semibold text-start">' + this.name + '</p>' +
         '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4">' + this.subtotal + '</p>' + 
         '</div></div><hr>';
+
+        $("#product-popup-modal-body").append(t);
     });
-    $("#product-popup-modal-body").html(t);
   }
 }
 function update_mini_cart(t) {

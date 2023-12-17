@@ -474,7 +474,7 @@
             </div>
             <div class="modal-body" id="product-popup-modal-body">
               
-              <div class=" row align-items-center mt-4">
+              <!--<div class=" row align-items-center mt-4">
                 <div class="addicon col-md-3 px-0">
                     <p class="m-0 fs-5 fw-semibold text-start text-dark">
                         Cart Total  
@@ -483,7 +483,7 @@
                 <div class=" col-md-9">
                     <p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark"> SAR 190</p>  
                 </div>                                                             
-              </div>
+              </div>-->
             </div>
             <div class="modal-footer border-0 pb-4 d-flex flex-nowrap">
                 <button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0">Checkout</button>
