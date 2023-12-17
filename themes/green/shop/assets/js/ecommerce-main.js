@@ -63,6 +63,16 @@ function update_popup_cart(t){
 
         $("#product-popup-modal-body").append(t);
     });
+
+    var e = 
+      '<div class=" row align-items-center mt-4">' +
+      '<div class="addicon col-md-3 px-0">' + 
+      '<p class="m-0 fs-5 fw-semibold text-start text-dark">Cart Total</p>' + 
+      '</div>' + 
+      '<div class=" col-md-9">' +
+      '<p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark">' + t.total + '</p>' +
+      '</div></div>'; 
+      $("#product-popup-modal-body").append(e);
   }
 }
 function update_mini_cart(t) {
