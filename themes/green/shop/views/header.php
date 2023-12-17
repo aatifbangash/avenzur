@@ -487,7 +487,7 @@
             </div>
             <div class="modal-footer border-0 pb-4 d-flex flex-nowrap">
                 <button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0">Checkout</button>
-                <button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 modalcloseBtn" data-bs-dismiss="modal">Continue Shopping</button>
+                <button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0" data-bs-dismiss="modal">Continue Shopping</button>
             </div>
             
         </div>
