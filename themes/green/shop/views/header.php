@@ -216,8 +216,9 @@
                                 <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
                                 <?= form_close(); ?>
                             </div>
-                            <span id="register-message" style="color: blue;"></span>
+                            
                           <div>
+                          <span id="register-message" style="color: blue;"></span>
                         </div>
                       <?php
                     }

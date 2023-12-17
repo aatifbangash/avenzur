@@ -1877,7 +1877,7 @@ $('#loginBtnCall').click(function (e) {
                 }, 1000);
 
             } else {
-                alert('Login failed. Please try again.');
+              $('#register-message').html(respObj.message);
             }
         },
         error: function (error) {
@@ -1921,7 +1921,7 @@ function handleLoginOTPClick(){
                 }, 1000);
 
             } else {
-                alert('Login failed. Please try again.');
+              $('#register-message').html(respObj.message);
             }
         },
         error: function (error) {
