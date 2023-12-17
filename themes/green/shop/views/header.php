@@ -184,21 +184,39 @@
                             </div>
                             <h4 class="fw-bold letstart">Let's get started</h4>
                             <div class="logsignBtns mt-3 d-flex justify-content-center">
-                                <button type="button" class="btn  text-white  active">Log in</button>
-                                <button type="button" class="btn  text-white px-4 ">Sign up</button>
+                                <button type="button" id="loginBtn" class="btn  text-white  active">Log in</button>
+                                <button type="button" id="registerBtn" class="btn  text-white px-4 ">Sign up</button>
                             </div>
-                            <div>
+                            <div id="registerBlock">
+                                <?php 
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
+                                    echo form_open('register', $attrib); 
+                                ?>
                                 <div class="controls logcardinput">
                                 
-                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter mobile or phone number" required="required"/>
+                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email" required="required"/>
                                 
                                 </div>
 
-                                <button type="button" class="btn  text-white continueBtn" data-bs-toggle="modal" data-bs-target="#exampleModal">Continue</button>
+                                <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
+                                <?= form_close(); ?>
                             </div>
-                            
-                        </div>
-                      <?= form_close(); ?>
+
+                            <div id="loginBlock" style="display:none;">
+                                <?php 
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
+                                    echo form_open('login', $attrib); 
+                                ?>
+                                <div class="controls logcardinput">
+                                
+                                <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
+                                
+                                </div>
+
+                                <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
+                                <?= form_close(); ?>
+                            </div>
+                          <div>
 
                       <!--<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-dialog-centered">
