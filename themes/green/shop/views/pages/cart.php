@@ -1,7 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); 
 
 $cart_contents = $this->cart->contents();
-print_r($cart_contents);exit;
 
 ?>
 
@@ -34,7 +33,14 @@ print_r($cart_contents);exit;
                             <div class="d-flex">
                                 <input type="text"  class="form-control  rounded-0" placeholder="Welcom20">
                                 <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> 
-                                    Code applied!
+                                    <?php 
+                                        if(isset($cart_contents['coupon_disc'])){
+                                            echo 'Code applied!';
+                                        }else{
+                                            echo 'Apply Code';
+                                        }
+                                    ?>   
+                                
                                 </button>
                             </div>
                             <div class="d-flex justify-content-between align-items-center my-3">
