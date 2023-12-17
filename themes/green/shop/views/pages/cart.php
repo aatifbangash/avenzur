@@ -32,7 +32,7 @@ $cart_contents = $this->cart->contents();
                             <h4>Coupon Code</h4>
                             <div class="d-flex">
                                 <?php
-                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registerOtpForm'];
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'coupon_form'];
                                     echo form_open('apply_coupon', $attrib); 
                                 ?>
                                 <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="Welcom20">
