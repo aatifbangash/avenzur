@@ -260,6 +260,12 @@ class Tec_cart
         return $this->sma->formatDecimal($this->_cart_contents['cart_total'], 4);
     }
 
+    public function set_discount($discount)
+    {
+        $this->_cart_contents['cart_discount'] = $discount;
+        return $this->sma->formatDecimal($this->_cart_contents['cart_discount'], 4);
+    }
+
     public function total()
     {
         return $this->sma->formatDecimal($this->_cart_contents['cart_total'], 4);
