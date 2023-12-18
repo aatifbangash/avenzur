@@ -27,7 +27,11 @@ class Products extends MY_Controller
 
     public function update_intl_barcode(){
 
-        $csvFile = 'https://avenzur.com/assets/uploads/temp/internation_bcs.csv';
+        //$csvFile = 'https://avenzur.com/assets/uploads/temp/iherb_updated.csv';
+        //$csvFile = '/var/www/backup25May2023/assets/uploads/temp/iherb_updated.csv';
+
+        $csvFile = $this->upload_path.'temp/iherb_updated.csv';
+        echo $csvFile;exit;
         
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
@@ -46,8 +50,8 @@ class Products extends MY_Controller
         // Iterate through rows in the CSV file
         while (($rowData = fgetcsv($handle)) !== false) {
             // Assuming 'B' and 'C' are the columns for 'code' and 'ic' respectively
-            $excelCode = $rowData[1]; // CSV is 0-indexed
-            $ic = $rowData[2];
+            $excelCode = $rowData[0]; // CSV is 0-indexed
+            $ic = $rowData[0];
     
             // Find the product in the database based on the code
             $product = $this->db->get_where('sma_products', ['code' => $excelCode])->row();
