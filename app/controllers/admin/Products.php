@@ -31,7 +31,6 @@ class Products extends MY_Controller
         //$csvFile = '/var/www/backup25May2023/assets/uploads/temp/iherb_updated.csv';
 
         $csvFile = $this->upload_path.'temp/iherb_updated.csv';
-        echo $csvFile;exit;
         
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
