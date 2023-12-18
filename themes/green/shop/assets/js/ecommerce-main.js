@@ -163,8 +163,8 @@ function update_cart_item(t, e, a, s, i) {
 }
 
 function update_cart(t) {
+  $("#cart-table-new").empty();
   if (t.total_items && t.total_items > 0) {
-    $("#cart-table-new").empty();
     var e = 1;
     $.each(t.contents, function () {
       var t = this,
@@ -688,9 +688,9 @@ $(document).ready(function () {
     (e.rowid = $(this).attr("data-rowid")),
       saa_alert(site.site_url + "cart/remove", !1, "post", e);
   }),
-    $("#empty-cart").click(function (t) {
-      t.preventDefault(), saa_alert($(this).attr("href"));
-    });
+  $("#empty-cart").click(function (t) {
+    t.preventDefault(), saa_alert($(this).attr("href"));
+  });
 
   update_cart(cart);
 
