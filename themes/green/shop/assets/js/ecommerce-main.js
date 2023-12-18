@@ -288,10 +288,15 @@ function update_cart(t) {
       //$(".cart-item-option").selectpicker("refresh"),
       $(".cart-empty-msg").hide(),
       $(".cart-contents").show();*/
-  } else
-    $("#total-items").text(t.total_items),
+  } else{
+    /*$("#total-items").text(t.total_items),
       $(".cart-contents").hide(),
-      $(".cart-empty-msg").show();
+      $(".cart-empty-msg").show();*/
+
+      $('#total-unique_items').html(t.total_unique_items);
+      $('#total-price').html(t.total);
+      $('#total-after_discount').html(t.total);
+  }
 }
 
 function formatMoney(t, e) {
