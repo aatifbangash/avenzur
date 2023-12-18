@@ -54,10 +54,10 @@ class Cart_ajax extends MY_Shop_Controller
             $cart_arr = $this->cart;
             $cart_total = $cart_arr->cart_contents['cart_total'];
             $discount = 25;
-            $coupon_disc = ($cart_total*25)/100;
+            $coupon_disc = ($cart_total*$discount)/100;
             $cart_total = $cart_total - $coupon_disc;
 
-            $this->cart->set_discount($cart_total);
+            $this->cart->set_discount($coupon_disc);
 
             echo '<pre>';
             print_r($this->cart);
