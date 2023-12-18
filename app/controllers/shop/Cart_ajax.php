@@ -64,7 +64,7 @@ class Cart_ajax extends MY_Shop_Controller
                     'rowid'  => $val['rowid'],
                     'discount'  => ($val['price'] * $discount) / 100
                 ];
-                array_push($data, $cart_arr);
+                array_push($cart_arr, $data);
             }
 
             echo '<pre>';
