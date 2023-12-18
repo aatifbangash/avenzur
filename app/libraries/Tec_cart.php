@@ -75,6 +75,7 @@ class Tec_cart
         $this->_cart_contents['total_items']        = 0;
         $this->_cart_contents['total_item_tax']     = 0;
         $this->_cart_contents['total_unique_items'] = 0;
+        $this->_cart_contents['total_discount']     = 0;
         foreach ($this->_cart_contents as $key => $val) {
             if (!is_array($val) or !isset($val['price'], $val['qty'])) {
                 continue;
