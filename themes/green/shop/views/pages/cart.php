@@ -1,9 +1,83 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<section class="page-contents">
+<?php defined('BASEPATH') or exit('No direct script access allowed'); 
+
+$cart_contents = $this->cart->contents();
+
+?>
+
+<section class="page-contents" style="background:white !important;">
     <div class="container container-max-width cartpage">
         <div class="row">
             <div class="col-md-12">
-                <div class="row">
+
+                <!-- cart new dsign -->
+                <div class="row justify-content-between ">
+
+                    <div class="col-sm-7">
+                        <h3>Shopping Cart</h3>
+                        <div class="row bg-light ps-1 mt-5" id="cart-table-new" style="margin-inline: 3px;padding: 25px;">
+                            
+                        </div>
+                    </div>
+
+
+                    <div class="col-sm-5">
+                        <div class="text-end">
+                            <!--<a class="navbar-brand" href="#">
+                            <img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="logo" >
+                            </a>-->
+                        </div>
+                        <div class="border p-3 px-4 mt-5 pb-5">
+                            <h2>Order Summary</h2>
+                        
+                            <h4>Coupon Code</h4>
+                            <div class="d-flex">
+                                <?php
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'coupon_form'];
+                                    echo form_open('apply_coupon', $attrib); 
+                                ?>
+                                <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="">
+                                <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> 
+                                    <?php 
+                                        if(isset($cart_contents['coupon_disc'])){
+                                            echo 'Code applied!';
+                                        }else{
+                                            echo 'Apply Code';
+                                        }
+                                    ?>   
+                                
+                                </button>
+                                <?php 
+                                    echo form_close();
+                                ?>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center my-3">
+                                <h4 class="m-0 fw-semibold">Subtotal (<span id="total-unique_items">0</span> items)</h4>
+                                <h4 class="m-0 fw-semibold"><span id="total-price">0 SAR</span></h4>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center my-3">
+                                <h4 class="m-0 ">Discount</h4>
+                                <h4 class="m-0 "><span id="total-discount">SAR 0</span></h4>
+                            </div>
+                            <h4 class="m-0 opacity-50 border-bottom pb-1">Shipping fee will be calculated at checkout</h4>
+                            <div class="d-flex justify-content-between align-items-center my-3">
+                                <h4 class="m-0 fw-bold fs-5">Total <span class="fs-6 opacity-50">(Inclusive of VAT)</span></h4>
+                                <h4 class="m-0 fw-bold fs-5"><span id="total-after_discount">SAR 0</span></h4>
+                            </div>
+
+                            <a href="<?= site_url('cart/checkout'); ?>" style="border:0px;background: none;" class="btn btn-danger btn-sm">
+                                <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 " style="font-size:18px !important;"> Checkout</button>
+                            </a>
+                            
+                        </div>
+                    </div>
+
+                </div>
+                <!-- cart new dsign end -->
+
+
+
+
+                <!--<div class="row">
 
                     <div class="col-sm-8">
                         <div class="panel panel-default margin-top-lg">
@@ -25,7 +99,7 @@
                                                class="table table-condensed table-striped table-cart margin-bottom-no">
                                             <thead>
                                             <tr>
-                                                <!--<th><i class="text-grey fa fa-trash-o"></i></th>-->
+                                                <th><i class="text-grey fa fa-trash-o"></i></th>
                                                 <th>#</th>
                                                 <th class="col-xs-4" colspan="2"><?= lang('product'); ?></th>
                                                 <th class="col-xs-3"><?= lang('option'); ?></th>
@@ -74,7 +148,11 @@
                         </div>
                     </div>
 
-                </div>
+                </div>-->
+
+
+                
+
                 <!--<code class="text-muted">* <?= lang('shipping_rate_info'); ?></code>-->
             </div>
         </div>

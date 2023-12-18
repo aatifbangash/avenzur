@@ -75,6 +75,7 @@ class Tec_cart
         $this->_cart_contents['total_items']        = 0;
         $this->_cart_contents['total_item_tax']     = 0;
         $this->_cart_contents['total_unique_items'] = 0;
+        $this->_cart_contents['total_discount']     = 0;
         foreach ($this->_cart_contents as $key => $val) {
             if (!is_array($val) or !isset($val['price'], $val['qty'])) {
                 continue;
@@ -252,6 +253,19 @@ class Tec_cart
     public function shipping()
     {
         return $this->sma->formatDecimal($this->shop_settings->shipping, 4);
+    }
+
+    public function set_total($total)
+    {
+        $this->_cart_contents['cart_total'] = $total;
+        return $this->sma->formatDecimal($this->_cart_contents['cart_total'], 4);
+    }
+
+    public function set_discount($discount)
+    {
+        $this->_cart_contents['cart_discount'] = $discount;
+        $this->_save_cart();
+        return $this->sma->formatDecimal($this->_cart_contents['cart_discount'], 4);
     }
 
     public function total()

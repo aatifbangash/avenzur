@@ -25,6 +25,7 @@ $route['page/(:any)'] = 'shop/shop/page/$1';
 $route['cart']               = 'shop/cart_ajax';
 $route['cart/(:any)']        = 'shop/cart_ajax/$1';
 $route['cart/(:any)/(:any)'] = 'shop/cart_ajax/$1/$2';
+$route['apply_coupon']       = 'shop/cart_ajax/apply_coupon';
 
 // Misc routes
 $route['shop/(:any)']               = 'shop/shop/$1';
@@ -33,9 +34,13 @@ $route['shop/(:any)/(:any)/(:any)'] = 'shop/shop/$1/$2/$3';
 
 // Auth routes
 $route['login']                  = 'main/login';
+$route['login_otp']              = 'main/login_otp';
+$route['verify_phone']           = 'main/verify_phone';
+$route['mobile_verify_otp']      = 'main/mobile_verify_otp';
 $route['logout']                 = 'main/logout';
 $route['profile']                = 'main/profile';
 $route['register']               = 'main/register';
+$route['register_otp']           = 'main/register_otp';
 $route['login/(:any)']           = 'main/login/$1';
 $route['logout/(:any)']          = 'main/logout/$1';
 $route['profile/(:any)']         = 'main/profile/$1';

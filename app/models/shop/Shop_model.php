@@ -34,7 +34,7 @@ class Shop_model extends CI_Model
         if ($query->num_rows() > 0) {
             $this->db->where($uniqueColumns);
             $this->db->update('customer_otp', $data);
-            
+
             $this->db->where($uniqueColumns);
             $query = $this->db->get('customer_otp');
             $result = $query->result_array();
@@ -48,16 +48,41 @@ class Shop_model extends CI_Model
         return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
     }
 
-    public function getUniqueCustomer($type, $identifier){
-        if($type == 'email'){
-            return $this->db->get_where('companies', ['email' => $identifier], 1)->row();
-        }else{
-            return $this->db->get_where('companies', ['phone' => $identifier], 1)->row();
-        }
-        
+    public function activate_user($email)
+    {
+        return $this->db->update('users', ['active' => 1], ['email' => $email]);
     }
 
-    public function addUniqueCustomer($data){
+    public function verify_success_mobile($company_id)
+    {
+        return $this->db->update('companies', ['mobile_verified' => 1], ['id' => $company_id]);
+    }
+
+    public function validate_otp($identifer, $otp)
+    {
+        $uniqueColumns = array('identifier' => $identifer, 'otp' => $otp);
+        $this->db->where($uniqueColumns);
+        $query = $this->db->get('customer_otp');
+        $result = $query->result_array();
+        if ($result) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function getUniqueCustomer($type, $identifier)
+    {
+        if ($type == 'email') {
+            return $this->db->get_where('companies', ['email' => $identifier], 1)->row();
+        } else {
+            return $this->db->get_where('companies', ['phone' => $identifier], 1)->row();
+        }
+
+    }
+
+    public function addUniqueCustomer($data)
+    {
         $uniqueColumns = array('email');
         $query = $this->db->get_where('companies', ['email' => $data['email']]);
 
@@ -177,6 +202,22 @@ class Shop_model extends CI_Model
     public function getAddresses()
     {
         return $this->db->get_where('addresses', ['company_id' => $this->session->userdata('company_id')])->result();
+    }
+
+    public function getDefaultChechoutAddress($lastAddress = false)
+    {
+        if ($lastAddress) {
+
+            $this->db->select('*');
+            $this->db->from('addresses');
+            $this->db->where('company_id', $this->session->userdata('company_id'));
+            $this->db->order_by('id', 'DESC'); 
+            $this->db->limit(1); 
+
+            return $result = $this->db->get()->result();
+          
+        }
+        return $this->db->get_where('addresses', ['company_id' => $this->session->userdata('company_id'), 'is_default' => 1])->result();
     }
 
     public function getAllBrands()
@@ -314,13 +355,13 @@ class Shop_model extends CI_Model
         foreach ($categories as $category) {
             $category->name = ucfirst(strtolower($category->name));
         }
-    
+
         return $categories;
     }
 
     public function getSpecialOffers($limit = 16, $promo = true)
     {
-        $countryId = get_cookie('shop_country', true);//$this->session->userdata('country');
+        $countryId = get_cookie('shop_country', true); //$this->session->userdata('country');
         $this->db->select("
         {$this->db->dbprefix('products')}.id as id, 
         {$this->db->dbprefix('products')}.name as name, 
@@ -371,12 +412,12 @@ class Shop_model extends CI_Model
         $this->db->group_by('products.id');
         $this->db->order_by('RAND()');
         $result = $this->db->get('products')->result();
-//        dd($result);
+        //        dd($result);
         array_map(function ($row) {
             if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
                 $productTaxPercent = $row->taxPercentage;
 
-                if($row->promotion == 1){
+                if ($row->promotion == 1) {
                     $productPromoPrice = $row->promo_price;
                     $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
                     $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
@@ -445,7 +486,7 @@ class Shop_model extends CI_Model
                 if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
                     $productTaxPercent = $row->taxPercentage;
 
-                    if($row->promotion == 1){
+                    if ($row->promotion == 1) {
                         $productPromoPrice = $row->promo_price;
                         $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
                         $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
@@ -467,42 +508,42 @@ class Shop_model extends CI_Model
     {
 
         $query = $this->db->select('sale_items.product_id, sale_items.product_code, sale_items.product_name,sales.customer_id')
-                            ->from('sale_items')
-                            ->join('sales', 'sales.id = sale_items.sale_id', 'left')
-                            ->where('sales.customer_id', $customer_id)
-                            ->group_by('sale_items.product_id');
-        $result = $query->get();                    
-                
+            ->from('sale_items')
+            ->join('sales', 'sales.id = sale_items.sale_id', 'left')
+            ->where('sales.customer_id', $customer_id)
+            ->group_by('sale_items.product_id');
+        $result = $query->get();
+
         if ($result) {
-        return $resultArray = $result->result();
+            return $resultArray = $result->result();
         } else {
             // Handle the error, for example, show an error message
-        return false;
+            return false;
         }
-           
+
     }
 
     public function getOrderItemsReviewByCustomer($customer_id)
     {
         $query = $this->db->select('product_reviews.*, products.code, products.name')
-                            ->from('product_reviews')
-                            ->join('products', 'products.id = product_reviews.product_id', 'left')
-                            ->where('product_reviews.customer_id', $customer_id)
-                            ;
-        $result = $query->get();    
-                
+            ->from('product_reviews')
+            ->join('products', 'products.id = product_reviews.product_id', 'left')
+            ->where('product_reviews.customer_id', $customer_id)
+        ;
+        $result = $query->get();
+
         if ($result) {
-          
-        return $resultArray = $result->result();
+
+            return $resultArray = $result->result();
         } else {
             return false;
         }
-           
+
     }
 
     public function getBestSellers($limit = 16, $promo = true)
     {
-        $countryId = get_cookie('shop_country', true);//$this->session->userdata('country');
+        $countryId = get_cookie('shop_country', true); //$this->session->userdata('country');
         $this->db->select("
         {$this->db->dbprefix('products')}.id as id, 
         {$this->db->dbprefix('products')}.name as name, 
@@ -554,13 +595,13 @@ class Shop_model extends CI_Model
         $this->db->group_by('products.id');
         $this->db->order_by('id desc');
         $result = $this->db->get('products')->result();
-//        dd($result);
+        //        dd($result);
 
         array_map(function ($row) {
             if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
                 $productTaxPercent = $row->taxPercentage;
 
-                if($row->promotion == 1){
+                if ($row->promotion == 1) {
                     $productPromoPrice = $row->promo_price;
                     $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
                     $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
@@ -576,7 +617,7 @@ class Shop_model extends CI_Model
 
     public function getBestSellersAdditional($limit = 16, $promo = true)
     {
-        $countryId = get_cookie('shop_country', true);//$this->session->userdata('country');
+        $countryId = get_cookie('shop_country', true); //$this->session->userdata('country');
         $this->db->select("
         {$this->db->dbprefix('products')}.id as id, 
         {$this->db->dbprefix('products')}.name as name, 
@@ -628,13 +669,13 @@ class Shop_model extends CI_Model
         $this->db->group_by('products.id');
         $this->db->order_by('id asc');
         $result = $this->db->get('products')->result();
-//        dd($result);
+        //        dd($result);
 
         array_map(function ($row) {
             if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
                 $productTaxPercent = $row->taxPercentage;
 
-                if($row->promotion == 1){
+                if ($row->promotion == 1) {
                     $productPromoPrice = $row->promo_price;
                     $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
                     $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
@@ -650,7 +691,7 @@ class Shop_model extends CI_Model
 
     public function getFeaturedProducts($limit = 16, $promo = true)
     {
-        $countryId = get_cookie('shop_country', true);//$this->session->userdata('country');
+        $countryId = get_cookie('shop_country', true); //$this->session->userdata('country');
         $this->db->select("
         {$this->db->dbprefix('products')}.id as id, 
         {$this->db->dbprefix('products')}.name as name, 
@@ -702,13 +743,13 @@ class Shop_model extends CI_Model
         $this->db->group_by('products.id');
         $this->db->order_by('RAND()');
         $result = $this->db->get('products')->result();
-//        dd($result);
+        //        dd($result);
 
         array_map(function ($row) {
             if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
                 $productTaxPercent = $row->taxPercentage;
 
-                if($row->promotion == 1){
+                if ($row->promotion == 1) {
                     $productPromoPrice = $row->promo_price;
                     $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
                     $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
@@ -847,8 +888,8 @@ class Shop_model extends CI_Model
             t.code as taxCode,
             CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating'
         )
-        ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
-        ->join('product_reviews pr', 'products.id=pr.product_id', 'left');
+            ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
+            ->join('product_reviews pr', 'products.id=pr.product_id', 'left');
         $sp = $this->getSpecialPrice();
         if ($sp->cgp) {
             $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
@@ -885,7 +926,7 @@ class Shop_model extends CI_Model
         $q = $this->db->get('products', 1);
         if ($q->num_rows() > 0) {
             $row = $q->row();
-//            Added by Atif and Commented by atif.
+            //            Added by Atif and Commented by atif.
 //            if($row->tax_method == '0') { // 0 = tax inclusive, 1 = tax exclusive
 //                $tax = $this->db->get_where('tax_rates', ['id' => $row->tax_rate])->row();
 //                if($tax){
@@ -1066,7 +1107,7 @@ class Shop_model extends CI_Model
                 }
                 /* Comment June 14, 2022 */
                 /* $nameRegex = str_replace(' ','|', strtolower($filters['query'])); 
-			 
+             
                 $this->db->group_start()->where("LOWER({$this->db->dbprefix('products')}.name) REGEXP ", $nameRegex)->or_like("{$this->db->dbprefix('products')}.code", $filters['query'], 'both') ->or_like("{$this->db->dbprefix('products')}.Auther_1", $filters['query'], 'both')->or_like("{$this->db->dbprefix('products')}.Auther_2", $filters['query'], 'both')->or_like("{$this->db->dbprefix('products')}.Auther_3", $filters['query'], 'both') -> or_where("LOWER(pub1.name) REGEXP ", $filters['query'], 'both')->group_end();   */
                 /* END */
 
@@ -1129,7 +1170,7 @@ class Shop_model extends CI_Model
                 if ($row['tax_method'] == '1' && $row['taxPercentage'] > 0) { // tax_method = 0 means inclusiveTax
                     $productTaxPercent = $row['taxPercentage'];
 
-                    if($row['promotion'] == 1){
+                    if ($row['promotion'] == 1) {
                         $productPromoPrice = $row['promo_price'];
                         $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
                         $row['promo_price'] = $productPromoPrice + $promoProductTaxAmount;
@@ -1145,7 +1186,7 @@ class Shop_model extends CI_Model
             }, $data);
         }
         /*  echo $this->db->last_query(); */
-//        dd($data);
+        //        dd($data);
         return $mapData;
     }
 
@@ -1496,14 +1537,15 @@ class Shop_model extends CI_Model
         return $this->db->get_where('sma_aramex', ['id' => 1])->row();
     }
 
-    public function getProductOnholdQty($product_id=null) {
-       // return $product_id; 
-       $this->db->select('SUM(quantity) AS total_quantity')
-       ->where('product_id', $product_id)
-       ->where('status', 'onhold');
-    $row =  $this->db->get('product_qty_onhold_request')->row();
-    return $row->total_quantity;
-     
-         }
+    public function getProductOnholdQty($product_id = null)
+    {
+        // return $product_id; 
+        $this->db->select('SUM(quantity) AS total_quantity')
+            ->where('product_id', $product_id)
+            ->where('status', 'onhold');
+        $row = $this->db->get('product_qty_onhold_request')->row();
+        return $row->total_quantity;
+
+    }
 
 }

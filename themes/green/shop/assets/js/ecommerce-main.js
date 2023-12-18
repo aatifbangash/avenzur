@@ -47,6 +47,34 @@ function sa_img(t, e) {
     confirmButtonText: lang.okay,
   }).catch(swal.noop);
 }
+
+function update_popup_cart(t){
+  if (t.total_items && t.total_items > 0) {
+    $.each(t.contents, function () {
+      var t = 
+        '<div class=" row align-items-center">' +
+        '<div class="addicon col-md-3 px-0">' +
+        '<img src="' + site.base_url + "assets/uploads/" + this.image + '" class="w-100">' + 
+        '</div>' + 
+        '<div class=" col-md-9">' + 
+        '<p class="m-0 fs-5 fw-semibold text-start">' + this.name + '</p>' +
+        '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4">' + this.subtotal + '</p>' + 
+        '</div></div><hr>';
+
+        $("#product-popup-modal-body").append(t);
+    });
+
+    var e = 
+      '<div class=" row align-items-center mt-4">' +
+      '<div class="addicon col-md-3 px-0">' + 
+      '<p class="m-0 fs-5 fw-semibold text-start text-dark">Cart Total</p>' + 
+      '</div>' + 
+      '<div class=" col-md-9">' +
+      '<p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark">' + t.total + '</p>' +
+      '</div></div>'; 
+      $("#product-popup-modal-body").append(e);
+  }
+}
 function update_mini_cart(t) {
   if (t.total_items && t.total_items > 0) {
     var cart_table =
@@ -110,6 +138,7 @@ function update_mini_cart(t) {
 }
 
 function update_cart_item(t, e, a, s, i) {
+  console.log(e);
   $.ajax({
     url: t,
     type: "POST",
@@ -134,8 +163,46 @@ function update_cart_item(t, e, a, s, i) {
 }
 
 function update_cart(t) {
+  $("#cart-table-new").empty();
   if (t.total_items && t.total_items > 0) {
-    $("#cart-table tbody").empty();
+    var e = 1;
+    $.each(t.contents, function () {
+      var t = this,
+      a = 
+        '<div class="col-md-2"><span class="cart-item-image">' +
+        '<img style="width: 100px;height: 90px;object-fit: contain;" src="' +
+        site.base_url +
+        "assets/uploads/" +
+        this.image +
+        '" class="card-img-top" alt="...">' +
+        '</span></div>' +
+        '<div class="col-md-10 d-flex flex-column justify-content-between"><div class="d-flex justify-content-between ">' +
+        '<h5 class="m-0">'+ this.name +'</h5>' + 
+        '<div>' +
+        '<h4 class="m-0 fw-semibold fs-5" >'+ this.price +'</h4>' +
+        //'<p class="m-0 text-decoration-line-through text-danger text-center fw-semibold mb-4">SAR 10</p>' +
+        '</div></div>' +
+        '<div class="d-flex justify-content-between align-items-center"><div>' + 
+        '<a href="#" data-rowid="' + this.rowid + '" class="text-red remove-item text-decoration-none text-dark"><i class="fa fa-trash-o"></i> Remove</a></div>' +
+        '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between cartQuantity"><h6 class="my-1 me-2">Quantity</h6>' +
+        '<span class="plus btn-plus-update"><i class="bi bi-plus-circle-fill"></i></span>' +
+        '<span class="fs-6 px-2"><input type="text" style="width: 50px;" name="' +
+        e +
+        '[qty]" class="form-control text-center input-qty cart-item-qty" value="' +
+        this.qty +
+        '"></span>' + 
+        '<span class="minus btn-minus-update"><i class="bi bi-dash-circle-fill"></i></span>' +
+        '</div></div></div><hr />';
+
+        $('<div class="row row-class" id="' + this.rowid + '">' + a + '</div>').appendTo('#cart-table-new');
+        //$(a).appendTo('#cart-table-new');
+    });
+
+    $('#total-unique_items').html(t.total_unique_items);
+    $('#total-price').html(t.total);
+    $('#total-after_discount').html(t.total);
+
+    /*$("#cart-table tbody").empty();
     var e = 1;
     $.each(t.contents, function () {
       var t = this,
@@ -216,35 +283,20 @@ function update_cart(t) {
         '</td><td class="text-right">' +
         t.total +
         "</td></tr>"),
-      /*!1 !== site.settings.tax2 &&
-        (a +=
-          "<tr><td>" +
-          lang.order_tax +
-          '</td><td class="text-right">' +
-          t.order_tax +
-          "</td></tr>"),*/
-      /*(a +=
-        "<tr class='shipping-row'><td>" +
-        lang.shipping +
-        ' *</td><td class="text-right">' +
-        t.shipping +
-        "</td></tr>"),
-      (a += '<tr class="shipping-row"><td colspan="2"></td></tr>'),
-      (a +=
-        '<tr class="active text-bold shipping-row"><td>' +
-        lang.grand_total +
-        '</td><td class="text-right">' +
-        t.grand_total +
-        "</td></tr>"),*/
       $("<tbody>" + a + "</tbody>").appendTo("#cart-totals"),
       $("#total-items").text(t.total_items + "(" + t.total_unique_items + ")"),
       //$(".cart-item-option").selectpicker("refresh"),
       $(".cart-empty-msg").hide(),
-      $(".cart-contents").show();
-  } else
-    $("#total-items").text(t.total_items),
+      $(".cart-contents").show();*/
+  } else{
+    /*$("#total-items").text(t.total_items),
       $(".cart-contents").hide(),
-      $(".cart-empty-msg").show();
+      $(".cart-empty-msg").show();*/
+
+      $('#total-unique_items').html(t.total_unique_items);
+      $('#total-price').html(t.total);
+      $('#total-after_discount').html(t.total);
+  }
 }
 
 function formatMoney(t, e) {
@@ -641,26 +693,26 @@ $(document).ready(function () {
     (e.rowid = $(this).attr("data-rowid")),
       saa_alert(site.site_url + "cart/remove", !1, "post", e);
   }),
-    $("#empty-cart").click(function (t) {
-      t.preventDefault(), saa_alert($(this).attr("href"));
-    });
+  $("#empty-cart").click(function (t) {
+    t.preventDefault(), saa_alert($(this).attr("href"));
+  });
 
   update_cart(cart);
 
   $(document).on("change", ".cart-item-option, .cart-item-qty", function (t) {
     t.preventDefault();
     var e = this.defaultValue,
-      a = $(this).closest("tr"),
+      a = $(this).closest("div.row-class"),
       s = a.attr("id"),
       i = site.site_url + "cart/update",
       o = {};
     (o[site.csrf_token] = site.csrf_token_value),
       (o.rowid = s),
       (o.qty = a.find(".cart-item-qty").val()),
-      (o.option = a
+      /*(o.option = a
         .find(".cart-item-option")
         .children("option:selected")
-        .val()),
+        .val()),*/
       update_cart_item(i, o, e, $(this), t.target.type);
   });
 
@@ -832,7 +884,7 @@ $(document).ready(function () {
     var e = $(this).attr("data-id"),
       a = $(".shopping-cart:visible"),
       s = $(this).parents(".card").find("input");
-    console.log(s.val());
+    
     if (typeof s.val() === "undefined") {
       s = $(this).parents(".get-quantity").find("input");
     }
@@ -855,6 +907,8 @@ $(document).ready(function () {
         ? sa_alert("Error!", t.message, "error", !0)
         : ((a = t),
           update_mini_cart(t),
+          update_popup_cart(t),
+          $('#productPop').modal('show'),
           $.toast({
             heading: "Success",
             text: "Product Added To The Cart.",
@@ -924,6 +978,39 @@ $(document).ready(function () {
   $(document).on("click", ".btn-plus", function (t) {
     var e = $(this).parent().find("input");
     e.val(parseInt(e.val()) + 1);
+  });
+
+  $(document).on("click", ".btn-minus-update", function (t) {
+    var e = $(this).parent().find("input");
+    if(e.val() > 1){
+      parseInt(e.val()) > 1 && e.val(parseInt(e.val()) - 1);
+
+      var a = $(this).closest("div.row-class"),
+      s = a.attr("id"),
+      i = site.site_url + "cart/update",
+      o = {};
+      (o[site.csrf_token] = site.csrf_token_value),
+        (o.rowid = s),
+        (o.qty = e.val()),
+        update_cart_item(i, o, e, $(this), t.target.type);
+    }
+  });
+
+  $(document).on("click", ".btn-plus-update", function (t) {
+    var e = $(this).parent().find("input");
+    if(e.val() < 3){
+      e.val(parseInt(e.val()) + 1);
+
+      var a = $(this).closest("div.row-class"),
+        s = a.attr("id"),
+        i = site.site_url + "cart/update",
+        o = {};
+      (o[site.csrf_token] = site.csrf_token_value),
+        (o.rowid = s),
+        (o.qty = e.val()),
+        update_cart_item(i, o, e, $(this), t.target.type);
+    }
+    
   });
 
   $(".feature_products").slick({
@@ -1153,32 +1240,38 @@ function initMap() {
           geocodeLatLng2(newPosition);
         });
 
-        $('#load_current_location-2').on('click', function(e) {
+        $("#load_current_location-2").on("click", function (e) {
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                function (position) {
-                  const userLocation = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                  };
+              function (position) {
+                const userLocation = {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                };
 
-                  document.getElementById('latitude').value = position.coords.latitude;
-                  document.getElementById('longitude').value = position.coords.longitude;
-                  marker.setPosition(userLocation);
-                  map.setCenter(userLocation);
-                  document.getElementById('manual-shipping-check-2').checked = false;
-                  document.getElementById('manual-shipping-address-2').style.display = 'none';
-                  geocodeLatLng2(userLocation);
-                },
-                function (error) {
-                  console.error('Error getting user location:', error);
-                },
-                {
-                  enableHighAccuracy: true
-                }
+                document.getElementById("latitude").value =
+                  position.coords.latitude;
+                document.getElementById("longitude").value =
+                  position.coords.longitude;
+                marker.setPosition(userLocation);
+                map.setCenter(userLocation);
+                document.getElementById(
+                  "manual-shipping-check-2"
+                ).checked = false;
+                document.getElementById(
+                  "manual-shipping-address-2"
+                ).style.display = "none";
+                geocodeLatLng2(userLocation);
+              },
+              function (error) {
+                console.error("Error getting user location:", error);
+              },
+              {
+                enableHighAccuracy: true,
+              }
             );
           }
-        })
+        });
       },
       function (error) {
         console.error("Error getting user location:", error);
@@ -1199,7 +1292,7 @@ function geocodeLatLng2(latLng) {
       if (results[0]) {
         const addressComponents = results[0].address_components;
         const formattedAddress = results[0].formatted_address;
-        document.getElementById("google-map-selected-address-2").value =
+        document.getElementById("autocomplete_search").value =
           formattedAddress;
         document.getElementById("address-line-1").value = formattedAddress;
         let city, country, state, street;
@@ -1415,10 +1508,16 @@ function add_address(t) {
       // initialize();
       initMap();
 
-      document.getElementById("manual-shipping-check-2").onchange = function (e) {
+      document.getElementById("manual-shipping-check-2").onchange = function (
+        e
+      ) {
         document.getElementById("google-map-selected-address-2").value = "";
-        document.getElementById('address-country-dropdown-2').value = $("#address-country-dropdown-2 option:first").val();
-        document.getElementById('address-city-dropdown-2').value = $("#address-city-dropdown-2 option:first").val();
+        document.getElementById("address-country-dropdown-2").value = $(
+          "#address-country-dropdown-2 option:first"
+        ).val();
+        document.getElementById("address-city-dropdown-2").value = $(
+          "#address-city-dropdown-2 option:first"
+        ).val();
         document.getElementById("address-line-1").value = "";
         document.getElementById("address-city").value = "";
         document.getElementById("address-country").value = "";
@@ -1440,58 +1539,66 @@ function add_address(t) {
       $.ajax({
         url: site.base_url + "cart/get_countries",
         method: "GET",
-        success: function(jsonResponse) {
+        success: function (jsonResponse) {
           var response = JSON.parse(jsonResponse);
           $("#address-country-dropdown-2").empty();
-          if(response.length > 0) {
-            $("#address-country-dropdown-2").append('<option value="0">--SELECT--</option>');
-            response.forEach(function(city) {
-              $("#address-country-dropdown-2").append('<option value="' + city.id + '">' + city.name + '</option>');
+          if (response.length > 0) {
+            $("#address-country-dropdown-2").append(
+              '<option value="0">--SELECT--</option>'
+            );
+            response.forEach(function (city) {
+              $("#address-country-dropdown-2").append(
+                '<option value="' + city.id + '">' + city.name + "</option>"
+              );
             });
           }
         },
-        error: function() {
+        error: function () {
           console.error("Failed to fetch cities.");
-        }
+        },
       });
 
-      $("#address-country-dropdown-2").on("change", function() {
-        $('#address-city').val('');
+      $("#address-country-dropdown-2").on("change", function () {
+        $("#address-city").val("");
 
         let countryId = $(this).val();
         let selectedOption = $(this).find(":selected").text();
-        if(selectedOption != '--SELECT--') {
+        if (selectedOption != "--SELECT--") {
           $("#address-country").val(selectedOption);
         } else {
-          $("#address-country").val('');
+          $("#address-country").val("");
         }
 
         //load cities
         $.ajax({
           url: site.base_url + "cart/get_cities_by_country_id/" + countryId, // Replace with the actual endpoint to fetch cities
           method: "GET",
-          success: function(jsonResponse) {
+          success: function (jsonResponse) {
             var response = JSON.parse(jsonResponse);
             $("#address-city-dropdown-2").empty();
-            if(response.length > 0) {
-              $("#address-city-dropdown-2").append('<option value="0">--SELECT--</option>');
-              response.forEach(function(city) {
-                $("#address-city-dropdown-2").append('<option value="' + city.id + '">' + city.name + '</option>');
+            if (response.length > 0) {
+              $("#address-city-dropdown-2").append(
+                '<option value="0">--SELECT--</option>'
+              );
+              response.forEach(function (city) {
+                $("#address-city-dropdown-2").append(
+                  '<option value="' + city.id + '">' + city.name + "</option>"
+                );
               });
             }
           },
-          error: function() {
+          error: function () {
             console.error("Failed to fetch cities.");
-          }
+          },
         });
       });
 
-      $("#address-city-dropdown-2").on("change", function() {
+      $("#address-city-dropdown-2").on("change", function () {
         let selectedOption = $(this).find(":selected").text();
-        if(selectedOption != '--SELECT--') {
+        if (selectedOption != "--SELECT--") {
           $("#address-city").val(selectedOption);
         } else {
-          $("#address-city").val('');
+          $("#address-city").val("");
         }
       });
     },
@@ -1668,3 +1775,202 @@ if (window.innerWidth < 500) {
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
   });
 }
+
+// New login workflow functionality
+
+function LoginFn(obj){ 
+  $('#loginBtn').addClass("active");
+  $('#registerBtn').removeClass("active");
+  $('#loginBlock').show();
+  $('#registerBlock').hide();
+}
+
+function registerFnBtn(obj){
+  $('#loginBtn').removeClass("active");
+  $('#registerBtn').addClass("active");
+  $('#loginBlock').hide();
+  $('#registerBlock').show();
+}
+
+$(document).ready(function() {
+  function handleRegisterOTPClick(){
+    var formData = $('#registrationForm').serialize();
+    $.ajax({
+        type: 'POST',
+        url: $('#registrationForm').attr('action'),
+        data: formData,
+        success: function (response) {
+            var respObj = JSON.parse(response);
+            if (respObj.status == 'success' || respObj.code == 1) {
+                $('#registerOTP').off('click', handleRegisterOTPClick);
+                document.getElementById('registerOTP').style.color = 'grey';
+                document.getElementById('registerOTP').style.cursor = 'none';
+                $('#registerModal').modal('show');
+                document.getElementById('identifier').innerHTML = document.getElementById('email').value;
+                document.getElementById('identifier_input').value = document.getElementById('email').value;
+
+                const countdownDuration = 60; // Duration in seconds
+                const countdownDisplay = document.getElementById("register-clock");
+                
+                let timer = countdownDuration, minutes, seconds;
+                const intervalId = setInterval(function () {
+                    minutes = parseInt(timer / 60, 10);
+                    seconds = parseInt(timer % 60, 10);
+
+                    countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                    if (--timer < 0) {
+                        clearInterval(intervalId);
+                        document.getElementById('registerOTP').style.color = '#662d91';
+                        document.getElementById('registerOTP').style.cursor = 'pointer';
+                        $('#registerOTP').click(handleRegisterOTPClick);
+                    }
+                }, 1000);
+
+            } else {
+                $('#register-message').html(respObj.message);
+            }
+        },
+        error: function (error) {
+            console.error(error);
+        }
+    });
+}
+
+$('#registerBtnCall').click(function (e) {
+    e.preventDefault(); 
+
+    var formData = $('#registrationForm').serialize();
+    $.ajax({
+        type: 'POST',
+        url: $('#registrationForm').attr('action'),
+        data: formData,
+        success: function (response) {
+            var respObj = JSON.parse(response);
+            if (respObj.status == 'success' || respObj.code == 1) {
+                $('.myaccountForm').removeClass('show');
+                $('#registerOTP').off('click', handleRegisterOTPClick);
+                document.getElementById('registerOTP').style.color = 'grey';
+                document.getElementById('registerOTP').style.cursor = 'none';
+                $('#registerModal').modal('show');
+                document.getElementById('identifier').innerHTML = document.getElementById('email').value;
+                document.getElementById('identifier_input').value = document.getElementById('email').value;
+
+                const countdownDuration = 60; // Duration in seconds
+                const countdownDisplay = document.getElementById("register-clock");
+                
+                let timer = countdownDuration, minutes, seconds;
+                const intervalId = setInterval(function () {
+                    minutes = parseInt(timer / 60, 10);
+                    seconds = parseInt(timer % 60, 10);
+
+                    countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                    if (--timer < 0) {
+                        clearInterval(intervalId);
+                        document.getElementById('registerOTP').style.color = '#662d91';
+                        document.getElementById('registerOTP').style.cursor = 'pointer';
+                        $('#registerOTP').click(handleRegisterOTPClick);
+                    }
+                }, 1000);
+
+            } else {
+              $('#register-message').html(respObj.message);
+            }
+        },
+        error: function (error) {
+            console.error(error);
+        }
+    });
+});
+
+$('#loginBtnCall').click(function (e) {
+    e.preventDefault(); 
+    var formData = $('#loginForm').serialize();
+    $.ajax({
+        type: 'POST',
+        url: $('#loginForm').attr('action'),
+        data: formData,
+        success: function (response) {
+            var respObj = JSON.parse(response);
+            if (respObj.status == 'success' || respObj.code == 1) {
+                $('#loginOTP').off('click', handleLoginOTPClick);
+                $('.myaccountForm').removeClass('show');
+                document.getElementById('loginOTP').style.color = 'grey';
+                document.getElementById('loginOTP').style.cursor = 'none';
+                $('#loginModal').modal('show');
+                document.getElementById('identifierl').innerHTML = document.getElementById('identity').value;
+                document.getElementById('identifierl_input').value = document.getElementById('identity').value;
+
+                const countdownDuration = 60; // Duration in seconds
+                const countdownDisplay = document.getElementById("login-clock");
+                
+                let timer = countdownDuration, minutes, seconds;
+                const intervalId = setInterval(function () {
+                    minutes = parseInt(timer / 60, 10);
+                    seconds = parseInt(timer % 60, 10);
+
+                    countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                    if (--timer < 0) {
+                        clearInterval(intervalId);
+                        document.getElementById('loginOTP').style.color = '#662d91';
+                        document.getElementById('loginOTP').style.cursor = 'pointer';
+                        $('#loginOTP').click(handleLoginOTPClick);
+                    }
+                }, 1000);
+
+            } else {
+              $('#register-message').html(respObj.message);
+            }
+        },
+        error: function (error) {
+            console.error(error);
+        }
+    });
+});
+
+function handleLoginOTPClick(){
+    var formData = $('#loginForm').serialize();
+    $.ajax({
+        type: 'POST',
+        url: $('#loginForm').attr('action'),
+        data: formData,
+        success: function (response) {
+            var respObj = JSON.parse(response);
+            if (respObj.status == 'success' || respObj.code == 1) {
+                $('#loginOTP').off('click', handleLoginOTPClick);
+                document.getElementById('loginOTP').style.color = 'grey';
+                document.getElementById('loginOTP').style.cursor = 'none';
+                $('#loginModal').modal('show');
+                document.getElementById('identifierl').innerHTML = document.getElementById('identity').value;
+                document.getElementById('identifierl_input').value = document.getElementById('identity').value;
+
+                const countdownDuration = 60; // Duration in seconds
+                const countdownDisplay = document.getElementById("login-clock");
+                
+                let timer = countdownDuration, minutes, seconds;
+                const intervalId = setInterval(function () {
+                    minutes = parseInt(timer / 60, 10);
+                    seconds = parseInt(timer % 60, 10);
+
+                    countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                    if (--timer < 0) {
+                        clearInterval(intervalId);
+                        document.getElementById('loginOTP').style.color = '#662d91';
+                        document.getElementById('loginOTP').style.cursor = 'pointer';
+                        $('#loginOTP').click(handleLoginOTPClick);
+                    }
+                }, 1000);
+
+            } else {
+              $('#register-message').html(respObj.message);
+            }
+        },
+        error: function (error) {
+            console.error(error);
+        }
+    });
+}
+});

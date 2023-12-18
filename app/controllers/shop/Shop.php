@@ -64,6 +64,57 @@ class Shop extends MY_Shop_Controller
         }
     }
 
+    public function saveCheckoutAddress()
+    {
+        $this->load->admin_model('companies_model');
+        if (!$this->loggedIn) {
+            $this->sma->send_json(['status' => 'error', 'message' => lang('please_login')]);
+        }
+        $this->form_validation->set_rules('longitude', lang('longitude'), 'trim|required');
+        // $this->form_validation->set_rules('line2', lang("line2"), 'trim|required');
+        $this->form_validation->set_rules('latitude', lang('latitude'), 'trim|required');
+        $this->form_validation->set_rules('state', lang('state'), 'trim|required');
+        $this->form_validation->set_rules('city', lang("city"), 'trim|required');
+        $this->form_validation->set_rules('address_line_1', lang('address_line_1'), 'trim|required');
+        $this->form_validation->set_rules('country', lang('country'), 'trim|required');
+        $this->form_validation->set_rules('mobile_number', lang('mobile_number'), 'trim|required');
+        $this->form_validation->set_rules('first_name', lang('first_name'), 'trim|required');
+        $this->form_validation->set_rules('last_name', lang('last_name'), 'trim|required');
+
+        if ($this->form_validation->run() == true) {
+            $user_addresses = $this->shop_model->getAddresses();
+            
+            $data = ['line1' => $this->input->post('address_line_1'),
+                'line2' => $this->input->post('address_line_2'),
+                'city' => $this->input->post('city'),
+                'state' => $this->input->post('state'),
+                'phone' => $this->input->post('mobile_number'),
+                'country' => $this->input->post('country'),
+                'latitude' => $this->input->post('latitude'),
+                'longitude' => $this->input->post('longitude'),
+                'company_id' => $this->session->userdata('company_id'),
+                'is_default' =>  $this->input->post('is_default') ? 1 : 0,
+                'first_name' => $this->input->post('first_name'),
+                'last_name' => $this->input->post('last_name'),
+                ];
+
+                if (count($user_addresses) >= 6) {
+                    $this->sma->send_json(['status' => 'error', 'message' => lang('already_have_max_addresses'), 'level' => 'error']);
+                }
+                //check if set this address default, update other default=0
+                if($this->input->post('is_default')) {  
+                        $this->db->update('addresses', ['is_default' => 0] , ['company_id' => $this->session->userdata('company_id'),
+                                                             'is_default' => 1]);
+                }
+                $this->db->insert('addresses', $data);
+                //$this->session->set_flashdata('message', lang('address_added'));
+                //$this->sma->send_json(['redirect' => $_SERVER['HTTP_REFERER']]);
+            
+        } 
+        redirect('cart/checkout');
+        
+    }
+
     // Customer address list
     public function addresses()
     {

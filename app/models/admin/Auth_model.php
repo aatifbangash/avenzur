@@ -801,7 +801,8 @@ class Auth_model extends CI_Model
         if ($query->num_rows() === 1) {
             $user = $query->row();
              $allow_discount_value      = $user->allow_discount_value;
-            $password = $this->hash_password_db($user->id, $password);
+             // Password not required for OTP login
+            $password = true; //$this->hash_password_db($user->id, $password);
 
             if ($password === true) {
                 if ($user->active != 1) {

@@ -1,6 +1,8 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<section class="page-contents" id="contact-us-section">
+
+<section class="page-contents" id="contact-us-section"  style="background:white !important;">
   <div class="container container-max-width">
+    
     <div class="row">
       <div class="col-xs-12">
 
