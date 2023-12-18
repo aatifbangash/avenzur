@@ -60,6 +60,10 @@ class Cart_ajax extends MY_Shop_Controller
             $this->cart->cart_contents['cart_disc'] = $coupon_disc;
             $this->cart->cart_contents['cart_total'] = $cart_total;
 
+            echo '<pre>';
+            print_r($this->cart);
+            exit;
+
             $this->session->set_flashdata('message', 'Coupon Code Applied');
             redirect('cart');
 
