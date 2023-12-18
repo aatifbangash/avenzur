@@ -56,6 +56,8 @@ class Cart_ajax extends MY_Shop_Controller
             $coupon_disc = ($cart_total*25)/100;
             $cart_total = $cart_total - $coupon_disc;
 
+            echo 'Cart Total: '.$cart_total;exit;
+
             if ($this->cart->update($data)) {
                 $this->session->set_flashdata('message', 'Coupon Code Applied');
                 redirect('cart');
