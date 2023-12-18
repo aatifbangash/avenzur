@@ -254,7 +254,7 @@ class Tec_cart
         return $this->sma->formatDecimal($this->shop_settings->shipping, 4);
     }
 
-    /*public function set_total($total)
+    public function set_total($total)
     {
         $this->_cart_contents['cart_total'] = $total;
         return $this->sma->formatDecimal($this->_cart_contents['cart_total'], 4);
@@ -265,7 +265,7 @@ class Tec_cart
         $this->_cart_contents['cart_discount'] = $discount;
         $this->_save_cart();
         return $this->sma->formatDecimal($this->_cart_contents['cart_discount'], 4);
-    }*/
+    }
 
     public function total()
     {
