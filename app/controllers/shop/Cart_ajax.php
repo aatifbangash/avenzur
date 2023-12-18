@@ -58,13 +58,16 @@ class Cart_ajax extends MY_Shop_Controller
             $cart_total = $cart_total - $coupon_disc;
 
             $cart_contents = $this->cart->contents();
+            $cart_arr = array();
             foreach ($cart_contents as $item => $val) {
                 $data = [
                     'rowid'  => $val['rowid'],
                     'discount'  => ($val['price'] * $discount) / 100
                 ];
-                $this->cart->update($data);
+                array_push($data, $cart_arr);
             }
+
+            $this->cart->update($cart_arr);
 
             //$this->cart->set_discount($coupon_disc);
 
