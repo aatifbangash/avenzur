@@ -263,6 +263,7 @@ class Tec_cart
     public function set_discount($discount)
     {
         $this->_cart_contents['cart_discount'] = $discount;
+        $this->_save_cart();
         return $this->sma->formatDecimal($this->_cart_contents['cart_discount'], 4);
     }
 
