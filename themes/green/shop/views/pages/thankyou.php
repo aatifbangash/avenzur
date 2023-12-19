@@ -33,7 +33,7 @@
             <h4 class="m-0 fs-4">Billing address</h4>
 
             <h4 class="m-0 fs-6 mt-2 py-2 fw-semibold">
-              Muhammad room 21, Al radwah, Riyadh, Saudi Arabia
+            <?= $customer->address; ?>
             </h4>
           </div>
         </div>
