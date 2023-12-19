@@ -199,7 +199,7 @@ function update_cart(t) {
     });
 
     $('#total-unique_items').html(t.total_unique_items);
-    $('#total-price').html(t.total);
+    $('#total-price').html(t.subtotal);
     $('#total-discount').html(t.total_discount);
     $('#total-after_discount').html(t.total);
 
@@ -295,7 +295,7 @@ function update_cart(t) {
       $(".cart-empty-msg").show();*/
 
       $('#total-unique_items').html(t.total_unique_items);
-      $('#total-price').html(t.total);
+      $('#total-price').html(t.subtotal);
       $('#total-discount').html(t.total_discount);
       $('#total-after_discount').html(t.total);
   }
