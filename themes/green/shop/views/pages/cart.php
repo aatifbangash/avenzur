@@ -35,8 +35,6 @@ $cart_contents = $this->cart->contents();
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'coupon_form'];
                                     echo form_open('apply_coupon', $attrib); 
                                 ?>
-                                
-                                 
                                     <?php 
                                         if($this->cart->get_total_discount() > 0){
                                             ?>
