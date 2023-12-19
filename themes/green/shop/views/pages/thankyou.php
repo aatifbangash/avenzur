@@ -41,7 +41,7 @@
       <div class="col-md-6">
         <div class="d-flex flex-column justify-content-between h-100">
           <img
-            src="/assets/uploads/logos/avenzur-logov2-024.png"
+            src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>"
             alt="logo"
             class="w-auto mt-3"
           />
