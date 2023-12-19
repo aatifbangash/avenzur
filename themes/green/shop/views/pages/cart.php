@@ -14,7 +14,7 @@ $cart_contents = $this->cart->contents();
 
                     <div class="col-sm-7">
                         <h3>Shopping Cart</h3>
-                        <div class="row bg-light ps-1 mt-5" id="cart-table-new" style="margin-inline: 3px;padding: 25px;">
+                        <div class="row bg-light ps-1 mt-5 shoppingCardmob" id="cart-table-new" style="margin-inline: 3px;padding: 25px;">
                             
                         </div>
                     </div>
@@ -32,7 +32,7 @@ $cart_contents = $this->cart->contents();
                             <h4>Coupon Code</h4>
                             <div class="d-flex">
                                 <?php
-                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'coupon_form'];
+                                    $attrib = ['class' => 'validate d-flex w-100', 'role' => 'form', 'id' => 'coupon_form'];
                                     echo form_open('apply_coupon', $attrib); 
                                 ?>
                                     <?php 
