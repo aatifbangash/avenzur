@@ -180,6 +180,7 @@ class Cart_ajax extends MY_Shop_Controller
                     'image'      => $product->image,
                     'option'     => $selected,
                     'options'    => !empty($options) ? $options : null,
+                    'discount'   => 0,
                 ];
 
             }else{
@@ -196,6 +197,7 @@ class Cart_ajax extends MY_Shop_Controller
                     'image'      => $product->image,
                     'option'     => $selected,
                     'options'    => !empty($options) ? $options : null,
+                    'discount'   => 0,
                 ];
 
             }
