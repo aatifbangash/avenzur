@@ -67,10 +67,6 @@ class Cart_ajax extends MY_Shop_Controller
                 array_push($cart_arr, $data);
             }
 
-            echo '<pre>';
-            print_r($cart_arr);
-            exit;
-
             $this->cart->update($cart_arr);
 
             //$this->cart->set_discount($coupon_disc);
