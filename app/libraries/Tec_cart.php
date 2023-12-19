@@ -75,7 +75,7 @@ class Tec_cart
         $this->_cart_contents['total_items']        = 0;
         $this->_cart_contents['total_item_tax']     = 0;
         $this->_cart_contents['total_unique_items'] = 0;
-        //$this->_cart_contents['total_discount']     = 0;
+        $this->_cart_contents['total_discount']     = 0;
         foreach ($this->_cart_contents as $key => $val) {
             if (!is_array($val) or !isset($val['price'], $val['qty'])) {
                 continue;
@@ -83,7 +83,7 @@ class Tec_cart
 
             $this->_cart_contents['total_unique_items'] += 1;
             $this->_cart_contents['total_items']        += $val['qty'];
-            //$this->_cart_contents['total_discount']         += $this->sma->formatDecimal($val['discount'], 4);
+            $this->_cart_contents['total_discount']         += $this->sma->formatDecimal($val['discount'], 4);
             $this->_cart_contents['cart_total']         += $this->sma->formatDecimal(($val['price'] * ($val['qty'] - $val['disc_qty'])), 4);
             $this->_cart_contents['total_item_tax']     += $this->sma->formatDecimal(($val['tax'] * ($val['qty'] - $val['disc_qty'])), 4);
             $this->_cart_contents[$key]['row_tax']  = $this->sma->formatDecimal(($this->_cart_contents[$key]['tax'] * ($this->_cart_contents[$key]['qty'] - $this->_cart_contents[$key]['disc_qty'])), 4);
@@ -172,7 +172,7 @@ class Tec_cart
     public function contents($newest_first = false)
     {
         $cart = ($newest_first) ? array_reverse($this->_cart_contents) : $this->_cart_contents;
-        unset($cart['total_items'], $cart['total_item_tax'], $cart['total_unique_items'], $cart['cart_total']);
+        unset($cart['total_items'], $cart['total_item_tax'], $cart['total_unique_items'], $cart['cart_total'], $cart['total_discount']);
 
         return $cart;
     }
@@ -315,7 +315,7 @@ class Tec_cart
 
     private function _empty()
     {
-        $this->_cart_contents = ['cart_total' => 0, 'total_item_tax' => 0, 'total_items' => 0, 'total_unique_items' => 0];
+        $this->_cart_contents = ['cart_total' => 0, 'total_item_tax' => 0, 'total_items' => 0, 'total_unique_items' => 0, 'total_discount' => 0];
     }
 
     private function _setup()
