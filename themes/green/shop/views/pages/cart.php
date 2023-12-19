@@ -38,7 +38,7 @@ $cart_contents = $this->cart->contents();
                                 <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="">
                                 <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> 
                                     <?php 
-                                        if(isset($cart_contents['coupon_disc'])){
+                                        if(isset($cart_contents['total_discount'])){
                                             echo 'Code applied!';
                                         }else{
                                             echo 'Apply Code';
