@@ -41,7 +41,7 @@ $cart_contents = $this->cart->contents();
                                         if($this->cart->get_total_discount() > 0){
                                             ?>
                                                 <input type="text" name="coupon_code" disabled="disabled" class="form-control  rounded-0" placeholder="">
-                                                <button disabled="disabled" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="background: green;font-size:14px !important;width: 175px !important;">
+                                                <button disabled="disabled" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="background: green;color: #fff;border: none;font-size:14px !important;width: 175px !important;">
                                                     Code Applied
                                                 </button>
                                             <?php
