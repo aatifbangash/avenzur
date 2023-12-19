@@ -69,9 +69,6 @@ class Cart_ajax extends MY_Shop_Controller
 
             $this->cart->update($cart_arr);
 
-            echo '<pre>';
-            print_r($this->cart);exit;
-
             //$this->cart->set_discount($coupon_disc);
 
             $this->session->set_flashdata('message', 'Coupon Code Applied');
