@@ -120,7 +120,7 @@ class Tec_cart
         if (isset($items['price'])) {
             $items['price'] = (float) $items['price'];
         }
-
+        print_r($keys);exit;
         foreach (array_diff($keys, ['id', 'name']) as $key) {
             $this->_cart_contents[$items['rowid']][$key] = $items[$key];
         }

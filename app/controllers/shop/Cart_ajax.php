@@ -62,7 +62,6 @@ class Cart_ajax extends MY_Shop_Controller
             foreach ($cart_contents as $item => $val) {
                 $data = [
                     'rowid'  => $val['rowid'],
-                    'price' => $val['price'],
                     'discount'  => ($val['price'] * $discount) / 100
                 ];
                 array_push($cart_arr, $data);
