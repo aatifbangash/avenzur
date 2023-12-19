@@ -150,7 +150,7 @@ class Tec_cart
             'total_unique_items' => $this->total_items(true),
             'contents'           => $citems,
             'total_item_tax'     => $this->sma->convertMoney($this->total_item_tax()),
-            'subtotal'           => $this->sma->convertMoney($this->total() - $this->total_item_tax()),
+            'subtotal'           => $this->sma->convertMoney($this->total_before_discount() - $this->total_item_tax()),
             'total'              => $this->sma->formatMoney($total, $this->selected_currency->symbol),
             'shipping'           => $this->sma->formatMoney($shipping, $this->selected_currency->symbol),
             'order_tax'          => $this->sma->formatMoney($order_tax, $this->selected_currency->symbol),
@@ -273,6 +273,11 @@ class Tec_cart
     public function get_total_discount()
     {
         return $this->sma->formatDecimal($this->_cart_contents['total_discount'], 4);
+    }
+
+    public function total_before_discount()
+    {
+        return $this->sma->formatDecimal(($this->_cart_contents['cart_total']), 4);
     }
 
     public function total()
