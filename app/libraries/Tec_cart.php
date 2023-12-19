@@ -154,7 +154,7 @@ class Tec_cart
             'total'              => $this->sma->formatMoney($total, $this->selected_currency->symbol),
             'shipping'           => $this->sma->formatMoney($shipping, $this->selected_currency->symbol),
             'order_tax'          => $this->sma->formatMoney($order_tax, $this->selected_currency->symbol),
-            'total_discount'     => $this->sma->convertMoney($this->total_discount()),
+            'total_discount'     => $this->sma->convertMoney($this->get_total_discount()),
             'grand_total'        => $this->sma->formatMoney(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($order_tax) + $this->sma->formatDecimal($shipping)), $this->selected_currency->symbol),
         ];
 
