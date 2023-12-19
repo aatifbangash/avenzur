@@ -107,7 +107,7 @@ class Tec_cart
         if (!isset($items['rowid'], $this->_cart_contents[$items['rowid']])) {
             return false;
         }
-        echo '<pre>';print_r($items);exit;
+        
         if (isset($items['qty'])) {
             $items['qty'] = (float) $items['qty'];
             if ($items['qty'] == 0) {
