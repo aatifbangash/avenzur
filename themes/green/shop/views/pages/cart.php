@@ -35,17 +35,26 @@ $cart_contents = $this->cart->contents();
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'coupon_form'];
                                     echo form_open('apply_coupon', $attrib); 
                                 ?>
-                                <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="">
-                                <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> 
+                                
+                                 
                                     <?php 
                                         if($this->cart->get_total_discount() > 0){
-                                            echo 'Code applied!';
+                                            ?>
+                                                <input type="text" name="coupon_code" disabled="disabled" class="form-control  rounded-0" placeholder="">
+                                                <button disabled="disabled" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="background: green;font-size:14px !important;width: 175px !important;">
+                                                    Code Applied
+                                                </button>
+                                            <?php
                                         }else{
-                                            echo 'Apply Code';
+                                            ?>
+                                                <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="">
+                                                <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;">
+                                                    Apply Code
+                                                </button>
+                                            <?php
+                                           
                                         }
                                     ?>   
-                                
-                                </button>
                                 <?php 
                                     echo form_close();
                                 ?>
