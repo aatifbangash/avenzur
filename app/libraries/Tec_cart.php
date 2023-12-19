@@ -277,7 +277,7 @@ class Tec_cart
 
     public function total()
     {
-        return $this->sma->formatDecimal($this->_cart_contents['cart_total'], 4);
+        return $this->sma->formatDecimal(($this->_cart_contents['cart_total'] - $this->_cart_contents['total_discount']), 4);
     }
 
     public function total_item_tax()

@@ -165,7 +165,6 @@ function update_cart_item(t, e, a, s, i) {
 function update_cart(t) {
   $("#cart-table-new").empty();
   if (t.total_items && t.total_items > 0) {
-    console.log(t);
     var e = 1;
     $.each(t.contents, function () {
       var t = this,
