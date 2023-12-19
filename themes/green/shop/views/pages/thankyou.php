@@ -34,7 +34,7 @@
             <h4 class="m-0 fs-4">Billing address</h4>
 
             <h4 class="m-0 fs-6 mt-2 py-2 fw-semibold">
-            <?= $customer->address; ?>
+            <?= $customer->address. ' '.$customer->city.' '.$customer->country; ?>
             </h4>
           </div>
         </div>
