@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); 
 
 $cart_contents = $this->cart->contents();
-echo '<pre>';print_r($this->cart->get_total_discount());exit;
+
 ?>
 
 <section class="page-contents" style="background:white !important;">
@@ -38,7 +38,7 @@ echo '<pre>';print_r($this->cart->get_total_discount());exit;
                                 <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="">
                                 <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> 
                                     <?php 
-                                        if(isset($cart_contents['total_discount'])){
+                                        if($this->cart->get_total_discount() > 0){
                                             echo 'Code applied!';
                                         }else{
                                             echo 'Apply Code';
