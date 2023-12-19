@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); 
 
 $cart_contents = $this->cart->contents();
-echo '<pre>';print_r($this->cart->_cart_contents);exit;
+echo '<pre>';print_r($this->cart['_cart_contents']);exit;
 ?>
 
 <section class="page-contents" style="background:white !important;">
