@@ -75,7 +75,7 @@ class Tec_cart
         $this->_cart_contents['total_items']        = 0;
         $this->_cart_contents['total_item_tax']     = 0;
         $this->_cart_contents['total_unique_items'] = 0;
-        $this->_cart_contents['total_discount']     = 0;
+        //$this->_cart_contents['total_discount']     = 0;
         foreach ($this->_cart_contents as $key => $val) {
             if (!is_array($val) or !isset($val['price'], $val['qty'])) {
                 continue;
@@ -83,7 +83,7 @@ class Tec_cart
 
             $this->_cart_contents['total_unique_items'] += 1;
             $this->_cart_contents['total_items']        += $val['qty'];
-            $this->_cart_contents['total_discount']         += $this->sma->formatDecimal($val['discount'], 4);
+            //$this->_cart_contents['total_discount']         += $this->sma->formatDecimal($val['discount'], 4);
             $this->_cart_contents['cart_total']         += $this->sma->formatDecimal(($val['price'] * ($val['qty'] - $val['disc_qty'])), 4);
             $this->_cart_contents['total_item_tax']     += $this->sma->formatDecimal(($val['tax'] * ($val['qty'] - $val['disc_qty'])), 4);
             $this->_cart_contents[$key]['row_tax']  = $this->sma->formatDecimal(($this->_cart_contents[$key]['tax'] * ($this->_cart_contents[$key]['qty'] - $this->_cart_contents[$key]['disc_qty'])), 4);
