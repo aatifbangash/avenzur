@@ -935,13 +935,14 @@ $(document).ready(function () {
           update_mini_cart(t),
           update_popup_cart(t),
           $('#productPop').modal('show'),
-          $.toast({
+          /*$.toast({
             heading: "Success",
             text: "Product Added To The Cart.",
             position: "top-right",
             showHideTransition: "slide",
             icon: "success",
-          }));
+          })*/
+        );
     });
   });
 
