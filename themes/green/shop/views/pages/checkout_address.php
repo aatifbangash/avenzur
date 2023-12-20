@@ -319,8 +319,9 @@ $(document).ready(function() {
 
     function verifyNumber(){
         event.preventDefault();
+        var formData = $('#checkoutAddress').serialize();
         $.ajax({
-            type: 'GET',
+            type: 'POST',
             url: '<?= base_url(); ?>verify_phone',
             success: function (response) {
                 var respObj = JSON.parse(response);
