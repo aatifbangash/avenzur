@@ -244,7 +244,7 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
                 success: function (response) {
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
-                        //window.location.href = 'cart/checkout';
+                        window.location.href = 'cart/checkout';
                     } else {
                         $('#otp-message').html('OTP verification failed');
                     }
