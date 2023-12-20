@@ -47,7 +47,7 @@
                                                         <?= $default_address->state; ?>
                                                         <?= $default_address->country; ?>
                                                     </p>
-                                                    <span class="phone_verified" style="visibility:hidden;"><?= $address->mobile_verified; ?></span>
+                                                    <span class="phone_verified" style="visibility:hidden;"><?= $default_address->mobile_verified; ?></span>
                                                     <p class="m-0 fs-6 fw-semibold"> +966
                                                         <?= $default_address->phone; ?> <i
                                                             class="bi bi-check-circle-fill ms-2 purpColor"></i>
