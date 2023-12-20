@@ -325,6 +325,7 @@ $(document).ready(function() {
             type: 'POST',
             //url: '<?= base_url(); ?>verify_phone',
             url: $('#checkoutAddress').attr('action'),
+            data: formData,
             success: function (response) {
                 var respObj = JSON.parse(response);
                 if (respObj.status == 'success' || respObj.code == 1) {
