@@ -318,6 +318,7 @@ $(document).ready(function() {
     });
 
     function verifyNumber(){
+        event.preventDefault();
         $.ajax({
             type: 'GET',
             url: '<?= base_url(); ?>verify_phone',
