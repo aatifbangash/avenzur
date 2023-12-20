@@ -238,50 +238,94 @@ $(document).ready(function() {
         last_name.removeClass('error');
     });
 
+    $('#checkoutAddress').submit(function(event) {
+        // Remove previous error highlights
+        $('.error').removeClass('error');
 
+        // Perform validation
+        var autocomplete_search = $('#autocomplete_search').val();
+        
+        if (autocomplete_search === '') {
+            
+            // Highlight the input field with an error
+            $('#autocomplete_search').addClass('error');
+            event.preventDefault(); // Prevent form submission
+        }
+        var mobile_number = $('#mobile_number').val();
 
+        if (mobile_number === '') {
+            // Highlight the input field with an error
+            $('#mobile_number').addClass('error');
+            event.preventDefault(); // Prevent form submission
+        }
 
-        $('#checkoutAddress').submit(function(event) {
-            // Remove previous error highlights
-            $('.error').removeClass('error');
-            event.preventDefault();
-            alert('Here in change address...bublooo');
-            // Perform validation
-            var autocomplete_search = $('#autocomplete_search').val();
-           
-            if (autocomplete_search === '') {
-               
-                // Highlight the input field with an error
-                $('#autocomplete_search').addClass('error');
-                event.preventDefault(); // Prevent form submission
-            }
-            var mobile_number = $('#mobile_number').val();
+        var first_name = $('#first_name');
 
-            if (mobile_number === '') {
-                // Highlight the input field with an error
-                $('#mobile_number').addClass('error');
-                event.preventDefault(); // Prevent form submission
-            }
+        if (first_name.val() === '') {
+            // Highlight the input field with an error
+            first_name.addClass('error');
+            event.preventDefault(); // Prevent form submission
+        }
 
-            var first_name = $('#first_name');
+        var last_name = $('#last_name');
 
-            if (first_name.val() === '') {
-                // Highlight the input field with an error
-                first_name.addClass('error');
-                event.preventDefault(); // Prevent form submission
-            }
+        if (last_name.val() === '') {
+            // Highlight the input field with an error
+            last_name.addClass('error');
+            event.preventDefault(); // Prevent form submission
+        }
 
-            var last_name = $('#last_name');
+        // Add more validation for other fields as needed
 
-            if (last_name.val() === '') {
-                // Highlight the input field with an error
-                last_name.addClass('error');
-                event.preventDefault(); // Prevent form submission
-            }
-
-            // Add more validation for other fields as needed
-        });
+        verifyNumber();
     });
+
+    function verifyNumber(){
+        $.ajax({
+            type: 'GET',
+            url: '<?= base_url(); ?>verify_phone',
+            success: function (response) {
+                var respObj = JSON.parse(response);
+                if (respObj.status == 'success' || respObj.code == 1) {
+                    $('#registerOTP').off('click', handleRegisterOTPClick);
+                    document.getElementById('registerOTP').style.color = 'grey';
+                    document.getElementById('registerOTP').style.cursor = 'none';
+                    $('#registerModal').modal('show');
+                    document.getElementById('identifier').innerHTML = document.getElementById('mobile_number').value;
+                    document.getElementById('identifier_input').value = document.getElementById('mobile_number').value;
+
+                    const countdownDuration = 60; // Duration in seconds
+                    const countdownDisplay = document.getElementById("register-clock");
+                    
+                    let timer = countdownDuration, minutes, seconds;
+                    const intervalId = setInterval(function () {
+                        minutes = parseInt(timer / 60, 10);
+                        seconds = parseInt(timer % 60, 10);
+
+                        countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                        if (--timer < 0) {
+                            clearInterval(intervalId);
+                            document.getElementById('registerOTP').style.color = '#662d91';
+                            document.getElementById('registerOTP').style.cursor = 'pointer';
+                            $('#registerOTP').click(handleRegisterOTPClick);
+                        }
+                    }, 1000);
+
+                } else {
+                    alert('Signup failed. Please try again.');
+                }
+            },
+            error: function (error) {
+                console.error(error);
+            }
+        });
+    }
+
+    function handleRegisterOTPClick(){
+        
+    }
+});
 
     function initMap() {
         console.log('test');
