@@ -323,8 +323,8 @@ $(document).ready(function() {
         var formData = $('#checkoutAddress').serialize();
         $.ajax({
             type: 'POST',
-            //url: '<?= base_url(); ?>verify_phone',
-            url: $('#checkoutAddress').attr('action'),
+            url: '<?= base_url(); ?>verify_phone',
+            //url: $('#checkoutAddress').attr('action'),
             data: formData,
             success: function (response) {
                 var respObj = JSON.parse(response);

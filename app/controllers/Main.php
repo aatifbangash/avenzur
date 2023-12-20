@@ -404,45 +404,6 @@ class Main extends MY_Shop_Controller
         }
     }
 
-    /*public function verify_phone(){
-        $company_id = $this->session->userdata('company_id');
-        $company_data = $this->shop_model->getCompanyByID($company_id);
-
-        if($company_data->mobile_verified == 0){
-            $mobile = $company_data->phone;
-
-            $otp_sent = $this->sendOTP($company_id, $mobile, 'mobile');
-
-        }else{
-            echo json_encode(['status' => 'error', 'message' => 'Mobile already verified']);
-        }
-
-    }*/
-
-    public function verify_phone(){
-        $this->form_validation->set_rules('identifier_input', lang('Mobile'), 'required');
-
-        if ($this->form_validation->run('') == true) {
-            $identity    = strtolower($this->input->post('identifier_input'));
-            $opt_part1    = strtolower($this->input->post('opt_part1'));
-            $opt_part2    = strtolower($this->input->post('opt_part2'));
-            $opt_part3    = strtolower($this->input->post('opt_part3'));
-            $opt_part4    = strtolower($this->input->post('opt_part4'));
-            $opt_part5    = strtolower($this->input->post('opt_part5'));
-            $opt_part6    = strtolower($this->input->post('opt_part6'));
-
-            $this->load->library('ion_auth');
-        }
-
-        if ($this->form_validation->run() == true){
-            $company_data = $this->shop_model->getUniqueCustomer('mobile', $identity);
-
-            $otp = $opt_part1.$opt_part2.$opt_part3.$opt_part4.$opt_part5.$opt_part6;
-
-            echo json_encode(['status' => 'success', 'message' => $otp]);
-        }
-    }
-
     public function mobile_verify_otp(){
         $this->form_validation->set_rules('identifier_input', lang('Mobile'), 'required');
 
@@ -668,6 +629,35 @@ class Main extends MY_Shop_Controller
 
         }else{
             $this->page_construct('user/login', $this->data);
+        }
+    }
+
+    /*public function verify_phone(){
+        $company_id = $this->session->userdata('company_id');
+        $company_data = $this->shop_model->getCompanyByID($company_id);
+
+        if($company_data->mobile_verified == 0){
+            $mobile = $company_data->phone;
+
+            $otp_sent = $this->sendOTP($company_id, $mobile, 'mobile');
+
+        }else{
+            echo json_encode(['status' => 'error', 'message' => 'Mobile already verified']);
+        }
+
+    }*/
+
+    public function verify_phone(){
+        $this->form_validation->set_rules('mobile_number', lang('Mobile'), 'required');
+
+        $company_id = $this->session->userdata('company_id');
+        $company_data = $this->shop_model->getCompanyByID($company_id);
+
+        if($company_data){
+            $mobile = $this->input->post('mobile_number');
+            $otp_sent = $this->sendOTP($company_id, $mobile, 'mobile');
+        }else{
+            echo json_encode(['status' => 'error', 'message' => 'User data does not exist']);
         }
     }
 
