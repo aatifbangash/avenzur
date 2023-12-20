@@ -156,6 +156,19 @@ class Shop extends MY_Shop_Controller
 
     }
 
+    public function deleteDeliveryAddress() {
+        if (!$this->loggedIn) {
+            $this->sma->send_json(['status' => 'error', 'message' => lang('please_login')]);
+        }
+        $this->form_validation->set_rules('addressId', lang('addressId'), 'trim|required');
+
+        if ($this->form_validation->run() == true) {
+            $addressId = $this->input->post('addressId');
+            $this->db->delete('addresses', ['id' => $addressId, 'company_id' => $this->session->userdata('company_id')]);
+            redirect('cart/checkout?action=changeaddress');
+        }
+    }
+
     // Customer address list
     public function addresses()
     {
