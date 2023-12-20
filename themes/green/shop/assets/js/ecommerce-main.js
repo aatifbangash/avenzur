@@ -934,7 +934,7 @@ $(document).ready(function () {
         : ((a = t),
           update_mini_cart(t),
           update_popup_cart(t),
-          $('#productPop').modal('show'),
+          $('#productPop').modal('show')
           /*$.toast({
             heading: "Success",
             text: "Product Added To The Cart.",
