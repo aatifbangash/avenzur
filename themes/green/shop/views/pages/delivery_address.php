@@ -107,7 +107,7 @@
                                     style="font-size:18px !important;"> Add New Address</a>
                                 <a href="<?=base_url().'cart/checkout';?>" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 "
                                     style="font-size:18px !important;"> Cancel</a>
-                                <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 "
+                                <button type="submit" id="confirm-address" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 "
                                     style="font-size:18px !important;"> Confirm</button>
 
                                     <?= form_close(); ?>    
@@ -149,6 +149,10 @@
 
             // Check the hidden radio button for form submission
             $("#address-selection-radio").prop("checked", true);
+        });
+        
+        $("#confirm-address").on("click", function () {
+            alert('here in confirm block');
         });
     });
 </script>
