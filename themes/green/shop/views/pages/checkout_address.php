@@ -438,6 +438,7 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
 
     function handleMobileOTPClick(){
         var formData = $('#checkoutAddress').serialize();
+        console.log(formData);
         $.ajax({
             type: 'POST',
             url: '<?= base_url(); ?>verify_phone',
