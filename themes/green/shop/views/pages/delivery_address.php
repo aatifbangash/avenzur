@@ -47,6 +47,7 @@
                                                         <?= $default_address->state; ?>
                                                         <?= $default_address->country; ?>
                                                     </p>
+                                                    <span class="phone_verified" style="visibility:hidden;"><?= $address->mobile_verified; ?></span>
                                                     <p class="m-0 fs-6 fw-semibold"> +966
                                                         <?= $default_address->phone; ?> <i
                                                             class="bi bi-check-circle-fill ms-2 purpColor"></i>
@@ -84,12 +85,12 @@
                                                             <?= $address->state; ?>
                                                             <?= $address->country; ?>
                                                         </p>
-                                                        <span class="phone_verified" style="visibility:hidden;"><?= $address->is_verified; ?></span>
+                                                        <span class="phone_verified" style="visibility:hidden;"><?= $address->mobile_verified; ?></span>
                                                         <p class="m-0 fs-6 fw-semibold"> +966
                                                             <span class="phone_number"><?= $address->phone; ?></span>
                                                             
                                                             
-                                                            <?php if ($address->is_verified == 1): ?>
+                                                            <?php if ($address->mobile_verified == 1): ?>
                                                                 <i class="bi bi-check-circle-fill ms-2 purpColor"></i>
                                                             <?php else: ?>
                                                                 <i class="bi bi-exclamation-triangle text-danger fs-5"></i>
