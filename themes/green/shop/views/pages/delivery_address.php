@@ -228,10 +228,11 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
             var phone_verified = $('.selected-address .phone_verified').val();
             var selected_add_id = $("#selected-address-id").val();
             
+            console.log(phone_verified);
             if(!phone_verified){
                 verifyNumber(selected_phone);    
             }else{
-                window.location.href = '/cart/checkout';
+                window.location.href = site.base_url+'cart/checkout';
             }
         });
 
@@ -247,7 +248,7 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
                 success: function (response) {
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
-                        window.location.href = '/cart/checkout';
+                        window.location.href = site.base_url+'cart/checkout';
                     } else {
                         $('#otp-message').html('OTP verification failed');
                     }
