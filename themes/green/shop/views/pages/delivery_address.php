@@ -232,13 +232,14 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
         function verifyNumber(selected_phone){
             event.preventDefault();
             //var formData = $('#checkoutAddress').serialize();
+            var formData = new FormData();
+            formData.append('mobile_number', selected_phone);
+
             $.ajax({
                 type: 'POST',
                 url: '<?= base_url(); ?>verify_phone',
                 //url: $('#checkoutAddress').attr('action'),
-                data: JSON.stringify({'mobile_number' : selected_phone}),
-                contentType: 'application/json',
-                dataType: 'json',
+                data: formData,
                 success: function (response) {
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
