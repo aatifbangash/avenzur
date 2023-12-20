@@ -216,9 +216,8 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
             // Check the hidden radio button for form submission
             $("#address-selection-radio").prop("checked", true);
 
-            console.log($('.selected-address').html());
-
-            //var phone_verified = $('.selected-address .phone_verified').text();
+            var phone_verified = $('.selected-address .phone_verified').text();
+            console.log(phone_verified);
             //if(phone_verified){
             //    $('#confirm-address').hide();
             //}else{
