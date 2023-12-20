@@ -1848,6 +1848,7 @@ $('#registerBtnCall').click(function (e) {
 });
 
 $('#loginBtnCall').click(function (e) {
+  
     e.preventDefault(); 
     var formData = $('#loginForm').serialize();
     $.ajax({
@@ -1874,7 +1875,8 @@ $('#loginBtnCall').click(function (e) {
                     seconds = parseInt(timer % 60, 10);
 
                     countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
-
+                    //document.getElementById('login_otp_1').focus();
+                
                     if (--timer < 0) {
                         clearInterval(intervalId);
                         document.getElementById('loginOTP').style.color = '#662d91';
@@ -1912,6 +1914,9 @@ function handleLoginOTPClick(){
                 const countdownDuration = 60; // Duration in seconds
                 const countdownDisplay = document.getElementById("login-clock");
                 
+                $('#login_otp_1').focus();
+                
+                
                 let timer = countdownDuration, minutes, seconds;
                 const intervalId = setInterval(function () {
                     minutes = parseInt(timer / 60, 10);
@@ -1936,4 +1941,162 @@ function handleLoginOTPClick(){
         }
     });
 }
+
+function moveFocusOld(currentInput, nextInputId) {
+          // Get the length of the OTP
+          var otpLength = currentInput.value.length;
+          console.log(otpLength);
+          console.log(currentInput.maxLength);
+          // If the OTP length is equal to the maximum length, move focus to the next input
+          if (otpLength === currentInput.maxLength) {
+              var nextInput = document.getElementById(nextInputId);
+              if (nextInput) {
+                  nextInput.focus();
+              }
+          }
+      }  
+      
+
+      function moveFocus(currentInput, nextInputId) {
+        
+        // Check if input value is empty
+        if (!currentInput.value.trim()) {
+            return;
+        }
+    
+        // Iterate through each character in the input value
+        for (let i = 0; i < currentInput.value.length; i++) {
+            // Get the next character
+            let char = currentInput.value.charAt(i);
+    
+            // Update the value of the current input
+            currentInput.value = char;
+    
+            // Move focus to the next input
+            var nextInput = document.getElementById(nextInputId);
+            if (nextInput) {
+                nextInput.focus();
+            }
+        }
+    }
+    
+    // Attach input event listener to the input for paste event
+    // $('#first_login_otp').on('input', function() {
+    //     moveFocus(this, 'second');
+    // });
+    
+
+      // function handleKeyup() {
+      //   var inputValue = $('#first_login_otp').val();
+      //   console.log('Input value:', inputValue);
+      //   // Add your logic here based on the input value
+      // }
+    
+      // Attach keyup event listener to the input
+      //$('#first_login_otp').on('keyup', moveFocus(this.length, 'second'));
+      // $('#first_login_otp').on('keyup', function() {
+      //   moveFocus(this, 'second_login_otp');
+      // });
+      // $('#second_login_otp').on('keyup', function() {
+      //   moveFocus(this, 'third_login_otp');
+      // });
+      // $('#third_login_otp').on('keyup', function() {
+      //   moveFocus(this, 'fourth_login_otp');
+      // });
+      // $('#fourth_login_otp').on('keyup', function() {
+      //   moveFocus(this, 'fifth_login_otp');
+      // });
+      // $('#fifth_login_otp').on('keyup', function() {
+      //   moveFocus(this, 'sixth_login_otp');
+      // });
+
+      // $('#first_register_otp').on('keyup', function() {
+      //   moveFocus(this, 'second_register_otp');
+      // });
+      // $('#second_register_otp').on('keyup', function() {
+      //   moveFocus(this, 'third_register_otp');
+      // });
+      // $('#third_register_otp').on('keyup', function() {
+      //   moveFocus(this, 'fourth_register_otp');
+      // });
+      // $('#fourth_register_otp').on('keyup', function() {
+      //   moveFocus(this, 'fifth_register_otp');
+      // });
+      // $('#fifth_register_otp').on('keyup', function() {
+      //   moveFocus(this, 'sixth_register_otp');
+      // });
+
+
+      function bindOtpKeyupEvents(prefix, totalFields) {
+        document.getElementById('login_otp_1').focus();
+        document.getElementById('register_otp_1').focus();
+        for (let i = 1; i <= totalFields; i++) {
+            let currentId = `${prefix}_${i}`;
+            let nextId = i < totalFields ? `${prefix}_${i + 1}` : null;
+    
+            $(`#${currentId}`).on('keyup', function() {
+                moveFocus(this, nextId);
+            });
+        }
+    }
+    
+    // Bind keyup events for login OTP
+    bindOtpKeyupEvents('login_otp', 6);
+    
+    // Bind keyup events for register OTP
+    bindOtpKeyupEvents('register_otp', 6);
+
+//     const loginInput =  $("#identity");
+
+//     // var input_address_phone = document.querySelector("#identity");
+//     // window.intlTelInput(input_address_phone, {
+//     //   //initialCountry: "SA"
+//     // });
+
+//     // Initialize intlTelInput with default options
+    
+//   //   const iti = window.intlTelInput(loginInput, {
+//   //     initialCountry: 'auto',
+//   //     onlyCountries: ['sa', 'ae'],
+//   //     separateDialCode: true,
+//   //     utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
+//   // });
+  
+//   const iti = loginInput.intlTelInput({
+//     initialCountry: 'auto',
+//     onlyCountries: ['sa', 'ae'], // Saudi Arabia, United Arab Emirates
+//     separateDialCode: true,
+//     utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
+// });
+
+//   // Keep track of the last entered value
+//   let lastValue = $("#identity").val();
+  
+//   // Add event listener for input changes
+//   loginInput.on('input', function () {
+//       const inputValue = $("#identity").val();
+//       const isFirstCharacterDigit = /^\d/.test(inputValue);
+  
+//       // Change input type and reinitialize intlTelInput accordingly
+//       if (isFirstCharacterDigit) {
+//         console.log('firs character') ;
+//           if (lastValue !== inputValue) {
+//             console.log('test');
+//               iti.destroy(); // Destroy the previous instance
+//               loginInput.prop('type', 'text'); // Change input type to tel
+//               window.intlTelInput(loginInput, { onlyCountries: ['sa', 'ae'] }); // Reinitialize intlTelInput on the updated input
+//               loginInput.focus(); // Set focus back to the input
+//               lastValue = inputValue; // Update last entered value
+//           }
+//       } else {
+//           iti.destroy(); // Destroy the previous instance
+//           loginInput.prop('type', 'text'); // Change input type to text
+//           loginInput.focus(); // Set focus back to the input
+//           lastValue = inputValue; // Update last entered value
+//       }
+//   });
+  
+
 });
+
+  

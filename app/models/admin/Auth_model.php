@@ -824,7 +824,7 @@ class Auth_model extends CI_Model
                 }
 
                 $this->trigger_events(['post_login', 'post_login_successful']);
-                $this->set_message('login_successful');
+                //$this->set_message('login_successful');
 
                 return true;
             }
