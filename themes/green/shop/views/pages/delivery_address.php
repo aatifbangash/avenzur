@@ -49,7 +49,7 @@
                                                     </p>
                                                     
                                                     <p class="m-0 fs-6 fw-semibold"> +966
-                                                        <?= $default_address->phone; ?> <i
+                                                        <span class="phone_number"><?= $default_address->phone; ?></span> <i
                                                             class="bi bi-check-circle-fill ms-2 purpColor"></i>
                                                     </p>
                                                     <span class="phone_verified" style="visibility:hidden;"><?= $default_address->mobile_verified; ?></span>
