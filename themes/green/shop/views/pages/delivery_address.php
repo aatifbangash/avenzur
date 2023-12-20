@@ -74,6 +74,7 @@
                                                         </p>
                                                         <p class="m-0 fs-6 fw-semibold"> +966
                                                             <span class="phone_number"><?= $address->phone; ?> </span>
+                                                            <input type="hidden" class="phone_verified" value="<?= $address->is_verified; ?>" />
                                                             <?php if($address->is_verified == 1):?>
                                                             <i class="bi bi-check-circle-fill ms-2 purpColor"></i>
                                                             <?php else:?>
@@ -117,7 +118,46 @@
                         </div>
                     </div>
 
-
+                    <!-- Register Modal Starts -->
+                    <div class="modal fade" id="verifyMobileModal" tabindex="-1" aria-labelledby="verifyMobileLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content px-4 rounded-4">
+                                <div class="modal-header border-0">
+                                    <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+                                </div>
+                                <div class="modal-body ">
+                                    <div class="emailOTP">
+                                        <div class="text-center px-5">
+                                            <h2>Verify your mobile</h2>
+                                            <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span></h5>
+                                        </div>
+                                        <?php 
+                                            $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'mobileOtpForm'];
+                                            echo form_open('verify_phone_otp', $attrib); 
+                                        ?>
+                                        <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
+                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
+                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
+                                            <input type="hidden" id="identifier_input" name="identifier_input" value="" />
+                                        </div>
+                                        <div  class="text-center">
+                                            <h6 class="m-0 mt-2"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="mobileOTP">Resend OTP </span></h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-0 pb-4">
+                                    <button type="submit" id="mobileOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Verify</button>
+                                </div>
+                                <span id="otp-message"></span>
+                                <?= form_close(); ?>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Register Modal Ends -->
                 </div>
 
             </div>
@@ -150,13 +190,116 @@
 
             // Check the hidden radio button for form submission
             $("#address-selection-radio").prop("checked", true);
+
+            var phone_verified = $('.selected-address .phone_verified').val();
+            if(phone_verified){
+                $('#confirm-address').hide();
+            }else{
+                $('#confirm-address').show();
+            }
         });
         
         $("#confirm-address").on("click", function (e) {
             e.preventDefault(); 
 
             var selected_phone = $('.selected-address .phone_number').text();
-            alert(selected_phone);
+            var phone_verified = $('.selected-address .phone_verified').val();
+            
+            if(!phone_verified){
+                verifyNumber(selected_phone);    
+            }
         });
+
+        function verifyNumber(selected_phone){
+            event.preventDefault();
+            //var formData = $('#checkoutAddress').serialize();
+            $.ajax({
+                type: 'POST',
+                url: '<?= base_url(); ?>verify_phone',
+                //url: $('#checkoutAddress').attr('action'),
+                data: {'mobile_number' : selected_phone},
+                success: function (response) {
+                    var respObj = JSON.parse(response);
+                    if (respObj.status == 'success' || respObj.code == 1) {
+                        $('#mobileOTP').off('click', handleMobileOTPClick);
+                        document.getElementById('mobileOTP').style.color = 'grey';
+                        document.getElementById('mobileOTP').style.cursor = 'none';
+                        $('#verifyMobileModal').modal('show');
+                        document.getElementById('identifier').innerHTML = $('#mobile_number').val();
+                        document.getElementById('identifier_input').value = $('#mobile_number').val();
+
+                        const countdownDuration = 60; // Duration in seconds
+                        const countdownDisplay = document.getElementById("register-clock");
+                        
+                        let timer = countdownDuration, minutes, seconds;
+                        const intervalId = setInterval(function () {
+                            minutes = parseInt(timer / 60, 10);
+                            seconds = parseInt(timer % 60, 10);
+
+                            countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                            if (--timer < 0) {
+                                clearInterval(intervalId);
+                                document.getElementById('mobileOTP').style.color = '#662d91';
+                                document.getElementById('mobileOTP').style.cursor = 'pointer';
+                                $('#mobileOTP').click(handleMobileOTPClick);
+                            }
+                        }, 1000);
+
+                    } else {
+                        alert('Mobile verification failed');
+                    }
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+        }
+
+        function handleMobileOTPClick(){
+            var formData = $('#checkoutAddress').serialize();
+            $.ajax({
+                type: 'POST',
+                url: '<?= base_url(); ?>verify_phone',
+                data: formData,
+                success: function (response) {
+                    var respObj = JSON.parse(response);
+                    if (respObj.status == 'success' || respObj.code == 1) {
+                        $('#mobileOTP').off('click', handleMobileOTPClick);
+                        document.getElementById('mobileOTP').style.color = 'grey';
+                        document.getElementById('mobileOTP').style.cursor = 'none';
+                        $('#mobileModal').modal('show');
+                        document.getElementById('identifier').innerHTML = $('#mobile_number').val();
+                        document.getElementById('identifier_input').value = $('#mobile_number').val();
+
+                        const countdownDuration = 60; // Duration in seconds
+                        const countdownDisplay = document.getElementById("register-clock");
+                        
+                        let timer = countdownDuration, minutes, seconds;
+                        const intervalId = setInterval(function () {
+                            minutes = parseInt(timer / 60, 10);
+                            seconds = parseInt(timer % 60, 10);
+
+                            countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                            if (--timer < 0) {
+                                clearInterval(intervalId);
+                                document.getElementById('mobileOTP').style.color = '#662d91';
+                                document.getElementById('mobileOTP').style.cursor = 'pointer';
+                                $('#mobileOTP').click(handleMobileOTPClick);
+                            }
+                        }, 1000);
+
+                    } else {
+                        alert('Mobile verification failed');
+                    }
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+        }
+
+
     });
 </script>
