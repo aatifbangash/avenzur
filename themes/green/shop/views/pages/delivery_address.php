@@ -233,7 +233,7 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
             event.preventDefault();
             //var formData = $('#checkoutAddress').serialize();
             $.ajax({
-                type: 'POST',
+                type: 'GET',
                 url: '<?= base_url(); ?>verify_phone',
                 //url: $('#checkoutAddress').attr('action'),
                 data: {'mobile_number' : selected_phone},
@@ -244,8 +244,8 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
                         document.getElementById('mobileOTP').style.color = 'grey';
                         document.getElementById('mobileOTP').style.cursor = 'none';
                         $('#verifyMobileModal').modal('show');
-                        document.getElementById('identifier').innerHTML = $('#mobile_number').val();
-                        document.getElementById('identifier_input').value = $('#mobile_number').val();
+                        document.getElementById('identifier').innerHTML = selected_phone;
+                        document.getElementById('identifier_input').value = selected_phone;
 
                         const countdownDuration = 60; // Duration in seconds
                         const countdownDisplay = document.getElementById("register-clock");
@@ -276,11 +276,12 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
         }
 
         function handleMobileOTPClick(){
-            var formData = $('#checkoutAddress').serialize();
+            //var formData = $('#checkoutAddress').serialize();
+            var selected_phone = $('.selected-address .phone_number').text();
             $.ajax({
-                type: 'POST',
+                type: 'GET',
                 url: '<?= base_url(); ?>verify_phone',
-                data: formData,
+                data: {'mobile_number' : selected_phone},
                 success: function (response) {
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
@@ -288,8 +289,8 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
                         document.getElementById('mobileOTP').style.color = 'grey';
                         document.getElementById('mobileOTP').style.cursor = 'none';
                         $('#mobileModal').modal('show');
-                        document.getElementById('identifier').innerHTML = $('#mobile_number').val();
-                        document.getElementById('identifier_input').value = $('#mobile_number').val();
+                        document.getElementById('identifier').innerHTML = selected_phone;
+                        document.getElementById('identifier_input').value = selected_phone;
 
                         const countdownDuration = 60; // Duration in seconds
                         const countdownDisplay = document.getElementById("register-clock");
