@@ -654,7 +654,7 @@ class Main extends MY_Shop_Controller
         if($address_id == 'default'){
             $verified_data = $this->shop_model->get_company_details($this->session->userdata('company_id'));
         }else{
-            $verified_data = $this->get_activate_phone->get_company_details($this->session->userdata('company_id'), $mobile_number, $address_id);
+            $verified_data = $this->shop_model->get_activate_phone($this->session->userdata('company_id'), $mobile_number, $address_id);
         }
         
         $this->session->set_userdata('changed_address', $verified_data);
