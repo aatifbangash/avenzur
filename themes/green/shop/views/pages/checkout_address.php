@@ -94,7 +94,8 @@
                                     New Address Details
                                     <?php 
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'checkoutAddress'];
-                                    echo form_open('shop/saveCheckoutAddress', $attrib); 
+                                    //echo form_open('shop/saveCheckoutAddress', $attrib); 
+                                    echo form_open('verify_phone', $attrib);
                                 ?>
                                     <input type="hidden" id="longitude" name="longitude" value="">
                                     <input type="hidden" id="latitude" name="latitude" value="">
@@ -322,7 +323,8 @@ $(document).ready(function() {
         var formData = $('#checkoutAddress').serialize();
         $.ajax({
             type: 'POST',
-            url: '<?= base_url(); ?>verify_phone',
+            //url: '<?= base_url(); ?>verify_phone',
+            url: $('#checkoutAddress').attr('action'),
             success: function (response) {
                 var respObj = JSON.parse(response);
                 if (respObj.status == 'success' || respObj.code == 1) {
