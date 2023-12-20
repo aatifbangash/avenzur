@@ -290,7 +290,7 @@ class Cart_ajax extends MY_Shop_Controller
         }
         $this->data['address_id'] = '';
         $action = $this->input->get('action');
-
+        print_r($this->session->get_userdata('changed_address'));exit;
         if($this->session->get_userdata('changed_address')){
             $this->data['default_address']  = $this->session->get_userdata('changed_address');
         }else{
