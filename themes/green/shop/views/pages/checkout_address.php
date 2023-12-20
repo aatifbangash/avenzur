@@ -217,6 +217,7 @@
                                 <div class="modal-footer border-0 pb-4">
                                     <button type="submit" id="mobileOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Verify</button>
                                 </div>
+                                <span id="otp-message"></span>
                                 <?= form_close(); ?>
                             </div>
                         </div>
@@ -328,13 +329,12 @@ $(document).ready(function() {
             url: $('#mobileOtpForm').attr('action'),
             data: formData,
             success: function (response) {
-                console.log(response);
-                /*var respObj = JSON.parse(response);
+                var respObj = JSON.parse(response);
                 if (respObj.status == 'success' || respObj.code == 1) {
-                    alert('Login Success');
+                    $('#checkoutAddress').submit();
                 } else {
-                    alert('Login failed. Please try again.');
-                }*/
+                    $('#otp-message').html('OTP verification failed');
+                }
             },
             error: function (error) {
                 console.error(error);
