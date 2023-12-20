@@ -39,24 +39,55 @@
     }
 
     .error {
-        border: 2px solid red !important; /* Set the initial border color to red for error */
-        animation: blink 2s infinite !important; /* Apply the blink animation */
+        border: 2px solid red !important;
+        /* Set the initial border color to red for error */
+        animation: blink 2s infinite !important;
+        /* Apply the blink animation */
     }
 
     @keyframes blink {
         0% {
             border-color: red;
         }
+
         50% {
             border-color: transparent;
         }
+
         100% {
             border-color: red;
         }
     }
-
-
 </style>
+<?php
+$longitude = '';
+$latitude = '';
+$address_line_1 = '';
+$address_line_2 = '';
+$address_city = '';
+$address_state = '';
+$address_country = '';
+$mobile_number = '';
+$first_name = '';
+$last_name = '';
+if (isset($selected_address_info) & !empty($selected_address_info)) {
+    $longitude = $selected_address_info->longitude;
+    $latitude = $selected_address_info->latitude;
+    if (isset($selected_address_info->address)) {
+        $address_line_1 = $selected_address_info->address;
+    } else {
+        $address_line_1 = $selected_address_info->line1;
+    }
+    $address_line_2 = $selected_address_info->line2;
+    $address_city = $selected_address_info->city;
+    $address_state = $selected_address_info->state;
+    $address_country = $selected_address_info->country;
+    $mobile_number = $selected_address_info->phone;
+    $first_name = $selected_address_info->first_name;
+    $last_name = $selected_address_info->last_name;
+}
+?>
+
 <section class=" py-1 ">
     <div class="container container-max-width">
         <div class=" my-4">
@@ -80,38 +111,48 @@
                         ?>
                         <div class="col-md-6 mb-4" id="<?= $address->id; ?>" style="margin-right:25px;">
                             <div class="card" id="map-container">
-                                <input id="autocomplete_search" type="text" class="form-control bg-white border-0 py-2" style="box-shadow: 0px 1px 5px #b2b2b2;"
-                                    placeholder="Type for the address..." autocomplete="on">
+                                <input id="autocomplete_search" type="text" class="form-control bg-white border-0 py-2"
+                                    style="box-shadow: 0px 1px 5px #b2b2b2;" placeholder="Type for the address..."
+                                    autocomplete="on" value="<?=$address_line_1;?>">
                                 <div id="load_map" style="height: 100%; width: 100%;"></div>
-                                <button type="button" id="load_current_location-2" class="bg-white rounded-5 border-0 py-2" style="width:100px;box-shadow: 0px 1px 5px #b2b2b2;">Locate Me</button>
+                                <button type="button" id="load_current_location-2"
+                                    class="bg-white rounded-5 border-0 py-2"
+                                    style="width:100px;box-shadow: 0px 1px 5px #b2b2b2;">Locate Me</button>
 
                             </div>
                         </div>
 
                         <div class="col-md-5 mb-4" id="<?= $address->id; ?>">
                             <div class="card" style="border:none">
-                                <span class="text-bold padding-bottom-md fw-bold mb-3" style="font-size:20px;font-weight: bold;color: #662d91;">
+                                <span class="text-bold padding-bottom-md fw-bold mb-3"
+                                    style="font-size:20px;font-weight: bold;color: #662d91;">
                                     New Address Details
-                                    <?php 
+                                    <?php
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'checkoutAddress'];
-                                    echo form_open('shop/saveCheckoutAddress', $attrib); 
-                                ?>
-                                    <input type="hidden" id="longitude" name="longitude" value="">
-                                    <input type="hidden" id="latitude" name="latitude" value="">
-                                    <input type="hidden" id="address-line-1" name="address_line_1" value="">
-                                    <input type="hidden" id="address-city" name="city" value="">
-                                    <input type="hidden" id="address-state" name="state" value="">
-                                    <input type="hidden" id="address-country" name="country" value="">
+                                    echo form_open('shop/saveCheckoutAddress', $attrib);
+                                    ?>
+                                    <input type="hidden" id="action_type" name="action_type_id"
+                                        value="<?=$address_id;?>">
+                                    <input type="hidden" id="longitude" name="longitude"
+                                        value="<?=$longitude;?>">
+                                    <input type="hidden" id="latitude" name="latitude" value="<?=$latitude;?>">
+                                    <input type="hidden" id="address-line-1" name="address_line_1"
+                                        value="<?=$address_line_1;?>">
+                                    <input type="hidden" id="address-city" name="city" value="<?=$address_city;?>">
+                                    <input type="hidden" id="address-state" name="state" value="<?=$address_state;?>">
+                                    <input type="hidden" id="address-country" name="country" value="<?=$address_country;?>">
+                                    <input type="hidden" id="current_mobile_number" name="current_mobile_number" value="<?=$mobile_number;?>">
                                     <span class=" padding-bottom-md fw-bold" style="font-size:17px;">
                                         LOCATION INFORMATION
                                     </span>
                                     <div class="form-row">
-                                    <div class="form-group col-md-8">
-                                        <label for="exampleFormControlInput1" class=" fw-bold fs-6">Additional Address Details</label>
-                                        <input type="text" class="form-control checkout_address ps-0" name="address_line_2"
-                                            id="exampleFormControlInput1"
-                                            placeholder="Building No, Floor, Flate No etc">
-                                    </div>
+                                        <div class="form-group col-md-8">
+                                            <label for="exampleFormControlInput1" class=" fw-bold fs-6">Additional
+                                                Address Details</label>
+                                            <input type="text" class="form-control checkout_address ps-0"
+                                                name="address_line_2" id="exampleFormControlInput1"
+                                                placeholder="Building No, Floor, Flate No etc" value="<?=$address_line_2;?>">
+                                        </div>
                                     </div>
 
                                     <!-- <div class="form-row">
@@ -135,12 +176,12 @@
                                             <select class="form-control checkout_address py-1 px-0"
                                                 id="exampleFormControlSelect1">
                                                 <option>+966</option>
-                                                </select>
+                                            </select>
                                         </div>
                                         <div class="form-group col-md-4 col-12 ms-md-4" style="float: left;">
                                             <label for="mobile_number" class=" fw-bold fs-6">&nbsp;</label>
-                                            <input type="text" class="form-control required checkout_address px-0 pt-1 " id="mobile_number" name="mobile_number"
-                                                placeholder="Mobile Number">
+                                            <input type="text" class="form-control required checkout_address px-0 pt-1 "
+                                                id="mobile_number" name="mobile_number" placeholder="Mobile Number" value="<?=$mobile_number;?>">
                                         </div>
                                     </div>
 
@@ -151,32 +192,32 @@
                                     <div class="form-row">
                                         <div class="form-group col-md-4 col-12" style="float: left">
                                             <label for="first_name" class=" fw-bold fs-6">First Name</label>
-                                            <input type="text" class="form-control checkout_address ps-0" id="first_name" name="first_name"
-                                                placeholder="Enter First Name">
+                                            <input type="text" class="form-control checkout_address ps-0"
+                                                id="first_name" name="first_name" placeholder="Enter First Name" value="<?=$first_name;?>">
                                         </div>
                                         <div class="form-group col-md-4 col-12 ms-md-4" style="float: left;">
                                             <label for="last_name" class=" fw-bold fs-6">Last Name</label>
-                                            <input type="text" class="form-control checkout_address ps-0" id="last_name" name="last_name"
-                                            placeholder="Enter Last Name">
+                                            <input type="text" class="form-control checkout_address ps-0" id="last_name"
+                                                name="last_name" placeholder="Enter Last Name" value="<?=$last_name;?>">
                                         </div>
                                     </div>
 
                                     <div class="custom-control custom-switch" style="clear: both">
-                                        
-                                    <div class="form-check form-switch d-flex align-items-center  ps-0 pe-3 w-100">
+
+                                        <!-- <div class="form-check form-switch d-flex align-items-center  ps-0 pe-3 w-100">
                                         <label class="form-check-label  mt-2" for="flexSwitchCheckDefault"  style="width: 200px; font-size: 18px;">Set as default address</label>
                                         <input class="form-check-input fs-5 " type="checkbox" role="switch" id="flexSwitchCheckDefault" checked="checked" name="is_default" style="margin-top:12px; margin-left: 12px;">
                                     
+                                    </div> -->
                                     </div>
-                                    </div>
-                                    
+
                                     <div>
                                         <button type="submit" class="btn primary-buttonAV  rounded-1 pb-2"
                                             style="margin-top:25px;">
                                             <?= lang('Confirm_&_Save_Address'); ?>
                                         </button>
                                     </div>
-                                <?= form_close(); ?>
+                                    <?= form_close(); ?>
 
                             </div>
                         </div>
@@ -209,47 +250,47 @@
 
 <script>
 
-$(document).ready(function() {
+    $(document).ready(function () {
 
-    var autocomplete_search = $('#autocomplete_search');
+        var autocomplete_search = $('#autocomplete_search');
 
-    // Remove the error class when the input field is focused
-    autocomplete_search.focus(function() {
-        autocomplete_search.removeClass('error');
-    });
+        // Remove the error class when the input field is focused
+        autocomplete_search.focus(function () {
+            autocomplete_search.removeClass('error');
+        });
 
-    // Remove the error class when the input value changes
-    autocomplete_search.on('change', function() {
-        autocomplete_search.removeClass('error');
-    });
-    const mobile_number = $('#mobile_number');
-    mobile_number.focus(function() {
-        mobile_number.removeClass('error');
-    });
+        // Remove the error class when the input value changes
+        autocomplete_search.on('change', function () {
+            autocomplete_search.removeClass('error');
+        });
+        const mobile_number = $('#mobile_number');
+        mobile_number.focus(function () {
+            mobile_number.removeClass('error');
+        });
 
-    const first_name = $('#first_name');
-    first_name.focus(function() {
-        first_name.removeClass('error');
-    });
+        const first_name = $('#first_name');
+        first_name.focus(function () {
+            first_name.removeClass('error');
+        });
 
-    const last_name = $('#last_name');
-    last_name.focus(function() {
-        last_name.removeClass('error');
-    });
-
-
+        const last_name = $('#last_name');
+        last_name.focus(function () {
+            last_name.removeClass('error');
+        });
 
 
-        $('#checkoutAddress').submit(function(event) {
+
+
+        $('#checkoutAddress').submit(function (event) {
             // Remove previous error highlights
             $('.error').removeClass('error');
-            event.preventDefault();
-            alert('Here in change address...bublooo');
+            //event.preventDefault();
+           // alert('Here in change address...bublooo');
             // Perform validation
             var autocomplete_search = $('#autocomplete_search').val();
-           
+
             if (autocomplete_search === '') {
-               
+
                 // Highlight the input field with an error
                 $('#autocomplete_search').addClass('error');
                 event.preventDefault(); // Prevent form submission
@@ -283,22 +324,20 @@ $(document).ready(function() {
     });
 
     function initMap() {
-        console.log('test');
         let map = new google.maps.Map(document.getElementById("load_map"), {
             center: { lat: 23.8859, lng: 45.0792 },
             zoom: 18,
         });
-
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                function (position) {
+                function (position) {     
                     const userLocation = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude,
+                        lat: <?php echo $latitude ? $latitude : 'position.coords.latitude'; ?>,
+                        lng: <?php echo $longitude ? $longitude : 'position.coords.longitude'; ?>
                     };
 
-                    document.getElementById("latitude").value = position.coords.latitude;
-                    document.getElementById("longitude").value = position.coords.longitude;
+                    document.getElementById("latitude").value = userLocation.lat;
+                    document.getElementById("longitude").value = userLocation.lng;
                     map.setCenter(userLocation);
 
                     const marker = new google.maps.Marker({
@@ -432,5 +471,5 @@ $(document).ready(function() {
     }
 
     // Load the map when the page is loaded
-    google.maps.event.addDomListener(window, 'load', initMap);
+    //google.maps.event.addDomListener(window, 'load', initMap('<?=$latitude?>','<?=$longitude;?>'));
 </script>

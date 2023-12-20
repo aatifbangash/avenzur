@@ -32,7 +32,7 @@
                                 <div class="border rounded p-3 pb-5 mb-4 address-container" data-address-id="default" style="cursor: pointer;">
                                     <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 "
                                         style="font-size:10px !important;"> Default</button>
-                                    <a href="" style="float:right">Edit Address</a>
+                                    <a href="?action=editaddress&id=default" style="float:right">Edit Address</a>
                                     <div class="d-flex">
 
                                         <div class="addressDetail d-flex align-items-center">
@@ -58,9 +58,9 @@
                                     foreach ($addresses as $address) {
                                         ?>
                                         <div class="border rounded p-3 pb-5 mb-4 address-container"
-                                            data-address-id="<?= $address->id; ?>" style="cursor: pointer;">
-                                            <a href="" style="float:right">Edit Address </a> <br>
-                                            <a href="" style="float:right">Delete</a>
+                                            data-address-id="<?=$address->id;?>" style="cursor: pointer;">
+                                            <a href="?action=editaddress&id=<?=$address->id;?>" style="float:right">Edit Address </a> <br>
+                                            <a href="?action=deleteaddress&id=<?=$address->id;?>" style="float:right">Delete</a>
                                             <div class="d-flex">
                                                 <div class="addressDetail d-flex align-items-center">
                                                     <div class="addicon "><i class="bi bi-geo-alt fs-5 purpColor"></i></div>
