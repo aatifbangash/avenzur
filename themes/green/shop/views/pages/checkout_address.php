@@ -333,8 +333,8 @@ $(document).ready(function() {
                     document.getElementById('registerOTP').style.color = 'grey';
                     document.getElementById('registerOTP').style.cursor = 'none';
                     $('#verifyMobileModal').modal('show');
-                    document.getElementById('identifier').innerHTML = document.getElementById('mobile_number').value;
-                    document.getElementById('identifier_input').value = document.getElementById('mobile_number').value;
+                    document.getElementById('identifier').innerHTML = $('#mobile_number').val();
+                    document.getElementById('identifier_input').value = $('#mobile_number').val();
 
                     const countdownDuration = 60; // Duration in seconds
                     const countdownDisplay = document.getElementById("register-clock");
