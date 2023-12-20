@@ -159,7 +159,7 @@
                           if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
                         ?>
                         
-                        <div class="dropdown-menu p-3 myaccountForm validate">
+                        <div class="dropdown-menu p-3 myaccountForm validate" id="myaccountForm">
                         <div class="loginRCard px-4 w-100">
                             <div class="logo-k mb-5"> 
                                 <a class="navbar-brand" href="http://localhost/avenzur/">
