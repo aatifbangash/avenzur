@@ -2028,8 +2028,8 @@ function moveFocusOld(currentInput, nextInputId) {
 
 
       function bindOtpKeyupEvents(prefix, totalFields) {
-        document.getElementById('login_otp_1').focus();
-        document.getElementById('register_otp_1').focus();
+        //document.getElementById('login_otp_1').focus();
+        //document.getElementById('register_otp_1').focus();
         for (let i = 1; i <= totalFields; i++) {
             let currentId = `${prefix}_${i}`;
             let nextId = i < totalFields ? `${prefix}_${i + 1}` : null;

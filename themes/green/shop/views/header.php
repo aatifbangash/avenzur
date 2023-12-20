@@ -371,7 +371,7 @@
     <?php 
       
       $currentUri = $this->uri->uri_string(); 
-      if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
+      if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register' && $currentUri !== 'cart/checkout') {
         ?>
           <!-- Register Modal Starts -->
           <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
