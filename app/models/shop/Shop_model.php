@@ -204,18 +204,10 @@ class Shop_model extends CI_Model
         return $this->db->get_where('addresses', ['company_id' => $this->session->userdata('company_id')])->result();
     }
 
-    public function getDefaultChechoutAddress($lastAddress = false)
+    public function getDefaultChechoutAddress($address_id = null)
     {
-        if ($lastAddress) {
-
-            $this->db->select('*');
-            $this->db->from('addresses');
-            $this->db->where('company_id', $this->session->userdata('company_id'));
-            $this->db->order_by('id', 'DESC'); 
-            $this->db->limit(1); 
-
-            return $result = $this->db->get()->result();
-          
+        if ($address_id != 'default' && is_numeric($address_id)) {
+           return $this->db->get_where('addresses', ['id' => $address_id, 'company_id' => $this->session->userdata('company_id')])->row();
         }
         return $this->db->get_where('companies', ['id' => $this->session->userdata('company_id')])->row();
     }

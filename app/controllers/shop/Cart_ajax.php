@@ -288,14 +288,24 @@ class Cart_ajax extends MY_Shop_Controller
             $this->session->set_flashdata('reminder', lang('cart_is_empty'));
              shop_redirect('products');
         }
-    
+        $this->data['address_id'] = '';
         $action = $this->input->get('action');
         $this->data['addresses']  = $this->loggedIn ? $this->shop_model->getAddresses() : false;
         $this->data['default_address']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
        
         if($this->loggedIn && (  $this->data['default_address']->phone == '' || in_array($action, array('addnewaddress', 'editaddress')) ) ) {
         //if($action == 'changeaddress' || empty($this->data['addresses']))  {  
-
+            // for edit address
+            if($action == 'editaddress') {
+                $address_id =   $this->input->get('id');
+                if($address_id == 'default' || is_numeric($address_id)) {
+                    $this->data['selected_address_info']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress($address_id) : false;
+                    $this->data['address_id'] = $address_id;
+                    if(empty($this->data['selected_address_info'])) {
+                        redirect('cart/checkout') ;
+                    }
+                }
+            }    
             $this->page_construct('pages/checkout_address', $this->data);    
         }
         else if( $this->loggedIn && $action == 'changeaddress' ) {
