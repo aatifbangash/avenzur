@@ -94,8 +94,8 @@
                                     New Address Details
                                     <?php 
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'checkoutAddress'];
-                                    //echo form_open('shop/saveCheckoutAddress', $attrib); 
-                                    echo form_open('verify_phone', $attrib);
+                                    echo form_open('shop/saveCheckoutAddress', $attrib); 
+                                    //echo form_open('verify_phone', $attrib);
                                 ?>
                                     <input type="hidden" id="longitude" name="longitude" value="">
                                     <input type="hidden" id="latitude" name="latitude" value="">
@@ -197,7 +197,7 @@
                                             <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span></h5>
                                         </div>
                                         <?php 
-                                            $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registerOtpForm'];
+                                            $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'mobileOtpForm'];
                                             echo form_open('mobile_verify_otp', $attrib); 
                                         ?>
                                         <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
@@ -210,12 +210,12 @@
                                             <input type="hidden" id="identifier_input" name="identifier_input" value="" />
                                         </div>
                                         <div  class="text-center">
-                                            <h6 class="m-0 mt-2"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="registerOTP">Resend OTP </span></h6>
+                                            <h6 class="m-0 mt-2"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="mobileOTP">Resend OTP </span></h6>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="modal-footer border-0 pb-4">
-                                    <button type="submit" id="registerOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Verify</button>
+                                    <button type="submit" id="mobileOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Verify</button>
                                 </div>
                                 <?= form_close(); ?>
                             </div>
@@ -329,9 +329,9 @@ $(document).ready(function() {
             success: function (response) {
                 var respObj = JSON.parse(response);
                 if (respObj.status == 'success' || respObj.code == 1) {
-                    $('#registerOTP').off('click', handleRegisterOTPClick);
-                    document.getElementById('registerOTP').style.color = 'grey';
-                    document.getElementById('registerOTP').style.cursor = 'none';
+                    $('#mobileOTP').off('click', handleMobileOTPClick);
+                    document.getElementById('mobileOTP').style.color = 'grey';
+                    document.getElementById('mobileOTP').style.cursor = 'none';
                     $('#verifyMobileModal').modal('show');
                     document.getElementById('identifier').innerHTML = $('#mobile_number').val();
                     document.getElementById('identifier_input').value = $('#mobile_number').val();
@@ -348,9 +348,9 @@ $(document).ready(function() {
 
                         if (--timer < 0) {
                             clearInterval(intervalId);
-                            document.getElementById('registerOTP').style.color = '#662d91';
-                            document.getElementById('registerOTP').style.cursor = 'pointer';
-                            $('#registerOTP').click(handleRegisterOTPClick);
+                            document.getElementById('mobileOTP').style.color = '#662d91';
+                            document.getElementById('mobileOTP').style.cursor = 'pointer';
+                            $('#mobileOTP').click(handleMobileOTPClick);
                         }
                     }, 1000);
 
@@ -364,8 +364,48 @@ $(document).ready(function() {
         });
     }
 
-    function handleRegisterOTPClick(){
-        
+    function handleMobileOTPClick(){
+        var formData = $('#checkoutAddress').serialize();
+        $.ajax({
+            type: 'POST',
+            url: '<?= base_url(); ?>verify_phone_otp',
+            data: formData,
+            success: function (response) {
+                var respObj = JSON.parse(response);
+                if (respObj.status == 'success' || respObj.code == 1) {
+                    $('#mobileOTP').off('click', handleMobileOTPClick);
+                    document.getElementById('mobileOTP').style.color = 'grey';
+                    document.getElementById('mobileOTP').style.cursor = 'none';
+                    $('#mobileModal').modal('show');
+                    document.getElementById('identifier').innerHTML = $('#mobile_number').val();
+                    document.getElementById('identifier_input').value = $('#mobile_number').val();
+
+                    const countdownDuration = 60; // Duration in seconds
+                    const countdownDisplay = document.getElementById("register-clock");
+                    
+                    let timer = countdownDuration, minutes, seconds;
+                    const intervalId = setInterval(function () {
+                        minutes = parseInt(timer / 60, 10);
+                        seconds = parseInt(timer % 60, 10);
+
+                        countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                        if (--timer < 0) {
+                            clearInterval(intervalId);
+                            document.getElementById('mobileOTP').style.color = '#662d91';
+                            document.getElementById('mobileOTP').style.cursor = 'pointer';
+                            $('#mobileOTP').click(handleMobileOTPClick);
+                        }
+                    }, 1000);
+
+                } else {
+                    alert('Mobile verification failed');
+                }
+            },
+            error: function (error) {
+                console.error(error);
+            }
+        });
     }
 });
 
