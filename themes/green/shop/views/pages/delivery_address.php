@@ -152,7 +152,7 @@
             $("#address-selection-radio").prop("checked", true);
         });
         
-        $("#confirm-address").on("click", function () {
+        $("#confirm-address").on("click", function (e) {
             e.preventDefault(); 
 
             var selected_phone = $('.selected-address .phone_number').text();
