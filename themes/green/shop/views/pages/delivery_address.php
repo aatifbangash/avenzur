@@ -43,8 +43,9 @@
                                                     <?= $default_address->state; ?>
                                                     <?= $default_address->country; ?>
                                                 </p>
-                                                <p class="m-0 fs-6 fw-semibold"> +966 <?= $default_address->phone; ?> <i
-                                                        class="bi bi-check-circle-fill ms-2 purpColor"></i></p>
+                                                <p class="m-0 fs-6 fw-semibold">
+                                                    <span class="phone_number"> +966 <?= $default_address->phone; ?> </span>
+                                                    <i class="bi bi-check-circle-fill ms-2 purpColor"></i></p>
                                             </div>
                                         </div>
 
@@ -72,7 +73,7 @@
                                                             <?= $address->country; ?>
                                                         </p>
                                                         <p class="m-0 fs-6 fw-semibold"> +966
-                                                            <?= $address->phone; ?> 
+                                                            <span class="phone_number"><?= $address->phone; ?> </span>
                                                             <?php if($address->is_verified == 1):?>
                                                             <i class="bi bi-check-circle-fill ms-2 purpColor"></i>
                                                             <?php else:?>
@@ -152,7 +153,10 @@
         });
         
         $("#confirm-address").on("click", function () {
-            alert('here in confirm block');
+            e.preventDefault(); 
+
+            var selected_phone = $('.selected-address .phone_number').text();
+            alert(selected_phone);
         });
     });
 </script>
