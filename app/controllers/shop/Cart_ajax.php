@@ -290,15 +290,9 @@ class Cart_ajax extends MY_Shop_Controller
         }
         $this->data['address_id'] = '';
         $action = $this->input->get('action');
-        
-        if($this->session->get_userdata('changed_address')){
-            $this->data['default_address']  = $this->session->get_userdata('changed_address')['changed_address'];
-        }else{
-            $this->data['default_address']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
-        }
 
         
-
+        $this->data['default_address']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
         $this->data['addresses']  = $this->loggedIn ? $this->shop_model->getAddresses() : false;  
        
         if($this->loggedIn && (  $this->data['default_address']->phone == '' || in_array($action, array('addnewaddress', 'editaddress')) ) ) {
@@ -336,7 +330,14 @@ class Cart_ajax extends MY_Shop_Controller
             }
         } 
          
-           $this->data['defaultAddress']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
+           //$this->data['defaultAddress']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
+
+           if($this->session->get_userdata('changed_address')){
+                $this->data['default_address']  = $this->session->get_userdata('changed_address')['changed_address'];
+            }else{
+                $this->data['default_address']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
+            }
+
           
             $this->data['paypal']     = $this->shop_model->getPaypalSettings();
             $this->data['skrill']     = $this->shop_model->getSkrillSettings();
