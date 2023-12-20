@@ -236,7 +236,26 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
             if(!phone_verified){
                 verifyNumber(selected_phone);    
             }else{
-                window.location.href = site.base_url+'cart/checkout';
+                // Set confirmed phone number as shipping
+                console.log(selected_phone);
+                /*$.ajax({
+                    type: 'GET',
+                    url: '<?= base_url(); ?>verify_phone',
+                    data: {'mobile_number' : selected_phone},
+                    success: function (response) {
+                        var respObj = JSON.parse(response);
+                        if (respObj.status == 'success' || respObj.code == 1) {
+                            
+                        } else {
+                            alert('Request failed');
+                        }
+                    },
+                    error: function (error) {
+                        console.error(error);
+                    }
+                });*/
+
+                //window.location.href = site.base_url+'cart/checkout';
             }
         });
 
