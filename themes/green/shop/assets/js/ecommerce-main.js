@@ -689,6 +689,10 @@ $(document).ready(function () {
     searchProducts();
   }
 
+  $(document).on("click", '.checkout-link', function (event){
+    console.log(event);
+  });
+
   $(document).on("click", "#pagination a", function (t) {
     t.preventDefault();
     var e = $(this).attr("href"),
