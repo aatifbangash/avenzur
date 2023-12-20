@@ -349,7 +349,27 @@ function sa_alert(t, e, a, s) {
 }
 
 function saa_alert(t, e, a, s) {
-  (a = a || lang.delete),
+  $.ajax({
+    url: t,
+    type: "POST",
+    data: s,
+    success: function (t) {
+      if (t.redirect) return (window.location.href = t.redirect), !1;
+      t.cart &&
+        ((cart = t.cart), update_mini_cart(cart), update_cart(cart)),
+        sa_alert(t.status, t.message);
+    },
+    error: function () {
+      sa_alert(
+        "Error!",
+        "Ajax call failed, please try again or contact site owner.",
+        "error",
+        !0
+      );
+    },
+  });
+
+  /*(a = a || lang.delete),
     (e = e || lang.x_reverted_back),
     (s = s || {}),
     (s._method = a),
@@ -384,7 +404,7 @@ function saa_alert(t, e, a, s) {
           });
         });
       },
-    }).catch(swal.noop);
+    }).catch(swal.noop);*/
 }
 
 function prompt(t, e, a) {
