@@ -215,12 +215,14 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
             // Check the hidden radio button for form submission
             $("#address-selection-radio").prop("checked", true);
 
-            var phone_verified = $('.selected-address .phone_verified').text();
-            if(phone_verified){
-                $('#confirm-address').hide();
-            }else{
-                $('#confirm-address').show();
-            }
+            console.log($('.selected-address').html());
+
+            //var phone_verified = $('.selected-address .phone_verified').text();
+            //if(phone_verified){
+            //    $('#confirm-address').hide();
+            //}else{
+            //    $('#confirm-address').show();
+            //}
         });
         
         $("#confirm-address").on("click", function (e) {
