@@ -669,9 +669,9 @@ class Main extends MY_Shop_Controller
             if($validate){
 
                 if($this->input->post('change_phone')){
-
-                    $verified_data = $this->shop_model->get_activate_phone($this->session->userdata('company_id'), $identity);
-                    if($this->shop_model->activate_phone($this->session->userdata('company_id'), $identity)){
+                    $address_id = $this->input->post('selected_add_id');
+                    $verified_data = $this->shop_model->get_activate_phone($this->session->userdata('company_id'), $identity, $address_id);
+                    if($this->shop_model->activate_phone($this->session->userdata('company_id'), $identity, $address_id)){
                         $this->session->set_userdata('changed_address', $verified_data);
                     }
                 }

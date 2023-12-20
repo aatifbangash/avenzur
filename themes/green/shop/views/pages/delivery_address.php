@@ -155,6 +155,7 @@
                                             <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
                                             <input type="hidden" id="identifier_input" name="identifier_input" value="" />
                                             <input type="hidden" name="change_phone" value="1" />
+                                            <input type="hidden" name="selected_add_id" value="" />
                                         </div>
                                         <div  class="text-center">
                                             <h6 class="m-0 mt-2"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="mobileOTP">Resend OTP </span></h6>
@@ -207,6 +208,7 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
             // Store the selected address ID in the hidden input
             var selectedAddressId = $(this).data("address-id");
             $("#selected-address-id").val(selectedAddressId);
+            $("#selected_add_id").val(selectedAddressId);
 
             // Check the hidden radio button for form submission
             $("#address-selection-radio").prop("checked", true);
@@ -224,6 +226,7 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
 
             var selected_phone = $('.selected-address .phone_number').text();
             var phone_verified = $('.selected-address .phone_verified').val();
+            var selected_add_id = $("#selected-address-id").val();
             
             if(!phone_verified){
                 verifyNumber(selected_phone);    

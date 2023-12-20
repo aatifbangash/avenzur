@@ -58,12 +58,12 @@ class Shop_model extends CI_Model
         return $this->db->update('companies', ['mobile_verified' => 1], ['id' => $company_id]);
     }
 
-    public function get_activate_phone($company_id, $mobile){
-        return $this->db->get_where('addresses', ['company_id' => $company_id, 'phone' => $mobile], 1)->row();
+    public function get_activate_phone($company_id, $mobile, $address_id){
+        return $this->db->get_where('addresses', ['id' => $address_id, 'company_id' => $company_id, 'phone' => $mobile], 1)->row();
     }
 
-    public function activate_phone($company_id, $mobile){
-        return $this->db->update('addresses', ['mobile_verified' => 1], ['company_id' => $company_id, 'phone' => $mobile]);
+    public function activate_phone($company_id, $mobile, $address_id){
+        return $this->db->update('addresses', ['mobile_verified' => 1], ['id' => $address_id, 'company_id' => $company_id, 'phone' => $mobile]);
     }
 
     public function validate_otp($identifer, $otp)
