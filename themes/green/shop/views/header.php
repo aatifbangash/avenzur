@@ -352,7 +352,7 @@
                   </table>
                 <div class="d-flex">
                   <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">View Cart</a>
-                  <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">Checkout</a>
+                  <a class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center checkout-link">Checkout</a>
                 </div>
               </div>
 
