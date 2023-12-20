@@ -690,7 +690,7 @@ $(document).ready(function () {
   }
 
   $(document).on("click", '.checkout-link', function (event){
-    $('.dropdown').modal('show');
+    $('.myaccountForm').modal('show');
   });
 
   $(document).on("click", "#pagination a", function (t) {
