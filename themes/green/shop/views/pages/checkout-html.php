@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php //print_r($defaultAddress);?>
+<?php //print_r($default_address);?>
 <?php
  if (!$this->loggedIn) {
 redirect('login') ; 
@@ -162,10 +162,10 @@ if ($this->Settings->indian_gst) {
 
            <input type="hidden" name="payment_method" value="directpay" id="directpay"
                                                    required="required">
-            <input type="hidden" name="address" id="address" value="<?php echo $defaultAddress->id;?>">    
-            <input type="hidden" name="shipping_city" id="shipping_city" value="<?php echo $defaultAddress->city;?>">                                       
-            <input type="hidden" name="shipping_state" id="shipping_state" value="<?php echo $defaultAddress->state;?>">          
-            <input type="hidden" name="shipping_country" id="shipping_country" value="<?php echo $defaultAddress->country;?>">                             
+            <input type="hidden" name="address" id="address" value="<?php echo $default_address->id;?>">    
+            <input type="hidden" name="shipping_city" id="shipping_city" value="<?php echo $default_address->city;?>">                                       
+            <input type="hidden" name="shipping_state" id="shipping_state" value="<?php echo $default_address->state;?>">          
+            <input type="hidden" name="shipping_country" id="shipping_country" value="<?php echo $default_address->country;?>">                             
             <input type="hidden" id="total-price" value="<?= $total ?>"/>
                 <h3 class=" fw-bold pb-2">Order Summary</h3>
                 <div class="border rounded py-3 px-2">
