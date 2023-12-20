@@ -58,6 +58,10 @@ class Shop_model extends CI_Model
         return $this->db->update('companies', ['mobile_verified' => 1], ['id' => $company_id]);
     }
 
+    public function get_company_details($address_id){
+        return $this->db->get_where('companies', ['id' => $address_id], 1)->row();
+    }
+
     public function get_activate_phone($company_id, $mobile, $address_id){
         return $this->db->get_where('addresses', ['id' => $address_id, 'company_id' => $company_id, 'phone' => $mobile], 1)->row();
     }

@@ -35,6 +35,7 @@ $route['shop/(:any)/(:any)/(:any)'] = 'shop/shop/$1/$2/$3';
 // Auth routes
 $route['login']                  = 'main/login';
 $route['login_otp']              = 'main/login_otp';
+$route['set_shipping_phone']     = 'main/set_shipping_phone';
 $route['verify_phone']           = 'main/verify_phone';
 $route['verify_phone_otp']       = 'main/verify_phone_otp';
 $route['activate_phone']         = 'main/activate_phone';

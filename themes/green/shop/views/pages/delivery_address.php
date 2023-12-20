@@ -218,7 +218,6 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
             $("#address-selection-radio").prop("checked", true);
 
             var phone_verified = $('.selected-address').find('.phone_verified').text();
-            console.log(phone_verified);
             //if(phone_verified){
             //    $('#confirm-address').hide();
             //}else{
@@ -237,23 +236,18 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
                 verifyNumber(selected_phone);    
             }else{
                 // Set confirmed phone number as shipping
-                console.log(selected_phone);
-                /*$.ajax({
+                var addressId = $('.selected-address').data('address-id');
+                $.ajax({
                     type: 'GET',
-                    url: '<?= base_url(); ?>verify_phone',
-                    data: {'mobile_number' : selected_phone},
+                    url: '<?= base_url(); ?>set_shipping_phone',
+                    data: {'mobile_number' : selected_phone, 'address_id': addressId},
                     success: function (response) {
-                        var respObj = JSON.parse(response);
-                        if (respObj.status == 'success' || respObj.code == 1) {
-                            
-                        } else {
-                            alert('Request failed');
-                        }
+                        console.log(response);
                     },
                     error: function (error) {
                         console.error(error);
                     }
-                });*/
+                });
 
                 //window.location.href = site.base_url+'cart/checkout';
             }

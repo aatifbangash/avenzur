@@ -647,6 +647,21 @@ class Main extends MY_Shop_Controller
 
     }*/
 
+    public function set_shipping_phone(){
+        $address_id = $this->input->get('address_id');
+        $mobile_number = $this->input->get('mobile_number');
+
+        if($address_id == 'default'){
+            $verified_data = $this->shop_model->get_company_details($this->session->userdata('company_id'));
+        }else{
+            $verified_data = $this->get_activate_phone->get_company_details($this->session->userdata('company_id'), $mobile_number, $address_id);
+        }
+        
+        $this->session->set_userdata('changed_address', $verified_data);
+
+        echo json_encode(['status' => 'success', 'message' => 'Address changed success']);
+    }
+
     public function verify_phone_otp(){
         $this->form_validation->set_rules('identifier_input', lang('Mobile'), 'required');
         if ($this->form_validation->run('') == true) {
