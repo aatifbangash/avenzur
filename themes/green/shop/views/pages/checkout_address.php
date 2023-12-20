@@ -198,7 +198,7 @@
                                         </div>
                                         <?php 
                                             $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'mobileOtpForm'];
-                                            echo form_open('mobile_verify_otp', $attrib); 
+                                            echo form_open('verify_phone_otp', $attrib); 
                                         ?>
                                         <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
                                             <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
