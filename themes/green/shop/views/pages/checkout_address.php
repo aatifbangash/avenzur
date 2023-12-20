@@ -368,7 +368,7 @@ $(document).ready(function() {
         var formData = $('#checkoutAddress').serialize();
         $.ajax({
             type: 'POST',
-            url: '<?= base_url(); ?>verify_phone_otp',
+            url: '<?= base_url(); ?>verify_phone',
             data: formData,
             success: function (response) {
                 var respObj = JSON.parse(response);
