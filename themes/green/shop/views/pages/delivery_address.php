@@ -84,9 +84,10 @@
                                                             <?= $address->state; ?>
                                                             <?= $address->country; ?>
                                                         </p>
+                                                        <span class="phone_verified" style="visibility:hidden;"><?= $address->is_verified; ?></span>
                                                         <p class="m-0 fs-6 fw-semibold"> +966
                                                             <span class="phone_number"><?= $address->phone; ?></span>
-                                                            <span class="phone_verified" style="visibility:hidden;"><?= $address->is_verified; ?></span>
+                                                            
                                                             
                                                             <?php if ($address->is_verified == 1): ?>
                                                                 <i class="bi bi-check-circle-fill ms-2 purpColor"></i>
@@ -214,7 +215,7 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
             // Check the hidden radio button for form submission
             $("#address-selection-radio").prop("checked", true);
 
-            var phone_verified = $('.selected-address .phone_verified').val();
+            var phone_verified = $('.selected-address .phone_verified').text();
             if(phone_verified){
                 $('#confirm-address').hide();
             }else{
@@ -226,7 +227,7 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
             e.preventDefault(); 
 
             var selected_phone = $('.selected-address .phone_number').text();
-            var phone_verified = $('.selected-address .phone_verified').val();
+            var phone_verified = $('.selected-address .phone_verified').text();
             var selected_add_id = $("#selected-address-id").val();
             
             if(!phone_verified){
