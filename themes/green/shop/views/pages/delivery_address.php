@@ -249,7 +249,7 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
                     }
                 });
 
-                //window.location.href = site.base_url+'cart/checkout';
+                window.location.href = site.base_url+'cart/checkout';
             }
         });
 
