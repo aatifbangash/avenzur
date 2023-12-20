@@ -243,13 +243,14 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
                     data: {'mobile_number' : selected_phone, 'address_id': addressId},
                     success: function (response) {
                         console.log(response);
+                        window.location.href = site.base_url+'cart/checkout';
                     },
                     error: function (error) {
                         console.error(error);
                     }
                 });
 
-                window.location.href = site.base_url+'cart/checkout';
+                
             }
         });
 
