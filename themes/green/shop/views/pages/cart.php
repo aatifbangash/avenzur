@@ -33,25 +33,32 @@ $cart_contents = $this->cart->contents();
                             <div class="d-flex">
                                 <?php
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'coupon_form'];
-                                    //echo form_open('apply_coupon', $attrib); 
+                                    echo form_open('apply_coupon', $attrib); 
                                 ?>
-                                <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="Welcom20">
-                                <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> 
                                     <?php 
-                                        if(isset($cart_contents['coupon_disc'])){
-                                            echo 'Code applied!';
+                                        if($this->cart->get_total_discount() > 0){
+                                            ?>
+                                                <input type="text" name="coupon_code" disabled="disabled" class="form-control  rounded-0" placeholder="">
+                                                <button disabled="disabled" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="background: green;color: #fff;border: none;font-size:14px !important;width: 175px !important;">
+                                                    Code Applied
+                                                </button>
+                                            <?php
                                         }else{
-                                            echo 'Apply Code';
+                                            ?>
+                                                <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="">
+                                                <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;">
+                                                    Apply Code
+                                                </button>
+                                            <?php
+                                           
                                         }
                                     ?>   
-                                
-                                </button>
                                 <?php 
-                                    //echo form_close();
+                                    echo form_close();
                                 ?>
                             </div>
                             <div class="d-flex justify-content-between align-items-center my-3">
-                                <h4 class="m-0 fw-semibold">Subtotal (<span id="total-unique_items">0</spam> items)</h4>
+                                <h4 class="m-0 fw-semibold">Subtotal (<span id="total-unique_items">0</span> items)</h4>
                                 <h4 class="m-0 fw-semibold"><span id="total-price">0 SAR</span></h4>
                             </div>
                             <div class="d-flex justify-content-between align-items-center my-3">

@@ -271,7 +271,7 @@ class Main extends MY_Shop_Controller
             redirect('admin/logout');
         }
         $logout   = $this->ion_auth->logout();
-
+        $this->cart->destroy();
         if (isset($_COOKIE['companyID'])) {
             $expirationTime = (time() + 3600 * 9999999) * -1;
             setcookie("companyID", "", $expirationTime, '/');

@@ -975,7 +975,8 @@ class Shop extends MY_Shop_Controller
                 $this->data['stripe_secret_key'] = $this->config->item('stripe_secret_key');
                 $this->data['stripe_publishable_key'] = $this->config->item('stripe_publishable_key');
                 $this->data['all_categories'] = $this->shop_model->getAllCategories();
-                $this->page_construct('pages/view_order', $this->data);
+                //$this->page_construct('pages/view_order', $this->data);
+                $this->page_construct('pages/thankyou', $this->data);
             } else {
                 $this->session->set_flashdata('error', lang('access_denied'));
                 redirect('/');

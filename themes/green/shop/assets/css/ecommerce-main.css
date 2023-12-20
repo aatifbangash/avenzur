@@ -1492,6 +1492,7 @@ h4.letstart {
   border-radius: 10px;
   margin-top: 25px;
 }
+
 .logsignBtns {
   background: #662d91;
   width: fit-content;
@@ -1559,17 +1560,17 @@ button.modalcloseBtn {
   .standard-div {
     gap: 6rem;
   }
-  .myaccountForm.cartform {
+  /* .myaccountForm.cartform {
     left: -9px !important;
-  }
+  } */
   #load_map {
     height: 400px !important;
     width: 100%;
   }
-  .dropdown-menu.myaccountForm.cartform {
+  /* .dropdown-menu.myaccountForm.cartform {
     right: 0 !important;
     left: auto !important;
-  }
+  } */
   .addtable {
     width: 100% !important;
   }

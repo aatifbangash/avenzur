@@ -51,18 +51,36 @@ class Cart_ajax extends MY_Shop_Controller
     
         if($coupon_code == 'welcom20'){
 
-            $cart_total = $this->cart->total();
+            $cart_arr = $this->cart;
+            $cart_total = $cart_arr->cart_contents['cart_total'];
             $discount = 25;
-            $coupon_disc = ($cart_total*25)/100;
+            $coupon_disc = ($cart_total*$discount)/100;
             $cart_total = $cart_total - $coupon_disc;
 
-            if ($this->cart->update($data)) {
+            $cart_contents = $this->cart->contents();
+            $cart_arr = array();
+            foreach ($cart_contents as $item => $val) {
+                $data = [
+                    'rowid'  => $val['rowid'],
+                    'discount'  => ($val['price'] * $discount) / 100
+                ];
+                array_push($cart_arr, $data);
+            }
+
+            $this->cart->update($cart_arr);
+
+            //$this->cart->set_discount($coupon_disc);
+
+            $this->session->set_flashdata('message', 'Coupon Code Applied');
+            redirect('cart');
+
+            /*if ($this->cart->update($data)) {
                 $this->session->set_flashdata('message', 'Coupon Code Applied');
                 redirect('cart');
             }else{
                 $this->session->set_flashdata('error', 'Could not add code');
                 redirect('cart');
-            }
+            }*/
         }else{
             $this->session->set_flashdata('error', 'Invalid Coupon Code');
             redirect('cart');
@@ -162,6 +180,7 @@ class Cart_ajax extends MY_Shop_Controller
                     'image'      => $product->image,
                     'option'     => $selected,
                     'options'    => !empty($options) ? $options : null,
+                    'discount'   => 0,
                 ];
 
             }else{
@@ -178,6 +197,7 @@ class Cart_ajax extends MY_Shop_Controller
                     'image'      => $product->image,
                     'option'     => $selected,
                     'options'    => !empty($options) ? $options : null,
+                    'discount'   => 0,
                 ];
 
             }

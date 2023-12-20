@@ -243,7 +243,8 @@ $(document).ready(function() {
         $('#checkoutAddress').submit(function(event) {
             // Remove previous error highlights
             $('.error').removeClass('error');
-
+            event.preventDefault();
+            alert('Here in change address...bublooo');
             // Perform validation
             var autocomplete_search = $('#autocomplete_search').val();
            

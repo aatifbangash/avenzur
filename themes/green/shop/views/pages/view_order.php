@@ -74,7 +74,8 @@
                                                     <?= lang('sale_status'); ?>: <?= lang($inv->sale_status); ?><br>
                                                     <?= lang('payment_status'); ?>: <?= lang($inv->payment_status); ?>
                                                     <br>
-                                                    <?= lang('payment_method'); ?>: <?= lang($inv->payment_method); ?>
+                                                    <?= lang('payment_method'); ?>: <?= lang($inv->payment_method); ?><br>
+                                                    <?= lang('Order No'); ?>: <?= lang($inv->id); ?>
                                                 </p>
                                             </div>
                                             <div class="col-xs-7 text-right order_barcodes text-end w-auto">
