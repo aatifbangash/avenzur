@@ -675,6 +675,20 @@ class Main extends MY_Shop_Controller
         }
     }
 
+    public function activate_phone(){
+        $this->form_validation->set_rules('mobile_number', lang('Mobile'), 'required');
+        $company_id = $this->session->userdata('company_id');
+        $company_data = $this->shop_model->getCompanyByID($company_id);
+
+        $mobile = $this->input->get('mobile_number');
+
+        if($this->shop_model->activate_phone($company_id, $mobile)){
+            echo json_encode(['status' => 'success', 'message' => 'Mobile activated successfully']);
+        }else{
+            echo json_encode(['status' => 'error', 'message' => 'Mobile activation failed']);
+        }
+    }
+
     public function verify_phone(){
         $this->form_validation->set_rules('mobile_number', lang('Mobile'), 'required');
 

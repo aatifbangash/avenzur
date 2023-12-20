@@ -229,6 +229,47 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
             }
         });
 
+        $('#mobileOtpBtn').click(function (e) {
+            e.preventDefault(); 
+
+            var formData = $('#mobileOtpForm').serialize();
+            $.ajax({
+                type: 'POST',
+                //url: '<?= base_url(); ?>verify_phone_otp',
+                url: $('#mobileOtpForm').attr('action'),
+                data: formData,
+                success: function (response) {
+                    var respObj = JSON.parse(response);
+                    if (respObj.status == 'success' || respObj.code == 1) {
+                        //$('#opt_verified').val(1);
+                        //$('#checkoutAddress').submit();
+                        $.ajax({
+                            type: 'GET',
+                            url: '<?= base_url(); ?>activate_phone',
+                            //url: $('#checkoutAddress').attr('action'),
+                            data: {'mobile_number' : selected_phone},
+                            success: function (response) {
+                                var respObj = JSON.parse(response);
+                                if (respObj.status == 'success' || respObj.code == 1) {
+                                    location.reload();
+                                }else{
+                                    location.reload();
+                                }
+                            },
+                            error: function (error) {
+                                console.error(error);
+                            }
+                        });
+                    } else {
+                        $('#otp-message').html('OTP verification failed');
+                    }
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+        });
+
         function verifyNumber(selected_phone){
             event.preventDefault();
             //var formData = $('#checkoutAddress').serialize();

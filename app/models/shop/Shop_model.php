@@ -58,6 +58,10 @@ class Shop_model extends CI_Model
         return $this->db->update('companies', ['mobile_verified' => 1], ['id' => $company_id]);
     }
 
+    public function activate_phone($company_id, $mobile){
+        return $this->db->update('addresses', ['mobile_verified' => 1], ['company_id' => $company_id, 'phone' => $mobile]);
+    }
+
     public function validate_otp($identifer, $otp)
     {
         $uniqueColumns = array('identifier' => $identifer, 'otp' => $otp);
