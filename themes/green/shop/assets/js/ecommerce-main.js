@@ -356,16 +356,16 @@ function saa_alert(t, e, a, s) {
     success: function (t) {
       if (t.redirect) return (window.location.href = t.redirect), !1;
       t.cart &&
-        ((cart = t.cart), update_mini_cart(cart), update_cart(cart)),
-        sa_alert(t.status, t.message);
+        ((cart = t.cart), update_mini_cart(cart), update_cart(cart));
+        //sa_alert(t.status, t.message);
     },
     error: function () {
-      sa_alert(
+      /*sa_alert(
         "Error!",
         "Ajax call failed, please try again or contact site owner.",
         "error",
         !0
-      );
+      );*/
     },
   });
 
