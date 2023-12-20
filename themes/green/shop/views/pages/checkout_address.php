@@ -103,6 +103,7 @@
                                     <input type="hidden" id="address-city" name="city" value="">
                                     <input type="hidden" id="address-state" name="state" value="">
                                     <input type="hidden" id="address-country" name="country" value="">
+                                    <input type="hidden" id="opt_verified" name="opt_verified" value="0">
                                     <span class=" padding-bottom-md fw-bold" style="font-size:17px;">
                                         LOCATION INFORMATION
                                     </span>
@@ -315,8 +316,9 @@ $(document).ready(function() {
         }
 
         // Add more validation for other fields as needed
-
-        verifyNumber();
+        if($('#opt_verified').val() == 0){
+            verifyNumber();
+        }
     });
 
     $('#mobileOtpBtn').click(function (e) {
@@ -331,6 +333,7 @@ $(document).ready(function() {
             success: function (response) {
                 var respObj = JSON.parse(response);
                 if (respObj.status == 'success' || respObj.code == 1) {
+                    $('#opt_verified').val(1);
                     $('#checkoutAddress').submit();
                 } else {
                     $('#otp-message').html('OTP verification failed');
