@@ -82,9 +82,13 @@ class Shop extends MY_Shop_Controller
         $this->form_validation->set_rules('last_name', lang('last_name'), 'trim|required');
 
         if ($this->form_validation->run() == true) {
-            $user_addresses = $this->shop_model->getAddresses();
+
+            // insert default address
+
+            $default_address = $this->shop_model->getDefaultChechoutAddress();
             
-            $data = ['line1' => $this->input->post('address_line_1'),
+            if($default_address->phone == '') {
+                $data = ['address' => $this->input->post('address_line_1'),
                 'line2' => $this->input->post('address_line_2'),
                 'city' => $this->input->post('city'),
                 'state' => $this->input->post('state'),
@@ -92,14 +96,30 @@ class Shop extends MY_Shop_Controller
                 'country' => $this->input->post('country'),
                 'latitude' => $this->input->post('latitude'),
                 'longitude' => $this->input->post('longitude'),
-                'company_id' => $this->session->userdata('company_id'),
-                'is_default' =>  $this->input->post('is_default') ? 1 : 0,
                 'first_name' => $this->input->post('first_name'),
                 'last_name' => $this->input->post('last_name'),
                 ];
-
+                $this->db->update('companies', $data , ['id' => $this->session->userdata('company_id')]);
+                redirect('cart/checkout');
+            }
+            else {
+            $user_addresses = $this->shop_model->getAddresses();
+            $data = ['line1' => $this->input->post('address_line_1'),
+            'line2' => $this->input->post('address_line_2'),
+            'city' => $this->input->post('city'),
+            'state' => $this->input->post('state'),
+            'phone' => $this->input->post('mobile_number'),
+            'country' => $this->input->post('country'),
+            'latitude' => $this->input->post('latitude'),
+            'longitude' => $this->input->post('longitude'),
+            'company_id' => $this->session->userdata('company_id'),
+            'first_name' => $this->input->post('first_name'),
+            'last_name' => $this->input->post('last_name'),
+            ];
                 if (count($user_addresses) >= 6) {
-                    $this->sma->send_json(['status' => 'error', 'message' => lang('already_have_max_addresses'), 'level' => 'error']);
+                    $this->session->set_flashdata('error', lang('already_have_max_addresses'));
+                    redirect('shop/addresses');
+                   // $this->sma->send_json(['status' => 'error', 'message' => lang('already_have_max_addresses'), 'level' => 'error']);
                 }
                 //check if set this address default, update other default=0
                 if($this->input->post('is_default')) {  
@@ -109,9 +129,10 @@ class Shop extends MY_Shop_Controller
                 $this->db->insert('addresses', $data);
                 //$this->session->set_flashdata('message', lang('address_added'));
                 //$this->sma->send_json(['redirect' => $_SERVER['HTTP_REFERER']]);
-            
+                redirect('cart/checkout?action=changeaddress');
+            }
         } 
-        redirect('cart/checkout');
+        
         
     }
 

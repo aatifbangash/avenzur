@@ -217,7 +217,7 @@ class Shop_model extends CI_Model
             return $result = $this->db->get()->result();
           
         }
-        return $this->db->get_where('addresses', ['company_id' => $this->session->userdata('company_id'), 'is_default' => 1])->result();
+        return $this->db->get_where('companies', ['id' => $this->session->userdata('company_id')])->row();
     }
 
     public function getAllBrands()

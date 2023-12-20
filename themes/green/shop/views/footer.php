@@ -91,7 +91,7 @@
     <link href="<?= $assets; ?>css/jquery.toast.min.css?<?php echo time(); ?>" rel="stylesheet">
     <link rel="stylesheet" href="<?= $assets; ?>build/css/intlTelInput.css">
     <!--<script src="<?php //echo $assets; ?>js/jquery.min.js"></script>-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/intlTelInput.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/intlTelInput.min.js"></script> -->
     <!--<script src="<?php //echo $assets; ?>js/intlTelInput.min.js"></script>-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.3/js/utils.min.js"></script>
     <!--<script src="<?php //echo $assets; ?>js/utils.min.js"></script>-->
@@ -273,7 +273,7 @@
 $(document).ready(function() {
     <?php if ($message) {
             ?>
-        sa_alert('<?=lang('success'); ?>', '<?= trim(str_replace(["\r", "\n", "\r\n"], '', addslashes($message))); ?>');
+        //sa_alert('<?=lang('success'); ?>', '<?= trim(str_replace(["\r", "\n", "\r\n"], '', addslashes($message))); ?>');
     <?php
         }
         if ($warning) {
@@ -301,6 +301,50 @@ $(document).ready(function() {
 
     <script>
       $(document).ready(function () {
+    const inputContainer = $('#inputContainer');
+
+    // Add event listener for input changes
+    inputContainer.on('input', '#identity', function () {
+        const inputValue = $(this).val();
+        const isFirstCharacterDigit = /^\d/.test(inputValue);
+        const hasTextOrAlphabet = /[a-zA-Z]/.test(inputValue);
+       
+       console.log(inputValue);
+        // Change input type and replace accordingly
+        if (isFirstCharacterDigit && !hasTextOrAlphabet) {
+            // Replace with country code dropdown and phone number input
+            inputContainer.html('<input type="text" id="countryCode" class="form-control" style="float: left; width:20%;" value="+966" ready><input type="text" id="identity_phone" name="identity" class="form-control" style="width: 80%; float: left" placeholder="Enter phone number" required="required">');
+        } else if (inputValue === '') {
+            // If the input is empty, revert to the original text field
+            //inputContainer.html('<input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required">');
+        }
+
+        $('#identity').val(inputValue);
+        $('#identity_phone').val(inputValue);
+        $('#identity_phone').focus();
+        //$('#identity').focus();
+      
+    });
+
+
+    inputContainer.on('input', '#identity_phone', function () {
+        const inputValue = $(this).val();
+       
+        const hasTextOrAlphabet = /[a-zA-Z]/.test(inputValue);
+       console.log(inputValue);
+        // Change input type and replace accordingly
+        if (hasTextOrAlphabet || inputValue === '') {
+            // Replace with country code dropdown and phone number input
+            inputContainer.html('<input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required">');
+        } else if (inputValue === '') {
+            // If the input is empty, revert to the original text field
+           // inputContainer.html('<input type="text" id="identity_phone" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required">');
+        }
+        $('#identity').val(inputValue);
+        $('#identity').focus();
+        
+      
+    }); 
 
         const dropdown = document.getElementById('languageDropdown');
         dropdown.addEventListener('click', function (event) {
@@ -404,5 +448,19 @@ $(document).ready(function() {
     </script>
     <script src="<?= $assets; ?>js/jquery-ui.min.js"></script>
     <script src="<?= $assets; ?>js/jquery-ui.js"></script>
+    <script>
+
+
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("login_otp_1").focus();
+  });
+
+
+</script>
+
+
   </body>
 </html>

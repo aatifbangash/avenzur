@@ -268,13 +268,19 @@ class Cart_ajax extends MY_Shop_Controller
             $this->session->set_flashdata('reminder', lang('cart_is_empty'));
              shop_redirect('products');
         }
-
+    
         $action = $this->input->get('action');
         $this->data['addresses']  = $this->loggedIn ? $this->shop_model->getAddresses() : false;
-        $this->data['defaultAddress']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
-        if($this->loggedIn && ($action == 'changeaddress' || empty($this->data['defaultAddress'])) ) {
+        $this->data['default_address']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
+       
+        if($this->loggedIn && (  $this->data['default_address']->phone == '' || in_array($action, array('addnewaddress', 'editaddress')) ) ) {
         //if($action == 'changeaddress' || empty($this->data['addresses']))  {  
+
             $this->page_construct('pages/checkout_address', $this->data);    
+        }
+        else if( $this->loggedIn && $action == 'changeaddress' ) {
+            
+            $this->page_construct('pages/delivery_address', $this->data);    
         }
         else{
 
@@ -288,10 +294,12 @@ class Cart_ajax extends MY_Shop_Controller
          
             // Check if the 'action' parameter is present
             if (isset($queryParams['action']) &&  trim($queryParams['action']) == 'changeaddress') {
-                $this->data['defaultAddress']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress($lastAddress = true) : false;
+               // $this->data['defaultAddress']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress($lastAddress = true) : false;
             }
         } 
-
+         
+           $this->data['defaultAddress']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
+          
             $this->data['paypal']     = $this->shop_model->getPaypalSettings();
             $this->data['skrill']     = $this->shop_model->getSkrillSettings();
             $this->data['country'] = $this->settings_model->getallCountry();

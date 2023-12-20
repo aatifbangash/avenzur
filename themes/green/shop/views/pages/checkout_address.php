@@ -69,7 +69,7 @@
                 <div class="px-3 py-2">
                     <div class="py-3">
                         <h6 class="m-0 fw-semibold">
-                            <?= lang('select_address_to_edit'); ?>
+                            <?= lang('add_new_address'); ?>
                         </h6>
                     </div>
                     <div class="row" id="addressList">
@@ -87,7 +87,6 @@
 
                             </div>
                         </div>
-
 
                         <div class="col-md-5 mb-4" id="<?= $address->id; ?>">
                             <div class="card" style="border:none">
