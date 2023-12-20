@@ -147,7 +147,7 @@ function update_cart_item(t, e, a, s, i) {
         ? ("text" == i ? s.val(a) : s.selectpicker("val", $po),
           sa_alert("Error!", t.message, "error", !0))
         : (t.cart &&
-            ((cart = t.cart), update_mini_cart(cart), update_cart(cart));
+            ((cart = t.cart), update_mini_cart(cart), update_cart(cart)));
           //sa_alert(t.status, t.message));
     },
     error: function () {
