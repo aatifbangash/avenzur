@@ -352,7 +352,7 @@
                   </table>
                 <div class="d-flex">
                   <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">View Cart</a>
-                  <a data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center checkout-link">Checkout</a>
+                  <a data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" class="dropdown-toggle btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center checkout-link">Checkout</a>
                 </div>
               </div>
 
