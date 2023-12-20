@@ -667,6 +667,8 @@ class Main extends MY_Shop_Controller
 
             $validate = $this->shop_model->validate_otp($identity, $otp);
             if($validate){
+                $this->shop_model->activate_phone($this->session->userdata('company_id'), $identity);
+
                 echo json_encode(['status' => 'success', 'message' => 'Otp verified']);
             }else{
                 echo json_encode(['status' => 'error', 'message' => 'Otp verification failed']);

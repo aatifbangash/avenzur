@@ -241,25 +241,7 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
                 success: function (response) {
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
-                        //$('#opt_verified').val(1);
-                        //$('#checkoutAddress').submit();
-                        $.ajax({
-                            type: 'GET',
-                            url: '<?= base_url(); ?>activate_phone',
-                            //url: $('#checkoutAddress').attr('action'),
-                            data: {'mobile_number' : selected_phone},
-                            success: function (response) {
-                                var respObj = JSON.parse(response);
-                                if (respObj.status == 'success' || respObj.code == 1) {
-                                    location.reload();
-                                }else{
-                                    location.reload();
-                                }
-                            },
-                            error: function (error) {
-                                console.error(error);
-                            }
-                        });
+                        location.reload();
                     } else {
                         $('#otp-message').html('OTP verification failed');
                     }
