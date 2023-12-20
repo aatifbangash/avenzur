@@ -191,7 +191,7 @@
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
                                     echo form_open('login', $attrib); 
                                 ?>
-                                <div class="controls logcardinput">
+                                <div class="controls logcardinput" id="inputContainer">
                                 
                                 <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
                                 
