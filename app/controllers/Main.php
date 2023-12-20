@@ -682,7 +682,12 @@ class Main extends MY_Shop_Controller
         $company_data = $this->shop_model->getCompanyByID($company_id);
 
         if($company_data){
-            $mobile = $this->input->post('mobile_number');
+            if($this->input->post('mobile_number')){
+                $mobile = $this->input->post('mobile_number');
+            }else{
+                $mobile = $this->input->get('mobile_number');
+            }
+            
             $otp_sent = $this->sendOTP($company_id, $mobile, 'mobile');
         }else{
             echo json_encode(['status' => 'error', 'message' => 'User data does not exist']);
