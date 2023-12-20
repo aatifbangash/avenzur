@@ -333,8 +333,8 @@ class Cart_ajax extends MY_Shop_Controller
            //$this->data['defaultAddress']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
 
            if($this->session->get_userdata('changed_address')){
-                //$this->data['default_address']  = $this->session->get_userdata('changed_address')['changed_address'];
-                $this->data['default_address']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
+                $this->data['default_address']  = $this->session->get_userdata('changed_address')['changed_address'];
+                //$this->data['default_address']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
             }else{
                 $this->data['default_address']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
             }
