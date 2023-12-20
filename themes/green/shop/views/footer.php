@@ -453,14 +453,6 @@ $(document).ready(function() {
 
 </script>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("login_otp_1").focus();
-  });
-
-
-</script>
-
 
   </body>
 </html>
