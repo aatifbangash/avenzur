@@ -217,7 +217,7 @@
                 type: 'POST',
                 url: '<?= base_url(); ?>verify_phone',
                 //url: $('#checkoutAddress').attr('action'),
-                data: {'mobile_number' : selected_phone},
+                data: JSON.stringify({'mobile_number' : selected_phone}),
                 success: function (response) {
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
