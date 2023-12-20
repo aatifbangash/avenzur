@@ -51,10 +51,9 @@ if ($this->Settings->indian_gst) {
                             <div class="addicon "><i class="bi bi-geo-alt fs-5 purpColor"></i></div>
                             <div class="ms-3">
                                 <p class="m-0 fs-6 fw-semibold">
-                                    <?php print_r($defaultAddress); ?>
-                                    <?php echo isset($defaultAddress->line1)?$defaultAddress->line1:$defaultAddress->address;?>
+                                    <?php echo isset($default_address->line1)?$default_address->line1:$default_address->address;?>
                                 </p>
-                                <p class="m-0 fs-6 fw-semibold"> +966  <?php echo isset($defaultAddress)?$defaultAddress->phone:'';?> <i class="bi bi-check-circle-fill ms-2 purpColor"></i></p>  
+                                <p class="m-0 fs-6 fw-semibold"> +966  <?php echo isset($default_address)?$default_address->phone:'';?> <i class="bi bi-check-circle-fill ms-2 purpColor"></i></p>  
                             </div>                                                             
                         </div>
 
