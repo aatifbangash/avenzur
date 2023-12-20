@@ -47,11 +47,12 @@
                                                         <?= $default_address->state; ?>
                                                         <?= $default_address->country; ?>
                                                     </p>
-                                                    <span class="phone_verified" style="visibility:hidden;"><?= $default_address->mobile_verified; ?></span>
+                                                    
                                                     <p class="m-0 fs-6 fw-semibold"> +966
                                                         <?= $default_address->phone; ?> <i
                                                             class="bi bi-check-circle-fill ms-2 purpColor"></i>
                                                     </p>
+                                                    <span class="phone_verified" style="visibility:hidden;"><?= $default_address->mobile_verified; ?></span>
                                                 </div>
                                             </div>
 
@@ -228,8 +229,8 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
         $("#confirm-address").on("click", function (e) {
             e.preventDefault(); 
 
-            var selected_phone = $('.selected-address .phone_number').text();
-            var phone_verified = $('.selected-address .phone_verified').text();
+            var selected_phone = $('.selected-address').find('.phone_number').text();
+            var phone_verified = $('.selected-address').find('.phone_verified').text();
             var selected_add_id = $("#selected-address-id").val();
             
             if(!phone_verified){
