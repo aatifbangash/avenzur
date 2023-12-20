@@ -154,6 +154,7 @@
                                             <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
                                             <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
                                             <input type="hidden" id="identifier_input" name="identifier_input" value="" />
+                                            <input type="hidden" name="change_phone" value="1" />
                                         </div>
                                         <div  class="text-center">
                                             <h6 class="m-0 mt-2"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="mobileOTP">Resend OTP </span></h6>
@@ -243,7 +244,7 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
                 success: function (response) {
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
-                        window.location.href = 'cart/checkout';
+                        //window.location.href = 'cart/checkout';
                     } else {
                         $('#otp-message').html('OTP verification failed');
                     }
