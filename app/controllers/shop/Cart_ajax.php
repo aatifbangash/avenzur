@@ -338,7 +338,8 @@ class Cart_ajax extends MY_Shop_Controller
             }else{
                 $this->data['default_address']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
             }
-            //print_r($this->shop_model->getDefaultChechoutAddress());exit;
+            print_r($this->data['default_address']);exit;
+            
           
             $this->data['paypal']     = $this->shop_model->getPaypalSettings();
             $this->data['skrill']     = $this->shop_model->getSkrillSettings();
