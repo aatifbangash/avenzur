@@ -318,6 +318,30 @@ $(document).ready(function() {
         verifyNumber();
     });
 
+    $('#mobileOtpBtn').click(function (e) {
+        e.preventDefault(); 
+
+        var formData = $('#mobileOtpForm').serialize();
+        $.ajax({
+            type: 'POST',
+            //url: '<?= base_url(); ?>verify_phone_otp',
+            url: $('#mobileOtpForm').attr('action'),
+            data: formData,
+            success: function (response) {
+                console.log(response);
+                /*var respObj = JSON.parse(response);
+                if (respObj.status == 'success' || respObj.code == 1) {
+                    alert('Login Success');
+                } else {
+                    alert('Login failed. Please try again.');
+                }*/
+            },
+            error: function (error) {
+                console.error(error);
+            }
+        });
+    });
+
     function verifyNumber(){
         event.preventDefault();
         var formData = $('#checkoutAddress').serialize();
