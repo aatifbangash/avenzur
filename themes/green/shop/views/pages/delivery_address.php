@@ -86,7 +86,8 @@
                                                         </p>
                                                         <p class="m-0 fs-6 fw-semibold"> +966
                                                             <span class="phone_number"><?= $address->phone; ?></span>
-                                                            <input type="hidden" class="phone_verified" value="<?= $address->is_verified; ?>" />
+                                                            <span class="phone_verified" style="visibility:hidden;"><?= $address->is_verified; ?></span>
+                                                            
                                                             <?php if ($address->is_verified == 1): ?>
                                                                 <i class="bi bi-check-circle-fill ms-2 purpColor"></i>
                                                             <?php else: ?>
@@ -228,7 +229,6 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
             var phone_verified = $('.selected-address .phone_verified').val();
             var selected_add_id = $("#selected-address-id").val();
             
-            console.log(phone_verified);
             if(!phone_verified){
                 verifyNumber(selected_phone);    
             }else{
