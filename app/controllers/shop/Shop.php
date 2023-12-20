@@ -66,7 +66,7 @@ class Shop extends MY_Shop_Controller
 
     public function saveCheckoutAddress()
     {
-        echo 'here we are....';exit;
+        echo 'Mobile Number'.$this->input->post('mobile_number');exit;
         $this->load->admin_model('companies_model');
         if (!$this->loggedIn) {
             $this->sma->send_json(['status' => 'error', 'message' => lang('please_login')]);
