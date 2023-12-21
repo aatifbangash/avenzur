@@ -1921,8 +1921,13 @@ $('#loginBtnCall').click(function (e) {
                 document.getElementById('loginOTP').style.color = 'grey';
                 document.getElementById('loginOTP').style.cursor = 'none';
                 $('#loginModal').modal('show');
-                document.getElementById('identifierl').innerHTML = document.getElementById('identity_phone').value;
-                document.getElementById('identifierl_input').value = document.getElementById('identity_phone').value;
+                if ($('#identity').length) {
+                  var identityVal = $('#identity').val();
+              } else {
+                  var identityVal = $('#identity_phone').val();
+              }
+                document.getElementById('identifierl').innerHTML = identityVal; //document.getElementById('identity_phone').value;
+                document.getElementById('identifierl_input').value = identityVal; //document.getElementById('identity_phone').value;
 
                 //document.getElementById('login_otp_1').value = 9;
                 
@@ -1930,13 +1935,13 @@ $('#loginBtnCall').click(function (e) {
                 const countdownDisplay = document.getElementById("login-clock");
                 
                 let timer = countdownDuration, minutes, seconds;
+               
                 const intervalId = setInterval(function () {
                     minutes = parseInt(timer / 60, 10);
                     seconds = parseInt(timer % 60, 10);
 
                     countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
-                    document.getElementById('login_otp_1').focus();
-                
+                   
                     if (--timer < 0) {
                         clearInterval(intervalId);
                         document.getElementById('loginOTP').style.color = '#662d91';
@@ -1944,6 +1949,8 @@ $('#loginBtnCall').click(function (e) {
                         $('#loginOTP').click(handleLoginOTPClick);
                     }
                 }, 1000);
+                document.getElementById('login_otp_1').focus();
+                
 
             } else {
               $('#register-message').html(respObj.message);
@@ -2091,6 +2098,13 @@ function handleLoginOTPClick(){
     // Bind keyup events for register OTP
     bindOtpKeyupEvents('register_otp', 6);
 
+    bindOtpKeyupEvents('checkout_login', 6);
+
+    bindOtpKeyupEvents('profile_login', 6);
+
+    bindOtpKeyupEvents('first_login', 6);
+
+   
 //     const loginInput =  $("#identity");
 
 //     // var input_address_phone = document.querySelector("#identity");
