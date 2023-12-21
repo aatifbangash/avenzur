@@ -231,10 +231,8 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
             var selected_phone = $('.selected-address').find('.phone_number').text();
             var phone_verified = $('.selected-address').find('.phone_verified').text();
             var selected_add_id = $("#selected-address-id").val();
-            
-            console.log('Phone: '+phone_verified);
 
-            if(!phone_verified){
+            if(phone_verified != 1){
                 verifyNumber(selected_phone);    
             }else{
                 // Set confirmed phone number as shipping
