@@ -484,9 +484,13 @@ class Main extends MY_Shop_Controller
                                 }
                             }
             
-                            $this->session->set_flashdata('message', $this->ion_auth->messages());
-                            $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
-                            redirect($referrer);
+                            $cart_contents = $this->cart->contents();
+                            if($cart_contents){
+                                redirect('cart/checkout');
+                            }else{
+                                $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
+                                redirect($referrer);
+                            }
                         } else {
                             $this->session->set_flashdata('error', $this->ion_auth->errors());
                             redirect('login');
@@ -558,8 +562,15 @@ class Main extends MY_Shop_Controller
                             }
             
                             $this->session->set_flashdata('message', $this->ion_auth->messages());
-                            $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
-                            redirect($referrer);
+
+                            $cart_contents = $this->cart->contents();
+                            if($cart_contents){
+                                redirect('cart/checkout');
+                            }else{
+                                $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
+                                redirect($referrer);
+                            }
+
                         } else {
                             $this->session->set_flashdata('error', $this->ion_auth->errors());
                             redirect('login');
