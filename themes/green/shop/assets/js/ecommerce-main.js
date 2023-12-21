@@ -690,7 +690,7 @@ $(document).ready(function () {
   }
 
   $(document).on('click', function (event) {
-      var popup = $('.checkout-link');
+      var popup = $('#myaccountForm');
 
       // Check if the clicked element is not inside the popup
       if (!popup.is(event.target) && popup.has(event.target).length === 0) {
