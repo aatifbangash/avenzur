@@ -138,7 +138,6 @@ function update_mini_cart(t) {
 }
 
 function update_cart_item(t, e, a, s, i) {
-  console.log(e);
   $.ajax({
     url: t,
     type: "POST",
@@ -148,8 +147,8 @@ function update_cart_item(t, e, a, s, i) {
         ? ("text" == i ? s.val(a) : s.selectpicker("val", $po),
           sa_alert("Error!", t.message, "error", !0))
         : (t.cart &&
-            ((cart = t.cart), update_mini_cart(cart), update_cart(cart)),
-          sa_alert(t.status, t.message));
+            ((cart = t.cart), update_mini_cart(cart), update_cart(cart)));
+          //sa_alert(t.status, t.message));
     },
     error: function () {
       sa_alert(
@@ -355,6 +354,31 @@ function saa_alert(t, e, a, s) {
     (s = s || {}),
     (s._method = a),
     (s[site.csrf_token] = site.csrf_token_value),
+  $.ajax({
+    url: t,
+    type: "POST",
+    data: s,
+    success: function (t) {
+      if (t.redirect) return (window.location.href = t.redirect), !1;
+      t.cart &&
+        ((cart = t.cart), update_mini_cart(cart), update_cart(cart));
+        //sa_alert(t.status, t.message);
+    },
+    error: function () {
+      /*sa_alert(
+        "Error!",
+        "Ajax call failed, please try again or contact site owner.",
+        "error",
+        !0
+      );*/
+    },
+  });
+
+  /*(a = a || lang.delete),
+    (e = e || lang.x_reverted_back),
+    (s = s || {}),
+    (s._method = a),
+    (s[site.csrf_token] = site.csrf_token_value),
     swal({
       title: lang.r_u_sure,
       html: e,
@@ -385,7 +409,7 @@ function saa_alert(t, e, a, s) {
           });
         });
       },
-    }).catch(swal.noop);
+    }).catch(swal.noop);*/
 }
 
 function prompt(t, e, a) {
@@ -665,6 +689,20 @@ $(document).ready(function () {
     searchProducts();
   }
 
+  $(document).on("click", '.checkout-link', function (event){
+    $('#cart-contents').hide();
+    $('#productPop').modal('hide');
+
+
+    
+    var myaccountForm = document.getElementById('myaccountForm');
+    myaccountForm.style.position = 'absolute';
+    myaccountForm.style.inset = '0px auto auto 0px';
+    myaccountForm.style.margin = '0px';
+    myaccountForm.style.transform = 'translate3d(-240px, 38.4px, 0px)';
+    $('#myaccountForm').show();
+  });
+
   $(document).on("click", "#pagination a", function (t) {
     t.preventDefault();
     var e = $(this).attr("href"),
@@ -910,14 +948,15 @@ $(document).ready(function () {
         : ((a = t),
           update_mini_cart(t),
           update_popup_cart(t),
-          $('#productPop').modal('show'),
-          $.toast({
+          $('#productPop').modal('show')
+          /*$.toast({
             heading: "Success",
             text: "Product Added To The Cart.",
             position: "top-right",
             showHideTransition: "slide",
             icon: "success",
-          }));
+          })*/
+        );
     });
   });
 

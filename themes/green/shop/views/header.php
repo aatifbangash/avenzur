@@ -159,7 +159,7 @@
                           if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
                         ?>
                         
-                        <div class="dropdown-menu p-3 myaccountForm validate">
+                        <div class="dropdown-menu p-3 myaccountForm validate" id="myaccountForm">
                         <div class="loginRCard px-4 w-100">
                             <div class="logo-k mb-5"> 
                                 <a class="navbar-brand" href="http://localhost/avenzur/">
@@ -352,7 +352,18 @@
                   </table>
                 <div class="d-flex">
                   <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">View Cart</a>
-                  <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">Checkout</a>
+                  <?php
+                    if ($loggedIn) {
+                        ?>
+                        <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">Checkout</a>
+                        <?php
+                    }else{
+                      ?>
+                        <a class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center checkout-link">Checkout</a>
+                      <?php
+                    }
+                  ?>
+                  
                 </div>
               </div>
 
@@ -482,9 +493,23 @@
             </div>
             <div class="modal-footer border-0 pb-4 d-flex flex-nowrap">
                 <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0">
-                <a href="<?= site_url('cart'); ?>" style="color: #fff;text-decoration: none;">
-                  Checkout
-                </a>
+                  <?php 
+                    if ($loggedIn) {
+                      ?>
+                        <a href="<?= site_url('cart/checkout'); ?>" style="color: #fff;text-decoration: none;">
+                          Checkout
+                        </a>
+                      <?php
+                    }else{
+                      ?>
+                        <a class="checkout-link" style="color: #fff;text-decoration: none;">
+                          Checkout
+                        </a>
+                      <?php
+                    }
+                  
+                  ?>
+                
                 </button>
                 <button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0" data-bs-dismiss="modal">Continue Shopping</button>
             </div>
