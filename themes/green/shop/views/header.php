@@ -359,7 +359,7 @@
                         <?php
                     }else{
                       ?>
-                        <a class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center checkout-link" data-bs-toggle="dropdown">Checkout</a>
+                        <a class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center checkout-link dropdown-toggle" data-bs-toggle="dropdown">Checkout</a>
                       <?php
                     }
                   ?>
