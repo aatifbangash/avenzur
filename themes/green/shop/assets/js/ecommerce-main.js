@@ -704,6 +704,12 @@ $(document).ready(function () {
       }
   });
 
+  $(document).on("click", '#login-btn-trigger', function (event){
+    $('#cart-contents').hide();
+    $('#productPop').modal('hide');
+    $('#myaccountForm').show();
+  });
+
   $(document).on("click", '.checkout-link', function (event){
     $('#cart-contents').hide();
     $('#productPop').modal('hide');
