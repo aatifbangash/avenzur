@@ -691,9 +691,10 @@ $(document).ready(function () {
 
   $(document).on('click', function (event) {
       var popup = $('#myaccountForm');
+      var link = $('.checkout-link');
 
       // Check if the clicked element is not inside the popup
-      if (!popup.is(event.target) && popup.has(event.target).length === 0) {
+      if (!popup.is(event.target) && popup.has(event.target).length === 0 && !link.is(event.target) && link.has(event.target).length === 0) {
           // Close the popup
           popup.hide();
       }
