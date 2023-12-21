@@ -496,7 +496,7 @@
                   <?php 
                     if ($loggedIn) {
                       ?>
-                        <a href="<?= site_url('cart/checkout'); ?>" style="color: #fff;text-decoration: none;">
+                        <a href="<?= site_url('cart'); ?>" style="color: #fff;text-decoration: none;">
                           Checkout
                         </a>
                       <?php
