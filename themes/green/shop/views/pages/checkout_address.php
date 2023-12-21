@@ -380,7 +380,7 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
 
             // Add more validation for other fields as needed
 
-            if ($('#opt_verified').val() == 0) {
+            if ($('#opt_verified').val() == 0 && last_name.val() !== '' && first_name.val() !== '' && mobile_number !== '' && autocomplete_search !== '') {
                 // check if current_mobile_number != phone
                 verifyNumber();
             }
