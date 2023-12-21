@@ -48,31 +48,41 @@ function sa_img(t, e) {
   }).catch(swal.noop);
 }
 
-function update_popup_cart(t){
+function update_popup_cart(t) {
   if (t.total_items && t.total_items > 0) {
     $.each(t.contents, function () {
-      var t = 
+      var t =
         '<div class=" row align-items-center">' +
         '<div class="addicon col-md-3 px-0">' +
-        '<img src="' + site.base_url + "assets/uploads/" + this.image + '" class="w-100">' + 
-        '</div>' + 
-        '<div class=" col-md-9">' + 
-        '<p class="m-0 fs-5 fw-semibold text-start">' + this.name + '</p>' +
-        '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4">' + this.subtotal + '</p>' + 
-        '</div></div><hr>';
+        '<img src="' +
+        site.base_url +
+        "assets/uploads/" +
+        this.image +
+        '" class="w-100">' +
+        "</div>" +
+        '<div class=" col-md-9">' +
+        '<p class="m-0 fs-6 fw-semibold text-start">' +
+        this.name +
+        "</p>" +
+        '<p class="m-0 fs-6 fw-semibold mt-2 text-end pe-4">' +
+        this.subtotal +
+        "</p>" +
+        "</div></div><hr>";
 
-        $("#product-popup-modal-body").append(t);
+      $("#product-popup-offcanvas").append(t);
     });
 
-    var e = 
+    var e =
       '<div class=" row align-items-center mt-4">' +
-      '<div class="addicon col-md-3 px-0">' + 
-      '<p class="m-0 fs-5 fw-semibold text-start text-dark">Cart Total</p>' + 
-      '</div>' + 
+      '<div class="addicon col-md-3 px-0">' +
+      '<p class="m-0 fs-5 fw-semibold text-start text-dark">Cart Total</p>' +
+      "</div>" +
       '<div class=" col-md-9">' +
-      '<p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark">' + t.total + '</p>' +
-      '</div></div>'; 
-      $("#product-popup-modal-body").append(e);
+      '<p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark">' +
+      t.total +
+      "</p>" +
+      "</div></div>";
+    $("#product-popup-offcanvas").append(e);
   }
 }
 function update_mini_cart(t) {
@@ -167,40 +177,48 @@ function update_cart(t) {
     var e = 1;
     $.each(t.contents, function () {
       var t = this,
-      a = 
-        '<div class="col-md-2"><span class="cart-item-image">' +
-        '<img style="width: 100px;height: 90px;object-fit: contain;" src="' +
-        site.base_url +
-        "assets/uploads/" +
-        this.image +
-        '" class="card-img-top" alt="...">' +
-        '</span></div>' +
-        '<div class="col-md-10 d-flex flex-column justify-content-between"><div class="d-flex justify-content-between ">' +
-        '<h5 class="m-0">'+ this.name +'</h5>' + 
-        '<div>' +
-        '<h4 class="m-0 fw-semibold fs-5" >'+ this.price +'</h4>' +
-        //'<p class="m-0 text-decoration-line-through text-danger text-center fw-semibold mb-4">SAR 10</p>' +
-        '</div></div>' +
-        '<div class="d-flex justify-content-between align-items-center"><div>' + 
-        '<a href="#" data-rowid="' + this.rowid + '" class="text-red remove-item text-decoration-none text-dark"><i class="fa fa-trash-o"></i> Remove</a></div>' +
-        '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between cartQuantity"><h6 class="my-1 me-2">Quantity</h6>' +
-        '<span class="plus btn-plus-update"><i class="bi bi-plus-circle-fill"></i></span>' +
-        '<span class="fs-6 px-2"><input type="text" style="width: 50px;" name="' +
-        e +
-        '[qty]" class="form-control text-center input-qty cart-item-qty" value="' +
-        this.qty +
-        '"></span>' + 
-        '<span class="minus btn-minus-update"><i class="bi bi-dash-circle-fill"></i></span>' +
-        '</div></div></div><hr />';
+        a =
+          '<div class="col-md-2"><span class="cart-item-image">' +
+          '<img style="width: 100px;height: 90px;object-fit: contain;" src="' +
+          site.base_url +
+          "assets/uploads/" +
+          this.image +
+          '" class="card-img-top" alt="...">' +
+          "</span></div>" +
+          '<div class="col-md-10 d-flex flex-column justify-content-between"><div class="d-flex justify-content-between ">' +
+          '<h5 class="m-0">' +
+          this.name +
+          "</h5>" +
+          "<div>" +
+          '<h4 class="m-0 fw-semibold fs-5" >' +
+          this.price +
+          "</h4>" +
+          //'<p class="m-0 text-decoration-line-through text-danger text-center fw-semibold mb-4">SAR 10</p>' +
+          "</div></div>" +
+          '<div class="d-flex justify-content-between align-items-center qtyRmv"><div class="removbtn">' +
+          '<a href="#" data-rowid="' +
+          this.rowid +
+          '" class="text-red remove-item text-decoration-none text-dark"><i class="fa fa-trash-o"></i> Remove</a></div>' +
+          '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between cartQuantity"><h6 class="my-1 me-2">Quantity</h6>' +
+          '<span class="plus btn-plus-update"><i class="bi bi-plus-circle-fill"></i></span>' +
+          '<span class="fs-6 px-2"><input type="text" style="width: 50px;" name="' +
+          e +
+          '[qty]" class="form-control text-center input-qty cart-item-qty" value="' +
+          this.qty +
+          '"></span>' +
+          '<span class="minus btn-minus-update"><i class="bi bi-dash-circle-fill"></i></span>' +
+          "</div></div></div><hr />";
 
-        $('<div class="row row-class" id="' + this.rowid + '">' + a + '</div>').appendTo('#cart-table-new');
-        //$(a).appendTo('#cart-table-new');
+      $(
+        '<div class="row row-class" id="' + this.rowid + '">' + a + "</div>"
+      ).appendTo("#cart-table-new");
+      //$(a).appendTo('#cart-table-new');
     });
 
-    $('#total-unique_items').html(t.total_unique_items);
-    $('#total-price').html(t.subtotal);
-    $('#total-discount').html(t.total_discount);
-    $('#total-after_discount').html(t.total);
+    $("#total-unique_items").html(t.total_unique_items);
+    $("#total-price").html(t.subtotal);
+    $("#total-discount").html(t.total_discount);
+    $("#total-after_discount").html(t.total);
 
     /*$("#cart-table tbody").empty();
     var e = 1;
@@ -288,15 +306,15 @@ function update_cart(t) {
       //$(".cart-item-option").selectpicker("refresh"),
       $(".cart-empty-msg").hide(),
       $(".cart-contents").show();*/
-  } else{
+  } else {
     /*$("#total-items").text(t.total_items),
       $(".cart-contents").hide(),
       $(".cart-empty-msg").show();*/
 
-      $('#total-unique_items').html(t.total_unique_items);
-      $('#total-price').html(t.subtotal);
-      $('#total-discount').html(t.total_discount);
-      $('#total-after_discount').html(t.total);
+    $("#total-unique_items").html(t.total_unique_items);
+    $("#total-price").html(t.subtotal);
+    $("#total-discount").html(t.total_discount);
+    $("#total-after_discount").html(t.total);
   }
 }
 
@@ -733,9 +751,9 @@ $(document).ready(function () {
     (e.rowid = $(this).attr("data-rowid")),
       saa_alert(site.site_url + "cart/remove", !1, "post", e);
   }),
-  $("#empty-cart").click(function (t) {
-    t.preventDefault(), saa_alert($(this).attr("href"));
-  });
+    $("#empty-cart").click(function (t) {
+      t.preventDefault(), saa_alert($(this).attr("href"));
+    });
 
   update_cart(cart);
 
@@ -924,7 +942,7 @@ $(document).ready(function () {
     var e = $(this).attr("data-id"),
       a = $(".shopping-cart:visible"),
       s = $(this).parents(".card").find("input");
-    
+
     if (typeof s.val() === "undefined") {
       s = $(this).parents(".get-quantity").find("input");
     }
@@ -984,13 +1002,13 @@ $(document).ready(function () {
 
   $(document).on("click", ".btn-minus-update", function (t) {
     var e = $(this).parent().find("input");
-    if(e.val() > 1){
+    if (e.val() > 1) {
       parseInt(e.val()) > 1 && e.val(parseInt(e.val()) - 1);
 
       var a = $(this).closest("div.row-class"),
-      s = a.attr("id"),
-      i = site.site_url + "cart/update",
-      o = {};
+        s = a.attr("id"),
+        i = site.site_url + "cart/update",
+        o = {};
       (o[site.csrf_token] = site.csrf_token_value),
         (o.rowid = s),
         (o.qty = e.val()),
@@ -1000,7 +1018,7 @@ $(document).ready(function () {
 
   $(document).on("click", ".btn-plus-update", function (t) {
     var e = $(this).parent().find("input");
-    if(e.val() < 3){
+    if (e.val() < 3) {
       e.val(parseInt(e.val()) + 1);
 
       var a = $(this).closest("div.row-class"),
@@ -1012,7 +1030,6 @@ $(document).ready(function () {
         (o.qty = e.val()),
         update_cart_item(i, o, e, $(this), t.target.type);
     }
-    
   });
 
   $(".feature_products").slick({
@@ -1294,8 +1311,7 @@ function geocodeLatLng2(latLng) {
       if (results[0]) {
         const addressComponents = results[0].address_components;
         const formattedAddress = results[0].formatted_address;
-        document.getElementById("autocomplete_search").value =
-          formattedAddress;
+        document.getElementById("autocomplete_search").value = formattedAddress;
         document.getElementById("address-line-1").value = formattedAddress;
         let city, country, state, street;
 
@@ -1780,111 +1796,119 @@ if (window.innerWidth < 500) {
 
 // New login workflow functionality
 
-function LoginFn(obj){ 
-  $('#loginBtn').addClass("active");
-  $('#registerBtn').removeClass("active");
-  $('#loginBlock').show();
-  $('#registerBlock').hide();
+function LoginFn(obj) {
+  $("#loginBtn").addClass("active");
+  $("#registerBtn").removeClass("active");
+  $("#loginBlock").show();
+  $("#registerBlock").hide();
 }
 
-function registerFnBtn(obj){
-  $('#loginBtn').removeClass("active");
-  $('#registerBtn').addClass("active");
-  $('#loginBlock').hide();
-  $('#registerBlock').show();
+function registerFnBtn(obj) {
+  $("#loginBtn").removeClass("active");
+  $("#registerBtn").addClass("active");
+  $("#loginBlock").hide();
+  $("#registerBlock").show();
 }
 
-$(document).ready(function() {
-  function handleRegisterOTPClick(){
-    var formData = $('#registrationForm').serialize();
+$(document).ready(function () {
+  function handleRegisterOTPClick() {
+    var formData = $("#registrationForm").serialize();
     $.ajax({
-        type: 'POST',
-        url: $('#registrationForm').attr('action'),
-        data: formData,
-        success: function (response) {
-            var respObj = JSON.parse(response);
-            if (respObj.status == 'success' || respObj.code == 1) {
-                $('#registerOTP').off('click', handleRegisterOTPClick);
-                document.getElementById('registerOTP').style.color = 'grey';
-                document.getElementById('registerOTP').style.cursor = 'none';
-                $('#registerModal').modal('show');
-                document.getElementById('identifier').innerHTML = document.getElementById('email').value;
-                document.getElementById('identifier_input').value = document.getElementById('email').value;
+      type: "POST",
+      url: $("#registrationForm").attr("action"),
+      data: formData,
+      success: function (response) {
+        var respObj = JSON.parse(response);
+        if (respObj.status == "success" || respObj.code == 1) {
+          $("#registerOTP").off("click", handleRegisterOTPClick);
+          document.getElementById("registerOTP").style.color = "grey";
+          document.getElementById("registerOTP").style.cursor = "none";
+          $("#registerModal").modal("show");
+          document.getElementById("identifier").innerHTML =
+            document.getElementById("email").value;
+          document.getElementById("identifier_input").value =
+            document.getElementById("email").value;
 
-                const countdownDuration = 60; // Duration in seconds
-                const countdownDisplay = document.getElementById("register-clock");
-                
-                let timer = countdownDuration, minutes, seconds;
-                const intervalId = setInterval(function () {
-                    minutes = parseInt(timer / 60, 10);
-                    seconds = parseInt(timer % 60, 10);
+          const countdownDuration = 60; // Duration in seconds
+          const countdownDisplay = document.getElementById("register-clock");
 
-                    countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+          let timer = countdownDuration,
+            minutes,
+            seconds;
+          const intervalId = setInterval(function () {
+            minutes = parseInt(timer / 60, 10);
+            seconds = parseInt(timer % 60, 10);
 
-                    if (--timer < 0) {
-                        clearInterval(intervalId);
-                        document.getElementById('registerOTP').style.color = '#662d91';
-                        document.getElementById('registerOTP').style.cursor = 'pointer';
-                        $('#registerOTP').click(handleRegisterOTPClick);
-                    }
-                }, 1000);
+            countdownDisplay.textContent =
+              minutes + "." + (seconds < 10 ? "0" : "") + seconds;
 
-            } else {
-                $('#register-message').html(respObj.message);
+            if (--timer < 0) {
+              clearInterval(intervalId);
+              document.getElementById("registerOTP").style.color = "#662d91";
+              document.getElementById("registerOTP").style.cursor = "pointer";
+              $("#registerOTP").click(handleRegisterOTPClick);
             }
-        },
-        error: function (error) {
-            console.error(error);
+          }, 1000);
+        } else {
+          $("#register-message").html(respObj.message);
         }
+      },
+      error: function (error) {
+        console.error(error);
+      },
     });
-}
+  }
 
-$('#registerBtnCall').click(function (e) {
-    e.preventDefault(); 
+  $("#registerBtnCall").click(function (e) {
+    e.preventDefault();
 
-    var formData = $('#registrationForm').serialize();
+    var formData = $("#registrationForm").serialize();
     $.ajax({
-        type: 'POST',
-        url: $('#registrationForm').attr('action'),
-        data: formData,
-        success: function (response) {
-            var respObj = JSON.parse(response);
-            if (respObj.status == 'success' || respObj.code == 1) {
-                $('.myaccountForm').removeClass('show');
-                $('#registerOTP').off('click', handleRegisterOTPClick);
-                document.getElementById('registerOTP').style.color = 'grey';
-                document.getElementById('registerOTP').style.cursor = 'none';
-                $('#registerModal').modal('show');
-                document.getElementById('identifier').innerHTML = document.getElementById('email').value;
-                document.getElementById('identifier_input').value = document.getElementById('email').value;
+      type: "POST",
+      url: $("#registrationForm").attr("action"),
+      data: formData,
+      success: function (response) {
+        var respObj = JSON.parse(response);
+        if (respObj.status == "success" || respObj.code == 1) {
+          $(".myaccountForm").removeClass("show");
+          $("#registerOTP").off("click", handleRegisterOTPClick);
+          document.getElementById("registerOTP").style.color = "grey";
+          document.getElementById("registerOTP").style.cursor = "none";
+          $("#registerModal").modal("show");
+          document.getElementById("identifier").innerHTML =
+            document.getElementById("email").value;
+          document.getElementById("identifier_input").value =
+            document.getElementById("email").value;
 
-                const countdownDuration = 60; // Duration in seconds
-                const countdownDisplay = document.getElementById("register-clock");
-                
-                let timer = countdownDuration, minutes, seconds;
-                const intervalId = setInterval(function () {
-                    minutes = parseInt(timer / 60, 10);
-                    seconds = parseInt(timer % 60, 10);
+          const countdownDuration = 60; // Duration in seconds
+          const countdownDisplay = document.getElementById("register-clock");
 
-                    countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+          let timer = countdownDuration,
+            minutes,
+            seconds;
+          const intervalId = setInterval(function () {
+            minutes = parseInt(timer / 60, 10);
+            seconds = parseInt(timer % 60, 10);
 
-                    if (--timer < 0) {
-                        clearInterval(intervalId);
-                        document.getElementById('registerOTP').style.color = '#662d91';
-                        document.getElementById('registerOTP').style.cursor = 'pointer';
-                        $('#registerOTP').click(handleRegisterOTPClick);
-                    }
-                }, 1000);
+            countdownDisplay.textContent =
+              minutes + "." + (seconds < 10 ? "0" : "") + seconds;
 
-            } else {
-              $('#register-message').html(respObj.message);
+            if (--timer < 0) {
+              clearInterval(intervalId);
+              document.getElementById("registerOTP").style.color = "#662d91";
+              document.getElementById("registerOTP").style.cursor = "pointer";
+              $("#registerOTP").click(handleRegisterOTPClick);
             }
-        },
-        error: function (error) {
-            console.error(error);
+          }, 1000);
+        } else {
+          $("#register-message").html(respObj.message);
         }
+      },
+      error: function (error) {
+        console.error(error);
+      },
     });
-});
+  });
 
 $('#loginBtnCall').click(function (e) {
   
@@ -1929,15 +1953,19 @@ $('#loginBtnCall').click(function (e) {
             } else {
               $('#register-message').html(respObj.message);
             }
-        },
-        error: function (error) {
-            console.error(error);
+          }, 1000);
+        } else {
+          $("#register-message").html(respObj.message);
         }
+      },
+      error: function (error) {
+        console.error(error);
+      },
     });
-});
+  });
 
-function handleLoginOTPClick(){
-    var formData = $('#loginForm').serialize();
+  function handleLoginOTPClick() {
+    var formData = $("#loginForm").serialize();
     $.ajax({
         type: 'POST',
         url: $('#loginForm').attr('action'),
@@ -1976,11 +2004,16 @@ function handleLoginOTPClick(){
             } else {
               $('#register-message').html(respObj.message);
             }
-        },
-        error: function (error) {
-            console.error(error);
+          }, 1000);
+        } else {
+          $("#register-message").html(respObj.message);
         }
+      },
+      error: function (error) {
+        console.error(error);
+      },
     });
+  }
 }
 
       function moveFocus(currentInput, nextInputId) {
@@ -2122,7 +2155,6 @@ function handleLoginOTPClick(){
 //       }
 //   });
   
-
 });
 
   
