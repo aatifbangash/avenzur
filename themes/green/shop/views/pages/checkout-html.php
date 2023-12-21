@@ -196,7 +196,7 @@ if ($this->Settings->indian_gst) {
                 <div class="payBtn">
                 <!-- <button type="button" class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 fs-1">Proceed to Pay</button> -->
                         <?php
-                                            if (!empty($addresses) && !$this->Staff) {
+                                            if ((!empty($addresses) || !empty($default_address)) && !$this->Staff) {
                                             ?>
                                             <input type="hidden" name="express_delivery" id="express_delivery"
                                                    value="Standard"/>
