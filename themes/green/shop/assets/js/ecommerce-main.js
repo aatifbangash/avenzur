@@ -689,6 +689,25 @@ $(document).ready(function () {
     searchProducts();
   }
 
+  $(document).on('click', function (event) {
+      var popup = $('#myaccountForm');
+      var link = $('.checkout-link');
+      var logintrigegr = $('#login-btn-trigger');
+
+      // Check if the clicked element is not inside the popup
+      if (!popup.is(event.target) && popup.has(event.target).length === 0 
+          && !link.is(event.target) && link.has(event.target).length === 0
+          && !logintrigegr.is(event.target) && logintrigegr.has(event.target).length === 0
+        ) {
+          // Close the popup
+          popup.hide();
+      }
+  });
+
+  $(document).on("click", '#login-btn-trigger', function (event){
+    $('#myaccountForm').show();
+  });
+
   $(document).on("click", '.checkout-link', function (event){
     $('#cart-contents').hide();
     $('#productPop').modal('hide');

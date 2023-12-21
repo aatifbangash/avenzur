@@ -119,7 +119,7 @@
                     </ul>
                 </div>
                 <div class="dropdown">
-                <button type="button" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                <button type="button" id="login-btn-trigger" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
                   <?php
                     if ($loggedIn) {
                       ?>
