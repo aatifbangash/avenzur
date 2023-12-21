@@ -384,7 +384,7 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
             if($('#action_type').val() == '' || ( $('#action_type').val() == 'editaddress' && $('#action_type_id').val() == 'default' ) ) {
             if ($('#opt_verified').val() == 0 && last_name.val() !== '' && first_name.val() !== '' && mobile_number !== '' && autocomplete_search !== '') {
                 // check if current_mobile_number != phone
-                if( $('#phone').val() != mobile_numer )) {
+                if( $('#phone').val() != mobile_numer ) {
                     verifyNumber();
                 }
                 
