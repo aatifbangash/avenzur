@@ -360,14 +360,14 @@ if ($this->Settings->indian_gst) {
                 'المملكة العربية السعودية'
             ].includes(country)) {
                 $('.payment-k').prop('disabled', false)
-                shipping = 19
+                shipping = 0
                 deliveryDays = "2 to 4 days"
 
                 if (city.toLowerCase() === 'riyadh' || city.toLowerCase() === 'al riyadh' || city.toLowerCase() === 'al-riyadh' || [
                     'الرياض',
                     'ریاض'
                 ].includes(city)) {
-                    shipping = 0
+                    shipping = 0 // 19 SAR
                     deliveryDays = "1 to 2 days"
                     $("#express-delivery-check").prop("disabled", false);
 
