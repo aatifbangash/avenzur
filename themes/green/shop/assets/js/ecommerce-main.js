@@ -705,8 +705,6 @@ $(document).ready(function () {
   });
 
   $(document).on("click", '#login-btn-trigger', function (event){
-    $('#cart-contents').hide();
-    $('#productPop').modal('hide');
     $('#myaccountForm').show();
   });
 
