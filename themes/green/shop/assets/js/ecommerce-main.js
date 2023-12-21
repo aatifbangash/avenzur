@@ -148,7 +148,6 @@ function update_mini_cart(t) {
 }
 
 function update_cart_item(t, e, a, s, i) {
-  console.log(e);
   $.ajax({
     url: t,
     type: "POST",
@@ -158,8 +157,8 @@ function update_cart_item(t, e, a, s, i) {
         ? ("text" == i ? s.val(a) : s.selectpicker("val", $po),
           sa_alert("Error!", t.message, "error", !0))
         : (t.cart &&
-            ((cart = t.cart), update_mini_cart(cart), update_cart(cart)),
-          sa_alert(t.status, t.message));
+            ((cart = t.cart), update_mini_cart(cart), update_cart(cart)));
+          //sa_alert(t.status, t.message));
     },
     error: function () {
       sa_alert(
@@ -373,6 +372,31 @@ function saa_alert(t, e, a, s) {
     (s = s || {}),
     (s._method = a),
     (s[site.csrf_token] = site.csrf_token_value),
+  $.ajax({
+    url: t,
+    type: "POST",
+    data: s,
+    success: function (t) {
+      if (t.redirect) return (window.location.href = t.redirect), !1;
+      t.cart &&
+        ((cart = t.cart), update_mini_cart(cart), update_cart(cart));
+        //sa_alert(t.status, t.message);
+    },
+    error: function () {
+      /*sa_alert(
+        "Error!",
+        "Ajax call failed, please try again or contact site owner.",
+        "error",
+        !0
+      );*/
+    },
+  });
+
+  /*(a = a || lang.delete),
+    (e = e || lang.x_reverted_back),
+    (s = s || {}),
+    (s._method = a),
+    (s[site.csrf_token] = site.csrf_token_value),
     swal({
       title: lang.r_u_sure,
       html: e,
@@ -403,7 +427,7 @@ function saa_alert(t, e, a, s) {
           });
         });
       },
-    }).catch(swal.noop);
+    }).catch(swal.noop);*/
 }
 
 function prompt(t, e, a) {
@@ -683,6 +707,20 @@ $(document).ready(function () {
     searchProducts();
   }
 
+  $(document).on("click", '.checkout-link', function (event){
+    $('#cart-contents').hide();
+    $('#productPop').modal('hide');
+
+
+    
+    var myaccountForm = document.getElementById('myaccountForm');
+    myaccountForm.style.position = 'absolute';
+    myaccountForm.style.inset = '0px auto auto 0px';
+    myaccountForm.style.margin = '0px';
+    myaccountForm.style.transform = 'translate3d(-240px, 38.4px, 0px)';
+    $('#myaccountForm').show();
+  });
+
   $(document).on("click", "#pagination a", function (t) {
     t.preventDefault();
     var e = $(this).attr("href"),
@@ -928,14 +966,15 @@ $(document).ready(function () {
         : ((a = t),
           update_mini_cart(t),
           update_popup_cart(t),
-          $("#productPop").modal("show"),
-          $.toast({
+          $('#productPop').modal('show')
+          /*$.toast({
             heading: "Success",
             text: "Product Added To The Cart.",
             position: "top-right",
             showHideTransition: "slide",
             icon: "success",
-          }));
+          })*/
+        );
     });
   });
 
@@ -1871,44 +1910,48 @@ $(document).ready(function () {
     });
   });
 
-  $("#loginBtnCall").click(function (e) {
-    e.preventDefault();
-    var formData = $("#loginForm").serialize();
+$('#loginBtnCall').click(function (e) {
+  
+    e.preventDefault(); 
+    var formData = $('#loginForm').serialize();
     $.ajax({
-      type: "POST",
-      url: $("#loginForm").attr("action"),
-      data: formData,
-      success: function (response) {
-        var respObj = JSON.parse(response);
-        if (respObj.status == "success" || respObj.code == 1) {
-          $("#loginOTP").off("click", handleLoginOTPClick);
-          $(".myaccountForm").removeClass("show");
-          document.getElementById("loginOTP").style.color = "grey";
-          document.getElementById("loginOTP").style.cursor = "none";
-          $("#loginModal").modal("show");
-          document.getElementById("identifierl").innerHTML =
-            document.getElementById("identity").value;
-          document.getElementById("identifierl_input").value =
-            document.getElementById("identity").value;
+        type: 'POST',
+        url: $('#loginForm').attr('action'),
+        data: formData,
+        success: function (response) {
+            var respObj = JSON.parse(response);
+            if (respObj.status == 'success' || respObj.code == 1) {
+                $('#loginOTP').off('click', handleLoginOTPClick);
+                $('.myaccountForm').removeClass('show');
+                document.getElementById('loginOTP').style.color = 'grey';
+                document.getElementById('loginOTP').style.cursor = 'none';
+                $('#loginModal').modal('show');
+                document.getElementById('identifierl').innerHTML = document.getElementById('identity_phone').value;
+                document.getElementById('identifierl_input').value = document.getElementById('identity_phone').value;
 
-          const countdownDuration = 60; // Duration in seconds
-          const countdownDisplay = document.getElementById("login-clock");
+                //document.getElementById('login_otp_1').value = 9;
+                
+                const countdownDuration = 60; // Duration in seconds
+                const countdownDisplay = document.getElementById("login-clock");
+                
+                let timer = countdownDuration, minutes, seconds;
+                const intervalId = setInterval(function () {
+                    minutes = parseInt(timer / 60, 10);
+                    seconds = parseInt(timer % 60, 10);
 
-          let timer = countdownDuration,
-            minutes,
-            seconds;
-          const intervalId = setInterval(function () {
-            minutes = parseInt(timer / 60, 10);
-            seconds = parseInt(timer % 60, 10);
+                    countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+                    document.getElementById('login_otp_1').focus();
+                
+                    if (--timer < 0) {
+                        clearInterval(intervalId);
+                        document.getElementById('loginOTP').style.color = '#662d91';
+                        document.getElementById('loginOTP').style.cursor = 'pointer';
+                        $('#loginOTP').click(handleLoginOTPClick);
+                    }
+                }, 1000);
 
-            countdownDisplay.textContent =
-              minutes + "." + (seconds < 10 ? "0" : "") + seconds;
-
-            if (--timer < 0) {
-              clearInterval(intervalId);
-              document.getElementById("loginOTP").style.color = "#662d91";
-              document.getElementById("loginOTP").style.cursor = "pointer";
-              $("#loginOTP").click(handleLoginOTPClick);
+            } else {
+              $('#register-message').html(respObj.message);
             }
           }, 1000);
         } else {
@@ -1924,39 +1967,42 @@ $(document).ready(function () {
   function handleLoginOTPClick() {
     var formData = $("#loginForm").serialize();
     $.ajax({
-      type: "POST",
-      url: $("#loginForm").attr("action"),
-      data: formData,
-      success: function (response) {
-        var respObj = JSON.parse(response);
-        if (respObj.status == "success" || respObj.code == 1) {
-          $("#loginOTP").off("click", handleLoginOTPClick);
-          document.getElementById("loginOTP").style.color = "grey";
-          document.getElementById("loginOTP").style.cursor = "none";
-          $("#loginModal").modal("show");
-          document.getElementById("identifierl").innerHTML =
-            document.getElementById("identity").value;
-          document.getElementById("identifierl_input").value =
-            document.getElementById("identity").value;
+        type: 'POST',
+        url: $('#loginForm').attr('action'),
+        data: formData,
+        success: function (response) {
+            var respObj = JSON.parse(response);
+            if (respObj.status == 'success' || respObj.code == 1) {
+                $('#loginOTP').off('click', handleLoginOTPClick);
+                document.getElementById('loginOTP').style.color = 'grey';
+                document.getElementById('loginOTP').style.cursor = 'none';
+                $('#loginModal').modal('show');
+                document.getElementById('identifierl').innerHTML = document.getElementById('identity').value;
+                document.getElementById('identifierl_input').value = document.getElementById('identity').value;
 
-          const countdownDuration = 60; // Duration in seconds
-          const countdownDisplay = document.getElementById("login-clock");
+                const countdownDuration = 60; // Duration in seconds
+                const countdownDisplay = document.getElementById("login-clock");
+                
+                $('#login_otp_1').focus();
+                
+                
+                let timer = countdownDuration, minutes, seconds;
+                const intervalId = setInterval(function () {
+                    minutes = parseInt(timer / 60, 10);
+                    seconds = parseInt(timer % 60, 10);
 
-          let timer = countdownDuration,
-            minutes,
-            seconds;
-          const intervalId = setInterval(function () {
-            minutes = parseInt(timer / 60, 10);
-            seconds = parseInt(timer % 60, 10);
+                    countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
 
-            countdownDisplay.textContent =
-              minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+                    if (--timer < 0) {
+                        clearInterval(intervalId);
+                        document.getElementById('loginOTP').style.color = '#662d91';
+                        document.getElementById('loginOTP').style.cursor = 'pointer';
+                        $('#loginOTP').click(handleLoginOTPClick);
+                    }
+                }, 1000);
 
-            if (--timer < 0) {
-              clearInterval(intervalId);
-              document.getElementById("loginOTP").style.color = "#662d91";
-              document.getElementById("loginOTP").style.cursor = "pointer";
-              $("#loginOTP").click(handleLoginOTPClick);
+            } else {
+              $('#register-message').html(respObj.message);
             }
           }, 1000);
         } else {
@@ -1968,4 +2014,147 @@ $(document).ready(function () {
       },
     });
   }
+}
+
+      function moveFocus(currentInput, nextInputId) {
+        
+        // Check if input value is empty
+        if (!currentInput.value.trim()) {
+            return;
+        }
+    
+        // Iterate through each character in the input value
+        for (let i = 0; i < currentInput.value.length; i++) {
+            // Get the next character
+            let char = currentInput.value.charAt(i);
+    
+            // Update the value of the current input
+            currentInput.value = char;
+    
+            // Move focus to the next input
+            var nextInput = document.getElementById(nextInputId);
+            if (nextInput) {
+                nextInput.focus();
+            }
+        }
+    }
+    
+    // Attach input event listener to the input for paste event
+    // $('#first_login_otp').on('input', function() {
+    //     moveFocus(this, 'second');
+    // });
+    
+
+      // function handleKeyup() {
+      //   var inputValue = $('#first_login_otp').val();
+      //   console.log('Input value:', inputValue);
+      //   // Add your logic here based on the input value
+      // }
+    
+      // Attach keyup event listener to the input
+      //$('#first_login_otp').on('keyup', moveFocus(this.length, 'second'));
+      // $('#first_login_otp').on('keyup', function() {
+      //   moveFocus(this, 'second_login_otp');
+      // });
+      // $('#second_login_otp').on('keyup', function() {
+      //   moveFocus(this, 'third_login_otp');
+      // });
+      // $('#third_login_otp').on('keyup', function() {
+      //   moveFocus(this, 'fourth_login_otp');
+      // });
+      // $('#fourth_login_otp').on('keyup', function() {
+      //   moveFocus(this, 'fifth_login_otp');
+      // });
+      // $('#fifth_login_otp').on('keyup', function() {
+      //   moveFocus(this, 'sixth_login_otp');
+      // });
+
+      // $('#first_register_otp').on('keyup', function() {
+      //   moveFocus(this, 'second_register_otp');
+      // });
+      // $('#second_register_otp').on('keyup', function() {
+      //   moveFocus(this, 'third_register_otp');
+      // });
+      // $('#third_register_otp').on('keyup', function() {
+      //   moveFocus(this, 'fourth_register_otp');
+      // });
+      // $('#fourth_register_otp').on('keyup', function() {
+      //   moveFocus(this, 'fifth_register_otp');
+      // });
+      // $('#fifth_register_otp').on('keyup', function() {
+      //   moveFocus(this, 'sixth_register_otp');
+      // });
+
+
+      function bindOtpKeyupEvents(prefix, totalFields) {
+        //document.getElementById('login_otp_1').focus();
+        //document.getElementById('register_otp_1').focus();
+        for (let i = 1; i <= totalFields; i++) {
+            let currentId = `${prefix}_${i}`;
+            let nextId = i < totalFields ? `${prefix}_${i + 1}` : null;
+    
+            $(`#${currentId}`).on('keyup', function() {
+                moveFocus(this, nextId);
+            });
+        }
+    }
+    
+    // Bind keyup events for login OTP
+    bindOtpKeyupEvents('login_otp', 6);
+    
+    // Bind keyup events for register OTP
+    bindOtpKeyupEvents('register_otp', 6);
+
+//     const loginInput =  $("#identity");
+
+//     // var input_address_phone = document.querySelector("#identity");
+//     // window.intlTelInput(input_address_phone, {
+//     //   //initialCountry: "SA"
+//     // });
+
+//     // Initialize intlTelInput with default options
+    
+//   //   const iti = window.intlTelInput(loginInput, {
+//   //     initialCountry: 'auto',
+//   //     onlyCountries: ['sa', 'ae'],
+//   //     separateDialCode: true,
+//   //     utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
+//   // });
+  
+//   const iti = loginInput.intlTelInput({
+//     initialCountry: 'auto',
+//     onlyCountries: ['sa', 'ae'], // Saudi Arabia, United Arab Emirates
+//     separateDialCode: true,
+//     utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
+// });
+
+//   // Keep track of the last entered value
+//   let lastValue = $("#identity").val();
+  
+//   // Add event listener for input changes
+//   loginInput.on('input', function () {
+//       const inputValue = $("#identity").val();
+//       const isFirstCharacterDigit = /^\d/.test(inputValue);
+  
+//       // Change input type and reinitialize intlTelInput accordingly
+//       if (isFirstCharacterDigit) {
+//         console.log('firs character') ;
+//           if (lastValue !== inputValue) {
+//             console.log('test');
+//               iti.destroy(); // Destroy the previous instance
+//               loginInput.prop('type', 'text'); // Change input type to tel
+//               window.intlTelInput(loginInput, { onlyCountries: ['sa', 'ae'] }); // Reinitialize intlTelInput on the updated input
+//               loginInput.focus(); // Set focus back to the input
+//               lastValue = inputValue; // Update last entered value
+//           }
+//       } else {
+//           iti.destroy(); // Destroy the previous instance
+//           loginInput.prop('type', 'text'); // Change input type to text
+//           loginInput.focus(); // Set focus back to the input
+//           lastValue = inputValue; // Update last entered value
+//       }
+//   });
+  
 });
+
+  

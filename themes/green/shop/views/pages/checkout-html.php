@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php //print_r($defaultAddress);?>
+<?php //print_r($default_address);?>
 <?php
  if (!$this->loggedIn) {
 redirect('login') ; 
@@ -51,13 +51,13 @@ if ($this->Settings->indian_gst) {
                             <div class="addicon "><i class="bi bi-geo-alt fs-5 purpColor"></i></div>
                             <div class="ms-3">
                                 <p class="m-0 fs-6 fw-semibold">
-                                    <?php echo isset($defaultAddress[0])?$defaultAddress[0]->line1:'';?>
+                                    <?php echo isset($default_address->line1)?$default_address->line1:$default_address->address;?>
                                 </p>
-                                <p class="m-0 fs-6 fw-semibold"> +966  <?php echo isset($defaultAddress[0])?$defaultAddress[0]->phone:'';?> <i class="bi bi-check-circle-fill ms-2 purpColor"></i></p>  
+                                <p class="m-0 fs-6 fw-semibold"> +966  <?php echo isset($default_address)?$default_address->phone:'';?> <i class="bi bi-check-circle-fill ms-2 purpColor"></i></p>  
                             </div>                                                             
                         </div>
 
-                        <?php
+                        <?php //&& !$this->Staff
                         if (count($addresses) < 6 && !$this->Staff) {?>
                                                 <p class="m-0 ms-auto">
                                                 <a href="?action=changeaddress" class=" text-decoration-none">Change Address</a>
@@ -80,7 +80,7 @@ if ($this->Settings->indian_gst) {
                 <h3 class=" fw-bold pb-2">Your Order</h3>
                 <div class=" border rounded p-3 pb-5 mb-4">
                     <div class="">
-                        <h3 class="fs-5 fw-bold">Shipment 1 of 1 <span class="fs-5 fw-medium purpColor">(<?php echo count($cart_contents)?> item(s))</span></h3>
+                        <h3 class="fs-5 fw-bold">Shipment <span class="fs-5 fw-medium purpColor">(<?php echo count($cart_contents)?> item<?php echo count($cart_contents) > 1 ? 's':'';?>)</span></h3>
                         <?php if(!empty($cart_contents)) {
                             foreach($cart_contents as $key => $item) {?>
                         <div class="addressDetail row align-items-center">
@@ -162,10 +162,10 @@ if ($this->Settings->indian_gst) {
 
            <input type="hidden" name="payment_method" value="directpay" id="directpay"
                                                    required="required">
-            <input type="hidden" name="address" id="address" value="<?php echo $defaultAddress[0]->id;?>">    
-            <input type="hidden" name="shipping_city" id="shipping_city" value="<?php echo $defaultAddress[0]->city;?>">                                       
-            <input type="hidden" name="shipping_state" id="shipping_state" value="<?php echo $defaultAddress[0]->state;?>">          
-            <input type="hidden" name="shipping_country" id="shipping_country" value="<?php echo $defaultAddress[0]->country;?>">                             
+            <input type="hidden" name="address" id="address" value="<?php echo $default_address->id;?>">    
+            <input type="hidden" name="shipping_city" id="shipping_city" value="<?php echo $default_address->city;?>">                                       
+            <input type="hidden" name="shipping_state" id="shipping_state" value="<?php echo $default_address->state;?>">          
+            <input type="hidden" name="shipping_country" id="shipping_country" value="<?php echo $default_address->country;?>">                             
             <input type="hidden" id="total-price" value="<?= $total ?>"/>
                 <h3 class=" fw-bold pb-2">Order Summary</h3>
                 <div class="border rounded py-3 px-2">

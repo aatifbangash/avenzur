@@ -70,10 +70,22 @@ $cart_contents = $this->cart->contents();
                                 <h4 class="m-0 fw-bold fs-5">Total <span class="fs-6 opacity-50">(Inclusive of VAT)</span></h4>
                                 <h4 class="m-0 fw-bold fs-5"><span id="total-after_discount">SAR 0</span></h4>
                             </div>
-
-                            <a href="<?= site_url('cart/checkout'); ?>" style="border:0px;background: none;" class="btn btn-danger btn-sm">
-                                <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 " style="font-size:18px !important;"> Checkout</button>
-                            </a>
+                            <?php 
+                                if ($loggedIn) {
+                                    ?>
+                                        <a href="<?= site_url('cart/checkout'); ?>" style="border:0px;background: none;" class="btn btn-danger btn-sm">
+                                            <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 " style="font-size:18px !important;"> Checkout</button>
+                                        </a>
+                                    <?php
+                                }else{
+                                    ?>
+                                        <a style="border:0px;background: none;" class="btn btn-danger btn-sm checkout-link">
+                                            <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 " style="font-size:18px !important;"> Checkout</button>
+                                        </a>
+                                    <?php
+                                }
+                            ?>
+                            
                             
                         </div>
                     </div>
