@@ -119,21 +119,18 @@
                     </ul>
                 </div>
                 <div class="dropdown">
-                
+                <button type="button" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
                   <?php
                     if ($loggedIn) {
                       ?>
-                      <button type="button" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
                       <i class="bi bi-person-fill"></i>&nbsp; <?= lang('hi') . ' ' . $loggedInUser->first_name; ?>
-                      </button>
                     <?php }else{
                       ?>
-                       
-                        <button id="loginpopup" type="button" class="btn  text-white " data-bs-toggle="modal" data-bs-target="#loginPopupModal"> <i class="bi bi-person-fill"></i>&nbsp; Login</button>
+                        <i class="bi bi-person-fill"></i>&nbsp; Login
                       <?php
                     }
                     ?>
-                
+                </button>
                   <?php 
                     if ($loggedIn) {
                       ?>
@@ -469,90 +466,13 @@
             </div>
         </div>
         <!-- Login Modal Ends -->
-        <!--login popup Modal -->
-        <div class="modal fade" id="loginPopupModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header border-0 p-0">
-                
-              <button type="button" class="modalcloseBtn z-2" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-              </div>
-              <div class="modal-body">
-              <div class="loginRCard px-4 w-100 mt-0">
-                  <div class="logo-k mb-5"> 
-                        <a class="navbar-brand" href="http://localhost/avenzur/">
-                            <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVENZUR">
-                        </a>
-                    </div>
-                    <h4 class="fw-bold letstart">Let's get started</h4>
-                    <div class="logsignBtns mt-3 d-flex justify-content-center">
-                        <button type="button" id="loginBtn" class="btn  text-white" onclick="LoginFn(this);">Log in</button>
-                        <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerFnBtn(this);">Sign up</button>
-                    </div>
-                    <div id="registerBlock">
-                        <?php 
-                            $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
-                            echo form_open('register', $attrib); 
-                        ?>
-                        <div class="controls logcardinput">
-                        
-                        <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email" required="required"/>
-                        
-                        </div>
-
-                        <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
-                        <?= form_close(); ?>
-                    </div>
-
-                    <div id="loginBlock" style="display:none;">
-                        <?php 
-                            $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
-                            echo form_open('login', $attrib); 
-                        ?>
-                        <div class="controls logcardinput">
-                        
-                        <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
-                        
-                        </div>
-
-                        <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
-                        <?= form_close(); ?>
-                    </div>
-                    
-                  <div>
-                    <span id="register-message" style="color: blue;"></span>
-                  </div>
-                </div>
-              </div>
-              
-            </div>
-          </div>
-        </div>
         <?php
       }
     ?>
 
   <!-- product popup start -->
-  <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvasWithBothOptions" aria-labelledby="offcanvasWithBothOptionsLabel">
-      <div class="offcanvas-header justify-content-end">
-          
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-      </div>
-      <div class="offcanvas-body px-2">
-          <div class="productOffcanvas px-3" id="product-popup-offcanvas"></div>
-
-          <div class="offcanvas-footer-p border-0 pb-4 d-flex flex-nowrap mt-3">
-              <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6">
-              <a href="<?= site_url('cart'); ?>" style="color: #fff;text-decoration: none;">
-              Checkout
-              </a>
-              </button>
-              <button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6" data-bs-dismiss="modal">Continue Shopping</button>
-          </div>
-      </div>
-  </div>
-  <!-- <div class="modal fade" id="productPop" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-right">
+  <div class="modal fade" id="productPop" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content px-4 rounded-4">
             <div class="modal-header border-0">
                 
@@ -560,7 +480,16 @@
             </div>
             <div class="modal-body" id="product-popup-modal-body">
               
-           
+              <!--<div class=" row align-items-center mt-4">
+                <div class="addicon col-md-3 px-0">
+                    <p class="m-0 fs-5 fw-semibold text-start text-dark">
+                        Cart Total  
+                    </p>
+                </div>
+                <div class=" col-md-9">
+                    <p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark"> SAR 190</p>  
+                </div>                                                             
+              </div>-->
             </div>
             <div class="modal-footer border-0 pb-4 d-flex flex-nowrap">
                 <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0">
@@ -587,7 +516,7 @@
             
         </div>
     </div>
-  </div> -->
+  </div>
 
 </div>
 <!-- product popup end -->
