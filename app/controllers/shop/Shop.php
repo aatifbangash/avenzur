@@ -465,7 +465,7 @@ class Shop extends MY_Shop_Controller
                     'paid' => 0,
                     'created_by' => $this->session->userdata('user_id') ? $this->session->userdata('user_id') : null,
                     'shop' => 1,
-                    'address_id' => ($this->input->post('address') == 'new') ? '' : $address->id,
+                    'address_id' => ($this->input->post('address') == 'new' || $this->input->post('address') == 'default' ) ? 0 : $address->id,
                     'hash' => hash('sha256', microtime() . mt_rand()),
                     'payment_method' => $this->input->post('payment_method'),
                     'delivery_type' => $this->input->post('express_delivery')
@@ -1004,7 +1004,9 @@ class Shop extends MY_Shop_Controller
                 $this->data['rows'] = $this->shop_model->getOrderItems($id);
                 $this->data['customer'] = $this->site->getCompanyByID($order->customer_id);
                 $this->data['biller'] = $this->site->getCompanyByID($order->biller_id);
+                $this->data['address'] = array();
                 $this->data['address'] = $this->shop_model->getAddressByID($order->address_id);
+                
                 $this->data['return_sale'] = $order->return_id ? $this->shop_model->getOrder(['id' => $id]) : null;
                 $this->data['return_rows'] = $order->return_id ? $this->shop_model->getOrderItems($order->return_id) : null;
                 $this->data['paypal'] = $this->shop_model->getPaypalSettings();
@@ -1017,6 +1019,7 @@ class Shop extends MY_Shop_Controller
                 $this->data['stripe_publishable_key'] = $this->config->item('stripe_publishable_key');
                 $this->data['all_categories'] = $this->shop_model->getAllCategories();
                 //$this->page_construct('pages/view_order', $this->data);
+                $this->cart->destroy();
                 $this->page_construct('pages/thankyou', $this->data);
             } else {
                 $this->session->set_flashdata('error', lang('access_denied'));
