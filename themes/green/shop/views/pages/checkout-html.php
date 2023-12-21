@@ -367,7 +367,7 @@ if ($this->Settings->indian_gst) {
                     'الرياض',
                     'ریاض'
                 ].includes(city)) {
-                    shipping = 16
+                    shipping = 0
                     deliveryDays = "1 to 2 days"
                     $("#express-delivery-check").prop("disabled", false);
 
@@ -380,7 +380,7 @@ if ($this->Settings->indian_gst) {
                 if (city.toLowerCase() === 'jeddah' || city.toLowerCase() === 'al jeddah' || city.toLowerCase() === 'al-jeddah' || [
                     'جده'
                 ].includes(city)) {
-                    shipping = 16
+                    shipping = 0
                     deliveryDays = "1 to 2 days"
                 }
 
