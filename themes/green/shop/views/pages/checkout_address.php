@@ -102,7 +102,14 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                 <div class="px-3 py-2">
                     <div class="py-3">
                         <h6 class="m-0 fw-semibold">
-                            <?= lang('add_new_address'); ?>
+                            <?php 
+                                if($action_type == 'editaddress'){
+                                    echo lang('Update address details');
+                                }else{
+                                    echo lang('add_new_address');
+                                }
+                            ?>
+                            
                         </h6>
                     </div>
                     <div class="row" id="addressList">
