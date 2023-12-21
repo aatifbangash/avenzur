@@ -689,7 +689,7 @@ $(document).ready(function () {
     searchProducts();
   }
 
-  $(document).on('click', function (event) {
+  /*$(document).on('click', function (event) {
       var popup = $('#myaccountForm');
       var link = $('.checkout-link');
       var logintrigegr = $('#login-btn-trigger');
@@ -704,7 +704,7 @@ $(document).ready(function () {
       }
   });
 
-  $(document).on("click", '#login-btn-trigger', function (event){
+ $(document).on("click", '#login-btn-trigger', function (event){
     $('#myaccountForm').show();
   });
 
@@ -720,7 +720,7 @@ $(document).ready(function () {
     myaccountForm.style.margin = '0px';
     myaccountForm.style.transform = 'translate3d(-240px, 38.4px, 0px)';
     $('#myaccountForm').show();
-  });
+  });*/
 
   $(document).on("click", "#pagination a", function (t) {
     t.preventDefault();

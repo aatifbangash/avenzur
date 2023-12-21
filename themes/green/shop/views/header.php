@@ -119,7 +119,7 @@
                     </ul>
                 </div>
                 <div class="dropdown">
-                <button type="button" id="login-btn-trigger" class="btn text-white dropdown-toggle px-0 border-0" aria-expanded="false" data-bs-auto-close="outside">
+                <button type="button" id="login-btn-trigger" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
                   <?php
                     if ($loggedIn) {
                       ?>
@@ -359,7 +359,7 @@
                         <?php
                     }else{
                       ?>
-                        <a class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center checkout-link">Checkout</a>
+                        <a class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center checkout-link" data-bs-toggle="dropdown">Checkout</a>
                       <?php
                     }
                   ?>
