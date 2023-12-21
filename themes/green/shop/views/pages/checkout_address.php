@@ -147,6 +147,8 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                     <input type="hidden" id="current_mobile_number" name="current_mobile_number"
                                         value="<?= $mobile_number; ?>">
                                     <input type="hidden" id="opt_verified" name="opt_verified" value="0">
+                                    <input type="hidden" id="action_type" name="action_type" value="<?=$action_type;?>">
+
                                     <span class=" padding-bottom-md fw-bold" style="font-size:17px;">
                                         LOCATION INFORMATION
                                     </span>
@@ -379,11 +381,12 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
             }
 
             // Add more validation for other fields as needed
-
+            if($('#action_type').val() == '' || $('#action_type_id').val() == 'default' ) {
             if ($('#opt_verified').val() == 0 && last_name.val() !== '' && first_name.val() !== '' && mobile_number !== '' && autocomplete_search !== '') {
                 // check if current_mobile_number != phone
                 verifyNumber();
             }
+        }
         });
 
         $('#mobileOtpBtn').click(function (e) {
