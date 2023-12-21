@@ -691,11 +691,6 @@ $(document).ready(function () {
 
   $(document).on("click", '.checkout-link', function (event){
     $('.myaccountForm').show();
-    var myaccountForm = document.getElementById('myaccountForm');
-    myaccountForm.style.position = 'absolute';
-    myaccountForm.style.inset = '0px auto auto 0px';
-    myaccountForm.style.margin = '0px';
-    myaccountForm.style.transform = 'translate3d(-240px, 38.4px, 0px)';
   });
 
   $(document).on("click", "#pagination a", function (t) {
