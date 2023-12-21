@@ -26,8 +26,11 @@
             <h4 class="m-0 fs-5 fw-semibold">Shipping address</h4>
 
             <h4 class="m-0 fs-6 mt-1 py-1 fw-semibold">
+              <?php if($inv->address_id > 0) {?>
               <?= $address->first_name. ' '. $address->last_name; ?> <br />
-              <?= $address->line1; ?>
+              <?= $address->line1; } else {?>
+                <?= $customer->address. ', '.$customer->city.' '.$customer->country; } ?>
+               
             </h4>
           </div>
           <div class="my-2 pt-3">

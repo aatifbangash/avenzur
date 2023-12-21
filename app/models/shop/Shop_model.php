@@ -208,6 +208,14 @@ class Shop_model extends CI_Model
 
     public function getAddressByID($id)
     {
+        if($id == 'default' || $id == 0) {
+            $address_row = $this->db->get_where('companies', ['id' => $this->session->userdata('company_id')])->row();
+            if (isset($address_row->address)) {
+                $address_row->line1 = $address_row->address;
+                unset($address_row->address);
+            }
+            return $address_row;
+        }
         return $this->db->get_where('addresses', ['id' => $id], 1)->row();
     }
 
