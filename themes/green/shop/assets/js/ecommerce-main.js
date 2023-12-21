@@ -700,7 +700,7 @@ $(document).ready(function () {
     myaccountForm.style.inset = '0px auto auto 0px';
     myaccountForm.style.margin = '0px';
     myaccountForm.style.transform = 'translate3d(-240px, 38.4px, 0px)';
-    $('.myaccountForm').show();
+    $('#myaccountForm').show();
   });
 
   $(document).on("click", "#pagination a", function (t) {
