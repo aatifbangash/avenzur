@@ -224,6 +224,21 @@ class Shop_model extends CI_Model
         return $this->db->get_where('companies', ['id' => $this->session->userdata('company_id')])->row();
     }
 
+    public function getCustomerVerifiedNumbers() {
+       $verify_address =  $this->db->get_where('addresses', ['company_id' => $this->session->userdata('company_id'), 'mobile_verified' => 1])->result();
+       $verify_row     = $this->db->get_where('companies', ['id' => $this->session->userdata('company_id'), 'mobile_verified' => 1])->row();
+       $verify_phone_numbers = array() ;
+       if(count($verify_address) > 0) { 
+        foreach ($verify_address as $key => $value) {
+            $verify_phone_numbers[] = $value->phone;
+         }
+       }
+       if(!empty($verify_row)) {
+            $verify_phone_numbers[] = $verify_row->phone;
+       }
+       return $verify_phone_numbers;
+    }
+
     public function getAllBrands()
     {
         if ($this->shop_settings->hide0) {

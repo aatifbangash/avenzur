@@ -84,9 +84,14 @@ class Shop extends MY_Shop_Controller
         if ($this->form_validation->run() == true) {
             // update address
             $action_type_id = $this->input->post('action_type_id');
-           
+            $verify_phone_numbers = $this->shop_model->getCustomerVerifiedNumbers();
                 // insert default address
                 $default_address = $this->shop_model->getDefaultChechoutAddress();
+                if( in_array($this->input->post('mobile_number') , $verify_phone_numbers) ) {
+                    $mobile_verified = 1;
+                }else {
+                    $mobile_verified = $this->input->post('opt_verified');
+                }
 
                 if ($default_address->phone == '' || $action_type_id == 'default') {
                     $data = ['address' => $this->input->post('address_line_1'),
@@ -99,6 +104,7 @@ class Shop extends MY_Shop_Controller
                         'longitude' => $this->input->post('longitude'),
                         'first_name' => $this->input->post('first_name'),
                         'last_name' => $this->input->post('last_name'),
+                        'mobile_verified' => $mobile_verified
                     ];
                     if($this->input->post('current_mobile_number') != $this->input->post('mobile_number')){ 
                         // verify mobile number
@@ -120,6 +126,7 @@ class Shop extends MY_Shop_Controller
                         'company_id' => $this->session->userdata('company_id'),
                         'first_name' => $this->input->post('first_name'),
                         'last_name' => $this->input->post('last_name'),
+                        'mobile_verified' => $mobile_verified
                     ];
                     $this->db->update('addresses', $data, ['id' => $action_type_id]);
                     redirect('cart/checkout?action=changeaddress');
@@ -136,6 +143,7 @@ class Shop extends MY_Shop_Controller
                         'company_id' => $this->session->userdata('company_id'),
                         'first_name' => $this->input->post('first_name'),
                         'last_name' => $this->input->post('last_name'),
+                        'mobile_verified' => $mobile_verified
                     ];
                     if (count($user_addresses) >= 6) {
                         $this->session->set_flashdata('error', lang('already_have_max_addresses'));

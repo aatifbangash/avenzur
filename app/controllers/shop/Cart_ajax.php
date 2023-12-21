@@ -308,6 +308,9 @@ class Cart_ajax extends MY_Shop_Controller
                     }
                 }
             }    
+            //get customer verified numbers
+            $verify_phone_numbers = $this->shop_model->getCustomerVerifiedNumbers();
+            $this->data['verify_phone_numbers'] = $verify_phone_numbers;
             $this->page_construct('pages/checkout_address', $this->data);    
         }
         else if( $this->loggedIn && $action == 'changeaddress' ) {

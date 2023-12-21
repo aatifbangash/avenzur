@@ -1863,9 +1863,11 @@ $('#loginBtnCall').click(function (e) {
                 document.getElementById('loginOTP').style.color = 'grey';
                 document.getElementById('loginOTP').style.cursor = 'none';
                 $('#loginModal').modal('show');
-                document.getElementById('identifierl').innerHTML = document.getElementById('identity').value;
-                document.getElementById('identifierl_input').value = document.getElementById('identity').value;
+                document.getElementById('identifierl').innerHTML = document.getElementById('identity_phone').value;
+                document.getElementById('identifierl_input').value = document.getElementById('identity_phone').value;
 
+                //document.getElementById('login_otp_1').value = 9;
+                
                 const countdownDuration = 60; // Duration in seconds
                 const countdownDisplay = document.getElementById("login-clock");
                 
@@ -1875,7 +1877,7 @@ $('#loginBtnCall').click(function (e) {
                     seconds = parseInt(timer % 60, 10);
 
                     countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
-                    //document.getElementById('login_otp_1').focus();
+                    document.getElementById('login_otp_1').focus();
                 
                     if (--timer < 0) {
                         clearInterval(intervalId);
@@ -1941,21 +1943,6 @@ function handleLoginOTPClick(){
         }
     });
 }
-
-function moveFocusOld(currentInput, nextInputId) {
-          // Get the length of the OTP
-          var otpLength = currentInput.value.length;
-          console.log(otpLength);
-          console.log(currentInput.maxLength);
-          // If the OTP length is equal to the maximum length, move focus to the next input
-          if (otpLength === currentInput.maxLength) {
-              var nextInput = document.getElementById(nextInputId);
-              if (nextInput) {
-                  nextInput.focus();
-              }
-          }
-      }  
-      
 
       function moveFocus(currentInput, nextInputId) {
         

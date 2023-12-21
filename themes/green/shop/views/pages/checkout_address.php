@@ -86,6 +86,8 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
     $first_name = $selected_address_info->first_name;
     $last_name = $selected_address_info->last_name;
 }
+
+//verified_numbers = [];
 ?>
 
 <section class=" py-1 ">
@@ -113,7 +115,7 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                             <div class="card" id="map-container">
                                 <input id="autocomplete_search" type="text" class="form-control bg-white border-0 py-2"
                                     style="box-shadow: 0px 1px 5px #b2b2b2;" placeholder="Type for the address..."
-                                    autocomplete="on" value="<?=$address_line_1;?>">
+                                    autocomplete="on" value="<?= $address_line_1; ?>">
                                 <div id="load_map" style="height: 100%; width: 100%;"></div>
                                 <button type="button" id="load_current_location-2"
                                     class="bg-white rounded-5 border-0 py-2"
@@ -130,19 +132,20 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                     <?php
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'checkoutAddress'];
                                     echo form_open('shop/saveCheckoutAddress', $attrib);
-                                        //echo form_open('verify_phone', $attrib);
-                                ?>
+                                    //echo form_open('verify_phone', $attrib);
+                                    ?>
                                     <input type="hidden" id="action_type" name="action_type_id"
-                                        value="<?=$address_id;?>">
-                                    <input type="hidden" id="longitude" name="longitude"
-                                        value="<?=$longitude;?>">
-                                    <input type="hidden" id="latitude" name="latitude" value="<?=$latitude;?>">
+                                        value="<?= $address_id; ?>">
+                                    <input type="hidden" id="longitude" name="longitude" value="<?= $longitude; ?>">
+                                    <input type="hidden" id="latitude" name="latitude" value="<?= $latitude; ?>">
                                     <input type="hidden" id="address-line-1" name="address_line_1"
-                                        value="<?=$address_line_1;?>">
-                                    <input type="hidden" id="address-city" name="city" value="<?=$address_city;?>">
-                                    <input type="hidden" id="address-state" name="state" value="<?=$address_state;?>">
-                                    <input type="hidden" id="address-country" name="country" value="<?=$address_country;?>">
-                                    <input type="hidden" id="current_mobile_number" name="current_mobile_number" value="<?=$mobile_number;?>">
+                                        value="<?= $address_line_1; ?>">
+                                    <input type="hidden" id="address-city" name="city" value="<?= $address_city; ?>">
+                                    <input type="hidden" id="address-state" name="state" value="<?= $address_state; ?>">
+                                    <input type="hidden" id="address-country" name="country"
+                                        value="<?= $address_country; ?>">
+                                    <input type="hidden" id="current_mobile_number" name="current_mobile_number"
+                                        value="<?= $mobile_number; ?>">
                                     <input type="hidden" id="opt_verified" name="opt_verified" value="0">
                                     <span class=" padding-bottom-md fw-bold" style="font-size:17px;">
                                         LOCATION INFORMATION
@@ -153,7 +156,8 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                                 Address Details</label>
                                             <input type="text" class="form-control checkout_address ps-0"
                                                 name="address_line_2" id="exampleFormControlInput1"
-                                                placeholder="Building No, Floor, Flate No etc" value="<?=$address_line_2;?>">
+                                                placeholder="Building No, Floor, Flate No etc"
+                                                value="<?= $address_line_2; ?>">
                                         </div>
                                     </div>
 
@@ -183,7 +187,8 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                         <div class="form-group col-md-4 col-12 ms-md-4" style="float: left;">
                                             <label for="mobile_number" class=" fw-bold fs-6">&nbsp;</label>
                                             <input type="text" class="form-control required checkout_address px-0 pt-1 "
-                                                id="mobile_number" name="mobile_number" placeholder="Mobile Number" value="<?=$mobile_number;?>">
+                                                id="mobile_number" name="mobile_number" placeholder="Mobile Number"
+                                                value="<?= $mobile_number; ?>">
                                         </div>
                                     </div>
 
@@ -195,12 +200,13 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                         <div class="form-group col-md-4 col-12" style="float: left">
                                             <label for="first_name" class=" fw-bold fs-6">First Name</label>
                                             <input type="text" class="form-control checkout_address ps-0"
-                                                id="first_name" name="first_name" placeholder="Enter First Name" value="<?=$first_name;?>">
+                                                id="first_name" name="first_name" placeholder="Enter First Name"
+                                                value="<?= $first_name; ?>">
                                         </div>
                                         <div class="form-group col-md-4 col-12 ms-md-4" style="float: left;">
                                             <label for="last_name" class=" fw-bold fs-6">Last Name</label>
                                             <input type="text" class="form-control checkout_address ps-0" id="last_name"
-                                                name="last_name" placeholder="Enter Last Name" value="<?=$last_name;?>">
+                                                name="last_name" placeholder="Enter Last Name" value="<?= $last_name; ?>">
                                         </div>
                                     </div>
 
@@ -226,38 +232,52 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                     </div>
                     <!-- Button to trigger the add address modal -->
                     <!-- Register Modal Starts -->
-                    <div class="modal fade" id="verifyMobileModal" tabindex="-1" aria-labelledby="verifyMobileLabel" aria-hidden="true">
+                    <div class="modal fade" id="verifyMobileModal" tabindex="-1" aria-labelledby="verifyMobileLabel"
+                        aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content px-4 rounded-4">
                                 <div class="modal-header border-0">
-                                    <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+                                    <button type="button" class="modalcloseBtn" data-bs-dismiss="modal"
+                                        aria-label="Close"><i class="bi bi-x-lg"></i></button>
                                 </div>
                                 <div class="modal-body ">
                                     <div class="emailOTP">
                                         <div class="text-center px-5">
                                             <h2>Verify your mobile</h2>
-                                            <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span></h5>
+                                            <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span
+                                                    id="identifier"></span></h5>
                                         </div>
-                                        <?php 
-                                            $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'mobileOtpForm'];
-                                            echo form_open('verify_phone_otp', $attrib); 
+                                        <?php
+                                        $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'mobileOtpForm'];
+                                        echo form_open('verify_phone_otp', $attrib);
                                         ?>
-                                        <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
-                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
-                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
-                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
-                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
-                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
-                                            <input type="hidden" id="identifier_input" name="identifier_input" value="" />
+                                        <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2">
+                                            <input class="m-1 text-center form-control rounded" type="text"
+                                                name="opt_part1" id="first" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded" type="text"
+                                                name="opt_part2" id="second" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded" type="text"
+                                                name="opt_part3" id="third" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded" type="text"
+                                                name="opt_part4" id="fourth" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded" type="text"
+                                                name="opt_part5" id="fifth" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded" type="text"
+                                                name="opt_part6" id="sixth" maxlength="1" />
+                                            <input type="hidden" id="identifier_input" name="identifier_input"
+                                                value="" />
                                         </div>
-                                        <div  class="text-center">
-                                            <h6 class="m-0 mt-2"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="mobileOTP">Resend OTP </span></h6>
+                                        <div class="text-center">
+                                            <h6 class="m-0 mt-2"><span id="register-clock"></span> <span
+                                                    class="ms-2 fw-semibold opacity-50" id="mobileOTP">Resend OTP
+                                                </span></h6>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="modal-footer border-0 pb-4">
-                                    <button type="submit" id="mobileOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Verify</button>
+                                    <button type="submit" id="mobileOtpBtn"
+                                        class="btn  text-white continueBtn rounded w-75 mx-auto mt-0"
+                                        data-bs-toggle="modal" data-bs-target="#exampleModal">Verify</button>
                                 </div>
                                 <span id="otp-message"></span>
                                 <?= form_close(); ?>
@@ -320,13 +340,11 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
         });
 
 
-
-
         $('#checkoutAddress').submit(function (event) {
             // Remove previous error highlights
             $('.error').removeClass('error');
             //event.preventDefault();
-           // alert('Here in change address...bublooo');
+            // alert('Here in change address...bublooo');
             // Perform validation
             var autocomplete_search = $('#autocomplete_search').val();
 
@@ -338,148 +356,156 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
             }
             var mobile_number = $('#mobile_number').val();
 
-        if (mobile_number === '') {
-            // Highlight the input field with an error
-            $('#mobile_number').addClass('error');
-            event.preventDefault(); // Prevent form submission
+            if (mobile_number === '') {
+                // Highlight the input field with an error
+                $('#mobile_number').addClass('error');
+                event.preventDefault(); // Prevent form submission
+            }
+
+            var first_name = $('#first_name');
+
+            if (first_name.val() === '') {
+                // Highlight the input field with an error
+                first_name.addClass('error');
+                event.preventDefault(); // Prevent form submission
+            }
+
+            var last_name = $('#last_name');
+
+            if (last_name.val() === '') {
+                // Highlight the input field with an error
+                last_name.addClass('error');
+                event.preventDefault(); // Prevent form submission
+            }
+
+            // Add more validation for other fields as needed
+
+            if ($('#opt_verified').val() == 0) {
+                // check if current_mobile_number != phone
+                verifyNumber();
+            }
+        });
+
+        $('#mobileOtpBtn').click(function (e) {
+            e.preventDefault();
+
+            var formData = $('#mobileOtpForm').serialize();
+            $.ajax({
+                type: 'POST',
+                //url: '<?= base_url(); ?>verify_phone_otp',
+                url: $('#mobileOtpForm').attr('action'),
+                data: formData,
+                success: function (response) {
+                    var respObj = JSON.parse(response);
+                    if (respObj.status == 'success' || respObj.code == 1) {
+                        $('#opt_verified').val(1);
+                        $('#checkoutAddress').submit();
+                    } else {
+                        $('#otp-message').html('OTP verification failed');
+                    }
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+        });
+
+        function verifyNumber() {
+            event.preventDefault();
+            var formData = $('#checkoutAddress').serialize();
+            $.ajax({
+                type: 'POST',
+                url: '<?= base_url(); ?>verify_phone',
+                //url: $('#checkoutAddress').attr('action'),
+                data: formData,
+                success: function (response) {
+                    var respObj = JSON.parse(response);
+                    if(respObj.status == 'verified') {
+                        $('#checkoutAddress').off('submit'); // Unbind existing submit handler
+                        $('#checkoutAddress').submit();
+                    }
+                    else if (respObj.status == 'success' || respObj.code == 1) {
+
+                            $('#mobileOTP').off('click', handleMobileOTPClick);
+                            document.getElementById('mobileOTP').style.color = 'grey';
+                            document.getElementById('mobileOTP').style.cursor = 'none';
+                            $('#verifyMobileModal').modal('show');
+                            document.getElementById('identifier').innerHTML = $('#mobile_number').val();
+                            document.getElementById('identifier_input').value = $('#mobile_number').val();
+
+                            const countdownDuration = 60; // Duration in seconds
+                            const countdownDisplay = document.getElementById("register-clock");
+
+                            let timer = countdownDuration, minutes, seconds;
+                            const intervalId = setInterval(function () {
+                                minutes = parseInt(timer / 60, 10);
+                                seconds = parseInt(timer % 60, 10);
+
+                                countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                                if (--timer < 0) {
+                                    clearInterval(intervalId);
+                                    document.getElementById('mobileOTP').style.color = '#662d91';
+                                    document.getElementById('mobileOTP').style.cursor = 'pointer';
+                                    $('#mobileOTP').click(handleMobileOTPClick);
+                                }
+                            }, 1000);
+                        
+
+                    } else {
+                        alert('Mobile verification failed');
+                    }
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
         }
 
-        var first_name = $('#first_name');
+        function handleMobileOTPClick() {
+            var formData = $('#checkoutAddress').serialize();
+            $.ajax({
+                type: 'POST',
+                url: '<?= base_url(); ?>verify_phone',
+                data: formData,
+                success: function (response) {
+                    var respObj = JSON.parse(response);
+                    if (respObj.status == 'success' || respObj.code == 1) {
+                        $('#mobileOTP').off('click', handleMobileOTPClick);
+                        document.getElementById('mobileOTP').style.color = 'grey';
+                        document.getElementById('mobileOTP').style.cursor = 'none';
+                        $('#mobileModal').modal('show');
+                        document.getElementById('identifier').innerHTML = $('#mobile_number').val();
+                        document.getElementById('identifier_input').value = $('#mobile_number').val();
 
-        if (first_name.val() === '') {
-            // Highlight the input field with an error
-            first_name.addClass('error');
-            event.preventDefault(); // Prevent form submission
-        }
+                        const countdownDuration = 60; // Duration in seconds
+                        const countdownDisplay = document.getElementById("register-clock");
 
-        var last_name = $('#last_name');
+                        let timer = countdownDuration, minutes, seconds;
+                        const intervalId = setInterval(function () {
+                            minutes = parseInt(timer / 60, 10);
+                            seconds = parseInt(timer % 60, 10);
 
-        if (last_name.val() === '') {
-            // Highlight the input field with an error
-            last_name.addClass('error');
-            event.preventDefault(); // Prevent form submission
-        }
+                            countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
 
-        // Add more validation for other fields as needed
-        if($('#opt_verified').val() == 0){
-            verifyNumber();
+                            if (--timer < 0) {
+                                clearInterval(intervalId);
+                                document.getElementById('mobileOTP').style.color = '#662d91';
+                                document.getElementById('mobileOTP').style.cursor = 'pointer';
+                                $('#mobileOTP').click(handleMobileOTPClick);
+                            }
+                        }, 1000);
+
+                    } else {
+                        alert('Mobile verification failed');
+                    }
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
         }
     });
-
-    $('#mobileOtpBtn').click(function (e) {
-        e.preventDefault(); 
-
-        var formData = $('#mobileOtpForm').serialize();
-        $.ajax({
-            type: 'POST',
-            //url: '<?= base_url(); ?>verify_phone_otp',
-            url: $('#mobileOtpForm').attr('action'),
-            data: formData,
-            success: function (response) {
-                var respObj = JSON.parse(response);
-                if (respObj.status == 'success' || respObj.code == 1) {
-                    $('#opt_verified').val(1);
-                    $('#checkoutAddress').submit();
-                } else {
-                    $('#otp-message').html('OTP verification failed');
-                }
-            },
-            error: function (error) {
-                console.error(error);
-            }
-        });
-    });
-
-    function verifyNumber(){
-        event.preventDefault();
-        var formData = $('#checkoutAddress').serialize();
-        $.ajax({
-            type: 'POST',
-            url: '<?= base_url(); ?>verify_phone',
-            //url: $('#checkoutAddress').attr('action'),
-            data: formData,
-            success: function (response) {
-                var respObj = JSON.parse(response);
-                if (respObj.status == 'success' || respObj.code == 1) {
-                    $('#mobileOTP').off('click', handleMobileOTPClick);
-                    document.getElementById('mobileOTP').style.color = 'grey';
-                    document.getElementById('mobileOTP').style.cursor = 'none';
-                    $('#verifyMobileModal').modal('show');
-                    document.getElementById('identifier').innerHTML = $('#mobile_number').val();
-                    document.getElementById('identifier_input').value = $('#mobile_number').val();
-
-                    const countdownDuration = 60; // Duration in seconds
-                    const countdownDisplay = document.getElementById("register-clock");
-                    
-                    let timer = countdownDuration, minutes, seconds;
-                    const intervalId = setInterval(function () {
-                        minutes = parseInt(timer / 60, 10);
-                        seconds = parseInt(timer % 60, 10);
-
-                        countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
-
-                        if (--timer < 0) {
-                            clearInterval(intervalId);
-                            document.getElementById('mobileOTP').style.color = '#662d91';
-                            document.getElementById('mobileOTP').style.cursor = 'pointer';
-                            $('#mobileOTP').click(handleMobileOTPClick);
-                        }
-                    }, 1000);
-
-                } else {
-                    alert('Mobile verification failed');
-                }
-            },
-            error: function (error) {
-                console.error(error);
-            }
-        });
-    }
-
-    function handleMobileOTPClick(){
-        var formData = $('#checkoutAddress').serialize();
-        $.ajax({
-            type: 'POST',
-            url: '<?= base_url(); ?>verify_phone',
-            data: formData,
-            success: function (response) {
-                var respObj = JSON.parse(response);
-                if (respObj.status == 'success' || respObj.code == 1) {
-                    $('#mobileOTP').off('click', handleMobileOTPClick);
-                    document.getElementById('mobileOTP').style.color = 'grey';
-                    document.getElementById('mobileOTP').style.cursor = 'none';
-                    $('#mobileModal').modal('show');
-                    document.getElementById('identifier').innerHTML = $('#mobile_number').val();
-                    document.getElementById('identifier_input').value = $('#mobile_number').val();
-
-                    const countdownDuration = 60; // Duration in seconds
-                    const countdownDisplay = document.getElementById("register-clock");
-                    
-                    let timer = countdownDuration, minutes, seconds;
-                    const intervalId = setInterval(function () {
-                        minutes = parseInt(timer / 60, 10);
-                        seconds = parseInt(timer % 60, 10);
-
-                        countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
-
-                        if (--timer < 0) {
-                            clearInterval(intervalId);
-                            document.getElementById('mobileOTP').style.color = '#662d91';
-                            document.getElementById('mobileOTP').style.cursor = 'pointer';
-                            $('#mobileOTP').click(handleMobileOTPClick);
-                        }
-                    }, 1000);
-
-                } else {
-                    alert('Mobile verification failed');
-                }
-            },
-            error: function (error) {
-                console.error(error);
-            }
-        });
-    }
-});
 
     function initMap() {
         let map = new google.maps.Map(document.getElementById("load_map"), {
@@ -488,7 +514,7 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
         });
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                function (position) {     
+                function (position) {
                     const userLocation = {
                         lat: <?php echo $latitude ? $latitude : 'position.coords.latitude'; ?>,
                         lng: <?php echo $longitude ? $longitude : 'position.coords.longitude'; ?>
@@ -629,5 +655,5 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
     }
 
     // Load the map when the page is loaded
-    //google.maps.event.addDomListener(window, 'load', initMap('<?=$latitude?>','<?=$longitude;?>'));
+    //google.maps.event.addDomListener(window, 'load', initMap('<?= $latitude ?>','<?= $longitude; ?>'));
 </script>

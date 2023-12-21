@@ -375,7 +375,7 @@ class Main extends MY_Shop_Controller
     }
 
     public function sendOTP($company_id, $identifier, $medium){
-
+        
         $otp = mt_rand(100000, 999999);
 
         $otp_data = [
@@ -718,7 +718,9 @@ class Main extends MY_Shop_Controller
 
         $company_id = $this->session->userdata('company_id');
         $company_data = $this->shop_model->getCompanyByID($company_id);
-
+         //get customer verified numbers
+         $verify_phone_numbers = $this->shop_model->getCustomerVerifiedNumbers();
+        
         if($company_data){
             if($this->input->post('mobile_number')){
                 $mobile = $this->input->post('mobile_number');
@@ -726,6 +728,11 @@ class Main extends MY_Shop_Controller
                 $mobile = $this->input->get('mobile_number');
             }
             
+            if(in_array($mobile, $verify_phone_numbers)) {
+                echo json_encode(['status' => 'verified', 'message' => 'Already Verified']);
+                exit;
+            }
+           
             $otp_sent = $this->sendOTP($company_id, $mobile, 'mobile');
         }else{
             echo json_encode(['status' => 'error', 'message' => 'User data does not exist']);
