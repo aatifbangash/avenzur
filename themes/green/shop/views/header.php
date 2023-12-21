@@ -352,7 +352,18 @@
                   </table>
                 <div class="d-flex">
                   <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">View Cart</a>
-                  <a class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center checkout-link">Checkout</a>
+                  <?php
+                    if ($loggedIn) {
+                        ?>
+                        <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">Checkout</a>
+                        <?php
+                    }else{
+                      ?>
+                        <a class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center checkout-link">Checkout</a>
+                      <?php
+                    }
+                  ?>
+                  
                 </div>
               </div>
 
@@ -482,9 +493,23 @@
             </div>
             <div class="modal-footer border-0 pb-4 d-flex flex-nowrap">
                 <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0">
-                <a class="checkout-link" style="color: #fff;text-decoration: none;">
-                  Checkout
-                </a>
+                  <?php 
+                    if ($loggedIn) {
+                      ?>
+                        <a href="<?= site_url('cart/checkout'); ?>" style="color: #fff;text-decoration: none;">
+                          Checkout
+                        </a>
+                      <?php
+                    }else{
+                      ?>
+                        <a class="checkout-link" style="color: #fff;text-decoration: none;">
+                          Checkout
+                        </a>
+                      <?php
+                    }
+                  
+                  ?>
+                
                 </button>
                 <button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0" data-bs-dismiss="modal">Continue Shopping</button>
             </div>
