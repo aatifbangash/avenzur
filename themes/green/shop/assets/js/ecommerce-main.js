@@ -690,7 +690,7 @@ $(document).ready(function () {
   }
 
   $(document).on("click", '.checkout-link', function (event){
-    $('.myaccountForm').modal('show');
+    $('.myaccountForm').show();
     var myaccountForm = document.getElementById('myaccountForm');
     myaccountForm.style.position = 'absolute';
     myaccountForm.style.inset = '0px auto auto 0px';
