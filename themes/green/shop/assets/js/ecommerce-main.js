@@ -692,6 +692,7 @@ $(document).ready(function () {
   $(document).on("click", '.checkout-link', function (event){
     $('.myaccountForm').show();
     $('#cart-contents').hide();
+    $('#productPop').modal('hide');
     var myaccountForm = document.getElementById('myaccountForm');
     myaccountForm.style.position = 'absolute';
     myaccountForm.style.inset = '0px auto auto 0px';
