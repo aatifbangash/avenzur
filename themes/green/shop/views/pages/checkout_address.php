@@ -135,7 +135,13 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                             <div class="card" style="border:none">
                                 <span class="text-bold padding-bottom-md fw-bold mb-3"
                                     style="font-size:20px;font-weight: bold;color: #662d91;">
-                                    New Address Details
+                                    <?php 
+                                        if($action_type == 'editaddress'){
+                                            echo lang('Update address details');
+                                        }else{
+                                            echo lang('New address details');
+                                        }
+                                    ?>
                                     <?php
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'checkoutAddress'];
                                     echo form_open('shop/saveCheckoutAddress', $attrib);
