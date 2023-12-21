@@ -359,7 +359,7 @@
                         <?php
                     }else{
                       ?>
-                        <a class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center checkout-link">Checkout</a>
+                        <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">Checkout</a>
                       <?php
                     }
                   ?>
@@ -502,7 +502,7 @@
                       <?php
                     }else{
                       ?>
-                        <a class="checkout-link" style="color: #fff;text-decoration: none;">
+                        <a href="<?= site_url('cart'); ?>" style="color: #fff;text-decoration: none;">
                           Checkout
                         </a>
                       <?php
