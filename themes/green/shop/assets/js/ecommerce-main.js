@@ -704,9 +704,9 @@ $(document).ready(function () {
       }
   });
 
-  $(document).on("click", '#login-btn-trigger', function (event){
+  /*$(document).on("click", '#login-btn-trigger', function (event){
     $('#myaccountForm').show();
-  });
+  });*/
 
   $(document).on("click", '.checkout-link', function (event){
     $('#cart-contents').hide();
