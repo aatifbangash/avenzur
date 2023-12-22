@@ -58,6 +58,18 @@ class Shop_model extends CI_Model
         return $this->db->update('companies', ['mobile_verified' => 1], ['id' => $company_id]);
     }
 
+    public function get_company_details($address_id){
+        return $this->db->get_where('companies', ['id' => $address_id], 1)->row();
+    }
+
+    public function get_activate_phone($company_id, $mobile, $address_id){
+        return $this->db->get_where('addresses', ['id' => $address_id, 'company_id' => $company_id, 'phone' => $mobile], 1)->row();
+    }
+
+    public function activate_phone($company_id, $mobile, $address_id){
+        return $this->db->update('addresses', ['mobile_verified' => 1], ['id' => $address_id, 'company_id' => $company_id, 'phone' => $mobile]);
+    }
+
     public function validate_otp($identifer, $otp)
     {
         $uniqueColumns = array('identifier' => $identifer, 'otp' => $otp);
@@ -196,6 +208,14 @@ class Shop_model extends CI_Model
 
     public function getAddressByID($id)
     {
+        if($id == 'default' || $id == 0) {
+            $address_row = $this->db->get_where('companies', ['id' => $this->session->userdata('company_id')])->row();
+            if (isset($address_row->address)) {
+                $address_row->line1 = $address_row->address;
+                unset($address_row->address);
+            }
+            return $address_row;
+        }
         return $this->db->get_where('addresses', ['id' => $id], 1)->row();
     }
 
@@ -204,20 +224,27 @@ class Shop_model extends CI_Model
         return $this->db->get_where('addresses', ['company_id' => $this->session->userdata('company_id')])->result();
     }
 
-    public function getDefaultChechoutAddress($lastAddress = false)
+    public function getDefaultChechoutAddress($address_id = null)
     {
-        if ($lastAddress) {
-
-            $this->db->select('*');
-            $this->db->from('addresses');
-            $this->db->where('company_id', $this->session->userdata('company_id'));
-            $this->db->order_by('id', 'DESC'); 
-            $this->db->limit(1); 
-
-            return $result = $this->db->get()->result();
-          
+        if ($address_id != 'default' && is_numeric($address_id)) {
+           return $this->db->get_where('addresses', ['id' => $address_id, 'company_id' => $this->session->userdata('company_id')])->row();
         }
-        return $this->db->get_where('addresses', ['company_id' => $this->session->userdata('company_id'), 'is_default' => 1])->result();
+        return $this->db->get_where('companies', ['id' => $this->session->userdata('company_id')])->row();
+    }
+
+    public function getCustomerVerifiedNumbers() {
+       $verify_address =  $this->db->get_where('addresses', ['company_id' => $this->session->userdata('company_id'), 'mobile_verified' => 1])->result();
+       $verify_row     = $this->db->get_where('companies', ['id' => $this->session->userdata('company_id'), 'mobile_verified' => 1])->row();
+       $verify_phone_numbers = array() ;
+       if(count($verify_address) > 0) { 
+        foreach ($verify_address as $key => $value) {
+            $verify_phone_numbers[] = $value->phone;
+         }
+       }
+       if(!empty($verify_row)) {
+            $verify_phone_numbers[] = $verify_row->phone;
+       }
+       return $verify_phone_numbers;
     }
 
     public function getAllBrands()

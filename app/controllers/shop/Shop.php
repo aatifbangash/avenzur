@@ -26,10 +26,10 @@ class Shop extends MY_Shop_Controller
         $this->form_validation->set_rules('line1', lang('line1'), 'trim|required');
         // $this->form_validation->set_rules('line2', lang("line2"), 'trim|required');
         $this->form_validation->set_rules('city', lang('city'), 'trim|required');
-//        $this->form_validation->set_rules('state', lang('state'), 'trim|required');
+        //        $this->form_validation->set_rules('state', lang('state'), 'trim|required');
         // $this->form_validation->set_rules('postal_code', lang("postal_code"), 'trim|required');
         $this->form_validation->set_rules('country', lang('country'), 'trim|required');
-//        $this->form_validation->set_rules('phone', lang('phone'), 'trim|required');
+        //        $this->form_validation->set_rules('phone', lang('phone'), 'trim|required');
 
         if ($this->form_validation->run() == true) {
             $user_addresses = $this->shop_model->getAddresses();
@@ -82,37 +82,99 @@ class Shop extends MY_Shop_Controller
         $this->form_validation->set_rules('last_name', lang('last_name'), 'trim|required');
 
         if ($this->form_validation->run() == true) {
-            $user_addresses = $this->shop_model->getAddresses();
-            
-            $data = ['line1' => $this->input->post('address_line_1'),
-                'line2' => $this->input->post('address_line_2'),
-                'city' => $this->input->post('city'),
-                'state' => $this->input->post('state'),
-                'phone' => $this->input->post('mobile_number'),
-                'country' => $this->input->post('country'),
-                'latitude' => $this->input->post('latitude'),
-                'longitude' => $this->input->post('longitude'),
-                'company_id' => $this->session->userdata('company_id'),
-                'is_default' =>  $this->input->post('is_default') ? 1 : 0,
-                'first_name' => $this->input->post('first_name'),
-                'last_name' => $this->input->post('last_name'),
-                ];
+            // update address
+            $action_type_id = $this->input->post('action_type_id');
+            $verify_phone_numbers = $this->shop_model->getCustomerVerifiedNumbers();
+                // insert default address
+                $default_address = $this->shop_model->getDefaultChechoutAddress();
+                if( in_array($this->input->post('mobile_number') , $verify_phone_numbers) ) {
+                    $mobile_verified = 1;
+                }else {
+                    $mobile_verified = $this->input->post('opt_verified');
+                }
 
-                if (count($user_addresses) >= 6) {
-                    $this->sma->send_json(['status' => 'error', 'message' => lang('already_have_max_addresses'), 'level' => 'error']);
+                if ($default_address->phone == '' || $action_type_id == 'default') {
+                    $data = ['address' => $this->input->post('address_line_1'),
+                        'line2' => $this->input->post('address_line_2'),
+                        'city' => $this->input->post('city'),
+                        'state' => $this->input->post('state'),
+                        'phone' => $this->input->post('mobile_number'),
+                        'country' => $this->input->post('country'),
+                        'latitude' => $this->input->post('latitude'),
+                        'longitude' => $this->input->post('longitude'),
+                        'first_name' => $this->input->post('first_name'),
+                        'last_name' => $this->input->post('last_name'),
+                        'mobile_verified' => $mobile_verified
+                    ];
+                    if($this->input->post('current_mobile_number') != $this->input->post('mobile_number')){ 
+                        // verify mobile number
+                    }
+
+                    $this->db->update('companies', $data, ['id' => $this->session->userdata('company_id')]);
+                    
+                    redirect('cart/checkout');
+                } else if($action_type_id != '' && is_numeric($action_type_id) ) {
+                  
+                    $data = ['line1' => $this->input->post('address_line_1'),
+                        'line2' => $this->input->post('address_line_2'),
+                        'city' => $this->input->post('city'),
+                        'state' => $this->input->post('state'),
+                        'phone' => $this->input->post('mobile_number'),
+                        'country' => $this->input->post('country'),
+                        'latitude' => $this->input->post('latitude'),
+                        'longitude' => $this->input->post('longitude'),
+                        'company_id' => $this->session->userdata('company_id'),
+                        'first_name' => $this->input->post('first_name'),
+                        'last_name' => $this->input->post('last_name'),
+                        'mobile_verified' => $mobile_verified
+                    ];
+                    $this->db->update('addresses', $data, ['id' => $action_type_id]);
+                    redirect('cart/checkout?action=changeaddress');
+                } else {
+                    $user_addresses = $this->shop_model->getAddresses();
+                    $data = ['line1' => $this->input->post('address_line_1'),
+                        'line2' => $this->input->post('address_line_2'),
+                        'city' => $this->input->post('city'),
+                        'state' => $this->input->post('state'),
+                        'phone' => $this->input->post('mobile_number'),
+                        'country' => $this->input->post('country'),
+                        'latitude' => $this->input->post('latitude'),
+                        'longitude' => $this->input->post('longitude'),
+                        'company_id' => $this->session->userdata('company_id'),
+                        'first_name' => $this->input->post('first_name'),
+                        'last_name' => $this->input->post('last_name'),
+                        'mobile_verified' => $mobile_verified
+                    ];
+                    if (count($user_addresses) >= 6) {
+                        $this->session->set_flashdata('error', lang('already_have_max_addresses'));
+                        redirect('shop/addresses');
+                        // $this->sma->send_json(['status' => 'error', 'message' => lang('already_have_max_addresses'), 'level' => 'error']);
+                    }
+                    
+                    $this->db->insert('addresses', $data);
+                    //$this->session->set_flashdata('message', lang('address_added'));
+                    //$this->sma->send_json(['redirect' => $_SERVER['HTTP_REFERER']]);
+                    redirect('cart/checkout?action=changeaddress');
                 }
-                //check if set this address default, update other default=0
-                if($this->input->post('is_default')) {  
-                        $this->db->update('addresses', ['is_default' => 0] , ['company_id' => $this->session->userdata('company_id'),
-                                                             'is_default' => 1]);
-                }
-                $this->db->insert('addresses', $data);
-                //$this->session->set_flashdata('message', lang('address_added'));
-                //$this->sma->send_json(['redirect' => $_SERVER['HTTP_REFERER']]);
             
-        } 
-        redirect('cart/checkout');
-        
+
+
+        }
+
+
+    }
+
+    public function deleteDeliveryAddress() {
+        if (!$this->loggedIn) {
+            $this->sma->send_json(['status' => 'error', 'message' => lang('please_login')]);
+        }
+        $this->form_validation->set_rules('addressId', lang('addressId'), 'trim|required');
+
+        if ($this->form_validation->run() == true) {
+            $addressId = $this->input->post('addressId');
+            $this->db->delete('addresses', ['id' => $addressId, 'company_id' => $this->session->userdata('company_id')]);
+            redirect('cart/checkout?action=changeaddress');
+        }
     }
 
     // Customer address list
@@ -223,7 +285,7 @@ class Shop extends MY_Shop_Controller
             $this->form_validation->set_rules('name', lang('name'), 'trim|required');
             $this->form_validation->set_rules('email', lang('email'), 'trim|required|valid_email');
             $this->form_validation->set_rules('phone', lang('phone'), 'trim|required');
-//            $this->form_validation->set_rules('billing_line1', lang('billing_address') . ' ' . lang('line1'), 'trim|required');
+            //            $this->form_validation->set_rules('billing_line1', lang('billing_address') . ' ' . lang('line1'), 'trim|required');
 //            $this->form_validation->set_rules('billing_city', lang('billing_address') . ' ' . lang('city'), 'trim|required');
 //            $this->form_validation->set_rules('billing_country', lang('billing_address') . ' ' . lang('country'), 'trim|required');
             $this->form_validation->set_rules('shipping_line1', lang('shipping_address') . ' ' . lang('line1'), 'trim|required');
@@ -232,7 +294,7 @@ class Shop extends MY_Shop_Controller
             $this->form_validation->set_rules('shipping_phone', lang('shipping_address') . ' ' . lang('phone'), 'trim|required');
         }
         if ($guest_checkout && $this->Settings->indian_gst) {
-//            $this->form_validation->set_rules('billing_state', lang('billing_address') . ' ' . lang('state'), 'trim|required');
+            //            $this->form_validation->set_rules('billing_state', lang('billing_address') . ' ' . lang('state'), 'trim|required');
             $this->form_validation->set_rules('shipping_state', lang('shipping_address') . ' ' . lang('state'), 'trim|required');
         }
 
@@ -258,7 +320,7 @@ class Shop extends MY_Shop_Controller
                     if (!($customer = $this->shop_model->getCompanyByEmail($this->input->post('email')))) {
                         $customer = new stdClass();
                         $customer->name = $this->input->post('name') . ($this->input->post('last_name') ?: '');
-                        $customer->company = 'Pharma Drug Store';//$this->input->post('company');
+                        $customer->company = 'Pharma Drug Store'; //$this->input->post('company');
                         $customer->phone = $this->input->post('phone');
                         $customer->email = $this->input->post('email');
                         $customer->address = $this->input->post('billing_line1') . '<br>' . $this->input->post('billing_line2');
@@ -403,7 +465,7 @@ class Shop extends MY_Shop_Controller
                     'paid' => 0,
                     'created_by' => $this->session->userdata('user_id') ? $this->session->userdata('user_id') : null,
                     'shop' => 1,
-                    'address_id' => ($this->input->post('address') == 'new') ? '' : $address->id,
+                    'address_id' => ($this->input->post('address') == 'new' || $this->input->post('address') == 'default' ) ? 0 : $address->id,
                     'hash' => hash('sha256', microtime() . mt_rand()),
                     'payment_method' => $this->input->post('payment_method'),
                     'delivery_type' => $this->input->post('express_delivery')
@@ -415,7 +477,7 @@ class Shop extends MY_Shop_Controller
                 }
 
                 if ($new_customer) {
-                    $customer = (array)$customer;
+                    $customer = (array) $customer;
                 }
                 // $this->sma->print_arrays($data, $products, $customer, $address);
 
@@ -504,7 +566,7 @@ class Shop extends MY_Shop_Controller
 
         // Use the Client to make requests to the Twilio REST API
         $client->messages->create(
-        // The number you'd like to send the message to
+            // The number you'd like to send the message to
             '+966511065098',
             [
                 // A Twilio phone number you purchased at https://console.twilio.com
@@ -559,7 +621,7 @@ class Shop extends MY_Shop_Controller
             $p_Password = 'R123456789$r';
             $p_Version = '1.0';
 
-            $p_soapLink = $dp->test_shippment_url;//'https://ws.sbx.aramex.net/ShippingAPI.V2/Shipping/Service_1_0.svc?wsdl';
+            $p_soapLink = $dp->test_shippment_url; //'https://ws.sbx.aramex.net/ShippingAPI.V2/Shipping/Service_1_0.svc?wsdl';
         }
 
 
@@ -569,10 +631,10 @@ class Shop extends MY_Shop_Controller
 
 
         $p_sale_id = $sale_id;
-        $p_transaction = (int)(microtime(true) * 1000);
+        $p_transaction = (int) (microtime(true) * 1000);
 
 
-        $cutomer_array = (array)$customer;
+        $cutomer_array = (array) $customer;
 
         //print_r($cutomer_array);
 
@@ -586,7 +648,7 @@ class Shop extends MY_Shop_Controller
         $c_PhoneNumber = $cutomer_array['phone'];
         $c_CellPhone = $cutomer_array['phone'];
         $c_EmailAddress = $cutomer_array['email'];
-        $c_CompanyName = 'Pharma Drug Store';//$cutomer_array['company'];
+        $c_CompanyName = 'Pharma Drug Store'; //$cutomer_array['company'];
         $c_State = $cutomer_array['state'];
 
         $product_weight = 0.0;
@@ -603,9 +665,9 @@ class Shop extends MY_Shop_Controller
                 'PackageType' => 'Box',
                 'Quantity' => $product['quantity'],
                 'Weight' => array(
-                    'Value' => '0.20',//$product['product_weight'],
-                    'Unit' => 'Kg',
-                ),
+                        'Value' => '0.20', //$product['product_weight'],
+                        'Unit' => 'Kg',
+                    ),
                 'Comments' => 'Medicine Boxes',
                 'Reference' => ''
             );
@@ -621,14 +683,14 @@ class Shop extends MY_Shop_Controller
                         'Reference2' => $p_sale_id,
                         'AccountNumber' => $p_accountnumber,
                         'PartyAddress' => array(
-                            'Line1' => $p_line1,
-                            'Line2' => '',
-                            'Line3' => '',
-                            'City' => $p_city,
-                            'StateOrProvinceCode' => '',
-                            'PostCode' => $p_postcode,
-                            'CountryCode' => $p_countrycode
-                        ),
+                                'Line1' => $p_line1,
+                                'Line2' => '',
+                                'Line3' => '',
+                                'City' => $p_city,
+                                'StateOrProvinceCode' => '',
+                                'PostCode' => $p_postcode,
+                                'CountryCode' => $p_countrycode
+                            ),
                         'Contact' => array(
                             'Department' => '',
                             'PersonName' => $p_personname,
@@ -650,14 +712,14 @@ class Shop extends MY_Shop_Controller
                         'Reference2' => $p_sale_id,
                         'AccountNumber' => $p_accountnumber,
                         'PartyAddress' => array(
-                            'Line1' => $c_Line1,
-                            'Line2' => '',
-                            'Line3' => '',
-                            'City' => $c_City,
-                            'StateOrProvinceCode' => (!empty($c_State)) ? $c_State : '',
-                            'PostCode' => (!empty($c_PostCode)) ? $c_PostCode : '',
-                            'CountryCode' => $c_CountryCode
-                        ),
+                                'Line1' => $c_Line1,
+                                'Line2' => '',
+                                'Line3' => '',
+                                'City' => $c_City,
+                                'StateOrProvinceCode' => (!empty($c_State)) ? $c_State : '',
+                                'PostCode' => (!empty($c_PostCode)) ? $c_PostCode : '',
+                                'CountryCode' => $c_CountryCode
+                            ),
 
                         'Contact' => array(
                             'Department' => '',
@@ -680,14 +742,14 @@ class Shop extends MY_Shop_Controller
                         'Reference2' => '',
                         'AccountNumber' => '',
                         'PartyAddress' => array(
-                            'Line1' => '',
-                            'Line2' => '',
-                            'Line3' => '',
-                            'City' => '',
-                            'StateOrProvinceCode' => '',
-                            'PostCode' => '',
-                            'CountryCode' => ''
-                        ),
+                                'Line1' => '',
+                                'Line2' => '',
+                                'Line3' => '',
+                                'City' => '',
+                                'StateOrProvinceCode' => '',
+                                'PostCode' => '',
+                                'CountryCode' => ''
+                            ),
                         'Contact' => array(
                             'Department' => '',
                             'PersonName' => '',
@@ -718,57 +780,57 @@ class Shop extends MY_Shop_Controller
                     'OperationsInstructions' => '',
 
                     'Details' => array(
-                        'Dimensions' => array(
-                            'Length' => '',
-                            'Width' => '',
-                            'Height' => '',
-                            'Unit' => 'cm',
+                            'Dimensions' => array(
+                                'Length' => '',
+                                'Width' => '',
+                                'Height' => '',
+                                'Unit' => 'cm',
 
+                            ),
+
+                            'ActualWeight' => array(
+                                'Value' => ($product_weight >= 1) ? $product_weight : 1.0,
+                                'Unit' => 'Kg'
+                            ),
+
+                            'ProductGroup' => 'EXP',
+                            'ProductType' => 'PDX',
+                            'PaymentType' => 'P',
+                            'PaymentOptions' => '',
+                            'Services' => '',
+                            'NumberOfPieces' => 1,
+                            'DescriptionOfGoods' => 'Medicine',
+                            'GoodsOriginCountry' => $p_countrycode,
+
+                            'CashOnDeliveryAmount' => array(
+                                    'Value' => 0,
+                                    'CurrencyCode' => ''
+                                ),
+
+                            'InsuranceAmount' => array(
+                                'Value' => 0,
+                                'CurrencyCode' => ''
+                            ),
+
+                            'CollectAmount' => array(
+                                'Value' => 0,
+                                'CurrencyCode' => ''
+                            ),
+
+                            'CashAdditionalAmount' => array(
+                                'Value' => 0,
+                                'CurrencyCode' => ''
+                            ),
+
+                            'CashAdditionalAmountDescription' => '',
+
+                            'CustomsValueAmount' => array(
+                                    'Value' => 0,
+                                    'CurrencyCode' => ''
+                                ),
+
+                            'Items' => array()
                         ),
-
-                        'ActualWeight' => array(
-                            'Value' => ($product_weight >= 1) ? $product_weight : 1.0,
-                            'Unit' => 'Kg'
-                        ),
-
-                        'ProductGroup' => 'EXP',
-                        'ProductType' => 'PDX',
-                        'PaymentType' => 'P',
-                        'PaymentOptions' => '',
-                        'Services' => '',
-                        'NumberOfPieces' => 1,
-                        'DescriptionOfGoods' => 'Medicine',
-                        'GoodsOriginCountry' => $p_countrycode,
-
-                        'CashOnDeliveryAmount' => array(
-                            'Value' => 0,
-                            'CurrencyCode' => ''
-                        ),
-
-                        'InsuranceAmount' => array(
-                            'Value' => 0,
-                            'CurrencyCode' => ''
-                        ),
-
-                        'CollectAmount' => array(
-                            'Value' => 0,
-                            'CurrencyCode' => ''
-                        ),
-
-                        'CashAdditionalAmount' => array(
-                            'Value' => 0,
-                            'CurrencyCode' => ''
-                        ),
-
-                        'CashAdditionalAmountDescription' => '',
-
-                        'CustomsValueAmount' => array(
-                            'Value' => 0,
-                            'CurrencyCode' => ''
-                        ),
-
-                        'Items' => array()
-                    ),
                 ),
             ),
 
@@ -818,7 +880,7 @@ class Shop extends MY_Shop_Controller
             $auth_call = $soapClient->CreateShipments($params);
 
             //var_dump((array)$auth_call);
-            $data = json_decode(json_encode($auth_call), true);//(array)$auth_call;
+            $data = json_decode(json_encode($auth_call), true); //(array)$auth_call;
 
 
             //var_dump($data);
@@ -942,7 +1004,9 @@ class Shop extends MY_Shop_Controller
                 $this->data['rows'] = $this->shop_model->getOrderItems($id);
                 $this->data['customer'] = $this->site->getCompanyByID($order->customer_id);
                 $this->data['biller'] = $this->site->getCompanyByID($order->biller_id);
+                $this->data['address'] = array();
                 $this->data['address'] = $this->shop_model->getAddressByID($order->address_id);
+                
                 $this->data['return_sale'] = $order->return_id ? $this->shop_model->getOrder(['id' => $id]) : null;
                 $this->data['return_rows'] = $order->return_id ? $this->shop_model->getOrderItems($order->return_id) : null;
                 $this->data['paypal'] = $this->shop_model->getPaypalSettings();
@@ -954,7 +1018,9 @@ class Shop extends MY_Shop_Controller
                 $this->data['stripe_secret_key'] = $this->config->item('stripe_secret_key');
                 $this->data['stripe_publishable_key'] = $this->config->item('stripe_publishable_key');
                 $this->data['all_categories'] = $this->shop_model->getAllCategories();
-                $this->page_construct('pages/view_order', $this->data);
+                //$this->page_construct('pages/view_order', $this->data);
+                $this->cart->destroy();
+                $this->page_construct('pages/thankyou', $this->data);
             } else {
                 $this->session->set_flashdata('error', lang('access_denied'));
                 redirect('/');
@@ -1006,13 +1072,16 @@ class Shop extends MY_Shop_Controller
     {
 
         if (!empty($_POST['formSubmitted'])) {
-            if ($this->shop_model->addContactUsRecord([
-                'user_id' => $this->session->userdata('user_id') ? $this->session->userdata('user_id') : null,
-                'type' => $_POST['type'],
-                'content' => $_POST['content']
-            ]))
+            if (
+                $this->shop_model->addContactUsRecord([
+                    'user_id' => $this->session->userdata('user_id') ? $this->session->userdata('user_id') : null,
+                    'type' => $_POST['type'],
+                    'content' => $_POST['content']
+                ])
+            )
                 // TODO(Will sent an email notification to the admin here)
-                $this->session->set_flashdata('success_message', 'Feedback submitted successfully!');;
+                $this->session->set_flashdata('success_message', 'Feedback submitted successfully!');
+            ;
         }
 
         $this->data['page_title'] = "Contact Us";
@@ -1447,7 +1516,7 @@ class Shop extends MY_Shop_Controller
         //$option_id = $analyzed['option_id'];
 
         $warehouse = $this->site->getWarehouseByID($warehouse_id);
-        $customer_group = "Retail";//$this->site->getCustomerGroupByID($customer->customer_group_id);
+        $customer_group = "Retail"; //$this->site->getCustomerGroupByID($customer->customer_group_id);
         $rows = $this->shop_model->getProductNames($sr, $warehouse_id, $category_id, $pos);
         $currencies = $this->site->getAllCurrencies();
 
@@ -1539,7 +1608,8 @@ class Shop extends MY_Shop_Controller
 
     public function refundData()
     {
-        $dt = date('Y-m-d');;
+        $dt = date('Y-m-d');
+        ;
 
         $data = array(
 

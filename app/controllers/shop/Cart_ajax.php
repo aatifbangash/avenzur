@@ -77,7 +77,7 @@ class Cart_ajax extends MY_Shop_Controller
 
     public function apply_coupon(){
         $coupon_code    = strtolower($this->input->post('coupon_code'));
-
+    
         if($coupon_code == 'welcom20'){
 
             $cart_arr = $this->cart;
@@ -87,19 +87,18 @@ class Cart_ajax extends MY_Shop_Controller
             $cart_total = $cart_total - $coupon_disc;
 
             $cart_contents = $this->cart->contents();
+            $cart_arr = array();
             foreach ($cart_contents as $item => $val) {
                 $data = [
                     'rowid'  => $val['rowid'],
                     'discount'  => ($val['price'] * $discount) / 100
                 ];
-                $this->cart->update($data);
+                array_push($cart_arr, $data);
             }
 
-            //$this->cart->set_discount($coupon_disc);
+            $this->cart->update($cart_arr);
 
-            echo '<pre>';
-            print_r($this->cart);
-            exit;
+            //$this->cart->set_discount($coupon_disc);
 
             $this->session->set_flashdata('message', 'Coupon Code Applied');
             redirect('cart');
@@ -210,6 +209,7 @@ class Cart_ajax extends MY_Shop_Controller
                     'image'      => $product->image,
                     'option'     => $selected,
                     'options'    => !empty($options) ? $options : null,
+                    'discount'   => 0,
                 ];
 
             }else{
@@ -226,6 +226,7 @@ class Cart_ajax extends MY_Shop_Controller
                     'image'      => $product->image,
                     'option'     => $selected,
                     'options'    => !empty($options) ? $options : null,
+                    'discount'   => 0,
                 ];
 
             }
@@ -283,11 +284,11 @@ class Cart_ajax extends MY_Shop_Controller
         $action = $this->input->get('action');
         $this->data['addresses']  = $this->loggedIn ? $this->shop_model->getAddresses() : false;
         $this->data['defaultAddress']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
-
+        
         //get dafault address
         if($this->loggedIn && ($action == 'changeaddress' || empty($this->data['defaultAddress'])) ) {
-        //if($action == 'changeaddress' || empty($this->data['addresses']))  {
-            $this->page_construct('pages/checkout_address', $this->data);
+        //if($action == 'changeaddress' || empty($this->data['addresses']))  {  
+            $this->page_construct('pages/checkout_address', $this->data);    
         }
         else{
 
@@ -295,8 +296,8 @@ class Cart_ajax extends MY_Shop_Controller
             $this->data['skrill']     = $this->shop_model->getSkrillSettings();
             $this->data['country'] = $this->settings_model->getallCountry();
             $this->data['countries'] = $this->settings_model->getCountries();
-
-
+    
+    
     //        $this->data['cities'] = $this->settings_model->getCities();
     //
     //        dd($this->data['cities']);
@@ -314,31 +315,60 @@ class Cart_ajax extends MY_Shop_Controller
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
         if ($this->cart->total_items() < 1) {
             $this->session->set_flashdata('reminder', lang('cart_is_empty'));
-            shop_redirect('products');
+             shop_redirect('products');
         }
-
+        $this->data['address_id'] = '';
         $action = $this->input->get('action');
+
+
+        $this->data['default_address']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
         $this->data['addresses']  = $this->loggedIn ? $this->shop_model->getAddresses() : false;
-        $this->data['defaultAddress']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
-        if($this->loggedIn && ($action == 'changeaddress' || empty($this->data['defaultAddress'])) ) {
+
+        if($this->loggedIn && (  $this->data['default_address']->phone == '' || in_array($action, array('addnewaddress', 'editaddress')) ) ) {
         //if($action == 'changeaddress' || empty($this->data['addresses']))  {
+            // for edit address
+            if($action == 'editaddress') {
+                $address_id =   $this->input->get('id');
+                if($address_id == 'default' || is_numeric($address_id)) {
+                    $this->data['selected_address_info']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress($address_id) : false;
+                    $this->data['address_id'] = $address_id;
+                    if(empty($this->data['selected_address_info'])) {
+                        redirect('cart/checkout') ;
+                    }
+                }
+            }
+            //get customer verified numbers
+            $verify_phone_numbers = $this->shop_model->getCustomerVerifiedNumbers();
+            $this->data['verify_phone_numbers'] = $verify_phone_numbers;
+            $this->data['action_type'] = $action;
             $this->page_construct('pages/checkout_address', $this->data);
+        }
+        else if( $this->loggedIn && $action == 'changeaddress' ) {
+
+            $this->page_construct('pages/delivery_address', $this->data);
         }
         else{
 
             $referrer = $this->input->server('HTTP_REFERER');
             $urlComponents = parse_url($referrer);
-
+      
         // Check if the query string is present
         if (isset($urlComponents['query'])) {
             // Parse the query string to get individual parameters
             parse_str($urlComponents['query'], $queryParams);
-
+         
             // Check if the 'action' parameter is present
             if (isset($queryParams['action']) &&  trim($queryParams['action']) == 'changeaddress') {
-                $this->data['defaultAddress']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress($lastAddress = true) : false;
+               // $this->data['defaultAddress']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress($lastAddress = true) : false;
             }
-        }        $this->data['paypal'] = $this->shop_model->getPaypalSettings();
+        } //$this->data['defaultAddress']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
+
+           if($this->session->get_userdata('changed_address')['changed_address']){
+                $this->data['default_address']  = $this->session->get_userdata('changed_address')['changed_address'];
+                //$this->data['default_address']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
+            }else{
+                $this->data['default_address']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
+            }       $this->data['paypal'] = $this->shop_model->getPaypalSettings();
         $this->data['skrill'] = $this->shop_model->getSkrillSettings();
         $this->data['country'] = $this->settings_model->getallCountry();
         $this->data['countries'] = $this->settings_model->getCountries();
@@ -353,7 +383,10 @@ class Cart_ajax extends MY_Shop_Controller
         $this->page_construct('pages/checkout-html', $this->data);
 
         }
+
     }
+    // ------end
+
 
     public function destroy()
     {

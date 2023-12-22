@@ -118,8 +118,8 @@
                       
                     </ul>
                 </div>
-                <div class="dropdown">
-                <button type="button" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                <div class="dropdown logindropdown-k">
+                <button type="button" id="login-btn-trigger" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
                   <?php
                     if ($loggedIn) {
                       ?>
@@ -159,7 +159,7 @@
                           if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
                         ?>
                         
-                        <div class="dropdown-menu p-3 myaccountForm validate">
+                        <div class="dropdown-menu p-3 myaccountForm validate" id="myaccountForm">
                         <div class="loginRCard px-4 w-100">
                             <div class="logo-k mb-5"> 
                                 <a class="navbar-brand" href="http://localhost/avenzur/">
@@ -191,7 +191,7 @@
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
                                     echo form_open('login', $attrib); 
                                 ?>
-                                <div class="controls logcardinput">
+                                <div class="controls logcardinput" id="inputContainer">
                                 
                                 <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
                                 
@@ -352,7 +352,18 @@
                   </table>
                 <div class="d-flex">
                   <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">View Cart</a>
-                  <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">Checkout</a>
+                  <?php
+                    if ($loggedIn) {
+                        ?>
+                        <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">Checkout</a>
+                        <?php
+                    }else{
+                      ?>
+                        <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">Checkout</a>
+                      <?php
+                    }
+                  ?>
+                  
                 </div>
               </div>
 
@@ -371,7 +382,7 @@
     <?php 
       
       $currentUri = $this->uri->uri_string(); 
-      if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
+      if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register' && $currentUri !== 'cart/checkout') {
         ?>
           <!-- Register Modal Starts -->
           <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
@@ -391,12 +402,12 @@
                                 echo form_open('register_otp', $attrib); 
                             ?>
                             <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="register_otp_1" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="register_otp_2" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="register_otp_3" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="register_otp_4" maxlength="1" /> 
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="register_otp_5" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="register_otp_6" maxlength="1" />
                                 <input type="hidden" id="identifier_input" name="identifier_input" value="" />
                             </div>
                             <div  class="text-center">
@@ -432,12 +443,12 @@
                                 echo form_open('login_otp', $attrib); 
                             ?>
                             <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="login_otp_1" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="login_otp_2" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="login_otp_3" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="login_otp_4" maxlength="1" /> 
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="login_otp_5" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="login_otp_6" maxlength="1" />
                                 <input type="hidden" id="identifierl_input" name="identifier_input" value="" />
                             </div>
                             
@@ -461,7 +472,7 @@
 
   <!-- product popup start -->
   <div class="modal fade" id="productPop" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered me-4">
         <div class="modal-content px-4 rounded-4">
             <div class="modal-header border-0">
                 
@@ -482,9 +493,23 @@
             </div>
             <div class="modal-footer border-0 pb-4 d-flex flex-nowrap">
                 <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0">
-                <a href="<?= site_url('cart'); ?>" style="color: #fff;text-decoration: none;">
-                  Checkout
-                </a>
+                  <?php 
+                    if ($loggedIn) {
+                      ?>
+                        <a href="<?= site_url('cart'); ?>" style="color: #fff;text-decoration: none;">
+                          Checkout
+                        </a>
+                      <?php
+                    }else{
+                      ?>
+                        <a href="<?= site_url('cart'); ?>" style="color: #fff;text-decoration: none;">
+                          Checkout
+                        </a>
+                      <?php
+                    }
+                  
+                  ?>
+                
                 </button>
                 <button type="submit"  class="btn text-white continueBtn w-50 rounded  mx-1 mt-0" data-bs-dismiss="modal">Continue Shopping</button>
             </div>

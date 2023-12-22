@@ -14,7 +14,7 @@ $cart_contents = $this->cart->contents();
 
                     <div class="col-sm-7">
                         <h3>Shopping Cart</h3>
-                        <div class="row bg-light ps-1 mt-5" id="cart-table-new" style="margin-inline: 3px;padding: 25px;">
+                        <div class="row bg-light ps-1 mt-5 shoppingCardmob" id="cart-table-new" style="margin-inline: 3px;padding: 25px;">
                             
                         </div>
                     </div>
@@ -32,20 +32,27 @@ $cart_contents = $this->cart->contents();
                             <h4>Coupon Code</h4>
                             <div class="d-flex">
                                 <?php
-                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'coupon_form'];
+                                    $attrib = ['class' => 'validate d-flex w-100', 'role' => 'form', 'id' => 'coupon_form'];
                                     echo form_open('apply_coupon', $attrib); 
                                 ?>
-                                <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="">
-                                <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;"> 
                                     <?php 
-                                        if(isset($cart_contents['coupon_disc'])){
-                                            echo 'Code applied!';
+                                        if($this->cart->get_total_discount() > 0){
+                                            ?>
+                                                <input type="text" name="coupon_code" disabled="disabled" class="form-control  rounded-0" placeholder="">
+                                                <button disabled="disabled" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="background: green;color: #fff;border: none;font-size:14px !important;width: 175px !important;">
+                                                    Code Applied
+                                                </button>
+                                            <?php
                                         }else{
-                                            echo 'Apply Code';
+                                            ?>
+                                                <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="">
+                                                <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;">
+                                                    Apply Code
+                                                </button>
+                                            <?php
+                                           
                                         }
                                     ?>   
-                                
-                                </button>
                                 <?php 
                                     echo form_close();
                                 ?>
@@ -63,10 +70,22 @@ $cart_contents = $this->cart->contents();
                                 <h4 class="m-0 fw-bold fs-5">Total <span class="fs-6 opacity-50">(Inclusive of VAT)</span></h4>
                                 <h4 class="m-0 fw-bold fs-5"><span id="total-after_discount">SAR 0</span></h4>
                             </div>
-
-                            <a href="<?= site_url('cart/checkout'); ?>" style="border:0px;background: none;" class="btn btn-danger btn-sm">
-                                <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 " style="font-size:18px !important;"> Checkout</button>
-                            </a>
+                            <?php 
+                                if ($loggedIn) {
+                                    ?>
+                                        <a href="<?= site_url('cart/checkout'); ?>" style="border:0px;background: none;" class="btn btn-danger btn-sm">
+                                            <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 " style="font-size:18px !important;"> Checkout</button>
+                                        </a>
+                                    <?php
+                                }else{
+                                    ?>
+                                        <a style="border:0px;background: none;" class="btn btn-danger btn-sm checkout-link">
+                                            <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 " style="font-size:18px !important;"> Checkout</button>
+                                        </a>
+                                    <?php
+                                }
+                            ?>
+                            
                             
                         </div>
                     </div>

@@ -832,7 +832,7 @@ input.qty.Qnum {
     padding-inline: 0;
   }
 }
-@media screen and (min-width: 600px) {
+@media screen and (min-width: 601px) {
   .loginPage .registerform {
     max-width: 450px;
     margin-inline: auto;
@@ -842,6 +842,26 @@ input.qty.Qnum {
   }
   .slick-next {
     right: -38px !important;
+  }
+  .modal-dialog-right {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - var(--bs-modal-margin) * 2);
+    justify-content: flex-end !important;
+    margin-right: 16px !important;
+  }
+  .dropdown.logindropdown-k {
+    position: initial !important;
+  }
+  div#myaccountForm {
+    position: fixed !important;
+    left: 0 !important;
+    transform: none !important;
+    right: 0 !important;
+    margin-inline: auto !important;
+    width: fit-content !important;
+    top: 17% !important;
+    box-shadow: 0px 0px 59px 522px #00000082;
   }
 }
 
@@ -1492,6 +1512,7 @@ h4.letstart {
   border-radius: 10px;
   margin-top: 25px;
 }
+
 .logsignBtns {
   background: #662d91;
   width: fit-content;
@@ -1559,17 +1580,17 @@ button.modalcloseBtn {
   .standard-div {
     gap: 6rem;
   }
-  .myaccountForm.cartform {
+  /* .myaccountForm.cartform {
     left: -9px !important;
-  }
+  } */
   #load_map {
     height: 400px !important;
     width: 100%;
   }
-  .dropdown-menu.myaccountForm.cartform {
+  /* .dropdown-menu.myaccountForm.cartform {
     right: 0 !important;
     left: auto !important;
-  }
+  } */
   .addtable {
     width: 100% !important;
   }
@@ -1904,5 +1925,17 @@ button.modalcloseBtn {
   html[lang="ar"] .registertab-k a.btn.btn-theme {
     float: left;
     margin-bottom: 11px;
+  }
+  .removbtn {
+    min-width: 28%;
+  }
+  .shoppingCardmob {
+    margin-top: 25px !important;
+    padding: 22px 8px !important;
+    justify-content: center !important;
+  }
+  .qtyRmv {
+    justify-content: center !important;
+    margin-block: 16px;
   }
 }
