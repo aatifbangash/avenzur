@@ -778,7 +778,7 @@ class Main extends MY_Shop_Controller
                 //$company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             }else{
                 $type = 'mobile';
-                $company_found = $this->shop_model->getUniqueCustomer('mobile', $email);
+                $company_found = $this->shop_model->getUniqueCustomer('mobile', str_replace("+966", "", $email));
                 //$company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             }
 
