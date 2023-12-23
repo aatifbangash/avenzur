@@ -105,8 +105,8 @@ if ($this->Settings->indian_gst) {
          
         <div class="col-md-4">
 
-                <div class="mt-5">
-                    <h2 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
+                
+                    <h3 class=" fw-bold pb-2">Payment</h3>
                     <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
                         <div class="form-check fs-5">
                         <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
@@ -116,10 +116,10 @@ if ($this->Settings->indian_gst) {
                         </div>
                     <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
                     </div>
-                </div>
+                
 
-                <div class="mt-4">
-                    <h2 class=" fw-bold pb-2 fs-2  m-0">Shipping</h2>
+                
+                <h3 class=" fw-bold pb-2">Shipping</h3>
                     <div class="d-flex align-items-center  py-3 standard-div">
                         <div class="form-check fs-5">
                         <input class="form-check-input" type="radio" name="delivery" id="flexRadiostandard" checked>
@@ -142,7 +142,7 @@ if ($this->Settings->indian_gst) {
                             <p class="m-0 fs-6 fw-semibold px-3 mx-1">21 SAR</p>
                         </div>
                     </div>
-                </div>
+                
 
 
             <?php echo shop_form_open('order', 'class="validate addressform-k"'); ?>
