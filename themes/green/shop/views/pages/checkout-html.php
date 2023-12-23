@@ -129,7 +129,7 @@ if ($this->Settings->indian_gst) {
                     </div>
                     <div class="d-flex align-items-center  py-1 standard-div" id="express-delivery-details" style="display: none !important;">
                         <div class="form-check fs-5">
-                        <input class="form-check-input" type="radio" name="delivery" id="express-delivery-check" disabled>
+                        <input class="form-check-input" type="radio" name="delivery" id="express-delivery-check">
                         <label class="form-check-label fs-6 fw-semibold" for="express-delivery-check">
                             Express delivery
                         </label>
