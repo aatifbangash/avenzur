@@ -331,7 +331,8 @@ if ($this->Settings->indian_gst) {
 
     function calCulateShipping(city, country, isExpressDelivery = false) {
        // alert(city);
-        $("#express-delivery-check").prop("disabled", true);
+        //$("#express-delivery-check").prop("disabled", true);
+        $("#express-delivery-check").hide();
         //$('.payment-k').prop('disabled', true);
 
         var shipping = parseInt('<?= round($calculateShipping); ?>');
@@ -369,7 +370,8 @@ if ($this->Settings->indian_gst) {
                 ].includes(city)) {
                     shipping = 0 // 19 SAR
                     deliveryDays = "1 to 2 days"
-                    $("#express-delivery-check").prop("disabled", false);
+                    //$("#express-delivery-check").prop("disabled", false);
+                    $("#express-delivery-check").show();
 
                     if (isExpressDelivery == true) {
                         shipping = 21
@@ -429,7 +431,8 @@ if ($this->Settings->indian_gst) {
                 }*/
                 deliveryDays = '4 to 6 days';
 
-                $("#express-delivery-check").prop("disabled", true);
+                //$("#express-delivery-check").prop("disabled", true);
+                $("#express-delivery-check").show();
             }
 
             $('#shipping-price').text(parseFloat(shipping).toFixed(2))
