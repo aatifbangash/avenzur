@@ -792,15 +792,16 @@ class Main extends MY_Shop_Controller
 
                     if($type == 'email'){
                         $otp_sent = $this->sendOTP($company_found->id, $email, 'email');
+
+                        if($otp_sent){
+                            echo json_encode(['status' => 'success', 'message' => 'An OTP is sent to your email']);  
+                        }else{
+                            echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
+                        }
                     }else{
                         $otp_sent = $this->sendOTP($company_found->id, $email, 'mobile');
                     }
         
-                    if($otp_sent){
-                        echo json_encode(['status' => 'success', 'message' => 'An OTP is sent to your email']);  
-                    }else{
-                        echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
-                    }
                 }else{
                     echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
                 }
