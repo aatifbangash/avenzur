@@ -118,7 +118,7 @@
                       
                     </ul>
                 </div>
-                <div class="dropdown">
+                <div class="dropdown logindropdown-k">
                 <button type="button" id="login-btn-trigger" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
                   <?php
                     if ($loggedIn) {
@@ -472,7 +472,7 @@
 
   <!-- product popup start -->
   <div class="modal fade" id="productPop" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered me-4">
         <div class="modal-content px-4 rounded-4">
             <div class="modal-header border-0">
                 
