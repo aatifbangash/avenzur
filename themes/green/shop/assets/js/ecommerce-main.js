@@ -367,7 +367,6 @@ function sa_alert(t, e, a, s) {
 }
 
 function saa_alert(t, e, a, s) {
-  console.log(t);
   (a = a || lang.delete),
     (e = e || lang.x_reverted_back),
     (s = s || {}),
@@ -380,6 +379,8 @@ function saa_alert(t, e, a, s) {
       success: function (t) {
         if (t.redirect) return (window.location.href = t.redirect), !1;
         t.cart && ((cart = t.cart), update_mini_cart(cart), update_cart(cart));
+
+        console.log(t);
         //sa_alert(t.status, t.message);
       },
       error: function () {
