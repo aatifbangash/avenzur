@@ -1318,6 +1318,9 @@ class Shop extends MY_Shop_Controller
         if ($this->input->get('promo') && $this->input->get('promo') == 'yes') {
             $promo = true;
         }
+        if ($this->input->get('special_product') && $this->input->get('special_product') == 'yes') {
+            $special_product = true;
+        }
 
         if ($category_slug != null) {
             $this->data['featureImage'] = $this->shop_model->getCategoryBySlug($category_slug);
@@ -1330,6 +1333,7 @@ class Shop extends MY_Shop_Controller
             'subcategory' => $subcategory_slug ? $this->shop_model->getCategoryBySlug($subcategory_slug) : null,
             'brand' => $brand_slug ? $this->shop_model->getBrandBySlug($brand_slug) : null,
             'promo' => $promo,
+            'special_product' => $special_product,
             'sorting' => $reset ? null : $this->input->get('sorting'),
             'min_price' => $reset ? null : $this->input->get('min_price'),
             'max_price' => $reset ? null : $this->input->get('max_price'),
