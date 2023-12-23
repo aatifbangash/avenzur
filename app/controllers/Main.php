@@ -465,7 +465,13 @@ class Main extends MY_Shop_Controller
         }
 
         if ($this->form_validation->run() == true){
-            $company_data = $this->shop_model->getUniqueCustomer('email', $identity);
+            if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+                $type = 'email';
+                $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
+            }else{
+                $type = 'mobile';
+                $company_data = $this->shop_model->getUniqueCustomer($type, str_replace("+966", "", $identity));
+            }
 
             if($company_data){
 
@@ -786,7 +792,27 @@ class Main extends MY_Shop_Controller
             if($company_found){
                 $user_data = $this->shop_model->getUserByEmail($company_found->email);
 
-                if($user_data->active == 1){
+                $this->load->library('ion_auth');
+
+                if ($this->form_validation->run() == true){
+
+                    if($type == 'email'){
+                        $otp_sent = $this->sendOTP($company_found->id, $email, 'email');
+
+                        if($otp_sent){
+                            echo json_encode(['status' => 'success', 'message' => 'An OTP is sent to your email']);  
+                        }else{
+                            echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
+                        }
+                    }else{
+                        $otp_sent = $this->sendOTP($company_found->id, $email, 'mobile');
+                    }
+        
+                }else{
+                    echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
+                }
+
+                /*if($user_data->active == 1){
                     $remember = true;
                     $this->load->library('ion_auth');
                     if ($this->ion_auth->login($company_found->email, '12345', $remember)) {
@@ -815,7 +841,7 @@ class Main extends MY_Shop_Controller
                     }else{
                         echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
                     }
-                }
+                }*/
             }else if($type == 'email'){
                 $company_data = [
                     //'country'             => $this->input->post('country') ? $this->input->post('country') : '-',

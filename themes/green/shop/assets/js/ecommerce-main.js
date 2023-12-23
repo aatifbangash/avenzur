@@ -650,6 +650,7 @@ function searchProducts(t) {
   }*/
 
   var promo = 0;
+  var special_product = 0;
   var callUrl;
   var currentURL = window.location.href;
   if (currentURL.includes("promo=yes")) {
@@ -659,11 +660,19 @@ function searchProducts(t) {
     callUrl = site.shop_url + "search?page=" + filters.page;
   }
 
+  if (currentURL.includes("special_product=yes")) {
+    special_product = 1;
+    callUrl = site.shop_url + "search?page=" + filters.page + "&special_product=yes";
+  } else {
+    callUrl = site.shop_url + "search?page=" + filters.page;
+  }
+
   $("#loading").show();
   var a = {};
   (a[site.csrf_token] = site.csrf_token_value),
     (a.filters = get_filters()),
     (a.filters.promo = promo),
+    (a.filters.special_product = special_product),
     (a.format = "json"),
     $.ajax({
       url: callUrl,
