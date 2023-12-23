@@ -1939,3 +1939,7 @@ button.modalcloseBtn {
     margin-block: 16px;
   }
 }
+.out-of-stock-notification i {
+  color: #662d91;
+  font-size: 15px;
+}

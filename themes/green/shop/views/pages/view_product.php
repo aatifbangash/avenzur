@@ -125,7 +125,12 @@
             </div>
                     
             <div class="product-detail product-count d-flex align-items-center get-quantity" style="width: fit-content;">
-                        
+
+                <?php if ($product->quantity == 0): ?>
+                    <a href="javascript:void(0);" data-id="<?= $product->id; ?>"
+                       class="out-of-stock-notification"><i class="bi bi-bell-fill"></i>
+                    </a>
+                <?php endif; ?>
                 <form action="#" class=" quantity text-end py-2 d-flex align-items-center justify-content-md-between">
                 
 

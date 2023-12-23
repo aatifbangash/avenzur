@@ -559,6 +559,11 @@
                                 </div>
                                 <div class="col-md-6">
                                 <div class="quantity text-end py-2 d-flex align-items-center justify-content-md-between">
+                                    <?php if ($sp->quantity == 0): ?>
+                                        <a href="javascript:void(0);" data-id="<?= $sp->id; ?>"
+                                           class="out-of-stock-notification"><i class="bi bi-bell-fill"></i>
+                                        </a>
+                                    <?php endif; ?>
                                     <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
                                     <input type="text" name="quantity" class="Qnum" value="1" required="required" />
                                     <!--<span class="Qnum ">1</span>-->
@@ -651,6 +656,11 @@
                                 </div>
                                 <div class="col-md-6">
                                 <div class="quantity text-end py-2 d-flex align-items-center justify-content-md-between">
+                                    <?php if ($sp->quantity == 0): ?>
+                                        <a href="javascript:void(0);" data-id="<?= $sp->id; ?>"
+                                           class="out-of-stock-notification"><i class="bi bi-bell-fill"></i>
+                                        </a>
+                                    <?php endif; ?>
                                     <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
                                     <input type="text" name="quantity" class="Qnum" value="1" required="required" />
                                     <!--<span class="Qnum ">1</span>-->
@@ -755,6 +765,11 @@
                                     </div>
                                     <div class="col-md-6 px-md-0">
                                         <div class="quantity text-end py-2 d-flex align-items-center  justify-content-md-between">
+                                            <?php if ($sp->quantity == 0): ?>
+                                                <a href="javascript:void(0);" data-id="<?= $sp->id; ?>"
+                                                   class="out-of-stock-notification"><i class="bi bi-bell-fill"></i>
+                                                </a>
+                                            <?php endif; ?>
                                         <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
                                         <input type="text" name="quantity" class="Qnum" value="1" required="required" />
                                         <!--<span class="Qnum ">1</span>-->

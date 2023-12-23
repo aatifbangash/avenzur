@@ -396,7 +396,7 @@ class Shop_model extends CI_Model
         {$this->db->dbprefix('products')}.image as image, 
         {$this->db->dbprefix('products')}.slug as slug, 
         {$this->db->dbprefix('products')}.price, 
-        quantity, 
+        {$this->db->dbprefix('products')}.quantity, 
         {$this->db->dbprefix('products')}.type, 
         {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
         {$this->db->dbprefix('products')}.tax_method,

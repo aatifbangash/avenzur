@@ -576,6 +576,12 @@ function gen_html(t) {
       e += '<div class="col-md-6 col-6">';
       e +=
         '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between">';
+
+      if(r.quantity == 0) {
+        e += '<a href="javascript:void(0);" data-id="' + r.id + '" ' +
+        'class="out-of-stock-notification"><i class="bi bi-bell-fill"></i>\n' +
+        '</a>';
+      }
       e +=
         '<span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>';
       //e += '<span class="Qnum ">1</span>';
