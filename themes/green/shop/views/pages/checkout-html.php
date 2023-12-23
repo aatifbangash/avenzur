@@ -127,7 +127,7 @@ if ($this->Settings->indian_gst) {
                             <p class="m-0 fst-italic text-white px-4  rounded" style="background:#662d91">Free</p>
                         </div>
                     </div>
-                    <div class="d-flex align-items-center  py-1 standard-div">
+                    <div class="d-flex align-items-center  py-1 standard-div" id="express-delivery-details">
                         <div class="form-check fs-5">
                         <input class="form-check-input" type="radio" name="delivery" id="express-delivery-check" disabled>
                         <label class="form-check-label fs-6 fw-semibold" for="express-delivery-check">
@@ -333,6 +333,7 @@ if ($this->Settings->indian_gst) {
        // alert(city);
         //$("#express-delivery-check").prop("disabled", true);
         $("#express-delivery-check").hide();
+        $("#express-delivery-details").hide();
         //$('.payment-k').prop('disabled', true);
 
         var shipping = parseInt('<?= round($calculateShipping); ?>');
@@ -372,6 +373,7 @@ if ($this->Settings->indian_gst) {
                     deliveryDays = "1 to 2 days"
                     //$("#express-delivery-check").prop("disabled", false);
                     $("#express-delivery-check").show();
+                    $("#express-delivery-details").show();
 
                     if (isExpressDelivery == true) {
                         shipping = 21
@@ -433,6 +435,7 @@ if ($this->Settings->indian_gst) {
 
                 //$("#express-delivery-check").prop("disabled", true);
                 $("#express-delivery-check").show();
+                $("#express-delivery-details").show();
             }
 
             $('#shipping-price').text(parseFloat(shipping).toFixed(2))
