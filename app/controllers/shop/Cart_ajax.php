@@ -236,6 +236,7 @@ class Cart_ajax extends MY_Shop_Controller
         }
     }
 
+    
     public function get_countries() {
         $countries = $this->settings_model->getCountries();
         echo json_encode($countries);
