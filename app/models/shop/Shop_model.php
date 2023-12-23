@@ -1117,6 +1117,9 @@ class Shop_model extends CI_Model
             if (!empty($filters['featured'])) {
                 $this->db->where('featured', 1);
             }
+            if (!empty($filters['special_product'])) {
+                $this->db->where('special_product', 1);
+            }
             $sortcase = '';
             if (!empty($filters['query'])) {
                 $booksearch = strtolower($filters['query']);
@@ -1235,6 +1238,9 @@ class Shop_model extends CI_Model
             if (!empty($filters['promo'])) {
                 $today = date('Y-m-d');
                 $this->db->where('promotion', 1)->where('start_date <=', $today)->where('end_date >=', $today);
+            }
+            if (!empty($filters['special_product'])) {
+                $this->db->where('special_product', 1);
             }
             if (!empty($filters['featured'])) {
                 $this->db->where('featured', 1);

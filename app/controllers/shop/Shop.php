@@ -1449,6 +1449,10 @@ class Shop extends MY_Shop_Controller
                 $pagination = str_replace('?page=', '?promo=yes&page=', $pagination);
             }
 
+            if (isset($_GET['special_product']) && !empty($_GET['special_product'])) {
+                $pagination = str_replace('?page=', '?special_product=yes&page=', $pagination);
+            }
+
             $info = ['page' => (isset($filters['page']) && !empty($filters['page']) ? $filters['page'] : 1), 'total' => ceil($total_rows / $limit)];
 
             $this->sma->send_json(['filters' => $filters, 'products' => $products, 'pagination' => $pagination, 'info' => $info]);
