@@ -101,18 +101,23 @@ if ($this->Settings->indian_gst) {
                     </div>
                 </div>
 
-                <div class="mt-5">
-                    <h2 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
-                    <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
-                        <div class="form-check fs-5">
+                
+
+            </div>
+         
+        <div class="col-md-4">
+            <div class="mt-5">
+                <h2 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
+                <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
+                    <div class="form-check fs-5">
                         <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
                         <label class="form-check-label fw-semibold" for="flexRadioDefault2">
                             Debit / Credit Card Payment
                         </label>
-                        </div>
-                    <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
                     </div>
+                <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
                 </div>
+            </div>
 
                 <div class="mt-4">
                     <h2 class=" fw-bold pb-2 fs-2  m-0">Shipping</h2>
@@ -139,10 +144,6 @@ if ($this->Settings->indian_gst) {
                         </div>
                     </div>
                 </div>
-
-            </div>
-         
-        <div class="col-md-4">
             <?php echo shop_form_open('order', 'class="validate addressform-k"'); ?>
            <?php
                 $total = $this->sma->convertMoney($this->cart->total(), false, false);
