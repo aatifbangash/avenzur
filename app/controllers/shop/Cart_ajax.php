@@ -107,7 +107,8 @@ class Cart_ajax extends MY_Shop_Controller
             $quantity_added = $this->input->get('qty') + $product_to_add_quantity;
 
             if($quantity_added > 3){
-                $this->sma->send_json(['error' => 1, 'message' => 'Maximum allowed order 3 pieces']);
+                //$this->sma->send_json(['error' => 1, 'message' => 'Maximum allowed order 3 pieces']);
+                return false;
             }
 
             $options = $this->shop_model->getProductVariants($product_id);
