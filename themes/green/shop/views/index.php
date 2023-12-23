@@ -76,6 +76,50 @@
       </div>
     </section>
     <!-- feature section end -->
+<!-- speacial offer banner slider -->
+    <section class="speacialOffer">
+      <div class="container container-max-width py-4">
+      <div class="featureTitle text-center mb-5"><h2>Special Offers</h2></div>
+          <div class="row speacialOfferMove">
+            <div class="col-lg-2 col-md-2 my-4">
+              <div class="moveBanner">
+                <img src="assets/images/banners/moveBanner1.jpg"  alt="movingBanner" class="w-100">
+              </div>
+            </div>
+            <div class="col-lg-2 col-md-2 my-4">
+              <div class="moveBanner">
+                <img src="assets/images/banners/moveBanner2.jpg"  alt="movingBanner" class="w-100">
+              </div>
+            </div>
+            <div class="col-lg-2 col-md-2 my-4">
+              <div class="moveBanner">
+                <img src="assets/images/banners/moveBanner3.jpg"  alt="movingBanner" class="w-100">
+              </div>
+            </div>
+            <div class="col-lg-2 col-md-2 my-4">
+              <div class="moveBanner">
+                <img src="assets/images/banners/moveBanner4.jpg"  alt="movingBanner" class="w-100">
+              </div>
+            </div>
+            <div class="col-lg-2 col-md-2 my-4">
+              <div class="moveBanner">
+                <img src="assets/images/banners/moveBanner5.jpg"  alt="movingBanner" class="w-100">
+              </div>
+            </div>
+            <div class="col-lg-2 col-md-2 my-4">
+              <div class="moveBanner">
+                <img src="assets/images/banners/moveBanner6.jpg"  alt="movingBanner" class="w-100">
+              </div>
+            </div>
+            <div class="col-lg-2 col-md-2 my-4">
+              <div class="moveBanner">
+                <img src="assets/images/banners/moveBanner4.jpg"  alt="movingBanner" class="w-100">
+              </div>
+            </div>
+          </div>
+      </div>
+    </section>
+<!-- speacial offer section end -->
 
     <!-- boom categores -->
     <section class="boom-categories">
@@ -779,42 +823,42 @@
     <!-- widgets section -->
     <section class="widgets">
       <div class="container container-max-width py-4">
-      <div class="row suprtwidget">
-        <div class="col-lg-4 col-md-6 my-4">
-          <div class="card text-center py-2" >
-            <h3 class="pt-2 fw-bolder"><i class="bi bi-telephone-forward-fill"></i></h3>
-            <div class="card-body">
-              <h5 class="card-title"><b>Help & Support</b></h5>
-              <p class="card-text">For inquires and support. Please contact us.</p>
-             
+        <div class="row suprtwidget">
+          <div class="col-lg-4 col-md-6 my-4">
+            <div class="card text-center py-2" >
+              <h3 class="pt-2 fw-bolder"><i class="bi bi-telephone-forward-fill"></i></h3>
+              <div class="card-body">
+                <h5 class="card-title"><b>Help & Support</b></h5>
+                <p class="card-text">For inquires and support. Please contact us.</p>
+              
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="col-lg-4 col-md-6 my-4">
-          <div class="card text-center py-2">
-            <h3 class="pt-2"><i class="bi bi-box-arrow-up-right"></i></h3>
-            <div class="card-body">
-              <h5 class="card-title"><b>Easy Return</b></h5>
-              <p class="card-text">You can easily return your newly purchased <br />products within 14 days.</p>
-             
+          <div class="col-lg-4 col-md-6 my-4">
+            <div class="card text-center py-2">
+              <h3 class="pt-2"><i class="bi bi-box-arrow-up-right"></i></h3>
+              <div class="card-body">
+                <h5 class="card-title"><b>Easy Return</b></h5>
+                <p class="card-text">You can easily return your newly purchased <br />products within 14 days.</p>
+              
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="col-lg-4 col-md-6 my-4">
-          <div class="card text-center py-2" >
-            <h3 class="pt-2"><i class="bi bi-wallet"></i></h3>
-            <div class="card-body">
-              <h5 class="card-title"><b>Payments</b></h5>
-              <p class="card-text">We provides secure and multiple method of payments to customers. VISA, MasterCard, Mada and Apple Pay.</p>
-             
+          <div class="col-lg-4 col-md-6 my-4">
+            <div class="card text-center py-2" >
+              <h3 class="pt-2"><i class="bi bi-wallet"></i></h3>
+              <div class="card-body">
+                <h5 class="card-title"><b>Payments</b></h5>
+                <p class="card-text">We provides secure and multiple method of payments to customers. VISA, MasterCard, Mada and Apple Pay.</p>
+              
+              </div>
             </div>
           </div>
-        </div>
 
+        </div>
       </div>
-    </div>
     </section>
 
     <!-- brand logos -->

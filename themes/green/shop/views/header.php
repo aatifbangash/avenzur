@@ -472,7 +472,7 @@
 
   <!-- product popup start -->
   <div class="modal fade" id="productPop" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered me-4">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content px-4 rounded-4">
             <div class="modal-header border-0">
                 

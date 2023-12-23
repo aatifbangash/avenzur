@@ -380,9 +380,12 @@ function saa_alert(t, e, a, s) {
         if (t.redirect) return (window.location.href = t.redirect), !1;
         t.cart && ((cart = t.cart), update_mini_cart(cart), update_cart(cart));
 
-        if(t.cart.total_items <= 0 || typeof t.cart.total_items == 'undefined'){
-          window.location.href = 'shop/products';
-        }else{
+        if (
+          t.cart.total_items <= 0 ||
+          typeof t.cart.total_items == "undefined"
+        ) {
+          window.location.href = "shop/products";
+        } else {
           console.log(t.total_items);
         }
         //sa_alert(t.status, t.message);
@@ -1023,7 +1026,7 @@ $(document).ready(function () {
     var e = $(this).parent().find("input");
     if (e.val() > 1) {
       parseInt(e.val()) > 1 && e.val(parseInt(e.val()) - 1);
-    } 
+    }
   });
 
   $(document).on("click", ".btn-plus", function (t) {
@@ -1049,7 +1052,6 @@ $(document).ready(function () {
     }
   });
 
-
   $(document).on("click", ".btn-plus-update", function (t) {
     var e = $(this).parent().find("input");
     if (e.val() < 3) {
@@ -1065,7 +1067,42 @@ $(document).ready(function () {
         update_cart_item(i, o, e, $(this), t.target.type);
     }
   });
-
+  $(".speacialOfferMove").slick({
+    slidesToShow: 6,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 2000,
+    arrows: false,
+    infinite: true,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 4,
+          slidesToScroll: 3,
+          infinite: true,
+          dots: true,
+        },
+      },
+      {
+        breakpoint: 770,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 2,
+        },
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+        },
+      },
+      // You can unslick at a given breakpoint now by adding:
+      // settings: "unslick"
+      // instead of a settings object
+    ],
+  });
   $(".feature_products").slick({
     infinite: false,
     speed: 300,
@@ -1904,9 +1941,9 @@ $(document).ready(function () {
       success: function (response) {
         var respObj = JSON.parse(response);
         if (respObj.status == "success" || respObj.code == 1) {
-          if(respObj.link){
+          if (respObj.link) {
             window.location.href = respObj.link;
-          }else{
+          } else {
             $(".myaccountForm").removeClass("show");
             $("#registerOTP").off("click", handleRegisterOTPClick);
             document.getElementById("registerOTP").style.color = "grey";
@@ -1938,7 +1975,6 @@ $(document).ready(function () {
               }
             }, 1000);
           }
-          
         } else {
           $("#register-message").html(respObj.message);
         }
