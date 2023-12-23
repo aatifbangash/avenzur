@@ -77,6 +77,18 @@
     </section>
     <!-- feature section end -->
 
+    <!-- banner area 1 -->
+    <section class="side-banner py-3 ">
+      <div class="container container-max-width">
+        <div class="sideBannerImg">
+          <a href="<?= site_url('shop/products?special_product=yes'); ?>">
+            <img loading="lazy" src="<?= base_url('assets/images/banners/special_offers.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100" />
+          </a>
+        </div>
+      </div>
+    </section>
+    <!-- banner area 1 end -->
+
     <!-- boom categores -->
     <section class="boom-categories">
       <div class="container container-max-width py-4">
