@@ -662,7 +662,8 @@ function searchProducts(t) {
 
   if (currentURL.includes("special_product=yes")) {
     special_product = 1;
-    callUrl = site.shop_url + "search?page=" + filters.page + "&special_product=yes";
+    callUrl =
+      site.shop_url + "search?page=" + filters.page + "&special_product=yes";
   } else {
     callUrl = site.shop_url + "search?page=" + filters.page;
   }
@@ -1076,6 +1077,7 @@ $(document).ready(function () {
         update_cart_item(i, o, e, $(this), t.target.type);
     }
   });
+  // special offer slider
   $(".speacialOfferMove").slick({
     slidesToShow: 6,
     slidesToScroll: 1,
@@ -1112,6 +1114,7 @@ $(document).ready(function () {
       // instead of a settings object
     ],
   });
+
   $(".feature_products").slick({
     infinite: false,
     speed: 300,
