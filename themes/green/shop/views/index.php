@@ -6,7 +6,7 @@
           <div class="carousel-indicators">
             <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
             <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
-           
+
           </div>
 
           <div class="carousel-inner">
@@ -56,15 +56,15 @@
                     ?>
                         <div class="col-md-2 col-sm-12 col-6">
                             <a href="<?= site_url('category/'.$fp->slug) ?>" class="text-decoration-none">
-                            
+
                                 <div class="card" style="width: 100%;">
                                 <div class="cardImg">
-                                
+
                                     <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" class="card-img-top" alt="..."></div>
                                 <div class="card-body">
                                     <h5 class="card-title"><?= ucfirst(strtolower($fp->name)); ?></h5>
                                 </div>
-                                </div> 
+                                </div>
 
                             </a>
                         </div>
@@ -83,7 +83,7 @@
         <div class="row">
 
           <div class="col-lg-8 col-md-12 col-sm-12">
-            
+
             <div class="row ">
 
               <div class="col-lg-8 col-md-7 col-sm-12">
@@ -105,7 +105,7 @@
               <div class="col-lg-4 col-md-5 col-sm-12">
                 <div class="boom-product-cat py-4 px-5" style="background-image: url(<?= base_url('assets/images/banners/boom2.png'); ?>)">
                   <div class="row align-items-center">
-                   
+
                     <div class="col-md-12">
                       <p class="m-0 py-2"><span class="boom-parag"></span></p>
                       <span class="btitle py-3"><span style="font-weight: bold;">Artelac</span> Advanced Eye Drops</span>
@@ -129,7 +129,7 @@
               <div class="col-md-5 col-sm-12">
                 <div class="boom-product-cat py-4 px-4" style="background-image: url(<?= base_url('assets/images/banners/boom4.png'); ?>)">
                   <div class="row ">
-                   
+
                     <div class="col-md-6 pe-md-0">
                       <p class="m-0 py-2"><span class="boom-parag"></span></p>
                       <span class="btitle py-3"><span style="font-weight: bold;">Laperva</span> Collections</span>
@@ -147,7 +147,7 @@
               <div class="col-md-7 col-sm-12">
                 <div class="boom-product-cat py-4 px-5" style="background-image: url(<?= base_url('assets/images/banners/boom5.png'); ?>)">
                   <div class="row align-items-center">
-                   
+
                     <div class="col-md-6 p-md-0 boomsale">
                       <span class="bigsale"></span>
                       <p class="m-0 py-2"><span class="boom-parag"></span></p>
@@ -168,7 +168,7 @@
           <div class="col-lg-4 col-md-12 col-sm-12  pt-lg-0 pt-md-4">
             <div class="boom-product-cat py-4 px-5" style="background-image: url('<?= base_url('assets/images/banners/boom3.png'); ?>')">
               <div class="row align-items-center">
-               
+
                 <div class="col-md-12 mb-4">
                   <span class="bigsale"></span>
                   <p class="m-0 py-2"><span class="boom-parag"></span></p>
@@ -207,7 +207,7 @@
       <div class="container container-max-width ">
         <div class=" row skinBannerRow  rounded-4 align-items-center justify-content-between">
           <div class="col-lg-6 col-md-12 col-sm-12 ps-0 skinbnnerimg">
-            
+
                 <img loading="lazy" src="<?= base_url('assets/images/banners/skinbanner.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100    rounded-start-3 rounded-end-5" />
             </a>
           </div>
@@ -221,7 +221,7 @@
               </a>
             </div>
           </div>
-         
+
         </div>
       </div>
     </section>
@@ -242,7 +242,7 @@
                     <?php
                         $pp++;
                     }
-                    ?> 
+                    ?>
                 </ul>
 
                 <div class="tab-content pt-3" id="pills-tabContent">
@@ -277,7 +277,7 @@
                                                     <div class="row align-items-center justify-content-between">
                                                         <div class="col-md-6">
                                                         <div class="rating">
-                                                          <?php 
+                                                          <?php
                                                                 for($i=1; $i<=5; $i++) {
                                                                   $class = '';
                                                                   if($i<=$sp->avg_rating) {$class = 'rated';}?>
@@ -296,24 +296,24 @@
                                                                         </div>
                                                                     </div>
                                                                 <?php
-                                                                
+
                                                             }
                                                         ?>
-                                                    </div> 
+                                                    </div>
                                                     <div class="row align-items-center justify-content-between">
                                                         <div class="col-md-6 ">
                                                             <div class="price text-start  py-2">
                                                                 <h4 class="m-0 fw-bold">
                                                                 <?php
                                                                 if ($popular_product->promotion) {
-                                                                    
+
                                                                         echo $this->sma->convertMoney($popular_product->promo_price);
-                                                                    
+
                                                                 }else{
                                                                     echo $this->sma->convertMoney(isset($popular_product->special_price) && !empty(isset($popular_product->special_price)) ? $popular_product->special_price : $popular_product->price);
                                                                 }
                                                                 ?>
-                                                                    
+
                                                                 </h4>
                                                             </div>
                                                         </div>
@@ -330,15 +330,15 @@
                                                     </div>
                                                 </div>
                                             <!--</a>-->
-                                            <div> 
+                                            <div>
                                                 <button type="button" data-id="<?= $popular_product->id; ?>" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>
                                             </div>
-                                        </div> 
+                                        </div>
                                     </div>
                                 <?php } ?>
                             </div>
                         </div>
-                    <?php 
+                    <?php
                     $pc++;
                     } ?>
                 </div>
@@ -362,7 +362,7 @@
             </div>
           </div>
         </div>
-        
+
       </div>
     </section>
     <!-- banner area 1 end -->
@@ -373,7 +373,7 @@
         <div class="featureProductC pt-4">
           <div class="popularTitle text-center mb-4"><h2>Feature Products</h2></div>
 
-          
+
           <div class="feature_products">
 
           <?php
@@ -384,7 +384,7 @@
                     <div class="row products-card text-center gy-4 ">
                         <div class="col-md-12 col-sm-12">
                         <div class="card" style="width: 100%">
-                            
+
                             <div class="cardImg position-relative">
                             <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
                                 Sale 20% OFF
@@ -394,12 +394,12 @@
                             </a>
                             </div>
                             <div class="card-body px-0 text-start pb-0">
-                            
+
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
                             <div class="row align-items-center justify-content-between">
                                 <div class="col-md-6">
                                 <div class="rating">
-                                  <?php 
+                                  <?php
                                         for($i=1; $i<=5; $i++) {
                                           $class = '';
                                           if($i<=$sp->avg_rating) {$class = 'rated';}?>
@@ -420,8 +420,8 @@
                                     <?php
                                 }
                                 ?>
-                                
-                            </div> 
+
+                            </div>
                             <!--price and quantity araea  -->
 
                             <div class="row align-items-center justify-content-between">
@@ -436,10 +436,17 @@
                                             }
                                             ?>
                                         </h4>
+
                                     </div>
                                 </div>
                                 <div class="col-md-6">
+
                                 <div class="quantity text-end py-2 d-flex align-items-center justify-content-md-between">
+                                    <?php if ($sp->quantity == 0): ?>
+                                        <a href="javascript:void(0);" data-id="<?= $sp->id; ?>"
+                                                class="out-of-stock-notification"><i class="bi bi-bell-fill"></i>
+                                        </a>
+                                    <?php endif; ?>
                                     <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
                                     <input type="text" name="quantity" class="Qnum" value="1" required="required" />
                                     <!--<span class="Qnum ">1</span>-->
@@ -447,34 +454,23 @@
                                 </div>
                                 </div>
                             </div>
-                            
                             <!-- price area end -->
-                            
-                                
                             </div>
-
                             <div>
-                                <?php if ($sp->quantity == 0): ?>
-                                <button type="button" data-id="<?= $sp->id; ?>"
-                                        class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark out-of-stock-notification">Out of stock
-                                    <span class="plus btn-plus"><i class="bi bi-bell-fill" style="font-size: 18px;"></i></span>
-                                </button>
-                                <?php else: ?>
                                 <button type="button" data-id="<?= $sp->id; ?>"
                                         class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add
                                     to cart
                                 </button>
-                                <?php endif; ?>
                             </div>
-                        </div> 
-                        </div> 
-                        
+                        </div>
+                        </div>
+
                     </div>
-                <?php 
+                <?php
                 }
-            } 
-            ?> 
-                
+            }
+            ?>
+
             </div>
           </div>
         </div>
@@ -496,7 +492,7 @@
         <div class="featureProductC pt-4">
           <div class="popularTitle text-center mb-4"><h2>Best Sellers</h2></div>
 
-          
+
           <div class="feature_products">
 
           <?php
@@ -507,7 +503,7 @@
                     <div class="row products-card text-center gy-4 ">
                         <div class="col-md-12 col-sm-12">
                         <div class="card" style="width: 100%">
-                            
+
                             <div class="cardImg position-relative">
                             <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
                                 Sale 20% OFF
@@ -517,12 +513,12 @@
                             </a>
                             </div>
                             <div class="card-body px-0 text-start pb-0">
-                            
+
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
                             <div class="row align-items-center justify-content-between">
                                 <div class="col-md-6">
                                 <div class="rating">
-                                  <?php 
+                                  <?php
                                         for($i=1; $i<=5; $i++) {
                                           $class = '';
                                           if($i<=$sp->avg_rating) {$class = 'rated';}?>
@@ -543,8 +539,8 @@
                                     <?php
                                 }
                                 ?>
-                                
-                            </div> 
+
+                            </div>
                             <!--price and quantity araea  -->
 
                             <div class="row align-items-center justify-content-between">
@@ -570,22 +566,22 @@
                                 </div>
                                 </div>
                             </div>
-                            
+
                             <!-- price area end -->
-                            
-                                
+
+
                             </div>
-                            
+
                             <div> <button type="button" data-id="<?= $sp->id; ?>" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
-                        </div> 
-                        </div> 
-                        
+                        </div>
+                        </div>
+
                     </div>
-                <?php 
+                <?php
                 }
-            } 
-            ?> 
-                
+            }
+            ?>
+
             </div>
 
             <!-- Additional Best Sellers -->
@@ -599,7 +595,7 @@
                     <div class="row products-card text-center gy-4 ">
                         <div class="col-md-12 col-sm-12">
                         <div class="card" style="width: 100%">
-                            
+
                             <div class="cardImg position-relative">
                             <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
                                 Sale 20% OFF
@@ -609,12 +605,12 @@
                             </a>
                             </div>
                             <div class="card-body px-0 text-start pb-0">
-                            
+
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
                             <div class="row align-items-center justify-content-between">
                                 <div class="col-md-6">
                                 <div class="rating">
-                                  <?php 
+                                  <?php
                                         for($i=1; $i<=5; $i++) {
                                           $class = '';
                                           if($i<=$sp->avg_rating) {$class = 'rated';}?>
@@ -635,8 +631,8 @@
                                     <?php
                                 }
                                 ?>
-                                
-                            </div> 
+
+                            </div>
                             <!--price and quantity araea  -->
 
                             <div class="row align-items-center justify-content-between">
@@ -662,22 +658,22 @@
                                 </div>
                                 </div>
                             </div>
-                            
+
                             <!-- price area end -->
-                            
-                                
+
+
                             </div>
-                            
+
                             <div> <button type="button" data-id="<?= $sp->id; ?>" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
-                        </div> 
-                        </div> 
-                        
+                        </div>
+                        </div>
+
                     </div>
-                <?php 
+                <?php
                 }
-            } 
-            ?> 
-                
+            }
+            ?>
+
             </div>
 
           </div>
@@ -701,7 +697,7 @@
             </div>
           </div>
         </div>
-        
+
       </div>
     </section>
     <!-- banner cat end -->
@@ -709,7 +705,7 @@
 
 
     <!-- special offer -->
-  
+
     <section class="specialOffer-container py-3">
       <div class="container container-max-width">
         <div class="specialOfferProductC pt-4">
@@ -727,7 +723,7 @@
                             <div class="col-md-12 col-sm-12">
                             <div class="row align-items-center">
                                 <div class="col-md-5 col-sm-12">
-                    
+
                                 <div class="cardImg rounded-3">
                                     <a href="<?= site_url('product/' . $sp->slug); ?>"><img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top rounded-3" alt="..."></a>
                                 </div>
@@ -737,9 +733,9 @@
                                     <div class="product-cat-title"><span class="text-uppercase"><?= $sp->category_name; ?></span></div>
                                     <a style="text-decoration: none;" href="<?= site_url('product/' . $sp->slug); ?>"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
                                     <div class="row align-items-center justify-content-between">
-                                    
-                                    
-                                    </div> 
+
+
+                                    </div>
                                     <!--price and quantity araea  -->
 
                                     <div class="row align-items-center justify-content-between w-100">
@@ -752,7 +748,7 @@
                                                     echo $this->sma->convertMoney($sp->promo_price);
                                                 } else {
                                                     echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
-                                                } 
+                                                }
                                             ?>
                                             </h4>
                                         </div>
@@ -768,15 +764,15 @@
                                     </div>
                                     <div> <button type="button" data-id="<?= $sp->id; ?>" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
                                     <!-- price area end -->
-                                    
-                                    
+
+
                                 </div>
                                 </div>
-                                
+
                             </div>
 
                             </div>
-                            
+
                         </div>
                     <?php
                     }
@@ -798,7 +794,7 @@
             <div class="card-body">
               <h5 class="card-title"><b>Help & Support</b></h5>
               <p class="card-text">For inquires and support. Please contact us.</p>
-             
+
             </div>
           </div>
         </div>
@@ -809,7 +805,7 @@
             <div class="card-body">
               <h5 class="card-title"><b>Easy Return</b></h5>
               <p class="card-text">You can easily return your newly purchased <br />products within 14 days.</p>
-             
+
             </div>
           </div>
         </div>
@@ -820,7 +816,7 @@
             <div class="card-body">
               <h5 class="card-title"><b>Payments</b></h5>
               <p class="card-text">We provides secure and multiple method of payments to customers. VISA, MasterCard, Mada and Apple Pay.</p>
-             
+
             </div>
           </div>
         </div>
@@ -851,8 +847,8 @@
           <h2>Join our newsletter</h2>
           <p>Join our newsletter and get latest deals, articles, and resources!</p>
           <form class="d-flex search-bar w-50 mx-auto" role="search">
-              
-            
+
+
               <input class="form-control border-0 bg-white py-3 ps-5" id="newsletterEmail" type="search" placeholder="Subscribe to our newsletter?" aria-label="Search">
               <button class="btn searchsubmitBtn" id="newsletterSubscribe" type="submit"><i class="bi bi-search"></i></button>
             </form>

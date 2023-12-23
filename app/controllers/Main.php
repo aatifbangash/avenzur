@@ -107,6 +107,10 @@ class Main extends MY_Shop_Controller
     public function index()
     {
         $config = array();
+
+//        $this->ion_auth->login('atif@gmail.com', '12345', true);
+
+
         $config["base_url"] = base_url() . "";
         $config["total_rows"] = $this->Shop_model->get_count();
         $config["per_page"] = 10;
