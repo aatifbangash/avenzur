@@ -367,6 +367,7 @@ function sa_alert(t, e, a, s) {
 }
 
 function saa_alert(t, e, a, s) {
+  console.log(t);
   (a = a || lang.delete),
     (e = e || lang.x_reverted_back),
     (s = s || {}),
