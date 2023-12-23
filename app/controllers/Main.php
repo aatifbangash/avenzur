@@ -465,7 +465,13 @@ class Main extends MY_Shop_Controller
         }
 
         if ($this->form_validation->run() == true){
-            $company_data = $this->shop_model->getUniqueCustomer('email', $identity);
+            if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+                $type = 'email';
+                $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
+            }else{
+                $type = 'mobile';
+                $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
+            }
 
             if($company_data){
 
