@@ -1894,36 +1894,41 @@ $(document).ready(function () {
       success: function (response) {
         var respObj = JSON.parse(response);
         if (respObj.status == "success" || respObj.code == 1) {
-          $(".myaccountForm").removeClass("show");
-          $("#registerOTP").off("click", handleRegisterOTPClick);
-          document.getElementById("registerOTP").style.color = "grey";
-          document.getElementById("registerOTP").style.cursor = "none";
-          $("#registerModal").modal("show");
-          document.getElementById("identifier").innerHTML =
-            document.getElementById("email").value;
-          document.getElementById("identifier_input").value =
-            document.getElementById("email").value;
+          if(respObj.link){
+            console.log(respObj.link);
+          }else{
+            $(".myaccountForm").removeClass("show");
+            $("#registerOTP").off("click", handleRegisterOTPClick);
+            document.getElementById("registerOTP").style.color = "grey";
+            document.getElementById("registerOTP").style.cursor = "none";
+            $("#registerModal").modal("show");
+            document.getElementById("identifier").innerHTML =
+              document.getElementById("email").value;
+            document.getElementById("identifier_input").value =
+              document.getElementById("email").value;
 
-          const countdownDuration = 60; // Duration in seconds
-          const countdownDisplay = document.getElementById("register-clock");
+            const countdownDuration = 60; // Duration in seconds
+            const countdownDisplay = document.getElementById("register-clock");
 
-          let timer = countdownDuration,
-            minutes,
-            seconds;
-          const intervalId = setInterval(function () {
-            minutes = parseInt(timer / 60, 10);
-            seconds = parseInt(timer % 60, 10);
+            let timer = countdownDuration,
+              minutes,
+              seconds;
+            const intervalId = setInterval(function () {
+              minutes = parseInt(timer / 60, 10);
+              seconds = parseInt(timer % 60, 10);
 
-            countdownDisplay.textContent =
-              minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+              countdownDisplay.textContent =
+                minutes + "." + (seconds < 10 ? "0" : "") + seconds;
 
-            if (--timer < 0) {
-              clearInterval(intervalId);
-              document.getElementById("registerOTP").style.color = "#662d91";
-              document.getElementById("registerOTP").style.cursor = "pointer";
-              $("#registerOTP").click(handleRegisterOTPClick);
-            }
-          }, 1000);
+              if (--timer < 0) {
+                clearInterval(intervalId);
+                document.getElementById("registerOTP").style.color = "#662d91";
+                document.getElementById("registerOTP").style.cursor = "pointer";
+                $("#registerOTP").click(handleRegisterOTPClick);
+              }
+            }, 1000);
+          }
+          
         } else {
           $("#register-message").html(respObj.message);
         }

@@ -785,10 +785,12 @@ class Main extends MY_Shop_Controller
                     if ($this->ion_auth->login($email, '12345', $remember)) {
                         $cart_contents = $this->cart->contents();
                         if($cart_contents){
-                            redirect('cart/checkout');
+                            //redirect('cart/checkout');
+                            echo json_encode(['status' => 'success', 'message' => 'Email already exists', 'link' => 'cart/checkout']);
                         }else{
                             $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
-                            redirect($referrer);
+                            echo json_encode(['status' => 'success', 'message' => 'Email already exists', 'link' => $referrer]);
+                            //redirect($referrer);
                         }
                     }
 
