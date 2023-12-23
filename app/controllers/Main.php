@@ -772,7 +772,7 @@ class Main extends MY_Shop_Controller
             $customer_group = $this->shop_model->getCustomerGroup($this->Settings->customer_group);
             $price_group    = $this->shop_model->getPriceGroup($this->Settings->price_group);
 
-            if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $type = 'email';
                 $company_found = $this->shop_model->getUniqueCustomer('email', $email);
                 //$company_data = $this->shop_model->getUniqueCustomer($type, $identity);
