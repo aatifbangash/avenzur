@@ -101,6 +101,10 @@ if ($this->Settings->indian_gst) {
                     </div>
                 </div>
 
+            </div>
+         
+        <div class="col-md-4">
+
                 <div class="mt-5">
                     <h2 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
                     <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
@@ -140,9 +144,7 @@ if ($this->Settings->indian_gst) {
                     </div>
                 </div>
 
-            </div>
-         
-        <div class="col-md-4">
+
             <?php echo shop_form_open('order', 'class="validate addressform-k"'); ?>
            <?php
                 $total = $this->sma->convertMoney($this->cart->total(), false, false);
