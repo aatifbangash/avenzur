@@ -789,7 +789,12 @@ class Main extends MY_Shop_Controller
                 $this->load->library('ion_auth');
 
                 if ($this->form_validation->run() == true){
-                    $otp_sent = $this->sendOTP($company_found->id, $email, 'email');
+
+                    if($type == 'email'){
+                        $otp_sent = $this->sendOTP($company_found->id, $email, 'email');
+                    }else{
+                        $otp_sent = $this->sendOTP($company_found->id, $email, 'mobile');
+                    }
         
                     if($otp_sent){
                         echo json_encode(['status' => 'success', 'message' => 'An OTP is sent to your email']);  
