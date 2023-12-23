@@ -333,7 +333,8 @@ if ($this->Settings->indian_gst) {
        // alert(city);
         //$("#express-delivery-check").prop("disabled", true);
         $("#express-delivery-check").hide();
-        $("#express-delivery-details").hide();
+        $("#express-delivery-details").css("display", "none !important");
+        //$("#express-delivery-details").hide();
         //$('.payment-k').prop('disabled', true);
 
         var shipping = parseInt('<?= round($calculateShipping); ?>');
