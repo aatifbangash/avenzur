@@ -193,7 +193,7 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
 
                                     <div class="form-row">
                                         <div class="form-group col-md-4 col-12" style="float: left">
-                                            <label for="mobile_number" class=" fw-bold fs-6">Mobile Number</label>
+                                            <label for="mobile_number" class=" fw-bold fs-6">Mobile Number *</label>
                                             <select class="form-control checkout_address py-1 px-0"
                                                 id="exampleFormControlSelect1">
                                                 <option>+966</option>
@@ -213,13 +213,13 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
 
                                     <div class="form-row">
                                         <div class="form-group col-md-4 col-12" style="float: left">
-                                            <label for="first_name" class=" fw-bold fs-6">First Name</label>
+                                            <label for="first_name" class=" fw-bold fs-6">First Name *</label>
                                             <input type="text" class="form-control checkout_address ps-0"
                                                 id="first_name" name="first_name" placeholder="Enter First Name"
                                                 value="<?= $first_name; ?>">
                                         </div>
                                         <div class="form-group col-md-4 col-12 ms-md-4" style="float: left;">
-                                            <label for="last_name" class=" fw-bold fs-6">Last Name</label>
+                                            <label for="last_name" class=" fw-bold fs-6">Last Name *</label>
                                             <input type="text" class="form-control checkout_address ps-0" id="last_name"
                                                 name="last_name" placeholder="Enter Last Name" value="<?= $last_name; ?>">
                                         </div>
