@@ -105,9 +105,8 @@ if ($this->Settings->indian_gst) {
          
         <div class="col-md-4">
 
-                
-                    <h3 class=" fw-bold pb-2">Payment</h3>
-                    <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
+                    <h3 class="fw-bold pb-2">Payment</h3>
+                    <div class="border rounded py-3 px-2">
                         <div class="form-check fs-5">
                         <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
                         <label class="form-check-label fw-semibold" for="flexRadioDefault2">
@@ -119,8 +118,8 @@ if ($this->Settings->indian_gst) {
                 
 
                 
-                <h3 class=" fw-bold pb-2">Shipping</h3>
-                    <div class="d-flex align-items-center  py-3 standard-div">
+                <h3 class="fw-bold pb-2">Shipping</h3>
+                    <div class="border rounded py-3 px-2">
                         <div class="form-check fs-5">
                         <input class="form-check-input" type="radio" name="delivery" id="flexRadiostandard" checked>
                         <label class="form-check-label fs-6 fw-semibold" for="flexRadiostandard">
