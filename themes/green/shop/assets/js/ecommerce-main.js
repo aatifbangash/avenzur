@@ -382,7 +382,8 @@ function saa_alert(t, e, a, s) {
 
         console.log(t);
         if(t.total_items <= 0 || typeof t.total_items == 'undefined'){
-          window.location.href = 'shop/products';
+          console.log(t);
+          //window.location.href = 'shop/products';
         }else{
           console.log(t.total_items);
         }
