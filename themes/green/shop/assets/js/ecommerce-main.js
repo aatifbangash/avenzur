@@ -1895,7 +1895,7 @@ $(document).ready(function () {
         var respObj = JSON.parse(response);
         if (respObj.status == "success" || respObj.code == 1) {
           if(respObj.link){
-            console.log(respObj.link);
+            window.location.href = respObj.link;
           }else{
             $(".myaccountForm").removeClass("show");
             $("#registerOTP").off("click", handleRegisterOTPClick);
