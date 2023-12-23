@@ -102,14 +102,14 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                 <div class="px-3 py-2">
                     <div class="py-3">
                         <h6 class="m-0 fw-semibold">
-                            <?php 
-                                if($action_type == 'editaddress'){
-                                    echo lang('Update address details');
-                                }else{
-                                    echo lang('add_new_address');
-                                }
+                            <?php
+                            if ($action_type == 'editaddress') {
+                                echo lang('Update address details');
+                            } else {
+                                echo lang('add_new_address');
+                            }
                             ?>
-                            
+
                         </h6>
                     </div>
                     <div class="row" id="addressList">
@@ -135,19 +135,19 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                             <div class="card" style="border:none">
                                 <span class="text-bold padding-bottom-md fw-bold mb-3"
                                     style="font-size:20px;font-weight: bold;color: #662d91;">
-                                    <?php 
-                                        if($action_type == 'editaddress'){
-                                            echo lang('Update address details');
-                                        }else{
-                                            echo lang('New address details');
-                                        }
+                                    <?php
+                                    if ($action_type == 'editaddress') {
+                                        echo lang('Update address details');
+                                    } else {
+                                        echo lang('New address details');
+                                    }
                                     ?>
                                     <?php
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'checkoutAddress'];
                                     echo form_open('shop/saveCheckoutAddress', $attrib);
                                     //echo form_open('verify_phone', $attrib);
                                     ?>
-                                    <input type="hidden" id="action_type" name="action_type_id"
+                                    <input type="hidden" id="action_type_id" name="action_type_id"
                                         value="<?= $address_id; ?>">
                                     <input type="hidden" id="longitude" name="longitude" value="<?= $longitude; ?>">
                                     <input type="hidden" id="latitude" name="latitude" value="<?= $latitude; ?>">
@@ -160,7 +160,7 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                     <input type="hidden" id="current_mobile_number" name="current_mobile_number"
                                         value="<?= $mobile_number; ?>">
                                     <input type="hidden" id="opt_verified" name="opt_verified" value="0">
-                                    <input type="hidden" id="action_type" name="action_type" value="<?=$action_type;?>">
+                                    <input type="hidden" id="action_type" name="action_type" value="<?= $action_type; ?>">
 
                                     <span class=" padding-bottom-md fw-bold" style="font-size:17px;">
                                         LOCATION INFORMATION
@@ -221,7 +221,8 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                         <div class="form-group col-md-4 col-12 ms-md-4" style="float: left;">
                                             <label for="last_name" class=" fw-bold fs-6">Last Name *</label>
                                             <input type="text" class="form-control checkout_address ps-0" id="last_name"
-                                                name="last_name" placeholder="Enter Last Name" value="<?= $last_name; ?>">
+                                                name="last_name" placeholder="Enter Last Name"
+                                                value="<?= $last_name; ?>">
                                         </div>
                                     </div>
 
@@ -394,15 +395,15 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
             }
 
             // Add more validation for other fields as needed
-            if($('#action_type').val() == '' || ( $('#action_type').val() == 'editaddress' && $('#action_type_id').val() == 'default' ) ) {
-            if ($('#opt_verified').val() == 0 && last_name.val() !== '' && first_name.val() !== '' && mobile_number !== '' && autocomplete_search !== '') {
-                // check if current_mobile_number != phone
-                if( $('#mobile_number').val() != $('#current_mobile_number').val() ) {
-                    verifyNumber();
+            if ($('#action_type').val() == '' || ($('#action_type').val() == 'editaddress' && $('#action_type_id').val() == 'default')) {
+                if ($('#opt_verified').val() == 0 && last_name.val() !== '' && first_name.val() !== '' && mobile_number !== '' && autocomplete_search !== '') {
+                    // check if current_mobile_number != phone
+                    if ($('#mobile_number').val() != $('#current_mobile_number').val()) {
+                        verifyNumber();
+                    }
+
                 }
-                
             }
-        }
         });
 
         $('#mobileOtpBtn').click(function (e) {
@@ -439,37 +440,38 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                 data: formData,
                 success: function (response) {
                     var respObj = JSON.parse(response);
-                    if(respObj.status == 'verified') {
+                    console.log(respObj.status);
+                    if (respObj.status == 'verified') {
                         $('#checkoutAddress').off('submit'); // Unbind existing submit handler
                         $('#checkoutAddress').submit();
                     }
                     else if (respObj.status == 'success' || respObj.code == 1) {
 
-                            $('#mobileOTP').off('click', handleMobileOTPClick);
-                            document.getElementById('mobileOTP').style.color = 'grey';
-                            document.getElementById('mobileOTP').style.cursor = 'none';
-                            $('#verifyMobileModal').modal('show');
-                            document.getElementById('identifier').innerHTML = $('#mobile_number').val();
-                            document.getElementById('identifier_input').value = $('#mobile_number').val();
+                        $('#mobileOTP').off('click', handleMobileOTPClick);
+                        document.getElementById('mobileOTP').style.color = 'grey';
+                        document.getElementById('mobileOTP').style.cursor = 'none';
+                        $('#verifyMobileModal').modal('show');
+                        document.getElementById('identifier').innerHTML = $('#mobile_number').val();
+                        document.getElementById('identifier_input').value = $('#mobile_number').val();
 
-                            const countdownDuration = 60; // Duration in seconds
-                            const countdownDisplay = document.getElementById("register-clock");
+                        const countdownDuration = 60; // Duration in seconds
+                        const countdownDisplay = document.getElementById("register-clock");
 
-                            let timer = countdownDuration, minutes, seconds;
-                            const intervalId = setInterval(function () {
-                                minutes = parseInt(timer / 60, 10);
-                                seconds = parseInt(timer % 60, 10);
+                        let timer = countdownDuration, minutes, seconds;
+                        const intervalId = setInterval(function () {
+                            minutes = parseInt(timer / 60, 10);
+                            seconds = parseInt(timer % 60, 10);
 
-                                countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+                            countdownDisplay.textContent = minutes + "." + (seconds < 10 ? "0" : "") + seconds;
 
-                                if (--timer < 0) {
-                                    clearInterval(intervalId);
-                                    document.getElementById('mobileOTP').style.color = '#662d91';
-                                    document.getElementById('mobileOTP').style.cursor = 'pointer';
-                                    $('#mobileOTP').click(handleMobileOTPClick);
-                                }
-                            }, 1000);
-                        
+                            if (--timer < 0) {
+                                clearInterval(intervalId);
+                                document.getElementById('mobileOTP').style.color = '#662d91';
+                                document.getElementById('mobileOTP').style.cursor = 'pointer';
+                                $('#mobileOTP').click(handleMobileOTPClick);
+                            }
+                        }, 1000);
+
 
                     } else {
                         alert('Mobile verification failed');
