@@ -382,6 +382,8 @@ function saa_alert(t, e, a, s) {
 
         if(t.total_items <= 0){
           window.location.href = 'shop/products';
+        }else{
+          console.log(t.total_items);
         }
         //sa_alert(t.status, t.message);
       },
