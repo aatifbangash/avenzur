@@ -380,7 +380,9 @@ function saa_alert(t, e, a, s) {
         if (t.redirect) return (window.location.href = t.redirect), !1;
         t.cart && ((cart = t.cart), update_mini_cart(cart), update_cart(cart));
 
-        console.log(t);
+        if(t.total_items <= 0){
+          window.location.href = 'shop/products';
+        }
         //sa_alert(t.status, t.message);
       },
       error: function () {
