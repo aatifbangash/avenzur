@@ -85,7 +85,7 @@ if ($this->Settings->indian_gst) {
                             foreach($cart_contents as $key => $item) {?>
                         <div class="addressDetail row align-items-center">
                             <div class="addicon col-md-2">
-                                <?php $image = $item['image'] != '' ? base_url() . 'assets/uploads'.$item['image'] : '';?>
+                                <?php $image = $item['image'] != '' ? base_url() . 'assets/uploads/'.$item['image'] : '';?>
                                     
                                 <img src="<?php echo $image; ?>" class="w-100">
                             </div>
