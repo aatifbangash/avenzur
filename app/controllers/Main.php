@@ -278,7 +278,8 @@ class Main extends MY_Shop_Controller
         }
         $referrer = ($_SERVER['HTTP_REFERER'] ?? '/');
         $this->session->set_flashdata('message', $this->ion_auth->messages());
-        redirect($m ? 'login/m' : $referrer);
+        //redirect($m ? 'login/m' : $referrer);
+        redirect('/');
     }
 
     public function profile($act = null)
