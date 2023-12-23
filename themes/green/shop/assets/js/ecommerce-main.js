@@ -1016,12 +1016,16 @@ $(document).ready(function () {
 
   $(document).on("click", ".btn-minus", function (t) {
     var e = $(this).parent().find("input");
-    parseInt(e.val()) > 1 && e.val(parseInt(e.val()) - 1);
+    if (e.val() > 1) {
+      parseInt(e.val()) > 1 && e.val(parseInt(e.val()) - 1);
+    } 
   });
 
   $(document).on("click", ".btn-plus", function (t) {
     var e = $(this).parent().find("input");
-    e.val(parseInt(e.val()) + 1);
+    if (e.val() < 3) {
+      e.val(parseInt(e.val()) + 1);
+    }
   });
 
   $(document).on("click", ".btn-minus-update", function (t) {
@@ -1040,19 +1044,6 @@ $(document).ready(function () {
     }
   });
 
-  $(document).on("click", ".btn-minus", function (t) {
-    var e = $(this).parent().find("input");
-    if (e.val() > 1) {
-      parseInt(e.val()) > 1 && e.val(parseInt(e.val()) - 1);
-    }
-  });
-
-  $(document).on("click", ".btn-plus", function (t) {
-    var e = $(this).parent().find("input");
-    if (e.val() < 3) {
-      e.val(parseInt(e.val()) + 1);
-    }
-  });
 
   $(document).on("click", ".btn-plus-update", function (t) {
     var e = $(this).parent().find("input");
