@@ -780,7 +780,18 @@ class Main extends MY_Shop_Controller
                 $user_data = $this->shop_model->getUserByEmail($email);
 
                 if($user_data->active == 1){
-                    echo json_encode(['status' => 'error', 'message' => 'Email already exists']);
+                    $remember = true;
+                    $this->load->library('ion_auth');
+                    if ($this->ion_auth->login($email, '12345', $remember)) {
+                        $cart_contents = $this->cart->contents();
+                        if($cart_contents){
+                            redirect('cart/checkout');
+                        }else{
+                            $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
+                            redirect($referrer);
+                        }
+                    }
+
                 }else{
                     $this->load->library('ion_auth');
 
