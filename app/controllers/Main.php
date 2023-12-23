@@ -767,22 +767,29 @@ class Main extends MY_Shop_Controller
 
         if ($this->form_validation->run('') == true) {
             $email    = strtolower($this->input->post('email'));
-            //$username = strtolower($this->input->post('username'));
             $username = strtolower($this->input->post('email'));
-            //$password = $this->input->post('password');
 
             $customer_group = $this->shop_model->getCustomerGroup($this->Settings->customer_group);
             $price_group    = $this->shop_model->getPriceGroup($this->Settings->price_group);
-                       // $this->data['country'] = $this->shop_->getallCountry();
 
-            $company_found = $this->shop_model->getUniqueCustomer('email', $email);
+            if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+                $type = 'email';
+                $company_found = $this->shop_model->getUniqueCustomer('email', $email);
+                //$company_data = $this->shop_model->getUniqueCustomer($type, $identity);
+            }else{
+                $type = 'mobile';
+                $company_found = $this->shop_model->getUniqueCustomer('mobile', $email);
+                //$company_data = $this->shop_model->getUniqueCustomer($type, $identity);
+            }
+
+            //$company_found = $this->shop_model->getUniqueCustomer('email', $email);
             if($company_found){
-                $user_data = $this->shop_model->getUserByEmail($email);
+                $user_data = $this->shop_model->getUserByEmail($company_found->email);
 
                 if($user_data->active == 1){
                     $remember = true;
                     $this->load->library('ion_auth');
-                    if ($this->ion_auth->login($email, '12345', $remember)) {
+                    if ($this->ion_auth->login($company_found->email, '12345', $remember)) {
                         $cart_contents = $this->cart->contents();
                         if($cart_contents){
                             //redirect('cart/checkout');
@@ -809,7 +816,7 @@ class Main extends MY_Shop_Controller
                         echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
                     }
                 }
-            }else{
+            }else if($type == 'email'){
                 $company_data = [
                     //'country'             => $this->input->post('country') ? $this->input->post('country') : '-',
                     //'name'                => $this->input->post('first_name') . ' ' . $this->input->post('last_name'),
@@ -852,6 +859,8 @@ class Main extends MY_Shop_Controller
                 }else{
                     echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
                 }
+            }else{
+                echo json_encode(['status' => 'error', 'message' => 'Data not found in system']);
             }
             
         }
