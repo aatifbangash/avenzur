@@ -93,7 +93,7 @@ if ($this->Settings->indian_gst) {
                                     <p class="m-0 fs-6 fw-semibold">
                                     <?php echo $item['name'];?>  
                                     </p>
-                                    <p class="m-0 fs-6 fw-semibold mt-2"> SAR <?php echo $item['price'];?> x <?php echo $item['qty'];?></p>  
+                                    <p class="m-0 fs-6 fw-semibold mt-2"> SAR <?php echo $item['price'];?> Quantity (<?php echo $item['qty'];?>)</p>  
                                 </div>                                                             
                             </div>
                             <hr />
