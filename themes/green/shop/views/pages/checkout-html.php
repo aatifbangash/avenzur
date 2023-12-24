@@ -82,20 +82,21 @@ if ($this->Settings->indian_gst) {
                     <div class="">
                         <h3 class="fs-5 fw-bold">Shipment <span class="fs-5 fw-medium purpColor">(<?php echo count($cart_contents)?> item<?php echo count($cart_contents) > 1 ? 's':'';?>)</span></h3>
                         <?php if(!empty($cart_contents)) {
-                            foreach($cart_contents as $key => $item) {?>
-                        <div class="addressDetail row align-items-center">
-                            <div class="addicon col-md-2">
-                                <?php $image = $item['image'] != '' ? base_url() . 'assets/uploads'.$item['image'] : '';?>
-                                    
-                                <img src="<?php echo $image; ?>" class="w-100">
+                            foreach($cart_contents as $key => $item) { ?>
+                            <div class="addressDetail row align-items-center">
+                                <div class="addicon col-md-2">
+                                    <?php $image = $item['image'] != '' ? base_url() . 'assets/uploads/'.$item['image'] : '';?>
+                                        
+                                    <img src="<?php echo $image; ?>" class="w-100">
+                                </div>
+                                <div class="ms-2 col-md-4">
+                                    <p class="m-0 fs-6 fw-semibold">
+                                    <?php echo $item['name'];?>  
+                                    </p>
+                                    <p class="m-0 fs-6 fw-semibold mt-2"> SAR <?php echo $item['price'];?> <br /><span style="font-size: 13.5px;">Quantity (<?php echo $item['qty'];?>)</span></p>  
+                                </div>                                                             
                             </div>
-                            <div class="ms-2 col-md-4">
-                                <p class="m-0 fs-6 fw-semibold">
-                                 <?php echo $item['name'];?>  
-                                </p>
-                                <p class="m-0 fs-6 fw-semibold mt-2"> SAR <?php echo $item['price'];?></p>  
-                            </div>                                                             
-                        </div>
+                            <hr />
                         <?php } }?>
                        
                     </div>

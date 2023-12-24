@@ -107,7 +107,8 @@ class Cart_ajax extends MY_Shop_Controller
             $quantity_added = $this->input->get('qty') + $product_to_add_quantity;
 
             if($quantity_added > 3){
-                $this->sma->send_json(['error' => 1, 'message' => 'Maximum allowed order 3 pieces']);
+                //$this->sma->send_json(['error' => 1, 'message' => 'Maximum allowed order 3 pieces']);
+                return false;
             }
 
             $options = $this->shop_model->getProductVariants($product_id);
@@ -130,9 +131,11 @@ class Cart_ajax extends MY_Shop_Controller
             if (!$this->Settings->overselling && $this->checkProductStock($product, $quantity_added, $selected)) {
                 if ($this->input->is_ajax_request()) {
                     if($quantity_in_stock > 0){
-                        $this->sma->send_json(['error' => 1, 'message' => lang('Only '.$quantity_in_stock.' pieces remaining')]);
+                        //$this->sma->send_json(['error' => 1, 'message' => lang('Only '.$quantity_in_stock.' pieces remaining')]);
+                        return false;
                     }else{
-                        $this->sma->send_json(['error' => 1, 'message' => lang('item_out_of_stock')]);
+                        //$this->sma->send_json(['error' => 1, 'message' => lang('item_out_of_stock')]);
+                        return false;
                     } 
                 } else {
                     $this->session->set_flashdata('error', lang('item_out_of_stock'));
@@ -233,6 +236,7 @@ class Cart_ajax extends MY_Shop_Controller
         }
     }
 
+    
     public function get_countries() {
         $countries = $this->settings_model->getCountries();
         echo json_encode($countries);

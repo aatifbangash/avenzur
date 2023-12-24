@@ -500,7 +500,9 @@ class Main extends MY_Shop_Controller
                             }
                         } else {
                             $this->session->set_flashdata('error', $this->ion_auth->errors());
-                            redirect('login');
+                            //redirect('login');
+                            $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
+                            redirect($referrer);
                         }
                     } else{
                         $this->data['error']      = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
@@ -516,12 +518,16 @@ class Main extends MY_Shop_Controller
                     }
                 }else{
                     $this->session->set_flashdata('error', 'OTP verification failed');
-                    redirect('login');
+                    //redirect('login');
+                    $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
+                    redirect($referrer);
                 }
                 
             }else{
                 $this->session->set_flashdata('error', 'Data not found in system');
-                redirect('login');
+                $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
+                redirect($referrer);
+                //redirect('login');
             }
         }else{
             $this->page_construct('user/login', $this->data);
@@ -580,7 +586,8 @@ class Main extends MY_Shop_Controller
 
                         } else {
                             $this->session->set_flashdata('error', $this->ion_auth->errors());
-                            redirect('login');
+                            $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
+                            redirect($referrer);
                         }
                     } else{
                         $this->data['error']      = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
@@ -596,12 +603,16 @@ class Main extends MY_Shop_Controller
                     }
                 }else{
                     $this->session->set_flashdata('error', 'OTP verification failed');
-                    redirect('login');
+                    $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
+                    redirect($referrer);
+                    //redirect('login');
                 }
                 
             }else{
                 $this->session->set_flashdata('error', 'Data not found in system');
-                redirect('login');
+                $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
+                redirect($referrer);
+                //redirect('login');
             }
         }else{
             $this->page_construct('user/login', $this->data);
