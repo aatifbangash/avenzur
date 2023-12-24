@@ -46,7 +46,7 @@
     <!-- feature section -->
     <section>
       <div class="container container-max-width py-4">
-       <div class="featureTitle text-center mb-5"><h2>Featured Categories</h2></div>
+       <div class="featureTitle text-center mb-5"><h2>Categories</h2></div>
        <!-- cards -->
        <div class="row feature-cards text-center gy-4 ">
             <?php
