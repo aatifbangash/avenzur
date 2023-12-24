@@ -1421,6 +1421,9 @@ html[lang="ar"] a.btn.primary-buttonAV {
 html[lang="ar"] td.ar-colCart {
   text-align: right;
 }
+html[lang="ar"] .speacialOfferMove {
+  direction: ltr;
+}
 .swal2-modal.swal2-show ul#iti-0__country-listbox {
   width: 100%;
   min-width: 450px;
