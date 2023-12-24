@@ -124,7 +124,7 @@ if ($this->Settings->indian_gst) {
                     <h2 class=" fw-bold pb-2 fs-2  m-0">Shipping</h2>
                     <div class="d-flex align-items-center  py-3 standard-div">
                         <div class="form-check fs-5">
-                        <input class="form-check-input" type="radio" name="delivery" id="flexRadiostandard" checked>
+                        <input class="form-check-input" type="radio" name="delivery" id="flexRadiostandard" checked value="shipping_standard">
                         <label class="form-check-label fs-6 fw-semibold" for="flexRadiostandard">
                             Standard delivery
                         </label>
@@ -135,7 +135,7 @@ if ($this->Settings->indian_gst) {
                     </div>
                     <div class="d-flex align-items-center  py-1 standard-div" id="express-delivery-details" style="display: none !important;">
                         <div class="form-check fs-5">
-                        <input class="form-check-input" type="radio" name="delivery" id="express-delivery-check">
+                        <input class="form-check-input" type="radio" name="delivery" id="express-delivery-check" value="shipping_express">
                         <label class="form-check-label fs-6 fw-semibold" for="express-delivery-check">
                             Express delivery
                         </label>
@@ -270,6 +270,21 @@ if ($this->Settings->indian_gst) {
 
             calCulateShipping(city, country, $(this).prop('checked'));
         })
+
+        $('#flexRadiostandard').change(function () {
+          
+          var city = $('#shipping_city').val();
+          var country = $('#shipping_country').val();
+      
+          if ($(this).prop('checked') == true) {
+              document.getElementById('express_delivery').value = 'Standard';
+              calCulateShipping(city, country, false);
+          } else {
+              document.getElementById('express_delivery').value = 'Express';
+              calCulateShipping(city, country, true);
+          }
+
+      })
 
         $('.payment-address').click(function (e) {
             $("#express-delivery-check").prop('checked', false)
