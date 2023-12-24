@@ -119,7 +119,7 @@
             </div>
             <div class="col-lg-2 col-md-2 my-4">
               <div class="moveBanner">
-                <a href="<?= site_url('category/health-wellness?special_product=yes'); ?>">
+                <a href="<?= site_url('category/flu?special_product=yes'); ?>">
                   <img src="assets/images/banners/moveBanner6.jpg"  alt="movingBanner" class="w-100">
                 </a>
               </div>
