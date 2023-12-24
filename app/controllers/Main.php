@@ -564,7 +564,6 @@ class Main extends MY_Shop_Controller
 
                 $validate = $this->shop_model->validate_otp($identity, $otp);
                 if($validate){
-                    echo 'OTP validated...';exit;
                     if ($this->form_validation->run('auth/login') == true) {
                         $remember = true;
                         if ($this->ion_auth->login($company_data->email, '12345', $remember)) {
@@ -586,6 +585,7 @@ class Main extends MY_Shop_Controller
                             }
 
                         } else {
+                            echo 'Login Failed...';exit;
                             $this->session->set_flashdata('error', $this->ion_auth->errors());
                             $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
                             redirect($referrer);
