@@ -557,8 +557,6 @@ class Main extends MY_Shop_Controller
                 $type = 'mobile';
                 $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             }
-
-            print_r($company_data);exit;
             
             if($company_data){
 
@@ -566,6 +564,7 @@ class Main extends MY_Shop_Controller
 
                 $validate = $this->shop_model->validate_otp($identity, $otp);
                 if($validate){
+                    echo 'OTP validated...';exit;
                     if ($this->form_validation->run('auth/login') == true) {
                         $remember = true;
                         if ($this->ion_auth->login($company_data->email, '12345', $remember)) {
