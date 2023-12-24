@@ -264,7 +264,8 @@ class Shop_model extends CI_Model
             $this->db->select("{$this->db->dbprefix('categories')}.*, {$pc} AS product_count", false);
             $this->db->having('product_count >', 0);
         }
-        $this->db->where('categories.id !=', 29);
+        //$this->db->where('categories.id !=', 29);
+        $this->db->where_not_in('categories.id', array(29, 32));
         $this->db->group_start()->where('parent_id', null)->or_where('parent_id', 0)->group_end()->order_by('name');
         $categories = $this->db->get('categories')->result();
 
