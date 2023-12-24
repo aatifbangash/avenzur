@@ -124,7 +124,48 @@
                 </a>
               </div>
             </div>
-            
+            <div class="col-lg-2 col-md-2 my-4">
+              <div class="moveBanner">
+                <a href="<?= site_url('category/har?special_product=yes'); ?>">
+                  <img src="assets/images/banners/moveBanner1.jpg"  alt="movingBanner" class="w-100">
+                </a>
+              </div>
+            </div>
+            <div class="col-lg-2 col-md-2 my-4">
+              <div class="moveBanner">
+                <a href="<?= site_url('category/vitamins?special_product=yes'); ?>">
+                  <img src="assets/images/banners/moveBanner2.jpg"  alt="movingBanner" class="w-100">
+                </a>
+              </div>
+            </div>
+            <div class="col-lg-2 col-md-2 my-4">
+              <div class="moveBanner">
+                <a href="<?= site_url('category/man?special_product=yes'); ?>">
+                  <img src="assets/images/banners/moveBanner3.jpg"  alt="movingBanner" class="w-100">
+                </a>
+              </div>
+            </div>
+            <div class="col-lg-2 col-md-2 my-4">
+              <div class="moveBanner">
+                <a href="<?= site_url('category/beauty?special_product=yes'); ?>">
+                  <img src="assets/images/banners/moveBanner4.jpg"  alt="movingBanner" class="w-100">
+                </a>
+              </div>
+            </div>
+            <div class="col-lg-2 col-md-2 my-4">
+              <div class="moveBanner">
+                <a href="<?= site_url('category/skn?special_product=yes'); ?>">
+                  <img src="assets/images/banners/moveBanner5.jpg"  alt="movingBanner" class="w-100">
+                </a>
+              </div>
+            </div>
+            <div class="col-lg-2 col-md-2 my-4">
+              <div class="moveBanner">
+                <a href="<?= site_url('category/health-wellness?special_product=yes'); ?>">
+                  <img src="assets/images/banners/moveBanner6.jpg"  alt="movingBanner" class="w-100">
+                </a>
+              </div>
+            </div>
           </div>
       </div>
     </section>
