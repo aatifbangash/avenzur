@@ -416,10 +416,7 @@
     </script>
     <script src="<?= $assets; ?>js/jquery-ui.min.js"></script>
     <script src="<?= $assets; ?>js/jquery-ui.js"></script>
-    <script>
-
-
-</script>
+    <script src="<?= $assets;?>js/notify.min.js"> </script>
 
 
   </body>
