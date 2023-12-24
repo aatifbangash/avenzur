@@ -124,13 +124,7 @@
                 </a>
               </div>
             </div>
-            <div class="col-lg-2 col-md-2 my-4">
-              <div class="moveBanner">
-                <a href="<?= site_url('category/beauty?special_product=yes'); ?>">
-                  <img src="assets/images/banners/moveBanner4.jpg"  alt="movingBanner" class="w-100">
-                </a>
-              </div>
-            </div>
+            
           </div>
       </div>
     </section>
