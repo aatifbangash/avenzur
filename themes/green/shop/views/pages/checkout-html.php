@@ -233,7 +233,7 @@ if ($this->Settings->indian_gst) {
 
 <script>
    $(document).ready(function () {
-        $('#proceed-payment').click(function () {
+        $('#proceed-payment').click(function (e) {
             e.preventDefault(); 
 
             alert('Post payment method...');
