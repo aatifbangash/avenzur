@@ -115,10 +115,10 @@ if ($this->Settings->indian_gst) {
                             <label class="form-check-label fw-semibold" for="flexRadioDefault2">
                                 Debit / Credit Card Payment
                             </label>
-                            <input type="text" name="card_name" value="" placeholder="Cardholder Name" />
-                            <input type="text" name="card_number" value="" placeholder="Card Number" />
-                            <input type="text" name="card_expiry" value="" placeholder="Card Expiry" />
-                            <input type="text" name="card_cvv" value="" placeholder="Card Cvv" />
+                            <input type="text" name="card_name" value="" id="card_name" placeholder="Cardholder Name" />
+                            <input type="text" name="card_number" value="" id="card_number" placeholder="Card Number" />
+                            <input type="text" name="card_expiry" value="" id="card_expiry" placeholder="Card Expiry" />
+                            <input type="text" name="card_cvv" value="" id="card_cvv" placeholder="Card Cvv" />
                         </div>
                         <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
                     </div>
@@ -236,22 +236,28 @@ if ($this->Settings->indian_gst) {
         $('#proceed-payment').click(function (e) {
             e.preventDefault(); 
 
-            alert('Post payment method...');
-            /*var formData = $('#registrationForm').serialize();
+            var card_name = $('#card_name').val();
+            var card_number = $('#card_number').val();
+            var card_cvv = $('#card_cvv').val();
+            var card_expiry = $('#card_expiry').val();
+
             $.ajax({
                 type: 'POST',
-                url: $('#registrationForm').attr('action'),
-                data: formData,
+                url: 'pay/process_payment',
+                data: { card_name: card_name, card_number: card_number, card_cvv: card_cvv, card_expiry: card_expiry },
+                headers: {
+                    'X-CSRF-Token': site.csrf_token_value
+                },
                 success: function (response) {
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
-
+                        console.log('Passed Correctly...');
                     }
                 },
                 error: function (error) {
                     console.error(error);
                 }
-            });*/
+            });
         });
 
         $('#shipping-phone.iti__flag-container').click(function () {

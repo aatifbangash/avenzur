@@ -323,6 +323,10 @@ class Pay extends MY_Shop_Controller
         //redirect('/');
     }
 
+    public function process_payment(){
+        echo json_encode('payment processed...');
+    }
+
     public function test_order(){
         $access_token_json = $this->oto_generate_token();
         $access_token_obj = json_decode($access_token_json);
