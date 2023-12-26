@@ -13,6 +13,10 @@
     background-color: #1ed743;
     border-radius: 50%;
   }
+
+  .wg-default{
+    display: none;
+  }
 </style>
 <section class="footer-container" >
       <div class="ft" style="background-image: url(<?= base_url('assets/images/banners/bgbanner.jpg'); ?>); max-width:1440px; margin-inline:auto;">
