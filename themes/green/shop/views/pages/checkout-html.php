@@ -209,7 +209,7 @@ if ($this->Settings->indian_gst) {
                                             <input type="hidden" id="shipping-input" name="shipping"
                                                    value="<?= $calculateShipping ?>"/>
                                             <?php
-                                           echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k" ');
+                                           echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k" id="proceed-payment"');
                                             } elseif ($this->Staff) {
                                                 echo '<div class="alert alert-warning margin-bottom-no">' . lang('staff_not_allowed') . '</div>';
                                             } else {
@@ -232,6 +232,27 @@ if ($this->Settings->indian_gst) {
 
 <script>
    $(document).ready(function () {
+        $('#proceed-payment').click(function () {
+            e.preventDefault(); 
+
+            alert('Post payment method...');
+            /*var formData = $('#registrationForm').serialize();
+            $.ajax({
+                type: 'POST',
+                url: $('#registrationForm').attr('action'),
+                data: formData,
+                success: function (response) {
+                    var respObj = JSON.parse(response);
+                    if (respObj.status == 'success' || respObj.code == 1) {
+
+                    }
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });*/
+        });
+
         $('#shipping-phone.iti__flag-container').click(function () {
             var countryCode = $('#shipping-phone.iti__selected-flag').attr('title');
             var countryCode = countryCode.replace(/[^0-9]/g, '')
