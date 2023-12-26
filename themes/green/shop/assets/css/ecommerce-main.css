@@ -71,15 +71,16 @@ section.top-bar {
 }
 .search-bar {
   border-radius: 100px;
-  background: #ddc3f4;
+  background: #ffffff;
   overflow: hidden;
 }
 .searchsubmitBtn {
-  background: var(--primary-color);
-  color: white;
-  font-size: 26px;
-  padding-inline: 25px;
+  background: white;
+  color: rgb(0, 0, 0);
+  font-size: 18px;
+  padding-inline: 18px;
   border-radius: 0;
+  padding-block: 4px;
   /* border-top-right-radius: 22px; */
 }
 .categorySelect:focus {

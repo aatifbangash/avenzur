@@ -89,135 +89,150 @@
     }
     ?>
     <!-- top bar -->
-    <section class="top-bar py-1 ">
-        <div class="container container-max-width">
-            <div class="row align-items-center">
-              <div class="col-md-6 topBartxt" style="font-weight: bold;font-size: medium;">
-                Free shipping.....Limited time offer *
-              </div>
-              <div class="col-md-6 d-flex justify-content-end topbarBtns">
-                <div class="dropdown me-2">
-                    <a class="btn  dropdown-toggle text-white moblang" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-globe-americas me-1"></i> English <i class="bi bi-chevron-down ms-2"></i>
-                    </a>
-                  
-                    <ul class="dropdown-menu" id="languageDropdown">
-                      <li><a class="dropdown-item" href="#" data-lang="en">ENGLISH</a></li>
-                      <li><a class="dropdown-item" href="#" data-lang="ar">عربي</a></li>
-                    </ul>
-                </div>
-                <div class="dropdown me-2">
-                    <a class="btn  dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      SAR <i class="bi bi-chevron-down ms-2"></i>
-                    </a>
-                  
-                    <ul class="dropdown-menu" id="currencyDropdown">
-                        <li><a class="dropdown-item" href="#" data-lang="SAR">SAR</a></li>
-                      <li><a class="dropdown-item" href="#" data-lang="USD">USD</a></li>
-                      <li><a class="dropdown-item" href="#" data-lang="AED">AED</a></li>
-                      
-                    </ul>
-                </div>
-                <div class="dropdown logindropdown-k">
-                <button type="button" id="login-btn-trigger" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
-                  <?php
-                    if ($loggedIn) {
-                      ?>
-                      <i class="bi bi-person-fill"></i>&nbsp; <?= lang('hi') . ' ' . $loggedInUser->first_name; ?>
-                    <?php }else{
-                      ?>
-                        <i class="bi bi-person-fill"></i>&nbsp; Login
-                      <?php
-                    }
-                    ?>
-                </button>
-                  <?php 
-                    if ($loggedIn) {
-                      ?>
-                      <div class="dropdown-menu dropdown-menu-right p-3 loggedin"">
-                        <div>
-                          <a class="text-decoration-none text-dark" href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a>
-                        </div>
-                        <div>
-                          <a class="text-decoration-none text-dark" href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a>
-                        </div>
-                        <div>
-                          <a class="text-decoration-none text-dark" href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a>
-                        </div>
-                        <div>
-                          <a class="text-decoration-none text-dark" href="<?= shop_url('rateAndReview'); ?>"><i class="mi fa fa-star"></i>Rate and Review</a>
-                        </div>
-                        <div>
-                          <a class="text-decoration-none text-dark" href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a>
-                        </div>
-                    </div>
-                      <?php
-                    }else{
-                      ?>  
-                        <?php $u = mt_rand();
-                          $currentUri = $this->uri->uri_string(); 
-                          if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
-                        ?>
-                        
-                        <div class="dropdown-menu p-3 myaccountForm validate" id="myaccountForm">
-                        <div class="loginRCard px-4 w-100">
-                            <div class="logo-k mb-5"> 
-                                <a class="navbar-brand" href="http://localhost/avenzur/">
-                                    <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVENZUR">
-                                </a>
-                            </div>
-                            <h4 class="fw-bold letstart">Let's get started</h4>
-                            <div class="logsignBtns mt-3 d-flex justify-content-center">
-                                <button type="button" id="loginBtn" class="btn  text-white" onclick="LoginFn(this);">Log in</button>
-                                <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerFnBtn(this);">Sign up</button>
-                            </div>
-                            <div id="registerBlock">
-                                <?php 
-                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
-                                    echo form_open('register', $attrib); 
-                                ?>
-                                <div class="controls logcardinput">
-                                
-                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email" required="required"/>
-                                
-                                </div>
+    <section class="top-bar py-3 ">
+      <div class="container container-max-width">
+          <div class="row align-items-center">
+            <!-- <div class="col-md-6 topBartxt" style="font-weight: bold;font-size: medium;">
+              Free shipping.....Limited time offer *
+            </div> -->
+          <div class="col-lg-3 col-md-3  mb-2">
+            <div class="logosearchMob" id="shoppingdivMob">
+              <div class="logo-k"> <a class="navbar-brand" href="<?= site_url(); ?>"><img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="<?= $shop_settings->shop_name; ?>"></a></div>
+              <div id="searchtoggle"><i class="bi bi-search"></i></div>
+            </div>       
+          </div>
 
-                                <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
-                                <?= form_close(); ?>
-                            </div>
-
-                            <div id="loginBlock" style="display:none;">
-                                <?php 
-                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
-                                    echo form_open('login', $attrib); 
-                                ?>
-                                <div class="controls logcardinput" id="inputContainer">
-                                
-                                <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
-                                
-                                </div>
-
-                                <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
-                                <?= form_close(); ?>
-                            </div>
-                            
-                          <div>
-                          <span id="register-message" style="color: blue;"></span>
-                        </div>
-                      <?php
-                          }
-                    }
-                  ?>
-                </div>
-              </div>
+          <div class="col-lg-5 col-md-5" id="searchbarmob">
+            <div id="searchtogglecros"><i class="bi bi-x-circle-fill"></i></div>
+            <?= shop_form_open('products', 'class="d-flex search-bar"'); ?>
+              <input name="query" class="form-control border-0 bg-transparent py-1 add_item_search"  id="product-search" type="search" placeholder="What are you looking for?" aria-label="Search">
+              <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
+            <?= form_close(); ?>
+            <ul id="autocomplete-suggestions" class="ui-autocomplete"></ul>
+          </div>
+          <div class="col-md-4 d-flex justify-content-end topbarBtns">
+            <div class="dropdown me-2">
+                <a class="btn  dropdown-toggle text-white moblang" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-globe-americas me-1"></i> English <i class="bi bi-chevron-down ms-2"></i>
+                </a>
               
+                <ul class="dropdown-menu" id="languageDropdown">
+                  <li><a class="dropdown-item" href="#" data-lang="en">ENGLISH</a></li>
+                  <li><a class="dropdown-item" href="#" data-lang="ar">عربي</a></li>
+                </ul>
+            </div>
+            <div class="dropdown me-2">
+                <a class="btn  dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  SAR <i class="bi bi-chevron-down ms-2"></i>
+                </a>
+              
+                <ul class="dropdown-menu" id="currencyDropdown">
+                    <li><a class="dropdown-item" href="#" data-lang="SAR">SAR</a></li>
+                  <li><a class="dropdown-item" href="#" data-lang="USD">USD</a></li>
+                  <li><a class="dropdown-item" href="#" data-lang="AED">AED</a></li>
+                  
+                </ul>
+            </div>
+            <div class="dropdown logindropdown-k">
+            <button type="button" id="login-btn-trigger" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+              <?php
+                if ($loggedIn) {
+                  ?>
+                  <i class="bi bi-person-fill"></i>&nbsp; <?= lang('hi') . ' ' . $loggedInUser->first_name; ?>
+                <?php }else{
+                  ?>
+                    <i class="bi bi-person-fill"></i>&nbsp; Login
+                  <?php
+                }
+                ?>
+            </button>
+              <?php 
+                if ($loggedIn) {
+                  ?>
+                  <div class="dropdown-menu dropdown-menu-right p-3 loggedin"">
+                    <div>
+                      <a class="text-decoration-none text-dark" href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a>
+                    </div>
+                    <div>
+                      <a class="text-decoration-none text-dark" href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a>
+                    </div>
+                    <div>
+                      <a class="text-decoration-none text-dark" href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a>
+                    </div>
+                    <div>
+                      <a class="text-decoration-none text-dark" href="<?= shop_url('rateAndReview'); ?>"><i class="mi fa fa-star"></i>Rate and Review</a>
+                    </div>
+                    <div>
+                      <a class="text-decoration-none text-dark" href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a>
+                    </div>
+                </div>
+                  <?php
+                }else{
+                  ?>  
+                    <?php $u = mt_rand();
+                      $currentUri = $this->uri->uri_string(); 
+                      if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
+                    ?>
+                    
+                    <div class="dropdown-menu p-3 myaccountForm validate" id="myaccountForm">
+                    <div class="loginRCard px-4 w-100">
+                        <div class="logo-k mb-5"> 
+                            <a class="navbar-brand" href="http://localhost/avenzur/">
+                                <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVENZUR">
+                            </a>
+                        </div>
+                        <h4 class="fw-bold letstart">Let's get started</h4>
+                        <div class="logsignBtns mt-3 d-flex justify-content-center">
+                            <button type="button" id="loginBtn" class="btn  text-white" onclick="LoginFn(this);">Log in</button>
+                            <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerFnBtn(this);">Sign up</button>
+                        </div>
+                        <div id="registerBlock">
+                            <?php 
+                                $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
+                                echo form_open('register', $attrib); 
+                            ?>
+                            <div class="controls logcardinput">
+                            
+                            <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email" required="required"/>
+                            
+                            </div>
+
+                            <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
+                            <?= form_close(); ?>
+                        </div>
+
+                        <div id="loginBlock" style="display:none;">
+                            <?php 
+                                $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
+                                echo form_open('login', $attrib); 
+                            ?>
+                            <div class="controls logcardinput" id="inputContainer">
+                            
+                            <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
+                            
+                            </div>
+
+                            <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
+                            <?= form_close(); ?>
+                        </div>
+                        
+                      <div>
+                      <span id="register-message" style="color: blue;"></span>
+                    </div>
+                  <?php
+                      }
+                }
+              ?>
             </div>
           </div>
+              
+            </div>
+      </div>
     </section>
     <!-- top bar end -->
 
     <!-- logo search bar -->
-    <section class="logo-searchBar">
+    <!-- <section class="logo-searchBar">
       <div class="container container-max-width">
         <div class="row  align-items-center justify-content-between py-3">
 
@@ -244,7 +259,7 @@
         </div>
       </div>
         
-    </section>
+    </section> -->
     
     <!-- logo search bar end -->
 
