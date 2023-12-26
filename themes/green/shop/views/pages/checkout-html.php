@@ -115,10 +115,10 @@ if ($this->Settings->indian_gst) {
                             <label class="form-check-label fw-semibold" for="flexRadioDefault2">
                                 Debit / Credit Card Payment
                             </label>
-                            <input type="text" name="card_name" value="" />
-                            <input type="text" name="card_number" value="" />
-                            <input type="text" name="card_expiry" value="" />
-                            <input type="text" name="card_cvv" value="" />
+                            <input type="text" name="card_name" value="" placeholder="Cardholder Name" />
+                            <input type="text" name="card_number" value="" placeholder="Card Number" />
+                            <input type="text" name="card_expiry" value="" placeholder="Card Expiry" />
+                            <input type="text" name="card_cvv" value="" placeholder="Card Cvv" />
                         </div>
                         <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
                     </div>
