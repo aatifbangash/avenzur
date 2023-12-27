@@ -243,6 +243,7 @@ if ($this->Settings->indian_gst) {
             var shipping = $('#shipping-input').val();
             var address = $('#address').val();
             var payment_method = $('#directpay').val();
+            var express_delivery = $('#express_delivery').val();
 
             $.ajax({
                 type: 'POST',
@@ -255,7 +256,8 @@ if ($this->Settings->indian_gst) {
                     card_expiry: card_expiry,
                     shipping: shipping,
                     address: address,
-                    payment_method: payment_method
+                    payment_method: payment_method,
+                    express_delivery: express_delivery
                 },
                 success: function (response) {
                     //var respObj = JSON.parse(response);
