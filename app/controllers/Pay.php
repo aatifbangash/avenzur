@@ -515,6 +515,7 @@ class Pay extends MY_Shop_Controller
 
     public function test_directpay_post(){
 
+        echo 'here we are';exit;
         $paymentLink = 'https://paytest.directpay.sa/SmartRoutePaymentWeb/SRPayMsgHandler';
         $auth_token = 'MGQ5YjY4NWRhYjA5ZmQyYjBmZjAzYzE3';
 
