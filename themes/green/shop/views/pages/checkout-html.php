@@ -240,18 +240,29 @@ if ($this->Settings->indian_gst) {
             var card_number = $('#card_number').val();
             var card_cvv = $('#card_cvv').val();
             var card_expiry = $('#card_expiry').val();
-
-            console.log('Card Name: '+card_name);
+            var shipping = $('#shipping-input').val();
+            var address = $('#address').val();
+            var payment_method = $('#directpay').val();
 
             $.ajax({
                 type: 'POST',
                 url: site.site_url + 'pay/process_payment',
-                data: { token: site.csrf_token_value, card_name: card_name, card_number: card_number, card_cvv: card_cvv, card_expiry: card_expiry },
+                data: { 
+                    token: site.csrf_token_value, 
+                    card_name: card_name, 
+                    card_number: card_number, 
+                    card_cvv: card_cvv, 
+                    card_expiry: card_expiry,
+                    shipping: shipping,
+                    address: address,
+                    payment_method: payment_method
+                },
                 success: function (response) {
-                    var respObj = JSON.parse(response);
-                    if (respObj.status == 'success' || respObj.code == 1) {
-                        console.log('Passed Correctly...');
-                    }
+                    //var respObj = JSON.parse(response);
+                    console.log(response);
+                    //if (respObj.status == 'success' || respObj.code == 1) {
+                        
+                    //}
                 },
                 error: function (error) {
                     console.error(error);
