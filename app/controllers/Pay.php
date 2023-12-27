@@ -535,7 +535,7 @@ class Pay extends MY_Shop_Controller
         //optional parameters to generate hash code
         $hashData['Version'] = '1.0';
         $hashData['PaymentDescription'] = urlencode('Payment From Avenzur');
-        $hashData['GenerateToken'] = 'no';
+        $hashData['GenerateToken'] = 'yes';
         $hashData['PaymentMethod'] = 1;
 
         $secureHash = $this->setSecureHash($hashData, $auth_token);
@@ -558,8 +558,10 @@ class Pay extends MY_Shop_Controller
             'SecurityCode' => '999',
             'CardHolderName' => 'Faisal Abbas',
             'SecureHash' => '274c8108a7b455dd50745fdc4ff74f9035621e6f92140b0d25a358fbfb37d6ec',
-            'GenerateToken' => 'no'
+            'GenerateToken' => 'yes'
         );
+
+        print_r($postData);exit;
 
         $ch = curl_init($paymentLink);
         curl_setopt($ch, CURLOPT_POST, 1);
