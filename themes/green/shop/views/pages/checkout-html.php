@@ -210,7 +210,7 @@ if ($this->Settings->indian_gst) {
                                                    value="<?= $calculateShipping ?>"/>
                                             <!--<input type="button" name="proceed_pay" class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k" value="Proceed to Pay" id="proceed-payment" />-->
                                             <?php
-                                           echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k" id="proceed-payment"');
+                                           echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k"');
                                             } elseif ($this->Staff) {
                                                 echo '<div class="alert alert-warning margin-bottom-no">' . lang('staff_not_allowed') . '</div>';
                                             } else {
