@@ -522,6 +522,24 @@ class Pay extends MY_Shop_Controller
         $paymentLink = 'https://paytest.directpay.sa/SmartRoutePaymentWeb/SRPayMsgHandler';
         $auth_token = 'MGQ5YjY4NWRhYjA5ZmQyYjBmZjAzYzE3';
 
+        //Required parameters to generate hash code 
+        $hashData['TransactionID'] = $transactionId;
+        $hashData['MerchantID'] = 'DP00000017';
+        $hashData['Amount'] = 26450;
+        $hashData['CurrencyISOCode'] = 682;
+        $hashData['MessageID'] = 1;
+        $hashData['Quantity'] = 1;
+        $hashData['Channel'] = 1;
+        $hashData['Language'] = 'En';
+
+        //optional parameters to generate hash code
+        $hashData['Version'] = '1.0';
+        $hashData['PaymentDescription'] = urlencode('Payment From Avenzur');
+        $hashData['GenerateToken'] = 'no';
+        $hashData['PaymentMethod'] = 1;
+
+        $secureHash = $this->setSecureHash($hashData, $auth_token);
+
         $postData = array(
             'Amount' => 26450,
             'Channel' => 1,
@@ -532,7 +550,6 @@ class Pay extends MY_Shop_Controller
             'PaymentDescription' => 'Payment From Avenzur',
             'PaymentMethod' => 1,
             'Quantity' => 1,
-            'ResponseBackURL' => 'https://tododev.xyz/pharmacy/pay/test_directpay_post',
             'TransactionID' => $transactionId,
             'Version' => '1.0',
             'CardNumber' => '5105105105105100',
@@ -541,10 +558,8 @@ class Pay extends MY_Shop_Controller
             'SecurityCode' => '999',
             'CardHolderName' => 'Faisal Abbas',
             'SecureHash' => '274c8108a7b455dd50745fdc4ff74f9035621e6f92140b0d25a358fbfb37d6ec',
-            'GenerateToken' => 'yes'
+            'GenerateToken' => 'no'
         );
-
-        print_r($postData);exit;
 
         $ch = curl_init($paymentLink);
         curl_setopt($ch, CURLOPT_POST, 1);
