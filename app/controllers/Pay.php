@@ -535,7 +535,7 @@ class Pay extends MY_Shop_Controller
         //optional parameters to generate hash code
         $hashData['Version'] = '1.0';
         $hashData['PaymentDescription'] = urlencode('Payment From Avenzur');
-        $hashData['GenerateToken'] = 'yes';
+        //$hashData['GenerateToken'] = 'yes';
         $hashData['PaymentMethod'] = 1;
 
         $secureHash = $this->setSecureHash($hashData, $auth_token);
@@ -557,8 +557,8 @@ class Pay extends MY_Shop_Controller
             'ExpiryDateMonth' => '01', // $card_expiry
             'SecurityCode' => '999',
             'CardHolderName' => 'Faisal Abbas',
-            'SecureHash' => $secureHash,
-            'GenerateToken' => 'yes'
+            //'SecureHash' => $secureHash,
+            //'GenerateToken' => 'yes'
         );
 
        // print_r($postData);exit;
