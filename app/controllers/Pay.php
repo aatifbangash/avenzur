@@ -605,8 +605,8 @@ class Pay extends MY_Shop_Controller
                     'GenerateToken' => $generateToken
                 );
 
-                $responseBackURL = urldecode(site_url('pay/directpay_post'));
-                $ch = curl_init($responseBackURL);
+        
+                $ch = curl_init($paymentLink);
                 curl_setopt($ch, CURLOPT_POST, 1);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
