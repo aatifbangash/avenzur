@@ -246,10 +246,7 @@ if ($this->Settings->indian_gst) {
             $.ajax({
                 type: 'POST',
                 url: site.site_url + 'pay/process_payment',
-                data: { card_name: card_name, card_number: card_number, card_cvv: card_cvv, card_expiry: card_expiry },
-                headers: {
-                    'X-CSRF-Token': site.csrf_token_value
-                },
+                data: { token: site.csrf_token_value, card_name: card_name, card_number: card_number, card_cvv: card_cvv, card_expiry: card_expiry },
                 success: function (response) {
                     var respObj = JSON.parse(response);
                     if (respObj.status == 'success' || respObj.code == 1) {
