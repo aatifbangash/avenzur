@@ -208,9 +208,9 @@ if ($this->Settings->indian_gst) {
                                                    value="Standard"/>
                                             <input type="hidden" id="shipping-input" name="shipping"
                                                    value="<?= $calculateShipping ?>"/>
-                                            <input type="button" name="proceed_pay" class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k" value="Proceed to Pay" id="proceed-payment" />
+                                            <!--<input type="button" name="proceed_pay" class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k" value="Proceed to Pay" id="proceed-payment" />-->
                                             <?php
-                                           //echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k" id="proceed-payment"');
+                                           echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k" id="proceed-payment"');
                                             } elseif ($this->Staff) {
                                                 echo '<div class="alert alert-warning margin-bottom-no">' . lang('staff_not_allowed') . '</div>';
                                             } else {
@@ -225,7 +225,7 @@ if ($this->Settings->indian_gst) {
                     <h4 class="fs-6 mt-4"> Terms of USe Terms of Sale Privacy Policy</h4>
                 </div>
             </div>
-            <?php  //echo form_close();?>
+            <?php  echo form_close();?>
         </div>
     </div>
 </section>
