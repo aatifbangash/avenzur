@@ -529,7 +529,7 @@ class Pay extends MY_Shop_Controller
         $hashData['CurrencyISOCode'] = 682;
         $hashData['MessageID'] = 1;
         $hashData['Quantity'] = 1;
-        $hashData['Channel'] = 1;
+        $hashData['Channel'] = 0;
         $hashData['Language'] = 'En';
 
         //optional parameters to generate hash code
@@ -542,7 +542,7 @@ class Pay extends MY_Shop_Controller
 
         $postData = array(
             'Amount' => 26450,
-            'Channel' => 1,
+            'Channel' => 0,
             'CurrencyISOCode' => 682,
             'Language' => 'En',
             'MerchantID' => 'DP00000017',
