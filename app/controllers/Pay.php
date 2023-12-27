@@ -515,7 +515,6 @@ class Pay extends MY_Shop_Controller
 
     public function test_directpay_post(){
 
-        echo 'here we are';exit;
         $paymentLink = 'https://paytest.directpay.sa/SmartRoutePaymentWeb/SRPayMsgHandler';
         $auth_token = 'MGQ5YjY4NWRhYjA5ZmQyYjBmZjAzYzE3';
 
@@ -551,7 +550,7 @@ class Pay extends MY_Shop_Controller
             echo 'Curl error: ' . curl_error($ch);
         }
 
-        echo $response;
+        echo $response;exit;
     }
 
     public function directpay_post($id, $card_name, $card_number, $card_expiry, $card_cvv){
