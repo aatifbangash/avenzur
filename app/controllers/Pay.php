@@ -513,6 +513,46 @@ class Pay extends MY_Shop_Controller
         }
     }
 
+    public function test_directpay_post(){
+
+        $paymentLink = 'https://paytest.directpay.sa/SmartRoutePaymentWeb/SRPayMsgHandler';
+        $auth_token = 'MGQ5YjY4NWRhYjA5ZmQyYjBmZjAzYzE3';
+
+        $postData = array(
+            'Amount' => 26450,
+            'Channel' => 1,
+            'CurrencyISOCode' => 682,
+            'Language' => 'En',
+            'MerchantID' => 'DP00000017',
+            'MessageID' => 1,
+            'PaymentDescription' => 'Payment From Avenzur',
+            'PaymentMethod' => 1,
+            'Quantity' => 1,
+            'ResponseBackURL' => 'https://tododev.xyz/pharmacy/pay/test_directpay_post',
+            'TransactionID' => 170367028797027,
+            'Version' => '1.0',
+            'CardNumber' => '5105105105105100',
+            'ExpiryDateYear' => '31', // $card_expiry
+            'ExpiryDateMonth' => '01', // $card_expiry
+            'SecurityCode' => '999',
+            'CardHolderName' => 'Faisal Abbas',
+            'SecureHash' => '274c8108a7b455dd50745fdc4ff74f9035621e6f92140b0d25a358fbfb37d6ec',
+            'GenerateToken' => 'yes'
+        );
+
+        $ch = curl_init($paymentLink);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            echo 'Curl error: ' . curl_error($ch);
+        }
+
+        echo $response;
+    }
+
     public function directpay_post($id, $card_name, $card_number, $card_expiry, $card_cvv){
         $dp = $this->pay_model->getDirectPaySettings();
         $currencySettings = $this->Settings->selected_currency;
