@@ -241,6 +241,8 @@ if ($this->Settings->indian_gst) {
             var card_cvv = $('#card_cvv').val();
             var card_expiry = $('#card_expiry').val();
 
+            console.log('Card Name: '+card_name);
+
             $.ajax({
                 type: 'POST',
                 url: 'pay/process_payment',
