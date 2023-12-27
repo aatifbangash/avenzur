@@ -324,11 +324,6 @@ class Pay extends MY_Shop_Controller
     }
 
     public function process_payment(){
-        $this->form_validation->set_rules('address', lang('address'), 'trim|required');
-        $this->form_validation->set_rules('shipping', lang('shipping'), 'trim|required');
-        $this->form_validation->set_rules('payment_method', lang('payment_method'), 'required');
-        $this->form_validation->set_rules('note', lang('comment'), 'trim');
-
         $card_name = $this->input->post('card_name');
         $card_number = $this->input->post('card_number');
         $card_expiry = $this->input->post('card_expiry');
