@@ -557,11 +557,11 @@ class Pay extends MY_Shop_Controller
             'ExpiryDateMonth' => '01', // $card_expiry
             'SecurityCode' => '999',
             'CardHolderName' => 'Faisal Abbas',
-            'SecureHash' => '274c8108a7b455dd50745fdc4ff74f9035621e6f92140b0d25a358fbfb37d6ec',
+            'SecureHash' => $secureHash,
             'GenerateToken' => 'yes'
         );
 
-        print_r($postData);exit;
+       // print_r($postData);exit;
 
         $ch = curl_init($paymentLink);
         curl_setopt($ch, CURLOPT_POST, 1);
