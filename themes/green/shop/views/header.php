@@ -91,7 +91,7 @@
     <!-- top bar -->
     <section class="top-bar py-3 ">
       <div class="container container-max-width">
-          <div class="row align-items-center">
+        <div class="row align-items-center">
             <!-- <div class="col-md-6 topBartxt" style="font-weight: bold;font-size: medium;">
               Free shipping.....Limited time offer *
             </div> -->
@@ -111,9 +111,52 @@
             <ul id="autocomplete-suggestions" class="ui-autocomplete"></ul>
           </div>
           <div class="col-md-4 d-flex justify-content-end topbarBtns">
+          <div class="text-end" id="cartdiv">
+            
+            <span class="cartIcon" id="cart-items">
+              <a class="btn  dropdown-toggle border-0 px-1" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-cart3 fs-4 text-white"></i>
+                
+                <span class="quantitynum cart-total-items" style="display: none;">1</span>
+               
+              </a>
+             
+              <div id="cart-contents" class=" dropdown-menu p-3 myaccountForm cartform">
+                <table class="table " id="cart-items-table">
+                  <thead>
+                      <tr>
+                          <th>Image</th>
+                          <th>Name</th>
+                          <th>Price</th>
+                        
+                      </tr>
+                  </thead>
+                  <tbody id="cart-body" ></tbody>
+                  <tfoot id="cart-foot"></tfoot>
+                </table>
+                <div class="d-flex">
+                  <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">View Cart</a>
+                  <?php
+                    if ($loggedIn) {
+                        ?>
+                        <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">Checkout</a>
+                        <?php
+                    }else{
+                      ?>
+                        <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">Checkout</a>
+                      <?php
+                    }
+                  ?>
+                  
+                </div>
+              </div>
+
+            </span>
+            Cart
+          </div>
             <div class="dropdown me-2">
-                <a class="btn  dropdown-toggle text-white moblang" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-globe-americas me-1"></i> English <i class="bi bi-chevron-down ms-2"></i>
+                <a class="btn  dropdown-toggle bg-white px-2 moblang" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    English <i class="bi bi-chevron-down ms-2"></i>
                 </a>
               
                 <ul class="dropdown-menu" id="languageDropdown">
@@ -133,100 +176,103 @@
                   
                 </ul>
             </div>
-            <div class="dropdown logindropdown-k">
-            <button type="button" id="login-btn-trigger" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
-              <?php
-                if ($loggedIn) {
-                  ?>
-                  <i class="bi bi-person-fill"></i>&nbsp; <?= lang('hi') . ' ' . $loggedInUser->first_name; ?>
-                <?php }else{
-                  ?>
-                    <i class="bi bi-person-fill"></i>&nbsp; Login
+            <div class="loginDiv">
+              <div class="dropdown logindropdown-k">
+                <button type="button" id="login-btn-trigger" class="btn dropdown-toggle px-0 border-0 rounded-0 px-3" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" style="color:#db5cff;border-inline: 2px solid #db5cff !important;">
                   <?php
-                }
-                ?>
-            </button>
-              <?php 
-                if ($loggedIn) {
-                  ?>
-                  <div class="dropdown-menu dropdown-menu-right p-3 loggedin"">
-                    <div>
-                      <a class="text-decoration-none text-dark" href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a>
-                    </div>
-                    <div>
-                      <a class="text-decoration-none text-dark" href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a>
-                    </div>
-                    <div>
-                      <a class="text-decoration-none text-dark" href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a>
-                    </div>
-                    <div>
-                      <a class="text-decoration-none text-dark" href="<?= shop_url('rateAndReview'); ?>"><i class="mi fa fa-star"></i>Rate and Review</a>
-                    </div>
-                    <div>
-                      <a class="text-decoration-none text-dark" href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a>
-                    </div>
-                </div>
-                  <?php
-                }else{
-                  ?>  
-                    <?php $u = mt_rand();
-                      $currentUri = $this->uri->uri_string(); 
-                      if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
+                    if ($loggedIn) {
+                      ?>
+                      <i class="bi bi-person-fill"></i>&nbsp; <?= lang('hi') . ' ' . $loggedInUser->first_name; ?>
+                    <?php }else{
+                      ?>
+                         Login
+                      <?php
+                    }
                     ?>
-                    
-                    <div class="dropdown-menu p-3 myaccountForm validate" id="myaccountForm">
-                    <div class="loginRCard px-4 w-100">
-                        <div class="logo-k mb-5"> 
-                            <a class="navbar-brand" href="http://localhost/avenzur/">
-                                <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVENZUR">
-                            </a>
-                        </div>
-                        <h4 class="fw-bold letstart">Let's get started</h4>
-                        <div class="logsignBtns mt-3 d-flex justify-content-center">
-                            <button type="button" id="loginBtn" class="btn  text-white" onclick="LoginFn(this);">Log in</button>
-                            <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerFnBtn(this);">Sign up</button>
-                        </div>
-                        <div id="registerBlock">
-                            <?php 
-                                $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
-                                echo form_open('register', $attrib); 
-                            ?>
-                            <div class="controls logcardinput">
-                            
-                            <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email" required="required"/>
-                            
-                            </div>
-
-                            <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
-                            <?= form_close(); ?>
-                        </div>
-
-                        <div id="loginBlock" style="display:none;">
-                            <?php 
-                                $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
-                                echo form_open('login', $attrib); 
-                            ?>
-                            <div class="controls logcardinput" id="inputContainer">
-                            
-                            <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
-                            
-                            </div>
-
-                            <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
-                            <?= form_close(); ?>
-                        </div>
-                        
+                </button>
+                <?php 
+                  if ($loggedIn) {
+                    ?>
+                    <div class="dropdown-menu dropdown-menu-right p-3 loggedin">
                       <div>
-                      <span id="register-message" style="color: blue;"></span>
+                        <a class="text-decoration-none text-dark" href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a>
+                      </div>
+                      <div>
+                        <a class="text-decoration-none text-dark" href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a>
+                      </div>
+                      <div>
+                        <a class="text-decoration-none text-dark" href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a>
+                      </div>
+                      <div>
+                        <a class="text-decoration-none text-dark" href="<?= shop_url('rateAndReview'); ?>"><i class="mi fa fa-star"></i>Rate and Review</a>
+                      </div>
+                      <div>
+                        <a class="text-decoration-none text-dark" href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a>
+                      </div>
                     </div>
-                  <?php
-                      }
-                }
-              ?>
+                    <?php
+                  }else{
+                    ?>  
+                      <?php $u = mt_rand();
+                        $currentUri = $this->uri->uri_string(); 
+                        if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
+                      ?>
+                      
+                      <div class="dropdown-menu p-3 myaccountForm validate" id="myaccountForm">
+                        <div class="loginRCard px-4 w-100">
+                          <div class="logo-k mb-5"> 
+                              <a class="navbar-brand" href="http://localhost/avenzur/">
+                                  <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVENZUR">
+                              </a>
+                          </div>
+                          <h4 class="fw-bold letstart">Let's get started</h4>
+                          <div class="logsignBtns mt-3 d-flex justify-content-center">
+                              <button type="button" id="loginBtn" class="btn  text-white" onclick="LoginFn(this);">Log in</button>
+                              <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerFnBtn(this);">Sign up</button>
+                          </div>
+                          <div id="registerBlock">
+                              <?php 
+                                  $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
+                                  echo form_open('register', $attrib); 
+                              ?>
+                              <div class="controls logcardinput">
+                              
+                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email" required="required"/>
+                              
+                              </div>
+
+                              <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
+                              <?= form_close(); ?>
+                          </div>
+
+                          <div id="loginBlock" style="display:none;">
+                              <?php 
+                                  $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
+                                  echo form_open('login', $attrib); 
+                              ?>
+                              <div class="controls logcardinput" id="inputContainer">
+                              
+                                <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
+                              
+                              </div>
+
+                              <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
+                              <?= form_close(); ?>
+                          </div>
+                          
+                        <div>
+                        <span id="register-message" style="color: blue;"></span>
+                      </div>
+                    <?php
+                        }
+                  }
+                ?>
+              </div>
             </div>
+           
           </div>
               
-            </div>
+        </div>
       </div>
     </section>
     <!-- top bar end -->
@@ -342,49 +388,7 @@
             </nav>
           </div>
           <div class="col-md-3 col-sm-2 shop-icons">
-            <div class="text-end" id="cartdiv">
             
-              <span class="cartIcon" id="cart-items">
-                <a class="btn  dropdown-toggle border-0" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9.33331 24C7.86665 24 6.67998 25.2 6.67998 26.6667C6.67998 28.1333 7.86665 29.3333 9.33331 29.3333C10.8 29.3333 12 28.1333 12 26.6667C12 25.2 10.8 24 9.33331 24ZM22.6666 24C21.2 24 20.0133 25.2 20.0133 26.6667C20.0133 28.1333 21.2 29.3333 22.6666 29.3333C24.1333 29.3333 25.3333 28.1333 25.3333 26.6667C25.3333 25.2 24.1333 24 22.6666 24ZM20.7333 17.3333C21.7333 17.3333 22.6133 16.7867 23.0666 15.96L27.84 7.30666C27.9523 7.10456 28.01 6.87662 28.0072 6.6454C28.0045 6.41418 27.9414 6.18769 27.8242 5.98834C27.707 5.78899 27.5398 5.6237 27.3391 5.50881C27.1384 5.39393 26.9112 5.33344 26.68 5.33332L6.94665 5.33332L5.69331 2.66666L1.33331 2.66666L1.33331 5.33332H3.99998L8.79998 15.4533L6.99998 18.7067C6.02665 20.4933 7.30665 22.6667 9.33331 22.6667L25.3333 22.6667V20L9.33331 20L10.8 17.3333L20.7333 17.3333ZM8.21331 7.99999L24.4133 7.99999L20.7333 14.6667L11.3733 14.6667L8.21331 7.99999Z" fill="#171A1F"/>
-                  </svg>
-                  <span class="quantitynum cart-total-items" style="display: none;">1</span>
-                </a>
-
-                <div id="cart-contents" class=" dropdown-menu p-3 myaccountForm cartform">
-                  <table class="table " id="cart-items-table">
-                    <thead>
-                        <tr>
-                            <th>Image</th>
-                            <th>Name</th>
-                            <th>Price</th>
-                          
-                        </tr>
-                    </thead>
-                    <tbody id="cart-body" ></tbody>
-                    <tfoot id="cart-foot"></tfoot>
-                  </table>
-                <div class="d-flex">
-                  <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">View Cart</a>
-                  <?php
-                    if ($loggedIn) {
-                        ?>
-                        <a href="<?= site_url('cart/checkout'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">Checkout</a>
-                        <?php
-                    }else{
-                      ?>
-                        <a href="<?= site_url('cart'); ?>" class="btn primary-buttonAV w-100 rounded-1 pb-2 mx-2 text-center">Checkout</a>
-                      <?php
-                    }
-                  ?>
-                  
-                </div>
-              </div>
-
-              </span>
-              
-            </div>
           
               
               

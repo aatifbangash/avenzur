@@ -140,7 +140,7 @@ span.quantitynum {
   position: absolute;
   top: -14px;
   right: 0;
-  background: var(--primary-color);
+  background: orange;
   min-width: 22px;
   min-height: 22px;
   text-align: center;
