@@ -605,7 +605,9 @@ class Pay extends MY_Shop_Controller
                     'GenerateToken' => $generateToken
                 );
 
-                $responseBackURL = urldecode(site_url('pay/RedirectPaymentResponsePage'));
+                print_r($postData);exit;
+
+                /*$responseBackURL = urldecode(site_url('pay/RedirectPaymentResponsePage'));
                 $ch = curl_init($responseBackURL);
                 curl_setopt($ch, CURLOPT_POST, 1);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
@@ -614,9 +616,9 @@ class Pay extends MY_Shop_Controller
 
                 if (curl_errno($ch)) {
                     echo 'Curl error: ' . curl_error($ch);
-                }
+                }*/
 
-                echo $response;
+                //echo $response;
 
             }
         }
