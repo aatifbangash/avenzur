@@ -515,6 +515,10 @@ class Pay extends MY_Shop_Controller
 
     public function test_directpay_post(){
 
+        $id = $_GET['id'];
+        $tid = (int)(microtime(true) * 1000);
+        $trasnid = (string)$tid.(string)$id;
+        $transactionId = $trasnid;
         $paymentLink = 'https://paytest.directpay.sa/SmartRoutePaymentWeb/SRPayMsgHandler';
         $auth_token = 'MGQ5YjY4NWRhYjA5ZmQyYjBmZjAzYzE3';
 
@@ -529,7 +533,7 @@ class Pay extends MY_Shop_Controller
             'PaymentMethod' => 1,
             'Quantity' => 1,
             'ResponseBackURL' => 'https://tododev.xyz/pharmacy/pay/test_directpay_post',
-            'TransactionID' => 170367028797027,
+            'TransactionID' => $transactionId,
             'Version' => '1.0',
             'CardNumber' => '5105105105105100',
             'ExpiryDateYear' => '31', // $card_expiry
