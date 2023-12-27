@@ -555,7 +555,7 @@ class Pay extends MY_Shop_Controller
                 //$totalAmount = intval(number_format($this->sma->convertMoney($inv->grand_total), 2,'',''));
                 $totalAmount = number_format(preg_replace('/[^0-9.]/', '', $this->sma->convertMoney($inv->grand_total)), 2,'','');
                 
-                $channel = 0; //E-Commerce channel in STS
+                $channel = 1; //E-Commerce channel in STS
                 $messageId = $paymentMsg;//'1'; 
                 
                 $clientIp = $this->getclientIP();
@@ -605,9 +605,7 @@ class Pay extends MY_Shop_Controller
                     'GenerateToken' => $generateToken
                 );
 
-                print_r($postData);exit;
-
-                /*$responseBackURL = urldecode(site_url('pay/RedirectPaymentResponsePage'));
+                $responseBackURL = urldecode(site_url('pay/directpay_post'));
                 $ch = curl_init($responseBackURL);
                 curl_setopt($ch, CURLOPT_POST, 1);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
@@ -616,9 +614,9 @@ class Pay extends MY_Shop_Controller
 
                 if (curl_errno($ch)) {
                     echo 'Curl error: ' . curl_error($ch);
-                }*/
+                }
 
-                //echo $response;
+                echo $response;
 
             }
         }
