@@ -547,7 +547,7 @@ class Pay extends MY_Shop_Controller
                 $transactionId = $trasnid;
                 $MerchantID = $merchantId;//'DP00000017';//'DP00000018';//$this->getMerchantId();
                 $itemId = $id;//$this->getItemId();
-                $responseBackURL =urldecode(site_url('pay/RedirectPaymentResponsePage'));
+                $responseBackURL =urldecode(site_url('pay/directpay_post'));
                 
                 $quantity =$inv->total_items;
                 $themeId = '1000000001';
@@ -584,23 +584,23 @@ class Pay extends MY_Shop_Controller
                 $secureHash = $this->setSecureHash($hashData, $authenticationToken);
 
                 $postData = array(
-                    'MessageID' => $messageId,
-                    'TransactionID' => $transactionId,
-                    'MerchantID' => $MerchantID,
                     'Amount' => $totalAmount,
-                    'Language' => 'En',
-                    'PaymentMethod' => $paymentMethod,
+                    'Channel' => $channel,
                     'CurrencyISOCode' => $currencyCode,
+                    'Language' => 'En',
+                    'MerchantID' => $MerchantID,
+                    'MessageID' => $messageId,
                     'PaymentDescription' => $paymentDescription,
+                    'PaymentMethod' => $paymentMethod,
+                    'Quantity' => $quantity,
                     'ResponseBackURL' => $responseBackURL,
+                    'TransactionID' => $transactionId,
+                    'Version' => $version,
                     'CardNumber' => $card_number,
                     'ExpiryDateYear' => '31', // $card_expiry
                     'ExpiryDateMonth' => '01', // $card_expiry
                     'SecurityCode' => $card_cvv,
                     'CardHolderName' => $card_name,
-                    'Channel' => $channel,
-                    'Quantity' => $quantity,
-                    'Version' => $version,
                     'SecureHash' => $secureHash,
                     'GenerateToken' => $generateToken
                 );
