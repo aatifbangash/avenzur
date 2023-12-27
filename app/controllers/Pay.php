@@ -544,6 +544,8 @@ class Pay extends MY_Shop_Controller
             'GenerateToken' => 'yes'
         );
 
+        print_r($postData);exit;
+
         $ch = curl_init($paymentLink);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
