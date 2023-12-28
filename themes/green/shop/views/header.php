@@ -129,7 +129,7 @@
                   <?php
                     if ($loggedIn) {
                       ?>
-                      <i class="bi bi-person-fill"></i>&nbsp; <?= lang('hi') . ' ' . $loggedInUser->first_name; ?>
+                      <i class="bi bi-person-fill"></i>&nbsp; <?= lang('hi') . ' ' . $loggedInUserByCompany->first_name; ?>
                     <?php }else{
                       ?>
                         <i class="bi bi-person-fill"></i>&nbsp; Login
