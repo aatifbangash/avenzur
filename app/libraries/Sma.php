@@ -529,7 +529,7 @@ class Sma
         // Close cURL session
         curl_close($ch);
 
-        echo json_decode($response, true);
+        print_r($response);
     }
 
     public function send_sms($receiver_number, $variable){
