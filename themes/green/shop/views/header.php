@@ -102,7 +102,7 @@
             </div>       
           </div>
 
-          <div class="col-lg-5 col-md-5" id="searchbarmob">
+          <div class="col-lg-4 col-md-4" id="searchbarmob">
             <div id="searchtogglecros"><i class="bi bi-x-circle-fill"></i></div>
             <?= shop_form_open('products', 'class="d-flex search-bar"'); ?>
               <input name="query" class="form-control border-0 bg-transparent py-1 add_item_search"  id="product-search" type="search" placeholder="What are you looking for?" aria-label="Search">
@@ -110,8 +110,8 @@
             <?= form_close(); ?>
             <ul id="autocomplete-suggestions" class="ui-autocomplete"></ul>
           </div>
-          <div class="col-md-4 d-flex justify-content-end topbarBtns">
-          <div class="text-end" id="cartdiv">
+          <div class="col-md-5 d-flex justify-content-end topbarBtns align-items-center">
+          <div class="text-end order-2" id="cartdiv">
             
             <span class="cartIcon" id="cart-items">
               <a class="btn  dropdown-toggle border-0 px-1" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -154,7 +154,7 @@
             </span>
             Cart
           </div>
-            <div class="dropdown me-2">
+            <div class="dropdown me-2 order-4">
                 <a class="btn  dropdown-toggle bg-white px-2 moblang" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     English <i class="bi bi-chevron-down ms-2"></i>
                 </a>
@@ -164,7 +164,7 @@
                   <li><a class="dropdown-item" href="#" data-lang="ar">عربي</a></li>
                 </ul>
             </div>
-            <div class="dropdown me-2">
+            <div class="dropdown me-2 order-3">
                 <a class="btn  dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                   SAR <i class="bi bi-chevron-down ms-2"></i>
                 </a>
@@ -176,9 +176,9 @@
                   
                 </ul>
             </div>
-            <div class="loginDiv">
+            <div class="loginDiv order-1">
               <div class="dropdown logindropdown-k">
-                <button type="button" id="login-btn-trigger" class="btn dropdown-toggle px-0 border-0 rounded-0 px-3" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" style="color:#db5cff;border-inline: 2px solid #db5cff !important;">
+                <button type="button" id="login-btn-trigger" class="btn dropdown-toggle px-0 border-0 rounded-0 px-4 " data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" style="color:#fff;border-inline: 1px solid #fff !important;">
                   <?php
                     if ($loggedIn) {
                       ?>
@@ -311,9 +311,9 @@
 
     <!-- menu bar -->
     <section>
-      <div class="container container-max-width main-menuTab">
+      <div class="container container-max-width main-menuTab py-0 border-0">
         <div class="row align-items-center">
-          <div class="col-md-2 col-sm-2 mob-catS" id="allcatDiv">
+          <!-- <div class="col-md-2 col-sm-2 mob-catS" id="allcatDiv">
             <button class="btn all-categoryBtn d-flex align-items-center justify-content-between" id="allCatmob" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
               <i class="bi bi-filter-left "></i> All Category
             </button>
@@ -332,9 +332,9 @@
                         <li class="list-group-item d-flex justify-content-between align-items-start">
                           <div class="ms-2 me-auto ar-catL">
                             <div class="fw-bold"><a href="<?= site_url('category/'.$category->slug) ?>"><?= $category->name; ?></a></div>
-                            <?php //echo $category->description; ?>
+                            <?php  ?>
                           </div>
-                          <!--<span class="badge bg-primary rounded-pill">14</span>-->
+                          
                         </li>
                       <?php
                     }
@@ -343,10 +343,10 @@
                 
               </div>
             </div>
-          </div>
-          <div class="col-md-7 col-sm-2 mob-menu">
-            <nav class="navbar navbar-expand-lg navbar-expand-md  container-max-width">
-              <div class="container-fluid">
+          </div> -->
+          <div class="col-md-7 col-sm-2 mob-menu ps-0">
+            <nav class="navbar navbar-expand-lg navbar-expand-md  container-max-width px-3 py-0">
+              <div class="container-fluid px-0">
                 
                 <div class="menu-av" id="sourcedivmob">
                   
@@ -355,6 +355,27 @@
                   </button>
                   <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0" >
+                    <li class="nav-item dropdown megamenu">
+                      <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="bi bi-list fs-5"></i> Category
+                      </a>
+                      <ul class="dropdown-menu w-100 megaDropdown ">
+                        
+                        <?php
+                          foreach($all_categories as $category){
+                            ?>
+                              <li class="">
+                                <div class="mx-2 ar-catL">
+                                  <div class="fw-bold"><a href="<?= site_url('category/'.$category->slug) ?>" class="text-decoration-none text-dark"><?= $category->name; ?></a></div>
+                                  <?php //echo $category->description; ?>
+                                </div>
+                                <!--<span class="badge bg-primary rounded-pill">14</span>-->
+                              </li>
+                            <?php
+                          }
+                        ?>
+                      </ul>
+                    </li>
                       <li class="nav-item">
                         <?php 
                           $isHttps = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
@@ -387,11 +408,24 @@
               </div>
             </nav>
           </div>
-          <div class="col-md-3 col-sm-2 shop-icons">
-            
-          
-              
-              
+          <div class="col-md-5 col-sm-2 ">
+            <div class="row delivCustBar">
+              <div class="col-md-7 d-flex align-items-center  bg-success freeDile">
+              <h5 class="m-0 text-white" style="font-size:17px">Free Delivery.... Limited time offer</h5>
+              </div>
+              <div class="col-md-5">
+              <div class="d-flex align-items-center justify-content-center py-1 text-white">
+                <h3 class="me-2 my-0">
+                <i class="bi bi-headset fs-2"></i>
+                    
+                </h3>
+                <div>
+                  <p class="m-0 fw-bold">Cutomer Service</p>
+                  <h5 class="fw-bolder m-0" style="font-size:17px">+966 55 125 1997</h5>
+                </div>
+              </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
