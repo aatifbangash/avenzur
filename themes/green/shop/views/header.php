@@ -74,6 +74,12 @@
       <?php
     }
     ?>
+    <style>
+   .inputs input.error-border {
+        border: 1px solid red;
+    }
+
+    </style>
 </head>
   
   <body>
@@ -182,7 +188,7 @@
                   <?php
                     if ($loggedIn) {
                       ?>
-                      <i class="bi bi-person-fill"></i>&nbsp; <?= lang('hi') . ' ' . $loggedInUser->first_name; ?>
+                      <i class="bi bi-person-fill"></i>&nbsp; <?= lang('hi') . ' ' . $loggedInUserByCompany->first_name; ?>
                     <?php }else{
                       ?>
                          Login
@@ -220,26 +226,7 @@
                       
                       <div class="dropdown-menu p-3 myaccountForm validate" id="myaccountForm">
                         <div class="loginRCard px-4 w-100">
-                          <div class="logo-k mb-5"> 
-                              <a class="navbar-brand" href="http://localhost/avenzur/">
-                                  <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVENZUR">
-                              </a>
-                          </div>
-                          <h4 class="fw-bold letstart">Let's get started</h4>
-                          <div class="logsignBtns mt-3 d-flex justify-content-center">
-                              <button type="button" id="loginBtn" class="btn  text-white" onclick="LoginFn(this);">Log in</button>
-                              <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerFnBtn(this);">Sign up</button>
-                          </div>
-                          <div id="registerBlock">
-                              <?php 
-                                  $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
-                                  echo form_open('register', $attrib); 
-                              ?>
-                              <div class="controls logcardinput">
-                              
-                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email" required="required"/>
-                              
-                              </div>
+                            
 
                               <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
                               <?= form_close(); ?>
@@ -253,8 +240,8 @@
                               <div class="controls logcardinput" id="inputContainer">
                               
                                 <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
-                              
-                              </div>
+                                
+                                
 
                               <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
                               <?= form_close(); ?>
@@ -496,15 +483,15 @@
                                 echo form_open('login_otp', $attrib); 
                             ?>
                             <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="login_otp_1" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="login_otp_2" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="login_otp_3" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="login_otp_4" maxlength="1" /> 
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="login_otp_5" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="login_otp_6" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded .ap-otp-input" type="text" name="opt_part1" id="login_otp_1" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded .ap-otp-input" type="text" name="opt_part2" id="login_otp_2" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded .ap-otp-input" type="text" name="opt_part3" id="login_otp_3" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded .ap-otp-input" type="text" name="opt_part4" id="login_otp_4" maxlength="1" /> 
+                                <input class="m-1 text-center form-control rounded .ap-otp-input" type="text" name="opt_part5" id="login_otp_5" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded .ap-otp-input" type="text" name="opt_part6" id="login_otp_6" maxlength="1" />
                                 <input type="hidden" id="identifierl_input" name="identifier_input" value="" />
                             </div>
-                            
+                            <div id="error" style="color: red; text-align: center"></div> 
                             <div  class="text-center">
                                 <h6 class="m-0 mt-2"><span id="login-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="loginOTP">Resend OTP</span></h6>
                             </div>
@@ -515,6 +502,7 @@
                         <button type="submit" id="loginOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0">Login</button>
                     </div>
                     <?= form_close(); ?>
+                   
                 </div>
             </div>
         </div>

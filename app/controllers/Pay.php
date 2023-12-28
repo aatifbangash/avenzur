@@ -324,7 +324,365 @@ class Pay extends MY_Shop_Controller
     }
 
     public function process_payment(){
-        echo json_encode('payment processed...');
+        $card_name = $this->input->post('card_name');
+        $card_number = $this->input->post('card_number');
+        $card_expiry = $this->input->post('card_expiry');
+        $card_cvv = $this->input->post('card_cvv');
+
+        if($address = $this->shop_model->getAddressByID($this->input->post('address'))){
+            $new_customer = false;
+            if ($this->input->post('address') != 'new') {
+                $customer = $this->site->getCompanyByID($this->session->userdata('company_id'));
+            } else {
+                if (!($customer = $this->shop_model->getCompanyByEmail($this->input->post('email')))) {
+                    $customer = new stdClass();
+                    $customer->name = $this->input->post('name') . ($this->input->post('last_name') ?: '');
+                    $customer->company = 'Pharma Drug Store'; //$this->input->post('company');
+                    $customer->phone = $this->input->post('phone');
+                    $customer->email = $this->input->post('email');
+                    $customer->address = $this->input->post('billing_line1') . '<br>' . $this->input->post('billing_line2');
+                    $customer->city = $this->input->post('billing_city');
+                    $customer->state = $this->input->post('billing_state');
+                    $customer->postal_code = $this->input->post('billing_postal_code');
+                    $customer->country = $this->input->post('billing_country');
+                    $customer->group_id = 3;
+                    $customer->group_name = 'customer';
+                    $customer->country = $this->input->post('billing_country');
+                    $customer_group = $this->shop_model->getCustomerGroup($this->Settings->customer_group);
+                    $price_group = $this->shop_model->getPriceGroup($this->Settings->price_group);
+                    $customer->customer_group_id = (!empty($customer_group)) ? $customer_group->id : null;
+                    $customer->customer_group_name = (!empty($customer_group)) ? $customer_group->name : null;
+                    $customer->price_group_id = (!empty($price_group)) ? $price_group->id : null;
+                    $customer->price_group_name = (!empty($price_group)) ? $price_group->name : null;
+                    $new_customer = true;
+                }
+            }
+            $biller = $this->site->getCompanyByID($this->shop_settings->biller);
+            $note = $this->db->escape_str($this->input->post('comment'));
+            $product_tax = 0;
+            $total = 0;
+            $gst_data = [];
+            $pro_weight = [];
+            $total_cgst = $total_sgst = $total_igst = 0;
+
+            foreach ($this->cart->contents() as $item) {
+                $item_option = null;
+                if ($product_details = $this->shop_model->getProductForCart($item['product_id'])) {
+                    $price = $this->sma->setCustomerGroupPrice(($this->loggedIn && isset($product_details->special_price) ? $product_details->special_price : $product_details->price), $this->customer_group);
+                    $price = $this->sma->isPromo($product_details) ? $product_details->promo_price : $price;
+                    if ($item['option']) {
+                        if ($product_variant = $this->shop_model->getProductVariantByID($item['option'])) {
+                            $item_option = $product_variant->id;
+                            $price = $product_variant->price + $price;
+                        }
+                    }
+
+                    $item_net_price = $unit_price = $price;
+                    $item_quantity = $item_unit_quantity = $item['qty'];
+                    $pr_item_tax = $item_tax = 0;
+                    $tax = '';
+
+                    if (!empty($product_details->tax_rate)) {
+                        $tax_details = $this->site->getTaxRateByID($product_details->tax_rate);
+                        $ctax = $this->site->calculateTax($product_details, $tax_details, $unit_price);
+                        $item_tax = $ctax['amount'];
+                        $tax = $ctax['tax'];
+                        if ($product_details->tax_method != 1) {
+                            $item_net_price = $unit_price - $item_tax;
+                        }
+                        $pr_item_tax = $this->sma->formatDecimal(($item_tax * $item_unit_quantity), 4);
+                        if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($biller->state == $customer->state), $tax_details)) {
+                            $total_cgst += $gst_data['cgst'];
+                            $total_sgst += $gst_data['sgst'];
+                            $total_igst += $gst_data['igst'];
+                        }
+                    }
+
+                    $product_tax += $pr_item_tax;
+                    $subtotal = (($item_net_price * $item_unit_quantity) + $pr_item_tax);
+
+                    $unit = $this->site->getUnitByID($product_details->unit);
+
+                    $product = [
+                        'product_id' => $product_details->id,
+                        'product_code' => $product_details->code,
+                        'product_name' => $product_details->name,
+                        'product_type' => $product_details->type,
+                        'option_id' => $item_option,
+                        'net_unit_price' => $item_net_price,
+                        'unit_price' => $this->sma->formatDecimal($item_net_price + $item_tax),
+                        'quantity' => $item_quantity,
+                        'product_unit_id' => $unit ? $unit->id : null,
+                        'product_unit_code' => $unit ? $unit->code : null,
+                        'unit_quantity' => $item_unit_quantity,
+                        'warehouse_id' => $this->shop_settings->warehouse,
+                        'item_tax' => $pr_item_tax,
+                        'tax_rate_id' => $product_details->tax_rate,
+                        'tax' => $tax,
+                        'discount' => null,
+                        'item_discount' => 0,
+                        'subtotal' => $this->sma->formatDecimal($subtotal),
+                        'serial_no' => null,
+                        'real_unit_price' => $price,
+                    ];
+                    $ww = $this->shop_model->getProductByID($product_details->id);
+                    $ww2 = array('product_weight' => $ww->weight);
+                    $pro_weight[] = $ww2;
+                    $products[] = ($product + $gst_data);
+                    $total += $this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                } else {
+                    $this->sma->send_json(['error' => 1, 'message' => lang('product_x_found')]);
+                }
+            }
+
+            $shipping = !empty($this->input->post('shipping'))
+                    ? $this->input->post('shipping')
+                    : $this->shop_settings->shipping;
+
+            $order_tax = $this->site->calculateOrderTax($this->Settings->default_tax_rate2, ($total + $product_tax));
+            $total_tax = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
+
+            $total = !empty($this->cart->total())
+                    ? $this->cart->total()
+                    : $total;
+
+            $total_tax = !empty($this->cart->total_item_tax())
+                ? $this->cart->total_item_tax()
+                : $total_tax;
+
+            $grand_total = $this->sma->formatDecimal(($total + $shipping), 4);
+
+            $data = [
+                'date' => date('Y-m-d H:i:s'),
+                'reference_no' => $this->site->getReference('so'),
+                'customer_id' => $customer->id ?? '',
+                'customer' => ($customer->company && $customer->company != '-' ? $customer->company : $customer->name),
+                'biller_id' => $biller->id,
+                'biller' => ($biller->company && $biller->company != '-' ? $biller->company : $biller->name),
+                'warehouse_id' => $this->shop_settings->warehouse,
+                'note' => $note,
+                'staff_note' => null,
+                'total' => $total,
+                'product_discount' => 0,
+                'order_discount_id' => null,
+                'order_discount' => 0,
+                'total_discount' => 0,
+                'product_tax' => $total_tax,
+                'order_tax_id' => $this->Settings->default_tax_rate2,
+                'order_tax' => $order_tax,
+                'total_tax' => $total_tax,
+                'shipping' => $shipping,
+                'grand_total' => $grand_total,
+                'total_items' => $this->cart->total_items(),
+                'sale_status' => 'pending',
+                'payment_status' => 'pending',
+                'payment_term' => null,
+                'due_date' => null,
+                'paid' => 0,
+                'created_by' => $this->session->userdata('user_id') ? $this->session->userdata('user_id') : null,
+                'shop' => 1,
+                'address_id' => ($this->input->post('address') == 'new' || $this->input->post('address') == 'default' ) ? 0 : $address->id,
+                'hash' => hash('sha256', microtime() . mt_rand()),
+                'payment_method' => $this->input->post('payment_method'),
+                'delivery_type' => $this->input->post('express_delivery')
+            ];
+
+            if ($this->Settings->invoice_view == 2) {
+                $data['cgst'] = $total_cgst;
+                $data['sgst'] = $total_sgst;
+                $data['igst'] = $total_igst;
+            }
+
+            if ($new_customer) {
+                $customer = (array) $customer;
+            }
+
+            if ($sale_id = $this->shop_model->addSale($data, $products, $customer, $address)) {
+                if ($this->input->post('payment_method') == 'paypal') {
+                    redirect('pay/paypal/' . $sale_id);
+                } elseif ($this->input->post('payment_method') == 'skrill') {
+                    redirect('pay/skrill/' . $sale_id);
+                } elseif ($this->input->post('payment_method') == 'directpay') {
+                    $this->directpay_post($sale_id, $card_name, $card_number, $card_expiry, $card_cvv);
+                } else {
+                    shop_redirect('orders/' . $sale_id . '/' . ($this->loggedIn ? '' : $data['hash']));
+                }
+            }
+        }else{
+            $this->sma->send_json(['error' => 1, 'message' => lang('address_x_found')]);
+        }
+    }
+
+    public function test_directpay_post(){
+
+        $id = $_GET['id'];
+        $tid = (int)(microtime(true) * 1000);
+        $trasnid = (string)$tid.(string)$id;
+        $transactionId = $trasnid;
+        $paymentLink = 'https://paytest.directpay.sa/SmartRoutePaymentWeb/SRPayMsgHandler';
+        $auth_token = 'MGQ5YjY4NWRhYjA5ZmQyYjBmZjAzYzE3';
+
+        //Required parameters to generate hash code 
+        $hashData['TransactionID'] = $transactionId;
+        $hashData['MerchantID'] = 'DP00000017';
+        $hashData['Amount'] = 26450;
+        $hashData['CurrencyISOCode'] = 682;
+        $hashData['MessageID'] = 1;
+        $hashData['Quantity'] = 1;
+        $hashData['Channel'] = 0;
+        $hashData['Language'] = 'En';
+
+        //optional parameters to generate hash code
+        $hashData['Version'] = '1.0';
+        $hashData['PaymentDescription'] = urlencode('Payment From Avenzur');
+        //$hashData['GenerateToken'] = 'yes';
+        $hashData['PaymentMethod'] = 1;
+
+        $secureHash = $this->setSecureHash($hashData, $auth_token);
+
+        $postData = array(
+            'Amount' => 26450,
+            'Channel' => 0,
+            'CurrencyISOCode' => 682,
+            'Language' => 'En',
+            'MerchantID' => 'DP00000017',
+            'MessageID' => 1,
+            'PaymentDescription' => 'Payment From Avenzur',
+            'PaymentMethod' => 1,
+            'Quantity' => 1,
+            'TransactionID' => $transactionId,
+            'Version' => '1.0',
+            'CardNumber' => '5105105105105100',
+            'ExpiryDateYear' => '31', // $card_expiry
+            'ExpiryDateMonth' => '01', // $card_expiry
+            'SecurityCode' => '999',
+            'CardHolderName' => 'Faisal Abbas',
+            //'SecureHash' => $secureHash,
+            //'GenerateToken' => 'yes'
+        );
+
+       // print_r($postData);exit;
+
+        $ch = curl_init($paymentLink);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            echo 'Curl error: ' . curl_error($ch);
+        }
+
+        echo $response;exit;
+    }
+
+    public function directpay_post($id, $card_name, $card_number, $card_expiry, $card_cvv){
+        $dp = $this->pay_model->getDirectPaySettings();
+        $currencySettings = $this->Settings->selected_currency;
+        $currencyObj = $this->pay_model->getCurrencyByCode($currencySettings);
+            if($dp->activation == 1)
+            {
+                $paymentLink = $dp->payment_link;
+                $auth_token = $dp->authentication_token;
+                $merchantId = $dp->merchant_id;
+            }else{
+                $paymentLink = $dp->test_payment_link;
+                $auth_token = $dp->test_auth_token;
+                $merchantId = $dp->test_Merchant_id;
+              
+            }
+
+            $ver = $dp->version;
+            //$currencyCode = $dp->currencyISOCode;
+            $currencyCode = $currencyObj->isocode;
+            $paymentMsg = $dp->payment_message_id;
+
+        if ($inv = $this->pay_model->getSaleByID($id)) {
+            if ((($inv->grand_total - $inv->paid) > 0)) {
+                $hashData = array();
+                $finalData = array();
+                $tid = (int)(microtime(true) * 1000);
+                $trasnid = (string)$tid.(string)$id;
+                
+                //Get data from the configyration page
+                $version = $ver;//'1.0';
+                $authenticationToken = $auth_token;//'MGQ5YjY4NWRhYjA5ZmQyYjBmZjAzYzE3';//$this->getAuthenticationToken();'NDc5NGZiMjk2ODJlOGIyZTNlOGFkOGM2';
+                $transactionId = $trasnid;
+                $MerchantID = $merchantId;//'DP00000017';//'DP00000018';//$this->getMerchantId();
+                $itemId = $id;//$this->getItemId();
+                $responseBackURL =urldecode(site_url('pay/directpay_post'));
+                
+                $quantity =$inv->total_items;
+                $themeId = '1000000001';
+                $currencyCode = $currencyCode;//'682';
+                //$totalAmount = intval(number_format($this->sma->convertMoney($inv->grand_total), 2,'',''));
+                $totalAmount = number_format(preg_replace('/[^0-9.]/', '', $this->sma->convertMoney($inv->grand_total)), 2,'','');
+                
+                $channel = 1; //E-Commerce channel in STS
+                $messageId = $paymentMsg;//'1'; 
+                
+                $clientIp = $this->getclientIP();
+                $generateToken = "yes";
+                $paymentDescription = "Payment From Avenzur";
+                $paymentMethod = 1;
+                
+                //Required parameters to generate hash code 
+                $hashData['TransactionID'] = $transactionId;
+                $hashData['MerchantID'] = $MerchantID;
+                $hashData['Amount'] = $totalAmount;
+                $hashData['CurrencyISOCode'] = $currencyCode;
+                $hashData['MessageID'] = $messageId;
+                $hashData['Quantity'] = $quantity;
+                $hashData['Channel'] = $channel;
+
+                //optional parameters to generate hash code
+                $hashData['ThemeID'] = $themeId;
+                $hashData['ResponseBackURL'] = $responseBackURL;
+                $hashData['Version'] = $version;
+                $hashData['ItemID'] = $itemId;
+                $hashData['PaymentDescription'] = urlencode($paymentDescription);
+                $hashData['GenerateToken'] = $generateToken;
+                $hashData['PaymentMethod'] = $paymentMethod;
+
+                $secureHash = $this->setSecureHash($hashData, $authenticationToken);
+
+                $postData = array(
+                    'Amount' => $totalAmount,
+                    'Channel' => $channel,
+                    'CurrencyISOCode' => $currencyCode,
+                    'Language' => 'En',
+                    'MerchantID' => $MerchantID,
+                    'MessageID' => $messageId,
+                    'PaymentDescription' => $paymentDescription,
+                    'PaymentMethod' => $paymentMethod,
+                    'Quantity' => $quantity,
+                    'ResponseBackURL' => $responseBackURL,
+                    'TransactionID' => $transactionId,
+                    'Version' => $version,
+                    'CardNumber' => $card_number,
+                    'ExpiryDateYear' => '31', // $card_expiry
+                    'ExpiryDateMonth' => '01', // $card_expiry
+                    'SecurityCode' => $card_cvv,
+                    'CardHolderName' => $card_name,
+                    'SecureHash' => $secureHash,
+                    'GenerateToken' => $generateToken
+                );
+
+        
+                $ch = curl_init($paymentLink);
+                curl_setopt($ch, CURLOPT_POST, 1);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                $response = curl_exec($ch);
+
+                if (curl_errno($ch)) {
+                    echo 'Curl error: ' . curl_error($ch);
+                }
+
+                echo $response;
+
+            }
+        }
     }
 
     public function test_order(){

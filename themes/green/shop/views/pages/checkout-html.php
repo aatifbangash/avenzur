@@ -208,9 +208,9 @@ if ($this->Settings->indian_gst) {
                                                    value="Standard"/>
                                             <input type="hidden" id="shipping-input" name="shipping"
                                                    value="<?= $calculateShipping ?>"/>
-                                            <input type="button" name="proceed_pay" class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k" value="Proceed to Pay" id="proceed-payment" />
+                                            <!--<input type="button" name="proceed_pay" class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k" value="Proceed to Pay" id="proceed-payment" />-->
                                             <?php
-                                           //echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k" id="proceed-payment"');
+                                           echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k"');
                                             } elseif ($this->Staff) {
                                                 echo '<div class="alert alert-warning margin-bottom-no">' . lang('staff_not_allowed') . '</div>';
                                             } else {
@@ -225,7 +225,7 @@ if ($this->Settings->indian_gst) {
                     <h4 class="fs-6 mt-4"> Terms of USe Terms of Sale Privacy Policy</h4>
                 </div>
             </div>
-            <?php  //echo form_close();?>
+            <?php  echo form_close();?>
         </div>
     </div>
 </section>
@@ -240,19 +240,31 @@ if ($this->Settings->indian_gst) {
             var card_number = $('#card_number').val();
             var card_cvv = $('#card_cvv').val();
             var card_expiry = $('#card_expiry').val();
+            var shipping = $('#shipping-input').val();
+            var address = $('#address').val();
+            var payment_method = $('#directpay').val();
+            var express_delivery = $('#express_delivery').val();
 
             $.ajax({
                 type: 'POST',
-                url: 'pay/process_payment',
-                data: { card_name: card_name, card_number: card_number, card_cvv: card_cvv, card_expiry: card_expiry },
-                headers: {
-                    'X-CSRF-Token': site.csrf_token_value
+                url: site.site_url + 'pay/process_payment',
+                data: { 
+                    token: site.csrf_token_value, 
+                    card_name: card_name, 
+                    card_number: card_number, 
+                    card_cvv: card_cvv, 
+                    card_expiry: card_expiry,
+                    shipping: shipping,
+                    address: address,
+                    payment_method: payment_method,
+                    express_delivery: express_delivery
                 },
                 success: function (response) {
-                    var respObj = JSON.parse(response);
-                    if (respObj.status == 'success' || respObj.code == 1) {
-                        console.log('Passed Correctly...');
-                    }
+                    //var respObj = JSON.parse(response);
+                    console.log(response);
+                    //if (respObj.status == 'success' || respObj.code == 1) {
+                        
+                    //}
                 },
                 error: function (error) {
                     console.error(error);

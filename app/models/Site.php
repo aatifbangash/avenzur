@@ -987,6 +987,18 @@ public function getallCountry()
         return false;
     }
 
+    public function getUserFromCompany($id = null)
+    {
+        if (!$id) {
+            $id = $this->session->userdata('company_id');
+        }
+        $q = $this->db->get_where('companies', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getUser($id = null)
     {
         if (!$id) {

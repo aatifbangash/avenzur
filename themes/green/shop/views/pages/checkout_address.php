@@ -67,9 +67,15 @@ $address_line_2 = '';
 $address_city = '';
 $address_state = '';
 $address_country = '';
-$mobile_number = '';
-$first_name = '';
-$last_name = '';
+$mobile_number = isset($default_address->phone) ? $default_address->phone : '';
+$first_name = isset($default_address->first_name) ? $default_address->first_name : '';
+$last_name = isset($default_address->last_name) ? $default_address->last_name : '';
+$email_address = true;
+if (isset($default_address->email) && $default_address->email == '' && ($action_type == '' || $address_id == 'default')) {
+    $email_address = false;
+}
+
+
 if (isset($selected_address_info) & !empty($selected_address_info)) {
     $longitude = $selected_address_info->longitude;
     $latitude = $selected_address_info->latitude;
@@ -160,7 +166,8 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                     <input type="hidden" id="current_mobile_number" name="current_mobile_number"
                                         value="<?= $mobile_number; ?>">
                                     <input type="hidden" id="opt_verified" name="opt_verified" value="0">
-                                    <input type="hidden" id="action_type" name="action_type" value="<?= $action_type; ?>">
+                                    <input type="hidden" id="action_type" name="action_type"
+                                        value="<?= $action_type; ?>">
 
                                     <span class=" padding-bottom-md fw-bold" style="font-size:17px;">
                                         LOCATION INFORMATION
@@ -175,21 +182,6 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                                 value="<?= $address_line_2; ?>">
                                         </div>
                                     </div>
-
-                                    <!-- <div class="form-row">
-                                        <div class="form-group col-md-3" style="float: left">
-                                            <label for="inputEmail4" class=" fw-bold fs-6">Mobile Number</label>
-                                            <select class="form-control checkout_address py-1 px-0"
-                                                id="exampleFormControlSelect1">
-                                                <option>+966</option>
-                                                </select>
-                                        </div>
-                                        <div class="form-group col-md-5 col-7" style="float: left; margin-left:0px; margin-top:11px">
-                                            <label for="inputPassword4">&nbsp;</label>
-                                            <input type="text" class="form-control required checkout_address px-0 pt-1 " id="mobile_number" name="mobile_number"
-                                                placeholder="Mobile Number">
-                                        </div>
-                                    </div> -->
 
                                     <div class="form-row">
                                         <div class="form-group col-md-4 col-12" style="float: left">
@@ -224,6 +216,19 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                                 name="last_name" placeholder="Enter Last Name"
                                                 value="<?= $last_name; ?>">
                                         </div>
+                                        <?php if (!$email_address) {
+                                            ?>
+                                            <div class="form-row">
+                                                <div class="form-group col-md-8">
+                                                    <label for="emailAddress" class=" fw-bold fs-6">Email Address</label>
+                                                    <input type="text" class="form-control checkout_address ps-0"
+                                                        name="email" id="emailAddress"
+                                                        placeholder="" >
+                                                </div>
+                                            </div>
+                                        <?php
+                                        }
+                                        ?>
                                     </div>
 
                                     <div class="custom-control custom-switch" style="clear: both">

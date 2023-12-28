@@ -299,8 +299,8 @@ class Cart_ajax extends MY_Shop_Controller
         
         $this->data['default_address']  = $this->loggedIn ? $this->shop_model->getDefaultChechoutAddress() : false;
         $this->data['addresses']  = $this->loggedIn ? $this->shop_model->getAddresses() : false;  
-       
-        if($this->loggedIn && (  $this->data['default_address']->phone == '' || in_array($action, array('addnewaddress', 'editaddress')) ) ) {
+       // print_r($this->data['default_address']);exit;
+        if($this->loggedIn && (  $this->data['default_address']->phone == '' || $this->data['default_address']->address == ''|| in_array($action, array('addnewaddress', 'editaddress')) ) ) {
         //if($action == 'changeaddress' || empty($this->data['addresses']))  {  
             // for edit address
             if($action == 'editaddress') {
