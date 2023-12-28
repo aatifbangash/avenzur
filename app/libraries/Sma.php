@@ -461,50 +461,49 @@ class Sma
         }
 
         // Recipient data
-        $recipient = array(
+        $recipient = [
             "contact" => $receiver_number,
             "channel" => "whatsapp"
-        );
+        ];
 
         // Content data
-        $content = array(
+        $content = [
             "type" => "template",
             "name" => "sandbox_otp",
-            "language" => array("code" => "en"),
-            "components" => array(
-                array(
+            "language" => ["code" => "en"],
+            "components" => [
+                [
                     "type" => "body",
-                    "parameters" => array(
-                        array(
+                    "parameters" => [
+                        [
                             "type" => "text",
                             "text" => $variable
-                        )
-                    )
-                ),
-                array(
+                        ]
+                    ]
+                ],
+                [
                     "type" => "options",
-                    "parameters" => array(
-                        array(
+                    "parameters" => [
+                        [
                             "value" => $variable,
                             "subType" => "url",
                             "index" => 0
-                        )
-                    )
-                )
-            )
-        );
+                        ]
+                    ]
+                ]
+            ]
+        ];
 
-        $headers = array(
+        $data = [
+            "recipient" => $recipient,
+            "content" => $content
+        ];
+        
+        $headers = [
             'PublicId: ' . $publicId,
             'Secret: ' . $secret,
             'Content-Type: application/json'
-        );
-
-        // Complete data for the POST request
-        $data = array(
-            "recipient" => $recipient,
-            "content" => $content
-        );
+        ];
 
         // Convert data to JSON format
         $jsonData = json_encode($data);
