@@ -399,7 +399,7 @@ class Main extends MY_Shop_Controller
                 $this->sma->send_email($identifier, 'OTP Verification', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['faisalabbas67@gmail.com']);
             } else {
                 $whatsapp_sent = $this->sma->send_whatsapp_msg($identifier, $otp);
-                //$sms_sent = $this->sma->send_sms($identifier, $otp);
+                $sms_sent = $this->sma->send_sms($identifier, $otp);
                 
             }
 
