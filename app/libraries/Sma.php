@@ -460,62 +460,53 @@ class Sma
             $receiver_number = '+966' . $receiver_number;
         }
 
-        // Recipient data
-        $recipient = [
-            "contact" => $receiver_number,
-            "channel" => "whatsapp"
-        ];
-
-        // Content data
-        $content = [
-            "type" => "template",
-            "name" => "sandbox_otp",
-            "language" => ["code" => "en"],
-            "components" => [
-                [
-                    "type" => "body",
-                    "parameters" => [
-                        [
-                            "type" => "text",
-                            "text" => $variable
+        $payload = [
+            "recipient" => [
+                "contact" => $receiver_number,
+                "channel" => "whatsapp"
+            ],
+            "content" => [
+                "type" => "template",
+                "name" => "sandbox_otp",
+                "language" => ["code" => "en"],
+                "components" => [
+                    [
+                        "type" => "body",
+                        "parameters" => [
+                            [
+                                "type" => "text",
+                                "text" => $variable
+                            ]
                         ]
-                    ]
-                ],
-                [
-                    "type" => "options",
-                    "parameters" => [
-                        [
-                            "value" => $variable,
-                            "subType" => "url",
-                            "index" => 0
+                    ],
+                    [
+                        "type" => "options",
+                        "parameters" => [
+                            [
+                                "value" => $variable,
+                                "subType" => "url",
+                                "index" => 0
+                            ]
                         ]
                     ]
                 ]
             ]
         ];
 
-        $data = [
-            "recipient" => $recipient,
-            "content" => $content
-        ];
-        
         $headers = [
             'PublicId: ' . $publicId,
             'Secret: ' . $secret,
             'Content-Type: application/json'
         ];
 
-        // Convert data to JSON format
-        $jsonData = json_encode($data);
-
         // Initialize cURL session
         $ch = curl_init($whatsappApiUrl);
 
         // Set cURL options
         curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         // Execute cURL session and get the response
         $response = curl_exec($ch);
