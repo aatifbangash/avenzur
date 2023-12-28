@@ -74,6 +74,12 @@
       <?php
     }
     ?>
+    <style>
+   .inputs input.error-border {
+        border: 1px solid red;
+    }
+
+    </style>
 </head>
   
   <body>
@@ -176,10 +182,13 @@
                                     $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
                                     echo form_open('register', $attrib); 
                                 ?>
-                                <div class="controls logcardinput">
+                                <div class="controls logcardinput" id="inputContainerRegister">
                                 
-                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email" required="required"/>
+                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email or phone number" required="required"/>
                                 
+                                </div>
+                                <div class="controls" style="font-size: 12px; font-weight: bold" >
+                                Phone Number Format: 5XXXXXXXX
                                 </div>
 
                                 <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
@@ -195,6 +204,9 @@
                                 
                                 <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
                                 
+                                </div>
+                                <div class="controls" style="font-size: 12px; font-weight: bold" >
+                                Phone Number Format: 5XXXXXXXX
                                 </div>
 
                                 <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
@@ -443,15 +455,15 @@
                                 echo form_open('login_otp', $attrib); 
                             ?>
                             <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="login_otp_1" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="login_otp_2" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="login_otp_3" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="login_otp_4" maxlength="1" /> 
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="login_otp_5" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="login_otp_6" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded .ap-otp-input" type="text" name="opt_part1" id="login_otp_1" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded .ap-otp-input" type="text" name="opt_part2" id="login_otp_2" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded .ap-otp-input" type="text" name="opt_part3" id="login_otp_3" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded .ap-otp-input" type="text" name="opt_part4" id="login_otp_4" maxlength="1" /> 
+                                <input class="m-1 text-center form-control rounded .ap-otp-input" type="text" name="opt_part5" id="login_otp_5" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded .ap-otp-input" type="text" name="opt_part6" id="login_otp_6" maxlength="1" />
                                 <input type="hidden" id="identifierl_input" name="identifier_input" value="" />
                             </div>
-                            
+                            <div id="error" style="color: red; text-align: center"></div> 
                             <div  class="text-center">
                                 <h6 class="m-0 mt-2"><span id="login-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="loginOTP">Resend OTP</span></h6>
                             </div>
@@ -462,6 +474,7 @@
                         <button type="submit" id="loginOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0">Login</button>
                     </div>
                     <?= form_close(); ?>
+                   
                 </div>
             </div>
         </div>

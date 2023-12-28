@@ -50,7 +50,9 @@ class Shop_model extends CI_Model
 
     public function activate_user($email)
     {
-        return $this->db->update('users', ['active' => 1], ['email' => $email]);
+        $valid_email = filter_var($email, FILTER_VALIDATE_EMAIL) ;
+        $identity_column = ($valid_email) ? 'email' : 'username';
+        return $this->db->update('users', ['active' => 1], [$identity_column => $email]);
     }
 
     public function verify_success_mobile($company_id)
