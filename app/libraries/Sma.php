@@ -519,6 +519,8 @@ class Sma
         // Close cURL session
         curl_close($ch);
 
+        return $response;
+
     }
 
     public function send_sms($receiver_number, $variable){
