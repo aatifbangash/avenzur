@@ -1907,11 +1907,16 @@ $(document).ready(function () {
           document.getElementById("registerOTP").style.color = "grey";
           document.getElementById("registerOTP").style.cursor = "none";
           $("#registerModal").modal("show");
-          document.getElementById("identifier").innerHTML =
-            document.getElementById("email").value;
-          document.getElementById("identifier_input").value =
-            document.getElementById("email").value;
 
+          if ($("#email").length) {
+            var identityVal = $("#email").val();
+          } else {
+            var identityVal = $("#email_phone").val();
+          }
+          
+          document.getElementById("identifier").innerHTML = identityVal;
+          document.getElementById("identifier_input").value = identityVal ;
+           
           const countdownDuration = 60; // Duration in seconds
           const countdownDisplay = document.getElementById("register-clock");
 
@@ -1961,10 +1966,15 @@ $(document).ready(function () {
             document.getElementById("registerOTP").style.color = "grey";
             document.getElementById("registerOTP").style.cursor = "none";
             $("#registerModal").modal("show");
-            document.getElementById("identifier").innerHTML =
-              document.getElementById("email").value;
-            document.getElementById("identifier_input").value =
-              document.getElementById("email").value;
+
+           if ($("#email").length) {
+            var identityVal = $("#email").val();
+          } else {
+            var identityVal = $("#email_phone").val();
+          }
+          
+          document.getElementById("identifier").innerHTML = identityVal;
+          document.getElementById("identifier_input").value = identityVal ;
 
             const countdownDuration = 60; // Duration in seconds
             const countdownDisplay = document.getElementById("register-clock");
@@ -2067,10 +2077,14 @@ $(document).ready(function () {
           document.getElementById("loginOTP").style.color = "grey";
           document.getElementById("loginOTP").style.cursor = "none";
           $("#loginModal").modal("show");
-          document.getElementById("identifierl").innerHTML =
-            document.getElementById("identity").value;
-          document.getElementById("identifierl_input").value =
-            document.getElementById("identity").value;
+
+          if ($("#identity").length) {
+            var identityVal = $("#identity").val();
+          } else {
+            var identityVal = $("#identity_phone").val();
+          }
+          document.getElementById("identifierl").innerHTML = identityVal; //document.getElementById('identity_phone').value;
+          document.getElementById("identifierl_input").value = identityVal; //document.getElementById('identity_phone').value;
 
           const countdownDuration = 60; // Duration in seconds
           const countdownDisplay = document.getElementById("login-clock");
@@ -2126,50 +2140,28 @@ $(document).ready(function () {
     }
   }
 
-  // Attach input event listener to the input for paste event
-  // $('#first_login_otp').on('input', function() {
-  //     moveFocus(this, 'second');
-  // });
+  // function handlePaste(currentInput, totalFields) {
+  //   setTimeout(function () {
+  //     const pastedValue = currentInput.value;
+  //     const characters = pastedValue.split("");
+  //     console.log(characters);
+  //     for (let i = 0; i < characters.length; i++) {
+  //       let char = characters[i];
+  //       currentInput.value = char;
 
-  // function handleKeyup() {
-  //   var inputValue = $('#first_login_otp').val();
-  //   console.log('Input value:', inputValue);
-  //   // Add your logic here based on the input value
+  //       if (i < characters.length - 1) {
+  //         let nextInputId = `${currentInput.id.substring(
+  //           0,
+  //           currentInput.id.lastIndexOf("_") + 1
+  //         )}${i + 2}`;
+  //         let nextInput = document.getElementById(nextInputId);
+  //         if (nextInput) {
+  //           nextInput.focus();
+  //         }
+  //       }
+  //     }
+  //   }, 0);
   // }
-
-  // Attach keyup event listener to the input
-  //$('#first_login_otp').on('keyup', moveFocus(this.length, 'second'));
-  // $('#first_login_otp').on('keyup', function() {
-  //   moveFocus(this, 'second_login_otp');
-  // });
-  // $('#second_login_otp').on('keyup', function() {
-  //   moveFocus(this, 'third_login_otp');
-  // });
-  // $('#third_login_otp').on('keyup', function() {
-  //   moveFocus(this, 'fourth_login_otp');
-  // });
-  // $('#fourth_login_otp').on('keyup', function() {
-  //   moveFocus(this, 'fifth_login_otp');
-  // });
-  // $('#fifth_login_otp').on('keyup', function() {
-  //   moveFocus(this, 'sixth_login_otp');
-  // });
-
-  // $('#first_register_otp').on('keyup', function() {
-  //   moveFocus(this, 'second_register_otp');
-  // });
-  // $('#second_register_otp').on('keyup', function() {
-  //   moveFocus(this, 'third_register_otp');
-  // });
-  // $('#third_register_otp').on('keyup', function() {
-  //   moveFocus(this, 'fourth_register_otp');
-  // });
-  // $('#fourth_register_otp').on('keyup', function() {
-  //   moveFocus(this, 'fifth_register_otp');
-  // });
-  // $('#fifth_register_otp').on('keyup', function() {
-  //   moveFocus(this, 'sixth_register_otp');
-  // });
 
   function bindOtpKeyupEvents(prefix, totalFields) {
     //document.getElementById('login_otp_1').focus();
@@ -2177,17 +2169,74 @@ $(document).ready(function () {
     for (let i = 1; i <= totalFields; i++) {
       let currentId = `${prefix}_${i}`;
       let nextId = i < totalFields ? `${prefix}_${i + 1}` : null;
+      let prevId = i > 1 ? `${prefix}_${i - 1}` : null;
 
-      $(`#${currentId}`).on("keyup", function () {
-        moveFocus(this, nextId);
+      $(`#${currentId}`).on("keyup", function (e) {
+        //console.log('key', e.key) ;
+        if (e.key === "Backspace" && prevId) {
+          // If backspace is pressed, move focus to the previous input
+          document.getElementById(prevId).focus();
+        } else {
+          moveFocus(this, nextId);
+        }
       });
     }
   }
+
+  // $(".ap-otp-input").on("paste", function (ev) {
+  //   console.log("paste", ev);
+  //   // Handle paste event
+  //   const clip = ev.originalEvent.clipboardData.getData("text").trim();
+  //   console.log(clip);
+  //   //handlePaste(this, totalFields);
+  // });
+
+  //   const $inp = $(".ap-otp-input");
+  // console.log('inp', $inp);
+
+  // $inp.on({
+  //   paste(ev) { // Handle Pasting
+  //     console.log('testing');
+  //     const clip = ev.originalEvent.clipboardData.getData('text').trim();
+  //     // Allow numbers only
+  //     if (!/\d{6}/.test(clip)) return ev.preventDefault(); // Invalid. Exit here
+  //     // Split string to Array or characters
+  //     const s = [...clip];
+  //     // Populate inputs. Focus last input.
+  //     $inp.val(i => s[i]).eq(5).focus();
+  //   },
+  //   keyup(ev) { // Handle typing
+  //     console.log('test');
+  //     const i = $inp.index(this);
+  //     if (this.value) $inp.eq(i + 1).focus();
+  //   },
+  //   keydown(ev) { // Handle Deleting
+  //     console.log('down');
+  //     const i = $inp.index(this);
+  //     if (!this.value && ev.key === "Backspace" && i) $inp.eq(i - 1).focus();
+  //   }
+
+  // });
 
   // Bind keyup events for login OTP
   bindOtpKeyupEvents("login_otp", 6);
 
   // Bind keyup events for register OTP
+//   const target = document.querySelector(".ap-otp-input");
+// if(target) {
+//   target.addEventListener("paste", (event) => {
+//     event.preventDefault();
+  
+//     let paste = (event.clipboardData || window.clipboardData).getData("text");
+//     paste = paste.toUpperCase();
+//     console.log('paste', paste);
+//     const selection = window.getSelection();
+//     if (!selection.rangeCount) return;
+//     selection.deleteFromDocument();
+//     selection.getRangeAt(0).insertNode(document.createTextNode(paste));
+//     selection.collapseToEnd();
+//   });
+// }
   bindOtpKeyupEvents("register_otp", 6);
 
   bindOtpKeyupEvents("checkout_login", 6);
