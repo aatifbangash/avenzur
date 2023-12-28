@@ -400,7 +400,7 @@ class Main extends MY_Shop_Controller
             } else {
                 $whatsapp_sent = $this->sma->send_whatsapp_msg($identifier, $otp);
                 $whatsapp_data = json_decode($whatsapp_sent, true);
-
+                print_r($whatsapp_data);exit;
                 if ($whatsapp_data && isset($whatsapp_data['messageId'])) {
                     return $whatsapp_sent;
                 } else {
