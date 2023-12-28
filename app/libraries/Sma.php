@@ -456,11 +456,11 @@ class Sma
 
 
         $whatsappApiUrl = 'https://apis.unifonic.com/v1/messages';
-        /*if (strpos($receiver_number, '+966') === false) {
+        if (strpos($receiver_number, '+966') === false) {
             $receiver_number = '+966' . $receiver_number;
-        }*/
+        }
 
-        $receiver_number = '+923469122590';
+        //$receiver_number = '+923469122590';
 
         $payload = [
             "recipient" => [
