@@ -450,6 +450,86 @@ class Sma
         return $rn;
     }
 
+    public function send_whatsapp_msg($receiver_number, $variable){
+        $publicId = 'f73c5f1a-baf8-4b54-a138-3bda6a3dacd0';
+        $secret = 'eZy78JtXYBttRDU07Boi48dXzAoKP8IvhbtmbdRLpcHSEUyhmFFrUtQvV3NtqyuYuWROrivT51W';
+
+
+        $whatsappApiUrl = 'https://apis.unifonic.com/v1/messages';
+        if (strpos($receiver_number, '+966') === false) {
+            $receiver_number = '+966' . $receiver_number;
+        }
+
+        // Recipient data
+        $recipient = array(
+            "contact" => $receiver_number,
+            "channel" => "whatsapp"
+        );
+
+        // Content data
+        $content = array(
+            "type" => "template",
+            "name" => "sandbox_otp",
+            "language" => array("code" => "en"),
+            "components" => array(
+                array(
+                    "type" => "body",
+                    "parameters" => array(
+                        array(
+                            "type" => "text",
+                            "text" => $variable
+                        )
+                    )
+                ),
+                array(
+                    "type" => "options",
+                    "parameters" => array(
+                        array(
+                            "value" => $variable,
+                            "subType" => "url",
+                            "index" => 0
+                        )
+                    )
+                )
+            )
+        );
+
+        $headers = array(
+            'PublicId: ' . $publicId,
+            'Secret: ' . $secret,
+            'Content-Type: application/json'
+        );
+
+        // Complete data for the POST request
+        $data = array(
+            "recipient" => $recipient,
+            "content" => $content
+        );
+
+        // Convert data to JSON format
+        $jsonData = json_encode($data);
+
+        // Initialize cURL session
+        $ch = curl_init($whatsappApiUrl);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        // Execute cURL session and get the response
+        $response = curl_exec($ch);
+
+        // Check for cURL errors
+        if (curl_errno($ch)) {
+            echo 'Curl error: ' . curl_error($ch);
+        }
+
+        // Close cURL session
+        curl_close($ch);
+    }
+
     public function send_sms($receiver_number, $variable){
         $data = [
             'userName' => 'phmc',
