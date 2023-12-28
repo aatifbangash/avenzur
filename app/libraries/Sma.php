@@ -475,7 +475,7 @@ class Sma
                         "parameters" => [
                             [
                                 "type" => "text",
-                                "text" => $variable
+                                "text" => (string) $variable
                             ]
                         ]
                     ],
@@ -483,7 +483,7 @@ class Sma
                         "type" => "options",
                         "parameters" => [
                             [
-                                "value" => $variable,
+                                "value" => (string) $variable,
                                 "subType" => "url",
                                 "index" => 0
                             ]
@@ -492,8 +492,6 @@ class Sma
                 ]
             ]
         ];
-
-        echo json_encode($payload);exit;
 
         $headers = [
             'PublicId: ' . $publicId,
