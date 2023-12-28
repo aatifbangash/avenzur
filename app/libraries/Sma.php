@@ -451,16 +451,14 @@ class Sma
     }
 
     public function send_whatsapp_msg($receiver_number, $variable){
-        $publicId = 'f73c5f1a-baf8-4b54-a138-3bda6a3dacd0';
-        $secret = 'eZy78JtXYBttRDU07Boi48dXzAoKP8IvhbtmbdRLpcHSEUyhmFFrUtQvV3NtqyuYuWROrivT51W';
+        $publicId = '0d337237-a84a-46e4-ba9e-1704e54c7124';
+        $secret = 'TdeO8nY0aJNYmufm72tKsHnCNOdatjnOPL1rk0t85g7nuBVhLCREFPjob5VKawGZCtZijUphP5T';
 
 
         $whatsappApiUrl = 'https://apis.unifonic.com/v1/messages';
         if (strpos($receiver_number, '+966') === false) {
             $receiver_number = '+966' . $receiver_number;
         }
-
-        echo 'Receiver: '.$receiver_number;exit;
 
         // Recipient data
         $recipient = array(
