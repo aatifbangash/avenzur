@@ -460,6 +460,8 @@ class Sma
             $receiver_number = '+966' . $receiver_number;
         }
 
+        echo 'Receiver: '.$receiver_number;exit;
+
         // Recipient data
         $recipient = array(
             "contact" => $receiver_number,
