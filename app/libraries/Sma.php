@@ -493,6 +493,8 @@ class Sma
             ]
         ];
 
+        echo json_encode($payload);exit;
+
         $headers = [
             'PublicId: ' . $publicId,
             'Secret: ' . $secret,
