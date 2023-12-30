@@ -77,7 +77,7 @@ function update_popup_cart(t) {
         '<div class=" col-md-9">' + 
         '<p class="m-0 fs-5 fw-semibold text-start">' + this.name + '</p>' + 
         '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4">' + this.subtotal + '</p>' + 
-        '</div>';
+        '</div><hr />';
 
       $("#product-canvas-body").append(t);
     });
