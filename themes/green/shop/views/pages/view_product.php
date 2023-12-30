@@ -135,7 +135,7 @@
                 
                 
                 </form>
-                <button type="button" data-id="<?= $product->id; ?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV ms-2 py-1 addtocart  text-dark add-to-cart" ><i class="bi bi-cart3 me-2"></i> Add to cart </button>
+                <button type="button" data-id="<?= $product->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV ms-2 py-1 addtocart  text-dark add-to-cart" ><i class="bi bi-cart3 me-2"></i> Add to cart </button>
                 <!--<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions">show canvas</button>-->
 
 
