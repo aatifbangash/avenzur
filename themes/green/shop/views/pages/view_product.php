@@ -160,9 +160,9 @@
 
                             <div class="border-0 pb-4 d-flex flex-nowrap mt-3">
                                 <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6">
-                                    <a href="http://localhost/avenzur/cart" style="color: #fff;text-decoration: none;">Checkout</a>                   
+                                    <a href="<?= site_url('cart'); ?>" style="color: #fff;text-decoration: none;">Checkout</a>                   
                                 </button>
-                                <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6">Continue Shopping</button>
+                                <button type="submit" data-bs-dismiss="offcanvas" aria-label="Close" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6">Continue Shopping</button>
                             </div>
                         </div>
                     </div>
