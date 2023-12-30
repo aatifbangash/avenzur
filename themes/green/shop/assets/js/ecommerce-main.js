@@ -50,7 +50,7 @@ function sa_img(t, e) {
 
 function update_popup_cart(t) {
   if (t.total_items && t.total_items > 0) {
-    $("#product-canvas-body").html();
+    $("#product-canvas-body").html('');
     $.each(t.contents, function () {
       /*var t =
         '<div class=" row align-items-center">' +
