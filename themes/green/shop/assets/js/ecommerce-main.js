@@ -1021,6 +1021,11 @@ $(document).ready(function () {
         : ((a = t),
           update_mini_cart(t),
           update_popup_cart(t));
+          $('#product-canvas-toggle').attr({
+            "data-bs-toggle": "offcanvas",
+            "data-bs-target": "#offcanvasWithBothOptions"
+          });
+          
           //$("#productPop").modal("show"));
       /*$.toast({
             heading: "Success",
