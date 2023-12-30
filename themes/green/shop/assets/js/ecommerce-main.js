@@ -51,7 +51,7 @@ function sa_img(t, e) {
 function update_popup_cart(t) {
   if (t.total_items && t.total_items > 0) {
     $.each(t.contents, function () {
-      var t =
+      /*var t =
         '<div class=" row align-items-center">' +
         '<div class="addicon col-md-3 px-0">' +
         '<img src="' +
@@ -67,9 +67,16 @@ function update_popup_cart(t) {
         '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4">' +
         this.subtotal +
         "</p>" +
-        "</div></div><hr>";
+        "</div></div><hr>";*/
 
-      $("#product-popup-modal-body").append(t);
+      var t =
+        'div class="addicon col-md-3"><img src="'+site.base_url+"assets/uploads/" +this.image+'" class="w-100"></div>' + 
+        '<div class=" col-md-9">' + 
+        '<p class="m-0 fs-5 fw-semibold text-start">' + this.name + '</p>' + 
+        '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4">' + this.subtotal + '</p>' + 
+        '</div>';
+
+      $("#product-canvas-body").append(t);
     });
 
     var e =
