@@ -182,7 +182,7 @@
                   
                 </ul>
             </div>
-            <div class="loginDiv order-1">
+            
               <div class="dropdown logindropdown-k">
                 <button type="button" id="login-btn-trigger" class="btn dropdown-toggle px-0 border-0 rounded-0 px-4 " data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" style="color:#fff;border-inline: 1px solid #fff !important;">
                   <?php
@@ -254,8 +254,9 @@
                         }
                   }
                 ?>
-              </div>
-            </div>
+              </div><!-- drop down close -->
+
+            
            
           </div>
               
