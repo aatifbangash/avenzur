@@ -1015,7 +1015,7 @@ $(document).ready(function () {
         ? $.notify(t.message, "warning") //alert('out of stock')//sa_alert("Error!", t.message, "error", !0)
         : ((a = t),
           update_mini_cart(t),
-          update_popup_cart(t);
+          update_popup_cart(t));
           //$("#productPop").modal("show"));
       /*$.toast({
             heading: "Success",
