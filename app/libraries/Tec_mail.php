@@ -2,12 +2,12 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 /*
-*  ==============================================================================
-*  Author   : Mian Saleem
-*  Email    : saleem@tecdiary.com
-*  Web      : http://tecdiary.com
-*  ==============================================================================
-*/
+ *  ==============================================================================
+ *  Author   : Mian Saleem
+ *  Email    : saleem@tecdiary.com
+ *  Web      : http://tecdiary.com
+ *  ==============================================================================
+ */
 
 use PHPMailer\PHPMailer\OAuth;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -28,31 +28,92 @@ class Tec_mail
 
     public function send_mail($to, $subject, $body, $from = null, $from_name = null, $attachment = null, $cc = null, $bcc = null)
     {
+        $mail = new PHPMailer(true);
+
+        try {
+            //Server settings
+            // $mail->isSMTP();
+            // $mail->Host       = 'smtp.gmail.com';
+            // $mail->SMTPAuth   = true;
+            // $mail->Username   = 'aleemktk@gmail.com'; // Your Gmail address
+            // $mail->Password   = $pass; // Your Gmail password
+            // $mail->SMTPSecure = 'tls';
+            // $mail->Port       = 587;
+
+            $mail->isSMTP();
+            $mail->Host =  $this->Settings->smtp_host;
+            $mail->SMTPAuth = true;
+            $mail->Username =  $this->Settings->smtp_user;
+            $mail->Password =  $this->Settings->smtp_pass; // Use the email account’s password
+            $mail->SMTPSecure = $this->Settings->smtp_crypto;
+            $mail->Port = $this->Settings->smtp_port;
+             
+            $from_name = 'Info' ;
+            $from = $this->Settings->smtp_user;
+            // if($from == 'info@avenzur.com') {
+            //     $from_name = 'Avenzur' ;
+            // }
+
+            //Recipients
+            $mail->setFrom($from, $from_name); // Your name and email
+            $mail->addAddress($to); // Recipient's name and email
+
+            //Content
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body = $body;
+            
+            $mail->isHTML(true);
+            $mail->Body = $body;
+            $mail->AltBody = strip_tags($mail->Body);
+            if ($attachment) {
+                if (is_array($attachment)) {
+                    foreach ($attachment as $attach) {
+                        $mail->addAttachment($attach);
+                    }
+                } else {
+                    $mail->addAttachment($attachment);
+                }
+            }
+            // Send the email
+            if (!$mail->send()) {
+                log_message('error', 'Mail Error: ' . $mail->ErrorInfo);
+                throw new Exception($mail->ErrorInfo);
+            }
+
+            return true;
+        } catch (Exception $e) {
+            echo "Error: {$mail->ErrorInfo}";
+        }
+    }
+
+    public function send_mail_old($to, $subject, $body, $from = null, $from_name = null, $attachment = null, $cc = null, $bcc = null)
+    {
         // $mail = new PHPMailer;
-        $mail          = new PHPMailer(true);
+        $mail = new PHPMailer(true);
         $mail->CharSet = 'UTF-8';
         try {
             if (DEMO) {
                 $mail->isSMTP();
-                $mail->Host     = '127.0.0.1';
+                $mail->Host = '127.0.0.1';
                 $mail->SMTPAuth = true;
-                $mail->Port     = 2525;
+                $mail->Port = 2525;
                 $mail->Username = 'SMA';
                 $mail->Password = '';
-            // $mail->SMTPDebug = 2;
+                // $mail->SMTPDebug = 2;
             } elseif ($this->Settings->protocol == 'mail') {
                 $mail->isMail();
             } elseif ($this->Settings->protocol == 'sendmail') {
                 $mail->isSendmail();
             } elseif ($this->Settings->protocol == 'smtp') {
                 $mail->isSMTP();
-                $mail->Host       = $this->Settings->smtp_host;
-                $mail->SMTPAuth   = true;
+                $mail->Host = $this->Settings->smtp_host;
+                $mail->SMTPAuth = true;
                 $mail->SMTPSecure = !empty($this->Settings->smtp_crypto) ? $this->Settings->smtp_crypto : false;
-                $mail->Port       = $this->Settings->smtp_port;
+                $mail->Port = $this->Settings->smtp_port;
                 if (isset($this->Settings->smtp_oauth2)) {
-                    $email        = $this->Settings->smtp_user;
-                    $clientId     = $this->config->item('client_id');
+                    $email = $this->Settings->smtp_user;
+                    $clientId = $this->config->item('client_id');
                     $clientSecret = $this->config->item('client_secret');
                     $refreshToken = $this->config->item('refresh_token');
 
@@ -61,11 +122,11 @@ class Tec_mail
                     $provider = new Google(['clientId' => $clientId, 'clientSecret' => $clientSecret]);
 
                     $this->mail->setOAuth(new OAuth([
-                        'provider'     => $provider,
-                        'clientId'     => $clientId,
+                        'provider' => $provider,
+                        'clientId' => $clientId,
                         'clientSecret' => $clientSecret,
                         'refreshToken' => $refreshToken,
-                        'userName'     => $email,
+                        'userName' => $email,
                     ]));
                 } else {
                     $mail->Username = $this->Settings->smtp_user;
@@ -75,12 +136,19 @@ class Tec_mail
                 $mail->isMail();
             }
 
-            $from =  $this->Settings->smtp_user; //'info@avenzur.com';
-            $from_name = 'Info';
-            if($from == 'info@avenzur.com') {
+            $from = $this->Settings->smtp_user; //'info@avenzur.com';
+            $from_name = 'Aleem';
+            if ($from == 'info@avenzur.com') {
                 $from_name = 'Avenzur';
             }
-          
+
+            // echo $from;
+            // echo '<br>'.$from_name;
+            // echo '<br>'.$mail->Username ;
+            // echo '<br>'.$mail->Password ;
+            // echo '<br>'. $this->Settings->protocol ;
+            // echo '<br>'. $to;
+            // exit;
 
             if ($from && $from_name) {
                 $mail->setFrom($from, $from_name);
@@ -94,6 +162,7 @@ class Tec_mail
             }
 
             $mail->addAddress($to);
+
             /*if ($cc) {
                 try {
                     if (is_array($cc)) {
@@ -122,7 +191,7 @@ class Tec_mail
             }*/
             $mail->Subject = $subject;
             $mail->isHTML(true);
-            $mail->Body    = $body;
+            $mail->Body = $body;
             $mail->AltBody = strip_tags($mail->Body);
             if ($attachment) {
                 if (is_array($attachment)) {
@@ -133,11 +202,11 @@ class Tec_mail
                     $mail->addAttachment($attachment);
                 }
             }
-
             if (!$mail->send()) {
                 log_message('error', 'Mail Error: ' . $mail->ErrorInfo);
                 throw new Exception($mail->ErrorInfo);
             }
+
             return true;
         } catch (MailException $e) {
             log_message('error', 'Mail Error: ' . $e->getMessage());
