@@ -570,10 +570,10 @@ class Main extends MY_Shop_Controller
 
         if ($this->form_validation->run() == true) {
             if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
-                $type = 'email';
+                echo $type = 'email';
                 $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             } else {
-                $type = 'mobile';
+                echo $type = 'mobile';
                 $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             }
 
@@ -590,7 +590,7 @@ class Main extends MY_Shop_Controller
                         if($user_data->active == 0){
                             $this->shop_model->activate_user($company_data->email);
                         }
-
+                       print_r($company_data);
                         if ($this->ion_auth->login($company_data->email, '12345', $remember)) {
                             if ($this->Settings->mmode) {
                                 if (!$this->ion_auth->in_group('owner')) {
@@ -616,7 +616,8 @@ class Main extends MY_Shop_Controller
 
                         } else {
                             header('Content-Type: application/json');
-                            echo json_encode(['status' => 'error', 'message' => $this->ion_auth->errors()]);
+                            //echo json_encode(['status' => 'error', 'message' => $this->ion_auth->errors()]);
+                            echo json_encode(['status' => 'error', 'message' => 'login error']);
                             // $this->session->set_flashdata('error', $this->ion_auth->errors());
                             // $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
                             // redirect($referrer);
@@ -673,7 +674,7 @@ class Main extends MY_Shop_Controller
                 $type = 'mobile';
                 $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             }
-
+           
             if ($company_data) {
                 if ($type == 'mobile' && $company_data->mobile_verified == 0) {
                     echo json_encode(['status' => 'error', 'message' => 'Mobile Number Not verified']);
