@@ -490,14 +490,8 @@
       </div>
       <div class="offcanvas-body px-1">
           <div class="m-2">
-              <div class=" row align-items-center">
-                  <div class="addicon col-md-3">
-                      <img src="http://localhost/avenzur/assets/uploads/901b783c3d0100d0074137cd321cb650.jpg" class="w-100">
-                  </div>
-                  <div class=" col-md-9">
-                      <p class="m-0 fs-5 fw-semibold text-start">Sulfad 1 gm 30 Tab</p>
-                      <p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4">264.50SAR </p>
-                  </div>
+              <div class=" row align-items-center" id="product-canvas-body">
+                  
               </div>
 
               <div class=" row align-items-center mt-4">
