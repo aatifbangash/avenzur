@@ -499,15 +499,15 @@
                       <p class="m-0 fs-5 fw-semibold text-start text-dark">Cart Total</p>
                   </div>
                   <div class=" col-md-8">
-                      <p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark">529.00SAR </p>
+                      <p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark" id="product-canvas-total"></p>
                   </div>
               </div>
 
               <div class="border-0 pb-4 d-flex flex-nowrap mt-3">
                   <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6">
-                      <a href="http://localhost/avenzur/cart" style="color: #fff;text-decoration: none;">Checkout</a>                   
+                      <a href="<?= site_url('cart'); ?>" style="color: #fff;text-decoration: none;">Checkout</a>                   
                   </button>
-                  <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6">Continue Shopping</button>
+                  <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6" data-bs-dismiss="offcanvas">Continue Shopping</button>
               </div>
           </div>
       </div>

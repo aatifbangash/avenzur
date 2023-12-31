@@ -615,7 +615,7 @@ function gen_html(t) {
       e +=
         '<button type="button" data-id="' +
         r.id +
-        '" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>';
+        '" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions">Add to cart </button>';
       e += "</div>";
       e += "</div>";
       e += "</div>";
