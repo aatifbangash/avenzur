@@ -115,11 +115,11 @@ if ($this->Settings->indian_gst) {
                             <label class="form-check-label fw-semibold" for="flexRadioDefault2">
                                 Debit / Credit Card Payment
                             </label>
-                            <input type="text" class="form-control required px-0 pt-1" name="card_name" value="" id="card_name" placeholder="Cardholder Name" />
-                            <input type="text" class="form-control required px-0 pt-1" name="card_number" value="" id="card_number" placeholder="Card Number" />
-                            <input type="text" class="form-control required px-0 pt-1" name="card_expiry_year" value="" id="card_expiry_year" placeholder="Card Expiry Year" />
-                            <input type="text" class="form-control required px-0 pt-1" name="card_expiry_month" value="" id="card_expiry_month" placeholder="Card Expiry Month" />
-                            <input type="text" class="form-control required px-0 pt-1" name="card_cvv" value="" id="card_cvv" placeholder="Card Cvv" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding-left: 5px;" name="card_name" value="" id="card_name" placeholder="Cardholder Name" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding-left: 5px;" name="card_number" value="" id="card_number" placeholder="Card Number" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding-left: 5px;" name="card_expiry_year" value="" id="card_expiry_year" placeholder="Card Expiry Year" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding-left: 5px;" name="card_expiry_month" value="" id="card_expiry_month" placeholder="Card Expiry Month" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding-left: 5px;" name="card_cvv" value="" id="card_cvv" placeholder="Card Cvv" />
                         </div>
                         <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
                     </div>
