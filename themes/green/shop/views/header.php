@@ -225,31 +225,50 @@
                       ?>
                       
                       <div class="dropdown-menu p-3 myaccountForm validate" id="myaccountForm">
-                        <div class="loginRCard px-4 w-100">
-                            
+                      <div class="loginRCard px-4 w-100">
+                            <div class="logo-k mb-5"> 
+                                <a class="navbar-brand" href="http://localhost/avenzur/">
+                                    <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVENZUR">
+                                </a>
+                            </div>
+                            <h4 class="fw-bold letstart">Let's get started</h4>
+                            <div class="logsignBtns mt-3 d-flex justify-content-center">
+                                <button type="button" id="loginBtn" class="btn  text-white" onclick="LoginFn(this);">Log in</button>
+                                <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerFnBtn(this);">Sign up</button>
+                            </div>
+                            <div id="registerBlock">
+                                <?php 
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
+                                    echo form_open('register', $attrib); 
+                                ?>
+                                <div class="controls logcardinput">
+                                
+                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email" required="required"/>
+                                
+                                </div>
 
-                              <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
-                              <?= form_close(); ?>
-                          </div>
+                                <button id="registerBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
+                                <?= form_close(); ?>
+                            </div>
 
-                          <div id="loginBlock" style="display:none;">
-                              <?php 
-                                  $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
-                                  echo form_open('login', $attrib); 
-                              ?>
-                              <div class="controls logcardinput" id="inputContainer">
-                              
+                            <div id="loginBlock" style="display:none;">
+                                <?php 
+                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
+                                    echo form_open('login', $attrib); 
+                                ?>
+                                <div class="controls logcardinput" id="inputContainer">
+                                
                                 <input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required" />
                                 
-                                
+                                </div>
 
-                              <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
-                              <?= form_close(); ?>
-                          </div>
-                          
-                        <div>
-                        <span id="register-message" style="color: blue;"></span>
-                      </div>
+                                <button id="loginBtnCall" type="button" class="btn  text-white continueBtn" data-bs-toggle="modal">Continue</button>
+                                <?= form_close(); ?>
+                            </div>
+                            
+                          <div>
+                          <span id="register-message" style="color: blue;"></span>
+                        </div>
                     <?php
                         }
                   }
