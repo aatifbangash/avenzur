@@ -3,6 +3,7 @@
 <html lang="en">
   <head>
   <?php
+    $currentUrl = current_url();
     if (strpos($currentUrl, 'avenzur.com') !== false) {
     ?>
     <!-- Google Tag Manager -->

@@ -451,8 +451,8 @@ class Sma
     }
 
     public function send_whatsapp_msg($receiver_number, $variable){
-        $publicId = '0d337237-a84a-46e4-ba9e-1704e54c7124';
-        $secret = 'TdeO8nY0aJNYmufm72tKsHnCNOdatjnOPL1rk0t85g7nuBVhLCREFPjob5VKawGZCtZijUphP5T';
+        $publicId = 'f73c5f1a-baf8-4b54-a138-3bda6a3dacd0';
+        $secret = 'eZy78JtXYBttRDU07Boi48dXzAoKP8IvhbtmbdRLpcHSEUyhmFFrUtQvV3NtqyuYuWROrivT51W';
 
 
         $whatsappApiUrl = 'https://apis.unifonic.com/v1/messages';
@@ -469,7 +469,7 @@ class Sma
             ],
             "content" => [
                 "type" => "template",
-                "name" => "sandbox_otp",
+                "name" => "otp_whatsapp",
                 "language" => ["code" => "en"],
                 "components" => [
                     [
