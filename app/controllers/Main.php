@@ -396,7 +396,6 @@ class Main extends MY_Shop_Controller
             $message = 'Your One Time Password for Avenzur.com is ' . $otp;
 
             if ($medium == 'email') {
-            if ($medium == 'email') {
                 $this->sma->send_email($identifier, 'OTP Verification', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['faisalabbas67@gmail.com']);
             } else {
                 $whatsapp_sent = $this->sma->send_whatsapp_msg($identifier, $otp);
