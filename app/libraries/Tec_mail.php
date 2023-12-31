@@ -75,8 +75,12 @@ class Tec_mail
                 $mail->isMail();
             }
 
-            $from = 'info@avenzur.com';
-            $from_name = 'Avenzur';
+            $from =  $this->Settings->smtp_user; //'info@avenzur.com';
+            $from_name = 'Info';
+            if($from == 'info@avenzur.com') {
+                $from_name = 'Avenzur';
+            }
+          
 
             if ($from && $from_name) {
                 $mail->setFrom($from, $from_name);
