@@ -570,10 +570,10 @@ class Main extends MY_Shop_Controller
 
         if ($this->form_validation->run() == true) {
             if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
-                echo $type = 'email';
+                 $type = 'email';
                 $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             } else {
-                echo $type = 'mobile';
+                 $type = 'mobile';
                 $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             }
 
@@ -590,7 +590,7 @@ class Main extends MY_Shop_Controller
                         if($user_data->active == 0){
                             $this->shop_model->activate_user($company_data->email);
                         }
-                       print_r($company_data);
+                    
                         if ($this->ion_auth->login($company_data->email, '12345', $remember)) {
                             if ($this->Settings->mmode) {
                                 if (!$this->ion_auth->in_group('owner')) {
@@ -935,8 +935,11 @@ class Main extends MY_Shop_Controller
                 if ($this->form_validation->run() == true) {
                     $otp_sent = $this->sendOTP($company_id, $email, $type);
 
-                    if (!$otp_sent) {
-                        echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
+                    if ($otp_sent) {
+                        echo json_encode(['status' => 'success', 'message' => 'OTP sent at this time']);
+    
+                         }else{
+                            echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
                          }
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
