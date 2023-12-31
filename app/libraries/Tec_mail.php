@@ -60,7 +60,8 @@ class Tec_mail
 
             //Content
             $mail->isHTML(true);
-            $mail->Subject = $subject;
+            $timestamp = date('Y-m-d H:i:s'); // Current timestamp
+            $mail->Subject = $subject .' -' . $timestamp;
             $mail->Body = $body;
             
             $mail->isHTML(true);
