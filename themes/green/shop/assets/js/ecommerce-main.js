@@ -52,7 +52,7 @@ function update_popup_cart(t) {
   if (t.total_items && t.total_items > 0) {
     $("#product-canvas-body").html('');
     $.each(t.contents, function () {
-      var t =
+      /*var t =
         '<div class=" row align-items-center">' +
         '<div class="addicon col-md-3 px-0">' +
         '<img src="' +
@@ -70,9 +70,9 @@ function update_popup_cart(t) {
         "</p>" +
         "</div></div><hr>";
 
-        $("#product-popup-modal-body").append(t);
+        $("#product-popup-modal-body").append(t);*/
 
-      /*var t =
+      var t =
         '<div class="addicon col-md-3">' + 
         '<img width="80" height="80" src="'+site.base_url+"assets/uploads/" +this.image+'" class="w-100" />' +
         '</div>' + 
@@ -81,12 +81,12 @@ function update_popup_cart(t) {
         '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4">' + this.subtotal + '</p>' + 
         '</div><hr />';
 
-      $("#product-canvas-body").append(t);*/
+      $("#product-canvas-body").append(t);
     });
 
-    //$('#product-canvas-total').html(t.total);
+    $('#product-canvas-total').html(t.total);
 
-    var e =
+    /*var e =
       '<div class=" row align-items-center mt-4">' +
       '<div class="addicon col-md-3 px-0">' +
       '<p class="m-0 fs-5 fw-semibold text-start text-dark">Cart Total</p>' +
@@ -96,7 +96,7 @@ function update_popup_cart(t) {
       t.total +
       "</p>" +
       "</div></div>";
-    $("#product-popup-modal-body").append(e);
+    $("#product-popup-modal-body").append(e);*/
   }
 }
 function update_mini_cart(t) {
@@ -1022,8 +1022,8 @@ $(document).ready(function () {
         ? $.notify(t.message, "warning") //alert('out of stock')//sa_alert("Error!", t.message, "error", !0)
         : ((a = t),
           update_mini_cart(t),
-          update_popup_cart(t),
-          $("#productPop").modal("show"));
+          update_popup_cart(t));
+          //$("#productPop").modal("show"));
           /*$('#product-canvas-toggle').attr({
             "data-bs-toggle": "offcanvas",
             "data-bs-target": "#offcanvasWithBothOptions"

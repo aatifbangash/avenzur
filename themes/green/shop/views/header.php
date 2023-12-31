@@ -483,6 +483,36 @@
       }
     ?>
 
+    <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvasWithBothOptions" aria-labelledby="offcanvasWithBothOptionsLabel">
+      <div class="offcanvas-header">
+          
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body px-1">
+          <div class="m-2">
+              <div class=" row align-items-center" id="product-canvas-body">
+                  
+              </div>
+
+              <div class=" row align-items-center mt-4">
+                  <div class="addicon col-md-4">
+                      <p class="m-0 fs-5 fw-semibold text-start text-dark">Cart Total</p>
+                  </div>
+                  <div class=" col-md-8">
+                      <p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark">529.00SAR </p>
+                  </div>
+              </div>
+
+              <div class="border-0 pb-4 d-flex flex-nowrap mt-3">
+                  <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6">
+                      <a href="http://localhost/avenzur/cart" style="color: #fff;text-decoration: none;">Checkout</a>                   
+                  </button>
+                  <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6">Continue Shopping</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
   <!-- product popup start -->
   <div class="modal fade" id="productPop" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
