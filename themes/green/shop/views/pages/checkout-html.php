@@ -242,6 +242,37 @@ if ($this->Settings->indian_gst) {
             $('#card_name_hidden').val($(this).val());
         });
 
+        $('#card_number').on('input', function() {
+            // Get the input value and remove non-numeric characters
+            var cardNumber = $(this).val().replace(/\D/g, '');
+
+            // Detect card type based on the first digit
+            var cardType = 'unknown';
+            if (/^4/.test(cardNumber)) {
+                cardType = 'visa';
+            } else if (/^5[1-5]/.test(cardNumber)) {
+                cardType = 'mastercard';
+            }
+
+            // Format the card number
+            var formattedNumber = formatCardNumber(cardNumber, cardType);
+
+            // Update the input value
+            $(this).val(formattedNumber);
+        });
+
+        // Function to format the card number
+        function formatCardNumber(cardNumber, cardType) {
+            // Format the card number based on the card type
+            if (cardType === 'visa' || cardType === 'mastercard') {
+                // Insert spaces after every 4 characters
+                return cardNumber.replace(/(\d{4})/g, '$1 ').trim();
+            } else {
+                // Default: no specific formatting for other card types
+                return cardNumber;
+            }
+        }
+
         $('#card_number').change(function(){
             $('#card_number_hidden').val($(this).val());
         });
