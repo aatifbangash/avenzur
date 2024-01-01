@@ -105,7 +105,7 @@ if ($this->Settings->indian_gst) {
                 
 
             </div>
-         
+            <?php echo shop_form_open('order', 'class="validate addressform-k"'); ?>
         <div class="col-md-4">
                 <div class="mt-5">
                     <h2 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
@@ -150,7 +150,7 @@ if ($this->Settings->indian_gst) {
                         </div>
                     </div>
                 </div>
-            <?php echo shop_form_open('order', 'class="validate addressform-k"'); ?>
+            
            <?php
                 $total = $this->sma->convertMoney($this->cart->total(), false, false);
                 $order_tax = $this->sma->convertMoney($this->cart->order_tax(), false, false);
