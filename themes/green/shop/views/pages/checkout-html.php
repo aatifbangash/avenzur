@@ -245,6 +245,17 @@ if ($this->Settings->indian_gst) {
         document.getElementById('card_expiry_year').setAttribute('min', currentYear);
         document.getElementById('card_expiry_year').setAttribute('max', currentYear + 10); // Allowing the next 10 years
 
+        $('#card_cvv').on('input', function() {
+            var cvv = $(this).val();
+            var cvvRegex = /^\d{3}$/;
+
+            if (!cvvRegex.test(cvv)) {
+                $('#cvvError').text('Please enter a valid 3-digit CVV');
+            } else {
+                $('#cvvError').text('');
+            }
+        });
+
         $('#card_name').change(function(){
             $('#card_name_hidden').val($(this).val());
         });
