@@ -23,6 +23,8 @@ $expiryDateMonth = $formdata["card_expiry_month"];
 $expiryDateYear = $formdata["card_expiry_year"];
 $cardCVV = $formdata["card_cvv"];
 
+$cardNumber = preg_replace('/\s+/', '', $cardNumber);
+$expiryDateYear = substr($expiryDateYear, -2);
 
 ?>
 
@@ -101,13 +103,13 @@ $cardCVV = $formdata["card_cvv"];
   <div></div>
   <form action="<?php echo $redirectURL?>" method="post" name="redirectForm">
 
-  <input type="hidden" name="CardNumber" value="5105105105105100">
+  <input type="hidden" name="CardNumber" value="<?php echo $cardNumber?>">
 
     <input name="MerchantID" type="hidden" value="<?php echo $merchantID?>" />
 
-    <input type="hidden" name="ExpiryDateMonth" value="01">
+    <input type="hidden" name="ExpiryDateMonth" value="<?php echo $expiryDateMonth?>">
 
-    <input type="hidden" name="CardHolderName" value="Aleem Nawaz Khan">
+    <input type="hidden" name="CardHolderName" value="<?php echo $cardName?>">
 
     <input name="Amount" type="hidden" value="<?php echo $amount?>" />
 
@@ -115,7 +117,7 @@ $cardCVV = $formdata["card_cvv"];
 
     <input name="MessageID" type="hidden" value="<?php echo $messageID?>" />
 
-    <input type="hidden" name="ExpiryDateYear" value="31">
+    <input type="hidden" name="ExpiryDateYear" value="<?php echo $expiryDateYear?>">
 
     <input name="TransactionID" type="hidden" value="<?php echo $transactionID?>" />
 
@@ -137,7 +139,7 @@ $cardCVV = $formdata["card_cvv"];
 
     <input name="GenerateToken" type="hidden" value="<?php echo $genertaeToken?>" />
 
-    <input type="hidden" name="SecurityCode" value="999">
+    <input type="hidden" name="SecurityCode" value="<?php echo $cardCVV?>">
 
     <input name="SecureHash" type="hidden" value="<?php echo $secureHash?>" />
 
