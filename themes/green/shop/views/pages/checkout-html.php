@@ -105,7 +105,7 @@ if ($this->Settings->indian_gst) {
                 
 
             </div>
-            <?php echo shop_form_open('order', 'class="validate addressform-k"'); ?>
+            
         <div class="col-md-4">
                 <div class="mt-5">
                     <h2 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
@@ -115,6 +115,7 @@ if ($this->Settings->indian_gst) {
                             <label class="form-check-label fw-semibold" for="flexRadioDefault2">
                                 Debit / Credit Card Payment
                             </label>
+                            <?php echo shop_form_open('order', 'class="validate addressform-k"'); ?>
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" name="card_name" value="" id="card_name" placeholder="Cardholder Name" />
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" name="card_number" value="" id="card_number" placeholder="Card Number" />
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" name="card_expiry_year" value="" id="card_expiry_year" placeholder="Card Expiry Year" />
