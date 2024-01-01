@@ -85,7 +85,7 @@ function update_popup_cart(t) {
       this.name +
       "</p>" +
       '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4 d-flex justify-content-between align-items-center">' + 
-      '<a href="#" data-rowid="'+this.rowid+'" class="text-red remove-item text-decoration-none text-danger fs-6 fw-normal"><i class="fa fa-trash-o"></i> Remove</a>' +
+      '<a href="#" data-rowid="'+this.rowid+'" class="text-red remove-item-sidepopup text-decoration-none text-danger fs-6 fw-normal"><i class="fa fa-trash-o"></i> Remove</a>' +
       this.subtotal +
       "</p>" +
       "</div><hr />";
@@ -387,6 +387,32 @@ function sa_alert(t, e, a, s) {
       timer: s ? 6e4 : 2e3,
       confirmButtonText: "Okay",
     }).catch(swal.noop);
+}
+
+function saaa_alert(t, e, a, s) {
+  (a = a || lang.delete),
+    (e = e || lang.x_reverted_back),
+    (s = s || {}),
+    (s._method = a),
+    (s[site.csrf_token] = site.csrf_token_value),
+    $.ajax({
+      url: t,
+      type: "POST",
+      data: s,
+      success: function (t) {
+        if (t.redirect) return (window.location.href = t.redirect), !1;
+        t.cart && ((cart = t.cart), update_mini_cart(cart), update_cart(cart));
+
+      },
+      error: function () {
+        /*sa_alert(
+        "Error!",
+        "Ajax call failed, please try again or contact site owner.",
+        "error",
+        !0
+      );*/
+      },
+    });
 }
 
 function saa_alert(t, e, a, s) {
@@ -810,16 +836,22 @@ $(document).ready(function () {
         }
       );
   });
-
+  
   $(document).on("click", ".remove-item", function (t) {
     t.preventDefault();
     var e = {};
     (e.rowid = $(this).attr("data-rowid")),
       saa_alert(site.site_url + "cart/remove", !1, "post", e);
   }),
-    $("#empty-cart").click(function (t) {
-      t.preventDefault(), saa_alert($(this).attr("href"));
-    });
+  $(document).on("click", ".remove-item-sidepopup", function (t) {
+    t.preventDefault();
+    var e = {};
+    (e.rowid = $(this).attr("data-rowid")),
+      saaa_alert(site.site_url + "cart/remove", !1, "post", e);
+  }),
+  $("#empty-cart").click(function (t) {
+    t.preventDefault(), saa_alert($(this).attr("href"));
+  });
 
   update_cart(cart);
 
