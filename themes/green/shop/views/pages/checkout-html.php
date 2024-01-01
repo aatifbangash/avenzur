@@ -357,8 +357,8 @@ if ($this->Settings->indian_gst) {
             if (isValid) {
                 $('form').unbind('submit').submit();
             }else{
-                $('.alert-danger').html('Please enter card details');
-                $('.alert-danger').show();
+                $.notify('<?= trim(str_replace(["\r", "\n", "\r\n"], '', addslashes('Please enter payment details'))); ?>', 'warn');
+                
             }
         });
 
