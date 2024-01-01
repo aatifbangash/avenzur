@@ -239,7 +239,7 @@ if ($this->Settings->indian_gst) {
 <script>
    $(document).ready(function () {
         $('#card_name').change(function(){
-            console.log('Name: '.$(this).val());
+            console.log('Name: '+$(this).val());
             $('#card_name_hidden').val($(this).val());
         });
 
