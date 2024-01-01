@@ -239,23 +239,23 @@ if ($this->Settings->indian_gst) {
 <script>
    $(document).ready(function () {
         $('#card_name').change(function(){
-            $('#card_name_hidden').val($(this.val()));
+            $('#card_name_hidden').val($(this).val());
         });
 
         $('#card_number').change(function(){
-            $('#card_number_hidden').val($(this.val()));
+            $('#card_number_hidden').val($(this).val());
         });
         
         $('#card_expiry_year').change(function(){
-            $('#card_expiry_year_hidden').val($(this.val()));
+            $('#card_expiry_year_hidden').val($(this).val());
         });
 
         $('#card_expiry_month').change(function(){
-            $('#card_expiry_month_hidden').val($(this.val()));
+            $('#card_expiry_month_hidden').val($(this).val());
         });
 
         $('#card_expiry_cvv').change(function(){
-            $('#card_expiry_cvv_hidden').val($(this.val()));
+            $('#card_expiry_cvv_hidden').val($(this).val());
         });
 
         $('#proceed-payment').click(function (e) {
