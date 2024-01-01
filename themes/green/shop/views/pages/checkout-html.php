@@ -168,11 +168,11 @@ if ($this->Settings->indian_gst) {
             ?>                     
 
             <input type="hidden" name="payment_method" value="directpay" id="directpay" required="required">
-            <input type="hidden" name="card_name" value="" id="card_name_hidden" />
-            <input type="hidden" name="card_number" value="" id="card_number_hidden" />
-            <input type="hidden" name="card_expiry_year" value="" id="card_expiry_year_hidden" />
-            <input type="hidden" name="card_expiry_month" value="" id="card_expiry_month_hidden" />
-            <input type="hidden" name="card_cvv" value="" id="card_cvv_hidden" />
+            <input type="hidden" name="card_name" value="" id="card_name_hidden" required="required" />
+            <input type="hidden" name="card_number" value="" id="card_number_hidden" required="required" />
+            <input type="hidden" name="card_expiry_year" value="" id="card_expiry_year_hidden" required="required" />
+            <input type="hidden" name="card_expiry_month" value="" id="card_expiry_month_hidden" required="required" />
+            <input type="hidden" name="card_cvv" value="" id="card_cvv_hidden" required="required" />
             <input type="hidden" name="address" id="address" value="<?php echo isset($default_address->company_id) ? $default_address->id : 'default';?>">    
             <input type="hidden" name="shipping_city" id="shipping_city" value="<?php echo $default_address->city;?>">                                       
             <input type="hidden" name="shipping_state" id="shipping_state" value="<?php echo $default_address->state;?>">          
