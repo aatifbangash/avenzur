@@ -99,7 +99,7 @@ $expiryDateYear = substr($expiryDateYear, -2);
   </style>
 </head>
 
-<body onload="javascript:document.redirectForm.submit();" >
+<body  >
   <div></div>
   <form action="<?php echo $redirectURL?>" method="post" name="redirectForm">
 
