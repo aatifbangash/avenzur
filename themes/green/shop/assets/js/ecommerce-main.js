@@ -85,7 +85,7 @@ function update_popup_cart(t) {
       this.name +
       "</p>" +
       '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4 d-flex justify-content-between align-items-center">' + 
-      '<a href="#" data-rowid="" class="text-red remove-item text-decoration-none text-danger fs-6 fw-normal"><i class="fa fa-trash-o"></i> Remove</a>' +
+      '<a href="#" data-rowid="'+this.rowid+'" class="text-red remove-item text-decoration-none text-danger fs-6 fw-normal"><i class="fa fa-trash-o"></i> Remove</a>' +
       this.subtotal +
       "</p>" +
       "</div><hr />";
