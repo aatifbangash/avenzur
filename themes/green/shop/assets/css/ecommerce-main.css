@@ -1580,6 +1580,23 @@ button.modalcloseBtn {
 .standard-div {
   gap: 15rem;
 }
+.offcanvas-backdropaddP {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1040;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+}
+.offcanvas-backdropaddP.fade {
+  opacity: 0;
+  z-index: -4;
+}
+.offcanvas-backdropaddP.show {
+  opacity: 0.5;
+  z-index: 1;
+}
 @media screen and (max-width: 500px) {
   .standard-div {
     gap: 6rem;

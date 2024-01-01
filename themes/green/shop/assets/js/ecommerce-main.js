@@ -73,13 +73,21 @@ function update_popup_cart(t) {
         $("#product-popup-modal-body").append(t);*/
 
       var t =
-        '<div class="addicon col-md-3">' + 
-        '<img width="80" height="80" src="'+site.base_url+"assets/uploads/" +this.image+'" class="w-100" />' +
-        '</div>' + 
-        '<div class=" col-md-9">' + 
-        '<p class="m-0 fs-5 fw-semibold text-start">' + this.name + '</p>' + 
-        '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4">' + this.subtotal + '</p>' + 
-        '</div><hr />';
+      '<div class="addicon col-md-3">' +
+      '<img width="80" height="80" src="' +
+      site.base_url +
+      "assets/uploads/" +
+      this.image +
+      '" class="w-100" />' +
+      "</div>" +
+      '<div class=" col-md-9">' +
+      '<p class="m-0 fs-5 fw-semibold text-start">' +
+      this.name +
+      "</p>" +
+      '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4 d-flex justify-content-between align-items-center"><a href="#" data-rowid="" class="text-red remove-item text-decoration-none text-danger fs-6 fw-normal"><i class="fa fa-trash-o"></i> Remove</a>' +
+      this.subtotal +
+      "</p>" +
+      "</div><hr />";
 
       $("#product-canvas-body").append(t);
     });
@@ -615,7 +623,7 @@ function gen_html(t) {
       e +=
         '<button type="button" data-id="' +
         r.id +
-        '" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions">Add to cart </button>';
+        '" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart" aria-controls="offcanvasWithBothOptions">Add to cart </button>';
       e += "</div>";
       e += "</div>";
       e += "</div>";
@@ -994,6 +1002,12 @@ $(document).ready(function () {
     });
   });
 
+  $(document).on("click", ".offcanvasClose", function () {
+    $(".addcartcanvas").removeClass("show");
+    $(".offcanvas-backdropaddP").removeClass("show");
+    $(".offcanvas-backdropaddP").hide();
+  });
+
   $(document).on("click", ".add-to-cart", function (t) {
     t.preventDefault();
     var e = $(this).attr("data-id"),
@@ -1023,6 +1037,14 @@ $(document).ready(function () {
         : ((a = t),
           update_mini_cart(t),
           update_popup_cart(t));
+          if (t.error) {
+            $(".addcartcanvas").removeClass("show");
+            $(".offcanvas-backdropaddP").removeClass("show");
+          } else {
+            $(".addcartcanvas").addClass("show");
+            $(".offcanvas-backdropaddP").addClass("show");
+            $(".offcanvas-backdropaddP").show();
+          }
           //$("#productPop").modal("show"));
           /*$('#product-canvas-toggle').attr({
             "data-bs-toggle": "offcanvas",
