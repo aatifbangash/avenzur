@@ -437,7 +437,7 @@
                                                 </div>
                                             <!--</a>-->
                                             <div> 
-                                                <button type="button" data-id="<?= $popular_product->id; ?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>
+                                                <button type="button" data-id="<?= $popular_product->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>
                                             </div>
                                         </div> 
                                     </div>
@@ -559,7 +559,7 @@
                                 
                             </div>
                             
-                            <div> <button type="button" data-id="<?= $sp->id; ?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
+                            <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
                         </div> 
                         </div> 
                         
@@ -670,7 +670,7 @@
                                 
                             </div>
                             
-                            <div> <button type="button" data-id="<?= $sp->id; ?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
+                            <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
                         </div> 
                         </div> 
                         
@@ -762,7 +762,7 @@
                                 
                             </div>
                             
-                            <div> <button type="button" data-id="<?= $sp->id; ?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
+                            <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
                         </div> 
                         </div> 
                         
@@ -860,7 +860,7 @@
                                         </div>
                                     </div>
                                     </div>
-                                    <div> <button type="button" data-id="<?= $sp->id; ?>" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
+                                    <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
                                     <!-- price area end -->
                                     
                                     
