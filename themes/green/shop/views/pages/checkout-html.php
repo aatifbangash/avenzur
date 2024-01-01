@@ -102,11 +102,6 @@ if ($this->Settings->indian_gst) {
                     </div>
                 </div>
 
-                
-
-            </div>
-            
-        <div class="col-md-4">
                 <div class="mt-5">
                     <h2 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
                     <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
@@ -115,12 +110,11 @@ if ($this->Settings->indian_gst) {
                             <label class="form-check-label fw-semibold" for="flexRadioDefault2">
                                 Debit / Credit Card Payment
                             </label>
-                            <?php echo shop_form_open('order', 'class="validate addressform-k"'); ?>
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" name="card_name" value="" id="card_name" placeholder="Cardholder Name" />
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" name="card_number" value="" id="card_number" placeholder="Card Number" />
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" name="card_expiry_year" value="" id="card_expiry_year" placeholder="Card Expiry Year" />
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" name="card_expiry_month" value="" id="card_expiry_month" placeholder="Card Expiry Month" />
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" name="card_cvv" value="" id="card_cvv" placeholder="Card Cvv" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_name" placeholder="Cardholder Name" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="Card Number" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="Card Expiry Year" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" placeholder="Card Expiry Month" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" placeholder="Card Cvv" />
                         </div>
                         <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
                     </div>
@@ -151,7 +145,12 @@ if ($this->Settings->indian_gst) {
                         </div>
                     </div>
                 </div>
-            
+
+            </div>
+         
+        <div class="col-md-4">
+                
+            <?php echo shop_form_open('order', 'class="validate addressform-k"'); ?>
            <?php
                 $total = $this->sma->convertMoney($this->cart->total(), false, false);
                 $order_tax = $this->sma->convertMoney($this->cart->order_tax(), false, false);
@@ -168,8 +167,12 @@ if ($this->Settings->indian_gst) {
 
             ?>                     
 
-           <input type="hidden" name="payment_method" value="directpay" id="directpay"
-                                                   required="required">
+            <input type="hidden" name="payment_method" value="directpay" id="directpay" required="required">
+            <input type="hidden" name="card_name" value="" id="card_name_hidden" />
+            <input type="hidden" name="card_number" value="" id="card_number_hidden" />
+            <input type="hidden" name="card_expiry_year" value="" id="card_expiry_year_hidden" />
+            <input type="hidden" name="card_expiry_month" value="" id="card_expiry_month_hidden" />
+            <input type="hidden" name="card_cvv" value="" id="card_cvv_hidden" />
             <input type="hidden" name="address" id="address" value="<?php echo isset($default_address->company_id) ? $default_address->id : 'default';?>">    
             <input type="hidden" name="shipping_city" id="shipping_city" value="<?php echo $default_address->city;?>">                                       
             <input type="hidden" name="shipping_state" id="shipping_state" value="<?php echo $default_address->state;?>">          
@@ -235,6 +238,26 @@ if ($this->Settings->indian_gst) {
 
 <script>
    $(document).ready(function () {
+        $('#card_name').change(function(){
+            $('#card_name_hidden').val($(this.val()));
+        });
+
+        $('#card_number').change(function(){
+            $('#card_number_hidden').val($(this.val()));
+        });
+        
+        $('#card_expiry_year').change(function(){
+            $('#card_expiry_year_hidden').val($(this.val()));
+        });
+
+        $('#card_expiry_month').change(function(){
+            $('#card_expiry_month_hidden').val($(this.val()));
+        });
+
+        $('#card_expiry_cvv').change(function(){
+            $('#card_expiry_cvv_hidden').val($(this.val()));
+        });
+
         $('#proceed-payment').click(function (e) {
             e.preventDefault(); 
 
