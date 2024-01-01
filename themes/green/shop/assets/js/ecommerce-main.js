@@ -1011,6 +1011,7 @@ $(document).ready(function () {
 
   $(document).on("click", ".add-to-cart", function (t) {
     t.preventDefault();
+    $(".offcanvas-backdropaddP").removeClass("show");
     var e = $(this).attr("data-id"),
       a = $(".shopping-cart:visible"),
       s = $(this).parents(".card").find("input");
