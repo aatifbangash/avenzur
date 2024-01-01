@@ -138,6 +138,7 @@ if ($this->Settings->indian_gst) {
                             </label>
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_name" placeholder="Cardholder Name" />
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="Card Number" />
+                            <img src="" id="card_type_image" alt="Card Type Image" style="width: 30px; height: 20px;">
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="Card Expiry Year" />
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" placeholder="Card Expiry Month" />
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" placeholder="Card Cvv" />
@@ -243,26 +244,32 @@ if ($this->Settings->indian_gst) {
         });
 
         $('#card_number').on('input', function() {
-            console.log('here we are....');
             // Get the input value and remove non-numeric characters
             var cardNumber = $(this).val().replace(/\D/g, '');
 
             // Detect card type based on the first digit
-            var cardType = 'unknown';
-            if (/^4/.test(cardNumber)) {
-                cardType = 'visa';
-            } else if (/^5[1-5]/.test(cardNumber)) {
-                cardType = 'mastercard';
-            }
+            var cardType = detectCardType(cardNumber);
 
             // Format the card number
             var formattedNumber = formatCardNumber(cardNumber, cardType);
 
             // Update the input value
             $(this).val(formattedNumber);
+
+            // Update the card type image
+            updateCardTypeImage(cardType);
         });
 
-        // Function to format the card number
+        function detectCardType(cardNumber) {
+            if (/^4/.test(cardNumber)) {
+                return 'visa';
+            } else if (/^5[1-5]/.test(cardNumber)) {
+                return 'mastercard';
+            } else {
+                return 'unknown';
+            }
+        }
+
         function formatCardNumber(cardNumber, cardType) {
             // Format the card number based on the card type
             if (cardType === 'visa' || cardType === 'mastercard') {
@@ -272,6 +279,19 @@ if ($this->Settings->indian_gst) {
                 // Default: no specific formatting for other card types
                 return cardNumber;
             }
+        }
+
+        function updateCardTypeImage(cardType) {
+            var imageUrl = '';
+
+            if (cardType === 'visa') {
+                imageUrl = 'visa.png'; // Replace with the actual path to your Visa image
+            } else if (cardType === 'mastercard') {
+                imageUrl = 'mastercard.png'; // Replace with the actual path to your Mastercard image
+            }
+
+            // Update the image source
+            $('#card_type_image').attr('src', imageUrl);
         }
 
         $('#card_number').change(function(){
