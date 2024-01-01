@@ -243,6 +243,7 @@ if ($this->Settings->indian_gst) {
         });
 
         $('#card_number').on('input', function() {
+            console.log('here we are....');
             // Get the input value and remove non-numeric characters
             var cardNumber = $(this).val().replace(/\D/g, '');
 
