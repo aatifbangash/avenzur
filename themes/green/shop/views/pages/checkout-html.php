@@ -102,24 +102,6 @@ if ($this->Settings->indian_gst) {
                     </div>
                 </div>
 
-                <div class="mt-5">
-                    <h2 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
-                    <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
-                        <div class="form-check fs-5">
-                            <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
-                            <label class="form-check-label fw-semibold" for="flexRadioDefault2">
-                                Debit / Credit Card Payment
-                            </label>
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_name" placeholder="Cardholder Name" />
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="Card Number" />
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="Card Expiry Year" />
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" placeholder="Card Expiry Month" />
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" placeholder="Card Cvv" />
-                        </div>
-                        <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
-                    </div>
-                </div>
-
                 <div class="mt-4">
                     <h2 class=" fw-bold pb-2 fs-2  m-0">Shipping</h2>
                     <div class="d-flex align-items-center  py-3 standard-div">
@@ -143,6 +125,24 @@ if ($this->Settings->indian_gst) {
                         <div>
                             <p class="m-0 fs-6 fw-semibold px-3 mx-1">21 SAR</p>
                         </div>
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <h2 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
+                    <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
+                        <div class="form-check fs-5">
+                            <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
+                            <label class="form-check-label fw-semibold" for="flexRadioDefault2">
+                                Debit / Credit Card Payment
+                            </label>
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_name" placeholder="Cardholder Name" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="Card Number" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="Card Expiry Year" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" placeholder="Card Expiry Month" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" placeholder="Card Cvv" />
+                        </div>
+                        <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
                     </div>
                 </div>
 
