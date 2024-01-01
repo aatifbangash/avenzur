@@ -401,7 +401,7 @@ function saaa_alert(t, e, a, s) {
       data: s,
       success: function (t) {
         if (t.redirect) return (window.location.href = t.redirect), !1;
-        t.cart && ((cart = t.cart), update_mini_cart(cart), update_cart(cart));
+        t.cart && ((cart = t.cart), update_mini_cart(cart), update_cart(cart), update_popup_cart(cart));
 
       },
       error: function () {
