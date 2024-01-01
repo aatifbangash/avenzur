@@ -49,7 +49,7 @@ function sa_img(t, e) {
 }
 
 function update_popup_cart(t) {
-  if (t.total_items && t.total_items > 0) {
+  //if (t.total_items && t.total_items > 0) {
     $("#product-canvas-body").html('');
     $.each(t.contents, function () {
       /*var t =
@@ -106,7 +106,7 @@ function update_popup_cart(t) {
       "</p>" +
       "</div></div>";
     $("#product-popup-modal-body").append(e);*/
-  }
+  //}
 }
 function update_mini_cart(t) {
   if (t.total_items && t.total_items > 0) {
