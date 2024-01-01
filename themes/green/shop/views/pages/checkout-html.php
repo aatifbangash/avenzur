@@ -254,8 +254,8 @@ if ($this->Settings->indian_gst) {
             $('#card_expiry_month_hidden').val($(this).val());
         });
 
-        $('#card_expiry_cvv').change(function(){
-            $('#card_expiry_cvv_hidden').val($(this).val());
+        $('#card_cvv').change(function(){
+            $('#card_cvv_hidden').val($(this).val());
         });
 
         $('#proceed-payment').click(function (e) {
