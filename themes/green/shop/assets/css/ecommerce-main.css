@@ -1593,8 +1593,9 @@ button.modalcloseBtn {
   opacity: 0;
   z-index: -4;
 }
+
 .offcanvas-backdropaddP.show {
-  opacity: 0.5;
+  opacity: 0.9;
   z-index: 1;
 }
 @media screen and (max-width: 500px) {
