@@ -503,6 +503,22 @@ class Shop extends MY_Shop_Controller
                     } elseif ($this->input->post('payment_method') == 'directpay') {
                         //$this->sendTwillioSMS();
                         //$this->sendMsegatSMS();
+
+                        $card_name = $this->input->post('card_name');
+                        $card_number = $this->input->post('card_number');
+                        $card_cvv = $this->input->post('card_cvv');
+                        $card_expiry_month = $this->input->post('card_expiry_month');
+                        $card_expiry_year = $this->input->post('card_expiry_year');
+
+                        // Store card details in session
+                        $this->session->set_userdata('card_details', array(
+                            'card_name' => $card_name,
+                            'card_number' => $card_number,
+                            'card_cvv' => $card_cvv,
+                            'card_expiry_month' => $card_expiry_month,
+                            'card_expiry_year' => $card_expiry_year
+                        ));
+
                         redirect('pay/directpay/' . $sale_id);
                     } else {
                         shop_redirect('orders/' . $sale_id . '/' . ($this->loggedIn ? '' : $data['hash']));
