@@ -137,8 +137,8 @@ if ($this->Settings->indian_gst) {
                                 Debit / Credit Card Payment
                             </label>
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_name" placeholder="Cardholder Name" />
-                            <input type="text" maxlength="19" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="Card Number" />
-                            <img src="" id="card_type_image" style="width: 30px; height: 20px;">
+                            <span><input type="text" maxlength="19" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="Card Number" />
+                            <img src="" id="card_type_image" style="width: 30px; height: 30px;display:none;"></span>
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="Card Expiry Year" />
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" placeholder="Card Expiry Month" />
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" placeholder="Card Cvv" />
@@ -284,9 +284,12 @@ if ($this->Settings->indian_gst) {
         function updateCardTypeImage(cardType) {
             var imageUrl = '';
 
+            $('#card_type_image').hide();
             if (cardType === 'visa') {
                 imageUrl = 'visa.png'; // Replace with the actual path to your Visa image
+                $('#card_type_image').show();
             } else if (cardType === 'mastercard') {
+                $('#card_type_image').show();
                 imageUrl = 'mastercard.png'; // Replace with the actual path to your Mastercard image
             }
 
