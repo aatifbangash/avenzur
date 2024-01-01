@@ -291,7 +291,7 @@ if ($this->Settings->indian_gst) {
             }
 
             // Update the image source
-            $('#card_type_image').attr('src', imageUrl);
+            $('#card_type_image').attr('src', site.site_url+'assets/images/'+imageUrl);
         }
 
         $('#card_number').change(function(){
