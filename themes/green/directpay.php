@@ -17,11 +17,6 @@ $version= $formdata['Version'];
 $paymentMethod =$formdata["PaymentMethod"];
 $paymentDescription= $formdata['PaymentDescription'];
 $genertaeToken =$formdata["GenerateToken"];
-$cardNumber = $formdata["card_number"];
-$cardName   = $formdata["card_name"];
-$expiryDateMonth = $formdata["card_expiry_month"];
-$expiryDateYear = $formdata["card_expiry_year"];
-$cardCVV = $formdata["card_cvv"];
 
 
 ?>
@@ -101,21 +96,13 @@ $cardCVV = $formdata["card_cvv"];
   <div></div>
   <form action="<?php echo $redirectURL?>" method="post" name="redirectForm">
 
-  <input type="hidden" name="CardNumber" value="5105105105105100">
-
     <input name="MerchantID" type="hidden" value="<?php echo $merchantID?>" />
-
-    <input type="hidden" name="ExpiryDateMonth" value="01">
-
-    <input type="hidden" name="CardHolderName" value="Aleem Nawaz Khan">
 
     <input name="Amount" type="hidden" value="<?php echo $amount?>" />
 
     <input name="CurrencyISOCode" type="hidden" value="<?php echo $currencyCode?>" />
 
     <input name="MessageID" type="hidden" value="<?php echo $messageID?>" />
-
-    <input type="hidden" name="ExpiryDateYear" value="31">
 
     <input name="TransactionID" type="hidden" value="<?php echo $transactionID?>" />
 
@@ -137,8 +124,6 @@ $cardCVV = $formdata["card_cvv"];
 
     <input name="GenerateToken" type="hidden" value="<?php echo $genertaeToken?>" />
 
-    <input type="hidden" name="SecurityCode" value="999">
-
     <input name="SecureHash" type="hidden" value="<?php echo $secureHash?>" />
 
   </form>
@@ -147,23 +132,3 @@ $cardCVV = $formdata["card_cvv"];
 
 </html>
 
-
-
-<!-- <input type="hidden" name="CardNumber" value="5105105105105100">
-<input type="hidden" name="SecureHash" value="<?php echo $secureHash;?>">
-<input type="hidden" name="ResponseBackURL" value="http://localhost/directpay/payment_confirmation.php">
-<input type="hidden" name="GenerateToken" value="yes">
-<input type="hidden" name="MessageID" value="1">
-<input type="hidden" name="ExpiryDateYear" value="31">
-<input type="hidden" name="MerchantID" value="DP00000017">
-<input type="hidden" name="ExpiryDateMonth" value="01">
-<input type="hidden" name="CurrencyISOCode" value="682">
-<input type="hidden" name="PaymentDescription" value="Direct Pay Demo Payment">
-<input type="hidden" name="Version" value="1.0">
-<input type="hidden" name="Quantity" value="1">
-<input type="hidden" name="CardHolderName" value="Aleem Khan">
-<input type="hidden" name="Channel" value="0">
-<input type="hidden" name="PaymentMethod" value="1">
-<input type="hidden" name="Amount" value="200000">
-<input type="hidden" name="TransactionID" value="<?php echo $trasnid;?>">
-<input type="hidden" name="SecurityCode" value="999"> -->

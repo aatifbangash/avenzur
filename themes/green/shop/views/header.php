@@ -71,6 +71,34 @@
         src="https://www.facebook.com/tr?id=768269778475763&ev=PageView&noscript=1"
         /></noscript>
         <!-- End Meta Pixel Code -->
+
+        <script>
+        !function (w, d, t) {
+          w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
+
+          ttq.load('CM9BCQBC77UBFHFT9UAG');
+          ttq.page();
+        }(window, document, 'ttq');
+        </script>
+
+        <!-- Snap Pixel Code -->
+        <script type='text/javascript'>
+        (function(e,t,n){if(e.snaptr)return;var a=e.snaptr=function()
+        {a.handleRequest?a.handleRequest.apply(a,arguments):a.queue.push(arguments)};
+        a.queue=[];var s='script';r=t.createElement(s);r.async=!0;
+        r.src=n;var u=t.getElementsByTagName(s)[0];
+        u.parentNode.insertBefore(r,u);})(window,document,
+        'https://sc-static.net/scevent.min.js');
+
+        snaptr('init', '48414e12-17e7-4ba1-bfd6-407aa41991b0', {
+        'user_email': '__INSERT_USER_EMAIL__'
+        });
+
+        snaptr('track', 'PAGE_VIEW');
+
+        </script>
+        <!-- End Snap Pixel Code -->
+
       <?php
     }
     ?>
@@ -343,8 +371,12 @@
                       ?>
                         <li class="list-group-item d-flex justify-content-between align-items-start">
                           <div class="ms-2 me-auto ar-catL">
-                            <div class="fw-bold"><a href="<?= site_url('category/'.$category->slug) ?>"><?= $category->name; ?></a></div>
-                            <?php  ?>
+
+                            <div class="fw-bold"><a href="<?= site_url('category/'.$category->slug) ?>">
+                            <?= strtolower($category->name) == 'otc' ? 'OTC' : $category->name; ?>
+                            </a></div>
+                            <?php //echo $category->description; ?>
+
                           </div>
                           
                         </li>
@@ -535,11 +567,14 @@
         <?php
       }
     ?>
-<div class="offcanvas-backdropaddP fade"></div>
+
+
+    <div class="offcanvas-backdropaddP fade"></div>
     <div class="offcanvas offcanvas-end addcartcanvas " data-bs-scroll="true" tabindex="-1" id="offcanvasWithBothOptions" aria-labelledby="offcanvasWithBothOptionsLabel">
       <div class="offcanvas-header">
           
-          <button type="button" class="btn-close offcanvasClose" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <button type="button" class="btn-close offcanvasClose" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+
       </div>
       <div class="offcanvas-body px-1">
           <div class="m-2">

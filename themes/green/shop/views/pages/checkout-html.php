@@ -102,29 +102,6 @@ if ($this->Settings->indian_gst) {
                     </div>
                 </div>
 
-                
-
-            </div>
-         
-        <div class="col-md-4">
-                <div class="mt-5">
-                    <h2 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
-                    <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
-                        <div class="form-check fs-5">
-                            <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
-                            <label class="form-check-label fw-semibold" for="flexRadioDefault2">
-                                Debit / Credit Card Payment
-                            </label>
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" name="card_name" value="" id="card_name" placeholder="Cardholder Name" />
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" name="card_number" value="" id="card_number" placeholder="Card Number" />
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" name="card_expiry_year" value="" id="card_expiry_year" placeholder="Card Expiry Year" />
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" name="card_expiry_month" value="" id="card_expiry_month" placeholder="Card Expiry Month" />
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" name="card_cvv" value="" id="card_cvv" placeholder="Card Cvv" />
-                        </div>
-                        <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
-                    </div>
-                </div>
-
                 <div class="mt-4">
                     <h2 class=" fw-bold pb-2 fs-2  m-0">Shipping</h2>
                     <div class="d-flex align-items-center  py-3 standard-div">
@@ -150,6 +127,30 @@ if ($this->Settings->indian_gst) {
                         </div>
                     </div>
                 </div>
+
+                <div class="mt-5">
+                    <h2 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
+                    <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
+                        <div class="form-check fs-5">
+                            <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
+                            <label class="form-check-label fw-semibold" for="flexRadioDefault2">
+                                Debit / Credit Card Payment
+                            </label>
+                            <!--<input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" pattern="[A-Za-z]{3}" value="" id="card_name" placeholder="Cardholder Name" />
+                            <span><input type="text" maxlength="19" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="Card Number" />
+                            <img src="" id="card_type_image" style="width: 30px; height: 30px;display:none;"></span>
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" maxlength="4" placeholder="Card Expiry Year" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" maxlength="2" placeholder="Card Expiry Month" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" maxlength="3" pattern="\d*" title="Please enter a 3-digit CVV" placeholder="Card Cvv" />-->
+                        </div>
+                        <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
+                    </div>
+                </div>
+
+            </div>
+         
+        <div class="col-md-4">
+                
             <?php echo shop_form_open('order', 'class="validate addressform-k"'); ?>
            <?php
                 $total = $this->sma->convertMoney($this->cart->total(), false, false);
@@ -167,8 +168,12 @@ if ($this->Settings->indian_gst) {
 
             ?>                     
 
-           <input type="hidden" name="payment_method" value="directpay" id="directpay"
-                                                   required="required">
+            <input type="hidden" name="payment_method" value="directpay" id="directpay" required="required">
+            <input type="hidden" name="card_name" value="" id="card_name_hidden" required="required" />
+            <input type="hidden" name="card_number" value="" id="card_number_hidden" required="required" />
+            <input type="hidden" name="card_expiry_year" value="" id="card_expiry_year_hidden" required="required" />
+            <input type="hidden" name="card_expiry_month" value="" id="card_expiry_month_hidden" required="required" />
+            <input type="hidden" name="card_cvv" value="" id="card_cvv_hidden" required="required" />
             <input type="hidden" name="address" id="address" value="<?php echo isset($default_address->company_id) ? $default_address->id : 'default';?>">    
             <input type="hidden" name="shipping_city" id="shipping_city" value="<?php echo $default_address->city;?>">                                       
             <input type="hidden" name="shipping_state" id="shipping_state" value="<?php echo $default_address->state;?>">          
@@ -211,7 +216,7 @@ if ($this->Settings->indian_gst) {
                                                    value="<?= $calculateShipping ?>"/>
                                             <!--<input type="button" name="proceed_pay" class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k" value="Proceed to Pay" id="proceed-payment" />-->
                                             <?php
-                                           echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k"');
+                                           echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment"');
                                             } elseif ($this->Staff) {
                                                 echo '<div class="alert alert-warning margin-bottom-no">' . lang('staff_not_allowed') . '</div>';
                                             } else {
@@ -234,6 +239,129 @@ if ($this->Settings->indian_gst) {
 
 <script>
    $(document).ready(function () {
+        var currentYear = new Date().getFullYear();
+
+        // Set the minimum and maximum allowed years
+        document.getElementById('card_expiry_year').setAttribute('min', currentYear);
+        document.getElementById('card_expiry_year').setAttribute('max', currentYear + 10); // Allowing the next 10 years
+
+        $('#card_cvv').on('input', function() {
+            var cvv = $(this).val();
+            var cvvRegex = /^\d{3}$/;
+
+            if (!cvvRegex.test(cvv)) {
+                $('#cvvError').text('Please enter a valid 3-digit CVV');
+            } else {
+                $('#cvvError').text('');
+            }
+        });
+
+        $('#card_name').change(function(){
+            $('#card_name_hidden').val($(this).val());
+        });
+
+        $('#card_number').on('input', function() {
+            // Get the input value and remove non-numeric characters
+            var cardNumber = $(this).val().replace(/\D/g, '');
+
+            // Detect card type based on the first digit
+            var cardType = detectCardType(cardNumber);
+
+            // Format the card number
+            var formattedNumber = formatCardNumber(cardNumber, cardType);
+
+            // Update the input value
+            $(this).val(formattedNumber);
+
+            // Update the card type image
+            updateCardTypeImage(cardType);
+        });
+
+        function detectCardType(cardNumber) {
+            if (/^4/.test(cardNumber)) {
+                return 'visa';
+            } else if (/^5[1-5]/.test(cardNumber)) {
+                return 'mastercard';
+            } else {
+                return 'unknown';
+            }
+        }
+
+        function formatCardNumber(cardNumber, cardType) {
+            // Format the card number based on the card type
+            if (cardType === 'visa' || cardType === 'mastercard') {
+                // Insert spaces after every 4 characters
+                return cardNumber.replace(/(\d{4})/g, '$1 ').trim();
+            } else {
+                // Default: no specific formatting for other card types
+                return cardNumber;
+            }
+        }
+
+        function updateCardTypeImage(cardType) {
+            var imageUrl = '';
+
+            $('#card_type_image').hide();
+            if (cardType === 'visa') {
+                imageUrl = 'visa.png'; // Replace with the actual path to your Visa image
+                $('#card_type_image').show();
+            } else if (cardType === 'mastercard') {
+                $('#card_type_image').show();
+                imageUrl = 'mastercard.png'; // Replace with the actual path to your Mastercard image
+            }
+
+            // Update the image source
+            $('#card_type_image').attr('src', site.site_url+'assets/images/'+imageUrl);
+        }
+
+        $('#card_number').change(function(){
+            $('#card_number_hidden').val($(this).val());
+        });
+        
+        $('#card_expiry_year').change(function(){
+            $('#card_expiry_year_hidden').val($(this).val());
+        });
+
+        $('#card_expiry_month').change(function(){
+            $('#card_expiry_month_hidden').val($(this).val());
+        });
+
+        $('#card_cvv').change(function(){
+            $('#card_cvv_hidden').val($(this).val());
+        });
+
+        $('form').submit(function(e){
+            e.preventDefault();
+
+            var isValid = true;
+            if($('#card_cvv_hidden').val() == ''){
+                isValid = false;
+            }
+
+            if($('#card_expiry_month').val() == ''){
+                isValid = false;
+            }
+
+            if($('#card_expiry_year').val() == ''){
+                isValid = false;
+            }
+
+            if($('#card_name').val() == ''){
+                isValid = false;
+            }
+
+            if($('#card_number').val() == ''){
+                isValid = false;
+            }
+
+            if (isValid) {
+                $('form').unbind('submit').submit();
+            }else{
+                $.notify('<?= trim(str_replace(["\r", "\n", "\r\n"], '', addslashes('Please enter payment details'))); ?>', 'warn');
+                
+            }
+        });
+
         $('#proceed-payment').click(function (e) {
             e.preventDefault(); 
 

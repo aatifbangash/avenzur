@@ -1603,6 +1603,7 @@ button.modalcloseBtn {
 .standard-div {
   gap: 15rem;
 }
+
 .megamenu {
   position: initial !important;
 }
@@ -1626,6 +1627,7 @@ li.nav-item.dropdown.megamenu a {
 li.nav-item.dropdown.megamenu a:hover {
   border-radius: 0 !important;
 }
+
 .offcanvas-backdropaddP {
   position: fixed;
   top: 0;
@@ -1639,8 +1641,10 @@ li.nav-item.dropdown.megamenu a:hover {
   opacity: 0;
   z-index: -4;
 }
+
 .offcanvas-backdropaddP.show {
-  opacity: 0.5;
+  opacity: 0;
+
   z-index: 1;
 }
 @media screen and (max-width: 500px) {
