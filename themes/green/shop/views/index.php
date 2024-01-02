@@ -62,7 +62,7 @@
                                 
                                     <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" class="card-img-top" alt="..."></div>
                                 <div class="card-body">
-                                    <h5 class="card-title"><?= ucfirst(strtolower($fp->name)); ?></h5>
+                                    <h5 class="card-title"><?= ( strtolower($fp->name) == 'otc' ? 'OTC' : ucfirst(strtolower($fp->name))); ?></h5>
                                 </div>
                                 </div> 
 
