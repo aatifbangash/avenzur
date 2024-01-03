@@ -97,7 +97,7 @@
                     <a href="https://www.youtube.com/channel/UCrzcYJ1xERstbhGunjgWDLA" class="text-dark text-decoration-none mx-2"> <i class="bi bi-youtube"></i></a>
                     <a href="https://twitter.com/aveznur" class="text-dark text-decoration-none mx-2"> <i class="bi bi-twitter"></i></a>
                     <a href="https://instagram.com/avenzurksa?igshid=NTc4MTIwNjQ2YQ==" class="text-dark text-decoration-none mx-2"><i class="bi bi-instagram"></i></a>
-                    <a href="https://www.tiktok.com/@avenzur?_t=8i4BKIMkJVK&_r=1" class="text-dark text-decoration-none mx-2"><i class="bi bi-tiktok"></i></a></h6>
+                    <a href="https://www.tiktok.com/@avenzur?_t=8i4BKIMkJVK&_r=1" class="text-dark text-decoration-none mx-2"><i class="bi bi-tiktok"></i></a>
                     <a href="https://www.snapchat.com/add/avenzurworld" class="text-dark text-decoration-none mx-2"><i class="bi bi-snapchat"></i></a>
                   </h6>
               </div>
