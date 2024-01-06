@@ -50,9 +50,10 @@ function sa_img(t, e) {
 
 function update_popup_cart(t) {
   //if (t.total_items && t.total_items > 0) {
-    $("#product-canvas-body").html('');
-    $.each(t.contents, function () {
-      /*var t =
+  $("#product-canvas-body").html("");
+
+  $.each(t.contents, function () {
+    /*var t =
         '<div class=" row align-items-center">' +
         '<div class="addicon col-md-3 px-0">' +
         '<img src="' +
@@ -72,7 +73,7 @@ function update_popup_cart(t) {
 
         $("#product-popup-modal-body").append(t);*/
 
-      var t =
+    var t =
       '<div class="addicon col-md-3">' +
       '<img width="80" height="80" src="' +
       site.base_url +
@@ -84,18 +85,20 @@ function update_popup_cart(t) {
       '<p class="m-0 fs-5 fw-semibold text-start">' +
       this.name +
       "</p>" +
-      '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4 d-flex justify-content-between align-items-center">' + 
-      '<a href="#" data-rowid="'+this.rowid+'" class="text-red remove-item-sidepopup text-decoration-none text-danger fs-6 fw-normal"><i class="fa fa-trash-o"></i> Remove</a>' +
+      '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4 d-flex justify-content-between align-items-center">' +
+      '<a href="#" data-rowid="' +
+      this.rowid +
+      '" class="text-red remove-item-sidepopup text-decoration-none text-danger fs-6 fw-normal"><i class="fa fa-trash-o"></i> Remove</a>' +
       this.subtotal +
       "</p>" +
       "</div><hr />";
 
-      $("#product-canvas-body").append(t);
-    });
+    $("#product-canvas-body").append(t);
+  });
 
-    $('#product-canvas-total').html(t.total);
+  $("#product-canvas-total").html(t.total);
 
-    /*var e =
+  /*var e =
       '<div class=" row align-items-center mt-4">' +
       '<div class="addicon col-md-3 px-0">' +
       '<p class="m-0 fs-5 fw-semibold text-start text-dark">Cart Total</p>' +
@@ -401,8 +404,11 @@ function saaa_alert(t, e, a, s) {
       data: s,
       success: function (t) {
         if (t.redirect) return (window.location.href = t.redirect), !1;
-        t.cart && ((cart = t.cart), update_mini_cart(cart), update_cart(cart), update_popup_cart(cart));
-
+        t.cart &&
+          ((cart = t.cart),
+          update_mini_cart(cart),
+          update_cart(cart),
+          update_popup_cart(cart));
       },
       error: function () {
         /*sa_alert(
@@ -651,6 +657,7 @@ function gen_html(t) {
         '<button type="button" data-id="' +
         r.id +
         '" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart" aria-controls="offcanvasWithBothOptions">Add to cart </button>';
+
       e += "</div>";
       e += "</div>";
       e += "</div>";
@@ -836,22 +843,22 @@ $(document).ready(function () {
         }
       );
   });
-  
+
   $(document).on("click", ".remove-item", function (t) {
     t.preventDefault();
     var e = {};
     (e.rowid = $(this).attr("data-rowid")),
       saa_alert(site.site_url + "cart/remove", !1, "post", e);
   }),
-  $(document).on("click", ".remove-item-sidepopup", function (t) {
-    t.preventDefault();
-    var e = {};
-    (e.rowid = $(this).attr("data-rowid")),
-      saaa_alert(site.site_url + "cart/remove", !1, "post", e);
-  }),
-  $("#empty-cart").click(function (t) {
-    t.preventDefault(), saa_alert($(this).attr("href"));
-  });
+    $(document).on("click", ".remove-item-sidepopup", function (t) {
+      t.preventDefault();
+      var e = {};
+      (e.rowid = $(this).attr("data-rowid")),
+        saaa_alert(site.site_url + "cart/remove", !1, "post", e);
+    }),
+    $("#empty-cart").click(function (t) {
+      t.preventDefault(), saa_alert($(this).attr("href"));
+    });
 
   update_cart(cart);
 
@@ -1068,24 +1075,22 @@ $(document).ready(function () {
       //(a = t, update_mini_cart(t));
       t.error
         ? $.notify(t.message, "warning") //alert('out of stock')//sa_alert("Error!", t.message, "error", !0)
-        : ((a = t),
-          update_mini_cart(t),
-          update_popup_cart(t));
-          if (t.error) {
-            $(".addcartcanvas").removeClass("show");
-            $(".offcanvas-backdropaddP").removeClass("show");
-          } else {
-            $(".addcartcanvas").addClass("show");
-            $(".offcanvas-backdropaddP").addClass("show");
-            $(".offcanvas-backdropaddP").show();
-          }
-          //$("#productPop").modal("show"));
-          /*$('#product-canvas-toggle').attr({
+        : ((a = t), update_mini_cart(t), update_popup_cart(t));
+      if (t.error) {
+        $(".addcartcanvas").removeClass("show");
+        $(".offcanvas-backdropaddP").removeClass("show");
+      } else {
+        $(".addcartcanvas").addClass("show");
+        $(".offcanvas-backdropaddP").addClass("show");
+        $(".offcanvas-backdropaddP").show();
+      }
+      //$("#productPop").modal("show"));
+      /*$('#product-canvas-toggle').attr({
+
             "data-bs-toggle": "offcanvas",
             "data-bs-target": "#offcanvasWithBothOptions"
           });*/
-          
-          
+
       /*$.toast({
             heading: "Success",
             text: "Product Added To The Cart.",
@@ -1194,7 +1199,7 @@ $(document).ready(function () {
   $(".feature_products").slick({
     infinite: false,
     speed: 300,
-    slidesToShow: 4,
+    slidesToShow: 6,
     slidesToScroll: 1,
     margin: 10,
     prevArrow:
@@ -1989,10 +1994,10 @@ $(document).ready(function () {
           } else {
             var identityVal = $("#email_phone").val();
           }
-          
+
           document.getElementById("identifier").innerHTML = identityVal;
-          document.getElementById("identifier_input").value = identityVal ;
-           
+          document.getElementById("identifier_input").value = identityVal;
+
           const countdownDuration = 60; // Duration in seconds
           const countdownDisplay = document.getElementById("register-clock");
 
@@ -2043,14 +2048,14 @@ $(document).ready(function () {
             document.getElementById("registerOTP").style.cursor = "none";
             $("#registerModal").modal("show");
 
-           if ($("#email").length) {
-            var identityVal = $("#email").val();
-          } else {
-            var identityVal = $("#email_phone").val();
-          }
-          
-          document.getElementById("identifier").innerHTML = identityVal;
-          document.getElementById("identifier_input").value = identityVal ;
+            if ($("#email").length) {
+              var identityVal = $("#email").val();
+            } else {
+              var identityVal = $("#email_phone").val();
+            }
+
+            document.getElementById("identifier").innerHTML = identityVal;
+            document.getElementById("identifier_input").value = identityVal;
 
             const countdownDuration = 60; // Duration in seconds
             const countdownDisplay = document.getElementById("register-clock");
@@ -2298,21 +2303,21 @@ $(document).ready(function () {
   bindOtpKeyupEvents("login_otp", 6);
 
   // Bind keyup events for register OTP
-//   const target = document.querySelector(".ap-otp-input");
-// if(target) {
-//   target.addEventListener("paste", (event) => {
-//     event.preventDefault();
-  
-//     let paste = (event.clipboardData || window.clipboardData).getData("text");
-//     paste = paste.toUpperCase();
-//     console.log('paste', paste);
-//     const selection = window.getSelection();
-//     if (!selection.rangeCount) return;
-//     selection.deleteFromDocument();
-//     selection.getRangeAt(0).insertNode(document.createTextNode(paste));
-//     selection.collapseToEnd();
-//   });
-// }
+  //   const target = document.querySelector(".ap-otp-input");
+  // if(target) {
+  //   target.addEventListener("paste", (event) => {
+  //     event.preventDefault();
+
+  //     let paste = (event.clipboardData || window.clipboardData).getData("text");
+  //     paste = paste.toUpperCase();
+  //     console.log('paste', paste);
+  //     const selection = window.getSelection();
+  //     if (!selection.rangeCount) return;
+  //     selection.deleteFromDocument();
+  //     selection.getRangeAt(0).insertNode(document.createTextNode(paste));
+  //     selection.collapseToEnd();
+  //   });
+  // }
   bindOtpKeyupEvents("register_otp", 6);
 
   bindOtpKeyupEvents("checkout_login", 6);
