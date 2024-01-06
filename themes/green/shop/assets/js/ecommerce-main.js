@@ -1199,7 +1199,7 @@ $(document).ready(function () {
   $(".feature_products").slick({
     infinite: false,
     speed: 300,
-    slidesToShow: 4,
+    slidesToShow: 6,
     slidesToScroll: 1,
     margin: 10,
     prevArrow:

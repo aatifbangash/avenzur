@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <!-- hero silder -->
 <section class="heroSlider">
-      <div class="container container-max-width py-4">
+      <div class="container container-max-width py-4 pt-0">
         <div id="carouselExampleIndicators" class="carousel slide">
           <div class="carousel-indicators">
             <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
@@ -46,7 +46,7 @@
     <!-- feature section -->
     <section>
       <div class="container container-max-width py-4">
-       <div class="featureTitle text-center mb-5"><h2>Categories</h2></div>
+       <div class="featureTitle text-center mb-5"><h2>Shop by category</h2></div>
        <!-- cards -->
        <div class="row feature-cards text-center gy-4 ">
             <?php
@@ -170,7 +170,120 @@
       </div>
     </section>
 <!-- speacial offer section end -->
+ <!-- feature product   -->
+ <section class="popularCat-container py-3" style="background: #d98dff;">
+      <div class="container container-max-width">
+        <div class="featureProductC pt-4 pb-3" >
+          <div class="popularTitle text-center mb-0 position-relative"><h2 class="mb-0 text-white">WOW Offers</h2> <button class="text-white viewbtn">View all</button></div>
 
+          
+          <div class="feature_products pt-1" >
+
+          <?php
+            $r = 0;
+            foreach (array_chunk($featured_products, 4) as $sps){
+                foreach ($sps as $sp) {
+                ?>
+                    <div class="row products-card text-center gy-4 ">
+                        <div class="col-md-12 col-sm-12 rounded-4 mb-3 bg-white">
+                        <div class="card position-relative" style="width: 100%">
+                            
+                            <div class="cardImg position-relative">
+                            <span class="position-absolute   badge rounded bg-danger" style="top:20px;left:5px;font-size:14px">
+                                 20% OFF
+                            </span>
+                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
+                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="...">
+                            </a>
+                            </div>
+                            <div class="card-body px-0 text-start pt-1 pb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                              <h5 class="nowfood">Now food</h5>
+                              <h5 class="categoryName text-dark">Vitamin</h5>
+                            </div>
+                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start mb-0"><?= $sp->name; ?></h5></a>
+                            <div class="row align-items-center justify-content-between">
+                                <div class="col-md-12">
+                                <div class="rating">
+                                  <?php 
+                                        for($i=1; $i<=5; $i++) {
+                                          $class = '';
+                                          if($i<=$sp->avg_rating) {$class = 'rated';}?>
+                                  <i class="bi bi-star-fill <?php echo $class;?>" ></i>
+                                  <?php }?>
+                                </div>
+                                </div>
+                                <?php
+                                if ($sp->promotion) {
+                                    ?>
+                                    <!-- <div class="col-md-6">
+                                        <div class="discountPrice price text-end py-2">
+                                            <h4 class="m-0 text-decoration-line-through">
+                                                <?php echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price); ?>
+                                            </h4>
+                                        </div>
+                                    </div> -->
+                                    <?php
+                                }
+                                ?>
+                                
+                            </div> 
+                            <!--price and quantity araea  -->
+
+                            <div class="row align-items-center justify-content-between">
+                                <div class="col-md-6 pe-0">
+                                    <div class="price text-start  py-2">
+                                        <h4 class="m-0 fw-bold" style="color:green;">
+                                            <?php
+                                            if ($sp->promotion) {
+                                                echo $this->sma->convertMoney($sp->promo_price);
+                                            }else{
+                                                echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
+                                            }
+                                            ?>
+                                        </h4>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                <!-- <div class="quantity text-end py-2 d-flex align-items-center justify-content-md-between">
+                                    <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
+                                    <input type="text" name="quantity" class="Qnum" value="1" required="required" />
+                                    
+                                    <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
+                                </div> -->
+                               
+                                        <div class="discountPrice price text-end py-2">
+                                            <h4 class="m-0 text-decoration-line-through fs-12">
+                                                <?php echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price); ?>
+                                            </h4>
+                                        </div>
+                                  
+                                </div>
+                            </div>
+                            
+                            <!-- price area end -->
+                            
+                                
+                            </div>
+                            
+                            <div class=" position-absolute w-100 text-center" style="top:45%"> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-0 py-0 addtocart  text-dark add-to-cart w-75 fs-6" style="padding-block: 0px!important;">Add to cart </button></div>
+                        </div> 
+                        </div> 
+                        
+                    </div>
+                <?php 
+                }
+            } 
+            ?> 
+                
+            </div>
+          </div>
+        </div>
+      </div>
+     </section>
+     <!-- feature products  end-->
+
+     
     <!-- banner area 1 -->
     <section class="side-banner py-3 ">
       <div class="container container-max-width">
@@ -307,9 +420,212 @@
       </div>
     </section>
     <!-- banner area 1 end -->
+  <!-- best seller product   -->
+  <section class="popularCat-container py-3" style="background: #E9E3E3">
+      <div class="container container-max-width">
+        <div class="featureProductC pt-4">
+          <div class="popularTitle text-center mb-0 position-relative"><h2 class=" m-0">Best Sellers</h2> <button class="text-white viewbtn">View all</button></div>
 
+          
+          <div class="feature_products">
+
+          <?php
+            $r = 0;
+            foreach (array_chunk($best_sellers, 4) as $sps){
+                foreach ($sps as $sp) {
+                ?>
+                    <div class="row products-card text-center gy-4 ">
+                        <div class="col-md-12 col-sm-12 rounded-4 mb-3 bg-white">
+                            <div class="card position-relative" style="width: 100%">
+                                
+                                <div class="cardImg position-relative">
+                                <span class="position-absolute   badge rounded bg-danger" style="top:20px;left:5px;font-size:14px">
+                                        20% OFF
+                                </span>
+                                <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
+                                <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="...">
+                                </a>
+                                </div>
+                                <div class="card-body px-0 text-start pt-1 pb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="nowfood">Now food</h5>
+                                    <h5 class="categoryName text-dark">Vitamin</h5>
+                                </div>
+                                <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start mb-0"><?= $sp->name; ?></h5></a>
+                                <div class="row align-items-center justify-content-between">
+                                    <div class="col-md-12">
+                                    <div class="rating">
+                                        <?php 
+                                            for($i=1; $i<=5; $i++) {
+                                                $class = '';
+                                                if($i<=$sp->avg_rating) {$class = 'rated';}?>
+                                        <i class="bi bi-star-fill <?php echo $class;?>" ></i>
+                                        <?php }?>
+                                    </div>
+                                    </div>
+                                    <?php
+                                    if ($sp->promotion) {
+                                        ?>
+                                        <!-- <div class="col-md-6">
+                                            <div class="discountPrice price text-end py-2">
+                                                <h4 class="m-0 text-decoration-line-through">
+                                                    <?php echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price); ?>
+                                                </h4>
+                                            </div>
+                                        </div> -->
+                                        <?php
+                                    }
+                                    ?>
+                                    
+                                </div> 
+                                <!--price and quantity araea  -->
+
+                                <div class="row align-items-center justify-content-between">
+                                    <div class="col-md-6 pe-0">
+                                        <div class="price text-start  py-2">
+                                            <h4 class="m-0 fw-bold" style="color:green;">
+                                                <?php
+                                                if ($sp->promotion) {
+                                                    echo $this->sma->convertMoney($sp->promo_price);
+                                                }else{
+                                                    echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
+                                                }
+                                                ?>
+                                            </h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                    <!-- <div class="quantity text-end py-2 d-flex align-items-center justify-content-md-between">
+                                        <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
+                                        <input type="text" name="quantity" class="Qnum" value="1" required="required" />
+                                        
+                                        <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
+                                    </div> -->
+                                    
+                                            <div class="discountPrice price text-end py-2">
+                                                <h4 class="m-0 text-decoration-line-through fs-12">
+                                                    <?php echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price); ?>
+                                                </h4>
+                                            </div>
+                                        
+                                    </div>
+                                </div>
+                                
+                                <!-- price area end -->
+                                
+                                    
+                                </div>
+                                
+                                <div class=" position-absolute w-100 text-center" style="top:45%"> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-0 py-0 addtocart  text-dark add-to-cart w-75 fs-6" style="padding-block: 0px!important;">Add to cart </button></div>
+                            </div> 
+                        </div> 
+                        
+                    </div>
+                <?php 
+                }
+            } 
+            ?> 
+                
+            </div>
+
+            <!-- Additional Best Sellers -->
+          <div class="feature_products">
+
+          <?php
+            $r = 0;
+            foreach (array_chunk($best_sellers_additional, 4) as $sps){
+                foreach ($sps as $sp) {
+                ?>
+                    <!-- <div class="row products-card text-center gy-4 ">
+                        <div class="col-md-12 col-sm-12">
+                        <div class="card" style="width: 100%">
+                            
+                            <div class="cardImg position-relative"> -->
+                            <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
+                                Sale 20% OFF
+                            </span>-->
+                            <!-- <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
+                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="...">
+                            </a>
+                            </div>
+                            <div class="card-body px-0 text-start pb-0">
+                            
+                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
+                            <div class="row align-items-center justify-content-between">
+                                <div class="col-md-6">
+                                <div class="rating">
+                                  <?php 
+                                        for($i=1; $i<=5; $i++) {
+                                          $class = '';
+                                          if($i<=$sp->avg_rating) {$class = 'rated';}?>
+                                  <i class="bi bi-star-fill <?php echo $class;?>" ></i>
+                                  <?php }?>
+                                </div>
+                                </div>
+                                <?php
+                                if ($sp->promotion) {
+                                    ?>
+                                    <div class="col-md-6">
+                                        <div class="discountPrice price text-end py-2">
+                                            <h4 class="m-0 text-decoration-line-through">
+                                                <?php echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price); ?>
+                                            </h4>
+                                        </div>
+                                    </div>
+                                    <?php
+                                }
+                                ?>
+                                
+                            </div>  -->
+                            <!--price and quantity araea  -->
+
+                            <!-- <div class="row align-items-center justify-content-between">
+                                <div class="col-md-6 ">
+                                    <div class="price text-start  py-2">
+                                        <h4 class="m-0 fw-bold">
+                                            <?php
+                                            if ($sp->promotion) {
+                                                echo $this->sma->convertMoney($sp->promo_price);
+                                            }else{
+                                                echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
+                                            }
+                                            ?>
+                                        </h4>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                <div class="quantity text-end py-2 d-flex align-items-center justify-content-md-between">
+                                    <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
+                                    <input type="text" name="quantity" class="Qnum" value="1" required="required" /> -->
+                                    <!--<span class="Qnum ">1</span>-->
+                                    <!-- <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
+                                </div>
+                                </div>
+                            </div> -->
+                            
+                            <!-- price area end -->
+                            
+                                
+                            <!-- </div>
+                            
+                            <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
+                        </div> 
+                        </div> 
+                        
+                    </div> -->
+                <?php 
+                }
+            } 
+            ?> 
+                
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
     <!-- skin container area -->
-    <section class="skin-container py-3 ">
+    <!-- <section class="skin-container py-3 ">
       <div class="container container-max-width ">
         <div class=" row skinBannerRow  rounded-4 align-items-center justify-content-between">
           <div class="col-lg-6 col-md-12 col-sm-12 ps-0 skinbnnerimg">
@@ -330,13 +646,13 @@
          
         </div>
       </div>
-    </section>
+    </section> -->
     <!-- skin container area end -->
 
     <section class="popularCat-container py-3">
         <div class="container container-max-width">
             <div class="categoryTabs pt-4">
-                <div class="popularTitle text-center mb-4"><h2>Popular Categories</h2></div>
+                <div class="popularTitle text-center mb-4"><h2>Most Popular Categories</h2></div>
                 <ul class="nav nav-pills mb-3 justify-content-center" id="pills-tab" role="tablist">
                     <?php
                     $pp = 0;
@@ -362,84 +678,89 @@
                                 <?php
                                 foreach($popular_category->products as $popular_product){
                                 ?>
-                                    <div class="col-lg-3 col-md-4 col-sm-12">
-                                        <div class="card" style="width: 100%">
-                                            <!--<a href="#" class="text-decoration-none">-->
-                                                <div class="cardImg position-relative">
-                                                    <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
-                                                        Sale 20% OFF
-                                                    </span>-->
-                                                    <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none">
-                                                        <img src="<?= base_url('assets/uploads/' . $popular_product->image); ?>" class="card-img-top" alt="...">
-                                                    </a>
-                                                </div>
-                                                <div class="card-body px-0 text-start pb-0">
-                                                    <div class="product-cat-title">
-                                                        <span class="text-uppercase"><?= $popular_category->name; ?></span>
-                                                    </div>
-                                                    <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none">
-                                                        <h5 class="card-title text-start"><?= $popular_product->name; ?></h5>
-                                                    </a>
-                                                    <div class="row align-items-center justify-content-between">
-                                                        <div class="col-md-6">
-                                                        <div class="rating">
-                                                          <?php 
-                                                                for($i=1; $i<=5; $i++) {
-                                                                  $class = '';
-                                                                  if($i<=$sp->avg_rating) {$class = 'rated';}?>
-                                                          <i class="bi bi-star-fill <?php echo $class;?>" ></i>
-                                                          <?php }?>
-                                                        </div>
-                                                        </div>
-                                                        <?php
-                                                            if ($popular_product->promotion) {
-                                                                ?>
-                                                                    <div class="col-md-6">
-                                                                        <div class="discountPrice price text-end py-2">
-                                                                            <h4 class="m-0 text-decoration-line-through">
-                                                                                <?= $this->sma->convertMoney(isset($popular_product->special_price) && !empty(isset($popular_product->special_price)) ? $popular_product->special_price : $popular_product->price); ?>
-                                                                            </h4>
-                                                                        </div>
-                                                                    </div>
-                                                                <?php
-                                                                
-                                                            }
-                                                        ?>
-                                                    </div> 
-                                                    <div class="row align-items-center justify-content-between">
-                                                        <div class="col-md-6 ">
-                                                            <div class="price text-start  py-2">
-                                                                <h4 class="m-0 fw-bold">
-                                                                <?php
-                                                                if ($popular_product->promotion) {
-                                                                    
-                                                                        echo $this->sma->convertMoney($popular_product->promo_price);
-                                                                    
-                                                                }else{
-                                                                    echo $this->sma->convertMoney(isset($popular_product->special_price) && !empty(isset($popular_product->special_price)) ? $popular_product->special_price : $popular_product->price);
-                                                                }
-                                                                ?>
-                                                                    
-                                                                </h4>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <div class="quantity text-end py-2 d-flex align-items-center justify-content-between">
-                                                                <span class="plus btn-plus">
-                                                                    <i class="bi bi-plus-circle-fill"></i>
-                                                                </span>
-                                                                <input type="text" name="quantity" class="Qnum" value="1" required="required" />
-                                                                <!--<span class="Qnum ">1</span>-->
-                                                                <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            <!--</a>-->
-                                            <div> 
-                                                <button type="button" data-id="<?= $popular_product->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>
+                                    <div class="col-lg-3 col-md-4 col-sm-12 rounded-4 mb-3 bg-white">
+                                      <div class="card position-relative" style="width: 100%">
+              
+                                        <div class="cardImg position-relative">
+                                        <span class="position-absolute   badge rounded bg-danger" style="top:20px;left:5px;font-size:14px">
+                                                20% OFF
+                                        </span>
+                                        <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none">
+                                        <img src="<?= base_url('assets/uploads/' . $popular_product->image); ?>" class="card-img-top" alt="...">
+                                        </a>
+                                        </div>
+                                        <div class="card-body px-0 text-start pt-1 pb-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h5 class="nowfood">Now food</h5>
+                                            <h5 class="categoryName text-dark">Vitamin</h5>
+                                        </div>
+                                        <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start mb-0"><?= $popular_product->name; ?></h5></a>
+                                        <div class="row align-items-center justify-content-between">
+                                            <div class="col-md-12">
+                                            <div class="rating">
+                                                <?php 
+                                                    for($i=1; $i<=5; $i++) {
+                                                        $class = '';
+                                                        if($i<=$popular_product->avg_rating) {$class = 'rated';}?>
+                                                <i class="bi bi-star-fill <?php echo $class;?>" ></i>
+                                                <?php }?>
                                             </div>
+                                            </div>
+                                            <?php
+                                            if ($popular_product->promotion) {
+                                                ?>
+                                                <!-- <div class="col-md-6">
+                                                    <div class="discountPrice price text-end py-2">
+                                                        <h4 class="m-0 text-decoration-line-through">
+                                                            <?php echo $this->sma->convertMoney(isset($popular_product->special_price) && !empty(isset($popular_product->special_price)) ? $popular_product->special_price : $popular_product->price); ?>
+                                                        </h4>
+                                                    </div>
+                                                </div> -->
+                                                <?php
+                                            }
+                                            ?>
+                                            
                                         </div> 
+                                        <!--price and quantity araea  -->
+
+                                        <div class="row align-items-center justify-content-between">
+                                            <div class="col-md-6 pe-0">
+                                                <div class="price text-start  py-2">
+                                                    <h4 class="m-0 fw-bold" style="color:green;">
+                                                        <?php
+                                                        if ($popular_product->promotion) {
+                                                            echo $this->sma->convertMoney($popular_product->promo_price);
+                                                        }else{
+                                                            echo $this->sma->convertMoney(isset($popular_product->special_price) && !empty(isset($popular_product->special_price)) ? $popular_product->special_price : $popular_product->price);
+                                                        }
+                                                        ?>
+                                                    </h4>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                            <!-- <div class="quantity text-end py-2 d-flex align-items-center justify-content-md-between">
+                                                <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
+                                                <input type="text" name="quantity" class="Qnum" value="1" required="required" />
+                                                
+                                                <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
+                                            </div> -->
+                                            
+                                                    <div class="discountPrice price text-end py-2">
+                                                        <h4 class="m-0 text-decoration-line-through fs-12">
+                                                            <?php echo $this->sma->convertMoney(isset($popular_product->special_price) && !empty(isset($popular_product->special_price)) ? $popular_product->special_price : $popular_product->price); ?>
+                                                        </h4>
+                                                    </div>
+                                                
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- price area end -->
+                                        
+                                            
+                                        </div>
+                                        
+                                        <div class=" position-absolute w-100 text-center" style="top:45%"> <button type="button" data-id="<?= $popular_product->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-0 py-0 addtocart  text-dark add-to-cart w-75 fs-6" style="padding-block: 0px!important;">Add to cart </button></div>
+                                      </div> 
                                     </div>
                                 <?php } ?>
                             </div>
@@ -454,7 +775,7 @@
 
      <!-- banner area 1 -->
 
-    <section class="side-banner py-3">
+    <!-- <section class="side-banner py-3">
       <div class="container container-max-width">
         <div class="row">
           <div class="col-md-12">
@@ -470,326 +791,29 @@
         </div>
         
       </div>
-    </section>
+    </section> -->
     <!-- banner area 1 end -->
 
-    <!-- feature product   -->
-    <section class="popularCat-container py-3">
-      <div class="container container-max-width">
-        <div class="featureProductC pt-4">
-          <div class="popularTitle text-center mb-4"><h2>Feature Products</h2></div>
+   
 
-          
-          <div class="feature_products">
-
-          <?php
-            $r = 0;
-            foreach (array_chunk($featured_products, 4) as $sps){
-                foreach ($sps as $sp) {
-                ?>
-                    <div class="row products-card text-center gy-4 ">
-                        <div class="col-md-12 col-sm-12">
-                        <div class="card" style="width: 100%">
-                            
-                            <div class="cardImg position-relative">
-                            <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
-                                Sale 20% OFF
-                            </span>-->
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
-                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="...">
-                            </a>
-                            </div>
-                            <div class="card-body px-0 text-start pb-0">
-                            
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
-                            <div class="row align-items-center justify-content-between">
-                                <div class="col-md-6">
-                                <div class="rating">
-                                  <?php 
-                                        for($i=1; $i<=5; $i++) {
-                                          $class = '';
-                                          if($i<=$sp->avg_rating) {$class = 'rated';}?>
-                                  <i class="bi bi-star-fill <?php echo $class;?>" ></i>
-                                  <?php }?>
-                                </div>
-                                </div>
-                                <?php
-                                if ($sp->promotion) {
-                                    ?>
-                                    <div class="col-md-6">
-                                        <div class="discountPrice price text-end py-2">
-                                            <h4 class="m-0 text-decoration-line-through">
-                                                <?php echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price); ?>
-                                            </h4>
-                                        </div>
-                                    </div>
-                                    <?php
-                                }
-                                ?>
-                                
-                            </div> 
-                            <!--price and quantity araea  -->
-
-                            <div class="row align-items-center justify-content-between">
-                                <div class="col-md-6 ">
-                                    <div class="price text-start  py-2">
-                                        <h4 class="m-0 fw-bold">
-                                            <?php
-                                            if ($sp->promotion) {
-                                                echo $this->sma->convertMoney($sp->promo_price);
-                                            }else{
-                                                echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
-                                            }
-                                            ?>
-                                        </h4>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                <div class="quantity text-end py-2 d-flex align-items-center justify-content-md-between">
-                                    <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
-                                    <input type="text" name="quantity" class="Qnum" value="1" required="required" />
-                                    <!--<span class="Qnum ">1</span>-->
-                                    <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
-                                </div>
-                                </div>
-                            </div>
-                            
-                            <!-- price area end -->
-                            
-                                
-                            </div>
-                            
-                            <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
-                        </div> 
-                        </div> 
-                        
-                    </div>
-                <?php 
-                }
-            } 
-            ?> 
-                
-            </div>
-          </div>
-        </div>
-      </div>
-     </section>
-     <!-- feature products  end-->
-
-     <section class="side-banner py-3">
-      <div class="container container-max-width">
-        <div class="sideBannerImg">
-          <a href="<?= site_url('category/sup'); ?>"><img loading="lazy" src="<?= base_url('assets/images/banners/suppli.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100"></a>
-        </div>
-      </div>
-    </section>
-
-    <!-- best seller product   -->
-    <section class="popularCat-container py-3">
-      <div class="container container-max-width">
-        <div class="featureProductC pt-4">
-          <div class="popularTitle text-center mb-4"><h2>Best Sellers</h2></div>
-
-          
-          <div class="feature_products">
-
-          <?php
-            $r = 0;
-            foreach (array_chunk($best_sellers, 4) as $sps){
-                foreach ($sps as $sp) {
-                ?>
-                    <div class="row products-card text-center gy-4 ">
-                        <div class="col-md-12 col-sm-12">
-                        <div class="card" style="width: 100%">
-                            
-                            <div class="cardImg position-relative">
-                            <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
-                                Sale 20% OFF
-                            </span>-->
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
-                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="...">
-                            </a>
-                            </div>
-                            <div class="card-body px-0 text-start pb-0">
-                            
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
-                            <div class="row align-items-center justify-content-between">
-                                <div class="col-md-6">
-                                <div class="rating">
-                                  <?php 
-                                        for($i=1; $i<=5; $i++) {
-                                          $class = '';
-                                          if($i<=$sp->avg_rating) {$class = 'rated';}?>
-                                  <i class="bi bi-star-fill <?php echo $class;?>" ></i>
-                                  <?php }?>
-                                </div>
-                                </div>
-                                <?php
-                                if ($sp->promotion) {
-                                    ?>
-                                    <div class="col-md-6">
-                                        <div class="discountPrice price text-end py-2">
-                                            <h4 class="m-0 text-decoration-line-through">
-                                                <?php echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price); ?>
-                                            </h4>
-                                        </div>
-                                    </div>
-                                    <?php
-                                }
-                                ?>
-                                
-                            </div> 
-                            <!--price and quantity araea  -->
-
-                            <div class="row align-items-center justify-content-between">
-                                <div class="col-md-6 ">
-                                    <div class="price text-start  py-2">
-                                        <h4 class="m-0 fw-bold">
-                                            <?php
-                                            if ($sp->promotion) {
-                                                echo $this->sma->convertMoney($sp->promo_price);
-                                            }else{
-                                                echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
-                                            }
-                                            ?>
-                                        </h4>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                <div class="quantity text-end py-2 d-flex align-items-center justify-content-md-between">
-                                    <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
-                                    <input type="text" name="quantity" class="Qnum" value="1" required="required" />
-                                    <!--<span class="Qnum ">1</span>-->
-                                    <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
-                                </div>
-                                </div>
-                            </div>
-                            
-                            <!-- price area end -->
-                            
-                                
-                            </div>
-                            
-                            <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
-                        </div> 
-                        </div> 
-                        
-                    </div>
-                <?php 
-                }
-            } 
-            ?> 
-                
-            </div>
-
-            <!-- Additional Best Sellers -->
-            <div class="feature_products">
-
-          <?php
-            $r = 0;
-            foreach (array_chunk($best_sellers_additional, 4) as $sps){
-                foreach ($sps as $sp) {
-                ?>
-                    <div class="row products-card text-center gy-4 ">
-                        <div class="col-md-12 col-sm-12">
-                        <div class="card" style="width: 100%">
-                            
-                            <div class="cardImg position-relative">
-                            <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
-                                Sale 20% OFF
-                            </span>-->
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
-                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="...">
-                            </a>
-                            </div>
-                            <div class="card-body px-0 text-start pb-0">
-                            
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
-                            <div class="row align-items-center justify-content-between">
-                                <div class="col-md-6">
-                                <div class="rating">
-                                  <?php 
-                                        for($i=1; $i<=5; $i++) {
-                                          $class = '';
-                                          if($i<=$sp->avg_rating) {$class = 'rated';}?>
-                                  <i class="bi bi-star-fill <?php echo $class;?>" ></i>
-                                  <?php }?>
-                                </div>
-                                </div>
-                                <?php
-                                if ($sp->promotion) {
-                                    ?>
-                                    <div class="col-md-6">
-                                        <div class="discountPrice price text-end py-2">
-                                            <h4 class="m-0 text-decoration-line-through">
-                                                <?php echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price); ?>
-                                            </h4>
-                                        </div>
-                                    </div>
-                                    <?php
-                                }
-                                ?>
-                                
-                            </div> 
-                            <!--price and quantity araea  -->
-
-                            <div class="row align-items-center justify-content-between">
-                                <div class="col-md-6 ">
-                                    <div class="price text-start  py-2">
-                                        <h4 class="m-0 fw-bold">
-                                            <?php
-                                            if ($sp->promotion) {
-                                                echo $this->sma->convertMoney($sp->promo_price);
-                                            }else{
-                                                echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
-                                            }
-                                            ?>
-                                        </h4>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                <div class="quantity text-end py-2 d-flex align-items-center justify-content-md-between">
-                                    <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
-                                    <input type="text" name="quantity" class="Qnum" value="1" required="required" />
-                                    <!--<span class="Qnum ">1</span>-->
-                                    <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
-                                </div>
-                                </div>
-                            </div>
-                            
-                            <!-- price area end -->
-                            
-                                
-                            </div>
-                            
-                            <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
-                        </div> 
-                        </div> 
-                        
-                    </div>
-                <?php 
-                }
-            } 
-            ?> 
-                
-            </div>
-
-          </div>
-        </div>
-      </div>
-     </section>
+  
      <!-- best seller products  end-->
 
      <!--banner cat  -->
      <section class="side-banner py-3">
       <div class="container container-max-width">
         <div class="row">
-          <div class="col-md-6">
+          <div class="col-md-4">
             <div class="sideBannerImg my-2">
              <a href="<?= site_url('category/mombaby'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/momBaby.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100 h-100 rounded-4" ></a>
             </div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
+            <div class="sideBannerImg my-2">
+              <a href="<?= site_url('category/skn'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/persC.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100  rounded-4" ></a>
+            </div>
+          </div>
+          <div class="col-md-4">
             <div class="sideBannerImg my-2">
               <a href="<?= site_url('category/skn'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/persC.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100  rounded-4" ></a>
             </div>
@@ -799,25 +823,31 @@
       </div>
     </section>
     <!-- banner cat end -->
-
+    <section class="side-banner py-3">
+      <div class="container container-max-width">
+        <div class="sideBannerImg">
+          <a href="<?= site_url('category/sup'); ?>"><img loading="lazy" src="<?= base_url('assets/images/banners/suppli.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100"></a>
+        </div>
+      </div>
+    </section>
 
 
     <!-- special offer -->
   
-    <section class="specialOffer-container py-3">
+    <!-- <section class="specialOffer-container py-3">
       <div class="container container-max-width">
         <div class="specialOfferProductC pt-4">
           <div class="specialOfferpopularTitle text-center mb-4"><h2>Special Offer</h2></div>
-        </div>
+        </div> -->
 
         <!-- special products -->
-        <div class="special_products">
+        <!-- <div class="special_products"> -->
             <?php
                 $r = 0;
                 foreach (array_chunk($special_offers, 4) as $sps){
                     foreach ($sps as $sp) {
                     ?>
-                        <div class="row specialOfferP py-4 get-quantity">
+                        <!-- <div class="row specialOfferP py-4 get-quantity">
                             <div class="col-md-12 col-sm-12">
                             <div class="row align-items-center">
                                 <div class="col-md-5 col-sm-12">
@@ -834,7 +864,7 @@
                                     
                                     
                                     </div> 
-                                    <!--price and quantity araea  -->
+                                 
 
                                     <div class="row align-items-center justify-content-between w-100">
                                     <div class="col-md-6 ">
@@ -842,7 +872,7 @@
                                             <h4 class="m-0 fw-bold">
                                             <?php
                                                 if ($sp->promotion) {
-                                                    //echo '<del class="text-red">' . $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price) . '</del><br>';
+                                                   
                                                     echo $this->sma->convertMoney($sp->promo_price);
                                                 } else {
                                                     echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
@@ -855,13 +885,13 @@
                                         <div class="quantity text-end py-2 d-flex align-items-center  justify-content-md-between">
                                         <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
                                         <input type="text" name="quantity" class="Qnum" value="1" required="required" />
-                                        <!--<span class="Qnum ">1</span>-->
+                                  
                                         <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
                                         </div>
                                     </div>
                                     </div>
                                     <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
-                                    <!-- price area end -->
+                                   
                                     
                                     
                                 </div>
@@ -871,17 +901,31 @@
 
                             </div>
                             
-                        </div>
+                        </div> -->
                     <?php
                     }
                 }
             ?>
-        </div>
+        <!-- </div> -->
         <!-- special products end -->
+      <!-- </div>
+    </section> -->
+    <!-- special offer end -->
+  <!-- brand logos -->
+  <section class="widgets">
+      <div class="container container-max-width pb-5">
+        <div class="widget-bar">
+          <div class="brands-logo">
+            <div><img src="<?= base_url('assets/images/banners/ceraVe.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Ghalior-Paris.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Jamieson.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Johnsons.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Laperva.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Purever-CANADA.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
+          </div>
+        </div>
       </div>
     </section>
-    <!-- special offer end -->
-
     <!-- widgets section -->
     <section class="widgets">
       <div class="container container-max-width py-4">
@@ -923,21 +967,7 @@
       </div>
     </section>
 
-    <!-- brand logos -->
-    <section class="widgets">
-      <div class="container container-max-width pb-5">
-        <div class="widget-bar">
-          <div class="brands-logo">
-            <div><img src="<?= base_url('assets/images/banners/ceraVe.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/Ghalior-Paris.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/Jamieson.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/Johnsons.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/Laperva.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/Purever-CANADA.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
-          </div>
-        </div>
-      </div>
-    </section>
+  
 <!-- join container -->
     <section class="join-container mb-2" >
       <div class="container container-max-width py-5" style="background-image: url(<?= base_url('assets/images/banners/bgbanner.jpg'); ?>);">

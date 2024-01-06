@@ -57,7 +57,7 @@ section.top-bar {
 }
 .price h4 {
   font-family: "Manrope", sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   color: black;
 }
 .discountPrice h4 {
@@ -106,8 +106,8 @@ button.btn.all-categoryBtn i.bi {
 
 nav .menu-av li.nav-item a.nav-link {
   font-size: 18px;
-  padding-bottom: 11px;
-  padding-top: 11px;
+  padding-bottom: 7px;
+  padding-top: 7px;
   /* border-bottom: 3px solid transparent; */
   transition: color 0.3s ease-in-out, font-weight 0.3s ease-in-out,
     border-bottom 0.3s ease-in-out;
@@ -200,7 +200,7 @@ section.heroSlider span.carousel-control-next-icon {
 }
 section.heroSlider .carousel-control-next,
 section.heroSlider .carousel-control-prev {
-  width: 6%;
+  width: 5%;
 }
 
 .feature-cards .cardImg {
@@ -329,8 +329,9 @@ section.heroSlider .carousel-control-prev {
 
 .addtocart {
   padding-block: 10px !important;
-  background: #ddc3f4;
+  background: var(--primary-color);
   font-size: 18px;
+  color: white !important;
 }
 .addtocart:hover {
   color: white !important;
@@ -873,10 +874,10 @@ input.qty.Qnum {
     max-width: 200px;
   }
   .carousel-control-prev {
-    left: -54px;
+    left: -50px;
   }
   .carousel-control-next {
-    right: -54px;
+    right: -50px;
   }
 }
 div#cartdiv {
@@ -1514,6 +1515,28 @@ html[lang="ar"] .featureTitle h2,
 html[lang="ar"] .popularTitle h2 {
   text-align: center !important;
 }
+html[lang="ar"] .freeDile {
+  clip-path: polygon(50% 0%, 100% 0, 100% 100%, 13% 100%, 0 0);
+}
+html[lang="ar"] #navbarSupportedContent ul.navbar-nav li.border-2 {
+  border: 0 !important;
+  border-left: 2px solid #adb5bd !important;
+}
+.viewbtn {
+  position: absolute;
+  top: 4px;
+  right: 0px;
+  /* bottom: 0; */
+  padding-inline: 13px;
+  border: none;
+  background: #c97edb;
+  font-weight: 600;
+  padding-block: 5px;
+  border-radius: 3px;
+}
+h5.nowfood {
+  color: #c97edb;
+}
 h4.or {
   margin: 0;
   font-size: 23px;
@@ -1646,6 +1669,9 @@ li.nav-item.dropdown.megamenu a:hover {
   opacity: 0;
 
   z-index: 1;
+}
+.fs-12 {
+  font-size: 12px !important;
 }
 @media screen and (max-width: 500px) {
   .standard-div {

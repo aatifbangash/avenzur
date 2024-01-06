@@ -352,7 +352,7 @@
     <!-- menu bar -->
     <section>
       <div class="container container-max-width main-menuTab py-0 border-0">
-        <div class="row align-items-center">
+        <div class="row align-items-center w-100 mx-auto">
           <!-- <div class="col-md-2 col-sm-2 mob-catS" id="allcatDiv">
             <button class="btn all-categoryBtn d-flex align-items-center justify-content-between" id="allCatmob" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
               <i class="bi bi-filter-left "></i> All Category
@@ -389,7 +389,7 @@
             </div>
           </div> -->
           <div class="col-md-7 col-sm-2 mob-menu ps-0">
-            <nav class="navbar navbar-expand-lg navbar-expand-md  container-max-width px-3 py-0">
+            <nav class="navbar navbar-expand-lg navbar-expand-md  container-max-width px-3 py-0 ps-0">
               <div class="container-fluid px-0">
                 
                 <div class="menu-av" id="sourcedivmob">
@@ -420,7 +420,7 @@
                         ?>
                       </ul>
                     </li>
-                      <li class="nav-item border-end border-2 border-dark-subtle px-2">
+                      <li class="nav-item border-end border-2 border-dark-subtle px-2 my-1">
                         <?php 
                           $isHttps = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
                           $domain = $_SERVER['HTTP_HOST'];
@@ -428,13 +428,13 @@
                         ?>
                         <a class="nav-link <?php if(site_url() == $url){ echo 'active'; } ?>" aria-current="page" href="<?= site_url(); ?>">Home</a>
                       </li>
-                      <li class="nav-item border-end border-2 border-dark-subtle px-2">
+                      <li class="nav-item border-end border-2 border-dark-subtle px-2  my-1">
                         <a class="nav-link <?php if(site_url('shop/products') == $url){ echo 'active'; } ?>"  href="<?= site_url('shop/products'); ?>">Products</a>
                       </li>
-                      <li class="nav-item border-end border-2 border-dark-subtle px-2">
+                      <li class="nav-item border-end border-2 border-dark-subtle px-2  my-1">
                         <a class="nav-link <?php if(site_url('shop/products?promo=yes') == $url){ echo 'active'; } ?>"  href="<?= site_url('shop/products?promo=yes'); ?>">Promotions</a>
                       </li>
-                      <li class="nav-item px-2">
+                      <li class="nav-item px-2  my-1">
                         <a class="nav-link <?php if(site_url('shop/bestsellers') == $url){ echo 'active'; } ?>"  href="<?= site_url('shop/bestsellers'); ?>">Best Sellers</a>
                       </li>
                       
@@ -453,7 +453,7 @@
             </nav>
           </div>
           <div class="col-md-5 col-sm-2 ">
-            <div class="row delivCustBar">
+            <div class="row delivCustBar w-100 ms-auto">
               <div class="col-md-7 d-flex align-items-center  bg-success freeDile">
               <h5 class="m-0 text-white" style="font-size:17px">Free Delivery.... Limited time offer</h5>
               </div>
