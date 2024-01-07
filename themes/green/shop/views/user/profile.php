@@ -190,12 +190,12 @@
                                     echo form_open('mobile_verify_otp', $attrib); 
                                 ?>
                                 <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="profile_login_1" maxlength="1" />
-                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="profile_login_2" maxlength="1" />
-                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="profile_login_3" maxlength="1" />
-                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="profile_login_4" maxlength="1" /> 
-                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="profile_login_5" maxlength="1" />
-                                    <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="profile_login_6" maxlength="1" />
+                                    <input class="m-1 text-center form-control rounded ap-otp-input" type="tel" name="opt_part1" id="profile_login_1"  data-index="0" maxlength="1" />
+                                    <input class="m-1 text-center form-control rounded ap-otp-input" type="tel" name="opt_part2" id="profile_login_2"  data-index="1" maxlength="1" />
+                                    <input class="m-1 text-center form-control rounded ap-otp-input" type="tel" name="opt_part3" id="profile_login_3"  data-index="2" maxlength="1" />
+                                    <input class="m-1 text-center form-control rounded ap-otp-input" type="tel" name="opt_part4" id="profile_login_4"  data-index="3" maxlength="1" /> 
+                                    <input class="m-1 text-center form-control rounded ap-otp-input" type="tel" name="opt_part5" id="profile_login_5"  data-index="4" maxlength="1" />
+                                    <input class="m-1 text-center form-control rounded ap-otp-input" type="tel" name="opt_part6" id="profile_login_6"  data-index="5" maxlength="1" />
                                     <input type="hidden" id="identifier_input" name="identifier_input" value="" />
                                 </div>
                                 <div  class="text-center">
