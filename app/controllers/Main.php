@@ -401,11 +401,13 @@ class Main extends MY_Shop_Controller
                 $whatsapp_sent = $this->sma->send_whatsapp_msg($identifier, $otp);
                 $whatsapp_data = json_decode($whatsapp_sent, true);
 
-                if ($whatsapp_data && isset($whatsapp_data['messageId'])) {
+                /*if ($whatsapp_data && isset($whatsapp_data['messageId'])) {
                     echo json_encode(['status' => 'success', 'message' => 'OTP sent to whatsapp']);
                 } else {
                     $sms_sent = $this->sma->send_sms($identifier, $otp);
-                }
+                }*/
+
+                $sms_sent = $this->sma->send_sms($identifier, $otp);
                 
             }
 
