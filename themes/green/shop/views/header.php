@@ -176,9 +176,9 @@
                         <div>
                           <a class="text-decoration-none text-dark" href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a>
                         </div>
-                        <div>
+                        <!--<div>
                           <a class="text-decoration-none text-dark" href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a>
-                        </div>
+                        </div>-->
                         <div>
                           <a class="text-decoration-none text-dark" href="<?= shop_url('rateAndReview'); ?>"><i class="mi fa fa-star"></i>Rate and Review</a>
                         </div>
