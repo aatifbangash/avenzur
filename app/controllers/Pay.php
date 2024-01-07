@@ -310,13 +310,23 @@ class Pay extends MY_Shop_Controller
                  $finalData["RedirectURL"] = $redirectURL;
                  $finalData['PaymentMethod'] = $paymentMethod;
                  $finalData["SecureHash"] = $secureHash;
+
+                 $card_details = $this->session->userdata('card_details');
                  
+                 if ($card_details) {
+                    $finalData["card_name"] = $card_details['card_name'];
+                    $finalData["card_number"] = $card_details['card_number'];
+                    $finalData["card_cvv"] = $card_details['card_cvv'];
+                    $finalData["card_expiry_month"] = $card_details['card_expiry_month'];
+                    $finalData["card_expiry_year"] = $card_details['card_expiry_year'];
+                 }
                  
+                 $this->session->unset_userdata('card_details');
                             
-                            $data["formdata"] = $finalData;
+                $data["formdata"] = $finalData;
                         
                       
-               $this->load->view('green/directpay', $data);
+                $this->load->view('green/directpay', $data);
             }
         }
         //$this->session->set_flashdata('error', lang('sale_x_found'));
