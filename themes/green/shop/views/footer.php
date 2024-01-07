@@ -344,6 +344,11 @@
 </script>
 
 <script>
+
+  function redirectToCheckout(redirect_url){
+    window.location.href = redirect_url;
+  }
+
   $(document).ready(function () {
 
     const inputContainer = $('#inputContainer');
