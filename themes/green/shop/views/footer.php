@@ -358,7 +358,7 @@
       // Change input type and replace accordingly
       if (isFirstCharacterDigit && !hasTextOrAlphabet) {
         // Replace with country code dropdown and phone number input
-        inputContainer.html('<input type="text" id="countryCode" class="form-control" style="float: left; width:20%;" value="+966" ready><input type="text" id="identity_phone" name="identity" class="form-control" style="width: 80%; float: left" placeholder="Enter phone number" required="required">');
+        inputContainer.html('<input type="text" id="countryCode" class="form-control" style="float: left; width:20%;" value="+966" ready><input type="tel" id="identity_phone" name="identity" class="form-control" style="width: 80%; float: left" placeholder="Enter phone number" required="required">');
       } else if (inputValue === '') {
         // If the input is empty, revert to the original text field
         //inputContainer.html('<input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required">');
@@ -400,7 +400,7 @@
       // Change input type and replace accordingly
       if (isFirstCharacterDigit && !hasTextOrAlphabet) {
         // Replace with country code dropdown and phone number input
-        inputContainerRegister.html('<input type="text" id="countryCode" class="form-control" style="float: left; width:20%;" value="+966" ready><input type="text" id="email_phone" name="email" class="form-control" style="width: 80%; float: left" placeholder="Enter phone number" required="required">');
+        inputContainerRegister.html('<input type="text" id="countryCode" class="form-control" style="float: left; width:20%;" value="+966" ready><input type="tel" id="email_phone" name="email" class="form-control" style="width: 80%; float: left" placeholder="Enter phone number" required="required">');
       } 
       $('#email').val(inputValue);
       $('#email_phone').val(inputValue);
