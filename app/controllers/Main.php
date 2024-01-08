@@ -937,12 +937,12 @@ class Main extends MY_Shop_Controller
                 if ($this->form_validation->run() == true) {
                     $otp_sent = $this->sendOTP($company_id, $email, $type);
 
-                    if ($otp_sent) {
-                        echo json_encode(['status' => 'success', 'message' => 'OTP sent at this time']);
+                    // if ($otp_sent) {
+                    //      echo json_encode(['status' => 'success', 'message' => 'OTP sent at this time']);
     
-                         }else{
-                            echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
-                         }
+                    //      }else{
+                    //         echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
+                    //      }
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
                 }
