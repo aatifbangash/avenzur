@@ -139,8 +139,8 @@ if ($this->Settings->indian_gst) {
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" pattern="[A-Za-z]{3}" value="" id="card_name" placeholder="Cardholder Name" />
                             <span><input type="text" maxlength="19" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="Card Number" />
                             <img src="" id="card_type_image" style="width: 30px; height: 30px;display:none;"></span>
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" maxlength="4" placeholder="Card Expiry Year" />
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" maxlength="2" placeholder="Card Expiry Month" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="2030 / 12" />
+                            <!--<input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" maxlength="2" placeholder="Card Expiry Month" />-->
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" maxlength="3" pattern="\d*" title="Please enter a 3-digit CVV" placeholder="Card Cvv" />
                         </div>
                         <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
@@ -172,7 +172,7 @@ if ($this->Settings->indian_gst) {
             <input type="hidden" name="card_name" value="" id="card_name_hidden" required="required" />
             <input type="hidden" name="card_number" value="" id="card_number_hidden" required="required" />
             <input type="hidden" name="card_expiry_year" value="" id="card_expiry_year_hidden" required="required" />
-            <input type="hidden" name="card_expiry_month" value="" id="card_expiry_month_hidden" required="required" />
+            <!--<input type="hidden" name="card_expiry_month" value="" id="card_expiry_month_hidden" required="required" />-->
             <input type="hidden" name="card_cvv" value="" id="card_cvv_hidden" required="required" />
             <input type="hidden" name="address" id="address" value="<?php echo isset($default_address->company_id) ? $default_address->id : 'default';?>">    
             <input type="hidden" name="shipping_city" id="shipping_city" value="<?php echo $default_address->city;?>">                                       
@@ -242,8 +242,8 @@ if ($this->Settings->indian_gst) {
         var currentYear = new Date().getFullYear();
 
         // Set the minimum and maximum allowed years
-        document.getElementById('card_expiry_year').setAttribute('min', currentYear);
-        document.getElementById('card_expiry_year').setAttribute('max', currentYear + 10); // Allowing the next 10 years
+        //document.getElementById('card_expiry_year').setAttribute('min', currentYear);
+        //document.getElementById('card_expiry_year').setAttribute('max', currentYear + 10); // Allowing the next 10 years
 
         $('#card_cvv').on('input', function() {
             var cvv = $(this).val();
@@ -317,17 +317,60 @@ if ($this->Settings->indian_gst) {
         $('#card_number').change(function(){
             $('#card_number_hidden').val($(this).val());
         });
+
+        $('#card_expiry_year').on('input', function() {
+            var inputValue = $(this).val();
+            var isBackspace = event.inputType === 'deleteContentBackward';
+
+            // Remove non-numeric characters
+            var numericValue = inputValue.replace(/\D/g, '');
+
+            // Format the date (YYYY / MM)
+            if (numericValue.length >= 4 && !isBackspace) {
+                var formattedValue = numericValue.substr(0, 4) + ' / ' + numericValue.substr(4, 2);
+                $(this).val(formattedValue);
+            } else if(!isBackspace) {
+                $(this).val(numericValue);
+            }
+
+            // Handle backspace to remove trailing "/"
+            if (isBackspace && numericValue.length === 4) {
+                $(this).val(function (index, value) {
+                    return value.substring(0, value.length - 2);
+                });
+            }
+        });
+
+        $('#card_expiry_year').on('blur', function() {
+            var inputValue = $(this).val();
+            if (!isValidExpiryDate(inputValue)) {
+                $(this).val('');
+                $('#card_expiry_year_hidden').val('');
+            }else{
+                $('#card_expiry_year_hidden').val($(this).val());
+            }
+        });
+
+        function isValidExpiryDate(value) {
+            // Implement your own validation logic if needed
+            // For example, check if the value matches the expected format
+            return /^\d{4}(\s*\/\s*\d{2})?$/.test(value);
+        }
         
-        $('#card_expiry_year').change(function(){
+        /*$('#card_expiry_year').change(function(){
             $('#card_expiry_year_hidden').val($(this).val());
-        });
+        });*/
 
-        $('#card_expiry_month').change(function(){
+        /*$('#card_expiry_month').change(function(){
             $('#card_expiry_month_hidden').val($(this).val());
-        });
+        });*/
 
-        $('#card_cvv').change(function(){
-            $('#card_cvv_hidden').val($(this).val());
+        $('#card_cvv').on('input',function(){
+            var inputValue = $(this).val();
+            var numericValue = inputValue.replace(/\D/g, '');
+
+            $('#card_cvv').val(numericValue);
+            $('#card_cvv_hidden').val(numericValue);
         });
 
         $('form').submit(function(e){
@@ -338,9 +381,9 @@ if ($this->Settings->indian_gst) {
                 isValid = false;
             }
 
-            if($('#card_expiry_month').val() == ''){
+            /*if($('#card_expiry_month').val() == ''){
                 isValid = false;
-            }
+            }*/
 
             if($('#card_expiry_year').val() == ''){
                 isValid = false;
