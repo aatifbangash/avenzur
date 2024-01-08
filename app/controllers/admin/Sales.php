@@ -1834,7 +1834,23 @@ class Sales extends MY_Controller
 
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
-        $address = $this->site->getAddressByID($address_id);
+
+        if($address_id == 0){
+            $address = new stdClass();
+            $address->line1 = $customer->address;
+            $address->phone = $customer->phone;
+            $address->longitude = $customer->longitude;
+            $address->latitude = $customer->latitude;
+        }else{
+            $address = $this->site->getAddressByID($address_id);
+        }
+
+        if (strpos($address->phone, "+966") !== false) {
+            //echo "The string contains +966.";
+        } else {
+            $address->phone = '+966'.$address->phone;
+        }
+
         $sale_items = $this->site->getAllSaleItems($sale->id);
 
         $items_data = array();
@@ -1888,6 +1904,8 @@ class Sales extends MY_Controller
             'notes' => 'no comments',
             'packages' => $items_data
         );
+
+        echo '<pre>';print_r($data);exit;
 
         $ch = curl_init($courier->url.'orders');
 
