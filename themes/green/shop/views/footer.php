@@ -344,6 +344,11 @@
 </script>
 
 <script>
+
+  function redirectToCheckout(redirect_url){
+    window.location.href = redirect_url;
+  }
+
   $(document).ready(function () {
 
     const inputContainer = $('#inputContainer');
@@ -524,6 +529,50 @@
 <?php if (!$this->loggedIn) { ?>
   <script src="<?= $assets; ?>js/login.js"></script>
 <?php } ?>
+
+<script>
+
+function initializeOtpInput(className) {
+  const $inp = $(`.${className}`);
+  //const $inp = $(".ap-otp-input");
+
+  $inp.on({
+    paste(ev) {
+      // Handle Pasting
+
+      const clip = ev.originalEvent.clipboardData.getData("text").trim();
+      // Allow numbers only
+      if (!/\d{6}/.test(clip)) return ev.preventDefault(); // Invalid. Exit here
+      // Split string to Array or characters
+      const s = [...clip];
+      // Populate inputs. Focus last input.
+      $inp
+        .val((i) => s[i])
+        .eq(5)
+        .focus();
+    },
+    input(ev) {
+      // Handle typing
+
+      const i = $inp.index(this);
+      if (this.value) $inp.eq(i + 1).focus();
+    },
+    keydown(ev) {
+      // Handle Deleting
+
+      const i = $inp.index(this);
+      if (!this.value && ev.key === "Backspace" && i) $inp.eq(i - 1).focus();
+    },
+  });
+}
+
+initializeOtpInput('ap-otp-input');
+initializeOtpInput('ap-otp-input-reg');
+initializeOtpInput('ap-otp-input-profile');
+initializeOtpInput('ap-otp-input-checkout');
+
+</script>
+
 <script src="<?= $assets; ?>js/jquery-ui.min.js"></script>
 <script src="<?= $assets; ?>js/jquery-ui.js"></script>
 <script src="<?= $assets; ?>js/notify.min.js"> </script>

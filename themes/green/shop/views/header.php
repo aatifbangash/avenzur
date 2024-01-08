@@ -447,12 +447,12 @@
                                 echo form_open('register_otp', $attrib); 
                             ?>
                             <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                <input class="m-1 text-center form-control rounded ap-otp-input" type="text" name="opt_part1" id="register_otp_1" data-index="0" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded ap-otp-input" type="text" name="opt_part2" id="register_otp_2" data-index="1" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded ap-otp-input" type="text" name="opt_part3" id="register_otp_3" data-index="2" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded ap-otp-input" type="text" name="opt_part4" id="register_otp_4" data-index="3" maxlength="1" /> 
-                                <input class="m-1 text-center form-control rounded ap-otp-input" type="text" name="opt_part5" id="register_otp_5" data-index="4" maxlength="1" />
-                                <input class="m-1 text-center form-control rounded ap-otp-input" type="text" name="opt_part6" id="register_otp_6" data-index="5" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded ap-otp-input-reg" type="tel" name="opt_part1" id="register_otp_1" data-index="0" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded ap-otp-input-reg" type="tel" name="opt_part2" id="register_otp_2" data-index="1" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded ap-otp-input-reg" type="tel" name="opt_part3" id="register_otp_3" data-index="2" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded ap-otp-input-reg" type="tel" name="opt_part4" id="register_otp_4" data-index="3" maxlength="1" /> 
+                                <input class="m-1 text-center form-control rounded ap-otp-input-reg" type="tel" name="opt_part5" id="register_otp_5" data-index="4" maxlength="1" />
+                                <input class="m-1 text-center form-control rounded ap-otp-input-reg" type="tel" name="opt_part6" id="register_otp_6" data-index="5" maxlength="1" />
                                 <input type="hidden" id="identifier_input" name="identifier_input" value="" />
                             </div>
                             <div  class="text-center">
@@ -538,10 +538,10 @@
               </div>
 
               <div class="border-0 pb-4 d-flex flex-nowrap mt-3">
-                  <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6">
-                      <a href="<?= site_url('cart'); ?>" style="color: #fff;text-decoration: none;">Checkout</a>                   
+                  <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6" onclick="redirectToCheckout('<?= site_url('cart'); ?>')">
+                  Checkout
                   </button>
-                  <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6" data-bs-dismiss="offcanvas">Continue Shopping</button>
+                  <button type="button" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6 offcanvasClose" data-bs-dismiss="offcanvas">Continue Shopping</button>
               </div>
           </div>
       </div>
