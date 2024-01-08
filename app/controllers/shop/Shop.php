@@ -509,8 +509,8 @@ class Shop extends MY_Shop_Controller
                         $card_cvv = $this->input->post('card_cvv');
                         $card_expiry = $this->input->post('card_expiry_year');
                         
-                        $card_expiry_year = trim(explode('/', $card_expiry)[0]);
-                        $card_expiry_month = trim(explode('/', $card_expiry)[1]);
+                        $card_expiry_year = trim(explode('/', $card_expiry)[1]);
+                        $card_expiry_month = trim(explode('/', $card_expiry)[0]);
 
                         // Store card details in session
                         $this->session->set_userdata('card_details', array(

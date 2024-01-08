@@ -143,7 +143,7 @@ if ($this->Settings->indian_gst) {
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" pattern="[A-Za-z]{3}" value="" id="card_name" placeholder="John Doe" />
                             <span><input type="text" maxlength="19" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="5105 1051 0510 5100" />
                             <img src="" id="card_type_image" style="width: 30px; height: 30px;display:none;"></span>
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="2031 / 12" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="12 / 31" />
                             <!--<input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" maxlength="2" placeholder="Card Expiry Month" />-->
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" maxlength="3" pattern="\d*" title="Please enter a 3-digit CVV" placeholder="358" />
                         </div>
@@ -329,18 +329,18 @@ if ($this->Settings->indian_gst) {
             // Remove non-numeric characters
             var numericValue = inputValue.replace(/\D/g, '');
 
-            // Format the date (YYYY / MM)
-            if (numericValue.length >= 4 && !isBackspace) {
-                var formattedValue = numericValue.substr(0, 4) + ' / ' + numericValue.substr(4, 2);
+            // Format the date (MM / YY)
+            if (numericValue.length >= 2 && !isBackspace) {
+                var formattedValue = numericValue.substr(0, 2) + ' / ' + numericValue.substr(2, 2);
                 $(this).val(formattedValue);
-            } else if(!isBackspace) {
+            } else if (!isBackspace) {
                 $(this).val(numericValue);
             }
 
             // Handle backspace to remove trailing "/"
-            if (isBackspace && numericValue.length === 4) {
-                $(this).val(function (index, value) {
-                    return value.substring(0, value.length - 2);
+            if (isBackspace && numericValue.length === 2) {
+                $(this).val(function(index, value) {
+                    return value.substring(0, value.length - 3);
                 });
             }
         });
@@ -350,7 +350,7 @@ if ($this->Settings->indian_gst) {
             if (!isValidExpiryDate(inputValue)) {
                 $(this).val('');
                 $('#card_expiry_year_hidden').val('');
-            }else{
+            } else {
                 $('#card_expiry_year_hidden').val($(this).val());
             }
         });
@@ -358,7 +358,7 @@ if ($this->Settings->indian_gst) {
         function isValidExpiryDate(value) {
             // Implement your own validation logic if needed
             // For example, check if the value matches the expected format
-            return /^\d{4}(\s*\/\s*\d{2})?$/.test(value);
+            return /^\d{2}(\s*\/\s*\d{2})?$/.test(value);
         }
         
         /*$('#card_expiry_year').change(function(){
