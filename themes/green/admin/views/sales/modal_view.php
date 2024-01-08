@@ -1,4 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php //echo '<pre>';print_r($this->data);?>
 <div class="modal-dialog modal-lg no-modal-header">
     <div class="modal-content">
         <div class="modal-body">
@@ -21,8 +22,12 @@
                     <div class="col-xs-5">
                     <p class="bold">
                         <?= lang('date'); ?>: <?= $this->sma->hrld($inv->date); ?><br>
+                        <?php if($inv->shop == 1) {?>
                         <?= lang('Invoice_Number'); ?>: <?= ($inv->invoice_number !== null ? $inv->invoice_number :'INV-'.$inv->sequence_code); ?><br>
                         <?= lang('ref'); ?>: <?= ($inv->reference_no != '0' ? $inv->reference_no :'AVN-'.$inv->sequence_code); ?><br>
+                        <?php } else { ?>
+                        <?= lang('ref'); ?>: <?= $inv->reference_no; ?><br>
+                        <?php } ?>
                         <?php if (!empty($inv->return_sale_ref)) {
                             echo lang('return_ref') . ': ' . $inv->return_sale_ref;
                             if ($inv->return_id) {
@@ -31,8 +36,10 @@
                                 echo '<br>';
                             }
                         } ?>
+                         <?php if($inv->shop != 1) {?>
                         <?= lang('sale_status'); ?>: <?= lang($inv->sale_status); ?><br>
                         <?= lang('payment_status'); ?>: <?= lang($inv->payment_status); ?><br>
+                        <?php }?>
                         <?= $inv->payment_method ? lang('payment_method') . ': ' . lang($inv->payment_method) : ''; ?>
                         <?php
                         if ($inv->payment_status != 'paid' && $inv->due_date) {
@@ -41,8 +48,10 @@
                     </p>
                     </div>
                     <div class="col-xs-7 text-right order_barcodes">
+                    <?php if($inv->shop != 1) {?>
                         <img src="<?= admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1'); ?>" alt="<?= $inv->reference_no; ?>" class="bcimg" />
                         <?php
+                         }
                         if ($Settings->ksa_qrcode) {
                             $qrtext = $this->inv_qrcode->base64([
                                 'seller'           => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
@@ -50,6 +59,7 @@
                                 'date'             => $inv->date,
                                 'grand_total'      => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
                                 'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
+                                'reference_no' => ($inv->reference_no != '0' ? $inv->reference_no :'AVN-'.$inv->sequence_code),
                             ]);
                             echo $this->sma->qrcode('text', $qrtext, 2);
                         } else {
