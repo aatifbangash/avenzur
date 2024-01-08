@@ -26,6 +26,10 @@ if ($this->Settings->indian_gst) {
     font-size: 25px !important;
  }
 
+ .form-control::placeholder {
+    opacity: 0.5;
+ }
+
 </style>
 <section class="page-contents" id="checkout-page" style="background:white !important;">
     <div class="container container-max-width">
@@ -136,12 +140,12 @@ if ($this->Settings->indian_gst) {
                             <label class="form-check-label fw-semibold" for="flexRadioDefault2">
                                 Debit / Credit Card Payment
                             </label>
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" pattern="[A-Za-z]{3}" value="" id="card_name" placeholder="Cardholder Name" />
-                            <span><input type="text" maxlength="19" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="Card Number" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" pattern="[A-Za-z]{3}" value="" id="card_name" placeholder="John Doe" />
+                            <span><input type="text" maxlength="19" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="5105 1051 0510 5100" />
                             <img src="" id="card_type_image" style="width: 30px; height: 30px;display:none;"></span>
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="2030 / 12" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="2031 / 12" />
                             <!--<input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" maxlength="2" placeholder="Card Expiry Month" />-->
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" maxlength="3" pattern="\d*" title="Please enter a 3-digit CVV" placeholder="Card Cvv" />
+                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" maxlength="3" pattern="\d*" title="Please enter a 3-digit CVV" placeholder="358" />
                         </div>
                         <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
                     </div>
