@@ -24,7 +24,7 @@ $expiryDateYear = $formdata["card_expiry_year"];
 $cardCVV = $formdata["card_cvv"];
 
 $cardNumber = preg_replace('/\s+/', '', $cardNumber);
-$expiryDateYear = substr($expiryDateYear, -2);
+//$expiryDateYear = substr($expiryDateYear, -2);
 
 ?>
 
