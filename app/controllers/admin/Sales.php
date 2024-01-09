@@ -1905,8 +1905,6 @@ class Sales extends MY_Controller
             'packages' => $items_data
         );
 
-        echo '<pre>';print_r($data);exit;
-
         $ch = curl_init($courier->url.'orders');
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
