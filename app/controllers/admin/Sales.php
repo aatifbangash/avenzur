@@ -2203,7 +2203,6 @@ class Sales extends MY_Controller
             $product = $this->site->getProductByID($sale_item->product_id);
             $strippedDescription = str_replace('<p><strong>Product Description:</strong></p>', '', $product->product_details);
             $strippedDescription = strip_tags($strippedDescription, '<ul><li><strong>');
-            // Remove additional line
 
             if($count > 0){
                 $items_str .= ',';
