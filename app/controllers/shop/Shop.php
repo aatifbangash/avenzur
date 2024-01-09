@@ -1162,7 +1162,7 @@ class Shop extends MY_Shop_Controller
     // Display Page
     public function product($slug)
     {
-
+        $this->load->admin_model('seo_model');
         $product = $this->shop_model->getProductBySlug($slug);
 
         if (!$slug || !$product) {
@@ -1204,6 +1204,7 @@ class Shop extends MY_Shop_Controller
         $this->data['page_title'] = $product->code . ' - ' . $product->name;
         $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->data['page_desc'] = character_limiter(strip_tags($product->product_details), 160);
+        $this->data['seoSetting'] = $this->seo_model->getSeoSettings(); 
         $this->page_construct('pages/view_product', $this->data);
     }
 
