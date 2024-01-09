@@ -31,10 +31,11 @@
     $seo_title = strip_tags(str_replace('{{title}}', $product->name, $seoSetting->title));
 
     $descriptionLimit = 20;
-    $plainDescription = strip_tags($product->details);
+    $plainDescription = strip_tags($product->product_details);
+
     $words = explode(' ', $plainDescription);
     $limitedDescription = implode(' ', array_slice($words, 0, $descriptionLimit));
-    $seo_description = str_replace('{{description}}', $limitedDescription, $seoSetting->product_details);
+    $seo_description = strip_tags(str_replace('{{description}}', $limitedDescription, $seoSetting->description));
 
     $seo_keywords = strip_tags($seoSetting->keywords);
 
