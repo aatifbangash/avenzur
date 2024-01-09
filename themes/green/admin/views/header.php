@@ -1,4 +1,5 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?><!DOCTYPE html>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -885,6 +886,15 @@
                                                 <i class="fa fa-upload"></i><span class="text"> <?= lang('change_logo'); ?></span>
                                             </a>
                                         </li>
+                                         <?php if( $this->input->cookie('companyID') == 999 ) {?>
+                                        <li id="system_settings_seo">
+                                            <a href="<?= admin_url('seo_setting/index') ?>">
+                                                <i class="fa fa-search"></i><span class="text"> <?= lang('SEO_Settings'); ?></span>
+                                            </a>
+                                        </li> 
+                                        <?php }?>
+                                        
+
                                         <li id="system_settings_currencies">
                                             <a href="<?= admin_url('system_settings/currencies') ?>">
                                                 <i class="fa fa-money"></i><span class="text"> <?= lang('currencies'); ?></span>
