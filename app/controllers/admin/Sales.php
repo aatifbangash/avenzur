@@ -1841,8 +1841,8 @@ class Sales extends MY_Controller
             $address->phone = $customer->phone;
             $address->longitude = $customer->longitude;
             $address->latitude = $customer->latitude;
-            $address->first_name = $customer->name;
-            $address->last_name = '';
+            $address->first_name = $customer->first_name;
+            $address->last_name = $customer->last_name;
         }else{
             $address = $this->site->getAddressByID($address_id);
         }
@@ -2177,8 +2177,8 @@ class Sales extends MY_Controller
             $address->state = $customer->state;
             $address->postal_code = $customer->postal_code;
             $address->country = $customer->country;
-            $address->first_name = $customer->name;
-            $address->last_name = '';
+            $address->first_name = $customer->first_name;
+            $address->last_name = $customer->last_name;
         }else{
             $address = $this->site->getAddressByID($address_id);
         }
@@ -2254,7 +2254,7 @@ class Sales extends MY_Controller
             "items":['.$items_str.'],
             "operateType":1
         }';
-
+        
         return $waybillinfo;
     }
 
