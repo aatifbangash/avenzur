@@ -398,7 +398,17 @@ class Main extends MY_Shop_Controller
             if ($medium == 'email') {
                 $this->sma->send_email($identifier, 'OTP Verification', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['faisalabbas67@gmail.com']);
             } else {
+                $whatsapp_sent = $this->sma->send_whatsapp_msg($identifier, $otp);
+                $whatsapp_data = json_decode($whatsapp_sent, true);
+
+                /*if ($whatsapp_data && isset($whatsapp_data['messageId'])) {
+                    echo json_encode(['status' => 'success', 'message' => 'OTP sent to whatsapp']);
+                } else {
+                    $sms_sent = $this->sma->send_sms($identifier, $otp);
+                }*/
+
                 $sms_sent = $this->sma->send_sms($identifier, $otp);
+                
             }
 
             return true;
@@ -562,10 +572,10 @@ class Main extends MY_Shop_Controller
 
         if ($this->form_validation->run() == true) {
             if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
-                $type = 'email';
+                 $type = 'email';
                 $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             } else {
-                $type = 'mobile';
+                 $type = 'mobile';
                 $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             }
 
@@ -582,7 +592,7 @@ class Main extends MY_Shop_Controller
                         if($user_data->active == 0){
                             $this->shop_model->activate_user($company_data->email);
                         }
-
+                    
                         if ($this->ion_auth->login($company_data->email, '12345', $remember)) {
                             if ($this->Settings->mmode) {
                                 if (!$this->ion_auth->in_group('owner')) {
@@ -608,7 +618,8 @@ class Main extends MY_Shop_Controller
 
                         } else {
                             header('Content-Type: application/json');
-                            echo json_encode(['status' => 'error', 'message' => $this->ion_auth->errors()]);
+                            //echo json_encode(['status' => 'error', 'message' => $this->ion_auth->errors()]);
+                            echo json_encode(['status' => 'error', 'message' => 'login error']);
                             // $this->session->set_flashdata('error', $this->ion_auth->errors());
                             // $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
                             // redirect($referrer);
@@ -665,7 +676,7 @@ class Main extends MY_Shop_Controller
                 $type = 'mobile';
                 $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             }
-
+           
             if ($company_data) {
                 if ($type == 'mobile' && $company_data->mobile_verified == 0) {
                     echo json_encode(['status' => 'error', 'message' => 'Mobile Number Not verified']);
@@ -926,9 +937,12 @@ class Main extends MY_Shop_Controller
                 if ($this->form_validation->run() == true) {
                     $otp_sent = $this->sendOTP($company_id, $email, $type);
 
-                    if (!$otp_sent) {
-                        echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
-                         }
+                    // if ($otp_sent) {
+                    //      echo json_encode(['status' => 'success', 'message' => 'OTP sent at this time']);
+    
+                    //      }else{
+                    //         echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
+                    //      }
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
                 }

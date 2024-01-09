@@ -94,10 +94,12 @@
                   <h6 class="m-0">
                     <a href="https://www.facebook.com/people/Avenzur/61551081317111/" class="text-dark text-decoration-none mx-2"> <i class="bi bi-facebook"></i></a>
                     <a href="https://www.linkedin.com/company/avenzur/?viewAsMember=true" class="text-dark text-decoration-none mx-2"> <i class="bi bi-linkedin"></i></a>
-                    <a href="https://www.youtube.com/channel/UCrzcYJ1xERstbhGunjgWDLA" class="text-dark text-decoration-none mx-2"> <i class="bi bi-youtube"></i></a>
+                    <!--<a href="https://www.youtube.com/channel/UCrzcYJ1xERstbhGunjgWDLA" class="text-dark text-decoration-none mx-2"> <i class="bi bi-youtube"></i></a>-->
                     <a href="https://twitter.com/aveznur" class="text-dark text-decoration-none mx-2"> <i class="bi bi-twitter"></i></a>
-                    <a href="https://instagram.com/avenzurksa?igshid=NTc4MTIwNjQ2YQ==" class="text-dark text-decoration-none mx-2"><i class="bi bi-instagram"></i></a>
-                    <a href="tiktok.com/@avenzur" class="text-dark text-decoration-none mx-2"><i class="bi bi-tiktok"></i></a></h6>
+                    <a href="https://www.instagram.com/avenzurworld?igsh=MmZicnZnZHZ2aGhl" class="text-dark text-decoration-none mx-2"><i class="bi bi-instagram"></i></a>
+                    <a href="https://www.tiktok.com/@avenzur?_t=8i4BKIMkJVK&_r=1" class="text-dark text-decoration-none mx-2"><i class="bi bi-tiktok"></i></a>
+                    <a href="https://www.snapchat.com/add/avenzurworld" class="text-dark text-decoration-none mx-2"><i class="bi bi-snapchat"></i></a>
+                  </h6>
               </div>
               </div>
             </div>
@@ -342,6 +344,11 @@
 </script>
 
 <script>
+
+  function redirectToCheckout(redirect_url){
+    window.location.href = redirect_url;
+  }
+
   $(document).ready(function () {
 
     const inputContainer = $('#inputContainer');
@@ -356,7 +363,7 @@
       // Change input type and replace accordingly
       if (isFirstCharacterDigit && !hasTextOrAlphabet) {
         // Replace with country code dropdown and phone number input
-        inputContainer.html('<input type="text" id="countryCode" class="form-control" style="float: left; width:20%;" value="+966" ready><input type="text" id="identity_phone" name="identity" class="form-control" style="width: 80%; float: left" placeholder="Enter phone number" required="required">');
+        inputContainer.html('<input type="text" id="countryCode" class="form-control" style="float: left; width:20%;" value="+966" ready><input type="tel" id="identity_phone" name="identity" class="form-control" style="width: 80%; float: left" placeholder="Enter phone number" required="required">');
       } else if (inputValue === '') {
         // If the input is empty, revert to the original text field
         //inputContainer.html('<input type="text" id="identity" name="identity" class="form-control" placeholder="Please enter email or phone number" required="required">');
@@ -398,7 +405,7 @@
       // Change input type and replace accordingly
       if (isFirstCharacterDigit && !hasTextOrAlphabet) {
         // Replace with country code dropdown and phone number input
-        inputContainerRegister.html('<input type="text" id="countryCode" class="form-control" style="float: left; width:20%;" value="+966" ready><input type="text" id="email_phone" name="email" class="form-control" style="width: 80%; float: left" placeholder="Enter phone number" required="required">');
+        inputContainerRegister.html('<input type="text" id="countryCode" class="form-control" style="float: left; width:20%;" value="+966" ready><input type="tel" id="email_phone" name="email" class="form-control" style="width: 80%; float: left" placeholder="Enter phone number" required="required">');
       } 
       $('#email').val(inputValue);
       $('#email_phone').val(inputValue);
@@ -522,6 +529,50 @@
 <?php if (!$this->loggedIn) { ?>
   <script src="<?= $assets; ?>js/login.js"></script>
 <?php } ?>
+
+<script>
+
+function initializeOtpInput(className) {
+  const $inp = $(`.${className}`);
+  //const $inp = $(".ap-otp-input");
+
+  $inp.on({
+    paste(ev) {
+      // Handle Pasting
+
+      const clip = ev.originalEvent.clipboardData.getData("text").trim();
+      // Allow numbers only
+      if (!/\d{6}/.test(clip)) return ev.preventDefault(); // Invalid. Exit here
+      // Split string to Array or characters
+      const s = [...clip];
+      // Populate inputs. Focus last input.
+      $inp
+        .val((i) => s[i])
+        .eq(5)
+        .focus();
+    },
+    input(ev) {
+      // Handle typing
+
+      const i = $inp.index(this);
+      if (this.value) $inp.eq(i + 1).focus();
+    },
+    keydown(ev) {
+      // Handle Deleting
+
+      const i = $inp.index(this);
+      if (!this.value && ev.key === "Backspace" && i) $inp.eq(i - 1).focus();
+    },
+  });
+}
+
+initializeOtpInput('ap-otp-input');
+initializeOtpInput('ap-otp-input-reg');
+initializeOtpInput('ap-otp-input-profile');
+initializeOtpInput('ap-otp-input-checkout');
+
+</script>
+
 <script src="<?= $assets; ?>js/jquery-ui.min.js"></script>
 <script src="<?= $assets; ?>js/jquery-ui.js"></script>
 <script src="<?= $assets; ?>js/notify.min.js"> </script>

@@ -1834,7 +1834,25 @@ class Sales extends MY_Controller
 
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
-        $address = $this->site->getAddressByID($address_id);
+
+        if($address_id == 0){
+            $address = new stdClass();
+            $address->line1 = $customer->address;
+            $address->phone = $customer->phone;
+            $address->longitude = $customer->longitude;
+            $address->latitude = $customer->latitude;
+            $address->first_name = $customer->first_name;
+            $address->last_name = $customer->last_name;
+        }else{
+            $address = $this->site->getAddressByID($address_id);
+        }
+
+        if (strpos($address->phone, "+966") !== false) {
+            //echo "The string contains +966.";
+        } else {
+            $address->phone = '+966'.$address->phone;
+        }
+
         $sale_items = $this->site->getAllSaleItems($sale->id);
 
         $items_data = array();
@@ -1868,7 +1886,7 @@ class Sales extends MY_Controller
             'source_location_long' => 0.0,
             'source_address' => '-',
             'destination_customer_phone' => $address->phone,
-            'destination_customer_name' => $customer->name,
+            'destination_customer_name' => $address->first_name.' '.$address->last_name,
             'destination_customer_reference' => $sale->reference_no,
             'destination_location_lat' => !empty($address->latitude) ? $address->latitude : 0.0,
             'destination_location_long' => !empty($address->longitude) ? $address->longitude : 0.0,
@@ -2147,12 +2165,35 @@ class Sales extends MY_Controller
     {
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
-        $address = $this->site->getAddressByID($address_id);
+
+        if($address_id == 0){
+            $address = new stdClass();
+            $address->line1 = $customer->address;
+            $address->line2 = '';
+            $address->phone = $customer->phone;
+            $address->longitude = $customer->longitude;
+            $address->latitude = $customer->latitude;
+            $address->city = $customer->city;
+            $address->state = $customer->state;
+            $address->postal_code = $customer->postal_code;
+            $address->country = $customer->country;
+            $address->first_name = $customer->first_name;
+            $address->last_name = $customer->last_name;
+        }else{
+            $address = $this->site->getAddressByID($address_id);
+        }
+
+        if (strpos($address->phone, "+966") !== false) {
+            //echo "The string contains +966.";
+        } else {
+            $address->phone = '+966'.$address->phone;
+        }
+
         $sale_items = $this->site->getAllSaleItems($sale->id);
 
         $address->phone = $this->arabicToEnglishNumber($address->phone);
 
-        $countryArr = $this->site->getCountryByName($address->country);
+        //$countryArr = $this->site->getCountryByName($address->country);
 
         $items_data = array();
         $items_str = '';
@@ -2162,7 +2203,6 @@ class Sales extends MY_Controller
             $product = $this->site->getProductByID($sale_item->product_id);
             $strippedDescription = str_replace('<p><strong>Product Description:</strong></p>', '', $product->product_details);
             $strippedDescription = strip_tags($strippedDescription, '<ul><li><strong>');
-            // Remove additional line
 
             if($count > 0){
                 $items_str .= ',';
@@ -2192,7 +2232,7 @@ class Sales extends MY_Controller
                 "mobile":"'.$address->phone.'",
                 "phone":"'.$address->phone.'",
                 "countryCode":"KSA",
-                "name":"'.$customer->name.'",
+                "name":"'.$address->first_name.' '.$address->last_name.'",
                 "postCode":"'.$address->postal_code.'",
                 "prov":"'.$address->state.'"
             },
@@ -2214,7 +2254,7 @@ class Sales extends MY_Controller
             "items":['.$items_str.'],
             "operateType":1
         }';
-
+        
         return $waybillinfo;
     }
 

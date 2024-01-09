@@ -503,6 +503,24 @@ class Shop extends MY_Shop_Controller
                     } elseif ($this->input->post('payment_method') == 'directpay') {
                         //$this->sendTwillioSMS();
                         //$this->sendMsegatSMS();
+
+                        $card_name = $this->input->post('card_name');
+                        $card_number = $this->input->post('card_number');
+                        $card_cvv = $this->input->post('card_cvv');
+                        $card_expiry = $this->input->post('card_expiry_year');
+                        
+                        $card_expiry_year = trim(explode('/', $card_expiry)[1]);
+                        $card_expiry_month = trim(explode('/', $card_expiry)[0]);
+
+                        // Store card details in session
+                        $this->session->set_userdata('card_details', array(
+                            'card_name' => $card_name,
+                            'card_number' => $card_number,
+                            'card_cvv' => $card_cvv,
+                            'card_expiry_month' => $card_expiry_month,
+                            'card_expiry_year' => $card_expiry_year
+                        ));
+                        
                         redirect('pay/directpay/' . $sale_id);
                     } else {
                         shop_redirect('orders/' . $sale_id . '/' . ($this->loggedIn ? '' : $data['hash']));
@@ -1144,7 +1162,7 @@ class Shop extends MY_Shop_Controller
     // Display Page
     public function product($slug)
     {
-
+        $this->load->admin_model('seo_model');
         $product = $this->shop_model->getProductBySlug($slug);
 
         if (!$slug || !$product) {
@@ -1186,6 +1204,7 @@ class Shop extends MY_Shop_Controller
         $this->data['page_title'] = $product->code . ' - ' . $product->name;
         $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->data['page_desc'] = character_limiter(strip_tags($product->product_details), 160);
+        $this->data['seoSetting'] = $this->seo_model->getSeoSettings(); 
         $this->page_construct('pages/view_product', $this->data);
     }
 

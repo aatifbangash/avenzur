@@ -60,6 +60,8 @@ class MY_Shop_Controller extends CI_Controller
             $this->data['loggedIn']     = $this->loggedIn;
             $this->loggedInUser         = $this->site->getUser();
             $this->data['loggedInUser'] = $this->loggedInUser;
+            $this->loggedInUserByCompany = $this->site->getUserFromCompany();
+            $this->data['loggedInUserByCompany'] = $this->loggedInUserByCompany;
             $this->Staff                = null;
             $this->data['Staff']        = $this->Staff;
             if ($this->loggedIn) {
