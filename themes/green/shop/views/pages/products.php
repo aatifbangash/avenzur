@@ -10,7 +10,7 @@
             </ol>
         </nav>
         <div class="row  ">
-            <div class="col-md-2 ">
+            <div class="col-lg-3  ">
                 
                 <!-- side bar left -->
                 <button class="btn btn-primary d-lg-none catsidebarmob" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasProducts" aria-controls="offcanvasProducts"><i class="bi bi-sort-down-alt"></i></button>
@@ -77,7 +77,7 @@
                 </div>
                 <!-- side bar end -->
             </div>
-            <div class="col-md-10 ps-md-5">
+            <div class="col-lg-9 ">
                 <div class="row justify-content-between align-items-center">
                     <!--<div class="col-md-6 col-6">
                         <div class="dropdown sortp">
@@ -102,7 +102,7 @@
                 </div>
     <!-- all products -->
 
-    <div id="results" class="row products-card text-center gy-4 py-4">
+    <div id="results" class="row products-card text-center gy-4 pb-4">
 
     </div>
     <!-- all products end -->

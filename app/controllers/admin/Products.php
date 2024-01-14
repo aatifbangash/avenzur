@@ -25,6 +25,106 @@ class Products extends MY_Controller
         $this->popup_attributes    = ['width' => '900', 'height' => '600', 'window_name' => 'sma_popup', 'menubar' => 'yes', 'scrollbars' => 'yes', 'status' => 'no', 'resizable' => 'yes', 'screenx' => '0', 'screeny' => '0'];
     }
 
+    public function oauth2callback(){
+        $credentialsPath = 'assets/credentials/credentials.json';
+        $client = new Google\Client();
+        $client->setAuthConfigFile($credentialsPath);
+        $client->setRedirectUri(admin_url().'products/oauth2callback');
+        //$client->addScope(Google\Service\Drive::DRIVE_METADATA_READONLY);
+        $client->setScopes(['https://www.googleapis.com/auth/content']);
+
+        if (! isset($_GET['code'])) {
+            $auth_url = $client->createAuthUrl();
+            header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
+        } else {
+            $client->authenticate($_GET['code']);
+            $_SESSION['google_access_token'] = $client->getAccessToken();
+            $redirect_uri = admin_url().'products/google_merch_apis';
+            header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
+        }
+    }
+
+    public function google_merch_apis($id, $data){
+        $data['details'] = str_replace('<p><strong>Highlights:</strong></p>','',$data['details']);
+        $data['details'] = str_replace('<ul>','',$data['details']);
+        $data['details'] = str_replace('</ul>','',$data['details']);
+        $data['details'] = str_replace('<li>','',$data['details']);
+        $data['details'] = str_replace('</li>','',$data['details']);
+
+        $brand_details = $this->products_model->getBrandByName($data['brand']);
+
+        $clientId = '216256641186-ord7an72cbi6jhtrhmb1knb93jbera1p.apps.googleusercontent.com';
+        $clientSecret = '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';
+
+        $credentialsPath = 'assets/credentials/credentials.json';
+        $client = new Google\Client();
+        $client->setAuthConfig($credentialsPath);
+        $client->setAccessType('offline');
+        $client->setApprovalPrompt('force');
+        
+        $client->setScopes(['https://www.googleapis.com/auth/content']);
+        //$client->addScope(Google\Service\Drive::DRIVE);
+
+        if (isset($_SESSION['google_access_token']) && $_SESSION['google_access_token']) {
+            $client->setAccessToken($_SESSION['google_access_token']);
+
+            $contentService = new Google_Service_ShoppingContent($client);
+            $merchantId = '5086892798';
+
+            $productData = [
+                'channel' => 'online',
+                'contentLanguage' => 'En',
+                'targetCountry' => 'SA',
+                'offerId' => $data['code'],
+                'title' => $data['name'],
+                'description' => $data['details'],
+                'link' => base_url().'product/'.$data['slug'],
+                'imageLink' => base_url().'assets/uploads/'.$data['image'],
+                'price' => [
+                    'value' => $data['price'],
+                    'currency' => 'SAR',
+                ],
+                'salePrice' => [
+                    'value' => $data['promo_price'],
+                    'currency' => 'SAR',
+                ],
+                'additionalImageLinks' => [
+
+                ],
+                'availability' => 'in stock',
+            ];
+
+            $productContent = new Google_Service_ShoppingContent_Product();
+            $productContent->setOfferId($productData['offerId']);
+
+            $productContent->setTitle($productData['title']);
+            $productContent->setDescription($productData['description']);
+            $productContent->setLink($productData['link']);
+            $productContent->setImageLink($productData['imageLink']);
+
+            $price = new Google_Service_ShoppingContent_Price();
+            $price->setValue($productData['price']['value']);
+            $price->setCurrency($productData['price']['currency']);
+            $productContent->setPrice($price);
+            $productContent->setChannel($productData['channel']);
+            $productContent->setContentLanguage($productData['contentLanguage']);
+            $productContent->setTargetCountry($productData['targetCountry']);
+
+            $productContent->setAvailability($productData['availability']);
+            
+            try {
+                
+                $product = $contentService->products->insert($merchantId, $productContent);
+                echo "Product inserted successfully. Product ID: " . $product->getId();
+            } catch (Exception $e) {
+                echo "Error inserting product: " . $e->getMessage();
+            }
+        }else{
+            $redirect_uri = admin_url().'products/oauth2callback';
+            header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
+        }
+    }
+
     public function update_intl_barcode(){
 
         //$csvFile = 'https://avenzur.com/assets/uploads/temp/iherb_updated.csv';
@@ -1277,10 +1377,11 @@ class Products extends MY_Controller
                 'hide'              => $this->input->post('hide') ? $this->input->post('hide') : 0,
                 'hide_pos'          => $this->input->post('hide_pos') ? $this->input->post('hide_pos') : 0,
                 'second_name'       => $this->input->post('second_name'),
-                'trade_name'       => $this->input->post('trade_name'),
-                'manufacture_name'       => $this->input->post('manufacture_name'),
-                'main_agent'       => $this->input->post('main_agent'),
-                'draft'            => $this->input->post('draft'),
+                'trade_name'        => $this->input->post('trade_name'),
+                'manufacture_name'  => $this->input->post('manufacture_name'),
+                'main_agent'        => $this->input->post('main_agent'),
+                'draft'             => $this->input->post('draft'),
+                'google_merch'      => $this->input->post('google_merch')
                 // 'purchase_account'       => $this->input->post('purchase_account'),
                 // 'sale_account'       => $this->input->post('sale_account'),
                 // 'inventory_account'       => $this->input->post('inventory_account'),
@@ -1608,6 +1709,10 @@ class Products extends MY_Controller
         }
 
         if ($this->form_validation->run() == true && $this->products_model->updateProduct($id, $data, $items, $warehouse_qty, $product_attributes, $photos, $update_variants)) {
+            if($data['google_merch'] == 1){
+                $this->google_merch_apis($id, $data);
+            }
+            
             $this->session->set_flashdata('message', lang('product_updated'));
             //admin_redirect('products');
             admin_redirect('products/edit/' . $id);

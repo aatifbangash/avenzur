@@ -10,24 +10,32 @@ $cart_contents = $this->cart->contents();
             <div class="col-md-12">
 
                 <!-- cart new dsign -->
-                <div class="row justify-content-between ">
+                <div class="row justify-content-between  ">
+              
 
-                    <div class="col-sm-7">
-                        <h3>Shopping Cart</h3>
-                        <div class="row bg-light ps-1 mt-5 shoppingCardmob" id="cart-table-new" style="margin-inline: 3px;padding: 25px;">
+                    <div class="col-lg-7">
+                    <h3 class="mb-3 fw-semibold">Shopping Cart</h3>
+                       
+                        <div class=" bg-light  shoppingCardmob p-4" >
+
+                     
+
+                        <div id="cart-table-new" >
+                        </div>
                             
                         </div>
                     </div>
 
 
-                    <div class="col-sm-5">
+                    <div class="col-lg-5">
                         <div class="text-end">
                             <!--<a class="navbar-brand" href="#">
                             <img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="logo" >
                             </a>-->
                         </div>
-                        <div class="border p-3 px-4 mt-5 pb-5">
-                            <h2>Order Summary</h2>
+                        <h3 class="mb-3 fw-semibold">Order Summary</h3>
+                        <div class="border order-summary-cont p-4">
+                           
                         
                             <h4>Coupon Code</h4>
                             <div class="d-flex">
@@ -46,7 +54,7 @@ $cart_contents = $this->cart->contents();
                                         }else{
                                             ?>
                                                 <input type="text" name="coupon_code"  class="form-control  rounded-0" placeholder="">
-                                                <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="font-size:14px !important;width: 175px !important;">
+                                                <button type="submit" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 apply-code" style="font-size:14px !important;width: 175px !important;">
                                                     Apply Code
                                                 </button>
                                             <?php
@@ -65,7 +73,7 @@ $cart_contents = $this->cart->contents();
                                 <h4 class="m-0 ">Discount</h4>
                                 <h4 class="m-0 "><span id="total-discount">SAR 0</span></h4>
                             </div>
-                            <h4 class="m-0 opacity-50 border-bottom pb-1">Shipping fee will be calculated at checkout</h4>
+                            <h4 class="m-0 opacity-50 border-bottom pb-3">Shipping fee will be calculated at checkout</h4>
                             <div class="d-flex justify-content-between align-items-center my-3">
                                 <h4 class="m-0 fw-bold fs-5">Total <span class="fs-6 opacity-50">(Inclusive of VAT)</span></h4>
                                 <h4 class="m-0 fw-bold fs-5"><span id="total-after_discount">SAR 0</span></h4>
@@ -73,14 +81,14 @@ $cart_contents = $this->cart->contents();
                             <?php 
                                 if ($loggedIn) {
                                     ?>
-                                        <a href="<?= site_url('cart/checkout'); ?>" style="border:0px;background: none;" class="btn btn-danger btn-sm">
+                                        <a href="<?= site_url('cart/checkout'); ?>" style="border:0px;background: none;" class="btn btn-danger btn-sm mt-3">
                                             <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 " style="font-size:18px !important;"> Checkout</button>
                                         </a>
                                     <?php
                                 }else{
                                     ?>
-                                        <a style="border:0px;background: none;" class="btn btn-danger btn-sm checkout-link">
-                                            <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 " style="font-size:18px !important;"> Checkout</button>
+                                        <a style="border:0px;background: none;" class="btn btn-danger btn-sm checkout-link mt-3">
+                                            <button class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-4 py-1 text-center" style="font-size:18px !important;"> Checkout</button>
                                         </a>
                                     <?php
                                 }
