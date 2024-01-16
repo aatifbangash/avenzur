@@ -226,7 +226,7 @@
                         ?>
                         
                         <div class="dropdown-menu  myaccountForm validate" id="myaccountForm">
-                        <div class="loginRCard px-4">
+                        <div class="loginRCard px-3">
                           <div class="d-flex justify-content-end w-100 pb-3 ">
                             <div class=" login-close d-flex justify-content-center align-items-center">
                               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="19" viewBox="0 0 20 19" fill="none">
@@ -235,7 +235,7 @@
                             </div>
                           </div>
                             <div class="logo-k"> 
-                                <a class="navbar-brand" href="http://localhost/avenzur/">
+                                <a class="navbar-brand" href="<?= base_url(); ?>">
                                     <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVENZUR">
                                 </a>
                             </div>
@@ -496,9 +496,9 @@
           </div>
           <div class="modal-body ">
             <div class="emailOTP">
-              <div class="text-center px-5">
+              <div class="text-center">
                 <h2>Verify your email</h2>
-                <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifier"></span></h5>
+                <h5 class="fs-4 lh-base">OTP has been sent to <span id="identifier"></span></h5>
               </div>
               <?php
               $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registerOtpForm'];
@@ -546,9 +546,9 @@
           </div>
           <div class="modal-body ">
             <div class="smsOTP">
-              <div class="text-center px-5">
+              <div class="text-center">
                 <h2>Verify OTP</h2>
-                <h5 class="fs-4 px-5 lh-base">OTP has been sent to <span id="identifierl"></span></h5>
+                <h5 class="fs-4 lh-base">OTP has been sent to <span id="identifierl"></span></h5>
               </div>
               <?php
               $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginOtpForm'];

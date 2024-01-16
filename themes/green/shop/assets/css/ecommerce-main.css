@@ -1590,7 +1590,7 @@ button.continueBtn{
   width: 100%;
   background: #662d91;
   margin-top: 20px;
-  border-radius: 0;
+  border-radius: 10px;
   font-size: 19px;
   padding-block: 10px;
 }
@@ -1604,14 +1604,19 @@ button.continueBtn:hover {
 }
 button.modalcloseBtn {
   position: absolute;
-  right: -15px;
-  top: -13px;
+  right: 15px;
+  top: 15px;
   border: none;
-  background: #c1c1c1;
-  color: white;
-  padding: 6px 11px;
-  border-radius: 30px;
-  font-size: 20px;
+  background: #f9f9f9;
+  color: #333;
+  border-radius: 50%;
+  font-size: 16px;
+  width:36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border:1px solid #eee
 }
 
 .form-check-input:checked {
@@ -2069,7 +2074,15 @@ div#myaccountForm {
   align-items: center;
   height: 100vh;
 }
-.login-close {width:35px; height: 35px; border:1px solid rgba(0,0,0,.1);  background-color: rgba(0,0,0,.05); border-radius: 50%; justify-content: end; cursor: pointer;}
+.login-close {
+  width: 35px;
+  height: 35px;
+  border: 1px solid rgba(0,0,0,.1);
+  background-color: #fff;
+  border-radius: 50%;
+  justify-content: end;
+  cursor: pointer;  
+}
 .login-close svg{width:15px; display: flex; }
 .close{display: none !important;}
 .shop-icons {margin-left: auto;}
@@ -2289,6 +2302,9 @@ h4.letstart {font-size: 16px;}
     }
   
 @media screen and (max-width: 991px) {
+  .categoryTabs .nav-pills {
+    margin-bottom: 0px;
+  }
   nav .menu-av li.nav-item a.nav-link:before {display: none;}
   .navbar {padding-left: 0; padding-right: 0;}
   .main-menuTab { padding: 10px 20px}
@@ -2299,7 +2315,7 @@ h4.letstart {font-size: 16px;}
  
   .feature-cards .card-body {padding-bottom: 20px;}
   section{ max-width:100% !important;}
-.loginRCard {width: 90% !important;}
+.loginRCard {width: 93% !important;}
 .flex-ipad-column {flex-direction: column; align-items: start !important;}
 .cart-content-wrapper .cart-item-image img , .cart-content-wrapper h5 , .cart-content-wrapper .remove-item {
   margin-bottom: 15px !important;
