@@ -18,8 +18,9 @@
     display: none;
   }
 </style>
-<section class="footer-container" >
-      <div class="ft" style="background-image: url(<?= base_url('assets/images/banners/bgbanner.jpg'); ?>); max-width:1440px; margin-inline:auto;">
+<section class="footer-container mb-4" >
+  <div class="container container-max-width">
+    <div class="ft" style="background-image: url(<?= base_url('assets/images/banners/bgbanner.jpg'); ?>);">
         <footer class="pt-5 pb-3">
 
       <div class="container container-max-width">
@@ -90,7 +91,7 @@
                 <img src="<?= base_url('assets/images/banners/pay.png'); ?>" alt="logo" class="footer-pay w-50 mt-3">
               </div>
               <div class="col-md-5 col-sm-12">
-                <div class="mobficon text-center">
+                <div class="mobficon justify-content-start mt-3">
                   <h6 class="m-0">
                     <a href="https://www.facebook.com/people/Avenzur/61551081317111/" class="text-dark text-decoration-none mx-2"> <i class="bi bi-facebook"></i></a>
                     <a href="https://www.linkedin.com/company/avenzur/?viewAsMember=true" class="text-dark text-decoration-none mx-2"> <i class="bi bi-linkedin"></i></a>
@@ -116,6 +117,7 @@
           </div>
         </footer>
       </div>
+    </div>
 
 </section>
 <!-- footer end -->

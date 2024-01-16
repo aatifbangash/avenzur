@@ -1,11 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<section class="page-contents" id="user-profile-section">
-    <div class="container">
-        <div class="row">
-            <div class="col-xs-12">
+<section class="page-contents user-profile-wrapper" id="user-profile-section">
+    <div class="container container-max-width ">
+    
+         
 
                 <div class="row">
-                    <div class="col-sm-9 col-md-12">
+                    <div class=" col-md-12 ">
 
                         <ul class="nav nav-tabs" role="tablist">
                             <li role="presentation" class="active"><a href="#user" aria-controls="user" role="tab" data-toggle="tab"><?= lang('details'); ?></a></li>
@@ -133,7 +133,7 @@
                                     </div>
                                 </div>
 
-                                <?= form_submit('billing', lang('update'), 'class="btn btn-lg btn-primary"'); ?>
+                                <?= form_submit('billing', lang('update'), 'class="btn btn-lg btn-primary mt-3"'); ?>
                                 <?php echo form_close(); ?>
 
                             </div>
@@ -158,7 +158,7 @@
                                             <?= form_password('new_password_confirm', set_value('new_password_confirm'), 'class="form-control tip" id="new_password_confirm" required="required" data-fv-identical="true" data-fv-identical-field="new_password" data-fv-identical-message="' . lang('pw_not_same') . '"'); ?>
                                         </div>
 
-                                        <?= form_submit('change_password', lang('change_password'), 'class="btn btn-lg btn-primary"'); ?>
+                                        <?= form_submit('change_password', lang('change_password'), 'class="btn btn-lg btn-primary mt-3"'); ?>
                                     </div>
                                 </div>
                                 <?php echo form_close(); ?>
@@ -170,7 +170,7 @@
                         
                     </div>
                 </div>
-            </div>
+         
 
              <!-- Register Modal Starts -->
              <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
@@ -212,7 +212,7 @@
             </div>
             <!-- Register Modal Ends -->
 
-        </div>
+       
     </div>
 </section>
 <script type="text/javascript">
