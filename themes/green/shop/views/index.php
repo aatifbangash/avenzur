@@ -362,11 +362,11 @@
                     ?>
                         <div class="tab-pane fade show <?php if($pc == 0) echo 'active'; ?>" id="pills-<?= $popular_category->name; ?>" role="tabpanel" aria-labelledby="pills-<?= $popular_category->name; ?>-tab" tabindex="0">
                             <!-- cards -->
-                            <div class="products-card popularCat text-center">
+                            <div class="row products-card popularCat text-center">
                                 <?php
                                 foreach($popular_category->products as $popular_product){
                                 ?>
-                                    <div class="item mb-4">
+                                    <div class="col-lg-3 col-md-4 col-sm-12 mb-4">
                                         <div class="card" style="width: 100%">
                                             <!--<a href="#" class="text-decoration-none">-->
                                                 <div class="cardImg position-relative">
