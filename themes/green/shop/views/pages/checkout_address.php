@@ -99,7 +99,7 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
 <section class=" py-1 ">
     <div class="container container-max-width">
         <div class=" my-4">
-            <div class="addressbar">
+            <div class="addressbar rounded-0">
                 <div class="w-100 addtitle">
                     <h5><i class="bi bi-map-fill me-2"></i>
                         <?= lang('address'); ?>
@@ -124,7 +124,7 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                             $istates = $this->gst->getIndianStates();
                         }
                         ?>
-                        <div class="col-md-6 mb-4 pe-4" id="<?= $address->id; ?>" >
+                        <div class="col-md-6 mb-4" id="<?= $address->id; ?>" style="margin-right:25px;">
                             <div class="card" id="map-container">
                                 <input id="autocomplete_search" type="text" class="form-control bg-white border-0 py-2"
                                     style="box-shadow: 0px 1px 5px #b2b2b2;" placeholder="Type for the address..."
@@ -137,7 +137,7 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                             </div>
                         </div>
 
-                        <div class="col-md-6 mb-4 " id="<?= $address->id; ?>">
+                        <div class="col-md-5 mb-4" id="<?= $address->id; ?>">
                             <div class="card" style="border:none">
                                 <span class="text-bold padding-bottom-md fw-bold mb-3"
                                     style="font-size:20px;font-weight: bold;color: #662d91;">
@@ -169,68 +169,59 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                     <input type="hidden" id="action_type" name="action_type"
                                         value="<?= $action_type; ?>">
 
-                                    <div class=" padding-bottom-md fw-bold mb-2 " style="font-size:17px;">
+                                    <span class=" padding-bottom-md fw-bold" style="font-size:17px;">
                                         LOCATION INFORMATION
-                                </div>
-                               
-                                        <div class="form-group mb-4">
+                                    </span>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-8">
                                             <label for="exampleFormControlInput1" class=" fw-bold fs-6">Additional
                                                 Address Details</label>
-                                            <input type="text" class="form-control checkout_address ps-1"
+                                            <input type="text" class="form-control checkout_address ps-0"
                                                 name="address_line_2" id="exampleFormControlInput1"
                                                 placeholder="Building No, Floor, Flate No etc"
                                                 value="<?= $address_line_2; ?>">
                                         </div>
-                                 
+                                    </div>
 
-                                    <div class="row mb-4">
-                                    <label for="mobile_number" class=" fw-bold fs-6">Mobile Number *</label>
-                                        <div class="col-md-3 col-12">
-                                        <div class="form-group" >
-                                  
+                                    <div class="form-row">
+                                        <div class="form-group col-md-4 col-12" style="float: left">
+                                            <label for="mobile_number" class=" fw-bold fs-6">Mobile Number *</label>
                                             <select class="form-control checkout_address py-1 px-0"
                                                 id="exampleFormControlSelect1">
                                                 <option>+966</option>
                                             </select>
                                         </div>
-                                      </div>
-                                      <div class="col-md-9 col-12">
-                                        <div class="form-group ">
-                                           <!-- <label for="mobile_number" class=" fw-bold fs-6">&nbsp;</label> -->
-                                            <input type="text" class="form-control required checkout_address px-1 pt-1 "
+                                        <div class="form-group col-md-4 col-12 ms-md-4" style="float: left;">
+                                            <label for="mobile_number" class=" fw-bold fs-6">&nbsp;</label>
+                                            <input type="text" class="form-control required checkout_address px-0 pt-1 "
                                                 id="mobile_number" name="mobile_number" placeholder="Mobile Number"
                                                 value="<?= $mobile_number; ?>">
                                         </div>
-                                     </div>
                                     </div>
 
-                                    <div class=" padding-bottom-md fw-bold fs-6 mb-2" style="clear:both">
+                                    <div class=" padding-bottom-md fw-bold fs-6" style="clear:both">
                                         PERSONAL INFORMATION
                                     </div>
 
-                                    <div class="form-row row mb-4">
-                                     <div class="col-md-6 col-12">
-                                        <div class="form-group " >
+                                    <div class="form-row">
+                                        <div class="form-group col-md-4 col-12" style="float: left">
                                             <label for="first_name" class=" fw-bold fs-6">First Name *</label>
-                                            <input type="text" class="form-control checkout_address ps-1"
+                                            <input type="text" class="form-control checkout_address ps-0"
                                                 id="first_name" name="first_name" placeholder="Enter First Name"
                                                 value="<?= $first_name; ?>">
-                                        </div> </div>
-                                     <div class="col-md-6 col-12">
-                                        <div class="form-group " >
+                                        </div>
+                                        <div class="form-group col-md-4 col-12 ms-md-4" style="float: left;">
                                             <label for="last_name" class=" fw-bold fs-6">Last Name *</label>
-                                            <input type="text" class="form-control checkout_address ps-1" id="last_name"
+                                            <input type="text" class="form-control checkout_address ps-0" id="last_name"
                                                 name="last_name" placeholder="Enter Last Name"
                                                 value="<?= $last_name; ?>">
                                         </div>
-                                     </div> 
-                                </div>
                                         <?php if (!$email_address) {
                                             ?>
                                             <div class="form-row">
-                                                <div class="form-group col-md-6">
+                                                <div class="form-group col-md-8">
                                                     <label for="emailAddress" class=" fw-bold fs-6">Email Address</label>
-                                                    <input type="text" class="form-control checkout_address ps-1"
+                                                    <input type="text" class="form-control checkout_address ps-0"
                                                         name="email" id="emailAddress"
                                                         placeholder="" >
                                                 </div>
@@ -238,22 +229,24 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                         <?php
                                         }
                                         ?>
+                                    </div>
 
+                                    <div class="custom-control custom-switch" style="clear: both">
 
+                                        <!-- <div class="form-check form-switch d-flex align-items-center  ps-0 pe-3 w-100">
+                                        <label class="form-check-label  mt-2" for="flexSwitchCheckDefault"  style="width: 200px; font-size: 18px;">Set as default address</label>
+                                        <input class="form-check-input fs-5 " type="checkbox" role="switch" id="flexSwitchCheckDefault" checked="checked" name="is_default" style="margin-top:12px; margin-left: 12px;">
+                                    
+                                    </div> -->
+                                    </div>
 
-<div>
+                                    <div>
                                         <button type="submit" class="btn primary-buttonAV  rounded-1 pb-2"
                                             style="margin-top:25px;">
                                             <?= lang('Confirm_&_Save_Address'); ?>
                                         </button>
                                     </div>
                                     <?= form_close(); ?>
-
-
-                                    </div>
-
-                                    
-                                  
 
                             </div>
                         </div>

@@ -3,13 +3,13 @@ var buttonToMove = document.getElementById("menuiconMob");
 var sourceDiv = document.getElementById("sourcedivmob");
 var targetDiv = document.getElementById("shoppingdivMob");
 var saledivToMove = document.getElementById("salediv");
-//var sourcesalemob = document.getElementById("salemob");
-//var targetmobnav = document.getElementById("mobnav");
-//var cartToMove = document.getElementById("cart-items");
-//var cartsourceDiv = document.getElementById("cartdiv");
-//var allCatToMove = document.getElementById("allCatmob");
-//var catsourceDiv = document.getElementById("allcatDiv");
-//var targetmenuDiv = document.getElementById("navbarSupportedContent");
+var sourcesalemob = document.getElementById("salemob");
+var targetmobnav = document.getElementById("mobnav");
+var cartToMove = document.getElementById("cart-items");
+var cartsourceDiv = document.getElementById("cartdiv");
+var allCatToMove = document.getElementById("allCatmob");
+var catsourceDiv = document.getElementById("allcatDiv");
+var targetmenuDiv = document.getElementById("navbarSupportedContent");
 // Check if the screen width is less than a certain threshold (e.g., 768 pixels for typical mobile screens)
 
 // Remove the button from the source div
@@ -73,25 +73,23 @@ function update_popup_cart(t) {
         $("#product-popup-modal-body").append(t);*/
 
     var t =
-      '<div class="d-flex align-items-center justify-content-center cart-cont-row">' +
-      '<div class="addicon">' +
+      '<div class="addicon col-md-3">' +
       '<img width="80" height="80" src="' +
       site.base_url +
       "assets/uploads/" +
       this.image +
       '" class="w-100" />' +
       "</div>" +
-      '<div class=" title-price-cont">' +
-      '<p class="m-0 product-title fw-semibold text-start">' +
+      '<div class=" col-md-9">' +
+      '<p class="m-0 fs-5 fw-semibold text-start">' +
       this.name +
       "</p>" +
-      '<p class="m-0 product-price fw-semibold mt-2 text-end pe-4 d-flex justify-content-between align-items-center">' +
+      '<p class="m-0 fs-5 fw-semibold mt-2 text-end pe-4 d-flex justify-content-between align-items-center">' +
       '<a href="#" data-rowid="' +
       this.rowid +
       '" class="text-red remove-item-sidepopup text-decoration-none text-danger fs-6 fw-normal"><i class="fa fa-trash-o"></i> Remove</a>' +
       this.subtotal +
       "</p>" +
-      "</div>" +
       "</div><hr />";
 
     $("#product-canvas-body").append(t);
@@ -205,25 +203,24 @@ function update_cart(t) {
     $.each(t.contents, function () {
       var t = this,
         a =
-        '<div class="d-flex align-items-center flex-mobile-column  py-4">' +
-          '<div class="cart-item-image pe-3">' +
+          '<div class="col-md-2"><span class="cart-item-image">' +
           '<img style="width: 100px;height: 90px;object-fit: contain;" src="' +
           site.base_url +
           "assets/uploads/" +
           this.image +
           '" class="card-img-top" alt="...">' +
-          "</div>" +
-          '<div class="d-flex flex-column justify-content-between w-100"><div class="d-flex justify-content-between flex-ipad-column">' +
+          "</span></div>" +
+          '<div class="col-md-10 d-flex flex-column justify-content-between"><div class="d-flex justify-content-between ">' +
           '<h5 class="m-0">' +
           this.name +
           "</h5>" +
           "<div>" +
-          '<h4 class="m-0 fw-semibold fs-5 price-label" >' +
+          '<h4 class="m-0 fw-semibold fs-5" >' +
           this.price +
           "</h4>" +
           //'<p class="m-0 text-decoration-line-through text-danger text-center fw-semibold mb-4">SAR 10</p>' +
           "</div></div>" +
-          '<div class="d-flex justify-content-between align-items-center flex-ipad-column remove-quatity-container"><div>' +
+          '<div class="d-flex justify-content-between align-items-center"><div>' +
           '<a href="#" data-rowid="' +
           this.rowid +
           '" class="text-red remove-item text-decoration-none text-dark"><i class="fa fa-trash-o"></i> Remove</a></div>' +
@@ -235,10 +232,10 @@ function update_cart(t) {
           this.qty +
           '"></span>' +
           '<span class="minus btn-minus-update"><i class="bi bi-dash-circle-fill"></i></span>' +
-          "</div></div></div> </div>";
+          "</div></div></div><hr />";
 
       $(
-        '<div class="cart-content-wrapper" id="' + this.rowid + '">' + a + "</div>"
+        '<div class="row row-class" id="' + this.rowid + '">' + a + "</div>"
       ).appendTo("#cart-table-new");
       //$(a).appendTo('#cart-table-new');
     });
@@ -551,7 +548,6 @@ function remove(t) {
     ? localStorage.removeItem(t)
     : alert("Please use a modern browser as this site needs localstroage!");
 }
-
 function gen_html(t) {
   var e = "";
   if (get_width() > 992)
@@ -565,7 +561,7 @@ function gen_html(t) {
   if (
     (t ||
       (e +=
-        '<div class=" col-lg-12"><div class="alert alert-warning text-center padding-xl margin-top-lg"><h4 class="margin-bottom-no">' +
+        '<div class="col-lg-3 col-md-4 col-sm-12"><div class="alert alert-warning text-center padding-xl margin-top-lg"><h4 class="margin-bottom-no">' +
         lang.x_product +
         "</h4></div></div>"),
     1 == site.settings.products_page &&
@@ -582,7 +578,7 @@ function gen_html(t) {
       //e += '<div class="product-container ' + i + " " + (1 == site.settings.products_page ? "grid-item" : "") + '">\n        <div class="product ' + o + " " + (1 == site.settings.products_page ? "grid-sizer" : "") + '">\n        ' + (r.promo_price ? '<span class="badge badge-right theme">Promo</span>' : "") + '\n        <div class="product-top">\n        <div class="product-image">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <img class="img-responsive" src="' + site.base_url + "assets/uploads/" + r.image + '" alt=""/>\n        </a>\n        </div>\n        <div class="product-desc">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <h2 class="product-name">' + r.name + "</h2>\n        </a>\n        <p>" + r.details + '</p>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        ' + (1 == site.shop_settings.hide_price ? "" : '\n        <div class="product-bottom">\n        <div class="product-price">\n        ' + (r.promo_price ? '<del class="text-danger text-size-sm">' + l + "</del>" : "") + "\n        " + c + '\n        </div>\n        <div class="product-rating">\n        <div class="form-group" style="margin-bottom:0;">\n        <div class="input-group">\n        <span class="input-group-addon pointer btn-minus"><span class="fa fa-minus"></span></span>\n        <input type="text" name="quantity" class="form-control text-center quantity-input" value="1" required="required">\n        <span class="input-group-addon pointer btn-plus"><span class="fa fa-plus"></span></span>\n        </div>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        <div class="product-cart-button">\n        <div class="btn-group" role="group" aria-label="...">\n        <button class="btn btn-info add-to-wishlist" data-id="' + r.id + '"><i class="fa fa-heart-o"></i></button>\n        <button class="btn btn-theme add-to-cart" data-id="' + r.id + '"><i class="fa fa-shopping-cart padding-right-md"></i> ' + lang.add_to_cart + '</button>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        </div>') + '\n        </div>\n        <div class="clearfix"></div>\n        </div>',
       //1 != site.settings.products_page && a + 1 === t.length && (e += "</div>")
 
-      e += '<div class="col-lg-4 col-md-6 col-sm-12">';
+      e += '<div class="col-lg-3 col-md-4 col-sm-12">';
       e += '<div class="card" style="width: 100%">';
       //e += '<a href="#" class="text-decoration-none">';
       e += '<div class="cardImg">';
@@ -613,8 +609,8 @@ function gen_html(t) {
         '" class="text-decoration-none">';
       e += '<h5 class="card-title text-start">' + r.name + "</h5>";
       e += "</a>";
-      e += '<div class="d-flex align-items-center justify-content-between">';
-      e += '<div class="rating">';
+      e += '<div class="row align-items-center justify-content-between">';
+      e += '<div class="col-md-6 col-6"><div class="rating">';
       for (i = 1; i <= 5; i++) {
         if (i <= r.avg_rating) {
           e += '<i class="bi bi-star-fill rated"></i>';
@@ -622,25 +618,25 @@ function gen_html(t) {
           e += '<i class="bi bi-star-fill"></i>';
         }
       }
-      e += "</div>";
+      e += "</div></div>";
 
       if (r.promotion) {
         e +=
-          '<div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">' +
+          '<div class="col-md-6 col-6"><div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">' +
           l +
-          "</h4></div>";
+          "</h4></div></div>";
       }
       e += "</div>";
-      e += '<div class="d-flex align-items-center justify-content-between">';
+      e += '<div class="row align-items-center justify-content-between">';
       e +=
-        '<div class="price text-start  py-2"><h4 class="m-0 fw-bold">';
+        '<div class="col-md-6 col-6"><div class="price text-start  py-2"><h4 class="m-0 fw-bold">';
       if (r.promotion) {
         e += r.formated_promo_price;
       } else {
         e += l;
       }
-      e += "</h4></div>";
-     
+      e += "</h4></div></div>";
+      e += '<div class="col-md-6 col-6">';
       e +=
         '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between">';
       e +=
@@ -653,7 +649,7 @@ function gen_html(t) {
       e += "</div>";
       e += "</div>";
       e += "</div>";
-    
+      e += "</div>";
       //e += '</a>';
       e += "<div>";
       e +=
@@ -1159,62 +1155,6 @@ $(document).ready(function () {
         update_cart_item(i, o, e, $(this), t.target.type);
     }
   });
-
-  if (window.innerWidth < 1030) {
-
-    $(".popularCat").slick({
-      infinite: false,
-      speed: 300,
-      slidesToShow: 2,
-      slidesToScroll: 1,
-      prevArrow:
-        "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
-      nextArrow:
-        "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
-    });
-  
-    $(".feature-cards").slick({
-      infinite: false,
-      speed: 300,
-      slidesToShow: 4,
-      slidesToScroll: 1,
-      responsive: [
-        {
-          breakpoint: 1024,
-          settings: {
-            slidesToShow: 4,
-            slidesToScroll: 3,
-            infinite: true,
-            dots: true,
-          },
-        },
-        {
-          breakpoint: 991,
-          settings: {
-            slidesToShow: 3,
-            slidesToScroll: 2,
-          },
-        },
-        {
-          breakpoint: 480,
-          settings: {
-            slidesToShow: 2,
-            slidesToScroll: 1,
-          },
-        },
-
-     
-        // You can unslick at a given breakpoint now by adding:
-        // settings: "unslick"
-        // instead of a settings object
-      ],
-      prevArrow:
-        "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
-      nextArrow:
-        "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
-    });
-  }
-
   // special offer slider
   $(".speacialOfferMove").slick({
     slidesToShow: 6,
@@ -1225,7 +1165,7 @@ $(document).ready(function () {
     infinite: true,
     responsive: [
       {
-        breakpoint: 1025,
+        breakpoint: 1024,
         settings: {
           slidesToShow: 4,
           slidesToScroll: 3,
@@ -1234,9 +1174,9 @@ $(document).ready(function () {
         },
       },
       {
-        breakpoint: 991,
+        breakpoint: 770,
         settings: {
-          slidesToShow: 3,
+          slidesToShow: 2,
           slidesToScroll: 2,
         },
       },
@@ -1258,14 +1198,14 @@ $(document).ready(function () {
     speed: 300,
     slidesToShow: 4,
     slidesToScroll: 1,
-    margin: 20,
+    margin: 10,
     prevArrow:
       "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
     nextArrow:
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
     responsive: [
       {
-        breakpoint: 1025,
+        breakpoint: 1024,
         settings: {
           slidesToShow: 3,
           slidesToScroll: 3,
@@ -1274,16 +1214,16 @@ $(document).ready(function () {
         },
       },
       {
-        breakpoint: 991,
+        breakpoint: 770,
         settings: {
           slidesToShow: 2,
-          slidesToScroll: 1,
+          slidesToScroll: 2,
         },
       },
       {
         breakpoint: 480,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 2,
           slidesToScroll: 1,
         },
       },
@@ -1298,14 +1238,14 @@ $(document).ready(function () {
     speed: 300,
     slidesToShow: 3,
     slidesToScroll: 1,
-    margin: 20,
+    margin: 10,
     prevArrow:
       "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
     nextArrow:
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
     responsive: [
       {
-        breakpoint: 1025,
+        breakpoint: 1024,
         settings: {
           slidesToShow: 3,
           slidesToScroll: 3,
@@ -1314,16 +1254,16 @@ $(document).ready(function () {
         },
       },
       {
-        breakpoint: 991,
+        breakpoint: 770,
         settings: {
-          slidesToShow: 2,
+          slidesToShow: 1,
           slidesToScroll: 1,
         },
       },
       {
         breakpoint: 480,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 2,
           slidesToScroll: 1,
         },
       },
@@ -1345,7 +1285,7 @@ $(document).ready(function () {
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
     responsive: [
       {
-        breakpoint: 1025,
+        breakpoint: 1024,
         settings: {
           slidesToShow: 3,
           slidesToScroll: 3,
@@ -1354,16 +1294,16 @@ $(document).ready(function () {
         },
       },
       {
-        breakpoint: 991,
+        breakpoint: 770,
         settings: {
-          slidesToShow: 3,
+          slidesToShow: 2,
           slidesToScroll: 2,
         },
       },
       {
         breakpoint: 480,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 2,
           slidesToScroll: 1,
         },
       },
@@ -1385,7 +1325,7 @@ $(document).ready(function () {
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
     responsive: [
       {
-        breakpoint: 1025,
+        breakpoint: 1024,
         settings: {
           slidesToShow: 3,
           slidesToScroll: 3,
@@ -1394,7 +1334,7 @@ $(document).ready(function () {
         },
       },
       {
-        breakpoint: 991,
+        breakpoint: 770,
         settings: {
           slidesToShow: 2,
           slidesToScroll: 2,
@@ -1995,40 +1935,12 @@ if (window.innerWidth < 500) {
   $(".popularCat").slick({
     infinite: false,
     speed: 300,
-    slidesToShow: 4,
+    slidesToShow: 2,
     slidesToScroll: 1,
     prevArrow:
       "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
     nextArrow:
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
-    responsive: [
-      {
-        breakpoint: 1025,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 3,
-          infinite: true,
-          dots: true,
-        },
-      },
-      {
-        breakpoint: 991,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 2,
-        },
-      },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-        },
-      },
-      // You can unslick at a given breakpoint now by adding:
-      // settings: "unslick"
-      // instead of a settings object
-    ],
   });
 
   $(".feature-cards").slick({

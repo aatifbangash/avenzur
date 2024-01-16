@@ -3,13 +3,9 @@
     <div class="container container-max-width">
         <div class=" my-4">
             <div class="addressbar">
-                <div class="w-100 "><h3 class="fw-semibold d-flex justify-content-between"><!--<i class="bi bi-map-fill me-2"></i>--> <?= lang('my_addresses'); ?>   
-                <button type="button" id="add-address" class="btn primary-buttonAV  rounded-1 pb-2" data-bs-toggle="modal" data-bs-target="#addAddressModal">
-                    <?= lang('add_address'); ?>
-                </button>
-            </h3></div>
-                <div class="p-0">
-                <div class="col-sm-12 text-bold mb-3"><?= lang('select_address_to_edit'); ?></div>
+                <div class="w-100 addtitle"><h5><i class="bi bi-map-fill me-2"></i> <?= lang('my_addresses'); ?></h5></div>
+                <div class="px-3 py-2">
+                <div class="py-3"><h6 class="m-0 fw-semibold"><?= lang('select_address_to_edit'); ?></h6></div>
                 <div class="row" id="addressList">
                     <?php
                         if ($this->Settings->indian_gst) {
@@ -37,7 +33,9 @@
                     ?>
                 </div>
                 <!-- Button to trigger the add address modal -->
-                
+                <button type="button" id="add-address" class="btn primary-buttonAV  rounded-1 pb-2" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                    <?= lang('add_address'); ?>
+                </button>
                 </div>
             </div>
         </div>

@@ -561,10 +561,6 @@ if (!empty($variants)) {
                         <label for="hide" class="padding05"><?= lang('hide_in_shop') ?></label>
                     </div>
                     <div class="form-group">
-                        <input name="google_merch" type="checkbox" class="checkbox" id="google Merhandizing" value="1" <?= empty($product->google_merch) ? '' : 'checked="checked"' ?>/>
-                        <label for="Google Merchandizing" class="padding05"><?= lang('Google Merchandizing') ?></label>
-                    </div>
-                    <div class="form-group">
                         <input name="cf" type="checkbox" class="checkbox" id="extras" value="" checked="checked"/><label
                             for="extras" class="padding05"><?= lang('custom_fields') ?></label>
                     </div>

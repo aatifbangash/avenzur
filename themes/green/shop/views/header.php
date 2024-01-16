@@ -162,7 +162,8 @@
         </div>
         <div class="col-md-6 d-flex justify-content-end topbarBtns">
           <div class="dropdown me-2">
-            <a class="btn  dropdown-toggle text-white moblang" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="btn  dropdown-toggle text-white moblang" href="#" role="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
               <i class="bi bi-globe-americas me-1"></i> English <i class="bi bi-chevron-down ms-2"></i>
             </a>
 
@@ -172,7 +173,8 @@
             </ul>
           </div>
           <div class="dropdown me-2">
-            <a class="btn  dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="btn  dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
               SAR <i class="bi bi-chevron-down ms-2"></i>
             </a>
 
@@ -184,7 +186,8 @@
             </ul>
           </div>
           <div class="dropdown logindropdown-k">
-            <button type="button" id="login-btn-trigger" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+            <button type="button" id="login-btn-trigger" class="btn text-white dropdown-toggle px-0 border-0"
+              data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
               <?php
               if ($loggedIn) {
                 ?>
@@ -200,7 +203,7 @@
             <?php
             if ($loggedIn) {
               ?>
-              <div class="dropdown-menu loggedin">
+              <div class="dropdown-menu dropdown-menu-right p-3 loggedin"">
                         <div>
                           <a class="text-decoration-none text-dark" href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a>
                         </div>
@@ -225,16 +228,9 @@
                           if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
                         ?>
                         
-                        <div class="dropdown-menu  myaccountForm validate" id="myaccountForm">
-                        <div class="loginRCard px-4">
-                          <div class="d-flex justify-content-end w-100 pb-3 ">
-                            <div class=" login-close d-flex justify-content-center align-items-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="19" viewBox="0 0 20 19" fill="none">
-                                <path d="M18.3972 17.9999L9.99379 9.49995M9.99379 9.49995L1.59033 1M9.99379 9.49995L18.3973 1M9.99379 9.49995L1.59033 18" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                              </svg> 
-                            </div>
-                          </div>
-                            <div class="logo-k"> 
+                        <div class="dropdown-menu p-3 myaccountForm validate" id="myaccountForm">
+                        <div class="loginRCard px-4 w-100">
+                            <div class="logo-k mb-5"> 
                                 <a class="navbar-brand" href="http://localhost/avenzur/">
                                     <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVENZUR">
                                 </a>
@@ -304,27 +300,30 @@
   <!-- logo search bar -->
   <section class="logo-searchBar">
     <div class="container container-max-width">
-      <div class="d-flex  align-items-center justify-content-between py-3">
+      <div class="row  align-items-center justify-content-between py-3">
 
-        <div class="mb-2 w-100 d-flex justify-content-between w-100">
+        <div class="col-lg-2 col-md-3  mb-2">
           <div class="logosearchMob" id="shoppingdivMob">
 
-          <div class="logo-k"> <a class="navbar-brand" href="<?= site_url(); ?>"><img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="<?= $shop_settings->shop_name; ?>"></a></div>
+            <div class="logo-k"> <a class="navbar-brand" href="<?= site_url(); ?>"><img
+                  src="<?= base_url('assets/uploads/logos/' . $shop_settings->logo); ?>"
+                  alt="<?= $shop_settings->shop_name; ?>"></a></div>
             <div id="searchtoggle"><i class="bi bi-search"></i></div>
           </div>
 
 
 
         </div>
-        <div id="searchbarmob">
+        <div class="col-lg-9 col-md-8" id="searchbarmob">
           <div id="searchtogglecros"><i class="bi bi-x-circle-fill"></i></div>
           <?= shop_form_open('products', 'class="d-flex search-bar"'); ?>
-          <input name="query" class="form-control border-0 bg-transparent py-3 add_item_search"  id="product-search" type="search" placeholder="What are you looking for?" aria-label="Search">
+          <input name="query" class="form-control border-0 bg-transparent py-3 add_item_search" id="product-search"
+            type="search" placeholder="What are you looking for?" aria-label="Search">
           <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
           <?= form_close(); ?>
           <ul id="autocomplete-suggestions" class="ui-autocomplete"></ul>
         </div>
-        <div class=" ps-md-0" id="salemob"></div>
+        <div class="col-lg-2 col-md-1 ps-md-0" id="salemob"></div>
 
       </div>
     </div>
@@ -335,14 +334,17 @@
 
   <!-- menu bar -->
   <section>
-    <div class="container container-max-width">
-      <div class="d-flex align-items-center flex-wrap main-menuTab">
-        <div class="mob-catS" id="allcatDiv">
-          <button class="btn all-categoryBtn d-flex align-items-center justify-content-between" id="allCatmob" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+    <div class="container container-max-width main-menuTab">
+      <div class="row align-items-center">
+        <div class="col-md-2 col-sm-2 mob-catS" id="allcatDiv">
+          <button class="btn all-categoryBtn d-flex align-items-center justify-content-between" id="allCatmob"
+            type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
+            aria-controls="offcanvasExample">
             <i class="bi bi-filter-left "></i> All Category
           </button>
 
-          <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+          <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample"
+            aria-labelledby="offcanvasExampleLabel">
             <div class="offcanvas-header">
               <h5 class="offcanvas-title" id="offcanvasExampleLabel">Categories</h5>
               <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -370,12 +372,15 @@
             </div>
           </div>
         </div>
-        <div class="mob-menu">
+        <div class="col-md-7 col-sm-2 mob-menu">
           <nav class="navbar navbar-expand-lg navbar-expand-md  container-max-width">
+            <div class="container-fluid">
 
               <div class="menu-av" id="sourcedivmob">
 
-                <button id="menuiconMob" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <button id="menuiconMob" class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                  aria-label="Toggle navigation">
                   <span class="navbar-toggler-icon"><i class="bi bi-list"></i></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -411,18 +416,20 @@
                     </li>
 
 
-                    <!--<div id="mobnav">
+                    <div id="mobnav">
 
-                    </div>-->
+                    </div>
 
                   </ul>
 
                 </div>
               </div>
 
+
+            </div>
           </nav>
         </div>
-        <div class="shop-icons">
+        <div class="col-md-3 col-sm-2 shop-icons">
           <div class="text-end" id="cartdiv">
 
             <span class="cartIcon" id="cart-items">
@@ -604,13 +611,13 @@
 
         </div>
 
-        <div class="d-flex justify-content-between p-1 align-items-center">
-          <div class="addicon">
+        <div class=" row align-items-center mt-4">
+          <div class="addicon col-md-4">
             <p class="m-0 fs-5 fw-semibold text-start text-dark">Cart Total</p>
           </div>
-          
+          <div class=" col-md-8">
             <p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark" id="product-canvas-total"></p>
-          
+          </div>
         </div>
 
               <div class="border-0 pb-4 d-flex flex-nowrap mt-3">
@@ -682,28 +689,3 @@
       exit; ?>
     </div>
   <?php } ?>
-  <script>
-    $('.login-close').click(function(){
-  $(this).parent().parent().parent().removeClass('show');
-  $(':root').css('overflow', 'auto');
-  $(this).parent().parent().parent().click(function(){
-    $('#myaccountForm').hide();
-  })
-
-});
-
-$('#login-btn-trigger').click(function(){
-  $(this).siblings(".myaccountForm.validate ").addClass('show');
-
-  if ($(".dropdown-menu.myaccountForm.validate ").hasClass("show")) {
-
-$(':root').css('overflow', 'hidden');
-
-}
-else{
-$(':root').css('overflow', 'auto');
-}
-
-
-});
-</script>

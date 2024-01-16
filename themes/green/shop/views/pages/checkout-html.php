@@ -48,36 +48,24 @@ if ($this->Settings->indian_gst) {
         <div class="row">
             <div class="col-md-8">
                 <h3 class=" fw-bold pb-2">Shipping Address</h3>
-                <div class=" border rounded p-3 mb-4">
-                    <div class="d-flex mobile-wrap mobile-start">
+                <div class=" border rounded p-3 pb-5 mb-4">
+                    <div class="d-flex">
                         
                         <div class="addressDetail d-flex align-items-center">
-                            
-                            <div class="">
-                                <p class="m-0 fs-6 fw-semibold d-flex mb-3 align-items-start"> <i class="bi bi-geo-alt fs-4 pe-2 purpColor"></i>
+                            <div class="addicon "><i class="bi bi-geo-alt fs-5 purpColor"></i></div>
+                            <div class="ms-3">
+                                <p class="m-0 fs-6 fw-semibold">
                                     <?php echo isset($default_address->line1)?$default_address->line1:$default_address->address;?>
                                 </p>
-                                <p class="m-0 fs-6 fw-semibold d-flex align-items-center"><i class="bi bi-phone fs-4 pe-2 purpColor"></i>  +966  <?php echo isset($default_address)?$default_address->phone:'';?> <i class="bi bi-check-circle-fill ms-2 purpColor"></i></p>  
+                                <p class="m-0 fs-6 fw-semibold"> +966  <?php echo isset($default_address)?$default_address->phone:'';?> <i class="bi bi-check-circle-fill ms-2 purpColor"></i></p>  
                             </div>                                                             
                         </div>
 
                         <?php //&& !$this->Staff
                         if (count($addresses) < 6 && !$this->Staff) {?>
-                                                <p class="m-0 change-address-link-cont">
-                                                <a href="?action=changeaddress" class="  d-flex change-address-link align-items-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                                <g clip-path="url(#clip0_2587_2962)">
-                                                <path d="M12.436 0.619885L4.30804 8.74789C3.99761 9.05665 3.7515 9.42392 3.58397 9.82845C3.41643 10.233 3.33081 10.6667 3.33204 11.1046V11.9999C3.33204 12.1767 3.40228 12.3463 3.52731 12.4713C3.65233 12.5963 3.8219 12.6666 3.99871 12.6666H4.89404C5.33189 12.6678 5.76562 12.5822 6.17015 12.4146C6.57467 12.2471 6.94195 12.001 7.25071 11.6906L15.3787 3.56255C15.7683 3.172 15.9871 2.64287 15.9871 2.09122C15.9871 1.53957 15.7683 1.01044 15.3787 0.619885C14.9825 0.241148 14.4555 0.0297852 13.9074 0.0297852C13.3593 0.0297852 12.8323 0.241148 12.436 0.619885ZM14.436 2.61989L6.30804 10.7479C5.93213 11.1215 5.42405 11.3318 4.89404 11.3332H4.66538V11.1046C4.66677 10.5745 4.87709 10.0665 5.25071 9.69055L13.3787 1.56255C13.5211 1.42652 13.7105 1.35061 13.9074 1.35061C14.1043 1.35061 14.2937 1.42652 14.436 1.56255C14.576 1.7029 14.6546 1.89301 14.6546 2.09122C14.6546 2.28942 14.576 2.47954 14.436 2.61989Z" fill="#662D91"/>
-                                                <path d="M15.3333 5.986C15.1565 5.986 14.987 6.05624 14.8619 6.18126C14.7369 6.30629 14.6667 6.47586 14.6667 6.65267V10H12C11.4696 10 10.9609 10.2107 10.5858 10.5858C10.2107 10.9609 10 11.4696 10 12V14.6667H3.33333C2.8029 14.6667 2.29419 14.456 1.91912 14.0809C1.54405 13.7058 1.33333 13.1971 1.33333 12.6667V3.33333C1.33333 2.8029 1.54405 2.29419 1.91912 1.91912C2.29419 1.54405 2.8029 1.33333 3.33333 1.33333H9.36133C9.53815 1.33333 9.70771 1.2631 9.83274 1.13807C9.95776 1.01305 10.028 0.843478 10.028 0.666667C10.028 0.489856 9.95776 0.320286 9.83274 0.195262C9.70771 0.0702379 9.53815 0 9.36133 0L3.33333 0C2.4496 0.00105857 1.60237 0.352588 0.97748 0.97748C0.352588 1.60237 0.00105857 2.4496 0 3.33333L0 12.6667C0.00105857 13.5504 0.352588 14.3976 0.97748 15.0225C1.60237 15.6474 2.4496 15.9989 3.33333 16H10.8953C11.3333 16.0013 11.7671 15.9156 12.1718 15.7481C12.5764 15.5806 12.9438 15.3345 13.2527 15.024L15.0233 13.252C15.3338 12.9432 15.58 12.576 15.7477 12.1715C15.9153 11.767 16.0011 11.3332 16 10.8953V6.65267C16 6.47586 15.9298 6.30629 15.8047 6.18126C15.6797 6.05624 15.5101 5.986 15.3333 5.986ZM12.31 14.0813C12.042 14.3487 11.7031 14.5337 11.3333 14.6147V12C11.3333 11.8232 11.4036 11.6536 11.5286 11.5286C11.6536 11.4036 11.8232 11.3333 12 11.3333H14.6167C14.5342 11.7023 14.3493 12.0406 14.0833 12.3093L12.31 14.0813Z" fill="#662D91"/>
-                                                </g>
-                                                <defs>
-                                                <clipPath id="clip0_2587_2962">
-                                                <rect width="16" height="16" fill="white"/>
-                                                </clipPath>
-                                                </defs>
-                                                </svg>    
-                                                Change Address</a>
-                                                </p>
+                                                <p class="m-0 ms-auto">
+                                                <a href="?action=changeaddress" class=" text-decoration-none">Change Address</a>
+                                            </p>
                                            <?php }
                                             if ($this->Settings->indian_gst && (isset($istates))) {
                                             ?>
@@ -94,7 +82,7 @@ if ($this->Settings->indian_gst) {
 
 
                 <h3 class=" fw-bold pb-2">Your Order</h3>
-                <div class=" border rounded p-3  mb-4 products-pay">
+                <div class=" border rounded p-3 pb-5 mb-4">
                     <div class="">
                         <h3 class="fs-5 fw-bold">Shipment <span class="fs-5 fw-medium purpColor">(<?php echo count($cart_contents)?> item<?php echo count($cart_contents) > 1 ? 's':'';?>)</span></h3>
                         <?php if(!empty($cart_contents)) {
@@ -105,14 +93,14 @@ if ($this->Settings->indian_gst) {
                                         
                                     <img src="<?php echo $image; ?>" class="w-100">
                                 </div>
-                                <div class="ps-2 col-md-10">
-                                    <p class="m-0 fs-6 fw-bold">
+                                <div class="ms-2 col-md-4">
+                                    <p class="m-0 fs-6 fw-semibold">
                                     <?php echo $item['name'];?>  
                                     </p>
-                                    <p class="m-0 fs-6 fw-semibold mt-2 price"> SAR <?php echo $item['price'];?> <br /><span class="quantity" style="font-size: 13.5px;">Quantity (<?php echo $item['qty'];?>)</span></p>  
-                                </div>                                                                
+                                    <p class="m-0 fs-6 fw-semibold mt-2"> SAR <?php echo $item['price'];?> <br /><span style="font-size: 13.5px;">Quantity (<?php echo $item['qty'];?>)</span></p>  
+                                </div>                                                             
                             </div>
-                            
+                            <hr />
                         <?php } }?>
                        
                     </div>
@@ -146,7 +134,7 @@ if ($this->Settings->indian_gst) {
 
                 <div class="mt-5">
                     <h2 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
-                    <div class="d-flex align-items-center justify-content-between py-3 border-bottom mobile-wrap  mobile-start">
+                    <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
                         <div class="form-check fs-5">
                             <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
                             <label class="form-check-label fw-semibold" for="flexRadioDefault2">
@@ -159,15 +147,15 @@ if ($this->Settings->indian_gst) {
                             <!--<input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" maxlength="2" placeholder="Card Expiry Month" />-->
                             <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" maxlength="3" pattern="\d*" title="Please enter a 3-digit CVV" placeholder="358" />
                         </div>
-                        <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 payment-method">
+                        <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 ">
                     </div>
                 </div>
 
             </div>
          
         <div class="col-md-4">
-            <h3 class=" fw-bold pb-2">Order Summary</h3>  
-            <?php echo shop_form_open('order', 'class="validate addressform-k p-0"'); ?>
+                
+            <?php echo shop_form_open('order', 'class="validate addressform-k"'); ?>
            <?php
                 $total = $this->sma->convertMoney($this->cart->total(), false, false);
                 $order_tax = $this->sma->convertMoney($this->cart->order_tax(), false, false);
@@ -195,7 +183,7 @@ if ($this->Settings->indian_gst) {
             <input type="hidden" name="shipping_state" id="shipping_state" value="<?php echo $default_address->state;?>">          
             <input type="hidden" name="shipping_country" id="shipping_country" value="<?php echo $default_address->country;?>">                             
             <input type="hidden" id="total-price" value="<?= $total ?>"/>
-                
+                <h3 class=" fw-bold pb-2">Order Summary</h3>
                 <div class="border rounded py-3 px-2">
                     <h4 class="m-0 fw-semibold mb-1">Order Details</h4>
                     <div class="d-flex justify-content-between">

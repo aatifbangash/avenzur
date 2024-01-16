@@ -5,26 +5,25 @@
             <div class="col-xs-12">
 
                 <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-sm-9 col-md-10">
 
                         <div class="panel panel-default margin-top-lg">
-                            <h3 class="fw-semibold">
-                               <!-- <i class="fa fa-list-alt margin-right-sm"></i> --><?= lang('my_orders'); ?>
-</h3>
-                            <div class="panel-body py-0 px-0">
+                            <div class="panel-heading text-bold">
+                                <i class="fa fa-list-alt margin-right-sm"></i> <?= lang('my_orders'); ?>
+                            </div>
+                            <div class="panel-body">
                                 <?php
                                 if (!empty($orders)) {
                                     echo '<div class="row">';
-                                    echo '<div class="col-sm-12 text-bold mb-3">' . lang('click_to_view') . '</div>';
+                                    echo '<div class="col-sm-12 text-bold">' . lang('click_to_view') . '</div>';
                                     echo '<div class="clearfix"></div>';
                                     $r = 1;
                                     foreach ($orders as $order) {
                                         ?>
-                                        <div class="col-md-6 order-detail-cont mb-4 ">
+                                        <div class="col-md-6">
                                           
                                            <!--<a href="<?= shop_url('orders/' . $order->id); ?>" class="link-address<?= $order->payment_status == 'paid' ? '' : ' active' ?>">-->
-                                           <div class="table-custom-container">
-                                            <table class="table table-borderless table-condensed order-table mb-0" >
+                                            <table class="table table-borderless table-condensed" style="margin-bottom:0;border:1px solid #ababab;">
                                                 <?= '<tr><td>' . lang('date') . '</td><td>' . $this->sma->hrld($order->date) . '</td></tr>'; ?>
                                                 <?= '<tr><td>' . lang('ref') . '</td><td>' . $order->reference_no . '</td></tr>'; ?>
                                                 <?= '<tr><td>' . lang('sale_status') . '</td><td>' . lang($order->sale_status) . '</td></tr>'; ?>
@@ -49,7 +48,7 @@
                                                
                                                <?= '<tr><td>' . lang('View_Order') . '</td><td><a href=orders/'.$order->id.'>  <input type="submit" class="btn btn-info btn-sm view" value="View Order" /></a></td></tr>'; ?>
                                           
-                                                </table> </div>
+                                                </table>
                                                 
                                                 <!--<span class="count"><i><?= $order->id; ?></i></span>-->
                                                 <!--<span class="edit"><i class="fa fa-eye"></i></span>-->

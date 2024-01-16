@@ -18,8 +18,7 @@
         "arutil/ar-php": "^0.1.1",
         "salla/zatca": "^1.0",
         "chillerlan/php-qrcode": "^4.3",
-        "twilio/sdk": "^7.11",
-        "google/apiclient": "^2.14"
+        "twilio/sdk": "^7.11"
     },
     "license": "Commercial License",
     "authors": [
