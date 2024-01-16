@@ -2,8 +2,8 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <section class="page-contents">
     <div class="container">
-        <div class="row">
-        <div class="col-md-12">
+    
+        <div class="item">
             <h2 style="text-align:center !important;" class="select-head"> Featured Products </h2>
             <?php
                 $r = 0;
@@ -92,7 +92,7 @@
                 }
             ?>
         </div>
-        </div>
+      
     </div>
 </section>
 
