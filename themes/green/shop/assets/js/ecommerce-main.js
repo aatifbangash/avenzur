@@ -1167,6 +1167,34 @@ $(document).ready(function () {
       speed: 300,
       slidesToShow: 2,
       slidesToScroll: 1,
+      responsive: [
+        {
+          breakpoint: 1025,
+          settings: {
+            slidesToShow: 3,
+            slidesToScroll: 3,
+            infinite: true,
+            dots: true,
+          },
+        },
+        {
+          breakpoint: 991,
+          settings: {
+            slidesToShow: 2,
+            slidesToScroll: 2,
+          },
+        },
+        {
+          breakpoint: 480,
+          settings: {
+            slidesToShow: 1,
+            slidesToScroll: 1,
+          },
+        },
+        // You can unslick at a given breakpoint now by adding:
+        // settings: "unslick"
+        // instead of a settings object
+      ],
       prevArrow:
         "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
       nextArrow:
@@ -1980,7 +2008,7 @@ function add_address(t) {
       }
   });
 });*/
-if (window.innerWidth < 500) {
+/*if (window.innerWidth < 500) {
   //  // Remove the button from the source div
   cartsourceDiv.removeChild(cartToMove);
 
@@ -2041,7 +2069,7 @@ if (window.innerWidth < 500) {
     nextArrow:
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
   });
-}
+}*/
 
 // New login workflow functionality
 

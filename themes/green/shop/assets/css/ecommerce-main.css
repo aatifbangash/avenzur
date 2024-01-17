@@ -1555,7 +1555,7 @@ h4.letstart {
   margin-inline: auto;
   text-align: center;
   padding: 30px;
-  border-radius: 10px;
+  border-radius: 10px !important;
   margin-top: 25px;
  
   border: 20px solid #fff;
@@ -2305,9 +2305,10 @@ h4.letstart {font-size: 16px;}
   .categoryTabs .nav-pills {
     margin-bottom: 0px;
   }
+  .cartIcon .dropdown-toggle {padding-top: 0 !important;}
   nav .menu-av li.nav-item a.nav-link:before {display: none;}
   .navbar {padding-left: 0; padding-right: 0;}
-  .main-menuTab { padding: 10px 20px}
+  .main-menuTab { padding: 5px 15px}
   .navbar-nav {border-bottom: 1px solid #eee;}
   .navbar .nav-link  {padding: 10px 0 !important;}
   #offcanvasProductsLabel  {font-size: 20px; font-weight: bold; width: 100%; border-bottom: 1px solid #eee; padding-bottom: 10px;}
