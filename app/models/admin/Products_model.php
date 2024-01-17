@@ -399,6 +399,15 @@ class Products_model extends CI_Model
         return false;
     }
 
+    public function getBrandByID($id)
+    {
+        $q = $this->db->get_where('brands', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getCategoryByCode($code)
     {
         $q = $this->db->get_where('categories', ['code' => $code], 1);
