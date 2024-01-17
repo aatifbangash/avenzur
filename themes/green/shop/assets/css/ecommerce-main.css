@@ -2091,7 +2091,8 @@ div#myaccountForm {
 .section-marg-top {margin-top: 70px}
 .title-wrapper { margin-bottom: 30px; display: flex; justify-content: center;}
 .sideBannerImg img , .moveBanner img , .skinBannerRow img {border-radius: 12px !important;}
-.brands-logo img{border:1px solid #eee; padding: 15px;  box-shadow: 0 2px 5px rgba(0,0,0,.05); border-radius: 10px; margin-bottom: 8px;}
+  /***asma 17-1 ****/
+.brands-logo img{border:1px solid #eee; padding: 15px;  box-shadow: 0 2px 5px rgba(0,0,0,.05); border-radius: 10px; margin-bottom: 6px;}
 .border-radius-10 , .footer-container .ft {border-radius: 10px; overflow: hidden;}
 .margin-minus {margin: 0 -12px;}
 .loginRCard  .logo-k {margin-bottom: 40px;}
@@ -2185,18 +2186,32 @@ html[lang='ar']  .top-bar .dropdown-menu i{padding-left: 10px; padding-right: 0;
 .productInfoTab .tab-pane{padding: 20px;}
 .product-detail.product-count {width: 100%}
 .specialOfferP .product-cat-title{min-height: 25px}
-.popularCat .card{margin-bottom: 20px;}
+
 .categoryTabs .nav-pills {margin-bottom: 20px;}
 .review h3{font-size: 22px;}
 .checkLeftCol-k .panel-body, .contleft {padding: 20px !important;}
 h3.fw-semibold , h3.fw-bold  {
-  font-size: 24px !important;
+  font-size: 24px !important; text-transform: capitalize;
 }
 
 .boom-categories .primary-buttonAV:hover , .skinBannerRow .primary-buttonAV:hover { background-color: transparent; border-color: #47126e; color: #47126e !important;}
 .validate.addressform-k .primary-buttonAV {text-align: center !important; line-height: 40px;}
 .validate.addressform-k .primary-buttonAV:hover , .order-table .btn:hover , .edit-address:hover, .checkLeftCol-k input[type='submit']:hover {background-color: #333 !important; border-color: #333 !important;}
 .addtocart:hover {background-color: #4f127c;}
+
+/***asma 17-1 ****/
+.address-container i{color: #47126e !important; font-size: 20px; padding-left: 10px;}
+html[lang='ar'] .address-container i{ padding-left: 0px; padding-right: 10px;}
+.address-container i:hover{color: #333 !important;}
+.address-but {font-size: 16px; margin-right: 10px;}
+html[lang='ar']  .address-but {margin-left: 10px; margin-right: 0;}
+#checkoutAddress {padding: 10px 0;}
+.default-address {background-color: #662D91;}
+.default-address i, .default-address p {color: #fff !important; font-weight: normal !important;}
+
+
+
+/*************/
 /************** ar ************/
 html[lang='ar'] body{ font-family: 'DroidArabicKufiRegular','lato'; direction: rtl !important; }
 
@@ -2305,16 +2320,26 @@ h4.letstart {font-size: 16px;}
   .categoryTabs .nav-pills {
     margin-bottom: 0px;
   }
+  .feature-cards .card-body {
+    padding: 5px 0 0px;}
+  
+    .title-wrapper {margin-bottom: 20px;}
+    .skinBannerRow .discoverbtn {margin-bottom: 0 !important;}
+    .categoryTabs .mb-4 {margin-bottom: 0 !important;}
+    .section-marg-top {
+      margin-top: 50px;
+  }
+  
+    /*********/
   .cartIcon .dropdown-toggle {padding-top: 0 !important;}
   nav .menu-av li.nav-item a.nav-link:before {display: none;}
   .navbar {padding-left: 0; padding-right: 0;}
-  .main-menuTab { padding: 5px 15px}
+  .main-menuTab { padding: 10px 20px}
   .navbar-nav {border-bottom: 1px solid #eee;}
   .navbar .nav-link  {padding: 10px 0 !important;}
   #offcanvasProductsLabel  {font-size: 20px; font-weight: bold; width: 100%; border-bottom: 1px solid #eee; padding-bottom: 10px;}
   .main-menuTab { padding: 10px 25px;}
  
-  .feature-cards .card-body {padding-bottom: 20px;}
   section{ max-width:100% !important;}
 .loginRCard {width: 93% !important;}
 .flex-ipad-column {flex-direction: column; align-items: start !important;}
@@ -2355,6 +2380,15 @@ h2{font-size: 26px !important;}
 }
 
 @media screen and (max-width: 480px) {
+  /***asma 17-1 ****/
+  .feature-cards .cardImg img { height: 100px; }
+    .feature-cards .card-body h5 {
+      font-size: 16px;}
+      .feature-cards .slick-track {margin-left: -10px;}
+      .address-but {margin-bottom: 10px !important; }
+ 
+
+/****************/
   .boom-categories.mt-4 , .side-banner.mt-4 , .boom-product-cat-mob-marg, .mt-10{margin-top: 10px !important}
   .mt-m-0 {margin-top: 0 !important}
 

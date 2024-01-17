@@ -84,7 +84,7 @@
 <!-- speacial offer banner slider -->
     <section class="speacialOffer section-marg-top">
       <div class="container container-max-width ">
-      <div class="featureTitle text-center title-wrapper"><h2 class="title-wrapper">Special Offers</h2></div>
+      <div class="featureTitle text-center"><h2 class="title-wrapper">Special Offers</h2></div>
           <div class="d-flex speacialOfferMove margin-minus">
             <div class="item">
               <div class="moveBanner">
@@ -366,7 +366,7 @@
                                 <?php
                                 foreach($popular_category->products as $popular_product){
                                 ?>
-                                    <div class="col-lg-3 col-md-4 col-sm-12 mb-4">
+                                    <div class="col-lg-4 col-md-4 col-sm-12">
                                         <div class="card" style="width: 100%">
                                             <!--<a href="#" class="text-decoration-none">-->
                                                 <div class="cardImg position-relative">
@@ -463,7 +463,7 @@
               <a href="<?= site_url('category/vitamins'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/vitamin.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100 h-100 " > </a>
             </div>
           </div>
-          <div class="col-md-12 mt-4">
+          <div class="col-md-12 mt-3">
             <div class="sideBannerImg">
               <a href="<?= site_url('category/beauty'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/makeup.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100  " ></a>
             </div>

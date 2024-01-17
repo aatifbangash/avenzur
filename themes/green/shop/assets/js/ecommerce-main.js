@@ -867,7 +867,7 @@ $(document).ready(function () {
   $(document).on("change", ".cart-item-option, .cart-item-qty", function (t) {
     t.preventDefault();
     var e = this.defaultValue,
-      a = $(this).closest("div.row-class"),
+      a = $(this).closest(".cart-content-wrapper"),
       s = a.attr("id"),
       i = site.site_url + "cart/update",
       o = {};
@@ -1133,7 +1133,7 @@ $(document).ready(function () {
     if (e.val() > 1) {
       parseInt(e.val()) > 1 && e.val(parseInt(e.val()) - 1);
 
-      var a = $(this).closest("div.row-class"),
+      var a = $(this).closest(".cart-content-wrapper"),
         s = a.attr("id"),
         i = site.site_url + "cart/update",
         o = {};
@@ -1149,7 +1149,7 @@ $(document).ready(function () {
     if (e.val() < 3) {
       e.val(parseInt(e.val()) + 1);
 
-      var a = $(this).closest("div.row-class"),
+      var a = $(this).closest(".cart-content-wrapper"),
         s = a.attr("id"),
         i = site.site_url + "cart/update",
         o = {};
@@ -1161,6 +1161,47 @@ $(document).ready(function () {
   });
 
   if (window.innerWidth < 1030) {
+
+    $(".feature-cards").slick({
+      infinite: false,
+      speed: 300,
+      slidesToShow: 4,
+      slidesToScroll: 1,
+      responsive: [
+        {
+          breakpoint: 1024,
+          settings: {
+            slidesToShow: 4,
+            slidesToScroll: 3,
+            infinite: true,
+            dots: true,
+          },
+        },
+        {
+          breakpoint: 991,
+          settings: {
+            slidesToShow: 4,
+            slidesToScroll: 2,
+          },
+        },
+        {
+          breakpoint: 480,
+          settings: {
+            slidesToShow: 3,
+            slidesToScroll: 1,
+          },
+        },
+
+     
+        // You can unslick at a given breakpoint now by adding:
+        // settings: "unslick"
+        // instead of a settings object
+      ],
+      prevArrow:
+        "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
+      nextArrow:
+        "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
+    });
 
     $(".popularCat").slick({
       infinite: false,
@@ -1200,47 +1241,7 @@ $(document).ready(function () {
       nextArrow:
         "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
     });
-  
-    $(".feature-cards").slick({
-      infinite: false,
-      speed: 300,
-      slidesToShow: 4,
-      slidesToScroll: 1,
-      responsive: [
-        {
-          breakpoint: 1024,
-          settings: {
-            slidesToShow: 4,
-            slidesToScroll: 3,
-            infinite: true,
-            dots: true,
-          },
-        },
-        {
-          breakpoint: 991,
-          settings: {
-            slidesToShow: 3,
-            slidesToScroll: 2,
-          },
-        },
-        {
-          breakpoint: 480,
-          settings: {
-            slidesToShow: 2,
-            slidesToScroll: 1,
-          },
-        },
 
-     
-        // You can unslick at a given breakpoint now by adding:
-        // settings: "unslick"
-        // instead of a settings object
-      ],
-      prevArrow:
-        "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
-      nextArrow:
-        "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
-    });
   }
 
   // special offer slider
