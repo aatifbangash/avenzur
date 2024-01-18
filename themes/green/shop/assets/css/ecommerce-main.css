@@ -2206,8 +2206,7 @@ html[lang='ar'] .address-container i{ padding-left: 0px; padding-right: 10px;}
 .address-but {font-size: 16px; margin-right: 10px;}
 html[lang='ar']  .address-but {margin-left: 10px; margin-right: 0;}
 #checkoutAddress {padding: 10px 0;}
-.default-address {background-color: #662D91;}
-.default-address i, .default-address p {color: #fff !important; font-weight: normal !important;}
+.default-address {border: 1px solid #662d91 !important; border-top: 3px solid #662d91 !important;}
 
 
 
@@ -2338,7 +2337,7 @@ h4.letstart {font-size: 16px;}
   .navbar-nav {border-bottom: 1px solid #eee;}
   .navbar .nav-link  {padding: 10px 0 !important;}
   #offcanvasProductsLabel  {font-size: 20px; font-weight: bold; width: 100%; border-bottom: 1px solid #eee; padding-bottom: 10px;}
-  .main-menuTab { padding: 10px 25px;}
+  .main-menuTab { padding: 5px 15px;}
  
   section{ max-width:100% !important;}
 .loginRCard {width: 93% !important;}
@@ -2380,7 +2379,14 @@ h2{font-size: 26px !important;}
 }
 
 @media screen and (max-width: 480px) {
+
   /***asma 17-1 ****/
+  .controls.logcardinput input {
+    padding: 8px;
+  }
+  .otpcontainer .modal-body{
+    padding: 0px;
+  }
   .feature-cards .cardImg img { height: 100px; }
     .feature-cards .card-body h5 {
       font-size: 16px;}

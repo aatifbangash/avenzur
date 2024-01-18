@@ -487,7 +487,7 @@
   if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register' && $currentUri !== 'cart/checkout') {
     ?>
     <!-- Register Modal Starts -->
-    <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal fade otpcontainer" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content px-4 rounded-4">
           <div class="modal-header border-0">

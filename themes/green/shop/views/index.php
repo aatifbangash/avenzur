@@ -384,8 +384,8 @@
                                                     <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none">
                                                         <h5 class="card-title text-start"><?= $popular_product->name; ?></h5>
                                                     </a>
-                                                    <div class="row align-items-center justify-content-between">
-                                                        <div class="col-md-6">
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        
                                                         <div class="rating">
                                                           <?php 
                                                                 for($i=1; $i<=5; $i++) {
@@ -394,24 +394,24 @@
                                                           <i class="bi bi-star-fill <?php echo $class;?>" ></i>
                                                           <?php }?>
                                                         </div>
-                                                        </div>
+                                                        
                                                         <?php
                                                             if ($popular_product->promotion) {
                                                                 ?>
-                                                                    <div class="col-md-6">
+                                                                    
                                                                         <div class="discountPrice price text-end py-2">
                                                                             <h4 class="m-0 text-decoration-line-through">
                                                                                 <?= $this->sma->convertMoney(isset($popular_product->special_price) && !empty(isset($popular_product->special_price)) ? $popular_product->special_price : $popular_product->price); ?>
                                                                             </h4>
                                                                         </div>
-                                                                    </div>
+                                                                    
                                                                 <?php
                                                                 
                                                             }
                                                         ?>
                                                     </div> 
-                                                    <div class="row align-items-center justify-content-between">
-                                                        <div class="col-md-6 ">
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        
                                                             <div class="price text-start  py-2">
                                                                 <h4 class="m-0 fw-bold">
                                                                 <?php
@@ -426,8 +426,8 @@
                                                                     
                                                                 </h4>
                                                             </div>
-                                                        </div>
-                                                        <div class="col-md-6">
+                                                        
+                                                        
                                                             <div class="quantity text-end py-2 d-flex align-items-center justify-content-between">
                                                                 <span class="plus btn-plus">
                                                                     <i class="bi bi-plus-circle-fill"></i>
@@ -436,7 +436,7 @@
                                                                 <!--<span class="Qnum ">1</span>-->
                                                                 <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
                                                             </div>
-                                                        </div>
+                                                        
                                                     </div>
                                                 </div>
                                             <!--</a>-->
