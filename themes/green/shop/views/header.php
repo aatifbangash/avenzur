@@ -287,7 +287,7 @@
                   </div>
 
                   <div>
-                    <span id="register-message" style="color: blue;"></span>
+                    <span id="register-message" style="color: red;padding-top: 5px;"></span>
                   </div>
                   <?php
             }
