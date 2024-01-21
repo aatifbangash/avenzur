@@ -1064,4 +1064,45 @@ class Main extends MY_Shop_Controller
             redirect('/');
         }
     }
+
+    public function notify_me(){
+        // Check if it's a POST request
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            
+            // Get the post data
+            $notify_email = $this->input->post('notify_email');
+            $product_input = $this->input->post('product_input');
+    
+            // Validate email
+            if (empty($notify_email) || !filter_var($notify_email, FILTER_VALIDATE_EMAIL)) {
+                return $this->sma->send_json(['status' => 'error', 'color' => '#FF5252', 'message' => 'Invalid or empty email address.']);
+            }
+    
+            // Check if the email already exists for the given product_id
+            $existing_data = $this->Shop_model->get_notify_data($notify_email, $product_input);
+            if ($existing_data > 0) {
+                return $this->sma->send_json(['status' => 'info', 'color' => '#2196F3', 'message' => 'Email already added for this product.']);
+            }
+    
+            // Insert into the database
+            $data_to_insert = [
+                'email' => $notify_email,
+                'product_id' => $product_input,
+                'date_created' => date('Y-m-d H:i:s')
+                // Add other fields as needed
+            ];
+    
+            $insert_result = $this->Shop_model->insert_notify_data($data_to_insert);
+    
+            if ($insert_result) {
+                return $this->sma->send_json(['status' => 'success', 'color' => '#4CAF50', 'message' => 'Successfully saved!']);
+            } else {
+                return $this->sma->send_json(['status' => 'error', 'color' => '#FF5252', 'message' => 'Failed to save data.']);
+            }
+        }
+    
+        // Handle non-POST requests if needed
+        return $this->sma->send_json(['status' => 'error', 'color' => '#FF5252', 'message' => 'Invalid request.']);
+    }
+    
 }

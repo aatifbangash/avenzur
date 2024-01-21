@@ -52,6 +52,7 @@ $route['profile/(:any)']         = 'main/profile/$1';
 $route['forgot_password']        = 'main/forgot_password';
 $route['activate/(:any)/(:any)'] = 'main/activate/$1/$2';
 $route['reset_password/(:any)']  = 'main/reset_password/$1';
+$route['notify_me']              = 'main/notify_me';
 
 // Admin area routes
 $route['admin']                      = 'admin/welcome';
