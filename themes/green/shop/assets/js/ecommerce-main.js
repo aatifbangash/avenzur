@@ -1208,7 +1208,7 @@ $(document).ready(function () {
   $(".popularCat").slick({
     infinite: false,
     speed: 300,
-    slidesToShow: 2,
+    slidesToShow: 4,
     slidesToScroll: 1,
     responsive: [
       {
