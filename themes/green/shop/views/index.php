@@ -347,7 +347,7 @@
                     foreach($popular_categories as $popular_category){
                     ?>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link <?php if($pp == 0) echo 'active'; ?>" id="pills-<?= $popular_category->name; ?>-tab" data-bs-toggle="pill" data-bs-target="#pills-<?= $popular_category->name; ?>" type="button" role="tab" aria-controls="pills-<?= $popular_category->name; ?>" aria-selected="true"><?= $popular_category->name; ?></button>
+                            <button class="nav-link <?php if($pp == 0) echo 'active'; ?>" id="pills-<?= str_replace(' ', '', $popular_category->name); ?>-tab" data-bs-toggle="pill" data-bs-target="#pills-<?= str_replace(' ', '', $popular_category->name); ?>" type="button" role="tab" aria-controls="pills-<?= str_replace(' ', '', $popular_category->name); ?>" aria-selected="true"><?= $popular_category->name; ?></button>
                         </li>
                     <?php
                         $pp++;
@@ -360,7 +360,7 @@
                     $pc = 0;
                     foreach($popular_categories as $popular_category){
                     ?>
-                        <div class="tab-pane fade show <?php if($pc == 0) echo 'active'; ?>" id="pills-<?= $popular_category->name; ?>" role="tabpanel" aria-labelledby="pills-<?= $popular_category->name; ?>-tab" tabindex="0">
+                        <div class="tab-pane fade show <?php if($pc == 0) echo 'active'; ?>" id="pills-<?= str_replace(' ', '', $popular_category->name); ?>" role="tabpanel" aria-labelledby="pills-<?= str_replace(' ', '', $popular_category->name); ?>-tab" tabindex="0">
                             <!-- cards -->
                             <div class="row products-card popularCat text-center">
                                 <?php
