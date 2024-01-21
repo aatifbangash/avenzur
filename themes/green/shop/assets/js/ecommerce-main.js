@@ -2427,6 +2427,8 @@ $(document).ready(function () {
     $("#notify_product_image").attr("src", imageSrc);
 
     $("#notifyModal").on("shown.bs.modal", function () {
+      $("#notify_content").show();
+      $("#notify_content").addClass('d-flex');
       $("#notify-response").text("");
     });
     $("#notifyModal").modal("show");
@@ -2452,6 +2454,10 @@ $(document).ready(function () {
           if (response && typeof response === "object") {
             
             $("#notify-response").html("<p style='color: "+response.color+"'>" + response.message + "</p>");
+            if(response.status == 'success' || response.status == 'info') {
+              $("#notify_content").hide();
+              $("#notify_content").removeClass('d-flex');
+            }
           } else {
             console.error("Invalid response format:", response);
             $("#notify-response").html(

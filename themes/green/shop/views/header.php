@@ -732,7 +732,7 @@
           echo form_open('notify_me', $attrib);
           ?>
            <span id="notify-response"></span>
-          <div class="d-flex flex-row justify-content-center mt-2">
+          <div id="notify_content" class="d-flex flex-row justify-content-center mt-2">
             <input class="m-1 form-control required" type="email" name="notify_email" id="notify_email"
               data-index="0" />
               
