@@ -2207,7 +2207,9 @@ html[lang='ar'] .address-container i{ padding-left: 0px; padding-right: 10px;}
 html[lang='ar']  .address-but {margin-left: 10px; margin-right: 0;}
 #checkoutAddress {padding: 10px 0;}
 .default-address {border: 1px solid #662d91 !important; border-top: 3px solid #662d91 !important;}
-
+.addressDetail .addicon {
+  width: 160px;
+}
 
 /*************/
 /************** ar ************/
