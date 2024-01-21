@@ -497,7 +497,7 @@
           <div class="modal-body ">
             <div class="emailOTP">
               <div class="text-center">
-                <h2>Verify your email</h2>
+                <h2>Verify OTP</h2>
                 <h5 class="fs-4 lh-base">OTP has been sent to <span id="identifier"></span></h5>
               </div>
               <?php
