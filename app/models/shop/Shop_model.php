@@ -1084,6 +1084,7 @@ class Shop_model extends CI_Model
         {$this->db->dbprefix('products')}.type, 
         {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
         {$this->db->dbprefix('products')}.tax_method,
+        {$this->db->dbprefix('products')}.quantity as product_quantity,
         promotion, 
         promo_price, 
         start_date, 
