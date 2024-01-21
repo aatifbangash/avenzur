@@ -26,7 +26,7 @@
   <?php
   $seo_title = 'Avenzur';
   $seo_description = '';
-  $seokeywords = '';
+  $seo_keywords = '';
   if (isset($seoSetting) && !empty($seoSetting) && isset($product) && !empty($product)) {
     $seo_title = strip_tags(str_replace('{{title}}', $product->name, $seoSetting->title));
 
@@ -40,7 +40,9 @@
     $seo_keywords = strip_tags($seoSetting->keywords);
 
   } ?>
-  <title><?php echo $seo_title; ?></title>
+  <title>
+    <?php echo $seo_title; ?>
+  </title>
   <meta name="description" content="<?php echo $seo_description; ?>">
   <meta name="keywords" content="<?php echo $seo_keywords; ?>">
   <!--<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -88,7 +90,7 @@
       !function (f, b, e, v, n, t, s) {
         if (f.fbq) return; n = f.fbq = function () {
           n.callMethod ?
-          n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            n.callMethod.apply(n, arguments) : n.queue.push(arguments)
         };
         if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
         n.queue = []; t = b.createElement(e); t.async = !0;
@@ -138,6 +140,28 @@
     .inputs input.error-border {
       border: 1px solid red;
     }
+    .notify-me-product {
+      margin-top: 5%;
+    }
+    .product-image-wrapper{
+      float: left;
+      margin-right: 10%;
+    }
+  
+    #notify_product_price{
+      margin-top: 2%;
+    }
+   
+    #notify_out_of_stock{
+      margin-top: 2%;
+    }
+
+    #notifyMeBtn{
+      margin-top: 4px;
+      margin-bottom: 4px;
+      padding-block: 5px !important;
+    }
+
   </style>
 </head>
 
@@ -162,7 +186,8 @@
         </div>
         <div class="col-md-6 d-flex justify-content-end topbarBtns">
           <div class="dropdown me-2">
-            <a class="btn  dropdown-toggle text-white moblang" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="btn  dropdown-toggle text-white moblang" href="#" role="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
               <i class="bi bi-globe-americas me-1"></i> English <i class="bi bi-chevron-down ms-2"></i>
             </a>
 
@@ -172,7 +197,8 @@
             </ul>
           </div>
           <div class="dropdown me-2">
-            <a class="btn  dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="btn  dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
               SAR <i class="bi bi-chevron-down ms-2"></i>
             </a>
 
@@ -184,7 +210,8 @@
             </ul>
           </div>
           <div class="dropdown logindropdown-k">
-            <button type="button" id="login-btn-trigger" class="btn text-white dropdown-toggle px-0 border-0" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+            <button type="button" id="login-btn-trigger" class="btn text-white dropdown-toggle px-0 border-0"
+              data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
               <?php
               if ($loggedIn) {
                 ?>
@@ -201,90 +228,104 @@
             if ($loggedIn) {
               ?>
               <div class="dropdown-menu loggedin">
-                        <div>
-                          <a class="text-decoration-none text-dark" href="<?= site_url('profile'); ?>"><i class="mi fa fa-user"></i> <?= lang('profile'); ?></a>
-                        </div>
-                        <div>
-                          <a class="text-decoration-none text-dark" href="<?= shop_url('orders'); ?>"><i class="mi fa fa-heart"></i> <?= lang('orders'); ?></a>
-                        </div>
-                        <!--<div>
+                <div>
+                  <a class=" text-decoration-none text-dark" href="<?= site_url('profile'); ?>"><i
+                      class="mi fa fa-user"></i>
+                    <?= lang('profile'); ?>
+                  </a>
+                </div>
+                <div>
+                  <a class="text-decoration-none text-dark" href="<?= shop_url('orders'); ?>"><i
+                      class="mi fa fa-heart"></i>
+                    <?= lang('orders'); ?>
+                  </a>
+                </div>
+                <!--<div>
                           <a class="text-decoration-none text-dark" href="<?= shop_url('addresses'); ?>"><i class="mi fa fa-building"></i> <?= lang('addresses'); ?></a>
                         </div>-->
-                        <div>
-                          <a class="text-decoration-none text-dark" href="<?= shop_url('rateAndReview'); ?>"><i class="mi fa fa-star"></i>Rate and Review</a>
-                        </div>
-                        <div>
-                          <a class="text-decoration-none text-dark" href="<?= site_url('logout'); ?>"><i class="mi fa fa-sign-out"></i> <?= lang('logout'); ?></a>
-                        </div>
+                <div>
+                  <a class="text-decoration-none text-dark" href="<?= shop_url('rateAndReview'); ?>"><i
+                      class="mi fa fa-star"></i>Rate and Review</a>
+                </div>
+                <div>
+                  <a class="text-decoration-none text-dark" href="<?= site_url('logout'); ?>"><i
+                      class="mi fa fa-sign-out"></i>
+                    <?= lang('logout'); ?>
+                  </a>
+                </div>
+              </div>
+              <?php
+            } else {
+              ?>
+              <?php $u = mt_rand();
+              $currentUri = $this->uri->uri_string();
+              if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
+                ?>
+
+                <div class="dropdown-menu  myaccountForm validate" id="myaccountForm">
+                  <div class="loginRCard px-3">
+                    <div class="d-flex justify-content-end w-100 pb-3 ">
+                      <div class=" login-close d-flex justify-content-center align-items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="19" viewBox="0 0 20 19" fill="none">
+                          <path
+                            d="M18.3972 17.9999L9.99379 9.49995M9.99379 9.49995L1.59033 1M9.99379 9.49995L18.3973 1M9.99379 9.49995L1.59033 18"
+                            stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      </div>
                     </div>
+                    <div class="logo-k">
+                      <a class="navbar-brand" href="<?= base_url(); ?>">
+                        <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVENZUR">
+                      </a>
+                    </div>
+                    <h4 class="fw-bold letstart">Let's get started</h4>
+                    <div class="logsignBtns mt-3 d-flex justify-content-center">
+                      <button type="button" id="loginBtn" class="btn  text-white" onclick="LoginFn(this);">Log in</button>
+                      <button type="button" id="registerBtn" class="btn  text-white px-4 active"
+                        onclick="registerFnBtn(this);">Sign up</button>
+                    </div>
+                    <div id="registerBlock">
                       <?php
-                    }else{
-                      ?>  
-                        <?php $u = mt_rand();
-                          $currentUri = $this->uri->uri_string(); 
-                          if ($currentUri !== 'profile' && $currentUri !== 'login' && $currentUri !== 'login#register') {
-                        ?>
-                        
-                        <div class="dropdown-menu  myaccountForm validate" id="myaccountForm">
-                        <div class="loginRCard px-3">
-                          <div class="d-flex justify-content-end w-100 pb-3 ">
-                            <div class=" login-close d-flex justify-content-center align-items-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="19" viewBox="0 0 20 19" fill="none">
-                                <path d="M18.3972 17.9999L9.99379 9.49995M9.99379 9.49995L1.59033 1M9.99379 9.49995L18.3973 1M9.99379 9.49995L1.59033 18" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                              </svg> 
-                            </div>
-                          </div>
-                            <div class="logo-k"> 
-                                <a class="navbar-brand" href="<?= base_url(); ?>">
-                                    <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVENZUR">
-                                </a>
-                            </div>
-                            <h4 class="fw-bold letstart">Let's get started</h4>
-                            <div class="logsignBtns mt-3 d-flex justify-content-center">
-                                <button type="button" id="loginBtn" class="btn  text-white" onclick="LoginFn(this);">Log in</button>
-                                <button type="button" id="registerBtn" class="btn  text-white px-4 active" onclick="registerFnBtn(this);">Sign up</button>
-                            </div>
-                            <div id="registerBlock">
-                                <?php 
-                                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
-                                    echo form_open('register', $attrib); 
-                                ?>
-                                <div class="controls logcardinput" id="inputContainerRegister">
-                                
-                                <input type="email" id="email" name="email" class="form-control" placeholder="Please enter email or phone number" required="required"/>
-                                
-                                </div>
-                                <div class="controls" style="font-size: 12px; font-weight: bold" >
-                                Phone Number Format: 5XXXXXXXX
-                                </div>
+                      $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'registrationForm'];
+                      echo form_open('register', $attrib);
+                      ?>
+                      <div class="controls logcardinput" id="inputContainerRegister">
 
-                    <button id="registerBtnCall" type="button" class="btn  text-white continueBtn"
-                      data-bs-toggle="modal">Continue
-                      <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status"
-                        aria-hidden="true"></span>
-                    </button>
-                    <?= form_close(); ?>
-                  </div>
+                        <input type="email" id="email" name="email" class="form-control"
+                          placeholder="Please enter email or phone number" required="required" />
 
-                  <div id="loginBlock" style="display:none;">
-                    <?php
-                    $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
-                    echo form_open('login', $attrib);
-                    ?>
-                    <div class="controls logcardinput" id="inputContainer">
+                      </div>
+                      <div class="controls" style="font-size: 12px; font-weight: bold">
+                        Phone Number Format: 5XXXXXXXX
+                      </div>
 
-                      <input type="text" id="identity" name="identity" class="form-control"
-                        placeholder="Please enter email or phone number" required="required" />
-
-                    </div>
-                    <div class="controls" style="font-size: 12px; font-weight: bold">
-                      Phone Number Format: 5XXXXXXXX
+                      <button id="registerBtnCall" type="button" class="btn  text-white continueBtn"
+                        data-bs-toggle="modal">Continue
+                        <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status"
+                          aria-hidden="true"></span>
+                      </button>
+                      <?= form_close(); ?>
                     </div>
 
-                    <button id="loginBtnCall" type="button" class="btn  text-white continueBtn"
-                      data-bs-toggle="modal">Continue</button>
-                    <?= form_close(); ?>
-                  </div>
+                    <div id="loginBlock" style="display:none;">
+                      <?php
+                      $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'loginForm'];
+                      echo form_open('login', $attrib);
+                      ?>
+                      <div class="controls logcardinput" id="inputContainer">
+
+                        <input type="text" id="identity" name="identity" class="form-control"
+                          placeholder="Please enter email or phone number" required="required" />
+
+                      </div>
+                      <div class="controls" style="font-size: 12px; font-weight: bold">
+                        Phone Number Format: 5XXXXXXXX
+                      </div>
+
+                      <button id="loginBtnCall" type="button" class="btn  text-white continueBtn"
+                        data-bs-toggle="modal">Continue</button>
+                      <?= form_close(); ?>
+                    </div>
 
                   <div>
                     <span id="register-message" style="color: red;padding-top: 5px;"></span>
@@ -293,11 +334,11 @@
             }
             }
             ?>
+              </div>
             </div>
-          </div>
 
+          </div>
         </div>
-      </div>
   </section>
   <!-- top bar end -->
 
@@ -309,17 +350,17 @@
         <div class="mb-2 w-100 d-flex justify-content-between w-100">
           <div class="logosearchMob" id="shoppingdivMob">
 
-          <div class="logo-k"> <a class="navbar-brand" href="<?= site_url(); ?>"><img src="<?= base_url('assets/uploads/logos/'.$shop_settings->logo); ?>" alt="<?= $shop_settings->shop_name; ?>"></a></div>
+            <div class="logo-k"> <a class="navbar-brand" href="<?= site_url(); ?>"><img
+                  src="<?= base_url('assets/uploads/logos/' . $shop_settings->logo); ?>"
+                  alt="<?= $shop_settings->shop_name; ?>"></a></div>
             <div id="searchtoggle"><i class="bi bi-search"></i></div>
           </div>
-
-
-
         </div>
         <div id="searchbarmob">
           <div id="searchtogglecros"><i class="bi bi-x-circle-fill"></i></div>
           <?= shop_form_open('products', 'class="d-flex search-bar"'); ?>
-          <input name="query" class="form-control border-0 bg-transparent py-3 add_item_search"  id="product-search" type="search" placeholder="What are you looking for?" aria-label="Search">
+          <input name="query" class="form-control border-0 bg-transparent py-3 add_item_search" id="product-search"
+            type="search" placeholder="What are you looking for?" aria-label="Search">
           <button class="btn searchsubmitBtn" type="submit"><i class="bi bi-search"></i></button>
           <?= form_close(); ?>
           <ul id="autocomplete-suggestions" class="ui-autocomplete"></ul>
@@ -338,11 +379,14 @@
     <div class="container container-max-width">
       <div class="d-flex align-items-center flex-wrap main-menuTab">
         <div class="mob-catS" id="allcatDiv">
-          <button class="btn all-categoryBtn d-flex align-items-center justify-content-between" id="allCatmob" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+          <button class="btn all-categoryBtn d-flex align-items-center justify-content-between" id="allCatmob"
+            type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample"
+            aria-controls="offcanvasExample">
             <i class="bi bi-filter-left "></i> All Category
           </button>
 
-          <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+          <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample"
+            aria-labelledby="offcanvasExampleLabel">
             <div class="offcanvas-header">
               <h5 class="offcanvas-title" id="offcanvasExampleLabel">Categories</h5>
               <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -373,52 +417,50 @@
         <div class="mob-menu">
           <nav class="navbar navbar-expand-lg navbar-expand-md  container-max-width">
 
-              <div class="menu-av" id="sourcedivmob">
+            <div class="menu-av" id="sourcedivmob">
 
-                <button id="menuiconMob" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                  <span class="navbar-toggler-icon"><i class="bi bi-list"></i></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                  <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                      <?php
-                      $isHttps = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
-                      $domain = $_SERVER['HTTP_HOST'];
-                      $url = ($isHttps ? 'https://' : 'http://') . $domain . $_SERVER['REQUEST_URI'];
-                      ?>
-                      <a class="nav-link <?php if (site_url() == $url) {
-                        echo 'active';
-                      } ?>" aria-current="page"
-                        href="<?= site_url(); ?>">Home</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link <?php if (site_url('shop/products') == $url) {
-                        echo 'active';
-                      } ?>"
-                        href="<?= site_url('shop/products'); ?>">Products</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link <?php if (site_url('shop/products?promo=yes') == $url) {
-                        echo 'active';
-                      } ?>"
-                        href="<?= site_url('shop/products?promo=yes'); ?>">Promotions</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link <?php if (site_url('shop/bestsellers') == $url) {
-                        echo 'active';
-                      } ?>"
-                        href="<?= site_url('shop/bestsellers'); ?>">Best Sellers</a>
-                    </li>
+              <button id="menuiconMob" class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"><i class="bi bi-list"></i></span>
+              </button>
+              <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                  <li class="nav-item">
+                    <?php
+                    $isHttps = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+                    $domain = $_SERVER['HTTP_HOST'];
+                    $url = ($isHttps ? 'https://' : 'http://') . $domain . $_SERVER['REQUEST_URI'];
+                    ?>
+                    <a class="nav-link <?php if (site_url() == $url) {
+                      echo 'active';
+                    } ?>" aria-current="page" href="<?= site_url(); ?>">Home</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link <?php if (site_url('shop/products') == $url) {
+                      echo 'active';
+                    } ?>" href="<?= site_url('shop/products'); ?>">Products</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link <?php if (site_url('shop/products?promo=yes') == $url) {
+                      echo 'active';
+                    } ?>" href="<?= site_url('shop/products?promo=yes'); ?>">Promotions</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link <?php if (site_url('shop/bestsellers') == $url) {
+                      echo 'active';
+                    } ?>" href="<?= site_url('shop/bestsellers'); ?>">Best Sellers</a>
+                  </li>
 
 
-                    <!--<div id="mobnav">
+                  <!--<div id="mobnav">
 
                     </div>-->
 
-                  </ul>
+                </ul>
 
-                </div>
               </div>
+            </div>
 
           </nav>
         </div>
@@ -472,9 +514,6 @@
             </span>
 
           </div>
-
-
-
         </div>
       </div>
     </div>
@@ -608,19 +647,21 @@
           <div class="addicon">
             <p class="m-0 fs-5 fw-semibold text-start text-dark">Cart Total</p>
           </div>
-          
-            <p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark" id="product-canvas-total"></p>
-          
+
+          <p class="m-0 fs-5 fw-semibold mt-2 text-end text-dark" id="product-canvas-total"></p>
+
         </div>
 
-              <div class="border-0 pb-4 d-flex flex-nowrap mt-3">
-                  <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6" onclick="redirectToCheckout('<?= site_url('cart'); ?>')">
-                  Checkout
-                  </button>
-                  <button type="button" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6 offcanvasClose" data-bs-dismiss="offcanvas">Continue Shopping</button>
-              </div>
-          </div>
+        <div class="border-0 pb-4 d-flex flex-nowrap mt-3">
+          <button type="submit" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6"
+            onclick="redirectToCheckout('<?= site_url('cart'); ?>')">
+            Checkout
+          </button>
+          <button type="button" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6 offcanvasClose"
+            data-bs-dismiss="offcanvas">Continue Shopping</button>
+        </div>
       </div>
+    </div>
   </div>
 
   <!-- product popup start -->
@@ -675,6 +716,50 @@
 
   </div>
   <!-- product popup end -->
+  
+  <!-- Notify Modal Ends -->
+  <div class="modal fade" id="notifyModal" tabindex="-1" aria-labelledby="notifyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content px-4 rounded-4">
+        <div class="modal-header border-0" style="padding-bottom: 0px;">
+          <button type="button" class="modalcloseBtn" data-bs-dismiss="modal" aria-label="Close"><i
+              class="bi bi-x-lg"></i></button>
+          <h5 class="">Get notified when this product is available</h5>
+        </div>
+        <div class="modal-body" style="padding-top: 5px;">
+          <?php
+          $attrib = ['class' => 'validate', 'role' => 'form', 'id' => 'notifyMeForm'];
+          echo form_open('notify_me', $attrib);
+          ?>
+           <span id="notify-response"></span>
+          <div class="d-flex flex-row justify-content-center mt-2">
+            <input class="m-1 form-control required" type="email" name="notify_email" id="notify_email"
+              data-index="0" />
+              
+            <button type="button" type="submit" id="notifyMeBtn" class="btn text-white continueBtn rounded w-75 mx-auto">Submit</button>
+            <input type="hidden" id="product_input" name="product_input" value="" />
+          </div>
+          I agree to receive notifications about this item and similar products
+          <div class="notify-me-product">
+            <div class="product-image-wrapper">
+              <img id="notify_product_image" src="" width="100" height="100">
+            </div>
+            <div class="product-details">
+              <div id="notify_product_title"></div>
+              <div id="notify_product_price"></div>
+              <div id="notify_out_of_stock">Out of stock</div>
+            </div>
+
+          </div>
+        </div>
+
+        <?= form_close(); ?>
+      </div>
+    </div>
+  </div>
+
+  <!--- End Notify modal -->
+
 
   <?php if ($this->session->flashdata('error')) { ?>
     <div class="error-message">
@@ -683,27 +768,27 @@
     </div>
   <?php } ?>
   <script>
-    $('.login-close').click(function(){
-  $(this).parent().parent().parent().removeClass('show');
-  $(':root').css('overflow', 'auto');
-  $(this).parent().parent().parent().click(function(){
-    $('#myaccountForm').hide();
-  })
+    $('.login-close').click(function () {
+      $(this).parent().parent().parent().removeClass('show');
+      $(':root').css('overflow', 'auto');
+      $(this).parent().parent().parent().click(function () {
+        $('#myaccountForm').hide();
+      })
 
-});
+    });
 
-$('#login-btn-trigger').click(function(){
-  $(this).siblings(".myaccountForm.validate ").addClass('show');
+    $('#login-btn-trigger').click(function () {
+      $(this).siblings(".myaccountForm.validate ").addClass('show');
 
-  if ($(".dropdown-menu.myaccountForm.validate ").hasClass("show")) {
+      if ($(".dropdown-menu.myaccountForm.validate ").hasClass("show")) {
 
-$(':root').css('overflow', 'hidden');
+        $(':root').css('overflow', 'hidden');
 
-}
-else{
-$(':root').css('overflow', 'auto');
-}
+      }
+      else {
+        $(':root').css('overflow', 'auto');
+      }
 
 
-});
-</script>
+    });
+  </script>

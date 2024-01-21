@@ -1584,4 +1584,20 @@ class Shop_model extends CI_Model
 
     }
 
+    public function get_notify_data($notify_email, $product_id) {
+        // Check if the email already exists for the given product_id
+        $this->db->where('email', $notify_email);
+        $this->db->where('product_id', $product_id);
+        $query = $this->db->get('out_of_stock_notify'); // 'sma_notify' is the name of your database table
+
+        return $query->num_rows(); // Return the result as an associative array
+    }
+
+    public function insert_notify_data($data) {
+        // Insert data into the database
+        $this->db->insert('out_of_stock_notify', $data); // 'sma_notify' is the name of your database table
+
+        return $this->db->insert_id(); // Return the ID of the inserted row
+    }
+
 }

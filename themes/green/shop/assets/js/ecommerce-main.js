@@ -205,7 +205,7 @@ function update_cart(t) {
     $.each(t.contents, function () {
       var t = this,
         a =
-        '<div class="d-flex align-items-center flex-mobile-column  py-4">' +
+          '<div class="d-flex align-items-center flex-mobile-column  py-4">' +
           '<div class="cart-item-image pe-3">' +
           '<img style="width: 100px;height: 90px;object-fit: contain;" src="' +
           site.base_url +
@@ -238,7 +238,11 @@ function update_cart(t) {
           "</div></div></div> </div>";
 
       $(
-        '<div class="cart-content-wrapper" id="' + this.rowid + '">' + a + "</div>"
+        '<div class="cart-content-wrapper" id="' +
+          this.rowid +
+          '">' +
+          a +
+          "</div>"
       ).appendTo("#cart-table-new");
       //$(a).appendTo('#cart-table-new');
     });
@@ -578,6 +582,7 @@ function gen_html(t) {
           r.promotion && r.promo_price && 0 != r.promo_price
             ? r.formated_promo_price
             : l);
+      //  console.log('quantitiy', parseFloat(r.quantity));
       //1 != site.settings.products_page && (0 === a ? e += '<div class="row">' : a % s == 0 && (e += '</div><div class="row">')),
       //e += '<div class="product-container ' + i + " " + (1 == site.settings.products_page ? "grid-item" : "") + '">\n        <div class="product ' + o + " " + (1 == site.settings.products_page ? "grid-sizer" : "") + '">\n        ' + (r.promo_price ? '<span class="badge badge-right theme">Promo</span>' : "") + '\n        <div class="product-top">\n        <div class="product-image">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <img class="img-responsive" src="' + site.base_url + "assets/uploads/" + r.image + '" alt=""/>\n        </a>\n        </div>\n        <div class="product-desc">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <h2 class="product-name">' + r.name + "</h2>\n        </a>\n        <p>" + r.details + '</p>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        ' + (1 == site.shop_settings.hide_price ? "" : '\n        <div class="product-bottom">\n        <div class="product-price">\n        ' + (r.promo_price ? '<del class="text-danger text-size-sm">' + l + "</del>" : "") + "\n        " + c + '\n        </div>\n        <div class="product-rating">\n        <div class="form-group" style="margin-bottom:0;">\n        <div class="input-group">\n        <span class="input-group-addon pointer btn-minus"><span class="fa fa-minus"></span></span>\n        <input type="text" name="quantity" class="form-control text-center quantity-input" value="1" required="required">\n        <span class="input-group-addon pointer btn-plus"><span class="fa fa-plus"></span></span>\n        </div>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        <div class="product-cart-button">\n        <div class="btn-group" role="group" aria-label="...">\n        <button class="btn btn-info add-to-wishlist" data-id="' + r.id + '"><i class="fa fa-heart-o"></i></button>\n        <button class="btn btn-theme add-to-cart" data-id="' + r.id + '"><i class="fa fa-shopping-cart padding-right-md"></i> ' + lang.add_to_cart + '</button>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        </div>') + '\n        </div>\n        <div class="clearfix"></div>\n        </div>',
       //1 != site.settings.products_page && a + 1 === t.length && (e += "</div>")
@@ -632,15 +637,14 @@ function gen_html(t) {
       }
       e += "</div>";
       e += '<div class="d-flex align-items-center justify-content-between">';
-      e +=
-        '<div class="price text-start  py-2"><h4 class="m-0 fw-bold">';
+      e += '<div class="price text-start  py-2"><h4 class="m-0 fw-bold">';
       if (r.promotion) {
         e += r.formated_promo_price;
       } else {
         e += l;
       }
       e += "</h4></div>";
-     
+
       e +=
         '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between">';
       e +=
@@ -653,13 +657,28 @@ function gen_html(t) {
       e += "</div>";
       e += "</div>";
       e += "</div>";
-    
+
       //e += '</a>';
       e += "<div>";
-      e +=
-        '<button type="button" data-id="' +
-        r.id +
-        '" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart" aria-controls="offcanvasWithBothOptions">Add to cart </button>';
+      const prod_quantity = parseFloat(r.quantity);
+      if (isNaN(prod_quantity) || prod_quantity === 0) {
+        e += "Out of Stock ";
+        e +=
+          '<button type="button" class="btn btn-link btn-notify-add-to-list" href="#" data-id="' +
+          r.id +
+          '" data-title="' +
+          r.name +
+          '" data-image="' +
+          r.image +
+          '" data-price="' +
+          (r.promotion ? r.formated_promo_price : l) +
+          '" >Notify me</button>';
+      } else {
+        e +=
+          '<button type="button" data-id="' +
+          r.id +
+          '" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart" aria-controls="offcanvasWithBothOptions">Add to cart </button>';
+      }
       e += "</div>";
       e += "</div>";
       e += "</div>";
@@ -2215,8 +2234,7 @@ $(document).ready(function () {
           //$("#register-message").html(errorMessage);
           //console.error("Error parsing JSON:", error);
           // You can display an error message to the user or perform other actions
-        }
-        finally {
+        } finally {
           // Hide the spinner after the AJAX request is complete
           $("#spinner").addClass("d-none");
           //$("#registerBtnCall").prop("disabled", false);
@@ -2364,29 +2382,6 @@ $(document).ready(function () {
     }
   }
 
-  // function handlePaste(currentInput, totalFields) {
-  //   setTimeout(function () {
-  //     const pastedValue = currentInput.value;
-  //     const characters = pastedValue.split("");
-  //     console.log(characters);
-  //     for (let i = 0; i < characters.length; i++) {
-  //       let char = characters[i];
-  //       currentInput.value = char;
-
-  //       if (i < characters.length - 1) {
-  //         let nextInputId = `${currentInput.id.substring(
-  //           0,
-  //           currentInput.id.lastIndexOf("_") + 1
-  //         )}${i + 2}`;
-  //         let nextInput = document.getElementById(nextInputId);
-  //         if (nextInput) {
-  //           nextInput.focus();
-  //         }
-  //       }
-  //     }
-  //   }, 0);
-  // }
-
   function bindOtpKeyupEvents(prefix, totalFields) {
     //document.getElementById('login_otp_1').focus();
     //document.getElementById('register_otp_1').focus();
@@ -2407,60 +2402,9 @@ $(document).ready(function () {
     }
   }
 
-  // $(".ap-otp-input").on("paste", function (ev) {
-  //   console.log("paste", ev);
-  //   // Handle paste event
-  //   const clip = ev.originalEvent.clipboardData.getData("text").trim();
-  //   console.log(clip);
-  //   //handlePaste(this, totalFields);
-  // });
-
-  //   const $inp = $(".ap-otp-input");
-  // console.log('inp', $inp);
-
-  // $inp.on({
-  //   paste(ev) { // Handle Pasting
-  //     console.log('testing');
-  //     const clip = ev.originalEvent.clipboardData.getData('text').trim();
-  //     // Allow numbers only
-  //     if (!/\d{6}/.test(clip)) return ev.preventDefault(); // Invalid. Exit here
-  //     // Split string to Array or characters
-  //     const s = [...clip];
-  //     // Populate inputs. Focus last input.
-  //     $inp.val(i => s[i]).eq(5).focus();
-  //   },
-  //   keyup(ev) { // Handle typing
-  //     console.log('test');
-  //     const i = $inp.index(this);
-  //     if (this.value) $inp.eq(i + 1).focus();
-  //   },
-  //   keydown(ev) { // Handle Deleting
-  //     console.log('down');
-  //     const i = $inp.index(this);
-  //     if (!this.value && ev.key === "Backspace" && i) $inp.eq(i - 1).focus();
-  //   }
-
-  // });
-
   // Bind keyup events for login OTP
   bindOtpKeyupEvents("login_otp", 6);
 
-  // Bind keyup events for register OTP
-  //   const target = document.querySelector(".ap-otp-input");
-  // if(target) {
-  //   target.addEventListener("paste", (event) => {
-  //     event.preventDefault();
-
-  //     let paste = (event.clipboardData || window.clipboardData).getData("text");
-  //     paste = paste.toUpperCase();
-  //     console.log('paste', paste);
-  //     const selection = window.getSelection();
-  //     if (!selection.rangeCount) return;
-  //     selection.deleteFromDocument();
-  //     selection.getRangeAt(0).insertNode(document.createTextNode(paste));
-  //     selection.collapseToEnd();
-  //   });
-  // }
   bindOtpKeyupEvents("register_otp", 6);
 
   bindOtpKeyupEvents("checkout_login", 6);
@@ -2469,53 +2413,56 @@ $(document).ready(function () {
 
   bindOtpKeyupEvents("first_login", 6);
 
-  //     const loginInput =  $("#identity");
+  $(document).on("click", ".btn-notify-add-to-list", function (t) {
+    t.preventDefault();
+    var dataId = $(this).data("id");
+    var imageSrc = site.base_url + "assets/uploads/" + $(this).data("image");
+    var dataTitle = $(this).data("title");
+    var dataPrice = $(this).data("price");
+    // Log the value to the console (optional)
+    console.log("data-id:", dataId);
+    $("#product_input").val(dataId);
+    $("#notify_product_title").text(dataTitle);
+    $("#notify_product_price").text(dataPrice);
+    $("#notify_product_image").attr("src", imageSrc);
 
-  //     // var input_address_phone = document.querySelector("#identity");
-  //     // window.intlTelInput(input_address_phone, {
-  //     //   //initialCountry: "SA"
-  //     // });
+    $("#notifyModal").on("shown.bs.modal", function () {
+      $("#notify-response").text("");
+    });
+    $("#notifyModal").modal("show");
+  });
 
-  //     // Initialize intlTelInput with default options
+  $("#notifyMeBtn").click(function (e) {
+    e.preventDefault();
+    // Clear previous error messages
+    $("#notify-response").text("");
+    // Check if email field is empty
+    if ($("#notify_email").val() == "") {
+      // Display an error message
+      $("#notify-response").text("Please enter your email.");
+    } else {
+      // Proceed with the AJAX call if the email field is not empty
+      var formData = $("#notifyMeForm").serialize();
 
-  //   //   const iti = window.intlTelInput(loginInput, {
-  //   //     initialCountry: 'auto',
-  //   //     onlyCountries: ['sa', 'ae'],
-  //   //     separateDialCode: true,
-  //   //     utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
-  //   // });
-
-  //   const iti = loginInput.intlTelInput({
-  //     initialCountry: 'auto',
-  //     onlyCountries: ['sa', 'ae'], // Saudi Arabia, United Arab Emirates
-  //     separateDialCode: true,
-  //     utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
-  // });
-
-  //   // Keep track of the last entered value
-  //   let lastValue = $("#identity").val();
-
-  //   // Add event listener for input changes
-  //   loginInput.on('input', function () {
-  //       const inputValue = $("#identity").val();
-  //       const isFirstCharacterDigit = /^\d/.test(inputValue);
-
-  //       // Change input type and reinitialize intlTelInput accordingly
-  //       if (isFirstCharacterDigit) {
-  //         console.log('firs character') ;
-  //           if (lastValue !== inputValue) {
-  //             console.log('test');
-  //               iti.destroy(); // Destroy the previous instance
-  //               loginInput.prop('type', 'text'); // Change input type to tel
-  //               window.intlTelInput(loginInput, { onlyCountries: ['sa', 'ae'] }); // Reinitialize intlTelInput on the updated input
-  //               loginInput.focus(); // Set focus back to the input
-  //               lastValue = inputValue; // Update last entered value
-  //           }
-  //       } else {
-  //           iti.destroy(); // Destroy the previous instance
-  //           loginInput.prop('type', 'text'); // Change input type to text
-  //           loginInput.focus(); // Set focus back to the input
-  //           lastValue = inputValue; // Update last entered value
-  //       }
-  //   });
+      $.ajax({
+        type: "POST",
+        url: $("#notifyMeForm").attr("action"),
+        data: formData,
+        success: function (response) {
+          if (response && typeof response === "object") {
+            
+            $("#notify-response").html("<p style='color: "+response.color+"'>" + response.message + "</p>");
+          } else {
+            console.error("Invalid response format:", response);
+            $("#notify-response").html(
+              "<p style='color: #FF5252'>Failed to process the server response.</p>"
+            );
+          }
+        },
+        error: function (error) {
+          console.error(error);
+        },
+      });
+    }
+  });
 });
