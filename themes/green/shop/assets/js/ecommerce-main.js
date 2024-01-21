@@ -660,7 +660,7 @@ function gen_html(t) {
 
       //e += '</a>';
       e += "<div>";
-      const prod_quantity = parseFloat(r.quantity);
+      const prod_quantity = parseFloat(r.product_quantity);
       if (isNaN(prod_quantity) || prod_quantity === 0) {
         e += "Out of Stock ";
         e +=
