@@ -2221,15 +2221,13 @@ $(document).ready(function () {
               }, 1000);
             }
           } else {
-            const errorMessage =
-              "If you get an OTP and the popup does not appear, click here to enter the OTP. If the popup still does not show, there might be an issue. Please refresh the page and try again.";
+           
             document.getElementById("registerBtnCall").remove();
-            $("#register-message").html(errorMessage);
+            $("#register-message").html(message.message);
           }
         } catch (error) {
           // If there's an error in parsing JSON, catch the exception and handle it
-          const errorMessage =
-            "If you get an OTP and the popup does not appear, click <a href='/register_otp_form'>here</a> to Enter the OTP. If the popup still does not show, there might be an issue. Please refresh the page and try again.";
+          
           //ocument.getElementById("registerBtnCall").remove();
           //$("#register-message").html(errorMessage);
           //console.error("Error parsing JSON:", error);
