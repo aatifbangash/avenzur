@@ -571,7 +571,7 @@ class Shop_model extends CI_Model
 
     }
 
-    public function getBestSellers($limit = 12, $promo = true)
+    public function getBestSellers($limit = 16, $promo = true)
     {
         $countryId = get_cookie('shop_country', true); //$this->session->userdata('country');
         $this->db->select("
@@ -620,7 +620,7 @@ class Shop_model extends CI_Model
         }
 
         if ($promo) {
-            $this->db->order_by('promotion desc');
+            //$this->db->order_by('promotion desc');
         }
         $this->db->group_by('products.id');
         $this->db->order_by('id desc');
@@ -645,7 +645,7 @@ class Shop_model extends CI_Model
         return $result;
     }
 
-    public function getBestSellersAdditional($limit = 12, $promo = true)
+    public function getBestSellersAdditional($limit = 16, $promo = true)
     {
         $countryId = get_cookie('shop_country', true); //$this->session->userdata('country');
         $this->db->select("
@@ -694,7 +694,7 @@ class Shop_model extends CI_Model
         }
 
         if ($promo) {
-            $this->db->order_by('promotion desc');
+            //$this->db->order_by('promotion desc');
         }
         $this->db->group_by('products.id');
         $this->db->order_by('id asc');
