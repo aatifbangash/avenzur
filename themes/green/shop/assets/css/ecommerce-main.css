@@ -264,7 +264,7 @@ section.heroSlider .carousel-control-prev {
   background-size: cover;
   background-repeat: no-repeat;
   border-radius: 12px;
-  min-height: 295px;
+  /*min-height: 295px;*/
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -1892,7 +1892,7 @@ button.modalcloseBtn {
     object-fit: contain;
   }
   .boomsale {
-    padding: 0 39px 33px 0;
+    padding: 0 15px 0px 0;
   }
   table#cart-table tr td span.cart-item-image img {
     width: auto;
@@ -2046,7 +2046,7 @@ button.modalcloseBtn {
   }
   .shoppingCardmob {
     margin-top: 25px !important;
-    padding: 22px 8px !important;
+    padding: 20px !important;
     justify-content: center !important;
   }
   .qtyRmv {
@@ -2097,7 +2097,7 @@ div#myaccountForm {
 .margin-minus {margin: 0 -12px;}
 .loginRCard  .logo-k {margin-bottom: 40px;}
 #myaccountForm.show {display: flex !important; justify-content: center !important;}
-.slick-dots {display: none !important;}
+/*.slick-dots {display: none !important;}*/
 .m-l-10 {margin-left: -10px;}
 .product-title {font-size: 18px;}
 .product-price {font-size: 16px;}
@@ -2266,7 +2266,12 @@ html[lang='ar'] .product-detail.product-count .add-to-cart {margin-left: 0 !impo
   }
 
   @media screen and (max-width: 1024px) {
+    /**********asma 19-1 **********/
 
+    .boom-categories .btitle {
+      font-size: 18px; }
+
+      /*********************/
     .categoryTabs ul  li{margin-bottom: 10px !important;}
 
     .widgets-wrapper .card-text {min-height: 65px;}
@@ -2288,7 +2293,7 @@ html[lang='ar'] .specialOfferP .quantity {padding-right: 5px;}
   @media screen and (min-device-width: 480px) and (max-device-width: 991px) { 
 
 .loginRCard .logo-k {margin-bottom: 20px;}
-.navbar-brand img{ height: 35px; }
+.navbar-brand img{ height: 25px; }
 h4.letstart {font-size: 16px;}
 .loginRCard {padding: 10px; margin-top: 0;}
 
@@ -2316,6 +2321,19 @@ h4.letstart {font-size: 16px;}
     }
   
 @media screen and (max-width: 991px) {
+  /**********asma 19-1 **********/
+  .main-menuTab {
+    padding: 10px 15px;
+  }
+  .navbar {padding: 0;}
+  .navbar-collapse.show  .navbar-nav {margin-bottom: 15px !important;}
+  button.btn.all-categoryBtn {margin-bottom: 0;}
+  .logo-searchBar .py-3{padding: 10px 0 !important;}
+  .logo-searchBar .mb-2 {margin-bottom: 0 !important;}
+  .skin-container {display:none}
+
+
+/***********************/
   .categoryTabs .nav-pills {
     margin-bottom: 0px;
   }
@@ -2333,11 +2351,11 @@ h4.letstart {font-size: 16px;}
   .cartIcon .dropdown-toggle {padding-top: 0 !important;}
   nav .menu-av li.nav-item a.nav-link:before {display: none;}
   .navbar {padding-left: 0; padding-right: 0;}
-  .main-menuTab { padding: 10px 20px}
+  /*.main-menuTab { padding: 10px 20px}*/
   .navbar-nav {border-bottom: 1px solid #eee;}
   .navbar .nav-link  {padding: 10px 0 !important;}
   #offcanvasProductsLabel  {font-size: 20px; font-weight: bold; width: 100%; border-bottom: 1px solid #eee; padding-bottom: 10px;}
-  .main-menuTab { padding: 5px 15px;}
+  /*.main-menuTab { padding: 5px 15px;}*/
  
   section{ max-width:100% !important;}
 .loginRCard {width: 93% !important;}
@@ -2380,6 +2398,32 @@ h2{font-size: 26px !important;}
 
 @media screen and (max-width: 480px) {
 
+  /**********asma 19-1 **********/
+.footer-container h5 {font-weight: bolder; font-size: 18px;} 
+.slick-slide {margin: 0 5px;}
+.boom-product-cat img {height: 100px}
+.btitle {font-size: 16px !important; line-height: 25px;}   
+.boom-product-cat .primary-buttonAV.mt-3 {margin-top:0px !important;} 
+.mobile-boom-categories  .boom-product-cat.py-4.px-4{ padding: 15px !important; }
+.m-l-10 {margin-left: 0 !important;}
+.cat-col-6-padding  {margin: 0 -6px;}
+.cat-col-6-padding .col-6{padding: 0 6px;}
+.product-m-order1 {order:1}
+.product-m-order2 {order:2}
+.flex-sm-column{flex-direction: column; align-items: start !important;}
+.vitamin-but {margin-top: 16px !important;}
+
+
+.slick-dots li{ padding-top: 15px;}
+.slick-dots li button:before {font-size: 16px !important;}
+.slick-dots li.slick-active button:before {opacity: .75;color: #662d91 !important;}
+.slick-dots {position: absolute; bottom: -30px;}
+.brands-logo-cont.section-marg-top {margin-top: 60px;}
+
+.feature-cards .cardImg {padding: 8px 11px 11px !important;}
+
+/**********************/
+
   /***asma 17-1 ****/
   .controls.logcardinput input {
     padding: 8px;
@@ -2387,10 +2431,10 @@ h2{font-size: 26px !important;}
   .otpcontainer .modal-body{
     padding: 0px;
   }
-  .feature-cards .cardImg img { height: 100px; }
+  .feature-cards .cardImg img { height: 115px; }
     .feature-cards .card-body h5 {
       font-size: 16px;}
-      .feature-cards .slick-track {margin-left: -10px;}
+      .feature-cards .slick-track {margin-left: -6px;}
       .address-but {margin-bottom: 10px !important; }
  
 

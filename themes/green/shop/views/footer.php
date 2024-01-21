@@ -32,25 +32,24 @@
         </div>
 
         <div class="row pt-5">
-          <div class="col-md-5 col-sm-12">
+          <div class="col-lg-5 col-md-5 col-sm-12">
+            <h5><a class="text-dark text-decoration-none"><b>Contact Us</b></a></h5>
 
-
-            <h6>CR:1010160412</h6>
+            <h6><b> CR: </b> 1010160412</h6>
             <h6>شركة فرماء الطبية</h6>
             <h6>٦٦٧٥ ، العليا، حي العليا، ٢٦٢٨</h6>
-            <h6>الرياض</h6>
-            <h6>12241</h6>
+            <h6> الرياض , 12241</h6>
             <!--<h6>KSA ,Riyadh ,Olaya main road,Mousa bin nosair street.</h6>
                   <h6>Silicon building no.1, Office 7</h6>-->
-            <h6>Phone No. 114654636</h6>
-            <h6><a href="mailto:Email info@avenzur.com" class="text-dark text-decoration-none">Email:
+            <h6><b> Phone No: </b> 114654636</h6>
+            <h6><a href="mailto:Email info@avenzur.com" class="text-dark text-decoration-none"> <b> Email: </b>
                 info@avenzur.com</a></h6>
 
 
           </div>
-          <div class="col-md-2 col-sm-12">
+          <div class="col-lg-2 col-md-3 col-sm-12">
             <div>
-              <h6><a class="text-dark text-decoration-none"><b>Our Top Categories</b></a></h6>
+              <h5><a class="text-dark text-decoration-none"><b>Our Top Categories</b></a></h5>
               <h6><a href="<?= site_url('category/beauty'); ?>" class="text-dark text-decoration-none"> Beauty</a></h6>
               <h6><a href="<?= site_url('category/herbal'); ?>" class="text-dark text-decoration-none"> Herbal</a></h6>
               <h6> <a href="<?= site_url('category/medical'); ?>" class="text-dark text-decoration-none">Medicine</a>
@@ -62,9 +61,9 @@
             </div>
           </div>
 
-          <div class="col-md-2 col-sm-12">
+          <div class="col-lg-2 col-md-2 col-sm-12">
             <div>
-              <h6><a class="text-dark text-decoration-none"><b>Store Policies</b></a></h6>
+              <h5><a class="text-dark text-decoration-none"><b>Store Policies</b></a></h5>
 
               <h6><a href="<?= site_url('shop/page/privacy-policy'); ?>" class="text-dark text-decoration-none"> Privacy
                   Policy</a></h6>
@@ -77,20 +76,20 @@
             </div>
           </div>
 
-              <div class="col-md-2 col-sm-12">
+              <div class="col-lg-2 col-md-2 col-sm-12">
                 <div class="footer-icons">
-                  <h6><a class="text-dark text-decoration-none" ><b>About Us</b></a></h6>
+                  <h5><a class="text-dark text-decoration-none" ><b>About Us</b></a></h5>
                   <h6><a href="<?= site_url('shop/page/about-us'); ?>" class="text-dark text-decoration-none"> About Avenzur</a></h6>
                   <h6><a href="<?= site_url('shop/contact_us'); ?>" class="text-dark text-decoration-none" >Contact Us </a></h6>
                   <h6><a href="<?= site_url('profile'); ?>" class="text-dark text-decoration-none" >My Account </a></h6>
                 </div>
               </div>
             </div>
-            <div class="row pb-2 align-items-center">
-              <div class="col-md-7 col-sm-12">
-                <img src="<?= base_url('assets/images/banners/pay.png'); ?>" alt="logo" class="footer-pay w-50 mt-3">
-              </div>
-              <div class="col-md-5 col-sm-12">
+            <div class="d-flex justify-content-between pb-2 align-items-center flex-sm-column">
+              
+              <img src="<?= base_url('assets/images/banners/pay.png'); ?>" alt="logo" class="footer-pay w-50 mt-3">
+              
+              
                 <div class="mobficon justify-content-start mt-3">
                   <h6 class="m-0">
                     <a href="https://www.facebook.com/people/Avenzur/61551081317111/" class="text-dark text-decoration-none mx-2"> <i class="bi bi-facebook"></i></a>
@@ -101,8 +100,8 @@
                     <a href="https://www.tiktok.com/@avenzur?_t=8i4BKIMkJVK&_r=1" class="text-dark text-decoration-none mx-2"><i class="bi bi-tiktok"></i></a>
                     <a href="https://www.snapchat.com/add/avenzurworld" class="text-dark text-decoration-none mx-2"><i class="bi bi-snapchat"></i></a>
                   </h6>
-              </div>
-              </div>
+                </div>
+              
             </div>
           </div>
           <div class="text-center border-top pt-3 pb-2">

@@ -1208,7 +1208,7 @@ $(document).ready(function () {
   $(".popularCat").slick({
     infinite: false,
     speed: 300,
-    slidesToShow: 4,
+    slidesToShow: 2,
     slidesToScroll: 1,
     responsive: [
       {
@@ -1392,7 +1392,7 @@ $(document).ready(function () {
       {
         breakpoint: 480,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 2,
           slidesToScroll: 1,
         },
       },
@@ -1434,6 +1434,9 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
+          dots: true,
+          prevArrow: false,
+          nextArrow: false
         },
       },
       // You can unslick at a given breakpoint now by adding:

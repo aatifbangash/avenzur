@@ -188,15 +188,15 @@
     <!-- banner area 1 end -->
 
     <!-- boom categores -->
-    <section class="boom-categories mt-4">
+    <section class="boom-categories mobile-boom-categories mt-4">
       <div class="container container-max-width">
         <div class="row">
 
           <div class="col-lg-8 col-md-12 col-sm-12">
             
-            <div class="row align-items-stretch">
+            <div class="row align-items-stretch cat-col-6-padding">
 
-              <div class="col-lg-8 col-md-7 col-sm-12 mobile-marg-b ">
+              <div class="col-lg-8 col-md-7 col-6">
                 <div class="boom-product-cat py-4 px-4" style="background-image: url(<?= base_url('assets/images/banners/boom1.png'); ?>)">
                   <div class="row align-items-center">
                     <div class="col-md-5">
@@ -204,27 +204,27 @@
                       <img loading="lazy" src="<?= base_url('assets/images/banners/boomtab1.png'.'?timestamp='.time()); ?>" alt=""  class="w-100"/>
                     </div>
                     <div class="col-lg-7 col-md-6">
-                      <p class="m-0 py-2"><span class="boom-parag"></span></p>
+                      <!--<p class="m-0 py-2"><span class="boom-parag"></span></p>-->
                       <span class="btitle py-3"><span style="font-weight: bold;">Ghali'or</span> Collection</span>
-                      <a href="https://avenzur.com/brand/ghalior-paris1"><button type="button" class="btn primary-buttonAV mt-4 pt-1">Buy now <i class="bi bi-chevron-right ms-1"></i></button></a>
+                      <a href="https://avenzur.com/brand/ghalior-paris1"><button type="button" class="btn primary-buttonAV mt-3 pt-1">Buy now <i class="bi bi-chevron-right ms-1"></i></button></a>
 
                     </div>
                   </div>
                 </div>
               </div>
-              <div class="col-lg-4 col-md-5 col-sm-12">
+              <div class="col-lg-4 col-md-5 col-6">
                 <div class="boom-product-cat py-4 px-4" style="background-image: url(<?= base_url('assets/images/banners/boom2.png'); ?>)">
                   <div class="row align-items-center">
                    
-                    <div class="col-md-12">
-                      <p class="m-0 py-2"><span class="boom-parag"></span></p>
+                    <div class="col-md-12 product-m-order2">
+                      <!--<p class="m-0 py-2"><span class="boom-parag"></span></p>-->
                       <span class="btitle py-3"><span style="font-weight: bold;">Artelac</span> Advanced Eye Drops</span>
                       <a href="https://avenzur.com/product/artelac-advanced-eye-drops-111003332">
                         <button type="button" class="btn primary-buttonAV mt-3 pt-1">Buy now <i class="bi bi-chevron-right ms-1s"></i></button>
                       </a>
 
                     </div>
-                    <div class="m-l-10">
+                    <div class="m-l-10 product-m-order1">
 
                       <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack.png'.'?timestamp='.time()); ?>" alt=""  class="w-100"/>
                     </div>
@@ -234,39 +234,39 @@
             </div>
 
             <!-- boom-sectond row -->
-            <div class="row mt-4 boom-product-cat-mob-marg">
+            <div class="row mt-4 boom-product-cat-mob-marg cat-col-6-padding">
 
-              <div class="col-md-5 col-sm-12 mobile-marg-b ">
+              <div class="col-md-5 col-sm-12 mobile-marg-b col-6">
                 <div class="boom-product-cat py-4 px-4 " style="background-image: url(<?= base_url('assets/images/banners/boom4.png'); ?>)">
-                  <div class="row ">
+                  <div class="row align-items-center">
                    
-                    <div class="col-md-6 pe-md-0">
-                      <p class="m-0 py-2"><span class="boom-parag"></span></p>
+                    <div class="col-md-6 pe-md-0 product-m-order2">
+                      <!--<p class="m-0 py-2"><span class="boom-parag"></span></p>-->
                       <span class="btitle py-3"><span style="font-weight: bold;">Laperva</span> Collections</span>
                       <a href="https://avenzur.com/brand/laperva">
                       <button type="button" class="btn primary-buttonAV mt-3 pt-1">Buy now <i class="bi bi-chevron-right ms-1s"></i></button>
                       </a>
                     </div>
-                    <div class="col-md-6 p-0">
+                    <div class="col-md-6 p-0 product-m-order1">
 
                       <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack3.png'.'?timestamp='.time()); ?>" alt=""  class="w-100"/>
                     </div>
                   </div>
                 </div>
               </div>
-              <div class="col-md-7 col-sm-12 mobile-marg-b mobile-h-marg-b-0">
+              <div class="col-md-7 col-sm-12 col-6 mobile-marg-b mobile-h-marg-b-0">
                 <div class="boom-product-cat py-4 px-4" style="background-image: url(<?= base_url('assets/images/banners/boom5.png'); ?>)">
                   <div class="d-flex align-items-center mobile-wrap">
                    
-                    <div class="col-md-6 p-md-0 boomsale">
+                    <div class="col-md-6 p-md-0 boomsale product-m-order2">
                       <span class="bigsale"></span>
                       <p class="m-0 py-2"><span class="boom-parag"></span></p>
-                      <span class="btitle "><span style="font-weight: bold;">Mavala Scientifique K+Pro</span> Keratin Nail Hardener 5ml</span>
+                      <span class="btitle py-3"><span style="font-weight: bold;">Mavala Scientifique K+Pro</span> Keratin Nail Hardener 5ml</span>
                       <a href="https://avenzur.com/product/mavala-scientifique-k-pro-keratin-nail-hardener-5ml-121017354">
                       <button type="button" class="btn primary-buttonAV mt-3 pt-1">Buy now <i class="bi bi-chevron-right ms-1"></i></button>
                       </a>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6 product-m-order1">
 
                       <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack5.png'.'?timestamp='.time()); ?>" alt=""  class="w-100"/>
                     </div>
@@ -279,15 +279,15 @@
             <div class="boom-product-cat py-4 px-4" style="background-image: url('<?= base_url('assets/images/banners/boom3.png'); ?>')">
               <div class="row  align-items-center">
                
-                <div class="col-md-12 mb-4 flex-column d-flex">
+                <div class="col-lg-12 col-md-6 mb-4 flex-column d-flex col-6 col-sm-6 ">
                   <span class="bigsale"></span>
                   <p class="m-0 py-2"><span class="boom-parag"></span></p>
                   <span class="btitle "><span style="font-weight: bold;">Vitamins</span> Collection</span>
                   <a href="https://avenzur.com/category/vitamins">
-                  <button type="button" class="btn primary-buttonAV mt-4 pt-1">Buy now <i class="bi bi-chevron-right ms-1s"></i></button>
+                  <button type="button" class="btn primary-buttonAV mt-3 vitamin-but">Buy now <i class="bi bi-chevron-right ms-1s"></i></button>
                   </a>
                 </div>
-                <div class="col-md-12">
+                <div class="col-lg-12 col-md-6 col-sm-6 col-6">
 
                   <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack2.png'.'?timestamp='.time()); ?>" alt=""  class="w-100"/>
                 </div>
@@ -366,7 +366,7 @@
                                 <?php
                                 foreach($popular_category->products as $popular_product){
                                 ?>
-                                    <div class="col-lg-4 col-md-4 col-sm-12">
+                                    <div class="col-lg-3 col-md-4 col-sm-12">
                                         <div class="card" style="width: 100%">
                                             <!--<a href="#" class="text-decoration-none">-->
                                                 <div class="cardImg position-relative">
@@ -486,7 +486,7 @@
     <section class="popularCat-container section-marg-top">
       <div class="container container-max-width">
         <div class="featureProductC"> 
-          <div class="popularTitle text-center mb-4"><h2 class="title-wrapper">Feature Products </h2></div>
+          <div class="popularTitle text-center"><h2 class="title-wrapper">Feature Products </h2></div>
 
           
           <div class="feature_products margin-minus ">
@@ -602,7 +602,7 @@
       <div class="container container-max-width">
 
         <div class="featureProductC ">
-          <div class="popularTitle text-center mb-4"><h2 class="title-wrapper">Best Sellers</h2></div>
+          <div class="popularTitle text-center"><h2 class="title-wrapper">Best Sellers</h2></div>
 
           
           <div class="feature_products margin-minus ">
@@ -822,7 +822,7 @@
     <section class="specialOffer-container section-marg-top">
       <div class="container container-max-width">
         <div class="specialOfferProductC">
-          <div class="specialOfferpopularTitle text-center mb-4"><h2 class="title-wrapper">Special Offer</h2></div>
+          <div class="specialOfferpopularTitle text-center"><h2 class="title-wrapper">Special Offer</h2></div>
         </div>
 
         <!-- special products -->
@@ -939,7 +939,7 @@
     </section>
 
     <!-- brand logos -->
-    <section class="widgets section-marg-top">
+    <section class="widgets section-marg-top brands-logo-cont">
       <div class="container container-max-width">
         <div class="widget-bar">
           <div class="brands-logo margin-minus">
