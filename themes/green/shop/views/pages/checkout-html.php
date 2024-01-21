@@ -99,13 +99,13 @@ if ($this->Settings->indian_gst) {
                         <h3 class="fs-5 fw-bold">Shipment <span class="fs-5 fw-medium purpColor">(<?php echo count($cart_contents)?> item<?php echo count($cart_contents) > 1 ? 's':'';?>)</span></h3>
                         <?php if(!empty($cart_contents)) {
                             foreach($cart_contents as $key => $item) { ?>
-                            <div class="addressDetail row align-items-center">
-                                <div class="addicon col-md-2">
+                            <div class="addressDetail d-flex align-items-center">
+                                <div class="addicon">
                                     <?php $image = $item['image'] != '' ? base_url() . 'assets/uploads/'.$item['image'] : '';?>
                                         
                                     <img src="<?php echo $image; ?>" class="w-100">
                                 </div>
-                                <div class="ps-2 col-md-10">
+                                <div class="ps-2">
                                     <p class="m-0 fs-6 fw-bold">
                                     <?php echo $item['name'];?>  
                                     </p>
@@ -166,7 +166,7 @@ if ($this->Settings->indian_gst) {
             </div>
          
         <div class="col-md-4">
-            <h3 class=" fw-bold pb-2">Order Summary</h3>  
+            <h3 class=" fw-bold pb-2 order-summary-title">Order Summary</h3>  
             <?php echo shop_form_open('order', 'class="validate addressform-k p-0"'); ?>
            <?php
                 $total = $this->sma->convertMoney($this->cart->total(), false, false);

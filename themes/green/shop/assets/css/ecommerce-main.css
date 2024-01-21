@@ -2209,7 +2209,6 @@ html[lang='ar']  .address-but {margin-left: 10px; margin-right: 0;}
 .default-address {border: 1px solid #662d91 !important; border-top: 3px solid #662d91 !important;}
 
 
-
 /*************/
 /************** ar ************/
 html[lang='ar'] body{ font-family: 'DroidArabicKufiRegular','lato'; direction: rtl !important; }
@@ -2331,7 +2330,7 @@ h4.letstart {font-size: 16px;}
   .logo-searchBar .py-3{padding: 10px 0 !important;}
   .logo-searchBar .mb-2 {margin-bottom: 0 !important;}
   .skin-container {display:none}
-
+  .addressDetail .addicon {width:130px}
 
 /***********************/
   .categoryTabs .nav-pills {
@@ -2399,6 +2398,9 @@ h2{font-size: 26px !important;}
 @media screen and (max-width: 480px) {
 
   /**********asma 19-1 **********/
+  .order-summary-title{
+    margin-top: 30px;
+  }
 .footer-container h5 {font-weight: bolder; font-size: 18px;} 
 .slick-slide {margin: 0 5px;}
 .boom-product-cat img {height: 100px}

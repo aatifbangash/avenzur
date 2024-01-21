@@ -100,14 +100,14 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
     <div class="container container-max-width">
         <div class=" my-4">
             <div class="addressbar">
-                <div class="w-100 addtitle">
-                    <h5><i class="bi bi-map-fill me-2"></i>
+                <div class="w-100">
+                    <h3 class=" fw-bold pb-2">
                         <?= lang('address'); ?>
-                    </h5>
+                    </h3>
                 </div>
-                <div class="px-3 py-2">
-                    <div class="py-3">
-                        <h6 class="m-0 fw-semibold">
+                <div>
+                    <div class="pb-4">
+                        <h6 class="m-0">
                             <?php
                             if ($action_type == 'editaddress') {
                                 echo lang('Update address details');
