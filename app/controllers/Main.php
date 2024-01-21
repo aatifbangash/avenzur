@@ -398,8 +398,8 @@ class Main extends MY_Shop_Controller
             if ($medium == 'email') {
                 $this->sma->send_email($identifier, 'OTP Verification', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['faisalabbas67@gmail.com']);
             } else {
-                //$whatsapp_sent = $this->sma->send_whatsapp_msg($identifier, $otp);
-                //$whatsapp_data = json_decode($whatsapp_sent, true);
+                $whatsapp_sent = $this->sma->send_whatsapp_msg($identifier, $otp);
+                $whatsapp_data = json_decode($whatsapp_sent, true);
 
                 /*if ($whatsapp_data && isset($whatsapp_data['messageId'])) {
                     echo json_encode(['status' => 'success', 'message' => 'OTP sent to whatsapp']);
