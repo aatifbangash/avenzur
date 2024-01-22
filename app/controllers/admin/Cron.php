@@ -65,21 +65,21 @@ class Cron extends MY_Controller
              //echo $body;
                 // Send the email notification
                 $sent = true;
-            //  $sent = $this->sma->send_email(
-            //        $row->email,
-            //        $subject,
-            //        $body,
-            //        "info@avenzur.com",
-            //        "Avenzur"
-            //    );
+             $sent = $this->sma->send_email(
+                   $row->email,
+                   $subject,
+                   $body,
+                   "info@avenzur.com",
+                   "Avenzur"
+               );
 
-            //     if($sent) {
-            //         $this->db
-            //             ->set('is_notified', 1)
-            //             ->set('date_updated', date('Y-m-d H:i:s'))
-            //             ->where(['id' => $row->id, 'is_notified' => 0])
-            //             ->update('out_of_stock_notify');
-            //     }
+                if($sent) {
+                    $this->db
+                        ->set('is_notified', 1)
+                        ->set('date_updated', date('Y-m-d H:i:s'))
+                        ->where(['id' => $row->id, 'is_notified' => 0])
+                        ->update('out_of_stock_notify');
+                }
             }
         }
     }
