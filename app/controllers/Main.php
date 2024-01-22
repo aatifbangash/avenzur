@@ -593,8 +593,18 @@ class Main extends MY_Shop_Controller
                         if($user_data->active == 0){
                             $this->shop_model->activate_user($company_data->email);
                         }
+
+                        /* New changes as login failed after signup */
+
+                        if(!empty($company_data->email)) {
+                            $login_column = $company_data->email;
+                        }else{
+                            $login_column = $company_data->phone;
+                        }
+
+                        /* Changes End */
                     
-                        if ($this->ion_auth->login($company_data->email, '12345', $remember)) {
+                        if ($this->ion_auth->login($login_column, '12345', $remember)) {
                             if ($this->Settings->mmode) {
                                 if (!$this->ion_auth->in_group('owner')) {
                                     $this->session->set_flashdata('error', lang('site_is_offline_plz_try_later'));
