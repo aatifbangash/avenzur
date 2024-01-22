@@ -409,6 +409,7 @@ class Main extends MY_Shop_Controller
 
                 //$sms_sent = $this->sma->send_sms($identifier, $otp);
                 
+                echo json_encode(['status' => 'success', 'message' => 'OTP sent to whatsapp']);
             }
 
             return true;
