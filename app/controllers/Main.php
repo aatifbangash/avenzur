@@ -1102,6 +1102,10 @@ class Main extends MY_Shop_Controller
             if (empty($notify_email) || !filter_var($notify_email, FILTER_VALIDATE_EMAIL)) {
                 return $this->sma->send_json(['status' => 'error', 'color' => '#FF5252', 'message' => 'Invalid or empty email address.']);
             }
+
+            if (empty($product_input) || !is_numeric($product_input) || $product_input <= 0) {
+                return $this->sma->send_json(['status' => 'error', 'color' => '#FF5252', 'message' => 'Please select product.']);
+            }
     
             // Check if the email already exists for the given product_id
             $existing_data = $this->Shop_model->get_notify_data($notify_email, $product_input);
