@@ -537,6 +537,15 @@ public function getallCountry()
         return false;
     }
 
+    public function getSMSServiceByName($name)
+    {
+        $q = $this->db->get_where('sms_services', ['name' => $name], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getCountryByName($name)
     {
         $this->db->like('name', $name);

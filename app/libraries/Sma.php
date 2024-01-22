@@ -526,12 +526,64 @@ class Sma
 
     }
 
+    public function send_sms_new($receiver_number, $variable){
+        $service = $this->site->getSMSServiceByName('4jawaly');
+        $app_id = $service->api_key;
+        $app_sec = $service->api_secret;
+        $app_hash = base64_encode("{$app_id}:{$app_sec}");
+        $messages = [
+            "messages" => [
+                [
+                    "text" => 'Your OTP verification code is '.$variable,
+                    "numbers" => ['966'.$receiver_number],
+                    "sender" => "4jawaly"
+                ]
+            ]
+        ];
+
+        $url = "https://api-sms.4jawaly.com/api/v1/account/area/sms/send";
+        $headers = [
+            "Accept: application/json",
+            "Content-Type: application/json",
+            "Authorization: Basic {$app_hash}"
+        ];
+
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($messages));
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($curl);
+        $status_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+
+        $response_json = json_decode($response, true);
+
+        if ($status_code == 200) {
+            if (isset($response_json["messages"][0]["err_text"])) {
+                return json_encode(['status' => 'error', 'message' => $response_json["messages"][0]["err_text"]]);
+                //echo $response_json["messages"][0]["err_text"];
+            } else {
+                return json_encode(['status' => 'success', 'message' => $response_json["job_id"]]);
+            }
+        } elseif ($status_code == 400) {
+            return json_encode(['status' => 'success', 'message' => $response_json["message"]]);
+        } elseif ($status_code == 422) {
+            return json_encode(['status' => 'error', 'message' => 'The message is empty']);
+        } else {
+            return json_encode(['status' => 'success', 'message' => $status_code]);
+        }
+    }
+
     public function send_sms($receiver_number, $variable){
+        $service = $this->site->getSMSServiceByName('MSEGAT');
+
         $data = [
             'userName' => 'phmc',
             'numbers' => $receiver_number,
             'userSender' => 'phmc',
-            'apiKey' => 'd3a916960217e3c7bc0af6ed80d1435c',
+            'apiKey' => $service->api_key,
             'msg' => 'Your OTP verification code is '.$variable,
         ];
     
