@@ -407,7 +407,7 @@ class Main extends MY_Shop_Controller
                     $sms_sent = $this->sma->send_sms($identifier, $otp);
                 }*/
 
-                $sms_sent = $this->sma->send_sms($identifier, $otp);
+                //$sms_sent = $this->sma->send_sms($identifier, $otp);
                 
             }
 
