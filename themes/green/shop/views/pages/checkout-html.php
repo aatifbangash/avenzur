@@ -163,7 +163,7 @@ if ($this->Settings->indian_gst) {
                             Apple Pay
                         </label>
                     </span>
-                    <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" pattern="[A-Za-z]{3}" value="" id="card_name" placeholder="John Doe" />
+                    <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_name" placeholder="John Doe" />
                     <span><input type="text" maxlength="19" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="5105 1051 0510 5100" />
                     <img src="" id="card_type_image" style="width: 30px; height: 30px;display:none;"></span>
                     <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="12 / 31" />

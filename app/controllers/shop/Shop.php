@@ -509,7 +509,6 @@ class Shop extends MY_Shop_Controller
                         $card_cvv = $this->input->post('card_cvv');
                         $card_expiry = $this->input->post('card_expiry_year');
                         $payment_method_details = $this->input->post('payment_method_details');
-                        echo 'Payment Details: '.$payment_method_details;exit;
                         
                         $card_expiry_year = trim(explode('/', $card_expiry)[1]);
                         $card_expiry_month = trim(explode('/', $card_expiry)[0]);
