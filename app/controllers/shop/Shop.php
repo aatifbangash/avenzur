@@ -508,6 +508,7 @@ class Shop extends MY_Shop_Controller
                         $card_number = $this->input->post('card_number');
                         $card_cvv = $this->input->post('card_cvv');
                         $card_expiry = $this->input->post('card_expiry_year');
+                        $payment_method_details = $this->input->post('payment_method_details');
                         
                         $card_expiry_year = trim(explode('/', $card_expiry)[1]);
                         $card_expiry_month = trim(explode('/', $card_expiry)[0]);
@@ -518,7 +519,8 @@ class Shop extends MY_Shop_Controller
                             'card_number' => $card_number,
                             'card_cvv' => $card_cvv,
                             'card_expiry_month' => $card_expiry_month,
-                            'card_expiry_year' => $card_expiry_year
+                            'card_expiry_year' => $card_expiry_year,
+                            'payment_method_details' => $payment_method_details
                         ));
                         
                         redirect('pay/directpay/' . $sale_id);
