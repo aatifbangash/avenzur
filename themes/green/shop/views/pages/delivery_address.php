@@ -160,12 +160,12 @@
                                             echo form_open('verify_phone_otp', $attrib); 
                                         ?>
                                         <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2"> 
-                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part1" id="first" maxlength="1" />
-                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part2" id="second" maxlength="1" />
-                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part3" id="third" maxlength="1" />
-                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part4" id="fourth" maxlength="1" /> 
-                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part5" id="fifth" maxlength="1" />
-                                            <input class="m-1 text-center form-control rounded" type="text" name="opt_part6" id="sixth" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded ap-otp-input-checkout" type="tel"  data-index="0" name="opt_part1" id="first" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded ap-otp-input-checkout" type="tel"  data-index="1" name="opt_part2" id="second" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded ap-otp-input-checkout" type="tel"  data-index="2" name="opt_part3" id="third" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded ap-otp-input-checkout" type="tel"  data-index="3" name="opt_part4" id="fourth" maxlength="1" /> 
+                                            <input class="m-1 text-center form-control rounded ap-otp-input-checkout" type="tel"  data-index="4" name="opt_part5" id="fifth" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded ap-otp-input-checkout" type="tel"  data-index="5" name="opt_part6" id="sixth" maxlength="1" />
                                             <input type="hidden" id="identifier_input" name="identifier_input" value="" />
                                             <input type="hidden" name="change_phone" value="1" />
                                             <input type="hidden" id="selected_add_id" name="selected_add_id" value="" />
@@ -240,7 +240,11 @@ echo form_open('shop/deleteDeliveryAddress', $attrib);
             var selected_phone = $('.selected-address').find('.phone_number').text();
             var phone_verified = $('.selected-address').find('.phone_verified').text();
             var selected_add_id = $("#selected-address-id").val();
-
+            if (selected_add_id == '') {
+                // Show an error message
+                alert("Please select an address to confirm.");
+                return false;
+            }
             if(phone_verified != 1){
                 verifyNumber(selected_phone);    
             }else{

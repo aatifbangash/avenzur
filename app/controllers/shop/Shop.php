@@ -112,6 +112,7 @@ class Shop extends MY_Shop_Controller
                     }
                     if($this->input->post('email') != '') {
                         $data['email'] = $this->input->post('email');
+                        $this->db->update('users', ['email'=>$data['email']], ['company_id' => $this->session->userdata('company_id')]);
                     }
 
                     $this->db->update('companies', $data, ['id' => $this->session->userdata('company_id')]);
