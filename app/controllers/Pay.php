@@ -267,7 +267,9 @@ class Pay extends MY_Shop_Controller
                 $clientIp = $this->getclientIP();
                 $generateToken = "yes";
                 $paymentDescription = "Payment From Avenzur";
-                $paymentMethod = 1;
+
+                $card_details = $this->session->userdata('card_details');
+                $paymentMethod = $card_details['payment_method_details'];
                 
                 //Required parameters to generate hash code 
                 $hashData['TransactionID'] = $transactionId;
@@ -310,10 +312,8 @@ class Pay extends MY_Shop_Controller
                  $finalData["RedirectURL"] = $redirectURL;
                  $finalData['PaymentMethod'] = $paymentMethod;
                  $finalData["SecureHash"] = $secureHash;
-
-                 $card_details = $this->session->userdata('card_details');
                  
-                 if ($card_details) {
+                 if ($card_details && $paymentMethod == 1) {
                     $finalData["card_name"] = $card_details['card_name'];
                     $finalData["card_number"] = $card_details['card_number'];
                     $finalData["card_cvv"] = $card_details['card_cvv'];

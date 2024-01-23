@@ -17,13 +17,24 @@ $version= $formdata['Version'];
 $paymentMethod =$formdata["PaymentMethod"];
 $paymentDescription= $formdata['PaymentDescription'];
 $genertaeToken =$formdata["GenerateToken"];
-$cardNumber = $formdata["card_number"];
-$cardName   = $formdata["card_name"];
-$expiryDateMonth = $formdata["card_expiry_month"];
-$expiryDateYear = $formdata["card_expiry_year"];
-$cardCVV = $formdata["card_cvv"];
+if(isset($formdata["card_number"])){
+  $cardNumber = $formdata["card_number"];
+  $cardNumber = preg_replace('/\s+/', '', $cardNumber);
+}
+if(isset($formdata["card_name"])){
+  $cardName   = $formdata["card_name"];
+}
+if(isset($formdata["card_expiry_month"])){
+  $expiryDateMonth = $formdata["card_expiry_month"];
+}
+if(isset($formdata["card_expiry_year"])){
+  $expiryDateYear = $formdata["card_expiry_year"];
+}
+if(isset($formdata["card_cvv"])){
+  $cardCVV = $formdata["card_cvv"];
+}
 
-$cardNumber = preg_replace('/\s+/', '', $cardNumber);
+
 //$expiryDateYear = substr($expiryDateYear, -2);
 
 ?>
@@ -102,14 +113,18 @@ $cardNumber = preg_replace('/\s+/', '', $cardNumber);
 <body onload="javascript:document.redirectForm.submit();" >
   <div></div>
   <form action="<?php echo $redirectURL?>" method="post" name="redirectForm">
-
-  <input type="hidden" name="CardNumber" value="<?php echo $cardNumber?>">
-
+    <?php if(isset($cardNumber)){ ?>
+      <input type="hidden" name="CardNumber" value="<?php echo $cardNumber?>">
+    <?php } ?>
     <input name="MerchantID" type="hidden" value="<?php echo $merchantID?>" />
 
-    <input type="hidden" name="ExpiryDateMonth" value="<?php echo $expiryDateMonth?>">
+    <?php if(isset($expiryDateMonth)){ ?>
+      <input type="hidden" name="ExpiryDateMonth" value="<?php echo $expiryDateMonth?>">
+    <?php } ?>
 
-    <input type="hidden" name="CardHolderName" value="<?php echo $cardName?>">
+    <?php if(isset($cardName)){ ?>
+      <input type="hidden" name="CardHolderName" value="<?php echo $cardName?>">
+    <?php } ?>
 
     <input name="Amount" type="hidden" value="<?php echo $amount?>" />
 
@@ -117,7 +132,9 @@ $cardNumber = preg_replace('/\s+/', '', $cardNumber);
 
     <input name="MessageID" type="hidden" value="<?php echo $messageID?>" />
 
-    <input type="hidden" name="ExpiryDateYear" value="<?php echo $expiryDateYear?>">
+    <?php if(isset($expiryDateYear)){ ?>
+      <input type="hidden" name="ExpiryDateYear" value="<?php echo $expiryDateYear?>">
+    <?php } ?>
 
     <input name="TransactionID" type="hidden" value="<?php echo $transactionID?>" />
 
@@ -139,7 +156,9 @@ $cardNumber = preg_replace('/\s+/', '', $cardNumber);
 
     <input name="GenerateToken" type="hidden" value="<?php echo $genertaeToken?>" />
 
-    <input type="hidden" name="SecurityCode" value="<?php echo $cardCVV?>">
+    <?php if(isset($cardCVV)){ ?>
+      <input type="hidden" name="SecurityCode" value="<?php echo $cardCVV?>">
+    <?php } ?>
 
     <input name="SecureHash" type="hidden" value="<?php echo $secureHash?>" />
 

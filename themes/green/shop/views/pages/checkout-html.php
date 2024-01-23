@@ -144,30 +144,38 @@ if ($this->Settings->indian_gst) {
                     </div>
                 </div>
 
-                <div class="mt-5">
-                    <h2 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
-                    <div class="d-flex align-items-center justify-content-between py-3 border-bottom mobile-wrap  mobile-start">
-                        <div class="form-check fs-5">
-                            <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
-                            <label class="form-check-label fw-semibold" for="flexRadioDefault2">
-                                Debit / Credit Card Payment
-                            </label>
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" pattern="[A-Za-z]{3}" value="" id="card_name" placeholder="John Doe" />
-                            <span><input type="text" maxlength="19" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="5105 1051 0510 5100" />
-                            <img src="" id="card_type_image" style="width: 30px; height: 30px;display:none;"></span>
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="12 / 31" />
-                            <!--<input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" maxlength="2" placeholder="Card Expiry Month" />-->
-                            <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" maxlength="3" pattern="\d*" title="Please enter a 3-digit CVV" placeholder="358" />
-                        </div>
-                        <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 payment-method">
-                    </div>
-                </div>
-
             </div>
          
         <div class="col-md-4">
-            <h3 class=" fw-bold pb-2 order-summary-title">Order Summary</h3>  
             <?php echo shop_form_open('order', 'class="validate addressform-k p-0"'); ?>
+            <h3 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
+            <div class="d-flex align-items-center justify-content-between py-3 border-bottom mobile-wrap  mobile-start">
+                <div class="form-check fs-5">
+                    <span>
+                        <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="showCardDetails();" value="1" id="flexRadioDefault2" checked>
+                        <label class="form-check-label fw-semibold" style="font-size: 14px;font-weight: normal !important;" for="flexRadioDefault2">
+                            Debit / Credit Card
+                        </label>
+                    </span>
+                    <span style="margin-left: 80px;">
+                        <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();" value="3" id="apple-pay">
+                        <label class="form-check-label fw-semibold" style="font-size: 14px;font-weight: normal !important;" for="flexRadioDefault2">
+                            Apple Pay
+                        </label>
+                    </span>
+                    <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_name" placeholder="John Doe" />
+                    <span><input type="text" maxlength="19" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="5105 1051 0510 5100" />
+                    <img src="" id="card_type_image" style="width: 30px; height: 30px;display:none;"></span>
+                    <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="12 / 31" />
+                    <!--<input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" maxlength="2" placeholder="Card Expiry Month" />-->
+                    <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" maxlength="3" pattern="\d*" title="Please enter a 3-digit CVV" placeholder="358" />
+                </div>
+                <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 payment-method">
+            </div>
+
+
+            <h3 class=" fw-bold pb-2 order-summary-title">Order Summary</h3>  
+            
            <?php
                 $total = $this->sma->convertMoney($this->cart->total(), false, false);
                 $order_tax = $this->sma->convertMoney($this->cart->order_tax(), false, false);
@@ -254,6 +262,22 @@ if ($this->Settings->indian_gst) {
 
 
 <script>
+    function showCardDetails(){
+        document.getElementById('card_name').style.display = 'block';
+        document.getElementById('card_number').style.display = 'block';
+        //document.getElementById('card_type_image').style.display = 'block';
+        document.getElementById('card_expiry_year').style.display = 'block';
+        document.getElementById('card_cvv').style.display = 'block';
+    }
+
+    function hideCardDetails(){
+        document.getElementById('card_name').style.display = 'none';
+        document.getElementById('card_number').style.display = 'none';
+        document.getElementById('card_type_image').style.display = 'none';
+        document.getElementById('card_expiry_year').style.display = 'none';
+        document.getElementById('card_cvv').style.display = 'none';
+    }
+
    $(document).ready(function () {
         var currentYear = new Date().getFullYear();
 
@@ -393,24 +417,24 @@ if ($this->Settings->indian_gst) {
             e.preventDefault();
 
             var isValid = true;
-            if($('#card_cvv_hidden').val() == ''){
-                isValid = false;
-            }
+            var payment_method_details = $('input[name="payment_method_details"]:checked').val();
+            
+            if(payment_method_details == 1){
+                if($('#card_cvv_hidden').val() == ''){
+                    isValid = false;
+                }
 
-            /*if($('#card_expiry_month').val() == ''){
-                isValid = false;
-            }*/
+                if($('#card_expiry_year').val() == ''){
+                    isValid = false;
+                }
 
-            if($('#card_expiry_year').val() == ''){
-                isValid = false;
-            }
+                if($('#card_name').val() == ''){
+                    isValid = false;
+                }
 
-            if($('#card_name').val() == ''){
-                isValid = false;
-            }
-
-            if($('#card_number').val() == ''){
-                isValid = false;
+                if($('#card_number').val() == ''){
+                    isValid = false;
+                }
             }
 
             if (isValid) {
@@ -433,20 +457,30 @@ if ($this->Settings->indian_gst) {
             var payment_method = $('#directpay').val();
             var express_delivery = $('#express_delivery').val();
 
+            const originalData = {
+                token: site.csrf_token_value,
+                card_name: card_name,
+                card_number: card_number,
+                card_cvv: card_cvv,
+                card_expiry: card_expiry,
+                shipping: shipping,
+                address: address,
+                payment_method: payment_method,
+                express_delivery: express_delivery
+            };
+
+            const formData = { ...originalData };
+            if (payment_method === 3) {
+                delete formData.card_name;
+                delete formData.card_number;
+                delete formData.card_cvv;
+                delete formData.card_expiry;
+            }
+
             $.ajax({
                 type: 'POST',
                 url: site.site_url + 'pay/process_payment',
-                data: { 
-                    token: site.csrf_token_value, 
-                    card_name: card_name, 
-                    card_number: card_number, 
-                    card_cvv: card_cvv, 
-                    card_expiry: card_expiry,
-                    shipping: shipping,
-                    address: address,
-                    payment_method: payment_method,
-                    express_delivery: express_delivery
-                },
+                data: formData,
                 success: function (response) {
                     //var respObj = JSON.parse(response);
                     console.log(response);
