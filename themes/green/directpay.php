@@ -110,7 +110,7 @@ if(isset($formdata["card_cvv"])){
   </style>
 </head>
 
-<body onload="javascript:document.redirectForm.submit();" >
+<body >
   <div></div>
   <form action="<?php echo $redirectURL?>" method="post" name="redirectForm">
     <?php if(isset($cardNumber)){ ?>
