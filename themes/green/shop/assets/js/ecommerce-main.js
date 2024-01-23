@@ -3,13 +3,13 @@ var buttonToMove = document.getElementById("menuiconMob");
 var sourceDiv = document.getElementById("sourcedivmob");
 var targetDiv = document.getElementById("shoppingdivMob");
 var saledivToMove = document.getElementById("salediv");
-//var sourcesalemob = document.getElementById("salemob");
-//var targetmobnav = document.getElementById("mobnav");
-//var cartToMove = document.getElementById("cart-items");
-//var cartsourceDiv = document.getElementById("cartdiv");
-//var allCatToMove = document.getElementById("allCatmob");
-//var catsourceDiv = document.getElementById("allcatDiv");
-//var targetmenuDiv = document.getElementById("navbarSupportedContent");
+var sourcesalemob = document.getElementById("salemob");
+var targetmobnav = document.getElementById("mobnav");
+var cartToMove = document.getElementById("cart-items");
+var cartsourceDiv = document.getElementById("cartdiv");
+var allCatToMove = document.getElementById("allCatmob");
+var catsourceDiv = document.getElementById("allcatDiv");
+var targetmenuDiv = document.getElementById("navbarSupportedContent");
 // Check if the screen width is less than a certain threshold (e.g., 768 pixels for typical mobile screens)
 
 // Remove the button from the source div
@@ -1191,7 +1191,7 @@ $(document).ready(function () {
           breakpoint: 1024,
           settings: {
             slidesToShow: 4,
-            slidesToScroll: 3,
+            slidesToScroll: 1,
             infinite: true,
             dots: true,
           },
@@ -1200,14 +1200,22 @@ $(document).ready(function () {
           breakpoint: 991,
           settings: {
             slidesToShow: 4,
-            slidesToScroll: 2,
+            slidesToScroll: 1,
+            prevArrow: false,
+            nextArrow: false,
+            autoplay: true,
+            infinite: true,
           },
         },
         {
           breakpoint: 480,
           settings: {
-            slidesToShow: 3,
+            slidesToShow: 4,
             slidesToScroll: 1,
+            prevArrow: false,
+            nextArrow: false,
+            autoplay: true,
+            infinite: true,
           },
         },
 
@@ -1227,14 +1235,14 @@ $(document).ready(function () {
   $(".popularCat").slick({
     infinite: false,
     speed: 300,
-    slidesToShow: 4,
+    slidesToShow: 5,
     slidesToScroll: 1,
     responsive: [
       {
         breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
           dots: true,
         },
@@ -1243,14 +1251,22 @@ $(document).ready(function () {
         breakpoint: 991,
         settings: {
           slidesToShow: 2,
-          slidesToScroll: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
         breakpoint: 480,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1276,16 +1292,20 @@ $(document).ready(function () {
         breakpoint: 1025,
         settings: {
           slidesToShow: 4,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
-          dots: true,
+          dots: false,
         },
       },
       {
         breakpoint: 991,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
@@ -1293,6 +1313,10 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1304,7 +1328,7 @@ $(document).ready(function () {
   $(".feature_products").slick({
     infinite: false,
     speed: 300,
-    slidesToShow: 4,
+    slidesToShow: 5,
     slidesToScroll: 1,
     margin: 20,
     prevArrow:
@@ -1316,9 +1340,9 @@ $(document).ready(function () {
         breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
-          dots: true,
+          dots: false,
         },
       },
       {
@@ -1326,13 +1350,21 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
         breakpoint: 480,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1356,9 +1388,9 @@ $(document).ready(function () {
         breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
-          dots: true,
+          dots: false,
         },
       },
       {
@@ -1366,13 +1398,21 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
         breakpoint: 480,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1386,6 +1426,10 @@ $(document).ready(function () {
     speed: 300,
     slidesToShow: 5,
     slidesToScroll: 1,
+    autoplay: true,
+    infinite: true,
+    prevArrow: false,
+    nextArrow: false,
 
     prevArrow:
       "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
@@ -1396,16 +1440,24 @@ $(document).ready(function () {
         breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
-          dots: true,
+          dots: false,
+          autoplay: true,
+      
+          prevArrow: false,
+          nextArrow: false,
         },
       },
       {
         breakpoint: 991,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
@@ -1413,6 +1465,10 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1436,7 +1492,7 @@ $(document).ready(function () {
         breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
           dots: true,
         },
@@ -1445,7 +1501,11 @@ $(document).ready(function () {
         breakpoint: 991,
         settings: {
           slidesToShow: 2,
-          slidesToScroll: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+            nextArrow: false,
+            autoplay: true,
+            infinite: true,
         },
       },
       {
@@ -1455,7 +1515,9 @@ $(document).ready(function () {
           slidesToScroll: 1,
           dots: true,
           prevArrow: false,
-          nextArrow: false
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:

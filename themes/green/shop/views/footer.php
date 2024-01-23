@@ -33,59 +33,69 @@
 
         <div class="row pt-5">
           <div class="col-lg-5 col-md-5 col-sm-12">
-            <h5><a class="text-dark text-decoration-none"><b>Contact Us</b></a></h5>
-
-            <h6><b> CR: </b> 1010160412</h6>
-            <h6>شركة فرماء الطبية</h6>
-            <h6>٦٦٧٥ ، العليا، حي العليا، ٢٦٢٨</h6>
-            <h6> الرياض , 12241</h6>
-            <!--<h6>KSA ,Riyadh ,Olaya main road,Mousa bin nosair street.</h6>
-                  <h6>Silicon building no.1, Office 7</h6>-->
-            <h6><b> Phone No: </b> 114654636</h6>
-            <h6><a href="mailto:Email info@avenzur.com" class="text-dark text-decoration-none"> <b> Email: </b>
-                info@avenzur.com</a></h6>
-
+            <h5 class="first-h5 footer-header-collapse arrow-down"><a class="text-dark text-decoration-none"><b>Contact Us</b></a>   </h5>
+            <ul class="contact-info hide ">
+              <li><b> CR: </b> 1010160412</li>
+              <li>شركة فرماء الطبية</li>
+              <li>٦٦٧٥ ، العليا، حي العليا، ٢٦٢٨</li>
+              <li> الرياض , 12241</li>
+              <!--<h6>KSA ,Riyadh ,Olaya main road,Mousa bin nosair street.</h6>
+                    <h6>Silicon building no.1, Office 7</h6>-->
+              <li><b> Phone No: </b> 114654636</li>
+              <li><a href="mailto:Email info@avenzur.com" class="text-dark text-decoration-none"> <b> Email: </b>
+                  info@avenzur.com</a></li>
+            </ul>
 
           </div>
           <div class="col-lg-2 col-md-3 col-sm-12">
             <div>
-              <h5><a class="text-dark text-decoration-none"><b>Our Top Categories</b></a></h5>
-              <h6><a href="<?= site_url('category/beauty'); ?>" class="text-dark text-decoration-none"> Beauty</a></h6>
-              <h6><a href="<?= site_url('category/herbal'); ?>" class="text-dark text-decoration-none"> Herbal</a></h6>
-              <h6> <a href="<?= site_url('category/medical'); ?>" class="text-dark text-decoration-none">Medicine</a>
-              </h6>
-              <h6> <a href="<?= site_url('category/mombaby'); ?>" class="text-dark text-decoration-none">Mom & Baby</a>
-              </h6>
-              <h6> <a href="<?= site_url('category/vitamins'); ?>" class="text-dark text-decoration-none">Vitamins</a>
-              </h6>
+              <h5 class="footer-header-collapse arrow-down"><a class="text-dark text-decoration-none"><b>Our Top Categories</b></a></h5>
+              <ul class="hide">
+                <li>
+                  <a href="<?= site_url('category/beauty'); ?>" class="text-dark text-decoration-none"> Beauty</a>
+                </li>
+                <li>
+                <a href="<?= site_url('category/herbal'); ?>" class="text-dark text-decoration-none"> Herbal</a>
+                </li>
+                <li>  <a href="<?= site_url('category/medical'); ?>" class="text-dark text-decoration-none">Medicine</a></li>
+                <li>  <a href="<?= site_url('category/mombaby'); ?>" class="text-dark text-decoration-none">Mom & Baby</a></li>
+                <li> <a href="<?= site_url('category/vitamins'); ?>" class="text-dark text-decoration-none">Vitamins</a> </li>
+              </ul>
             </div>
           </div>
 
           <div class="col-lg-2 col-md-2 col-sm-12">
             <div>
-              <h5><a class="text-dark text-decoration-none"><b>Store Policies</b></a></h5>
+            <h5 class="footer-header-collapse arrow-down"><a class="text-dark text-decoration-none"><b>Store Policies</b></a></h5>
 
-              <h6><a href="<?= site_url('shop/page/privacy-policy'); ?>" class="text-dark text-decoration-none"> Privacy
-                  Policy</a></h6>
-              <h6> <a href="<?= site_url('shop/page/Terms-Conditions'); ?>" class="text-dark text-decoration-none">Terms
-                  & Conditions</a></h6>
-              <h6> <a href="<?= site_url('shop/page/exchange-return-policy'); ?>"
-                  class="text-dark text-decoration-none">Refund & Return</a></h6>
-              <h6> <a href="<?= site_url('shop/page/delivery'); ?>" class="text-dark text-decoration-none">Delivery
-                  Information</a></h6>
+              <ul class="hide">
+                <li> <a href="<?= site_url('shop/page/privacy-policy'); ?>" class="text-dark text-decoration-none"> Privacy
+                  Policy</a> </li>
+
+               <li> <a href="<?= site_url('shop/page/Terms-Conditions'); ?>" class="text-dark text-decoration-none">Terms
+                  & Conditions</a> </li>
+                  <li> <a href="<?= site_url('shop/page/exchange-return-policy'); ?>"
+                  class="text-dark text-decoration-none">Refund & Return</a> </li>
+
+                  <li> <a href="<?= site_url('shop/page/delivery'); ?>" class="text-dark text-decoration-none">Delivery
+                  Information</a> </li>
+              </ul>
             </div>
           </div>
 
               <div class="col-lg-2 col-md-2 col-sm-12">
                 <div class="footer-icons">
-                  <h5><a class="text-dark text-decoration-none" ><b>About Us</b></a></h5>
-                  <h6><a href="<?= site_url('shop/page/about-us'); ?>" class="text-dark text-decoration-none"> About Avenzur</a></h6>
-                  <h6><a href="<?= site_url('shop/contact_us'); ?>" class="text-dark text-decoration-none" >Contact Us </a></h6>
-                  <h6><a href="<?= site_url('profile'); ?>" class="text-dark text-decoration-none" >My Account </a></h6>
+                  <h5 class="footer-header-collapse arrow-down"><a class="text-dark text-decoration-none" ><b>About Us</b></a></h5>
+                  <ul class="hide">
+                    <li> 
+                    <a href="<?= site_url('shop/page/about-us'); ?>" class="text-dark text-decoration-none"> About Avenzur</a></li>
+                    <li> <a href="<?= site_url('shop/contact_us'); ?>" class="text-dark text-decoration-none" >Contact Us </a> </li>
+                    <li> <a href="<?= site_url('profile'); ?>" class="text-dark text-decoration-none" >My Account </a> </li>
+                  </ul>
                 </div>
               </div>
             </div>
-            <div class="d-flex justify-content-between pb-2 align-items-center flex-sm-column">
+            <div class="d-flex justify-content-between pb-2 align-items-center  footer-end">
               
               <img src="<?= base_url('assets/images/banners/pay.png'); ?>" alt="logo" class="footer-pay w-50 mt-3">
               
@@ -526,6 +536,13 @@
     // Append the detached element to the form with the class "d-flex search-bar"
     $("#autocomplete-suggestions").append($uiIdElement);
   });
+
+  $('.footer-header-collapse').each(function(){
+    $(this).click(function(){
+      $(this).next("ul").toggleClass('hide');
+      $(this).toggleClass('arrow-down arrow-up')
+    })
+  })
 </script>
 <?php if (!$this->loggedIn) { ?>
   <script src="<?= $assets; ?>js/login.js"></script>
