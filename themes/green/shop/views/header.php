@@ -603,17 +603,17 @@
               echo form_open('login_otp', $attrib);
               ?>
               <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2">
-                <input class="m-1 text-center form-control rounded ap-otp-input" type="text" name="opt_part1"
+                <input class="m-1 text-center form-control rounded ap-otp-input" type="tel" name="opt_part1"
                   id="login_otp_1" data-index="0" maxlength="1" />
-                <input class="m-1 text-center form-control rounded ap-otp-input" type="text" name="opt_part2"
+                <input class="m-1 text-center form-control rounded ap-otp-input" type="tel" name="opt_part2"
                   id="login_otp_2" data-index="1" maxlength="1" />
-                <input class="m-1 text-center form-control rounded ap-otp-input" type="text" name="opt_part3"
+                <input class="m-1 text-center form-control rounded ap-otp-input" type="tel" name="opt_part3"
                   id="login_otp_3" data-index="2" maxlength="1" />
-                <input class="m-1 text-center form-control rounded ap-otp-input" type="text" name="opt_part4"
+                <input class="m-1 text-center form-control rounded ap-otp-input" type="tel" name="opt_part4"
                   id="login_otp_4" data-index="3" maxlength="1" />
-                <input class="m-1 text-center form-control rounded ap-otp-input" type="text" name="opt_part5"
+                <input class="m-1 text-center form-control rounded ap-otp-input" type="tel" name="opt_part5"
                   id="login_otp_5" data-index="4" maxlength="1" />
-                <input class="m-1 text-center form-control rounded ap-otp-input" type="text" name="opt_part6"
+                <input class="m-1 text-center form-control rounded ap-otp-input" type="tel" name="opt_part6"
                   id="login_otp_6" data-index="5" maxlength="1" />
                 <input type="hidden" id="identifierl_input" name="identifier_input" value="" />
               </div>

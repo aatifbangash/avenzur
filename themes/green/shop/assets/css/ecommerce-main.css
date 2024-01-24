@@ -1742,6 +1742,7 @@ button.modalcloseBtn {
   .quantity {
     justify-content: start !important;
     gap: 4px;
+    margin-top: 5px;
   }
   .categoryTabs #pills-tab li button {
     margin-bottom: 10px;
@@ -2122,7 +2123,7 @@ html[lang="ar"] .cart-cont-row .addicon {padding-left: 15px; padding-right: 0;}
 
 .shoppingCardmob .cart-content-wrapper:last-of-type {border-bottom: none;}
 .cart-content-wrapper .cart-item-image img {border-radius: 15px;}
-.remove-quatity-container {padding-top: 15px;}
+.remove-quatity-container {padding-top: 20px;}
 .remove-quatity-container .remove-item{font-size: 16px;}
 .remove-quatity-container .remove-item:hover {color:#47126e !important; }
 
@@ -2172,7 +2173,7 @@ html[lang="ar"] .cart-cont-row .addicon {padding-left: 15px; padding-right: 0;}
   border-radius: 50%;
 }
 
-.list-group.catList a:hover:before , .list-group.catList a.active{  background-color: #fff;}
+.list-group.catList a:hover:before , .list-group.catList a.active::before{  background-color: #fff;}
 
 .categoryTabs .tab-pane{ border:none }
 .categoryTabs ul {padding: 0 !important;}
@@ -2222,6 +2223,17 @@ html[lang='ar']  .address-but {margin-left: 10px; margin-right: 0;}
 html[lang="ar"]  .contact-info  { padding-left: 0px; padding-right: 0px !important;}
 
 .brands-logo .slick-prev , .brands-logo .slick-next {display: none !important;}
+  /**********asma 24-1 **********/
+  img.cart-img {
+    width: 150px;
+  }
+  .owl-stage .item {border:1px solid #dfdfdf ;  border-radius: 10px;}
+  .owl-stage .item img {width: 100px; padding: 5px;  height: 100px; object-fit: contain; margin: 0 !important;}
+  .productzoomImg {display: flex; justify-content: center; align-items: center;}
+  .productzoomImg.item img {width: 100%;   height: 350px; }
+  #thumb .item {margin: 0 10px 0 0 !important; display: flex; justify-content: center; align-items: center;}
+  html[lang="ar"] #thumb .item {margin: 0 0px 0 10px !important;}
+  #thumb .owl-stage .owl-item:last-of-type .item{margin: 0 0 0 0 !important;}
 
 /*************/
 /************** ar ************/
@@ -2281,6 +2293,9 @@ footer ul{
   }
 
   @media screen and (max-width: 1024px) {
+    /**********asma 24-1 **********/
+    .owl-stage .item img {width: 70px;   height: 70px; }
+    .productzoomImg.item img {width: 100%;   height: 300px; }
     /**********asma 19-1 **********/
 
     .boom-categories .btitle {
@@ -2336,6 +2351,11 @@ h4.letstart {font-size: 16px;}
     }
   
 @media screen and (max-width: 991px) {
+  /**********asma 24-1 **********/
+  .cart-img {width:150px}
+
+  .owl-stage .item img {width: 60px;   height: 60px; }
+  .productzoomImg.item img {width: 100%;   height: 300px; }
   /**********asma 19-1 **********/
   .main-menuTab {
     padding: 0;
@@ -2378,9 +2398,9 @@ h4.letstart {font-size: 16px;}
   section{ max-width:100% !important;}
 .loginRCard {width: 93% !important;}
 .flex-ipad-column {flex-direction: column; align-items: start !important;}
-.cart-content-wrapper .cart-item-image img , .cart-content-wrapper h5 , .cart-content-wrapper .remove-item {
+/*.cart-content-wrapper .cart-item-image img , .cart-content-wrapper h5 , .cart-content-wrapper .remove-item {
   margin-bottom: 15px !important;
-}
+}*/
 .shoppingCardmob {margin-bottom: 20px;}
 .product-detail.product-count {
   padding: 13px 25px;
@@ -2411,13 +2431,29 @@ html [lang='ar']  .contact-info  { padding-left: 0px !important; padding-right: 
   .cart-content-wrapper .price-label { padding-top: 10px;}
   .quantity input{width: 36px !important;}
   .cart-content-wrapper .cart-item-image img {margin-bottom: 15px;}
-  .remove-quatity-container {
-    padding-top: 10px;
-}
-.cartQuantity {margin-top: 10px;}
+  
+  .cartQuantity {margin-top: 5px;}
 }
 
 @media screen and (max-width: 480px) {
+  /***************24-1*****************/
+  .product-cards-wrapper.row {margin: 0 -6px !important;}
+  .product-cards-cont.col-6 {padding: 0 6px !important;}
+  .cart-img {width:80px !important}
+  .remove-quatity-container {padding-top: 5px;}
+  .cart-content-wrapper h5{    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    height: 40px;
+    flex: 0 0 70%;
+    overflow: hidden;
+  }
+  .cart-content-wrapper .price-label {padding-top: 0;}
+.owl-stage .item img {width: 60px;   height: 60px; }
+.productzoomImg.item img {width: 100%;   height: 250px; }
+
+  /***************22-1*****************/
   img.footer-pay {
     width: 35% !important;
 }
@@ -2495,7 +2531,7 @@ html [lang='ar']  .contact-info  { padding-left: 0px !important; padding-right: 
   .otpcontainer .modal-body{
     padding: 0px;
   }
-  .feature-cards .cardImg img { height: 75px;width: 75px; }
+  .feature-cards .cardImg img { height: 75px; }
     .feature-cards .card-body h5 {
       font-size: 14px;}
       .feature-cards .slick-track {margin-left: -6px;}
