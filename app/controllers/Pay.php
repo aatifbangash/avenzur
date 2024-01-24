@@ -1068,9 +1068,11 @@ class Pay extends MY_Shop_Controller
         if ($inv->shop) {
             shop_redirect('orders/' . $inv->id . '/' . ($this->loggedIn ? '' : $inv->hash));
         }
-
-        redirect(SHOP ? '/' : site_url($ipnstatus ? 'notify/payment_success' : 'notify/payment_failed'));
-        exit();
+        
+        $this->page_construct('pages/payment_error', $this->data);
+        
+        //redirect(SHOP ? '/' : site_url($ipnstatus ? 'notify/payment_success' : 'notify/payment_failed'));
+        //exit();
     }
 
     public function sendMsegatSMS($receiver_number, $order_id, $receiver_name){
