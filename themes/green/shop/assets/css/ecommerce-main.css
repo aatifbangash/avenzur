@@ -2440,16 +2440,18 @@ html [lang='ar']  .contact-info  { padding-left: 0px !important; padding-right: 
   .product-cards-wrapper.row {margin: 0 -6px !important;}
   .product-cards-cont.col-6 {padding: 0 6px !important;}
   .cart-img {width:80px !important}
-  .remove-quatity-container {padding-top: 5px;}
+  .remove-quatity-container {padding-top: 0px;}
   .cart-content-wrapper h5{    -webkit-line-clamp: 2;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     white-space: normal;
     height: 40px;
-    flex: 0 0 70%;
     overflow: hidden;
   }
-  .cart-content-wrapper .price-label {padding-top: 0;}
+  .cartQuantity {
+    margin-top: 0px;
+  }
+  .cart-content-wrapper .price-label {padding-top: 5px;}
 .owl-stage .item img {width: 60px;   height: 60px; }
 .productzoomImg.item img {width: 100%;   height: 250px; }
 

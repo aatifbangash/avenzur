@@ -213,7 +213,7 @@ function update_cart(t) {
           this.image +
           '" class="card-img-top" alt="...">' +
           "</div>" +
-          '<div class="d-flex flex-column justify-content-between w-100"><div class="d-flex align-items-center justify-content-between">' +
+          '<div class="flex-mobile-column d-flex flex-column justify-content-between w-100"><div class="d-flex align-items-center justify-content-between">' +
           '<h5 class="m-0">' +
           this.name +
           "</h5>" +
