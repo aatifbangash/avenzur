@@ -382,7 +382,7 @@
                                                         <span class="text-uppercase"><?= $popular_category->name; ?></span>
                                                     </div>
                                                     <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none">
-                                                        <h5 class="card-title text-start"><?= $popular_product->name; ?></h5>
+                                                        <h5 class="card-title text-start"><?= stripslashes($popular_product->name); ?></h5>
                                                     </a>
                                                     <div class="d-flex align-items-center justify-content-between flex-mobile-column">
                                                         
@@ -512,7 +512,7 @@
                             </div>
                             <div class="card-body px-0 text-start pb-0">
                             
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
+                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= stripslashes($sp->name); ?></h5></a>
                             <div class="d-flex align-items-center justify-content-between flex-mobile-column">
                                 
                                 <div class="rating">
@@ -627,7 +627,7 @@
                             </div>
                             <div class="card-body px-0 text-start pb-0">
                             
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
+                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= stripslashes($sp->name); ?></h5></a>
                             <div class="d-flex  rating-cont align-items-center justify-content-between flex-mobile-column">
                             
                                 <div class="rating">
@@ -719,7 +719,7 @@
                             </div>
                             <div class="card-body px-0 text-start pb-0">
                             
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
+                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= stripslashes($sp->name); ?></h5></a>
                             <div class="d-flex rating-cont align-items-center justify-content-between flex-mobile-column">
                            
                                 <div class="rating">
@@ -845,7 +845,7 @@
                                 <div class="col-md-7 col-sm-12 px-md-0">
                                 <div class="card-body px-md-0 text-start pb-0">
                                     <div class="product-cat-title"><span class="text-uppercase"><?= $sp->category_name; ?></span></div>
-                                    <a style="text-decoration: none;" href="<?= site_url('product/' . $sp->slug); ?>"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
+                                    <a style="text-decoration: none;" href="<?= site_url('product/' . $sp->slug); ?>"><h5 class="card-title text-start"><?= stripslashes($sp->name); ?></h5></a>
                                     <div class="row align-items-center justify-content-between">
                                     
                                     

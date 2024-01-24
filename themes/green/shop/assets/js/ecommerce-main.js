@@ -83,7 +83,7 @@ function update_popup_cart(t) {
       "</div>" +
       '<div class=" title-price-cont">' +
       '<p class="m-0 product-title fw-semibold text-start">' +
-      this.name +
+      this.name + '<span style="margin-left:5px;">('+ this.qty +')</span>' +
       "</p>" +
       '<p class="m-0 product-price fw-semibold mt-2 text-end pe-4 d-flex justify-content-between align-items-center">' +
       '<a href="#" data-rowid="' +

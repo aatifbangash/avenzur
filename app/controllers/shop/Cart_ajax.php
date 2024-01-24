@@ -154,6 +154,9 @@ class Cart_ajax extends MY_Shop_Controller
             $sulfad_in_cart = 0;
             $sulfad_code = '06285193000301';
 
+            $other_product_count = 0;
+            $other_product_in_cart = 0;
+
             if($product->code == '06285193000301'){
                 $sulfad_in_cart += ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1));
                 
@@ -162,6 +165,17 @@ class Cart_ajax extends MY_Shop_Controller
                     $product_code = $item['code'];
                     if($product_code == $sulfad_code){
                         $sulfad_count += $item['qty'];
+                        $this->cart->remove($item['rowid']);
+                    }
+                }
+            }else{
+                $other_product_in_cart += ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1));
+
+                $cart_contents = $this->cart->contents();
+                foreach ($cart_contents as $item) {
+                    $product_code = $item['code'];
+                    if($product_code == $product->code){
+                        $other_product_count += $item['qty'];
                         $this->cart->remove($item['rowid']);
                     }
                 }
@@ -188,10 +202,13 @@ class Cart_ajax extends MY_Shop_Controller
                 ];
 
             }else{
+                $total_other_product = $other_product_in_cart + $other_product_count;
+
                 $data = [
                     'id'         => $id,
                     'product_id' => $product->id,
-                    'qty'        => ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1)),
+                    //'qty'        => ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1)),
+                    'qty'        => $total_other_product,
                     'disc_qty'   => 0,
                     'name'       => $product->name,
                     'slug'       => $product->slug,
