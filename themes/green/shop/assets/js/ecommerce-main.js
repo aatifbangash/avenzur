@@ -2158,6 +2158,23 @@ function add_address(t) {
 
 // New login workflow functionality
 
+if (window.innerWidth < 991) {
+
+  //  // Remove the button from the source div
+  cartsourceDiv.removeChild(cartToMove);
+
+
+  catsourceDiv.removeChild(allCatToMove);
+
+  // Append the button to the target div
+  targetmenuDiv.prepend(allCatToMove);
+
+  targetDiv.prepend(cartToMove);
+
+
+
+}
+
 function LoginFn(obj) {
   $("#loginBtn").addClass("active");
   $("#registerBtn").removeClass("active");
