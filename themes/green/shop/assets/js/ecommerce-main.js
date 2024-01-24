@@ -3,13 +3,13 @@ var buttonToMove = document.getElementById("menuiconMob");
 var sourceDiv = document.getElementById("sourcedivmob");
 var targetDiv = document.getElementById("shoppingdivMob");
 var saledivToMove = document.getElementById("salediv");
-//var sourcesalemob = document.getElementById("salemob");
-//var targetmobnav = document.getElementById("mobnav");
-//var cartToMove = document.getElementById("cart-items");
-//var cartsourceDiv = document.getElementById("cartdiv");
-//var allCatToMove = document.getElementById("allCatmob");
-//var catsourceDiv = document.getElementById("allcatDiv");
-//var targetmenuDiv = document.getElementById("navbarSupportedContent");
+var sourcesalemob = document.getElementById("salemob");
+var targetmobnav = document.getElementById("mobnav");
+var cartToMove = document.getElementById("cart-items");
+var cartsourceDiv = document.getElementById("cartdiv");
+var allCatToMove = document.getElementById("allCatmob");
+var catsourceDiv = document.getElementById("allcatDiv");
+var targetmenuDiv = document.getElementById("navbarSupportedContent");
 // Check if the screen width is less than a certain threshold (e.g., 768 pixels for typical mobile screens)
 
 // Remove the button from the source div
@@ -83,7 +83,7 @@ function update_popup_cart(t) {
       "</div>" +
       '<div class=" title-price-cont">' +
       '<p class="m-0 product-title fw-semibold text-start">' +
-      this.name +
+      this.name + '<span style="margin-left:5px;">('+ this.qty +')</span>' +
       "</p>" +
       '<p class="m-0 product-price fw-semibold mt-2 text-end pe-4 d-flex justify-content-between align-items-center">' +
       '<a href="#" data-rowid="' +
@@ -205,15 +205,15 @@ function update_cart(t) {
     $.each(t.contents, function () {
       var t = this,
         a =
-          '<div class="d-flex align-items-center flex-mobile-column  py-4">' +
+          '<div class="d-flex align-items-center  py-4">' +
           '<div class="cart-item-image pe-3">' +
-          '<img style="width: 100px;height: 90px;object-fit: contain;" src="' +
+          '<img class="cart-img" style="object-fit: contain;" src="' +
           site.base_url +
           "assets/uploads/" +
           this.image +
           '" class="card-img-top" alt="...">' +
           "</div>" +
-          '<div class="d-flex flex-column justify-content-between w-100"><div class="d-flex justify-content-between flex-ipad-column">' +
+          '<div class="d-flex flex-column justify-content-between w-100"><div class="d-flex align-items-center justify-content-between">' +
           '<h5 class="m-0">' +
           this.name +
           "</h5>" +
@@ -223,7 +223,7 @@ function update_cart(t) {
           "</h4>" +
           //'<p class="m-0 text-decoration-line-through text-danger text-center fw-semibold mb-4">SAR 10</p>' +
           "</div></div>" +
-          '<div class="d-flex justify-content-between align-items-center flex-ipad-column remove-quatity-container"><div>' +
+          '<div class="d-flex justify-content-between align-items-center flex-mobile-column remove-quatity-container"><div>' +
           '<a href="#" data-rowid="' +
           this.rowid +
           '" class="text-red remove-item text-decoration-none text-dark"><i class="fa fa-trash-o"></i> Remove</a></div>' +
@@ -587,7 +587,7 @@ function gen_html(t) {
       //e += '<div class="product-container ' + i + " " + (1 == site.settings.products_page ? "grid-item" : "") + '">\n        <div class="product ' + o + " " + (1 == site.settings.products_page ? "grid-sizer" : "") + '">\n        ' + (r.promo_price ? '<span class="badge badge-right theme">Promo</span>' : "") + '\n        <div class="product-top">\n        <div class="product-image">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <img class="img-responsive" src="' + site.base_url + "assets/uploads/" + r.image + '" alt=""/>\n        </a>\n        </div>\n        <div class="product-desc">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <h2 class="product-name">' + r.name + "</h2>\n        </a>\n        <p>" + r.details + '</p>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        ' + (1 == site.shop_settings.hide_price ? "" : '\n        <div class="product-bottom">\n        <div class="product-price">\n        ' + (r.promo_price ? '<del class="text-danger text-size-sm">' + l + "</del>" : "") + "\n        " + c + '\n        </div>\n        <div class="product-rating">\n        <div class="form-group" style="margin-bottom:0;">\n        <div class="input-group">\n        <span class="input-group-addon pointer btn-minus"><span class="fa fa-minus"></span></span>\n        <input type="text" name="quantity" class="form-control text-center quantity-input" value="1" required="required">\n        <span class="input-group-addon pointer btn-plus"><span class="fa fa-plus"></span></span>\n        </div>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        <div class="product-cart-button">\n        <div class="btn-group" role="group" aria-label="...">\n        <button class="btn btn-info add-to-wishlist" data-id="' + r.id + '"><i class="fa fa-heart-o"></i></button>\n        <button class="btn btn-theme add-to-cart" data-id="' + r.id + '"><i class="fa fa-shopping-cart padding-right-md"></i> ' + lang.add_to_cart + '</button>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        </div>') + '\n        </div>\n        <div class="clearfix"></div>\n        </div>',
       //1 != site.settings.products_page && a + 1 === t.length && (e += "</div>")
 
-      e += '<div class="col-lg-4 col-md-6 col-sm-12">';
+      e += '<div class="col-xl-3 col-lg-4 col-md-6 col-6 product-cards-cont">';
       e += '<div class="card" style="width: 100%">';
       //e += '<a href="#" class="text-decoration-none">';
       e += '<div class="cardImg">';
@@ -803,6 +803,14 @@ $(document).ready(function () {
   }
 
   $(document).on("click", function (event) {
+
+    if (!$('.offcanvas').is(event.target) && $('.offcanvas').has(event.target).length === 0 && $('.offcanvas').hasClass('show')) {
+        // Hide the offcanvas
+        //$('.offcanvas').offcanvas('hide');
+        $('.offcanvas').removeClass('show');
+        $('.offcanvas-backdropaddP').removeClass('show');
+    }
+
     var popup = $("#myaccountForm");
     var link = $(".checkout-link");
     var logintrigegr = $("#login-btn-trigger");
@@ -1191,7 +1199,7 @@ $(document).ready(function () {
           breakpoint: 1024,
           settings: {
             slidesToShow: 4,
-            slidesToScroll: 3,
+            slidesToScroll: 1,
             infinite: true,
             dots: true,
           },
@@ -1200,14 +1208,22 @@ $(document).ready(function () {
           breakpoint: 991,
           settings: {
             slidesToShow: 4,
-            slidesToScroll: 2,
+            slidesToScroll: 1,
+            prevArrow: false,
+            nextArrow: false,
+            autoplay: true,
+            infinite: true,
           },
         },
         {
           breakpoint: 480,
           settings: {
-            slidesToShow: 3,
+            slidesToShow: 4,
             slidesToScroll: 1,
+            prevArrow: false,
+            nextArrow: false,
+            autoplay: true,
+            infinite: true,
           },
         },
 
@@ -1227,14 +1243,14 @@ $(document).ready(function () {
   $(".popularCat").slick({
     infinite: false,
     speed: 300,
-    slidesToShow: 4,
+    slidesToShow: 5,
     slidesToScroll: 1,
     responsive: [
       {
         breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
           dots: true,
         },
@@ -1243,14 +1259,22 @@ $(document).ready(function () {
         breakpoint: 991,
         settings: {
           slidesToShow: 2,
-          slidesToScroll: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
         breakpoint: 480,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1276,16 +1300,20 @@ $(document).ready(function () {
         breakpoint: 1025,
         settings: {
           slidesToShow: 4,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
-          dots: true,
+          dots: false,
         },
       },
       {
         breakpoint: 991,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
@@ -1293,6 +1321,10 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1304,7 +1336,7 @@ $(document).ready(function () {
   $(".feature_products").slick({
     infinite: false,
     speed: 300,
-    slidesToShow: 4,
+    slidesToShow: 5,
     slidesToScroll: 1,
     margin: 20,
     prevArrow:
@@ -1316,9 +1348,9 @@ $(document).ready(function () {
         breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
-          dots: true,
+          dots: false,
         },
       },
       {
@@ -1326,13 +1358,21 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
         breakpoint: 480,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1356,9 +1396,9 @@ $(document).ready(function () {
         breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
-          dots: true,
+          dots: false,
         },
       },
       {
@@ -1366,13 +1406,21 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
         breakpoint: 480,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1386,6 +1434,10 @@ $(document).ready(function () {
     speed: 300,
     slidesToShow: 5,
     slidesToScroll: 1,
+    autoplay: true,
+    infinite: true,
+    prevArrow: false,
+    nextArrow: false,
 
     prevArrow:
       "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
@@ -1396,16 +1448,24 @@ $(document).ready(function () {
         breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
-          dots: true,
+          dots: false,
+          autoplay: true,
+      
+          prevArrow: false,
+          nextArrow: false,
         },
       },
       {
         breakpoint: 991,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
@@ -1413,6 +1473,10 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1436,7 +1500,7 @@ $(document).ready(function () {
         breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
           dots: true,
         },
@@ -1445,7 +1509,11 @@ $(document).ready(function () {
         breakpoint: 991,
         settings: {
           slidesToShow: 2,
-          slidesToScroll: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+            nextArrow: false,
+            autoplay: true,
+            infinite: true,
         },
       },
       {
@@ -1455,7 +1523,9 @@ $(document).ready(function () {
           slidesToScroll: 1,
           dots: true,
           prevArrow: false,
-          nextArrow: false
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -2095,6 +2165,23 @@ function add_address(t) {
 }*/
 
 // New login workflow functionality
+
+if (window.innerWidth < 991) {
+
+  //  // Remove the button from the source div
+  cartsourceDiv.removeChild(cartToMove);
+
+
+  catsourceDiv.removeChild(allCatToMove);
+
+  // Append the button to the target div
+  targetmenuDiv.prepend(allCatToMove);
+
+  targetDiv.prepend(cartToMove);
+
+
+
+}
 
 function LoginFn(obj) {
   $("#loginBtn").addClass("active");

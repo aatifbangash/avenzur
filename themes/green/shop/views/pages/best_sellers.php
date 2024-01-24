@@ -11,7 +11,7 @@
             </ol>
         </nav>
         <div class="row  ">
-            <div class="col-md-2 ">
+            <div class="col-xl-2  col-lg-3">
                 
                 <!-- side bar left -->
                 <button class="btn btn-primary d-lg-none catsidebarmob" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasProducts" aria-controls="offcanvasProducts"><i class="bi bi-sort-down-alt"></i></button>
@@ -43,7 +43,7 @@
                 </div>
                 <!-- side bar end -->
             </div>
-            <div class="col-md-10">
+            <div class="col-xl-10 col-lg-9">
 
                 <!-- all products -->
                 <div class="row products-card text-center gy-4 pb-4">
@@ -53,7 +53,7 @@
                     foreach (array_chunk($best_sellers, 4) as $sps){
                         foreach ($sps as $sp) {
                             ?>
-                              <div class="col-lg-4 col-md-6 col-sm-12">  
+                              <div class="col-xl-3 col-lg-4 col-md-6 col-6 product-cards-cont product-cards-wrapper">  
                                         <div class="card" style="width: 100%">
                                         <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
                                         <div class="cardImg"><img src="<?= base_url('assets/uploads/thumbs/' . $sp->image); ?>" class="card-img-top" alt="..."></div>

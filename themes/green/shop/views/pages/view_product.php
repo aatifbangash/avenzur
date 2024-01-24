@@ -80,7 +80,7 @@
                         } ?>
                         <div class="product-name">
                             <h2>
-                                <?= $product->name; ?>
+                                <?= stripslashes($product->name); ?>
                             </h2>
                         </div>
                         <div class="rating">

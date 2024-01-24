@@ -1214,8 +1214,11 @@ class Shop_model extends CI_Model
                     $productTaxAmount = $productPrice * ($productTaxPercent / 100);
 
                     $row['price'] = $productPrice + $productTaxAmount;
+                    $row['name'] = stripslashes($row['name']);
                     return $row;
                 }
+
+                $row['name'] = stripslashes($row['name']);
                 return $row;
             }, $data);
         }

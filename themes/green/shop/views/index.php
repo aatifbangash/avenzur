@@ -276,7 +276,7 @@
             </div>
           </div>
           <div class="col-lg-4 col-md-12 col-sm-12  mt-10 mt-m-0 mobile-h-marg-t">
-            <div class="boom-product-cat py-4 px-4" style="background-image: url('<?= base_url('assets/images/banners/boom3.png'); ?>')">
+            <div class="boom-product-cat boom-product-cat-cont py-4 px-4" style="background-image: url('<?= base_url('assets/images/banners/boom3.png'); ?>')">
               <div class="row  align-items-center">
                
                 <div class="col-lg-12 col-md-6 mb-4 flex-column d-flex col-6 col-sm-6 ">
@@ -382,9 +382,9 @@
                                                         <span class="text-uppercase"><?= $popular_category->name; ?></span>
                                                     </div>
                                                     <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none">
-                                                        <h5 class="card-title text-start"><?= $popular_product->name; ?></h5>
+                                                        <h5 class="card-title text-start"><?= stripslashes($popular_product->name); ?></h5>
                                                     </a>
-                                                    <div class="d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center justify-content-between flex-mobile-column">
                                                         
                                                         <div class="rating">
                                                           <?php 
@@ -394,23 +394,24 @@
                                                           <i class="bi bi-star-fill <?php echo $class;?>" ></i>
                                                           <?php }?>
                                                         </div>
-                                                        
+                                                        <div class="discountPrice price text-end py-2">
+                                                                            <h4 class="m-0 text-decoration-line-through">
                                                         <?php
                                                             if ($popular_product->promotion) {
                                                                 ?>
                                                                     
-                                                                        <div class="discountPrice price text-end py-2">
-                                                                            <h4 class="m-0 text-decoration-line-through">
+                                                                        
                                                                                 <?= $this->sma->convertMoney(isset($popular_product->special_price) && !empty(isset($popular_product->special_price)) ? $popular_product->special_price : $popular_product->price); ?>
-                                                                            </h4>
-                                                                        </div>
+                                                                            
                                                                     
                                                                 <?php
                                                                 
                                                             }
                                                         ?>
+                                                        </h4>
+                                                                        </div>
                                                     </div> 
-                                                    <div class="d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center justify-content-between flex-mobile-column">
                                                         
                                                             <div class="price text-start  py-2">
                                                                 <h4 class="m-0 fw-bold">
@@ -511,8 +512,8 @@
                             </div>
                             <div class="card-body px-0 text-start pb-0">
                             
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
-                            <div class="d-flex align-items-center justify-content-between">
+                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= stripslashes($sp->name); ?></h5></a>
+                            <div class="d-flex align-items-center justify-content-between flex-mobile-column">
                                 
                                 <div class="rating">
                                   <?php 
@@ -540,7 +541,7 @@
                             </div> 
                             <!--price and quantity araea  -->
 
-                            <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center justify-content-between flex-mobile-column">
                           
                                     <div class="price text-start  py-2">
                                         <h4 class="m-0 fw-bold">
@@ -626,8 +627,8 @@
                             </div>
                             <div class="card-body px-0 text-start pb-0">
                             
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
-                            <div class="d-flex  rating-cont align-items-center justify-content-between">
+                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= stripslashes($sp->name); ?></h5></a>
+                            <div class="d-flex  rating-cont align-items-center justify-content-between flex-mobile-column">
                             
                                 <div class="rating">
                                   <?php 
@@ -637,25 +638,25 @@
                                   <i class="bi bi-star-fill <?php echo $class;?>" ></i>
                                   <?php }?>
                                 </div>
-                             
+                                <div class="discountPrice price text-end py-2">
+                                <h4 class="m-0 text-decoration-line-through">
                                 <?php
                                 if ($sp->promotion) {
                                     ?>
                                  
-                                        <div class="discountPrice price text-end py-2">
-                                            <h4 class="m-0 text-decoration-line-through">
+                                        
                                                 <?php echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price); ?>
-                                            </h4>
-                                        </div>
+                                            
                                  
                                     <?php
                                 }
                                 ?>
-                                
+                                </h4>
+                                 </div>
                             </div> 
                             <!--price and quantity araea  -->
 
-                            <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center justify-content-between flex-mobile-column">
                                
                                     <div class="price text-start  py-2">
                                         <h4 class="m-0 fw-bold">
@@ -718,8 +719,8 @@
                             </div>
                             <div class="card-body px-0 text-start pb-0">
                             
-                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
-                            <div class="d-flex rating-cont align-items-center justify-content-between">
+                            <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= stripslashes($sp->name); ?></h5></a>
+                            <div class="d-flex rating-cont align-items-center justify-content-between flex-mobile-column">
                            
                                 <div class="rating">
                                   <?php 
@@ -747,7 +748,7 @@
                             </div> 
                             <!--price and quantity araea  -->
 
-                            <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center justify-content-between flex-mobile-column">
                                
                                     <div class="price text-start  py-2">
                                         <h4 class="m-0 fw-bold">
@@ -826,7 +827,7 @@
         </div>
 
         <!-- special products -->
-        <div class="special_products margin-minus ">
+        <div class="special_products margin-minus special_products-cont">
             <?php
                 $r = 0;
                 foreach (array_chunk($special_offers, 4) as $sps){
@@ -844,14 +845,14 @@
                                 <div class="col-md-7 col-sm-12 px-md-0">
                                 <div class="card-body px-md-0 text-start pb-0">
                                     <div class="product-cat-title"><span class="text-uppercase"><?= $sp->category_name; ?></span></div>
-                                    <a style="text-decoration: none;" href="<?= site_url('product/' . $sp->slug); ?>"><h5 class="card-title text-start"><?= $sp->name; ?></h5></a>
+                                    <a style="text-decoration: none;" href="<?= site_url('product/' . $sp->slug); ?>"><h5 class="card-title text-start"><?= stripslashes($sp->name); ?></h5></a>
                                     <div class="row align-items-center justify-content-between">
                                     
                                     
                                     </div> 
                                     <!--price and quantity araea  -->
 
-                                    <div class="d-flex align-items-center justify-content-between w-100">
+                                    <div class="d-flex align-items-center justify-content-between w-100 flex-mobile-column">
                                  
                                         <div class="price text-start  py-2">
                                             <h4 class="m-0 fw-bold">
