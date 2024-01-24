@@ -2418,6 +2418,9 @@ html [lang='ar']  .contact-info  { padding-left: 0px !important; padding-right: 
 }
 
 @media screen and (max-width: 480px) {
+  img.footer-pay {
+    width: 35% !important;
+}
   /***************22-1*****************/
   .hide {height: 0; opacity: 0; display: none;}
   .footer-header-collapse {background-repeat: no-repeat !important; background-position: center right 10px !important;}
