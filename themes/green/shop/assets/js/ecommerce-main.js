@@ -803,6 +803,14 @@ $(document).ready(function () {
   }
 
   $(document).on("click", function (event) {
+
+    if (!$('.offcanvas').is(event.target) && $('.offcanvas').has(event.target).length === 0 && $('.offcanvas').hasClass('show')) {
+        // Hide the offcanvas
+        //$('.offcanvas').offcanvas('hide');
+        $('.offcanvas').removeClass('show');
+        $('.offcanvas-backdropaddP').removeClass('show');
+    }
+
     var popup = $("#myaccountForm");
     var link = $(".checkout-link");
     var logintrigegr = $("#login-btn-trigger");
