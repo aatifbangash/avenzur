@@ -1,9 +1,9 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
 <!--product detail page  -->
-
+<div class="container container-max-width">
 <section class="side-banner py-3">
-    <div class="container container-max-width">
+    
         <div class="brad-crumb py-3">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
@@ -260,9 +260,9 @@
         <!-- related products end -->
 
 
-    </div>
+    
 </section>
-
+</div>
 <!-- join container -->
 <!--<section class="join-container " >
     <div class="container container-max-width py-5" style="background-image: url(<?php //echo base_url('assets/images/banners/bgbanner.jpg'); ?>);">
