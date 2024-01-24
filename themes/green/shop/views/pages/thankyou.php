@@ -55,7 +55,7 @@
             type="button"
             class="btn text-white continueBtn px-5 mb-1 mx-md-0 mx-auto"
             style="width: fit-content"
-            onclick="redirectToHome('<?= site_url(); ?>')"
+            onclick="redirectToCheckout('<?= site_url(); ?>')"
           >
             Continue
           </button>
