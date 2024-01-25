@@ -2249,7 +2249,7 @@ html[lang="ar"] #thumb .item {margin: 0 0px 0 10px !important;}
 #thumb .item img {width: 70px; padding: 5px;  height: 70px; object-fit: contain; margin: 0 !important;}
 #thumb .owl-item .item{border:1px solid #dfdfdf ;  border-radius: 10px;}
 .categoryTabs .products-card {direction: ltr !important;}
-.owl-carousel .owl-stage{display: flex;}
+#thumb .owl-carousel .owl-stage{display: flex;padding: 10px;touch-action: none !important;}
 /*************/
 /************** ar ************/
 html[lang='ar'] body{ font-family: 'DroidArabicKufiRegular','lato'; direction: rtl !important; }
