@@ -2256,6 +2256,7 @@ html[lang='ar'] .item2 {flex:0 0 40%}
 .form-check .form-check-input {margin-left:0 !important;}
 .form-check-input {margin-right: 10px;}
 html[lang='ar'] .form-check-input {margin-right: 0px !important; margin-left: 10px !important; }
+html[lang='ar'] .form-control{direction: ltr !important;}
 .payment-method-wrapper img {width: 50%;margin-top:20px; margin-bottom:20px;}
 /*************/
 /************** ar ************/
