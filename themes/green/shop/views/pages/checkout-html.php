@@ -121,7 +121,7 @@ if ($this->Settings->indian_gst) {
                 <div class="mt-4">
                     <h2 class=" fw-bold pb-2 fs-2  m-0">Shipping</h2>
                     <div class="d-flex align-items-center  py-3 standard-div">
-                        <div class="form-check fs-5">
+                        <div class="form-check px-0">
                         <input class="form-check-input" type="radio" name="delivery" id="flexRadiostandard" checked value="shipping_standard">
                         <label class="form-check-label fs-6 fw-semibold" for="flexRadiostandard">
                             Standard delivery
@@ -131,8 +131,8 @@ if ($this->Settings->indian_gst) {
                             <p class="m-0 fst-italic text-white px-4  rounded" style="background:#662d91">Free</p>
                         </div>
                     </div>
-                    <div class="d-flex align-items-center  py-1 standard-div" id="express-delivery-details" style="display: none !important;">
-                        <div class="form-check fs-5">
+                    <div class="d-flex align-items-center  py-3 standard-div" id="express-delivery-details" style="display: none !important;">
+                        <div class="form-check px-0">
                         <input class="form-check-input" type="radio" name="delivery" id="express-delivery-check" value="shipping_express">
                         <label class="form-check-label fs-6 fw-semibold" for="express-delivery-check">
                             Express delivery
@@ -146,32 +146,36 @@ if ($this->Settings->indian_gst) {
 
             </div>
          
-        <div class="col-md-4">
+        <div class="col-md-4 payment-method-wrapper">
             <?php echo shop_form_open('order', 'class="validate addressform-k p-0"'); ?>
             <h3 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
             <div class="d-flex align-items-center justify-content-between py-3 border-bottom mobile-wrap  mobile-start">
-                <div class="form-check fs-5">
-                    <span>
+                <div class="form-check px-0 w-100 d-flex flex-column">
+                    <div class="d-flex w-100 radio-button-wrapper my-3">
+                    <div class="d-flex align-items-center item1">
                         <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="showCardDetails();" value="1" id="flexRadioDefault2" checked>
                         <label class="form-check-label fw-semibold" style="font-size: 14px;font-weight: normal !important;" for="flexRadioDefault2">
                             Debit / Credit Card
                         </label>
-                    </span>
-                    <span style="margin-left: 80px;">
+                     </div>
+                    <div class="d-flex align-items-center item2">
                         <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();" value="3" id="apple-pay">
                         <label class="form-check-label fw-semibold" style="font-size: 14px;font-weight: normal !important;" for="flexRadioDefault2">
                             Apple Pay
                         </label>
-                    </span>
+                    </div>
+                  </div>
                     <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_name" placeholder="John Doe" />
-                    <span><input type="text" maxlength="19" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="5105 1051 0510 5100" />
-                    <img src="" id="card_type_image" style="width: 30px; height: 30px;display:none;"></span>
+                    <div><input type="text" maxlength="19" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="5105 1051 0510 5100" />
+                    <img src="" id="card_type_image" style="width: 30px; height: 30px;display:none;"></div>
                     <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="12 / 31" />
                     <!--<input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" maxlength="2" placeholder="Card Expiry Month" />-->
                     <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" maxlength="3" pattern="\d*" title="Please enter a 3-digit CVV" placeholder="358" />
                 </div>
-                <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" w-25 payment-method">
+             
             </div>
+
+            <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" payment-method">
 
 
             <h3 class=" fw-bold pb-2 order-summary-title">Order Summary</h3>  

@@ -938,7 +938,6 @@ input.qty.Qnum {
   height: 23px;
   padding-block: 0;
   max-width: 50px;
-  text-align: center;
 }
 
 .text-dark {
@@ -1461,7 +1460,7 @@ html[lang="ar"] .form-check {
   display: flex;
 }
 html[lang="ar"] label.form-check-label {
-  margin-right: 30px;
+  margin-right: 0px;
 }
 html[lang="ar"] .dropdown-menu.loggedin {
   text-align: right;
@@ -1748,8 +1747,9 @@ button.modalcloseBtn {
     margin-bottom: 5px;*/
   }
   .quantity {
-    justify-content: center !important;
+    justify-content: start !important;
     gap: 4px;
+    margin-top: 5px;
   }
   .categoryTabs #pills-tab li button {
     margin-bottom: 10px;
@@ -2017,7 +2017,7 @@ button.modalcloseBtn {
     margin: 0;
     margin-left: 0px;
     position: absolute;
-    bottom: 20px;
+    bottom: 0px;
     left: 0;
     margin-left: 0;
     right: auto;
@@ -2249,7 +2249,14 @@ html[lang="ar"] #thumb .item {margin: 0 0px 0 10px !important;}
 #thumb .item img {width: 70px; padding: 5px;  height: 70px; object-fit: contain; margin: 0 !important;}
 #thumb .owl-item .item{border:1px solid #dfdfdf ;  border-radius: 10px;}
 .categoryTabs .products-card {direction: ltr !important;}
-#thumb .owl-stage{display: flex;padding: 10px;touch-action: none !important;}
+#thumb .owl-stage {display: flex; padding: 10px; }
+.radio-button-wrapper .item1,.radio-button-wrapper .item2 {flex: 0 0 50%}
+html[lang='ar'] .item1 {flex:0 0 60%}
+html[lang='ar'] .item2 {flex:0 0 40%}
+.form-check .form-check-input {margin-left:0 !important;}
+.form-check-input {margin-right: 10px;}
+html[lang='ar'] .form-check-input {margin-right: 0px !important; margin-left: 10px !important; }
+.payment-method-wrapper img {width: 50%;margin-top:20px; margin-bottom:20px;}
 /*************/
 /************** ar ************/
 html[lang='ar'] body{ font-family: 'DroidArabicKufiRegular','lato'; direction: rtl !important; }
