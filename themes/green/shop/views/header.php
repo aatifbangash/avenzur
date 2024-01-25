@@ -45,6 +45,7 @@
   </title>
   <meta name="description" content="<?php echo $seo_description; ?>">
   <meta name="keywords" content="<?php echo $seo_keywords; ?>">
+  <meta name="p:domain_verify" content="0704e772b1ab59012494397c16667a45"/>
   <!--<link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>-->
   <!--<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;1,100;1,300;1,400;1,700&family=Manrope:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">-->
