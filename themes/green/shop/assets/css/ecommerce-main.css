@@ -21,6 +21,12 @@ h6,
 p {
   font-family: "Lato",'DroidArabicKufiRegular' !important;
 }
+html[lang="ar"] body , html[lang="ar"]  h2,
+html[lang="ar"]  h3,
+html[lang="ar"] h4,
+html[lang="ar"]  h5,
+html[lang="ar"]  h6,
+html[lang="ar"] p {  font-family:'DroidArabicKufiRegular' , "Lato" !important ;}
 ul {
   padding-left: 15px;
 }
@@ -2015,6 +2021,7 @@ button.modalcloseBtn {
     left: 0;
     margin-left: 0;
     right: auto;
+    justify-content: center;
   }
   .feature-cards h5.card-title {
     text-align: center !important;
@@ -2241,6 +2248,7 @@ html[lang="ar"] #thumb .item {margin: 0 0px 0 10px !important;}
 #thumb .owl-item {width:75px !important; height: 75px !important; }
 #thumb .item img {width: 70px; padding: 5px;  height: 70px; object-fit: contain; margin: 0 !important;}
 #thumb .owl-item .item{border:1px solid #dfdfdf ;  border-radius: 10px;}
+.categoryTabs .products-card {direction: ltr !important;}
 
 /*************/
 /************** ar ************/

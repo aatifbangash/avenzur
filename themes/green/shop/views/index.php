@@ -384,7 +384,7 @@
                                                     <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none">
                                                         <h5 class="card-title text-start"><?= stripslashes($popular_product->name); ?></h5>
                                                     </a>
-                                                    <div class="d-flex align-items-center justify-content-between flex-mobile-column">
+                                                    <div class="d-flex align-items-center justify-content-between">
                                                         
                                                         <div class="rating">
                                                           <?php 
@@ -411,7 +411,7 @@
                                                         </h4>
                                                                         </div>
                                                     </div> 
-                                                    <div class="d-flex align-items-center justify-content-between flex-mobile-column">
+                                                    <div class="d-flex align-items-center justify-content-between">
                                                         
                                                             <div class="price text-start  py-2">
                                                                 <h4 class="m-0 fw-bold">
@@ -513,7 +513,7 @@
                             <div class="card-body px-0 text-start pb-0">
                             
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= stripslashes($sp->name); ?></h5></a>
-                            <div class="d-flex align-items-center justify-content-between flex-mobile-column">
+                            <div class="d-flex align-items-center justify-content-between">
                                 
                                 <div class="rating">
                                   <?php 
@@ -541,7 +541,7 @@
                             </div> 
                             <!--price and quantity araea  -->
 
-                            <div class="d-flex align-items-center justify-content-between flex-mobile-column">
+                            <div class="d-flex align-items-center justify-content-between">
                           
                                     <div class="price text-start  py-2">
                                         <h4 class="m-0 fw-bold">
@@ -628,7 +628,7 @@
                             <div class="card-body px-0 text-start pb-0">
                             
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= stripslashes($sp->name); ?></h5></a>
-                            <div class="d-flex  rating-cont align-items-center justify-content-between flex-mobile-column">
+                            <div class="d-flex  rating-cont align-items-center justify-content-between">
                             
                                 <div class="rating">
                                   <?php 
@@ -656,7 +656,7 @@
                             </div> 
                             <!--price and quantity araea  -->
 
-                            <div class="d-flex align-items-center justify-content-between flex-mobile-column">
+                            <div class="d-flex align-items-center justify-content-between">
                                
                                     <div class="price text-start  py-2">
                                         <h4 class="m-0 fw-bold">
@@ -720,7 +720,7 @@
                             <div class="card-body px-0 text-start pb-0">
                             
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none"><h5 class="card-title text-start"><?= stripslashes($sp->name); ?></h5></a>
-                            <div class="d-flex rating-cont align-items-center justify-content-between flex-mobile-column">
+                            <div class="d-flex rating-cont align-items-center justify-content-between">
                            
                                 <div class="rating">
                                   <?php 
@@ -748,7 +748,7 @@
                             </div> 
                             <!--price and quantity araea  -->
 
-                            <div class="d-flex align-items-center justify-content-between flex-mobile-column">
+                            <div class="d-flex align-items-center justify-content-between">
                                
                                     <div class="price text-start  py-2">
                                         <h4 class="m-0 fw-bold">
@@ -852,7 +852,7 @@
                                     </div> 
                                     <!--price and quantity araea  -->
 
-                                    <div class="d-flex align-items-center justify-content-between w-100 flex-mobile-column">
+                                    <div class="d-flex align-items-center justify-content-between w-100">
                                  
                                         <div class="price text-start  py-2">
                                             <h4 class="m-0 fw-bold">
@@ -868,7 +868,7 @@
                                         </div>
                                    
                                 
-                                        <div class="quantity text-end py-2 d-flex align-items-center  justify-content-md-between">
+                                        <div class="quantity text-end py-2 d-flex align-items-center">
                                         <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
                                         <input type="text" name="quantity" class="Qnum" value="1" required="required" />
                                         <!--<span class="Qnum ">1</span>-->
