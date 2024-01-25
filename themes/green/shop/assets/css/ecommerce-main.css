@@ -938,6 +938,7 @@ input.qty.Qnum {
   height: 23px;
   padding-block: 0;
   max-width: 50px;
+  text-align: center;
 }
 
 .text-dark {
@@ -2248,7 +2249,7 @@ html[lang="ar"] #thumb .item {margin: 0 0px 0 10px !important;}
 #thumb .item img {width: 70px; padding: 5px;  height: 70px; object-fit: contain; margin: 0 !important;}
 #thumb .owl-item .item{border:1px solid #dfdfdf ;  border-radius: 10px;}
 .categoryTabs .products-card {direction: ltr !important;}
-
+.owl-carousel .owl-stage{display: flex;}
 /*************/
 /************** ar ************/
 html[lang='ar'] body{ font-family: 'DroidArabicKufiRegular','lato'; direction: rtl !important; }
