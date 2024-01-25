@@ -1747,9 +1747,8 @@ button.modalcloseBtn {
     margin-bottom: 5px;*/
   }
   .quantity {
-    justify-content: start !important;
+    justify-content: center !important;
     gap: 4px;
-    margin-top: 5px;
   }
   .categoryTabs #pills-tab li button {
     margin-bottom: 10px;
