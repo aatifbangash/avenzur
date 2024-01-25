@@ -2013,7 +2013,7 @@ button.modalcloseBtn {
     margin-top: 35px;
   }
   html[lang="ar"] .heroSlider .carousel-indicators {
-    width: 21%;
+    width: 100%;
     margin: 0;
     margin-left: 0px;
     position: absolute;
@@ -2447,7 +2447,8 @@ html [lang='ar']  .contact-info  { padding-left: 0px !important; padding-right: 
   .mt-10{ margin-top: 20px;}
 
   .cart-content-wrapper .price-label { padding-top: 10px;}
-  .quantity input{width: 36px !important;}
+  .quantity input{width: 34px !important; padding: 0 5px;}
+  .price h4 {font-size: 14px;}
   .cart-content-wrapper .cart-item-image img {margin-bottom: 15px;}
   
   .cartQuantity {margin-top: 5px;}
@@ -2455,6 +2456,7 @@ html [lang='ar']  .contact-info  { padding-left: 0px !important; padding-right: 
 
 @media screen and (max-width: 480px) {
   /***************24-1*****************/
+  .rating i, .discountPrice h4{font-size: 13px;}
   .product-cards-wrapper.row {margin: 0 -6px !important;}
   .product-cards-cont.col-6 {padding: 0 6px !important;}
   .cart-img {width:80px !important; height: 80px !important;}
