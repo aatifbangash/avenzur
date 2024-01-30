@@ -451,10 +451,79 @@ class Sma
         return $rn;
     }
 
-    public function send_whatsapp_msg($receiver_number, $variable){
-        $publicId = 'f73c5f1a-baf8-4b54-a138-3bda6a3dacd0';
-        $secret = 'eZy78JtXYBttRDU07Boi48dXzAoKP8IvhbtmbdRLpcHSEUyhmFFrUtQvV3NtqyuYuWROrivT51W';
+    public function send_whatsapp_notify($receiver_number, $variable){
+        $service = $this->site->getSMSServiceByName('unifonic-whatsapp');
+        $publicId = $service->api_key;
+        $secret = $service->api_secret;
 
+        $whatsappApiUrl = 'https://apis.unifonic.com/v1/messages';
+
+        $payload = [
+            "recipient" => [
+                "contact" => $receiver_number,
+                "channel" => "whatsapp"
+            ],
+            "content" => [
+                "type" => "template",
+                "name" => "otp_whatsapp",
+                "language" => ["code" => "en"],
+                "components" => [
+                    [
+                        "type" => "body",
+                        "parameters" => [
+                            [
+                                "type" => "text",
+                                "text" => (string) $variable
+                            ]
+                        ]
+                    ],
+                    [
+                        "type" => "options",
+                        "parameters" => [
+                            [
+                                "value" => (string) $variable,
+                                "subType" => "url",
+                                "index" => 0
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $headers = [
+            'PublicId: ' . $publicId,
+            'Secret: ' . $secret,
+            'Content-Type: application/json'
+        ];
+
+        // Initialize cURL session
+        $ch = curl_init($whatsappApiUrl);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        // Execute cURL session and get the response
+        $response = curl_exec($ch);
+
+        // Check for cURL errors
+        if (curl_errno($ch)) {
+            echo 'Curl error: ' . curl_error($ch);
+        }
+
+        // Close cURL session
+        curl_close($ch);
+
+        return $response;
+    }
+
+    public function send_whatsapp_msg($receiver_number, $variable){
+        $service = $this->site->getSMSServiceByName('unifonic-whatsapp');
+        $publicId = $service->api_key;
+        $secret = $service->api_secret;
 
         $whatsappApiUrl = 'https://apis.unifonic.com/v1/messages';
         if (strpos($receiver_number, '+966') === false) {
@@ -536,7 +605,7 @@ class Sma
                 [
                     "text" => 'Your OTP verification code is '.$variable,
                     "numbers" => ['966'.$receiver_number],
-                    "sender" => "4jawaly"
+                    "sender" => "PHMC"
                 ]
             ]
         ];

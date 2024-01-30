@@ -101,7 +101,7 @@
               
               
                 <div class="mobficon justify-content-start mt-3" style="text-align:center;">
-                  <img width="60" style="margin-bottom: 20px;" src="<?= base_url('assets/images/gold-logo.png'); ?>" />
+                  <img width="70" style="margin-bottom: 20px;" src="<?= base_url('assets/images/gold-logo.png'); ?>" />
                   <h6 class="m-0">
                     <a href="https://www.facebook.com/people/Avenzur/61551081317111/" class="text-dark text-decoration-none mx-2"> <i class="bi bi-facebook"></i></a>
                     <a href="https://www.linkedin.com/company/avenzur/?viewAsMember=true" class="text-dark text-decoration-none mx-2"> <i class="bi bi-linkedin"></i></a>
