@@ -59,7 +59,7 @@ if ($this->Settings->indian_gst) {
                                 </p>
                                 <p class="m-0 fs-6 fw-semibold d-flex align-items-center"><i class="bi bi-phone fs-4 pe-2 purpColor"></i>  +966  <?php echo isset($default_address)?$default_address->phone:'';?> <i class="bi bi-check-circle-fill ms-2 purpColor"></i></p>  
                             </div>                                                             
-                        
+                        </div>
 
                         <?php //&& !$this->Staff
                         if (count($addresses) < 6 && !$this->Staff) {?>
@@ -88,7 +88,6 @@ if ($this->Settings->indian_gst) {
                                             } else {
                                                 echo '<script>var istates = false; </script>';
                                             } ?>
-                    </div>
                         
                     </div>
                 </div>
