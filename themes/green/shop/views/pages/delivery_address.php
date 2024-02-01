@@ -171,12 +171,12 @@
                                             <input type="hidden" id="selected_add_id" name="selected_add_id" value="" />
                                         </div>
                                         <div  class="text-center">
-                                            <h6 class="m-0 mt-2"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="mobileOTP">Resend OTP </span></h6>
+                                            <h6 class="m-0 mt-2 d-flex justify-content-center"><span id="register-clock"></span> <span class="ms-2 fw-semibold opacity-50" id="mobileOTP">Resend OTP </span></h6>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="modal-footer border-0 pb-4">
-                                    <button type="submit" id="mobileOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0" data-bs-toggle="modal" data-bs-target="#exampleModal">Verify</button>
+                                    <button type="submit" id="mobileOtpBtn" class="btn  text-white continueBtn rounded w-75 mx-auto mt-0 d-flex justify-content-center" data-bs-toggle="modal" data-bs-target="#exampleModal">Verify</button>
                                 </div>
                                 <span id="otp-message"></span>
                                 <?= form_close(); ?>
