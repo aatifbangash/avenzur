@@ -2268,7 +2268,7 @@ html[lang='ar'] #cart-items a {font-size: 14px;}
 html[lang='ar'] #cart-items-table {direction: rtl;}
 html[lang='ar'] .change-address-link svg {padding-left: 10px; padding-right: 0; }
 
-
+html[lang='ar'] #otp{direction: ltr !important;}
 html[lang='ar']  .bi-chevron-right::before {
   content: "\f284";
 }
