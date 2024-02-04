@@ -1621,16 +1621,29 @@ h4.letstart {
   padding: 9px 12px;
 }
 button.continueBtn{
-  width: 100%;
   background: #662d91;
+  color: #fff;
+}
+
+button.continueBtn:hover, button.continueShopping:hover {
+  background-color: #333;
+  border-color: #333;
+}
+
+button.continueShopping{
+  background: #fff;
+  color: #662d91;
+  border: 1px solid #662d91;
+}
+
+button.continueShopping, button.continueBtn{
+  width: 100%;
   margin-top: 20px;
   border-radius: 10px;
   font-size: 19px;
   padding-block: 10px;
 }
-button.continueBtn:hover {
-  background-color: #333;
-}
+
 .inputs input {
   width: 40px;
   height: 40px;
