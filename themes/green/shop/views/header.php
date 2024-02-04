@@ -669,7 +669,7 @@
             onclick="redirectToCheckout('<?= site_url('cart'); ?>')">
             Checkout
           </button>
-          <button type="button" class="btn text-white continueShopping w-50 rounded  mx-1 mt-0 fs-6 offcanvasClose"
+          <button type="button" class="btn continueShopping w-50 rounded  mx-1 mt-0 fs-6 offcanvasClose"
             data-bs-dismiss="offcanvas">Continue Shopping</button>
         </div>
       </div>
