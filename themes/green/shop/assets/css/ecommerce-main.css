@@ -377,6 +377,12 @@ section.heroSlider .carousel-control-prev {
   color: black;
   height: 38px;
 }
+
+html[lang='ar'] .products-card .card .card-title,
+html[lang='ar'] .specialOfferP .card-title {
+  text-align: right !important;
+}
+
 .products-card .card .card-body {
   padding-left: 0;
   padding-right: 0;
