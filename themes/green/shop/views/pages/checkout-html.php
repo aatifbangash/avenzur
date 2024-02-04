@@ -49,7 +49,7 @@ if ($this->Settings->indian_gst) {
             <div class="col-md-8">
                 <h3 class=" fw-bold pb-2">Shipping Address</h3>
                 <div class=" border rounded p-3 mb-4">
-                    <div class="d-flex mobile-wrap mobile-start ">
+                    <div class="d-flex mobile-wrap justify-content-between mobile-start ">
                         
                         <div class="addressDetail d-flex align-items-center">
                             

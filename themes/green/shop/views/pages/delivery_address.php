@@ -130,7 +130,7 @@
                                         class="btn btn-lg primary-buttonAV rounded-2  fw-normal px-4 py-1 address-but"
                                        > Add New Address</a>
                                     <a href="<?= base_url() . 'cart/checkout'; ?>"
-                                        class="btn btn-lg primary-buttonAV rounded-2 fw-normal px-4 py-1 address-but"
+                                        class="btn btn-lg cancel-button rounded-2 fw-normal px-4 py-1 address-but"
                                       > Cancel</a>
                                     <button type="submit"
                                         id="confirm-address" class="btn btn-lg  primary-buttonAV rounded-2 fw-normal px-4 py-1 address-but"

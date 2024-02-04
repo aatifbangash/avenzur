@@ -2179,7 +2179,7 @@ html[lang="ar"] .cart-cont-row .addicon {padding-left: 15px; padding-right: 0;}
 
 .tab-pane.rate-review  { padding: 20px;}
 #otp-message { display: flex; justify-content: center; padding: 15px 0; }
-.change-address-link {color:#662D91; width:150px; font-weight: bold; text-decoration: none; padding-top: 15px; }
+.change-address-link {color:#662D91; font-weight: bold; text-decoration: none; padding-top: 15px; }
 .change-address-link:hover{color: #212529; text-decoration: underline;}
 .change-address-link svg {padding-right: 10px; width: 26px}
 .addressDetail {border-bottom: 1px solid #dfdfdf; padding: 15px 0;}
@@ -2252,6 +2252,14 @@ h3.fw-semibold , h3.fw-bold  {
 .validate.addressform-k .primary-buttonAV {text-align: center !important; line-height: 40px;}
 .validate.addressform-k .primary-buttonAV:hover , .order-table .btn:hover , .edit-address:hover, .checkLeftCol-k input[type='submit']:hover {background-color: #333 !important; border-color: #333 !important;}
 .addtocart:hover {background-color: #4f127c;}
+
+.cancel-button{
+  background-color: #fff;
+  border: 1px solid #4f127c;
+  color: #4f127c;
+  text-align: center;
+  line-height: 40px;
+}
 
 /***asma 17-1 ****/
 .address-container i{color: #47126e !important; font-size: 20px; padding-left: 10px;}
@@ -2336,7 +2344,7 @@ footer ul{
 
 @media screen and (min-width: 1440px) {
   .loginRCard {
-    width: 25% !important; }
+    width: 30% !important; }
 
   
   }
