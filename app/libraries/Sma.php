@@ -322,7 +322,12 @@ class Sma
             $product = json_decode(json_encode($product), false);
         }
         $today = date('Y-m-d');
-        return $product->promotion && $product->promo_price;
+        
+        return !is_null($product->promotion) && 
+        $product->promo_price && 
+        $product->start_date <= $today && 
+        $product->end_date >= $today;
+        //return  !is_null($product->promotion) && $product->promotion && $product->promo_price;
         //return $product->promotion && $product->start_date <= $today && $product->end_date >= $today && $product->promo_price;
     }
 
