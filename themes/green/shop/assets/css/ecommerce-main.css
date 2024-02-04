@@ -8,25 +8,38 @@
   --primary-color: #662d91; /* Define a variable named --my-color and set its value to a color */
 }
 
+@font-face {
+  font-family: 'Droid Arabic Kufi';
+  src: url('../fonts/DroidArabicKufi.woff2') format('woff2'),
+      url('../fonts/DroidArabicKufi.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+
 body {
-  font-family: "Lato", 'DroidArabicKufiRegular';
+  font-family: "Lato", 'Droid Arabic Kufi';
 
   font-size: 14px;
 }
+
 h2,
 h3,
 h4,
 h5,
 h6,
 p {
-  font-family: "Lato",'DroidArabicKufiRegular' !important;
+  font-family: "Lato",'Droid Arabic Kufi' !important;
 }
+
+
 html[lang="ar"] body , html[lang="ar"]  h2,
 html[lang="ar"]  h3,
 html[lang="ar"] h4,
 html[lang="ar"]  h5,
 html[lang="ar"]  h6,
-html[lang="ar"] p {  font-family:'DroidArabicKufiRegular' , "Lato" !important ;}
+html[lang="ar"] p {  font-family:'Droid Arabic Kufi' , "Lato" !important ;}
 ul {
   padding-left: 15px;
 }
