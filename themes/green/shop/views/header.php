@@ -54,7 +54,7 @@
     integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   <link href="<?= $assets; ?>css/ecommerce-main.css" rel="stylesheet">
   <link rel="stylesheet" media="screen" href="https://fontlibrary.org/face/droid-arabic-kufi" type="text/css"/>
-
+  
   <script src="<?= $assets; ?>build/js/intlTelInput.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <?php
@@ -669,7 +669,7 @@
             onclick="redirectToCheckout('<?= site_url('cart'); ?>')">
             Checkout
           </button>
-          <button type="button" class="btn text-white continueBtn w-50 rounded  mx-1 mt-0 fs-6 offcanvasClose"
+          <button type="button" class="btn text-white continueShopping w-50 rounded  mx-1 mt-0 fs-6 offcanvasClose"
             data-bs-dismiss="offcanvas">Continue Shopping</button>
         </div>
       </div>
