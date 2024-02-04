@@ -1619,6 +1619,11 @@ h4.letstart {
   border: 1px solid #662d918c;
   border-radius: 8px;
   padding: 9px 12px;
+  font-size: 14px;
+}
+
+html[lang='ar'] .controls.logcardinput input{
+  text-align: right !important;
 }
 button.continueBtn{
   background: #662d91;
