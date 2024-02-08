@@ -277,7 +277,7 @@ class Shop extends MY_Shop_Controller
     // Add new Order form shop
     public function order()
     {
-
+        echo $this->input->post('card_name').' - '.$this->input->post('card_number').' - '.$this->input->post('card_cvv').' - '.$this->input->post('card_expiry_year').' - '.$this->input->post('payment_method_details');exit;
         $guest_checkout = $this->input->post('guest_checkout');
         if (!$guest_checkout && !$this->loggedIn) {
             redirect('login');
