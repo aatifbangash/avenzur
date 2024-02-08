@@ -322,6 +322,7 @@ class Shop extends MY_Shop_Controller
                 if ($this->input->post('address') != 'new') {
                     $customer = $this->site->getCompanyByID($this->session->userdata('company_id'));
                 } else {
+                    echo 'Email: '.$this->input->post('email');exit;
                     if (!($customer = $this->shop_model->getCompanyByEmail($this->input->post('email')))) {
                         $customer = new stdClass();
                         $customer->name = $this->input->post('name') . ($this->input->post('last_name') ?: '');
