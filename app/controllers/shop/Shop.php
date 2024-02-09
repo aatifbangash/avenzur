@@ -164,6 +164,8 @@ class Shop extends MY_Shop_Controller
             
 
 
+        }else{
+            redirect('cart/checkout');
         }
 
 
