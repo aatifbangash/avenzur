@@ -367,6 +367,11 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
             last_name.removeClass('error');
         });
 
+        const emailAddress = $('#emailAddress');
+        emailAddress.focus(function () {
+            emailAddress.removeClass('error');
+        });
+
 
         $('#checkoutAddress').submit(function (event) {
             // Remove previous error highlights
@@ -403,6 +408,14 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
             if (last_name.val() === '') {
                 // Highlight the input field with an error
                 last_name.addClass('error');
+                event.preventDefault(); // Prevent form submission
+            }
+
+            var emailAddress = $('#emailAddress');
+
+            if (emailAddress.val() === '') {
+                // Highlight the input field with an error
+                emailAddress.addClass('error');
                 event.preventDefault(); // Prevent form submission
             }
 
