@@ -229,7 +229,7 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                             ?>
                                             <div class="form-row">
                                                 <div class="form-group col-md-6">
-                                                    <label for="emailAddress" class=" fw-bold fs-6">Email Address</label>
+                                                    <label for="emailAddress" class=" fw-bold fs-6">Email Address *</label>
                                                     <input type="text" class="form-control checkout_address ps-1"
                                                         name="email" id="emailAddress"
                                                         placeholder="" >

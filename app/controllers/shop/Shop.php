@@ -80,7 +80,7 @@ class Shop extends MY_Shop_Controller
         $this->form_validation->set_rules('mobile_number', lang('mobile_number'), 'trim|required');
         $this->form_validation->set_rules('first_name', lang('first_name'), 'trim|required');
         $this->form_validation->set_rules('last_name', lang('last_name'), 'trim|required');
-        $this->form_validation->set_rules('email', lang('email'), 'trim');
+        $this->form_validation->set_rules('email', lang('email'), 'trim|required');
         
         if ($this->form_validation->run() == true) {
             // update address
@@ -277,7 +277,7 @@ class Shop extends MY_Shop_Controller
     // Add new Order form shop
     public function order()
     {
-        //echo $this->input->post('card_name').' - '.$this->input->post('card_number').' - '.$this->input->post('card_cvv').' - '.$this->input->post('card_expiry_year').' - '.$this->input->post('payment_method_details');exit;
+
         $guest_checkout = $this->input->post('guest_checkout');
         if (!$guest_checkout && !$this->loggedIn) {
             redirect('login');
