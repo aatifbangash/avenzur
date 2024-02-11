@@ -2261,6 +2261,11 @@ h3.fw-semibold , h3.fw-bold  {
   line-height: 40px;
 }
 
+.cancel-button:hover{
+  background-color: #333;
+  color: #fff;
+}
+
 /***asma 17-1 ****/
 .address-container i{color: #47126e !important; font-size: 20px; padding-left: 10px;}
 html[lang='ar'] .address-container i{ padding-left: 0px; padding-right: 10px;}
@@ -2295,7 +2300,7 @@ html[lang="ar"] #thumb .item {margin: 0 0px 0 10px !important;}
 #thumb .owl-item .item{border:1px solid #dfdfdf ;  border-radius: 10px;}
 .categoryTabs .products-card {direction: ltr !important;}
 #thumb .owl-stage {display: flex; padding: 10px; }
-.radio-button-wrapper .item1,.radio-button-wrapper .item2 {flex: 0 0 50%}
+.radio-button-wrapper .item1,.radio-button-wrapper .item2 {flex: 0 0 40%}
 html[lang='ar'] .item1 {flex:0 0 60%}
 html[lang='ar'] .item2 {flex:0 0 40%}
 .form-check .form-check-input {margin-left:0 !important;}
