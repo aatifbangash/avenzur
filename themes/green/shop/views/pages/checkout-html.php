@@ -164,6 +164,12 @@ if ($this->Settings->indian_gst) {
                             Apple Pay
                         </label>
                     </div>
+                    <div class="d-flex align-items-center item3">
+                        <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();" value="5" id="stc-pay">
+                        <label class="form-check-label fw-semibold" style="font-size: 14px;font-weight: normal !important;" for="flexRadioDefault2">
+                            STC Pay
+                        </label>
+                    </div>
                   </div>
                     <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_name" placeholder="John Doe" />
                     <div><input type="text" maxlength="19" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_number" placeholder="5105 1051 0510 5100" />
