@@ -411,7 +411,8 @@ class Main extends MY_Shop_Controller
                 //$sms_sent = $this->sma->send_sms($identifier, $otp);
 
                 // uncomment below lines
-                $sms_sent = $this->sma->send_sms_new($identifier, $otp);
+                $message_to_send = 'Your OTP verification code is '.$otp;
+                $sms_sent = $this->sma->send_sms_new($identifier, $message_to_send);
                 echo $sms_sent;
 
                 //echo json_encode(['status' => 'success', 'message' => 'OTP sent to whatsapp']);

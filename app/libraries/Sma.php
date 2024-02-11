@@ -600,7 +600,7 @@ class Sma
 
     }
 
-    public function send_sms_new($receiver_number, $variable){
+    public function send_sms_new($receiver_number, $message){
         $service = $this->site->getSMSServiceByName('4jawaly');
         $app_id = $service->api_key;
         $app_sec = $service->api_secret;
@@ -608,7 +608,7 @@ class Sma
         $messages = [
             "messages" => [
                 [
-                    "text" => 'Your OTP verification code is '.$variable,
+                    "text" => $message,
                     "numbers" => ['966'.$receiver_number],
                     "sender" => "PHMC"
                 ]

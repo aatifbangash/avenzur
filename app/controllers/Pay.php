@@ -973,7 +973,9 @@ class Pay extends MY_Shop_Controller
                         $this->create_oto_order($order);
                         /* OTO Order Generation Ends */
 
-                        $this->sendMsegatSMS($address->phone, $inv->id, $customer->name);
+                        $message_to_send = 'Hello '.$customer->name.', thank you for your order with Avenzur.com! Your Invoice No: '.$inv->id;
+                        $sms_sent = $this->sma->send_sms_new($address->phone, $message_to_send);
+                        //$this->sendMsegatSMS($address->phone, $inv->id, $customer->name);
 
                     }else{
                         /* Shipway Order Generation Ends */
@@ -1173,11 +1175,17 @@ class Pay extends MY_Shop_Controller
             }*/
             try {
                 if ($this->sma->send_email(($customer ? $customer->email : $user->email), $subject, $message, null, null, $attachment, $cc, $bcc)) {
+                    //$whatsapp_sent = $this->sma->send_whatsapp_notify('+966534525101', 'New Order Generated On Avenzur');
+                    //$whatsapp_data = json_decode($whatsapp_sent, true);
                     $this->sma->send_email('ama@pharma.com.sa', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                     $this->sma->send_email('Agilkar@avenzur.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                     $this->sma->send_email('inamadnan2@gmail.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                     delete_files($attachment);
                     $sent = true;
+                }else{
+                    $this->sma->send_email('ama@pharma.com.sa', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
+                    $this->sma->send_email('Agilkar@avenzur.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
+                    $this->sma->send_email('inamadnan2@gmail.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                 }
             } catch (Exception $e) {
                 $error = $e->getMessage();
