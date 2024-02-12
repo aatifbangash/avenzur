@@ -24,7 +24,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <?php
-  $seo_title = 'Avenzur';
+  $seo_title = isset($page_title2) ? $page_title2 : 'Avenzur';
   $seo_description = '';
   $seo_keywords = '';
   if (isset($seoSetting) && !empty($seoSetting) && isset($product) && !empty($product)) {
@@ -39,12 +39,28 @@
 
     $seo_keywords = strip_tags($seoSetting->keywords);
 
-  } ?>
+  }
+  $max_length = 60; // Maximum title length
+    if (strlen($seo_title) > $max_length) {
+        $seo_title = substr($seo_title, 0, $max_length);
+        // Optionally, you can break the title at the last space within the limit to avoid breaking words
+        $last_space = strrpos($seo_title, ' ');
+        if ($last_space !== false) {
+            $seo_title = substr($title, 0, $last_space);
+        }
+    }
+
+    $max_length = 160; // Maximum title length
+    if (strlen($seo_description) > $max_length) {
+        $seo_description = substr($seo_description, 0, $max_length);
+    }
+  
+  ?>
   <title>
-    <?php echo $seo_title; ?>
+    <?php echo htmlspecialchars($seo_title); ?>
   </title>
   <link rel="icon" type="image/x-icon" href="<?= base_url('assets/images/avenzur-png.png'); ?>">
-  <meta name="description" content="<?php echo $seo_description; ?>">
+  <meta name="description" content="<?php echo htmlspecialchars($seo_description); ?>">
   <meta name="keywords" content="<?php echo $seo_keywords; ?>">
   <meta name="p:domain_verify" content="0704e772b1ab59012494397c16667a45"/>
   <!--<link rel="preconnect" href="https://fonts.googleapis.com">
