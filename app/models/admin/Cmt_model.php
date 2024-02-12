@@ -32,8 +32,13 @@ class Cmt_model extends CI_Model
         }
     }
 
-    public function addRasdNotification($data){
+    public function addRasdNotification($data, $batch_data){
         if ($this->db->insert('rasd_notifications', $data)) {
+
+            if(sizeOf($batch_data) > 0){
+                $this->db->insert_batch('sma_notification_serials', $batch_data);
+            }
+
             return true;
         } else {
             return false;
