@@ -1333,6 +1333,13 @@ class Products extends MY_Controller
             }
             
            $product_countries = rtrim($product_countries, ',');
+
+           $hide_product = $this->input->post('hide_pos') ? $this->input->post('hide_pos') : 0;
+
+           $draft_set = $this->input->post('draft');
+           if($draft_set == 1){
+                $hide_product = 1;
+           }
             
             $data = ['code'         => $this->input->post('code'),
                 'barcode_symbology' => $this->input->post('barcode_symbology'),
@@ -1383,7 +1390,7 @@ class Products extends MY_Controller
                 'special_offer'     => $this->input->post('special_offer'),
                 'hsn_code'          => $this->input->post('hsn_code'),
                 'hide'              => $this->input->post('hide') ? $this->input->post('hide') : 0,
-                'hide_pos'          => $this->input->post('hide_pos') ? $this->input->post('hide_pos') : 0,
+                'hide_pos'          => $hide_product,
                 'second_name'       => $this->input->post('second_name'),
                 'trade_name'       => $this->input->post('trade_name'),
                 'manufacture_name'       => $this->input->post('manufacture_name'),
