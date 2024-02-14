@@ -51,6 +51,31 @@
             style="width: fit-content;"
           />
 
+          <div class=" border rounded p-3  mb-4 products-pay">
+              <div class="">
+                  <h3 class="fs-5 fw-bold">Order Summary <span class="fs-5 fw-medium purpColor">(<?php echo count($rows)?> item<?php echo count($rows) > 1 ? 's':'';?>)</span></h3>
+                  <?php if(!empty($rows)) {
+                    
+                      foreach($rows as $item) { ?>
+                      <div class="addressDetail d-flex align-items-center">
+                          <div class="addicon">
+                              <?php $image = $item->image != '' ? base_url() . 'assets/uploads/'.$item->image : '';?>
+                                  
+                              <img src="<?php echo $image; ?>" class="w-100">
+                          </div>
+                          <div class="ps-2">
+                              <p class="m-0 fs-6 fw-bold">
+                              <?php echo $item->product_name;?>  
+                              </p>
+                              <p class="m-0 fs-6 fw-semibold mt-2 price"> SAR <?php echo $item->net_unit_price;?> <br /><span class="quantity" style="font-size: 13.5px;">Quantity (<?php echo $item->quantity;?>)</span></p>  
+                          </div>                                                                
+                      </div>
+                      
+                  <?php } }?>
+                  
+              </div>
+          </div>
+
           <button
             type="button"
             class="btn text-white continueBtn px-5 mb-1 mx-md-0 mx-auto"
