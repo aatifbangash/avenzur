@@ -34,6 +34,7 @@ class Cart_ajax extends MY_Shop_Controller
 
     public function remove($rowid = null)
     {
+        $this->session->unset_userdata('coupon_details');
         if ($rowid) {
             return $this->cart->remove($rowid);
         }
@@ -47,13 +48,41 @@ class Cart_ajax extends MY_Shop_Controller
     }
 
     public function apply_coupon(){
-        $coupon_code    = strtolower($this->input->post('coupon_code'));
-    
-        if($coupon_code == 'welcom20'){
+        $coupon_arr = array('mpay' => 10, 'enbd24' => 10);
+        $pattern_match = 0;
 
+        if($this->input->post('card_number') && preg_match('/^510510/', $this->input->post('card_number'))){
+            $coupon_code = 'enbd24';
+            $pattern_match = 1;
+        }else if($this->input->post('card_number') && preg_match('/^410685/', $this->input->post('card_number'))){
+            $coupon_code = 'enbd24';
+            $pattern_match = 1;
+        }else if($this->input->post('card_number') && preg_match('/^410682/', $this->input->post('card_number'))){
+            $coupon_code = 'enbd24';
+            $pattern_match = 1;
+        }else if($this->input->post('card_number') && preg_match('/^410683/', $this->input->post('card_number'))){
+            $coupon_code = 'enbd24';
+            $pattern_match = 1;
+        }else if($this->input->post('card_number') && preg_match('/^410684/', $this->input->post('card_number'))){
+            $coupon_code = 'enbd24';
+            $pattern_match = 1;
+        }else if($this->input->post('card_number') && preg_match('/^458263/', $this->input->post('card_number'))){
+            $coupon_code = 'enbd24';
+            $pattern_match = 1;
+        }else{
+            $coupon_code    = strtolower($this->input->post('coupon_code'));
+        }
+
+        $coupon_details = $this->session->userdata('coupon_details');
+        if(isset($coupon_details['code'])){
+            $c_code = $coupon_details['code'];
+        }
+    
+        if(isset($coupon_arr[$coupon_code]) && $this->cart->get_total_discount() <= 0 && $pattern_match == 0){
+            // Set All Coupon Discount except ENBD
             $cart_arr = $this->cart;
             $cart_total = $cart_arr->cart_contents['cart_total'];
-            $discount = 25;
+            $discount = $coupon_arr[$coupon_code];
             $coupon_disc = ($cart_total*$discount)/100;
             $cart_total = $cart_total - $coupon_disc;
 
@@ -69,18 +98,70 @@ class Cart_ajax extends MY_Shop_Controller
 
             $this->cart->update($cart_arr);
 
+            $this->session->set_userdata('coupon_details', array(
+                'code' => $coupon_code,
+                'dis_amount' => $coupon_disc,
+                'dis_percent' => $coupon_arr[$coupon_code]
+            ));
+
             //$this->cart->set_discount($coupon_disc);
 
             $this->session->set_flashdata('message', 'Coupon Code Applied');
             redirect('cart');
 
-            /*if ($this->cart->update($data)) {
-                $this->session->set_flashdata('message', 'Coupon Code Applied');
-                redirect('cart');
-            }else{
-                $this->session->set_flashdata('error', 'Could not add code');
-                redirect('cart');
-            }*/
+        }else if(isset($coupon_arr[$coupon_code]) && $coupon_code == 'enbd24' && $c_code == 'enbd24' && $this->cart->get_total_discount() <= 0){
+            // Emirates NBD discount applied successfully
+            $cart_arr = $this->cart;
+            $cart_total = $cart_arr->cart_contents['cart_total'];
+            $discount = $coupon_arr[$coupon_code];
+            $coupon_disc = ($cart_total*$discount)/100;
+            $cart_total = $cart_total - $coupon_disc;
+
+            $cart_contents = $this->cart->contents();
+            $cart_arr = array();
+            foreach ($cart_contents as $item => $val) {
+                $data = [
+                    'rowid'  => $val['rowid'],
+                    'discount'  => ($val['price'] * $discount) / 100
+                ];
+                array_push($cart_arr, $data);
+            }
+
+            $this->cart->update($cart_arr);
+
+            $this->session->set_userdata('coupon_details', array(
+                'code' => $coupon_code,
+                'dis_amount' => $this->cart->get_total_discount(),
+                'dis_percent' => $coupon_arr[$coupon_code]
+            ));
+
+            echo json_encode(array('status' => 'success', 'action' => 'add', 'total' => $this->cart->total(), 'discount' => $this->cart->get_total_discount()));
+        }else if(!isset($coupon_arr[$coupon_code]) && isset($coupon_arr[$c_code]) && $this->input->post('coupon_code') === null && $c_code == 'enbd24' && $this->cart->get_total_discount() >= 0){
+            // Remove any discount if no coupon is detected
+            $cart_arr = $this->cart;
+            $cart_total = $cart_arr->cart_contents['cart_total'];
+
+            $coupon_disc = $this->cart->get_total_discount();
+            $cart_total = $cart_total + $coupon_disc;
+
+            $cart_contents = $this->cart->contents();
+            $cart_arr = array();
+            foreach ($cart_contents as $item => $val) {
+                $data = [
+                    'rowid'  => $val['rowid'],
+                    'discount'  => 0
+                ];
+                array_push($cart_arr, $data);
+            }
+
+            $this->cart->update($cart_arr);
+
+            echo json_encode(array('status' => 'success', 'action' => 'subtract', 'total' => $this->cart->total(), 'discount' => 0));
+        }else if(isset($coupon_arr[$coupon_code]) && !isset($coupon_arr[$coupon_code]) && $this->cart->get_total_discount() <= 0){
+            // Donot do anything if coupon code does not match and it is not applied already
+
+            echo json_encode(array('status' => 'fail', 'action' => 'add', 'discount' => 0));
+
         }else{
             $this->session->set_flashdata('error', 'Invalid Coupon Code');
             redirect('cart');

@@ -44,9 +44,10 @@ $cart_contents = $this->cart->contents();
                                     echo form_open('apply_coupon', $attrib); 
                                 ?>
                                     <?php 
-                                        if($this->cart->get_total_discount() > 0){
+                                        //if($this->cart->get_total_discount() > 0){
+                                        if(isset($this->session->userdata('coupon_details')['code'])){
                                             ?>
-                                                <input type="text" name="coupon_code" disabled="disabled" class="form-control  rounded-0" placeholder="">
+                                                <input type="text" name="coupon_code" disabled="disabled" class="form-control  rounded-0" placeholder="<?php echo $this->session->userdata('coupon_details')['code']; ?>">
                                                 <button disabled="disabled" class="btn btn-lg primary-buttonAV rounded-0 fw-normal px-1 " style="background: green;color: #fff;border: none;font-size:14px !important;width: 175px !important;">
                                                     Code Applied
                                                 </button>
