@@ -47,9 +47,14 @@
                                                
                                                echo '</tr>';} ?>
                                                
-                                               <?= '<tr><td>' . lang('View_Order') . '</td><td><a href=orders/'.$order->id.'>  <input type="submit" class="btn btn-info btn-sm view" value="View Order" /></a></td></tr>'; ?>
-                                          
-                                                </table> </div>
+                                               <?= '<tr><td>' . lang('View_Order') . '</td><td><a href=orders/'.$order->id.'>  <input type="submit" class="btn btn-info btn-sm view" value="View Order" /></a>'; ?>
+                                               <?php if($order->payment_status == 'paid' && $order->courier_id == 1) {?>
+                                               <?= '<a href=orders/'.$order->id.'?action=tracking>  <input type="button" class="btn btn-info btn-sm view" value="Track Order" /></a>'; ?>
+                                            <?php }?>   
+                                               <?= ' </td></tr>'; ?>
+
+                                             
+                                            </table> </div>
                                                 
                                                 <!--<span class="count"><i><?= $order->id; ?></i></span>-->
                                                 <!--<span class="edit"><i class="fa fa-eye"></i></span>-->

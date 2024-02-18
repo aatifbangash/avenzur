@@ -1024,7 +1024,16 @@ class Shop extends MY_Shop_Controller
         if ($this->Staff) {
             admin_redirect('sales');
         }
-        if ($id && !$pdf) {
+        //order tracking
+       $action = $this->input->get('action');
+       
+       if($action == 'tracking') {
+        $order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash]);
+        $this->cart->destroy();
+        $this->data['order'] = $order;
+        $this->page_construct('pages/order_tracking', $this->data);
+       }
+        else if ($id && !$pdf) {
             if ($order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash])) {
                 $this->load->library('inv_qrcode');
                 $this->data['inv'] = $order;
