@@ -441,7 +441,16 @@ class Shop extends MY_Shop_Controller
                     ? $this->cart->total_item_tax()
                     : $total_tax;
 
+                $total_discount = !empty($this->cart->get_total_discount())
+                    ? $this->cart->get_total_discount()
+                    : 0;
+
                 $grand_total = $this->sma->formatDecimal(($total + $shipping), 4);
+
+                $coupon_details = $this->session->userdata('coupon_details');
+                if(isset($coupon_details['code'])){
+                    $c_code = $coupon_details['code'];
+                }
 
                 $data = [
                     'date' => date('Y-m-d H:i:s'),
@@ -457,7 +466,7 @@ class Shop extends MY_Shop_Controller
                     'product_discount' => 0,
                     'order_discount_id' => null,
                     'order_discount' => 0,
-                    'total_discount' => 0,
+                    'total_discount' => $total_discount,
                     'product_tax' => $total_tax,
                     'order_tax_id' => $this->Settings->default_tax_rate2,
                     'order_tax' => $order_tax,
@@ -475,7 +484,8 @@ class Shop extends MY_Shop_Controller
                     'address_id' => ($this->input->post('address') == 'new' || $this->input->post('address') == 'default' ) ? 0 : $address->id,
                     'hash' => hash('sha256', microtime() . mt_rand()),
                     'payment_method' => $this->input->post('payment_method'),
-                    'delivery_type' => $this->input->post('express_delivery')
+                    'delivery_type' => $this->input->post('express_delivery'),
+                    'coupon_code' => $c_code
                 ];
                 if ($this->Settings->invoice_view == 2) {
                     $data['cgst'] = $total_cgst;

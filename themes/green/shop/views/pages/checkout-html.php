@@ -183,8 +183,17 @@ if ($this->Settings->indian_gst) {
 
             <img src="https://avenzur.com/assets/images/banners/pay.png" alt="paycard" class=" payment-method">
 
+            <?php 
+                $promo_applied = false;
+                if(isset($this->session->userdata('coupon_details')['code'])){
+                    $promo_applied = true;
+                    $promo_code = $this->session->userdata('coupon_details')['code'].' Applied';
+                }else{
+                    $promo_code = 'No Code Applied';
+                }
+            ?>
 
-            <h3 class=" fw-bold pb-2 order-summary-title">Order Summary</h3>  
+            <h3 class=" fw-bold pb-2 order-summary-title">Order Summary <span id="promo_span" style="<?php echo isset($promo_applied) ? ($promo_applied ? 'color:green;' : 'color:grey;') : ''; ?> font-size:16px; float:right;"><?php echo $promo_code; ?></span></h3>  
             
            <?php
                 $total = $this->sma->convertMoney($this->cart->total(), false, false);
@@ -220,13 +229,13 @@ if ($this->Settings->indian_gst) {
                         <div>
                             <h4 class="m-0 my-2">Sub total</h4>
                             <h4 class="m-0 my-2">Shipping Fee</h4>
-                           
+                            <h4 class="m-0 my-2">Discount</h4>
                         </div>
                         <div class="text-end">
-                            <h4 class="m-0 my-2"> <?= $this->sma->formatMoney($total, $selected_currency->symbol); ?>
+                            <h4 class="m-0 my-2" id="sub-total-amt"> <?= $this->sma->formatMoney($total, $selected_currency->symbol); ?>
                                                </h4>
                             <h4 class="text-success m-0 my-2" id="shipping-price"> <?= $this->sma->formatNumber($shipping); ?></span><?= $selected_currency->symbol ?></h4>
-                           
+                            <h4 class="text-success m-0 my-2" id="discount-amt"> <?= $this->sma->formatNumber($this->cart->get_total_discount()); ?></span><?= $selected_currency->symbol ?></h4>
                         </div>
                     </div>
                     <hr class="mb-0 mt-2">
@@ -278,14 +287,72 @@ if ($this->Settings->indian_gst) {
         //document.getElementById('card_type_image').style.display = 'block';
         document.getElementById('card_expiry_year').style.display = 'block';
         document.getElementById('card_cvv').style.display = 'block';
+
+        var promo_code = '<?php echo $this->session->userdata('coupon_details')['code']; ?>';
+        if(typeof promo_code != 'undefined' && promo_code != ''){
+            $('#promo_span').css('color', 'green');
+            $('#promo_span').text(promo_code+' Applied');
+        }else{
+            $('#promo_span').css('color', 'grey');
+            $('#promo_span').text('No Code Applied');
+        }
+        
     }
 
     function hideCardDetails(){
+        $('#card_number').val('');
+        $('#card_cvv').val('');
+        $('#card_expiry_year').val('');
+        $('#card_name').val('');
+
         document.getElementById('card_name').style.display = 'none';
         document.getElementById('card_number').style.display = 'none';
         document.getElementById('card_type_image').style.display = 'none';
         document.getElementById('card_expiry_year').style.display = 'none';
         document.getElementById('card_cvv').style.display = 'none';
+
+        var cardNum = '';
+
+        $.ajax({
+            url: site.base_url +'cart/apply_coupon',
+            type: "POST",
+            data: {token: site.csrf_token_value, card_number: cardNum},
+            success: function (t) {
+                var response = JSON.parse(t);
+                if(response.status == 'success'){
+                    if(response.action == 'add'){
+                        $('#discount-amt').html(parseFloat(response.discount).toFixed(2) + '<?php echo $selected_currency->symbol; ?>');
+                        $('#grand-total-price').html(parseFloat(response.total).toFixed(2));
+                        $('#sub-total-amt').html(parseFloat(parseFloat(response.total) + parseFloat(response.discount)).toFixed(2) + '<?php echo $selected_currency->symbol; ?>');
+
+
+                        $('#total-price').val(parseFloat(parseFloat(response.total)));
+                        var city = $('#shipping_city').val();
+                        var country = $('#shipping_country').val();
+                        calCulateShipping(city, country, $('#express-delivery-check').prop('checked'));
+                    }else if(response.action == 'subtract'){
+                        $('#promo_span').css('color', 'grey');
+                        $('#promo_span').text('Promo Not Applicable');
+                        $('#discount-amt').html(parseFloat(response.discount).toFixed(2) + '<?php echo $selected_currency->symbol; ?>');
+                        $('#grand-total-price').html(parseFloat(response.total).toFixed(2));
+                        $('#sub-total-amt').html(parseFloat(parseFloat(response.total) + parseFloat(response.discount)).toFixed(2) + '<?php echo $selected_currency->symbol; ?>');
+
+                        $('#total-price').val(parseFloat(parseFloat(response.total)));
+                        var city = $('#shipping_city').val();
+                        var country = $('#shipping_country').val();
+                        calCulateShipping(city, country, $('#express-delivery-check').prop('checked'));
+                    }
+                }
+            },
+            error: function () {
+            sa_alert(
+                "Error!",
+                "Ajax call failed, please try again or contact site owner.",
+                "error",
+                !0
+            );
+            },
+        });
     }
 
    $(document).ready(function () {
@@ -325,6 +392,61 @@ if ($this->Settings->indian_gst) {
 
             // Update the card type image
             updateCardTypeImage(cardType);
+        });
+
+        $('#card_number').on('blur', function() {
+            var cardNumber = $(this).val().replace(/\D/g, '');
+            $.ajax({
+                url: site.base_url +'cart/apply_coupon',
+                type: "POST",
+                data: {token: site.csrf_token_value, card_number: cardNumber},
+                success: function (t) {
+                    var response = JSON.parse(t);
+                    
+                    if(response.status == 'success'){
+                        if(response.action == 'add'){
+                            var promo_code = '<?php echo $this->session->userdata('coupon_details')['code']; ?>';
+                            if(typeof promo_code != 'undefined' && promo_code != ''){
+                                $('#promo_span').css('color', 'green');
+                                $('#promo_span').text(promo_code+' Applied');
+                            }else{
+                                $('#promo_span').css('color', 'grey');
+                                $('#promo_span').text('No Code Applied');
+                            }
+
+                            $('#discount-amt').html(parseFloat(response.discount).toFixed(2) + '<?php echo $selected_currency->symbol; ?>');
+                            $('#grand-total-price').html(parseFloat(response.total).toFixed(2));
+                            $('#sub-total-amt').html(parseFloat(parseFloat(response.total) + parseFloat(response.discount)).toFixed(2) + '<?php echo $selected_currency->symbol; ?>');
+
+
+                            $('#total-price').val(parseFloat(parseFloat(response.total)));
+                            var city = $('#shipping_city').val();
+                            var country = $('#shipping_country').val();
+                            calCulateShipping(city, country, $('#express-delivery-check').prop('checked'));
+                        }else if(response.action == 'subtract'){
+                            $('#promo_span').css('color', 'grey');
+                            $('#promo_span').text('Code Not Applicable');
+
+                            $('#discount-amt').html(parseFloat(response.discount).toFixed(2) + '<?php echo $selected_currency->symbol; ?>');
+                            $('#grand-total-price').html(parseFloat(response.total).toFixed(2));
+                            $('#sub-total-amt').html(parseFloat(parseFloat(response.total) + parseFloat(response.discount)).toFixed(2) + '<?php echo $selected_currency->symbol; ?>');
+
+                            $('#total-price').val(parseFloat(parseFloat(response.total)));
+                            var city = $('#shipping_city').val();
+                            var country = $('#shipping_country').val();
+                            calCulateShipping(city, country, $('#express-delivery-check').prop('checked'));
+                        }
+                    }
+                },
+                error: function () {
+                sa_alert(
+                    "Error!",
+                    "Ajax call failed, please try again or contact site owner.",
+                    "error",
+                    !0
+                );
+                },
+            });
         });
 
         function detectCardType(cardNumber) {
@@ -638,6 +760,7 @@ if ($this->Settings->indian_gst) {
 
         var totalPrice = parseFloat($('#total-price').val());
         var totalOrderTax = parseFloat($('#total-order-tax').val());
+
         var orderWithTax = totalPrice + totalOrderTax;
         var saudiOrder = 0;
 
@@ -715,7 +838,7 @@ if ($this->Settings->indian_gst) {
                 deliveryDays = "5 to 8 days"
             }
 
-            var grandTotalPrice = totalPrice + shipping;
+            var grandTotalPrice = parseFloat(totalPrice) + parseFloat(shipping);
 
             if (non_express_items > 0) {
                 if (saudiOrder == 1 && orderWithTax > 200) {
