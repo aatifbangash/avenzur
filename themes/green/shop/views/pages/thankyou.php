@@ -75,7 +75,7 @@
                       <h4 class="mt-3"><span class="fw-semibold">Total</span> Incl. VAT</h4>
                   </div>
                   <div>
-                      <h4 class="mt-3"><span class="fw-semibold"  id="grand-total-price">SAR <?= $this->sma->formatDecimal(($this->sma->formatDecimal($inv->total) + $this->sma->formatDecimal($inv->total_tax) + $this->sma->formatDecimal($inv->shipping))); ?></span><?= $selected_currency->symbol ?></span> </h4>
+                      <h4 class="mt-3"><span class="fw-semibold"  id="grand-total-price">SAR <?= $this->sma->formatDecimal(($this->sma->formatDecimal($inv->total))); ?></span><?= $selected_currency->symbol ?></span> </h4>
                   </div>
               </div>   
               </div>
