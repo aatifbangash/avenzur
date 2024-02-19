@@ -51,13 +51,13 @@ if ($this->Settings->indian_gst) {
                 <div class=" border rounded p-3 mb-4">
                     <div class="d-flex mobile-wrap justify-content-between mobile-start ">
                         
-                        <div class="addressDetail d-flex align-items-center" style="font-size: 0.87rem!important;">
+                        <div class="addressDetail d-flex align-items-center">
                             
                             <div class="">
-                                <p class="m-0 fs-6 fw-semibold d-flex mb-3 align-items-start"> <i class="bi bi-geo-alt fs-4 pe-2 purpColor"></i>
+                                <p class="m-0 fs-6 fw-semibold d-flex mb-3 align-items-start" style="font-size: 0.87rem!important;"> <i class="bi bi-geo-alt fs-4 pe-2 purpColor"></i>
                                     <?php echo isset($default_address->line1)?$default_address->line1:$default_address->address;?>
                                 </p>
-                                <p class="m-0 fs-6 fw-semibold d-flex align-items-center"><i class="bi bi-phone fs-4 pe-2 purpColor"></i>  +966  <?php echo isset($default_address)?$default_address->phone:'';?> <i class="bi bi-check-circle-fill ms-2 purpColor"></i></p>  
+                                <p class="m-0 fs-6 fw-semibold d-flex align-items-center" style="font-size: 0.87rem!important;"><i class="bi bi-phone fs-4 pe-2 purpColor"></i>  +966  <?php echo isset($default_address)?$default_address->phone:'';?> <i class="bi bi-check-circle-fill ms-2 purpColor"></i></p>  
                             </div>                                                             
                         </div>
 
