@@ -2562,8 +2562,7 @@ class Products extends MY_Controller
                             $this->session->set_flashdata('error', lang('check_unit') . ' (' . $item['unit'] . '). ' . lang('unit_code_x_exist') . ' ' . lang('line_no') . ' ' . ($key + 1));
                             admin_redirect('products/import_csv');
                         }
-                        echo '<pre>';
-                    print_r($tax_details);exit;
+
                         unset($item['category_code'], $item['subcategory_code']);
                         $item['unit']           = $base_unit;
                         $item['sale_unit']      = $sale_unit;
