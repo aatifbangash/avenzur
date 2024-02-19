@@ -232,7 +232,7 @@ if ($this->Settings->indian_gst) {
                             <h4 class="m-0 my-2">Discount</h4>
                         </div>
                         <div class="text-end">
-                            <h4 class="m-0 my-2" id="sub-total-amt"> <?= $this->sma->formatMoney($total, $selected_currency->symbol); ?>
+                            <h4 class="m-0 my-2" id="sub-total-amt"> <?= $this->sma->formatMoney($total + $this->cart->get_total_discount(), $selected_currency->symbol); ?>
                                                </h4>
                             <h4 class="text-success m-0 my-2" id="shipping-price"> <?= $this->sma->formatNumber($shipping); ?></span><?= $selected_currency->symbol ?></h4>
                             <h4 class="text-success m-0 my-2" id="discount-amt"> <?= $this->sma->formatNumber($this->cart->get_total_discount()); ?></span><?= $selected_currency->symbol ?></h4>
