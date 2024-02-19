@@ -502,6 +502,7 @@ class Site extends CI_Model
 
 public function getallCountry()
 {
+    $this->db->order_by('name', 'ASC');
     $q = $this->db->get('countries');
     if ($q->num_rows() > 0) {
         foreach (($q->result()) as $row) {
