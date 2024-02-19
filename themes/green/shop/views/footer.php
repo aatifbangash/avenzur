@@ -35,10 +35,10 @@
           <div class="col-lg-5 col-md-5 col-sm-12">
             <h5 class="first-h5 footer-header-collapse arrow-down"><a class="text-dark text-decoration-none"><b>Contact Us</b></a>   </h5>
             <ul class="contact-info hide ">
-              <li><b> CR: </b> 1010160412</li>
+              <!--<li><b> CR: </b> 1010160412</li>
               <li>شركة فرماء الطبية</li>
               <li>٦٦٧٥ ، العليا، حي العليا، ٢٦٢٨</li>
-              <li> الرياض , 12241</li>
+              <li> الرياض , 12241</li>-->
               <!--<h6>KSA ,Riyadh ,Olaya main road,Mousa bin nosair street.</h6>
                     <h6>Silicon building no.1, Office 7</h6>-->
               <li><b> Phone No: </b> 114654636</li>
@@ -116,7 +116,7 @@
             </div>
           </div>
           <div class="text-center border-top pt-3 pb-2">
-            <p class="m-0 fw-bold copyr">جميع الحقوق محفوظة شركة فرماء الطبية</p>
+            <p class="m-0 fw-bold copyr">Copyright &copy; Avenzur, All rights reserved</p>
           </div>
           <div id="live-chat" style="position: fixed;z-index: 999;bottom: 0.2rem;right: 2rem;">
             <a href="https://api.whatsapp.com/send?phone=966551251997" title="whatsapp chat" target="_blank" rel="nofollow noreferrer">
