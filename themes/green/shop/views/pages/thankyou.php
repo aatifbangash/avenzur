@@ -6,7 +6,7 @@
   <div class="container container-max-width">
     <div class="row">
       <div class="col-md-6">
-        <h3 class="purpColor fw-semibold">Thank you for your Order</h3>
+        <h3 class="purpColor fw-semibold" style="text-transform: none !important;">Thank you for your Order</h3>
         <h4 class="mt-3 fw-semibold fs-5">Order no: <?= $inv->id; ?></h4>
 
         <div class="my-3 p-3 border rounded">
