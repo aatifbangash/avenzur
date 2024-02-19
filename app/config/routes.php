@@ -28,6 +28,7 @@ $route['cart']               = 'shop/cart_ajax';
 $route['cart/(:any)']        = 'shop/cart_ajax/$1';
 $route['cart/(:any)/(:any)'] = 'shop/cart_ajax/$1/$2';
 $route['apply_coupon']       = 'shop/cart_ajax/apply_coupon';
+$route['remove_coupon']       = 'shop/cart_ajax/remove_coupon';
 
 // Misc routes
 $route['shop/(:any)']               = 'shop/shop/$1';

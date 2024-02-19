@@ -37,7 +37,21 @@ $cart_contents = $this->cart->contents();
                         <div class="border order-summary-cont p-4">
                            
                         
-                            <h4>Coupon Code</h4>
+                            
+                                <div class="d-flex"><h4>Coupon Code</h4></div>
+                                <div>
+                                <?php 
+                                    if(isset($this->session->userdata('coupon_details')['code'])){
+                                        echo form_open('remove_coupon', $attrib); 
+                                        ?>
+                                            <input type="submit" name="remove_coupon" style="background: none;border: none;float: right;text-decoration: underline;overflow: hidden;" id="remove_coupon" value="Remove Code" />
+                                        <?php
+                                        echo form_close();
+                                    }
+                                ?>
+                                </div>
+                            
+
                             <div class="d-flex">
                                 <?php
                                     $attrib = ['class' => 'validate d-flex w-100', 'role' => 'form', 'id' => 'coupon_form'];
