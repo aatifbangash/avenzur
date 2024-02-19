@@ -9,7 +9,7 @@
         <h3 class="purpColor fw-semibold">Thank you for your Order</h3>
         <h4 class="mt-3 fw-semibold fs-5">Order no: <?= $inv->id; ?></h4>
 
-        <div class="my-3 p-3 border rounded shadow">
+        <div class="my-3 p-3 border rounded">
           <h4 class="m-0 fs-5 fw-semibold">Your order is confirmed</h4>
 
           <h4 class="m-0 fs-6 mt-2 fw-semibold" style="font-weight:normal !important;">
@@ -17,7 +17,7 @@
           </h4>
         </div>
 
-        <div class="mt-3 p-3 px-4 border rounded shadow">
+        <div class="mt-3 p-3 px-4 border rounded">
           <h4 class="m-0 fs-5 fw-semibold">Customer information</h4>
 
           <h4 class="m-0 fs-6 mt-1 py-1 fw-semibold" style="font-weight:normal !important;">Contact: <?= $customer->phone; ?></h4>
