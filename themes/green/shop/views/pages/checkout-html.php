@@ -103,7 +103,7 @@ if ($this->Settings->indian_gst) {
                                 <div class="addicon">
                                     <?php $image = $item['image'] != '' ? base_url() . 'assets/uploads/'.$item['image'] : '';?>
                                         
-                                    <img src="<?php echo $image; ?>" class="w-100">
+                                    <img src="<?php echo $image; ?>" class="cart-img" style="object-fit: contain;">
                                 </div>
                                 <div class="ps-2">
                                     <p class="m-0 fs-6 fw-bold">
