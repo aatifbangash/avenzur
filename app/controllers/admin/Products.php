@@ -2540,6 +2540,9 @@ class Products extends MY_Controller
                         'draft'             => isset($value[42]) ? trim($value[42]) : 1,
                     ];
 
+                    echo '<pre>';
+                    print_r($item);exit;
+
                     if ($catd = $this->products_model->getCategoryByCode($item['category_code'])) {
                         $tax_details   = $this->products_model->getTaxRateByName($item['tax_rate']);
                         $prsubcat      = $this->products_model->getCategoryByCode($item['subcategory_code']);
