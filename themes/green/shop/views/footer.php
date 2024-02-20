@@ -207,7 +207,7 @@
       carouselItems[1].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_2 + '.jpg?timestamp=' + Date.now();
 
       // set english promo banner
-      document.getElementById('promo-banner-1').src = site.site_url + '/assets/uploads/banners/special_offers_en.jpg?timestamp=' + Date.now();
+      document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/special_offers_en.jpg?timestamp=' + Date.now();
 
     } else if (newLang === 'ar') {
       var imgname1 = carouselItems[0].querySelector('img').src;
@@ -238,7 +238,7 @@
       carouselItems[1].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_2 + '.jpg?timestamp=' + Date.now();
 
       // set arabic promo banner
-      document.getElementById('promo-banner-1').src = site.site_url + '/assets/uploads/banners/special_offers_ar.jpg?timestamp=' + Date.now();
+      document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/special_offers_ar.jpg?timestamp=' + Date.now();
     }
 
   })
