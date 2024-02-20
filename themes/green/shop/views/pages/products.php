@@ -84,7 +84,7 @@
                     <?php 
                         if($promo_banner){
                             ?>
-                                <section class="side-banner section-marg-top">
+                                <section class="side-banner section-marg-top" style="margin-top:10px;margin-bottom: 40px;">
                                 <div class="container container-max-width">
                                     <div class="sideBannerImg">
                                     <a href="<?= site_url('shop/products?promo=yes'); ?>">
