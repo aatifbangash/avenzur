@@ -1396,6 +1396,7 @@ class Shop extends MY_Shop_Controller
         $this->data['page_title'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products'))) . ' - ' . $this->shop_settings->shop_name;
         if ($this->input->get('promo') && $this->input->get('promo') == 'yes') {
             $this->data['page_title2'] = 'Promotions';
+            $this->data['promo_banner'] = true;
         }else{
             $this->data['page_title2'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products')));
         }

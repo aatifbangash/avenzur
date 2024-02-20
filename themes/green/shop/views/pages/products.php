@@ -80,6 +80,22 @@
             <div class="col-xl-10 col-lg-9 ">
                 <div class="row justify-content-between align-items-center" style="text-align: right">
                     <h1 style="font-size: 22px; font-weight: bold; color: #000;"><?php echo $page_title2; ?></h1>
+
+                    <?php 
+                        if($promo_banner){
+                            ?>
+                                <section class="side-banner section-marg-top">
+                                <div class="container container-max-width">
+                                    <div class="sideBannerImg">
+                                    <a href="<?= site_url('shop/products?promo=yes'); ?>">
+                                        <img id="promo-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/promo-page-banner-en.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100" />
+                                    </a>
+                                    </div>
+                                </div>
+                                </section>
+                            <?php
+                        }
+                    ?>
                     <!--<div class="col-md-6 col-6">
                         <div class="dropdown sortp">
                             <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
