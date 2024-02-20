@@ -1346,6 +1346,7 @@ class Shop extends MY_Shop_Controller
         $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->data['location'] = $this->shop_model->getProductLocation();
         $this->data['best_sellers'] = $this->shop_model->getBestSellers(100);
+        $this->data['page_title'] = 'Best Sellers';
 
         $this->page_construct('pages/best_sellers', $this->data);
     }
@@ -1393,7 +1394,12 @@ class Shop extends MY_Shop_Controller
         $this->data['category_slug'] = $category_slug;
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['page_title'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products'))) . ' - ' . $this->shop_settings->shop_name;
-        $this->data['page_title2'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products')));
+        if ($this->input->get('promo') && $this->input->get('promo') == 'yes') {
+            $this->data['page_title2'] = 'Promotions';
+        }else{
+            $this->data['page_title2'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products')));
+        }
+        
         $this->data['page_desc'] = !empty($filters['category']) ? $filters['category']->description : (!empty($filters['brand']) ? $filters['brand']->description : $this->shop_settings->products_description);
         $this->data['location'] = $this->shop_model->getProductLocation();
         if ($this->data == 'Saudi Arabia') {

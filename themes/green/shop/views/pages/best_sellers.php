@@ -47,7 +47,7 @@
 
                 <!-- all products -->
                 <div class="row products-card text-center gy-4 pb-4">
-                                    
+                <h1 style="font-size: 22px; font-weight: bold; color: #000; text-align:right;"><?php echo $page_title; ?></h1>             
                 <?php
                     $r = 0;
                     foreach (array_chunk($best_sellers, 4) as $sps){
