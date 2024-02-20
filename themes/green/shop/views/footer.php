@@ -181,64 +181,68 @@
     var carouselItems = document.querySelectorAll('.carousel-item');
 
     if (newLang === 'en') {
-      var imgname1 = carouselItems[0].querySelector('img').src;
-      var imgname2 = carouselItems[1].querySelector('img').src;
+      if(carouselItems.length > 0){
+        var imgname1 = carouselItems[0].querySelector('img').src;
+        var imgname2 = carouselItems[1].querySelector('img').src;
 
-      var parts1 = imgname1.split('/');
-      var lastPart1 = parts1[parts1.length - 1];
-      var imageName_1 = lastPart1.split('?')[0];
-      imageName_1 = imageName_1.slice(0, -4);
-      var parts2 = imgname2.split('/');
-      var lastPart2 = parts2[parts2.length - 1];
-      var imageName_2 = lastPart2.split('?')[0];
-      imageName_2 = imageName_2.slice(0, -4);
+        var parts1 = imgname1.split('/');
+        var lastPart1 = parts1[parts1.length - 1];
+        var imageName_1 = lastPart1.split('?')[0];
+        imageName_1 = imageName_1.slice(0, -4);
+        var parts2 = imgname2.split('/');
+        var lastPart2 = parts2[parts2.length - 1];
+        var imageName_2 = lastPart2.split('?')[0];
+        imageName_2 = imageName_2.slice(0, -4);
 
-      console.log(imageName_1);
+        if (imageName_1.endsWith('-ar')) {
+          imageName_1 = imageName_1.slice(0, -3);
+        }
 
-      if (imageName_1.endsWith('-ar')) {
-        imageName_1 = imageName_1.slice(0, -3);
+        if (imageName_2.endsWith('-ar')) {
+          imageName_2 = imageName_2.slice(0, -3);
+        }
+
+        carouselItems[0].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_1 + '.jpg?timestamp=' + Date.now();
+        carouselItems[1].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_2 + '.jpg?timestamp=' + Date.now();
+        // set english promo banner
+        document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/special_offers_en.jpg?timestamp=' + Date.now();
+      }else{
+        document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo-page-banner-en.jpg?timestamp=' + Date.now();
       }
-
-      if (imageName_2.endsWith('-ar')) {
-        imageName_2 = imageName_2.slice(0, -3);
-      }
-
-      carouselItems[0].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_1 + '.jpg?timestamp=' + Date.now();
-      carouselItems[1].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_2 + '.jpg?timestamp=' + Date.now();
-
-      // set english promo banner
-      document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/special_offers_en.jpg?timestamp=' + Date.now();
-
     } else if (newLang === 'ar') {
-      var imgname1 = carouselItems[0].querySelector('img').src;
-      var imgname2 = carouselItems[1].querySelector('img').src;
+      if(carouselItems.length > 0){
+        var imgname1 = carouselItems[0].querySelector('img').src;
+        var imgname2 = carouselItems[1].querySelector('img').src;
 
-      var parts1 = imgname1.split('/');
-      var lastPart1 = parts1[parts1.length - 1];
-      var imageName_1 = lastPart1.split('?')[0];
-      imageName_1 = imageName_1.slice(0, -4);
-      var parts2 = imgname2.split('/');
-      var lastPart2 = parts2[parts2.length - 1];
-      var imageName_2 = lastPart2.split('?')[0];
-      imageName_2 = imageName_2.slice(0, -4);
+        var parts1 = imgname1.split('/');
+        var lastPart1 = parts1[parts1.length - 1];
+        var imageName_1 = lastPart1.split('?')[0];
+        imageName_1 = imageName_1.slice(0, -4);
+        var parts2 = imgname2.split('/');
+        var lastPart2 = parts2[parts2.length - 1];
+        var imageName_2 = lastPart2.split('?')[0];
+        imageName_2 = imageName_2.slice(0, -4);
 
-      if (imageName_1.endsWith('-ar')) {
+        if (imageName_1.endsWith('-ar')) {
 
-      } else {
-        imageName_1 += '-ar';
+        } else {
+          imageName_1 += '-ar';
+        }
+
+        if (imageName_2.endsWith('-ar')) {
+
+        } else {
+          imageName_2 += '-ar';
+        }
+
+        carouselItems[0].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_1 + '.jpg?timestamp=' + Date.now();
+        carouselItems[1].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_2 + '.jpg?timestamp=' + Date.now();
+
+        // set arabic promo banner
+        document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/special_offers_ar.jpg?timestamp=' + Date.now();
+      }else{
+        document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo-page-banner-ar.jpg?timestamp=' + Date.now();
       }
-
-      if (imageName_2.endsWith('-ar')) {
-
-      } else {
-        imageName_2 += '-ar';
-      }
-
-      carouselItems[0].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_1 + '.jpg?timestamp=' + Date.now();
-      carouselItems[1].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_2 + '.jpg?timestamp=' + Date.now();
-
-      // set arabic promo banner
-      document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/special_offers_ar.jpg?timestamp=' + Date.now();
     }
 
   })
