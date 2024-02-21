@@ -16,7 +16,7 @@
                 foreach ($slider as $slide) {
                     if (!empty($slide->image)) {
                         ?>
-                            <div class="carousel-item <?= ($sr == 0 ? ' active' : ''); ?>">
+                            <div class="carousel-item <?= ($sr == 2 ? ' active' : ''); ?>">
                                 <a href="<?php echo $slide->link; ?>">
                                
 
