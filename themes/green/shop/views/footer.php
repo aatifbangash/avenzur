@@ -224,7 +224,7 @@
       if(carouselItems.length > 0){
         var imgname1 = carouselItems[0].querySelector('img').src;
         var imgname2 = carouselItems[1].querySelector('img').src;
-        var imgname3 = carouselItems[1].querySelector('img').src;
+        var imgname3 = carouselItems[2].querySelector('img').src;
 
         var parts1 = imgname1.split('/');
         var lastPart1 = parts1[parts1.length - 1];
