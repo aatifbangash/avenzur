@@ -184,6 +184,7 @@
       if(carouselItems.length > 0){
         var imgname1 = carouselItems[0].querySelector('img').src;
         var imgname2 = carouselItems[1].querySelector('img').src;
+        var imgname3 = carouselItems[1].querySelector('img').src;
 
         var parts1 = imgname1.split('/');
         var lastPart1 = parts1[parts1.length - 1];
@@ -193,6 +194,11 @@
         var lastPart2 = parts2[parts2.length - 1];
         var imageName_2 = lastPart2.split('?')[0];
         imageName_2 = imageName_2.slice(0, -4);
+
+        var parts3 = imgname3.split('/');
+        var lastPart3 = parts3[parts3.length - 1];
+        var imageName_3 = lastPart3.split('?')[0];
+        imageName_3 = imageName_3.slice(0, -4);
 
         if (imageName_1.endsWith('-ar')) {
           imageName_1 = imageName_1.slice(0, -3);
@@ -202,8 +208,13 @@
           imageName_2 = imageName_2.slice(0, -3);
         }
 
+        if (imageName_3.endsWith('-ar')) {
+          imageName_3 = imageName_3.slice(0, -3);
+        }
+
         carouselItems[0].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_1 + '.jpg?timestamp=' + Date.now();
         carouselItems[1].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_2 + '.jpg?timestamp=' + Date.now();
+        carouselItems[2].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_3 + '.jpg?timestamp=' + Date.now();
         // set english promo banner
         document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/special_offers_en.jpg?timestamp=' + Date.now();
       }else{
@@ -213,6 +224,7 @@
       if(carouselItems.length > 0){
         var imgname1 = carouselItems[0].querySelector('img').src;
         var imgname2 = carouselItems[1].querySelector('img').src;
+        var imgname3 = carouselItems[1].querySelector('img').src;
 
         var parts1 = imgname1.split('/');
         var lastPart1 = parts1[parts1.length - 1];
@@ -222,6 +234,10 @@
         var lastPart2 = parts2[parts2.length - 1];
         var imageName_2 = lastPart2.split('?')[0];
         imageName_2 = imageName_2.slice(0, -4);
+        var parts3 = imgname3.split('/');
+        var lastPart3 = parts3[parts3.length - 1];
+        var imageName_3 = lastPart3.split('?')[0];
+        imageName_3 = imageName_3.slice(0, -4);
 
         if (imageName_1.endsWith('-ar')) {
 
@@ -235,8 +251,15 @@
           imageName_2 += '-ar';
         }
 
+        if (imageName_3.endsWith('-ar')) {
+
+        } else {
+          imageName_3 += '-ar';
+        }
+
         carouselItems[0].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_1 + '.jpg?timestamp=' + Date.now();
         carouselItems[1].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_2 + '.jpg?timestamp=' + Date.now();
+        carouselItems[2].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_3 + '.jpg?timestamp=' + Date.now();
 
         // set arabic promo banner
         document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/special_offers_ar.jpg?timestamp=' + Date.now();
