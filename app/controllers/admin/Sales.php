@@ -2122,7 +2122,7 @@ class Sales extends MY_Controller
         $context = stream_context_create($options);
     
         $result = file_get_contents($url, false, $context);
-        print_r($result);exit;
+        
         return $result;
     }
 
@@ -2254,7 +2254,7 @@ class Sales extends MY_Controller
             "items":['.$items_str.'],
             "operateType":1
         }';
-        
+        echo $waybillinfo;exit;
         return $waybillinfo;
     }
 
