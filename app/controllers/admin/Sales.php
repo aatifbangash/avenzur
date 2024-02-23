@@ -2119,8 +2119,6 @@ class Sales extends MY_Controller
                 'timeout' => 15 * 60
             )
         );
-        echo '<pre>';
-        print_r($options);exit;
         $context = stream_context_create($options);
     
         $result = file_get_contents($url, false, $context);
