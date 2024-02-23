@@ -1961,9 +1961,7 @@ class Sales extends MY_Controller
         $post_content = array(
             'bizContent' => $post_data
         );
-        echo '<pre>';
-        print_r($post_content);
-        exit;
+    
         $postdata = http_build_query($post_content);
     
         $options = array(
@@ -2108,7 +2106,7 @@ class Sales extends MY_Controller
         );
     
         $postdata = http_build_query($post_content);
-    
+        echo '<pre>';print_r($postdata);exit;
         $options = array(
             'http' => array(
                 'method' => 'POST',
