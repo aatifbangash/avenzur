@@ -2106,7 +2106,7 @@ class Sales extends MY_Controller
         );
     
         $postdata = http_build_query($post_content);
-        echo '<pre>';print_r($postdata);exit;
+    
         $options = array(
             'http' => array(
                 'method' => 'POST',
@@ -2119,6 +2119,8 @@ class Sales extends MY_Controller
                 'timeout' => 15 * 60
             )
         );
+        echo '<pre>';
+        print_r($options);exit;
         $context = stream_context_create($options);
     
         $result = file_get_contents($url, false, $context);
