@@ -26,7 +26,7 @@
   <?php
   $seo_title = isset($page_title2) ? $page_title2 : 'avenzur  | Health, Wellness & Beauty';
   $seo_description = 'Avenzur is a Health, Wellness and Beauty Store. Shop daily vitamins, supplements, beauty, skin care products and more.';
-  $seo_keywords = strip_tags($seoSetting->keywords);
+  
   if (isset($seoSetting) && !empty($seoSetting) && isset($product) && !empty($product)) {
     $seo_title = strip_tags(str_replace('{{title}}', $product->name, $seoSetting->title));
 
@@ -39,6 +39,8 @@
 
     $seo_keywords = strip_tags($seoSetting->keywords);
 
+  }else{
+    $seo_keywords = 'Avenzur, Saudi Arabia Store, Sulfad, Beauty';
   }
   $max_length = 60; // Maximum title length
     if (strlen($seo_title) > $max_length) {
