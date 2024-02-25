@@ -24,9 +24,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <?php
-  $seo_title = isset($page_title2) ? $page_title2 : 'Avenzur';
-  $seo_description = '';
-  $seo_keywords = '';
+  $seo_title = isset($page_title2) ? $page_title2 : 'avenzur  | Health, Wellness & Beauty';
+  $seo_description = 'Avenzur is a Health, Wellness and Beauty Store. Shop daily vitamins, supplements, beauty, skin care products and more.';
+  $seo_keywords = strip_tags($seoSetting->keywords);
   if (isset($seoSetting) && !empty($seoSetting) && isset($product) && !empty($product)) {
     $seo_title = strip_tags(str_replace('{{title}}', $product->name, $seoSetting->title));
 
