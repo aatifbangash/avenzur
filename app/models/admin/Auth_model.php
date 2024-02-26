@@ -779,7 +779,7 @@ class Auth_model extends CI_Model
             $this->set_error('login_unsuccessful');
             return false;
         }
-        echo $identity.' -- '.$password;exit;
+        
         $this->trigger_events('extra_where');
         $this->load->helper('email');
         $this->identity_column = valid_email($identity) ? 'email' : 'username';
@@ -789,6 +789,7 @@ class Auth_model extends CI_Model
             ->get($this->tables['users']);
 
         if ($this->is_time_locked_out($identity)) {
+            echo 'TIme locked out';exit;
             //Hash something anyway, just to take up time
             $this->hash_password($password);
 
@@ -797,6 +798,8 @@ class Auth_model extends CI_Model
 
             return false;
         }
+
+        echo 'TIme not locked out';exit;
 
         if ($query->num_rows() === 1) {
             $user = $query->row();
