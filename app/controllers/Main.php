@@ -511,7 +511,6 @@ class Main extends MY_Shop_Controller
                         $this->shop_model->activate_user($login_column);
 
                         if ($this->ion_auth->login($login_column, '12345', $remember)) {
-                            echo 'LoggedIn...';exit;
                             // login success
                             if ($type == 'mobile') {
                                 $this->shop_model->updateCompany($company_data->id, ['mobile_verified' => 1]);
@@ -532,7 +531,6 @@ class Main extends MY_Shop_Controller
                                 redirect($referrer);
                             }
                         } else {
-                            echo 'Cannot LoggedIn...';exit;
                             $this->session->set_flashdata('error', $this->ion_auth->errors());
                             //redirect('login');
                             $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
