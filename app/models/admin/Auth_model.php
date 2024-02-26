@@ -789,6 +789,7 @@ class Auth_model extends CI_Model
             ->get($this->tables['users']);
 
         if ($this->is_time_locked_out($identity)) {
+            echo 'Again time locked...';exit;
             //Hash something anyway, just to take up time
             $this->hash_password($password);
 
