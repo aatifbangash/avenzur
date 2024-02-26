@@ -525,6 +525,74 @@ class Sma
         return $response;
     }
 
+    public function whatsapp_order_confirmation($receiver_number, $order_number, $invoice_url){
+        $service = $this->site->getSMSServiceByName('unifonic-whatsapp');
+        $publicId = $service->api_key;
+        $secret = $service->api_secret;
+
+        $whatsappApiUrl = 'https://apis.unifonic.com/v1/messages';
+        if (strpos($receiver_number, '+966') === false) {
+            $receiver_number = '+966' . $receiver_number;
+        }
+
+        //$receiver_number = '+923469122590';
+
+        $payload = [
+            "recipient" => [
+                "contact" => $receiver_number,
+                "channel" => "whatsapp"
+            ],
+            "content" => [
+                "type" => "template",
+                "name" => "order_confirmation",
+                "language" => ["code" => "en"],
+                "components" => [
+                    [
+                        "type" => "body",
+                        "parameters" => [
+                            [
+                                "type" => "text",
+                                "text" => (string) $order_number
+                            ],
+                            [
+                                "type" => "text",
+                                "text" => (string) $invoice_url
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $headers = [
+            'PublicId: ' . $publicId,
+            'Secret: ' . $secret,
+            'Content-Type: application/json'
+        ];
+
+        // Initialize cURL session
+        $ch = curl_init($whatsappApiUrl);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        // Execute cURL session and get the response
+        $response = curl_exec($ch);
+
+        // Check for cURL errors
+        if (curl_errno($ch)) {
+            echo 'Curl error: ' . curl_error($ch);
+        }
+
+        // Close cURL session
+        curl_close($ch);
+
+        return $response;
+    }
+
     public function send_whatsapp_msg($receiver_number, $variable){
         $service = $this->site->getSMSServiceByName('unifonic-whatsapp');
         $publicId = $service->api_key;
