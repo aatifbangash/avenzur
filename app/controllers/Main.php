@@ -493,7 +493,7 @@ class Main extends MY_Shop_Controller
                 $type = 'mobile';
                 $company_data = $this->shop_model->getUniqueCustomer($type, str_replace("+966", "", $identity));
             }
-            //print_r($company_data);exit;
+            print_r($company_data);exit;
             if ($company_data) {
 
                 $otp = $opt_part1 . $opt_part2 . $opt_part3 . $opt_part4 . $opt_part5 . $opt_part6;
