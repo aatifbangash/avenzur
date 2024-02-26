@@ -779,7 +779,7 @@ class Auth_model extends CI_Model
             $this->set_error('login_unsuccessful');
             return false;
         }
-
+        echo $identity.' -- '.$password;exit;
         $this->trigger_events('extra_where');
         $this->load->helper('email');
         $this->identity_column = valid_email($identity) ? 'email' : 'username';
