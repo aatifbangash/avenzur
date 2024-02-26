@@ -789,7 +789,6 @@ class Auth_model extends CI_Model
             ->get($this->tables['users']);
 
         if ($this->is_time_locked_out($identity)) {
-            echo 'Again time locked...';exit;
             //Hash something anyway, just to take up time
             $this->hash_password($password);
 
@@ -801,7 +800,6 @@ class Auth_model extends CI_Model
 
         if ($query->num_rows() === 1) {
             $user = $query->row();
-            print_r($user);exit;
              $allow_discount_value      = $user->allow_discount_value;
              // Password not required for OTP login
             //$password = true; //$this->hash_password_db($user->id, $password);
@@ -834,7 +832,7 @@ class Auth_model extends CI_Model
                 return true;
             }
         }
-        echo 'Out of condition...';exit;
+
         //Hash something anyway, just to take up time
         $this->hash_password($password);
 
