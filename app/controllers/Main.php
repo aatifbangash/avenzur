@@ -499,9 +499,9 @@ class Main extends MY_Shop_Controller
                 $otp = $opt_part1 . $opt_part2 . $opt_part3 . $opt_part4 . $opt_part5 . $opt_part6;
                 //echo $identity.$otp;exit;
                 $validate = $this->shop_model->validate_otp($identity, $otp);
-                print_r($validate);exit;
                 if ($validate) {
                     if ($this->form_validation->run('auth/login') == true) {
+                        echo 'Authenticated...';exit;
                         $remember = true;
                         if (!empty($company_data->email)) {
                             $login_column = $company_data->email;
@@ -532,6 +532,7 @@ class Main extends MY_Shop_Controller
                                 redirect($referrer);
                             }
                         } else {
+                            echo 'Cannot Authenticate...';exit;
                             $this->session->set_flashdata('error', $this->ion_auth->errors());
                             //redirect('login');
                             $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
