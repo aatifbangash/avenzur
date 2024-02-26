@@ -923,6 +923,12 @@ class Pay extends MY_Shop_Controller
                     $ipnstatus = true;
                     $sale_items = $this->pay_model->getSaleItems($invoice_no);
 
+                    if($address_id == 0){
+                        $customer_mobile = $customer->phone;
+                    }else{
+                        $customer_mobile = $address->phone;
+                    }
+
                     $delivery_country = $address->country;
                     $lowercase_delivery_country = strtolower($delivery_country);
 
@@ -1057,11 +1063,11 @@ class Pay extends MY_Shop_Controller
                     }
                     
                     $email = $this->order_received($invoice_no);
-                    if($address->phone != ''){
+                    if($customer_mobile != ''){
                         $attachment = $this->orders($invoice_no, null, true, 'S');
-                        $whatsapp_order_message = $this->sma->whatsapp_order_confirmation($address->phone, $invoice_no, site_url(''));
+                        $whatsapp_order_message = $this->sma->whatsapp_order_confirmation($customer_mobile, $invoice_no, site_url('shop/orders/'+$invoice_no));
                     }
-
+                    
                     $this->sma->log_payment('SUCCESS', 'Payment has been made for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));
                     $this->session->set_flashdata('message', lang('payment_added'));
                     
