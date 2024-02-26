@@ -1024,6 +1024,94 @@ class Shop extends MY_Shop_Controller
         }
     }
 
+    public function invoiceorders($id = null, $hash = null, $pdf = null, $buffer_save = null){
+        $hash = $hash ? $hash : $this->input->get('hash', true);
+        if (!$this->loggedIn && !$hash) {
+            redirect('/');
+        }
+        if ($this->Staff) {
+            admin_redirect('sales');
+        }
+        //order tracking
+       $action = $this->input->get('action');
+       
+       if($action == 'tracking') {
+        $order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash]);
+        $this->cart->destroy();
+        $this->data['order'] = $order;
+        $this->page_construct('pages/order_tracking', $this->data);
+       }
+        else if ($id && !$pdf) {
+            if ($order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash])) {
+                $this->load->library('inv_qrcode');
+                $this->data['inv'] = $order;
+                $this->data['rows'] = $this->shop_model->getOrderItems($id);
+                $this->data['customer'] = $this->site->getCompanyByID($order->customer_id);
+                $this->data['biller'] = $this->site->getCompanyByID($order->biller_id);
+                $this->data['address'] = array();
+                $this->data['address'] = $this->shop_model->getAddressByID($order->address_id);
+                
+                $this->data['return_sale'] = $order->return_id ? $this->shop_model->getOrder(['id' => $id]) : null;
+                $this->data['return_rows'] = $order->return_id ? $this->shop_model->getOrderItems($order->return_id) : null;
+                $this->data['paypal'] = $this->shop_model->getPaypalSettings();
+                $this->data['skrill'] = $this->shop_model->getSkrillSettings();
+                $this->data['page_title'] = lang('view_order');
+                $this->data['page_desc'] = '';
+
+                $this->config->load('payment_gateways');
+                $this->data['stripe_secret_key'] = $this->config->item('stripe_secret_key');
+                $this->data['stripe_publishable_key'] = $this->config->item('stripe_publishable_key');
+                $this->data['all_categories'] = $this->shop_model->getAllCategories();
+                $this->page_construct('pages/view_order', $this->data);
+                $this->cart->destroy();
+                //$this->page_construct('pages/thankyou', $this->data);
+            } else {
+                $this->session->set_flashdata('error', lang('access_denied'));
+                redirect('/');
+            }
+        } elseif ($pdf || $this->input->get('download')) {
+            $this->load->library('inv_qrcode');
+            $id = $pdf ? $id : $this->input->get('download', true);
+            $hash = $hash ? $hash : $this->input->get('hash', true);
+            $order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash]);
+            $this->data['inv'] = $order;
+            $this->data['rows'] = $this->shop_model->getOrderItems($id);
+            $this->data['customer'] = $this->site->getCompanyByID($order->customer_id);
+            $this->data['biller'] = $this->site->getCompanyByID($order->biller_id);
+            $this->data['address'] = $this->shop_model->getAddressByID($order->address_id);
+            $this->data['return_sale'] = $order->return_id ? $this->shop_model->getOrder(['id' => $id]) : null;
+            $this->data['return_rows'] = $order->return_id ? $this->shop_model->getOrderItems($order->return_id) : null;
+            $this->data['Settings'] = $this->Settings;
+            $this->data['all_categories'] = $this->shop_model->getAllCategories();
+            $this->data['shop_settings'] = $this->shop_settings;
+            $html = $this->load->view($this->Settings->theme . '/shop/views/pages/pdf_invoice', $this->data, true);
+            if ($this->input->get('view')) {
+                echo $html;
+                exit;
+            }
+            $name = lang('invoice') . '_' . str_replace('/', '_', $order->reference_no) . '.pdf';
+            if ($buffer_save) {
+                return $this->sma->generate_pdf($html, $name, $buffer_save, $this->data['biller']->invoice_footer);
+            }
+            $this->sma->generate_pdf($html, $name, false, $this->data['biller']->invoice_footer);
+        } elseif (!$id) {
+            $page = $this->input->get('page') ? $this->input->get('page', true) : 1;
+            $limit = 50;
+            $offset = ($page * $limit) - $limit;
+            $this->load->helper('pagination');
+            //$total_rows = $this->shop_model->getCustomerOrdersCount();
+            $this->session->set_userdata('requested_page', $this->uri->uri_string());
+            $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+            $this->data['orders'] = $this->shop_model->getOrders($limit, $offset);
+            //$this->data['pagination'] = pagination('shop/orders', $total_rows, $limit);
+            $this->data['page_info'] = ['page' => $page, 'total' => ceil($total_rows / $limit)];
+            $this->data['page_title'] = lang('my_orders');
+            $this->data['page_desc'] = '';
+            $this->data['all_categories'] = $this->shop_model->getAllCategories();
+            $this->page_construct('pages/orders', $this->data);
+        }
+    }
+
     // Customer order/orders page
     public function orders($id = null, $hash = null, $pdf = null, $buffer_save = null)
     {
