@@ -80,8 +80,10 @@ class Shop extends MY_Shop_Controller
         $this->form_validation->set_rules('mobile_number', lang('mobile_number'), 'trim|required');
         $this->form_validation->set_rules('first_name', lang('first_name'), 'trim|required');
         $this->form_validation->set_rules('last_name', lang('last_name'), 'trim|required');
-        $this->form_validation->set_rules('email', lang('email'), 'trim|required');
-        
+        if($this->input->post('email')){
+            $this->form_validation->set_rules('email', lang('email'), 'trim|required');
+        }
+    
         if ($this->form_validation->run() == true) {
             // update address
             $action_type_id = $this->input->post('action_type_id');
@@ -93,7 +95,7 @@ class Shop extends MY_Shop_Controller
                 }else {
                     $mobile_verified = $this->input->post('opt_verified');
                 }
-
+               
                 if ($default_address->phone == '' || $default_address->address == '' || $action_type_id == 'default') {
                     $data = ['address' => $this->input->post('address_line_1'),
                         'line2' => $this->input->post('address_line_2'),
