@@ -1291,6 +1291,9 @@ class Products extends MY_Controller
 
     public function edit($id = null)
     {
+        ini_set('display_errors', '1');
+        ini_set('display_startup_errors', '1');
+        error_reporting(E_ALL);
         $this->sma->checkPermissions();
         $this->load->helper('security');
         if ($this->input->post('id')) {
