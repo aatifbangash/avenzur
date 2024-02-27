@@ -1404,6 +1404,9 @@ class Products extends MY_Controller
                 // 'sale_account'       => $this->input->post('sale_account'),
                 // 'inventory_account'       => $this->input->post('inventory_account'),
             ];
+
+            print_r($this->session->get_userdata());
+
             $warehouse_qty      = null;
             $product_attributes = null;
             $update_variants    = [];
