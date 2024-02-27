@@ -1291,9 +1291,6 @@ class Products extends MY_Controller
 
     public function edit($id = null)
     {
-        ini_set('display_errors', '1');
-        ini_set('display_startup_errors', '1');
-        error_reporting(E_ALL);
         $this->sma->checkPermissions();
         $this->load->helper('security');
         if ($this->input->post('id')) {
@@ -1404,9 +1401,6 @@ class Products extends MY_Controller
                 // 'sale_account'       => $this->input->post('sale_account'),
                 // 'inventory_account'       => $this->input->post('inventory_account'),
             ];
-
-            print_r($this->session->get_userdata());
-
             $warehouse_qty      = null;
             $product_attributes = null;
             $update_variants    = [];
