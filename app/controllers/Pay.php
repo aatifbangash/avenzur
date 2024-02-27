@@ -321,7 +321,7 @@ class Pay extends MY_Shop_Controller
                     $finalData["card_expiry_year"] = $card_details['card_expiry_year'];
                  }
                  
-                 $this->session->unset_userdata('card_details');
+                $this->session->unset_userdata('card_details');
                             
                 $data["formdata"] = $finalData;
                         
@@ -892,6 +892,7 @@ class Pay extends MY_Shop_Controller
         
         if($response_status == '00000')
         {
+            $this->session->unset_userdata('coupon_details');
             $amount = $_POST['Response_Amount'] / 100;
             
             $reference  = $_POST['Response_ApprovalCode'];

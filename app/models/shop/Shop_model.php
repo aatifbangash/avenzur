@@ -420,6 +420,7 @@ class Shop_model extends CI_Model
             ->join('categories c', 'products.category_id=c.id', 'left')
             ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
             ->where('products.special_offer', 1)
+            ->where('products.quantity >', 0)
             ->where('hide !=', 1)
             //->where('products.cf1', $countryId)
             ->limit($limit);
@@ -494,6 +495,7 @@ class Shop_model extends CI_Model
                 ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
                 ->join('categories c', 'products.category_id=c.id', 'left')
                 ->where('products.category_id', $category->id)
+                ->where('products.quantity >', 0)
                 ->where('hide !=', 1)
                 //->where('products.cf1', $countryId)
                 ->limit(8);
@@ -603,6 +605,7 @@ class Shop_model extends CI_Model
             ->join('categories c', 'products.category_id=c.id', 'left')
             ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
             ->where('products.best_seller', 1)
+            ->where('products.quantity >', 0)
             ->where('hide !=', 1)
             //->where('products.cf1', $countryId)
             ->limit($limit);
@@ -677,6 +680,7 @@ class Shop_model extends CI_Model
             ->join('categories c', 'products.category_id=c.id', 'left')
             ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
             ->where('products.best_seller', 1)
+            ->where('products.quantity >', 0)
             ->where('hide !=', 1)
             //->where('products.cf1', $countryId)
             ->limit($limit);
@@ -751,6 +755,7 @@ class Shop_model extends CI_Model
             ->join('categories c', 'products.category_id=c.id', 'left')
             ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
             ->where('products.featured', 1)
+            ->where('products.quantity >', 0)
             ->where('hide !=', 1)
             //->where('products.cf1', $countryId)
             ->limit($limit);
