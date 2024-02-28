@@ -152,8 +152,10 @@ class Shop_model extends CI_Model
             $data['address_id'] = $this->db->insert_id();
         }
 
-        $this->db->trans_start();
-        print_r($data);exit;
+        //$this->db->trans_start();
+        //print_r($data);exit;
+        $this->db->insert('sales', $data);
+        echo $this->db->last_query();exit;
         if ($this->db->insert('sales', $data)) {
             echo 'sale done';exit;
             $sale_id = $this->db->insert_id();
