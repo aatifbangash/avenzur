@@ -546,6 +546,8 @@ error_reporting(E_ALL);
                     } else {
                         shop_redirect('orders/' . $sale_id . '/' . ($this->loggedIn ? '' : $data['hash']));
                     }
+                }else{
+                    echo 'Error adding the order...';exit;
                 }
             } else {
                 $this->session->set_flashdata('error', lang('address_x_found'));
