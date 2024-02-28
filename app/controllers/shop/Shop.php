@@ -281,9 +281,7 @@ class Shop extends MY_Shop_Controller
     // Add new Order form shop
     public function order()
     {
-        ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
+        
         $guest_checkout = $this->input->post('guest_checkout');
         if (!$guest_checkout && !$this->loggedIn) {
             redirect('login');
@@ -546,8 +544,6 @@ error_reporting(E_ALL);
                     } else {
                         shop_redirect('orders/' . $sale_id . '/' . ($this->loggedIn ? '' : $data['hash']));
                     }
-                }else{
-                    echo 'Error adding the order...';exit;
                 }
             } else {
                 $this->session->set_flashdata('error', lang('address_x_found'));
