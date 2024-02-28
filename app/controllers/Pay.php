@@ -1135,12 +1135,12 @@ class Pay extends MY_Shop_Controller
             $biller   = $this->site->getCompanyByID($inv->biller_id);
             $this->load->library('parser');
             $parse_data = [
-                'reference_number' => $inv->reference_no,
-                'contact_person'   => $customer->name,
+                'reference_number' => $inv->id,
+                'contact_person'   => $customer->first_name.' '.$customer->last_name,
                 'company'          => $customer->company && $customer->company != '-' ? '(' . $customer->company . ')' : '',
                 'order_link'       => shop_url('orders/' . $id . '/' . ($this->loggedIn ? '' : $inv->hash)),
                 'site_link'        => base_url(),
-                'site_name'        => $this->Settings->site_name,
+                'site_name'        => 'Avenzur',
                 'logo'             => '<img src="' . base_url() . 'assets/uploads/logos/' . $biller->logo . '" alt="' . ($biller->company && $biller->company != '-' ? $biller->company : $biller->name) . '"/>',
             ];
             $msg     = file_get_contents('./themes/' . $this->Settings->theme . '/admin/views/email_templates/sale.html');
@@ -1172,7 +1172,8 @@ class Pay extends MY_Shop_Controller
             $btn_code .= '<div class="clearfix"></div></div>';
             $message    = $message . $btn_code;
             $attachment = $this->orders($id, $hash, true, 'S');
-            $subject    = lang('new_order_received');
+            //$subject    = lang('new_order_received');
+            $subject = 'Thank you for your order!';
             $sent       = false;
             $error      = false;
             $cc         = [];
