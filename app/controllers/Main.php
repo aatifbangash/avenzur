@@ -891,11 +891,6 @@ class Main extends MY_Shop_Controller
                 $company_found = $this->shop_model->getUniqueCustomer('mobile', str_replace("+966", "", $email));
             }
 
-            echo '<pre>';
-            print_r($company_found);
-            echo $type;
-            exit;
-
             if ($company_found) {
                 if (!empty($company_found->email)) {
                     $user_data = $this->shop_model->getUserByEmail($company_found->email);
@@ -929,7 +924,7 @@ class Main extends MY_Shop_Controller
                 } elseif ($type == 'mobile') {
                     $company_data['phone'] = $this->input->post('email');
                 }
-
+                print_r($company_data);exit;
                 //$company_id = $this->shop_model->addCustomer($company_data);
                 $company_id = $this->shop_model->addUniqueCustomer($company_data);
 
