@@ -151,17 +151,20 @@ class Shop_model extends CI_Model
             $this->db->insert('addresses', $address);
             $data['address_id'] = $this->db->insert_id();
         }
-        print_r($data);exit;
+
         $this->db->trans_start();
         if ($this->db->insert('sales', $data)) {
             $sale_id = $this->db->insert_id();
             $this->site->updateReference('so');
-
+            echo 'SaleId: '.$sale_id;
             foreach ($items as $item) {
                 $item['sale_id'] = $sale_id;
+                print_r($item);
                 $this->db->insert('sale_items', $item);
                 $sale_item_id = $this->db->insert_id();
+                echo 'SaleItemId: '.$sale_item_id;
                 if ($data['sale_status'] == 'completed') {
+                    echo 'Sale Completed';
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
@@ -182,6 +185,8 @@ class Shop_model extends CI_Model
                             }
                         }
                     }
+                }else{
+                    echo 'Not completed';
                 }
             }
 
