@@ -499,6 +499,8 @@ class Shop extends MY_Shop_Controller
                     $customer = (array) $customer;
                 }
                 // $this->sma->print_arrays($data, $products, $customer, $address);
+                echo '<pre>';
+                print_r($data);exit;
 
                 if ($sale_id = $this->shop_model->addSale($data, $products, $customer, $address)) {
                     //$added_record = $this->aramexshipment($sale_id, $data, $products, $customer, $address,$pro_weight);
