@@ -281,7 +281,9 @@ class Shop extends MY_Shop_Controller
     // Add new Order form shop
     public function order()
     {
-
+        ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
         $guest_checkout = $this->input->post('guest_checkout');
         if (!$guest_checkout && !$this->loggedIn) {
             redirect('login');
@@ -499,8 +501,6 @@ class Shop extends MY_Shop_Controller
                     $customer = (array) $customer;
                 }
                 // $this->sma->print_arrays($data, $products, $customer, $address);
-                echo '<pre>';
-                print_r($data);exit;
 
                 if ($sale_id = $this->shop_model->addSale($data, $products, $customer, $address)) {
                     //$added_record = $this->aramexshipment($sale_id, $data, $products, $customer, $address,$pro_weight);
