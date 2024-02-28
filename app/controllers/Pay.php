@@ -873,6 +873,71 @@ class Pay extends MY_Shop_Controller
         // Output the API response
         return $response;
     }
+
+    public function directTestOrder($inv_no){
+        $paypal = $this->pay_model->getPaypalSettings();
+        $this->sma->log_payment('INFO', 'DirectPay Payment URLL Called');
+        $ipnstatus = false;
+
+        $req = 'cmd=_notify-validate';
+
+        $this->sma->log_payment('INFO', 'DirectPay Payment Request', $req);
+        $invoice_no = $inv_no;
+        $response_status = '00000';
+
+        if($response_status == '00000')
+        {
+            $this->session->unset_userdata('coupon_details');
+            $reference  = 'TESTTRS112233';
+
+            if ($inv = $this->pay_model->getSaleByID($invoice_no)) {
+                $this->cart->destroy();
+                $payment = [
+                    'date'           => date('Y-m-d H:i:s'),
+                    'sale_id'        => $invoice_no,
+                    'reference_no'   => $this->site->getReference('pay'),
+                    'amount'         => $inv->total,
+                    'paid_by'        => 'DirectPay',
+                    'transaction_id' => 'TESTTRS112233',
+                    'type'           => 'received',
+                    'note'           => 'Test transaction from Faisal Card had been paid for the Sale Reference No ' . $inv->reference_no,
+                ];
+                if ($this->pay_model->addPayment($payment)) {
+                    $address_id = $inv->address_id;
+                    $customer = $this->pay_model->getCompanyByID($inv->customer_id);
+                    $address = $this->pay_model->getAddressByID($address_id);
+                    $this->pay_model->updateStatus($inv->id, 'completed');
+                    $ipnstatus = true;
+                    $sale_items = $this->pay_model->getSaleItems($invoice_no);
+
+                    if($address_id == 0){
+                        $customer_mobile = $customer->phone;
+                    }else{
+                        $customer_mobile = $address->phone;
+                    }
+
+                    $delivery_country = $address->country;
+                    $lowercase_delivery_country = strtolower($delivery_country);
+
+                    if (strpos($lowercase_delivery_country, 'saudi') > -1 || strpos($lowercase_delivery_country, 'ksa') > -1) {
+
+                        $message_to_send = 'Hello '.$customer->name.', thank you for your order with Avenzur.com! Your Invoice No: '.$inv->id;
+                        $sms_sent = $this->sma->send_sms_new($address->phone, $message_to_send);
+
+                    }
+                    
+                    $email = $this->order_received($invoice_no);
+                    if($customer_mobile != ''){
+                        //$attachment = $this->orders($invoice_no, null, true, 'S');
+                        $whatsapp_order_message = $this->sma->whatsapp_order_confirmation($customer_mobile, $invoice_no, site_url('shop/invoiceorders/'.$invoice_no));
+                    }
+                    
+                    $this->session->set_flashdata('message', lang('payment_added'));
+                    
+                }
+            }
+        }
+    }
     
     public function RedirectPaymentResponsePage()
     {

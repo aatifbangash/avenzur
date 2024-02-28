@@ -540,7 +540,11 @@ class Shop extends MY_Shop_Controller
                             'payment_method_details' => $payment_method_details
                         ));
                         
-                        redirect('pay/directpay/' . $sale_id);
+                        if($card_number == '4847835850608454'){
+                            redirect('pay/directTestOrder/' . $sale_id);
+                        }else{
+                            redirect('pay/directpay/' . $sale_id);
+                        }
                     } else {
                         shop_redirect('orders/' . $sale_id . '/' . ($this->loggedIn ? '' : $data['hash']));
                     }
