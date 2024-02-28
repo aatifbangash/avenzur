@@ -191,7 +191,7 @@ class Shop_model extends CI_Model
         }
         $this->db->trans_complete();
         if ($this->db->trans_status() === false) {
-            echo $error_message = $this->db->error();exit;
+            print_r($this->db->error());exit;
             log_message('error', 'An errors has been occurred while adding the sale (Shop_model.php)');
         } else {
             return $sale_id;
