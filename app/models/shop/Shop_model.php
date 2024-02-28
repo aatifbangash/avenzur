@@ -133,9 +133,6 @@ class Shop_model extends CI_Model
 
     public function addSale($data, $items, $customer, $address)
     {
-        ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
         // Sequence-Code
         $this->load->library('SequenceCode');
         $this->sequenceCode = new SequenceCode();
@@ -154,7 +151,7 @@ error_reporting(E_ALL);
             $this->db->insert('addresses', $address);
             $data['address_id'] = $this->db->insert_id();
         }
-
+        print_r($data);exit;
         $this->db->trans_start();
         if ($this->db->insert('sales', $data)) {
             $sale_id = $this->db->insert_id();
