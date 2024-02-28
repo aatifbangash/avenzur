@@ -190,8 +190,8 @@ class Shop_model extends CI_Model
             // return $sale_id;
         }
         $this->db->trans_complete();
-        echo 'Come till here.....';
         if ($this->db->trans_status() === false) {
+            echo 'Here we are in false....';exit;
             log_message('error', 'An errors has been occurred while adding the sale (Shop_model.php)');
         } else {
             return $sale_id;
