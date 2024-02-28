@@ -281,9 +281,7 @@ class Shop extends MY_Shop_Controller
     // Add new Order form shop
     public function order()
     {
-        ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
+        
         $guest_checkout = $this->input->post('guest_checkout');
         if (!$guest_checkout && !$this->loggedIn) {
             redirect('login');
@@ -454,6 +452,8 @@ error_reporting(E_ALL);
                 $coupon_details = $this->session->userdata('coupon_details');
                 if(isset($coupon_details['code'])){
                     $c_code = $coupon_details['code'];
+                }else{
+                    $c_code = '';
                 }
 
                 $data = [
