@@ -153,7 +153,9 @@ class Shop_model extends CI_Model
         }
 
         $this->db->trans_start();
+        print_r($data);exit;
         if ($this->db->insert('sales', $data)) {
+            echo 'sale done';exit;
             $sale_id = $this->db->insert_id();
             echo 'SaleId: '.$sale_id;exit;
             $this->site->updateReference('so');
