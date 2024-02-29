@@ -1595,11 +1595,12 @@ class Shop extends MY_Shop_Controller
 
             $pagination = pagination('shop/products', $total_rows, $limit);
 
-            if (isset($_GET['promo']) && !empty($_GET['promo'])) {
+            //if (isset($_GET['promo']) && !empty($_GET['promo'])) {
+            if(isset($filters['promo']) && $filters['promo'] == 1)  {
                 $pagination = str_replace('?page=', '?promo=yes&page=', $pagination);
             }
 
-            if (isset($_GET['special_product']) && !empty($_GET['special_product'])) {
+            if (isset($filters['special_product']) && !empty($filters['special_product'])) {
                 $pagination = str_replace('?page=', '?special_product=yes&page=', $pagination);
             }
 
