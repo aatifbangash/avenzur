@@ -1248,11 +1248,14 @@ class Pay extends MY_Shop_Controller
             }
             $cc[]      = $biller->email;*/
             $warehouse = $this->site->getWarehouseByID($inv->warehouse_id);
+            $customer_email = $customer ? $customer->email : $user->email;
             /*if ($warehouse->email) {
                 $cc[] = $warehouse->email;
             }*/
             try {
-                if ($this->sma->send_email(($customer ? $customer->email : $user->email), $subject, $message, null, null, $attachment, $cc, $bcc)) {
+                if (isset($customer_email) && !empty($customer_email) && $customer_email) {
+                    $this->sma->send_email(($customer_email), $subject, $message, null, null, $attachment, $cc, $bcc);
+
                     //$whatsapp_sent = $this->sma->send_whatsapp_notify('+966534525101', 'New Order Generated On Avenzur');
                     //$whatsapp_data = json_decode($whatsapp_sent, true);
                     $this->sma->send_email('ama@pharma.com.sa', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
