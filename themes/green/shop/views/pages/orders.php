@@ -25,34 +25,34 @@
                                            <!--<a href="<?= shop_url('orders/' . $order->id); ?>" class="link-address<?= $order->payment_status == 'paid' ? '' : ' active' ?>">-->
                                            <div class="table-custom-container">
                                             <table class="table table-borderless table-condensed order-table mb-0" >
+                                                <?= '<tr><td>' . lang('Invoice No.') . '</td><td>' . $order->id . '</td></tr>'; ?>
                                                 <?= '<tr><td>' . lang('date') . '</td><td>' . $this->sma->hrld($order->date) . '</td></tr>'; ?>
-                                                <?= '<tr><td>' . lang('ref') . '</td><td>' . $order->reference_no . '</td></tr>'; ?>
                                                 <?= '<tr><td>' . lang('sale_status') . '</td><td>' . lang($order->sale_status) . '</td></tr>'; ?>
                                                 <?= '<tr><td>' . lang('amount') . '</td><td>' . $this->sma->formatMoney($order->grand_total, $this->default_currency->symbol) . '</td></tr>'; ?>
                                                 <?= '<tr><td>' . lang('payment_status') . '</td><td>' . ($order->payment_status ? lang($order->payment_status) : lang('no_payment')) . '</td></tr>'; ?>
                                                 <?= '<tr><td>' . lang('delivery_status') . '</td><td><span class="label ' . ($order->delivery_status == 'delivered' ? 'label-success' : 'label-info') . '">' . ($order->delivery_status ? lang($order->delivery_status) : lang('verifying')) . '</span></td></tr>'; ?>
-                                              
-                                              <?php if($order->sale_status =='completed'){ ?>
-                                               <?= '<tr><td>' . lang('Refund') . '</td>'?>
-                                               
-                                               <?php  
-                                                        if(strlen($order->refund_status) > 0){  
-                                                            echo '<td><span class="label '.($order->refund_status == 'success' ? 'label-success' : 'label-info').'">'.$order->refund_status.'</span></td>';
-                                                            
-                                                        }else{ 
-                                                            
-                                                            echo '<td><button type="button" class="btn btn-info btn-sm refund" data-id='.$order->id.' data-toggle="modal" data-target="#myModal">Refund</button></td>';
-                                                            
-                                                        }
-                                               
-                                               echo '</tr>';} ?>
                                                
                                                <?= '<tr><td>' . lang('View_Order') . '</td><td><a href=orders/'.$order->id.'>  <input type="submit" class="btn btn-info btn-sm view" value="View Order" /></a>'; ?>
+                                               <?= '<tr><td>' . lang('View Invoice') . '</td><td><a href=invoiceorders/'.$order->id.'>  <input type="submit" class="btn btn-info btn-sm view" value="View Order" /></a>'; ?>
                                                <?php if($order->payment_status == 'paid' && $order->courier_id == 1) {?>
                                                <?= '<a href=orders/'.$order->id.'?action=tracking>  <input type="button" class="btn btn-info btn-sm view" value="Track Order" /></a>'; ?>
                                             <?php }?>   
                                                <?= ' </td></tr>'; ?>
-
+                                               <?php if($order->sale_status =='completed'){ ?>
+                                               <?= '<tr><td>' . lang('Return') . '</td>'?>
+                                               
+                                               <?php  
+                                                /*if(strlen($order->refund_status) > 0){  
+                                                    echo '<td><span class="label '.($order->refund_status == 'success' ? 'label-success' : 'label-info').'">'.$order->refund_status.'</span></td>';
+                                                    
+                                                }else{ 
+                                                    
+                                                    echo '<td><button type="button" class="btn btn-info btn-sm refund" data-id='.$order->id.' data-toggle="modal" data-target="#myModal">Refund</button></td>';
+                                                    
+                                                }*/
+                                                echo '<td><span class="label label-info"><a target="blank" href="https://api.whatsapp.com/send?phone=966551251997">Contact us on whatsapp</a></span></td>';
+                                                echo '</tr>';} 
+                                                ?>
                                              
                                             </table> </div>
                                                 
