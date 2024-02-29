@@ -1321,7 +1321,7 @@ class Pay extends MY_Shop_Controller
                 echo $html;
                 exit;
             }
-            $name = lang('invoice') . '_' . str_replace('/', '_', $order->reference_no) . '.pdf';
+            $name = lang('invoice') . '_' . str_replace('/', '_', $order->id) . '.pdf';
             if ($buffer_save) {
                 return $this->sma->generate_pdf($html, $name, $buffer_save, $this->data['biller']->invoice_footer);
             }
