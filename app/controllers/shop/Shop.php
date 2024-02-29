@@ -541,7 +541,7 @@ class Shop extends MY_Shop_Controller
                         ));
                         
                         if($card_number == '4847 8358 5060 8454'){
-                            redirect('pay/directTestOrder/' . $sale_id);
+                            redirect('pay/directpay/' . $sale_id);
                         }else{
                             redirect('pay/directpay/' . $sale_id);
                         }
