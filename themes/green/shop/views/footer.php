@@ -218,7 +218,7 @@
         // set english promo banner
         document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/ramadan_offers_en.jpg?timestamp=' + Date.now();
       }else{
-        document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo-page-banner-en.jpg?timestamp=' + Date.now();
+        document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo-page-banner-ramadan-en.jpg?timestamp=' + Date.now();
       }
     } else if (newLang === 'ar') {
       if(carouselItems.length > 0){
@@ -264,7 +264,7 @@
         // set arabic promo banner
         document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/ramadan_offers_ar.jpg?timestamp=' + Date.now();
       }else{
-        document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo-page-banner-ar.jpg?timestamp=' + Date.now();
+        document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo-page-banner-ramadan-ar.jpg?timestamp=' + Date.now();
       }
     }
 
