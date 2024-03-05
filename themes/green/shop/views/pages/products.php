@@ -85,7 +85,7 @@
                         if($promo_banner){
                             ?>
                                 <section class="side-banner section-marg-top" style="margin-top:10px;margin-bottom: 40px;">
-                                <div class="container container-max-width">
+                                <div class="container container-max-width" style="padding-left: 0px;padding-right: 0px;">
                                     <div class="sideBannerImg">
                                     <a href="<?= site_url('shop/products?promo=yes'); ?>">
                                         <img id="promo-page-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/promo-page-banner-ramadan-en.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100" />
