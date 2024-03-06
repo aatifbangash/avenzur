@@ -1129,7 +1129,7 @@ class Shop_model extends CI_Model
             if (!empty($filters['special_product'])) {
                 $this->db->where('special_product', 1);
             }
-            $sortcase = 'id';
+            $sortcase = '';
             if (!empty($filters['query'])) {
                 $booksearch = strtolower($filters['query']);
                 $sortcase = "CASE when (" . $this->db->dbprefix('products') . ".name LIKE '%" . $booksearch . "%') THEN 1 ELSE 0 END";
@@ -1187,7 +1187,7 @@ class Shop_model extends CI_Model
                     $sort = explode('-', $filters['sorting']);
                     $this->db->order_by($sort[0], $this->db->escape_str($sort[1]));
                 } else {
-                    $this->db->order_by('name asc');
+                    $this->db->order_by('id desc');
                 }
             } else {
                 $this->db->order_by($sortcase . ' desc');
@@ -1195,7 +1195,7 @@ class Shop_model extends CI_Model
 
             }
         } else {
-            $this->db->order_by('name asc');
+            $this->db->order_by('id desc');
         }
 
 
