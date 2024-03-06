@@ -676,4 +676,6 @@ $lang['credit_memo']                = 'Credit Memo';
 $lang['service_invoice']            = 'Service Invoice';
 $lang['courier_name']               = 'Courier Name';
 $lang['express']                    = 'Express';
-
+$lang['abandoned_cart']             = 'Abandoned Cart';
+$lang['cart_total']                 = 'Cart Total';
+$lang['total_items']                = 'Total Items';

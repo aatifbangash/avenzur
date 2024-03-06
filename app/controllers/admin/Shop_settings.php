@@ -247,6 +247,38 @@ class Shop_settings extends MY_Controller
         $this->page_construct('shop/pages', $meta, $this->data);
     }
 
+    public function abandoned_cart(){
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+
+            $abandoned_cart_array = $this->shop_admin_model->getAbandonedCart($start_date, $end_date);
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['abandoned_cart_array'] = $abandoned_cart_array;
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('shop_settings'), 'page' => lang('shop_settings')], ['link' => '#', 'page' => lang('shop_settings')]];
+            $meta = ['page_title' => lang('abandoned_cart'), 'bc' => $bc];
+            $this->page_construct('settings/abandoned_cart', $meta, $this->data);
+        } else {
+
+            $abandoned_cart_array = $this->shop_admin_model->getAbandonedCart(NULL, NULL);
+            $this->data['abandoned_cart_array'] = $abandoned_cart_array;
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('shop_settings'), 'page' => lang('shop_settings')], ['link' => '#', 'page' => lang('shop_settings')]];
+            $meta = ['page_title' => lang('abandoned_cart'), 'bc' => $bc];
+            $this->page_construct('settings/abandoned_cart', $meta, $this->data);
+        }
+    }
+
     public function send_sms($date = null)
     {
         $this->form_validation->set_rules('mobile', lang('mobile'), 'trim|required');

@@ -94,6 +94,14 @@ class Shop_admin_model extends CI_Model
         return $this->db->get('categories')->result();
     }
 
+    public function getAbandonedCart($start_date, $end_date){
+        $this->db->select('cart.*, users.email');
+        $this->db->from('cart');
+        $this->db->join('users', 'cart.user_id = users.id');
+        $this->db->order_by('cart.time', 'DESC');
+        return $this->db->get()->result();
+    }
+
     public function updatePage($id, $data)
     {
         if ($this->db->update('pages', $data, ['id' => $id])) {
