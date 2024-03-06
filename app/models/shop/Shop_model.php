@@ -1129,7 +1129,7 @@ class Shop_model extends CI_Model
             if (!empty($filters['special_product'])) {
                 $this->db->where('special_product', 1);
             }
-            $sortcase = '';
+            $sortcase = 'id';
             if (!empty($filters['query'])) {
                 $booksearch = strtolower($filters['query']);
                 $sortcase = "CASE when (" . $this->db->dbprefix('products') . ".name LIKE '%" . $booksearch . "%') THEN 1 ELSE 0 END";
