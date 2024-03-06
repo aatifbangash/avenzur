@@ -62,7 +62,7 @@ if ($this->Settings->indian_gst) {
                         </div>
 
                         <?php //&& !$this->Staff
-                        if (count($addresses) < 6 && !$this->Staff) {?>
+                        if (!$this->Staff) {?>
                                                 <p class="m-0 change-address-link-cont">
                                                 <a href="?action=changeaddress" class="  d-flex change-address-link align-items-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
