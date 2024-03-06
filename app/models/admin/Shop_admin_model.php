@@ -97,7 +97,7 @@ class Shop_admin_model extends CI_Model
     public function getAbandonedCart($start_date, $end_date){
         $this->db->select('cart.*, users.email');
         $this->db->from('cart');
-        $this->db->join('users', 'cart.user_id = users.id');
+        $this->db->join('users', 'cart.user_id = users.id', 'left');
         $this->db->order_by('cart.time', 'DESC');
         return $this->db->get()->result();
     }
