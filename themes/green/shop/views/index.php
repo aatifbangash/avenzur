@@ -306,7 +306,7 @@
       <div class="container container-max-width">
         <div class="sideBannerImg">
           <a href="<?= site_url('category/skin-care'); ?>">
-            <img loading="lazy" src="<?= base_url('assets/images/banners/side-banner.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100" />
+            <img loading="lazy" src="<?= base_url('assets/images/banners/skin-long-banner.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100" />
           </a>
         </div>
       </div>
@@ -462,12 +462,12 @@
         <div class="row">
           <div class="col-md-12">
             <div class="sideBannerImg">
-              <a href="<?= site_url('category/vitamins'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/vitamin.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100 h-100 " > </a>
+              <a href="<?= site_url('category/vitamins'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/vitamins-long-banner.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100 h-100 " > </a>
             </div>
           </div>
           <div class="col-md-12 mt-3">
             <div class="sideBannerImg">
-              <a href="<?= site_url('category/beauty1'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/makeup.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100  " ></a>
+              <a href="<?= site_url('category/beauty1'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/makeup-long-banner.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100  " ></a>
             </div>
           </div>
         </div>
@@ -594,7 +594,7 @@
      <section class="side-banner section-marg-top">
       <div class="container container-max-width">
         <div class="sideBannerImg">
-          <a href="<?= site_url('category/sup'); ?>"><img loading="lazy" src="<?= base_url('assets/images/banners/suppli.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100"></a>
+          <a href="<?= site_url('category/sup'); ?>"><img loading="lazy" src="<?= base_url('assets/images/banners/supplements-long-banner.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100"></a>
         </div>
       </div>
     </section>
