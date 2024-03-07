@@ -3,6 +3,9 @@ DirectoryIndex index.php index.html
 <IfModule mod_rewrite.c>
 
 RewriteEngine On
+Header set Access-Control-Allow-Origin "https://www.avenzur.com"
+Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header set Access-Control-Allow-Headers "X-Requested-With, Content-Type"
 # RewriteBase /basepath/
 RewriteCond $1 !^(index\.php|assets|install|update)
 RewriteCond %{REQUEST_FILENAME} !-f
