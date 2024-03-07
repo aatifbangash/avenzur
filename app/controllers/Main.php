@@ -106,6 +106,11 @@ class Main extends MY_Shop_Controller
 
     public function index()
     {
+
+        if ($_SERVER['HTTP_HOST'] === 'www.avenzur.com') {
+            header('Location: https://avenzur.com');
+        }
+
         $config = array();
         $config["base_url"] = base_url() . "";
         $config["total_rows"] = $this->Shop_model->get_count();
