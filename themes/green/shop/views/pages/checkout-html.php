@@ -776,7 +776,8 @@ if ($this->Settings->indian_gst) {
                 'سعودی',
                 'سعودية',
                 'السعودية',
-                'المملكة العربية السعودية'
+                'المملكة العربية السعودية',
+                'SA'
             ].includes(country)) {
                 $('.payment-k').prop('disabled', false)
                 shipping = 0
