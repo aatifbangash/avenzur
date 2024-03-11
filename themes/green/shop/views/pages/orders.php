@@ -34,7 +34,7 @@
                                                
                                                <?= '<tr><td>' . lang('View_Order') . '</td><td><a href=orders/'.$order->id.'>  <input type="submit" class="btn btn-info btn-sm view" value="View Order" /></a>'; ?>
                                                <?= '<tr><td>' . lang('View Invoice') . '</td><td><a href=invoiceorders/'.$order->id.'>  <input type="submit" class="btn btn-info btn-sm view" value="View Order" /></a>'; ?>
-                                               <?php if($order->payment_status == 'paid' && $order->courier_id == 1) {?>
+                                               <?php if($order->payment_status == 'paid') {?>
                                                <?= '<a href=orders/'.$order->id.'?action=tracking>  <input type="button" class="btn btn-info btn-sm view" value="Track Order" /></a>'; ?>
                                             <?php }?>   
                                                <?= ' </td></tr>'; ?>
