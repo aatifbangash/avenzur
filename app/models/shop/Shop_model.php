@@ -289,6 +289,20 @@ class Shop_model extends CI_Model
         return $this->db->get_where('pages', ['active' => 1])->result();
     }
 
+    public function getProductQuantitiesInWarehouses($product_id){
+        $query = $this->db->select('warehouses_products.*')
+            ->from('warehouses_products')
+            ->where('warehouses_products.product_id', $product_id);
+        $result = $query->get();
+
+        if ($result) {
+            return $resultArray = $result->result();
+        } else {
+            // Handle the error, for example, show an error message
+            return false;
+        }
+    }
+
     public function getAllWarehouseWithPQ($product_id, $warehouse_id = null)
     {
         if (!$warehouse_id) {

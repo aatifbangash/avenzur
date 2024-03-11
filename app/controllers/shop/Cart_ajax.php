@@ -487,8 +487,22 @@ class Cart_ajax extends MY_Shop_Controller
     //        $this->data['cities'] = $this->settings_model->getCities();
     //
     //        dd($this->data['cities']);
+
+            $virtual_pharmacy_items = 0;
+            $cart_contents = $this->cart->contents();
+            foreach ($cart_contents as $item) {
+                $product_id = $item['product_id'];
+                $warehouse_quantities = $this->shop_model->getProductQuantitiesInWarehouses($product_id);
+                foreach ($warehouse_quantities as $wh_quantity){
+                    if($wh_quantity->warehouse_id == '6' || $wh_quantity->warehouse_id == '7'){
+                        $virtual_pharmacy_items += $wh_quantity->quantity;
+                    }
+                }
+            }
+
             $this->data['page_title'] = lang('checkout');
             $this->data['all_categories']    = $this->shop_model->getAllCategories();
+            $this->data['virtual_pharmacy_items'] = $virtual_pharmacy_items;
             $this->page_construct('pages/checkout-html', $this->data);
 
         }

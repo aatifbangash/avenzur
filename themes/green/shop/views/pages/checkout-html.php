@@ -119,7 +119,7 @@ if ($this->Settings->indian_gst) {
                 </div>
 
                 <div class="mt-4">
-                    <h2 class=" fw-bold pb-2 fs-2  m-0">Shipping</h2>
+                    <h2 class=" fw-bold pb-2 fs-2  m-0">Shipping <span><?php echo $virtual_pharmacy_items > 0 ? '(4 to 6 Days)' : ''; ?></span></h2>
                     <div class="d-flex align-items-center  py-3 standard-div">
                         <div class="form-check px-0">
                         <input class="form-check-input" type="radio" name="delivery" id="flexRadiostandard" checked value="shipping_standard">
