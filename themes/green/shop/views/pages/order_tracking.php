@@ -144,11 +144,11 @@ if($order->courier_id != '' && $order->courier_order_status == '') {
   $step = 2;
   $order_status = 'Sent to Courier' ;
 }
-else if($order->courier_order_status == 'Under processing' || $order->courier_order_status == 'Pending') {
+else if($order->courier_order_status == 'Under processing' || $order->courier_order_status == 'Sending scan' || $order->courier_order_status == 'Pending') {
     $order_status = 'On the way' ;
     $step = 3;
 }
-else if($order->courier_order_status == 'Delivered') {
+else if($order->courier_order_status == 'Delivered' || $order->courier_order_status == 'Sign scan') {
   $order_status = 'Delivered';
   $step = 4;
 }
@@ -174,7 +174,7 @@ else if($order->courier_order_status != ''){
         <div class="my-3 p-3 border rounded shadow">
           <div class="card-body row">
             <div class="col"> <strong>Estimated Delivery time:</strong> <br>Within 3 to 5 days</div>
-            <div class="col"> <strong>Shipping BY:</strong> <br> <?php if($order->courier == 1) {echo "Run-X";} else {echo "J&T";}?> <!--| <i class="fa fa-phone"></i> -->
+            <div class="col"> <strong>Shipping BY:</strong> <br> <?php if($order->courier_id == 1) {echo "Run-X";} else {echo "J&T";}?> | <i class="fa fa-phone"></i> +966115203838
             </div>
             <div class="col"> <strong>Current Status:</strong> <br> <?php echo $order_status;?> </div>
             <div class="col"> <strong>Tracking #:</strong> <br> <?php echo ($order->courier_order_tracking_id > 0 ? $order->courier_order_tracking_id: 'N/A');?> </div>
