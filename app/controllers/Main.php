@@ -914,6 +914,7 @@ class Main extends MY_Shop_Controller
                 }
 
             } else if ($type == 'email' || $type == 'mobile') {
+                echo 'Here company not found...';exit;
                 $company_data = [
                     'group_id' => 3,
                     'group_name' => 'customer',
