@@ -914,7 +914,6 @@ class Main extends MY_Shop_Controller
                 }
 
             } else if ($type == 'email' || $type == 'mobile') {
-                echo 'Here company not found...';exit;
                 $company_data = [
                     'group_id' => 3,
                     'group_name' => 'customer',
@@ -932,6 +931,8 @@ class Main extends MY_Shop_Controller
                 }
 
                 //$company_id = $this->shop_model->addCustomer($company_data);
+                echo '<pre>';
+                print_r($company_data);exit;
                 $company_id = $this->shop_model->addUniqueCustomer($company_data);
 
                 $additional_data = [
