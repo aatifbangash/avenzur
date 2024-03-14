@@ -51,6 +51,7 @@ h2 {
   font-size: 32px;
   font-weight: 700;
 }
+.override-h1{font-size: 32px !important; font-weight: 700;}
 a:hover , button:hover {transition: all .5s;}
 .primary-buttonAV {
   background: var(--primary-color);
@@ -2485,6 +2486,7 @@ h4.letstart {font-size: 16px;}
 }
 .productzoomImg img {height: 400px;}
 h2{font-size: 26px !important;}
+.override-h1{font-size: 26px !important;}
 .panel.panel-default.checkLeftCol-k.contleftbar {
 
   min-height: auto
@@ -2645,6 +2647,7 @@ form.validate.addressform-k {
   .news-letter-container {padding-left: 20px !important; padding-right: 20px !important;}
   .news-letter-container h2 {font-size: 24px;}
   h2{font-size: 26px !important; line-height: 39px;}
+  .override-h1{font-size: 26px !important; line-height: 39px;}
    .flex-mobile-column {flex-direction: column; align-items: start !important;}
 
    .categoryTabs  li {flex: 0 0 50%; }

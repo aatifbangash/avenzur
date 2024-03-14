@@ -51,7 +51,7 @@
     <!-- feature section -->
     <section class="categories section-marg-top">
       <div class="container container-max-width">
-       <div class="featureTitle text-center"><h1 style="font-size: 32px;font-weight: 700;" class="title-wrapper">Categories</h1></div>
+       <div class="featureTitle text-center"><h1 class="title-wrapper override-h1">Categories</h1></div>
        <!-- cards -->
        <div class="row feature-cards text-center feature-cards2">
             <?php
