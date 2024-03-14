@@ -366,6 +366,7 @@ class Shop_settings extends MY_Controller
         }
 
         $map .= '</urlset>';
+        echo $map;exit;
         file_put_contents('sitemap.xml', $map);
         header('Location: ' . base_url('sitemap.xml'));
         exit;
