@@ -22,7 +22,7 @@
 
                                 
 
-                                  <img src="<?= base_url('assets/uploads/' . $slide->image.'?timestamp='.time()); ?>" class="d-block w-100" alt="..."> 
+                                  <img src="<?= base_url('assets/uploads/' . $slide->image.'?timestamp='.time()); ?>" class="d-block w-100" alt="Sulfad Promotion"> 
                                 </a>
                             </div>
                         <?php
@@ -65,7 +65,7 @@
                                 <div class="card" style="width: 100%;">
                                 <div class="cardImg">
                                 
-                                    <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" class="card-img-top" alt="..."></div>
+                                    <img src="<?= base_url('assets/uploads/' . $fp->image); ?>" class="card-img-top"  alt="<?= $fp->name; ?>"></div>
                                 <div class="card-body">
                                     <h5 class="card-title"><?= ( strtolower($fp->name) == 'otc' ? 'OTC' : ucfirst(strtolower($fp->name))); ?></h5>
                                 </div>
@@ -85,89 +85,89 @@
 <!-- speacial offer banner slider -->
     <section class="speacialOffer section-marg-top">
       <div class="container container-max-width ">
-      <div class="featureTitle text-center"><h2 class="title-wrapper">Special Offers</h2></div>
+      <div class="featureTitle text-center"><h1 class="title-wrapper override-h1">Special Offers</h1></div>
           <div class="d-flex speacialOfferMove margin-minus">
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/har?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner1.jpg"  alt="movingBanner" class="w-100">
+                  <img src="assets/images/banners/carouselBanner1.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/vitamins?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner2.jpg"  alt="movingBanner" class="w-100">
+                  <img src="assets/images/banners/carouselBanner2.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/man?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner3.jpg"  alt="movingBanner" class="w-100">
+                  <img src="assets/images/banners/carouselBanner3.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/beauty1?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner4.jpg"  alt="movingBanner" class="w-100">
+                  <img src="assets/images/banners/carouselBanner4.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/skin-care?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner5.jpg"  alt="movingBanner" class="w-100">
+                  <img src="assets/images/banners/carouselBanner5.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/flu?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner6.jpg"  alt="movingBanner" class="w-100">
+                  <img src="assets/images/banners/carouselBanner6.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/har?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner1.jpg"  alt="movingBanner" class="w-100">
+                  <img src="assets/images/banners/carouselBanner1.jpg"  alt="movingBanner" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/vitamins?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner2.jpg"  alt="movingBanner" class="w-100">
+                  <img src="assets/images/banners/carouselBanner2.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/man?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner3.jpg"  alt="movingBanner" class="w-100">
+                  <img src="assets/images/banners/carouselBanner3.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/beauty1?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner4.jpg"  alt="movingBanner" class="w-100">
+                  <img src="assets/images/banners/carouselBanner4.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/skin-care?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner5.jpg"  alt="movingBanner" class="w-100">
+                  <img src="assets/images/banners/carouselBanner5.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/flu?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner6.jpg"  alt="movingBanner" class="w-100">
+                  <img src="assets/images/banners/carouselBanner6.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
@@ -181,7 +181,7 @@
       <div class="container container-max-width">
         <div class="sideBannerImg">
           <a href="<?= site_url('shop/products?promo=yes'); ?>">
-            <img id="promo-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/ramadan_offers_en.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100" />
+            <img id="promo-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/ramadan_offers_en.jpg'.'?timestamp='.time()); ?>" alt="Promotion" class="w-100" />
           </a>
         </div>
       </div>
@@ -202,7 +202,7 @@
                   <div class="row align-items-center">
                     <div class="col-md-5">
 
-                      <img loading="lazy" src="<?= base_url('assets/images/banners/boomtab1.png'.'?timestamp='.time()); ?>" alt=""  class="w-100"/>
+                      <img loading="lazy" src="<?= base_url('assets/images/banners/boomtab1.png'.'?timestamp='.time()); ?>" alt="Ghali'or Collection"  class="w-100"/>
                     </div>
                     <div class="col-lg-7 col-md-6">
                       <!--<p class="m-0 py-2"><span class="boom-parag"></span></p>-->
@@ -227,7 +227,7 @@
                     </div>
                     <div class="m-l-10 product-m-order1">
 
-                      <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack.png'.'?timestamp='.time()); ?>" alt=""  class="w-100"/>
+                      <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack.png'.'?timestamp='.time()); ?>" alt="Cerave Collection"  class="w-100"/>
                     </div>
                   </div>
                 </div>
@@ -250,7 +250,7 @@
                     </div>
                     <div class="col-md-6 p-0 product-m-order1">
 
-                      <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack3.png'.'?timestamp='.time()); ?>" alt=""  class="w-100"/>
+                      <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack3.png'.'?timestamp='.time()); ?>" alt="Laperva Collection"  class="w-100"/>
                     </div>
                   </div>
                 </div>
@@ -269,7 +269,7 @@
                     </div>
                     <div class="col-md-6 product-m-order1">
 
-                      <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack5.png'.'?timestamp='.time()); ?>" alt=""  class="w-100"/>
+                      <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack5.png'.'?timestamp='.time()); ?>" alt="Honst Food Supplements"  class="w-100"/>
                     </div>
                   </div>
                 </div>
@@ -290,7 +290,7 @@
                 </div>
                 <div class="col-lg-12 col-md-6 col-sm-6 col-6">
 
-                  <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack2.png'.'?timestamp='.time()); ?>" alt=""  class="w-100"/>
+                  <img loading="lazy" src="<?= base_url('assets/images/banners/tabpack2.png'.'?timestamp='.time()); ?>" alt="Vitamins Collection"  class="w-100"/>
                 </div>
               </div>
             </div>
@@ -306,7 +306,7 @@
       <div class="container container-max-width">
         <div class="sideBannerImg">
           <a href="<?= site_url('category/skin-care'); ?>">
-            <img loading="lazy" src="<?= base_url('assets/images/banners/skin-long-banner.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100" />
+            <img loading="lazy" src="<?= base_url('assets/images/banners/skin-long-banner.jpg'.'?timestamp='.time()); ?>" alt="Skin Care" class="w-100" />
           </a>
         </div>
       </div>
@@ -319,7 +319,7 @@
         <div class=" row skinBannerRow  rounded-4 align-items-center justify-content-between">
           <div class="col-lg-6 col-md-12 col-sm-12 ps-0 skinbnnerimg">
             
-                <img loading="lazy" src="<?= base_url('assets/images/banners/skinbanner.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100    rounded-start-3 rounded-end-5" />
+                <img loading="lazy" src="<?= base_url('assets/images/banners/skinbanner.jpg'.'?timestamp='.time()); ?>" alt="Skin Care" class="w-100    rounded-start-3 rounded-end-5" />
             </a>
           </div>
 
@@ -375,7 +375,7 @@
                                                         Sale 20% OFF
                                                     </span>-->
                                                     <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none">
-                                                        <img src="<?= base_url('assets/uploads/' . $popular_product->image); ?>" class="card-img-top" alt="...">
+                                                        <img src="<?= base_url('assets/uploads/' . $popular_product->image); ?>" class="card-img-top" alt="<?= $popular_product->name; ?>">
                                                     </a>
                                                 </div>
                                                 <div class="card-body px-0 text-start pb-0">
@@ -462,12 +462,12 @@
         <div class="row">
           <div class="col-md-12">
             <div class="sideBannerImg">
-              <a href="<?= site_url('category/vitamins'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/vitamins-long-banner.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100 h-100 " > </a>
+              <a href="<?= site_url('category/vitamins'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/vitamins-long-banner.jpg'.'?timestamp='.time()); ?>" alt="Vitamins" class="w-100 h-100 " > </a>
             </div>
           </div>
           <div class="col-md-12 mt-3">
             <div class="sideBannerImg">
-              <a href="<?= site_url('category/beauty1'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/makeup-long-banner.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100  " ></a>
+              <a href="<?= site_url('category/beauty1'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/makeup-long-banner.jpg'.'?timestamp='.time()); ?>" alt="Makeup" class="w-100  " ></a>
             </div>
           </div>
         </div>
@@ -508,7 +508,7 @@
                                 Sale 20% OFF
                             </span>-->
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
-                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="...">
+                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="<?= $sp->name; ?>">
                             </a>
                             </div>
                             <div class="card-body px-0 text-start pb-0">
@@ -594,7 +594,7 @@
      <section class="side-banner section-marg-top">
       <div class="container container-max-width">
         <div class="sideBannerImg">
-          <a href="<?= site_url('category/supplements'); ?>"><img loading="lazy" src="<?= base_url('assets/images/banners/supplements-long-banner.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100"></a>
+          <a href="<?= site_url('category/supplements'); ?>"><img loading="lazy" src="<?= base_url('assets/images/banners/supplements-long-banner.jpg'.'?timestamp='.time()); ?>" alt="Supplements Promotion" class="w-100"></a>
         </div>
       </div>
     </section>
@@ -623,7 +623,7 @@
                                 Sale 20% OFF
                             </span>-->
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
-                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="...">
+                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="<?= $sp->name; ?>">
                             </a>
                             </div>
                             <div class="card-body px-0 text-start pb-0">
@@ -715,7 +715,7 @@
                                 Sale 20% OFF
                             </span>-->
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
-                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="...">
+                            <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="<?= $sp->name; ?>">
                             </a>
                             </div>
                             <div class="card-body px-0 text-start pb-0">
@@ -803,12 +803,12 @@
         <div class="row">
           <div class="col-md-6">
             <div class="sideBannerImg my-2">
-             <a href="<?= site_url('category/mombaby'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/momBaby.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100 h-100 rounded-4" ></a>
+             <a href="<?= site_url('category/mombaby'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/momBaby.jpg'.'?timestamp='.time()); ?>" alt="Mom Baby Promotion" class="w-100 h-100 rounded-4" ></a>
             </div>
           </div>
           <div class="col-md-6">
             <div class="sideBannerImg my-2">
-              <a href="<?= site_url('category/personal-care'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/persC.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100  rounded-4" ></a>
+              <a href="<?= site_url('category/personal-care'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/persC.jpg'.'?timestamp='.time()); ?>" alt="Personal Care Promotion" class="w-100  rounded-4" ></a>
             </div>
           </div>
         </div>
@@ -840,7 +840,7 @@
                                 <div class="col-md-5 col-sm-12">
                     
                                 <div class="cardImg rounded-3">
-                                    <a href="<?= site_url('product/' . $sp->slug); ?>"><img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top rounded-3" alt="..."></a>
+                                    <a href="<?= site_url('product/' . $sp->slug); ?>"><img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top rounded-3" alt="<?= $sp->name; ?>"></a>
                                 </div>
                                 </div>
                                 <div class="col-md-7 col-sm-12 px-md-0">
@@ -945,12 +945,12 @@
       <div class="container container-max-width">
         <div class="widget-bar">
           <div class="brands-logo margin-minus">
-            <div><img src="<?= base_url('assets/images/banners/ceraVe.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/Ghalior-Paris.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/Jamieson.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/Johnsons.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/Laperva.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
-            <div><img src="<?= base_url('assets/images/banners/Purever-CANADA.jpg'.'?timestamp='.time()); ?>" alt="-" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/ceraVe.jpg'.'?timestamp='.time()); ?>" alt="Cerave Brand" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Ghalior-Paris.jpg'.'?timestamp='.time()); ?>" alt="Ghalior Paris Brand" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Jamieson.jpg'.'?timestamp='.time()); ?>" alt="Jamieson Brand" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Johnsons.jpg'.'?timestamp='.time()); ?>" alt="Johnsons Brand" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Laperva.jpg'.'?timestamp='.time()); ?>" alt="Laperva Brand" class="w-100"> </div>
+            <div><img src="<?= base_url('assets/images/banners/Purever-CANADA.jpg'.'?timestamp='.time()); ?>" alt="Purever Brand" class="w-100"> </div>
           </div>
         </div>
       </div>

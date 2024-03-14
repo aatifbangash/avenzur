@@ -25,7 +25,7 @@
                     if (isset($product->image)) {
                         ?>
                         <div class="item productzoomImg">
-                            <img src="<?= base_url('assets/uploads/' . $product->image); ?>" />
+                            <img src="<?= base_url('assets/uploads/' . $product->image); ?>" alt="<?= $product->name; ?>" />
                         </div>
                         <?php
                     }
@@ -34,7 +34,7 @@
                         foreach ($images as $ph) {
                             ?>
                             <div class="item productzoomImg">
-                                <img src="<?= base_url('assets/uploads/' . $ph->photo); ?>" />
+                                <img src="<?= base_url('assets/uploads/' . $ph->photo); ?>" alt="<?= $product->name; ?>" />
                             </div>
                             <?php
                         }
@@ -47,7 +47,7 @@
                     if (isset($product->image)) {
                         ?>
                         <div class="item">
-                            <img src="<?= base_url('assets/uploads/' . $product->image); ?>" />
+                            <img src="<?= base_url('assets/uploads/' . $product->image); ?>" alt="<?= $product->name; ?>" />
                         </div>
                         <?php
                     }
@@ -56,7 +56,7 @@
                         foreach ($images as $ph) {
                             ?>
                             <div class="item">
-                                <img src="<?= base_url('assets/uploads/' . $ph->photo); ?>" />
+                                <img src="<?= base_url('assets/uploads/' . $ph->photo); ?>" alt="<?= $product->name; ?>" />
                             </div>
                             <?php
                         }
@@ -79,9 +79,9 @@
                             <?php
                         } ?>
                         <div class="product-name">
-                            <h2>
+                            <h1 class=" override-h1">
                                 <?= stripslashes($product->name); ?>
-                            </h2>
+                            </h1>
                         </div>
                         <div class="rating">
                             <?php
@@ -96,7 +96,7 @@
                     </div>
 
                     <div class="product-price-discount">
-                        <h4 class="m-0">
+                        <h2 class="m-0">
                             <?php
                             if ($product->promotion) {
                                 ?>
@@ -119,7 +119,7 @@
 
                             ?>
 
-                        </h4>
+                        </h2>
                     </div>
 
                     <div class="product-desc border-top" id="show_desc" style="min-height: 220px;line-height: 28px;">
