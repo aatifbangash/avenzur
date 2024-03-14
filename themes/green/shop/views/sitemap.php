@@ -24,7 +24,7 @@
 
   if (!empty($brands)) {
       foreach ($brands as $brand) {
-        if(!empty($brand)){
+        if(!empty($brand) && strpos($slug, '&') !== false){
         ?>
         <url>
           <loc><?php echo base_url('brand/' . $brand->slug); ?></loc>
