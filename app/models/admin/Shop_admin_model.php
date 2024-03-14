@@ -61,6 +61,20 @@ class Shop_admin_model extends CI_Model
         return false;
     }
 
+    public function getAllActiveProducts()
+    {
+        $q = $this->db->where('hide', 0)
+                  ->where('draft', 0)
+                  ->get("products");
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getPageByID($id)
     {
         $q = $this->db->get_where('pages', ['id' => $id]);

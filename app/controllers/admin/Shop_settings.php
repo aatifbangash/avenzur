@@ -303,7 +303,7 @@ class Shop_settings extends MY_Controller
     public function sitemap()
     {
         $categories = $this->shop_admin_model->getAllCategories();
-        $products   = $this->shop_admin_model->getAllProducts();
+        $products   = $this->shop_admin_model->getAllActiveProducts();
         $brands     = $this->shop_admin_model->getAllBrands();
         $pages      = $this->shop_admin_model->getAllPages();
         $map        = '<?xml version="1.0" encoding="UTF-8" ?>';
