@@ -17,7 +17,8 @@ $route['category/(:any)/(:any)'] = 'shop/shop/products/$1/$2';
 $route['pay/process_payment']    = 'pay/process_payment';
 $route['pay/test_directpay_post']  = 'pay/test_directpay_post';
 
-$route['sitemapold\.xml']           = "Sitemap/index";
+//$route['sitemapold\.xml']           = "Sitemap/index";
+$route['sitemap.xml']        = "Sitemap/index";
 
 // Page route
 $route['page/contact-us'] = 'shop/shop/contact_us';
