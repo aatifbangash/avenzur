@@ -85,7 +85,7 @@
 <!-- speacial offer banner slider -->
     <section class="speacialOffer section-marg-top">
       <div class="container container-max-width ">
-      <div class="featureTitle text-center"><h1 class="title-wrapper override-h1">Special Offers</h1></div>
+      <div class="featureTitle text-center"><h2 class="title-wrapper">Special Offers</h2></div>
           <div class="d-flex speacialOfferMove margin-minus">
             <div class="item">
               <div class="moveBanner">
