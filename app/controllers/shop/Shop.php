@@ -1315,6 +1315,7 @@ class Shop extends MY_Shop_Controller
         $this->data['brand'] = $this->site->getBrandByID($product->brand);
         $this->data['images'] = $this->shop_model->getProductPhotos($product->id);
         $this->data['category'] = $this->site->getCategoryByID($product->category_id);
+        $this->data['customer_also_viewed'] = $this->shop_model->getCustomerAlsoViewed($product->category_id);
         $this->data['subcategory'] = $product->subcategory_id ? $this->site->getCategoryByID($product->subcategory_id) : null;
         $this->data['tax_rate'] = $product->tax_rate ? $this->site->getTaxRateByID($product->tax_rate) : null;
         $this->data['warehouse'] = $this->shop_model->getAllWarehouseWithPQ($product->id);

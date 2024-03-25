@@ -66,6 +66,7 @@
             </div>
             <!-- product image col and thumb slider end-->
 
+
             <!--product info start  -->
 
             <div class="col-md-7 col-12">
@@ -261,7 +262,89 @@
 
     
 </section>
+
+<!-- special offer -->
+  
+<section class="specialOffer-container">
+    <div class="container container-max-width">
+        <div class="specialOfferProductC">
+        <div class="specialOfferpopularTitle text-center"><h3 class="title-wrapper">Customers Also Viewed</h3></div>
+        </div>
+
+        <!-- special products -->
+        <div class="customer_viewed_products margin-minus special_products-cont">
+            <?php
+                $r = 0;
+                foreach (array_chunk($customer_also_viewed, 4) as $sps){
+                    foreach ($sps as $sp) {
+                    ?>
+                        <div class=" specialOfferP get-quantity">
+                            <div class=" card">
+                            <div class="row align-items-center">
+                                <div class="col-md-5 col-sm-12">
+                    
+                                <div class="cardImg rounded-3">
+                                    <a href="<?= site_url('product/' . $sp->slug); ?>"><img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top rounded-3" alt="<?= $sp->name; ?>"></a>
+                                </div>
+                                </div>
+                                <div class="col-md-7 col-sm-12 px-md-0">
+                                <div class="card-body px-md-0 text-start pb-0">
+                                    <div class="product-cat-title"><span class="text-uppercase"><?= $sp->category_name; ?></span></div>
+                                    <a style="text-decoration: none;" href="<?= site_url('product/' . $sp->slug); ?>"><h5 class="card-title text-start"><?= stripslashes($sp->name); ?></h5></a>
+                                    <div class="row align-items-center justify-content-between">
+                                    
+                                    
+                                    </div> 
+                                    <!--price and quantity araea  -->
+
+                                    <div class="d-flex align-items-center justify-content-between w-100">
+                                
+                                        <div class="price text-start  py-2">
+                                            <h4 class="m-0 fw-bold">
+                                            <?php
+                                                if ($sp->promotion) {
+                                                    //echo '<del class="text-red">' . $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price) . '</del><br>';
+                                                    echo $this->sma->convertMoney($sp->promo_price);
+                                                } else {
+                                                    echo $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price);
+                                                } 
+                                            ?>
+                                            </h4>
+                                        </div>
+                                
+                                
+                                        <div class="quantity text-end py-2 d-flex align-items-center">
+                                        <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
+                                        <input type="text" name="quantity" class="Qnum" value="1" required="required" />
+                                        <!--<span class="Qnum ">1</span>-->
+                                        <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
+                                        </div>
+                                
+                                    </div>
+                                    <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
+                                    <!-- price area end -->
+                                    
+                                    
+                                </div>
+                                </div>
+                                
+                            </div>
+
+                            </div>
+                            
+                        </div>
+                    <?php
+                    }
+                }
+            ?>
+        </div>
+        <!-- special products end -->
+    </div>
+</section>
+<!-- special offer end -->
+
 </div>
+
 <!-- join container -->
 <!--<section class="join-container " >
     <div class="container container-max-width py-5" style="background-image: url(<?php //echo base_url('assets/images/banners/bgbanner.jpg'); ?>);">

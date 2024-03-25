@@ -1378,6 +1378,11 @@ h4.contleftsocial a {
   height: 150px;
   object-fit: contain;
 }
+.customer_viewed_products .specialOfferP .cardImg a img {
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+}
 .table.addtable {
   width: 100% !important;
 }
