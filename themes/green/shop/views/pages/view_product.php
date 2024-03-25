@@ -292,7 +292,8 @@
                                 <div class="col-md-7 col-sm-12 px-md-0">
                                 <div class="card-body px-md-0 text-start pb-0">
                                     <div class="product-cat-title"><span class="text-uppercase"><?= $sp->category_name; ?></span></div>
-                                    <a style="text-decoration: none;" href="<?= site_url('product/' . $sp->slug); ?>"><h5 class="card-title text-start"><?= stripslashes($sp->name); ?></h5></a>
+                                    <a style="text-decoration: none;" href="<?= site_url('product/' . $sp->slug); ?>">
+                                    <h5 class="card-title text-start" style="font-size: 14px;"><?= stripslashes($sp->name); ?></h5></a>
                                     <div class="row align-items-center justify-content-between">
                                     
                                     
@@ -301,7 +302,7 @@
 
                                     <div class="d-flex align-items-center justify-content-between w-100">
                                 
-                                        <div class="price text-start  py-2">
+                                        <div class="price text-start  py-2" style="width: 12px;">
                                             <h4 class="m-0 fw-bold">
                                             <?php
                                                 if ($sp->promotion) {
@@ -323,7 +324,7 @@
                                         </div>
                                 
                                     </div>
-                                    <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
+                                    <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" style="font-size: 15px;" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
                                     <!-- price area end -->
                                     
                                     
