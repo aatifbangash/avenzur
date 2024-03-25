@@ -302,7 +302,7 @@
 
                                     <div class="d-flex align-items-center justify-content-between w-100">
                                 
-                                        <div class="price text-start  py-2" style="width: 12px;">
+                                        <div class="price text-start  py-2" style="font-size: 12px;">
                                             <h4 class="m-0 fw-bold">
                                             <?php
                                                 if ($sp->promotion) {
