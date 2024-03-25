@@ -284,7 +284,9 @@
                                 <div class="col-md-5 col-sm-12">
                     
                                 <div class="cardImg rounded-3">
-                                    <a href="<?= site_url('product/' . $sp->slug); ?>"><img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top rounded-3" alt="<?= $sp->name; ?>"></a>
+                                    <a href="<?= site_url('product/' . $sp->slug); ?>">
+                                        <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" style="object-fit: contain !important;width: 100% !important;max-height: 140px !important;" class="card-img-top rounded-3" alt="<?= $sp->name; ?>">
+                                    </a>
                                 </div>
                                 </div>
                                 <div class="col-md-7 col-sm-12 px-md-0">
