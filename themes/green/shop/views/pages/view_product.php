@@ -302,8 +302,8 @@
 
                                     <div class="d-flex align-items-center justify-content-between w-100">
                                 
-                                        <div class="price text-start  py-2" style="font-size: 12px;">
-                                            <h4 class="m-0 fw-bold">
+                                        <div class="price text-start  py-2">
+                                            <h4 class="m-0 fw-bold" style="font-size: 12px;">
                                             <?php
                                                 if ($sp->promotion) {
                                                     //echo '<del class="text-red">' . $this->sma->convertMoney(isset($sp->special_price) && !empty(isset($sp->special_price)) ? $sp->special_price : $sp->price) . '</del><br>';
