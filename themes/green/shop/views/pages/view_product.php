@@ -293,7 +293,7 @@
                                 <div class="card-body px-md-0 text-start pb-0">
                                     <div class="product-cat-title"><span class="text-uppercase"><?= $sp->category_name; ?></span></div>
                                     <a style="text-decoration: none;" href="<?= site_url('product/' . $sp->slug); ?>">
-                                    <h5 class="card-title text-start" style="font-size: 14px;"><?= stripslashes($sp->name); ?></h5></a>
+                                    <h5 class="card-title text-start" style="font-size: 14px;height: 48px;"><?= stripslashes($sp->name); ?></h5></a>
                                     <div class="row align-items-center justify-content-between">
                                     
                                     
