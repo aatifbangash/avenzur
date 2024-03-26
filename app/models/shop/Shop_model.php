@@ -404,52 +404,42 @@ class Shop_model extends CI_Model
     }
 
     public function getCustomersAlsoBought($product_id, $limit = 16){
-        /*$this->db->select("
-        {$this->db->dbprefix('products')}.id as id, 
-        {$this->db->dbprefix('products')}.name as name, 
-        {$this->db->dbprefix('products')}.code as code, 
-        {$this->db->dbprefix('products')}.image as image, 
-        {$this->db->dbprefix('products')}.slug as slug, 
-        {$this->db->dbprefix('products')}.price, 
-        quantity, 
-        {$this->db->dbprefix('products')}.type, 
-        {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
-        {$this->db->dbprefix('products')}.tax_method,
-        promotion, 
-        promo_price, 
-        start_date, 
-        end_date, 
-        b.name as brand_name, 
-        b.slug as brand_slug, 
-        c.name as category_name, 
-        c.slug as category_slug,
-        t.name as taxName,
-        t.rate as taxPercentage,
-        t.code as taxCode,
-        CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating")
-            ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
-            ->join('brands b', 'products.brand=b.id', 'left')
-            ->join('categories c', 'products.category_id=c.id', 'left')
-            ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
-            ->where('products.quantity >', 0)
-            ->where('hide !=', 1)
-            ->limit($limit);*/
+        $query = $this->db->query("
+            SELECT mapped.product_id, mapped.id, products.code, products.name
+            FROM sma_sale_items main
+            JOIN sma_sale_items mapped ON main.sale_id = mapped.sale_id
+            JOIN sma_sales sales ON main.sale_id = sales.id
+            JOIN sma_products products ON products.id = mapped.product_id
+            WHERE main.product_id != mapped.product_id
+            AND main.product_id = {$product_id}
+            AND sales.shop = 1
+            ORDER BY mapped.id DESC
+            LIMIT 8
+        ");
 
-        $this->db->select("
+        $result = $query->result_array();
+
+        // Extracting product IDs
+        $similarProductIds = array_map(function($sale) {
+            return $sale['product_id'];
+        }, $result);
+
+        if($similarProductIds){
+            $this->db->select("
             {$this->db->dbprefix('products')}.id as id, 
             {$this->db->dbprefix('products')}.name as name, 
             {$this->db->dbprefix('products')}.code as code, 
             {$this->db->dbprefix('products')}.image as image, 
             {$this->db->dbprefix('products')}.slug as slug, 
             {$this->db->dbprefix('products')}.price, 
-            {$this->db->dbprefix('products')}.quantity, 
+            quantity, 
             {$this->db->dbprefix('products')}.type, 
             {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
             {$this->db->dbprefix('products')}.tax_method,
-            {$this->db->dbprefix('products')}.promotion, 
-            {$this->db->dbprefix('products')}.promo_price, 
-            {$this->db->dbprefix('products')}.start_date, 
-            {$this->db->dbprefix('products')}.end_date, 
+            promotion, 
+            promo_price, 
+            start_date, 
+            end_date, 
             b.name as brand_name, 
             b.slug as brand_slug, 
             c.name as category_name, 
@@ -458,47 +448,45 @@ class Shop_model extends CI_Model
             t.rate as taxPercentage,
             t.code as taxCode,
             CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating")
-        ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
-        ->join('brands b', 'products.brand=b.id', 'left')
-        ->join('categories c', 'products.category_id=c.id', 'left')
-        ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
-        ->join('sma_sale_items main', 'main.product_id = products.id')
-        ->join('sma_sale_items mapped', 'main.sale_id = mapped.sale_id')
-        ->join('sma_sales sales', 'main.sale_id = sales.id')
-        ->where('main.product_id != mapped.product_id', null, false)
-        ->where('main.product_id', $product_id)
-        ->where('sales.shop', 1)
-        ->where('products.quantity >', 0)
-        ->where('hide !=', 1)
-        ->order_by('mapped.id', 'DESC')
-        ->limit($limit);
+                ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
+                ->join('brands b', 'products.brand=b.id', 'left')
+                ->join('categories c', 'products.category_id=c.id', 'left')
+                ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
+                ->where('products.quantity >', 0)
+                ->where_in('products.id', $similarProductIds)
+                ->where('hide !=', 1)
+                ->limit($limit);
 
-        $sp = $this->getSpecialPrice();
-        if ($sp->cgp) {
-            $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
-        } elseif ($sp->wgp) {
-            $this->db->select('wgp.price as special_price', false)->join($sp->wgp, 'products.id=wgp.product_id', 'left');
+            $sp = $this->getSpecialPrice();
+            if ($sp->cgp) {
+                $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
+            } elseif ($sp->wgp) {
+                $this->db->select('wgp.price as special_price', false)->join($sp->wgp, 'products.id=wgp.product_id', 'left');
+            }
+
+            $this->db->group_by('products.id');
+            $this->db->order_by('RAND()');
+            $result = $this->db->get('products')->result();
+            //        dd($result);
+            array_map(function ($row) {
+                if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
+                    $productTaxPercent = $row->taxPercentage;
+
+                    if ($row->promotion == 1) {
+                        $productPromoPrice = $row->promo_price;
+                        $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                        $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
+                    }
+
+                    $productPrice = $row->price;
+                    $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+                    $row->price = $productPrice + $productTaxAmount;
+                }
+            }, $result);
+        }else{
+            return [];
         }
 
-        $this->db->group_by('products.id');
-        $this->db->order_by('RAND()');
-        $result = $this->db->get('products')->result();
-        //        dd($result);
-        array_map(function ($row) {
-            if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
-                $productTaxPercent = $row->taxPercentage;
-
-                if ($row->promotion == 1) {
-                    $productPromoPrice = $row->promo_price;
-                    $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
-                    $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
-                }
-
-                $productPrice = $row->price;
-                $productTaxAmount = $productPrice * ($productTaxPercent / 100);
-                $row->price = $productPrice + $productTaxAmount;
-            }
-        }, $result);
         return $result;
     }
 

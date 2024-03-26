@@ -264,7 +264,9 @@
 </section>
 
 <!-- customers also bought -->
-  
+<?php
+    if($customers_also_bought){
+?>
 <section class="specialOffer-container" style="margin-bottom: 50px;">
     <div class="container container-max-width">
         <div class="specialOfferProductC">
@@ -345,6 +347,8 @@
     </div>
 </section>
 <!-- customers also bought end -->
+
+<?php } ?>
 
 <!-- special offer -->
   
