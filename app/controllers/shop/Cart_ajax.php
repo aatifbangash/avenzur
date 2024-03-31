@@ -110,7 +110,7 @@ class Cart_ajax extends MY_Shop_Controller
             $c_code = $coupon_details['code'];
         }
     
-        if(isset($coupon_arr[$coupon_code]) && $this->cart->get_total_discount() <= 0 && $pattern_match == 0){
+        if(isset($coupon_arr[$coupon_code]) && $this->cart->get_total_discount() <= 0 && $pattern_match == 0 && $this->cart->total() >= $coupon_cap_arr[$coupon_code]){
             // Set All Coupon Discount except ENBD
             $cart_arr = $this->cart;
             $cart_total = $cart_arr->cart_contents['cart_total'];
