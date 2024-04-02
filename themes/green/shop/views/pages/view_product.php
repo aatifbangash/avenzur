@@ -185,6 +185,11 @@
             </div> -->
             </div>
             <!-- product info end -->
+
+            <div class="banner-pr-detail">
+                <img src="<?= base_url('assets/images/banners/Mobily-En.jpg'); ?>" id="banner-pr-detail-img" class="banner-pr-detail-img" />
+            </div>
+
         </div>
 
         <!-- product info tab start -->

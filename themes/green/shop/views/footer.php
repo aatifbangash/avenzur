@@ -181,6 +181,11 @@
     var carouselItems = document.querySelectorAll('.carousel-item');
 
     if (newLang === 'en') {
+
+      if(document.getElementById('banner-pr-detail-img')){
+        document.getElementById('banner-pr-detail-img').src = site.site_url + '/assets/images/banners/Mobily-En.jpg?timestamp=' + Date.now();
+      }
+
       if(carouselItems.length > 0){
         var imgname1 = carouselItems[0].querySelector('img').src;
         var imgname2 = carouselItems[1].querySelector('img').src;
@@ -220,7 +225,12 @@
       }else{
         document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo-page-banner-ramadan-en.jpg?timestamp=' + Date.now();
       }
+
     } else if (newLang === 'ar') {
+      if(document.getElementById('banner-pr-detail-img')){
+        document.getElementById('banner-pr-detail-img').src = site.site_url + '/assets/images/banners/Mobily-Ar.jpg?timestamp=' + Date.now();
+      }
+
       if(carouselItems.length > 0){
         var imgname1 = carouselItems[0].querySelector('img').src;
         var imgname2 = carouselItems[1].querySelector('img').src;
