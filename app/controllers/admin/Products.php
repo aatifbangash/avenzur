@@ -45,9 +45,6 @@ class Products extends MY_Controller
     }
 
     public function google_merch_apis($id, $data){
-        ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
         $data['details'] = str_replace('<p><strong>Highlights:</strong></p>','',$data['details']);
         $data['details'] = str_replace('<p>','',$data['details']);
         $data['details'] = str_replace('</p>','',$data['details']);
@@ -64,10 +61,9 @@ error_reporting(E_ALL);
             //array_push(base_url().'assets/uploads/'.$photo->photo, $photos_arr);
             array_push($photos_arr, base_url().'assets/uploads/'.$photo->photo);
         }
-        
+
         $clientId = '216256641186-ord7an72cbi6jhtrhmb1knb93jbera1p.apps.googleusercontent.com';
         $clientSecret = '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';
-
 
         $credentialsPath = 'assets/credentials/credentials.json';
         $client = new Google\Client();
