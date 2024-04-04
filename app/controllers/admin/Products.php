@@ -61,7 +61,7 @@ class Products extends MY_Controller
             //array_push(base_url().'assets/uploads/'.$photo->photo, $photos_arr);
             array_push($photos_arr, base_url().'assets/uploads/'.$photo->photo);
         }
-
+        print_r($product_photos);exit;
         $clientId = '216256641186-ord7an72cbi6jhtrhmb1knb93jbera1p.apps.googleusercontent.com';
         $clientSecret = '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';
 
