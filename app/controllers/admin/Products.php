@@ -55,6 +55,8 @@ class Products extends MY_Controller
         
         $brand_details = $this->products_model->getBrandByID($data['brand']);
         $product_photos = $this->products_model->getProductPhotos($id);
+        $product_details = $this->products_model->getProductByID($id);
+
         $photos_arr = array();
 
         foreach($product_photos as $photo){
@@ -79,31 +81,62 @@ class Products extends MY_Controller
 
             $contentService = new Google_Service_ShoppingContent($client);
             $merchantId = '5086892798';
-
-            $productData = [
-                'channel' => 'online',
-                'contentLanguage' => 'En',
-                'targetCountry' => 'SA',
-                'offerId' => $data['code'],
-                'title' => $data['name'],
-                'description' => $data['details'],
-                'link' => base_url().'product/'.$data['slug'],
-                'imageLink' => base_url().'assets/uploads/'.$data['image'],
-                'brand' => $brand_details->name,
-                'price' => [
-                    'value' => $data['price'],
-                    'currency' => 'SAR',
-                ],
-                'salePrice' => [
-                    'value' => $data['promo_price'],
-                    'currency' => 'SAR',
-                ],
-                'additionalImageLinks' => $photos_arr,
-                'availability' => 'in stock',
-            ];
+            $productContentId = 'online:en:SA:'.$data['code'];
+            $existingProduct = $contentService->products->get($merchantId, $productContentId);
 
             $productContent = new Google_Service_ShoppingContent_Product();
-            $productContent->setOfferId($productData['offerId']);
+
+            if($existingProduct->id){
+                $productData = [
+                    'channel' => 'online',
+                    'contentLanguage' => 'En',
+                    'targetCountry' => 'SA',
+                    'productId' => $productContentId,
+                    'title' => $data['name'],
+                    'description' => $data['details'],
+                    'link' => base_url().'product/'.$data['slug'],
+                    'imageLink' => base_url().'assets/uploads/'.$product_details->image,
+                    'brand' => $brand_details->name,
+                    'price' => [
+                        'value' => $data['price'],
+                        'currency' => 'SAR',
+                    ],
+                    'salePrice' => [
+                        'value' => $data['promo_price'],
+                        'currency' => 'SAR',
+                    ],
+                    'additionalImageLinks' => $photos_arr,
+                    'availability' => 'in stock',
+                ];
+            }else{
+                $productData = [
+                    'channel' => 'online',
+                    'contentLanguage' => 'En',
+                    'targetCountry' => 'SA',
+                    'offerId' => $data['code'],
+                    'title' => $data['name'],
+                    'description' => $data['details'],
+                    'link' => base_url().'product/'.$data['slug'],
+                    'imageLink' => base_url().'assets/uploads/'.$product_details->image,
+                    'brand' => $brand_details->name,
+                    'price' => [
+                        'value' => $data['price'],
+                        'currency' => 'SAR',
+                    ],
+                    'salePrice' => [
+                        'value' => $data['promo_price'],
+                        'currency' => 'SAR',
+                    ],
+                    'additionalImageLinks' => $photos_arr,
+                    'availability' => 'in stock',
+                ];
+
+                $productContent->setOfferId($productData['offerId']);
+                $productContent->setChannel($productData['channel']);
+                $productContent->setContentLanguage($productData['contentLanguage']);
+                $productContent->setTargetCountry($productData['targetCountry']);
+            }
+            
 
             $productContent->setTitle($productData['title']);
             $productContent->setDescription($productData['description']);
@@ -114,16 +147,22 @@ class Products extends MY_Controller
             $price->setValue($productData['price']['value']);
             $price->setCurrency($productData['price']['currency']);
             $productContent->setPrice($price);
-            $productContent->setChannel($productData['channel']);
-            $productContent->setContentLanguage($productData['contentLanguage']);
-            $productContent->setTargetCountry($productData['targetCountry']);
 
             $productContent->setAvailability($productData['availability']);
             
             try {
+                // Check if the product already exists, if so, update it; otherwise, insert a new product
                 
-                $product = $contentService->products->insert($merchantId, $productContent);
-                //echo "Product inserted successfully. Product ID: " . $product->getId();
+                if($existingProduct->id){
+                    $product = $contentService->products->update($merchantId, $productData['productId'], $productContent);
+                    $this->session->set_flashdata('message', lang('product_updated'));
+                    admin_redirect('products/edit/' . $id);
+                }else{
+                    $product = $contentService->products->insert($merchantId, $productContent);
+                    $this->session->set_flashdata('message', lang('product_updated'));
+                    admin_redirect('products/edit/' . $id);
+                }
+                
             } catch (Exception $e) {
                 echo "Error inserting product: " . $e->getMessage();
             }
@@ -1726,11 +1765,12 @@ class Products extends MY_Controller
         if ($this->form_validation->run() == true && $this->products_model->updateProduct($id, $data, $items, $warehouse_qty, $product_attributes, $photos, $update_variants)) {
             if($data['google_merch'] == 1){
                 $this->google_merch_apis($id, $data);
+            }else{
+                $this->session->set_flashdata('message', lang('product_updated'));
+                //admin_redirect('products');
+                admin_redirect('products/edit/' . $id);
             }
             
-            $this->session->set_flashdata('message', lang('product_updated'));
-            //admin_redirect('products');
-            admin_redirect('products/edit/' . $id);
         } else {
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
 
