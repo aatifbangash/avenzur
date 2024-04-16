@@ -90,84 +90,84 @@
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/har?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner1.jpg" class="w-100" alt="Special Offer">
+                  <img src="assets/images/banners/moveBanner1.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/vitamins?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner2.jpg" class="w-100" alt="Special Offer">
+                  <img src="assets/images/banners/moveBanner2.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/man?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner3.jpg" class="w-100" alt="Special Offer">
+                  <img src="assets/images/banners/moveBanner3.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/beauty1?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner4.jpg" class="w-100" alt="Special Offer">
+                  <img src="assets/images/banners/moveBanner4.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/skin-care?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner5.jpg" class="w-100" alt="Special Offer">
+                  <img src="assets/images/banners/moveBanner5.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/flu?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner6.jpg" class="w-100" alt="Special Offer">
+                  <img src="assets/images/banners/moveBanner6.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/har?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner1.jpg"  alt="movingBanner" class="w-100" alt="Special Offer">
+                  <img src="assets/images/banners/moveBanner1.jpg"  alt="movingBanner" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/vitamins?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner2.jpg" class="w-100" alt="Special Offer">
+                  <img src="assets/images/banners/moveBanner2.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/man?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner3.jpg" class="w-100" alt="Special Offer">
+                  <img src="assets/images/banners/moveBanner3.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/beauty1?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner4.jpg" class="w-100" alt="Special Offer">
+                  <img src="assets/images/banners/moveBanner4.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/skin-care?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner5.jpg" class="w-100" alt="Special Offer">
+                  <img src="assets/images/banners/moveBanner5.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
             <div class="item">
               <div class="moveBanner">
                 <a href="<?= site_url('category/flu?special_product=yes'); ?>">
-                  <img src="assets/images/banners/carouselBanner6.jpg" class="w-100" alt="Special Offer">
+                  <img src="assets/images/banners/moveBanner6.jpg" class="w-100" alt="Special Offer">
                 </a>
               </div>
             </div>
