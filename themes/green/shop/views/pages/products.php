@@ -88,7 +88,7 @@
                                 <div class="container container-max-width" style="padding-left: 0px;padding-right: 0px;">
                                     <div class="sideBannerImg">
                                     <a href="<?= site_url('shop/products?promo=yes'); ?>">
-                                        <img id="promo-page-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/promo-page-banner-eid-en.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100" />
+                                        <img id="promo-page-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/promo_inner_2023-04-16_en.jpg'.'?timestamp='.time()); ?>" alt="placeholder" class="w-100" />
                                     </a>
                                     </div>
                                 </div>
