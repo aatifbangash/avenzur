@@ -221,7 +221,7 @@
         carouselItems[1].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_2 + '.jpg?timestamp=' + Date.now();
         carouselItems[2].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_3 + '.jpg?timestamp=' + Date.now();
         // set english promo banner
-        document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/eid_offers_en.jpg?timestamp=' + Date.now();
+        document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/promo_offers_2023-04-16_en.jpg?timestamp=' + Date.now();
       }else{
         document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo-page-banner-eid-en.jpg?timestamp=' + Date.now();
       }
@@ -272,7 +272,7 @@
         carouselItems[2].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_3 + '.jpg?timestamp=' + Date.now();
 
         // set arabic promo banner
-        document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/eid_offers_ar.jpg?timestamp=' + Date.now();
+        document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/promo_offers_2023-04-16_ar.jpg?timestamp=' + Date.now();
       }else{
         document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo-page-banner-eid-ar.jpg?timestamp=' + Date.now();
       }
