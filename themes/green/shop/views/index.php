@@ -306,7 +306,7 @@
       <div class="container container-max-width">
         <div class="sideBannerImg">
           <a href="<?= site_url('category/skin-care'); ?>">
-            <img loading="lazy" src="<?= base_url('assets/images/banners/skin-long-banner.jpg'.'?timestamp='.time()); ?>" alt="Skin Care" class="w-100" />
+            <img loading="lazy" src="<?= base_url('assets/images/banners/SkinCare_Banner_2024-04-16.jpg'.'?timestamp='.time()); ?>" alt="Skin Care" class="w-100" />
           </a>
         </div>
       </div>
@@ -467,7 +467,7 @@
           </div>
           <div class="col-md-12 mt-3">
             <div class="sideBannerImg">
-              <a href="<?= site_url('category/beauty1'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/makeup-long-banner.jpg'.'?timestamp='.time()); ?>" alt="Makeup" class="w-100  " ></a>
+              <a href="<?= site_url('category/beauty1'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/Makeup_Banner_2024-04-16.jpg'.'?timestamp='.time()); ?>" alt="Makeup" class="w-100  " ></a>
             </div>
           </div>
         </div>
@@ -594,7 +594,7 @@
      <section class="side-banner section-marg-top">
       <div class="container container-max-width">
         <div class="sideBannerImg">
-          <a href="<?= site_url('category/supplements'); ?>"><img loading="lazy" src="<?= base_url('assets/images/banners/supplements-long-banner.jpg'.'?timestamp='.time()); ?>" alt="Supplements Promotion" class="w-100"></a>
+          <a href="<?= site_url('category/supplements'); ?>"><img loading="lazy" src="<?= base_url('assets/images/banners/Supplements_Banner_2024-04-16.jpg'.'?timestamp='.time()); ?>" alt="Supplements Promotion" class="w-100"></a>
         </div>
       </div>
     </section>
