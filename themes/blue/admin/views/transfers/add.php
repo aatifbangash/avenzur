@@ -210,15 +210,15 @@
                             </div>
                         </div>
 
-                        <!--<div class="col-md-4">
+                        <div class="col-md-4">
                             <div class="form-group">
-                                <?php //echo lang('status', 'tostatus'); ?>
+                                <?= lang('status', 'tostatus'); ?>
                                 <?php
-                                //$post = ['save' => lang('save'), 'completed' => lang('completed'), 'sent' => lang('sent')];
-                                //echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="tostatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
+                                $post = ['save' => lang('save'), 'completed' => lang('completed')];
+                                echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="tostatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
                                 ?>
                             </div>
-                        </div>-->
+                        </div>
 
                         <div class="col-md-4">
                             <div class="form-group" style="margin-bottom:5px;">
