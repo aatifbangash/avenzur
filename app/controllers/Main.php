@@ -127,10 +127,10 @@ class Main extends MY_Shop_Controller
 
 
         if (!SHOP) {
-            redirect('admin');
+            redirect('/');
         }
         if ($this->shop_settings->private && !$this->loggedIn) {
-            redirect('/login');
+            redirect('/');
         }
         /*else if(!$this->loggedIn){
 
