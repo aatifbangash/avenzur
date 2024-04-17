@@ -742,7 +742,7 @@ public function getallCountry()
         $q = $this->db->get_where('purchase_items', $clause);
         if ($q->num_rows() > 0) {
             echo '<pre>';
-            print_r($q->num_rows());exit;
+            print_r($q->row());exit;
             return $q->row();
         }
         return false;
