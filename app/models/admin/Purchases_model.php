@@ -340,6 +340,8 @@ class Purchases_model extends CI_Model
             foreach (($q->result()) as $row) {
                 $data[] = $row;
             }
+            echo '<pre>';
+            print_r($data);exit;
             return $data;
         }
         return false;
