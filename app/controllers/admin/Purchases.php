@@ -896,7 +896,7 @@ class Purchases extends MY_Controller
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
             //$this->sma->print_arrays($data, $products);exit;
-        }else{
+        }else if($this->form_validation->run() == false){
             echo 'Validation failed...';exit;
         }
 
