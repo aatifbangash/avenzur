@@ -565,6 +565,10 @@ if (!empty($variants)) {
                         <label for="Google Merchandizing" class="padding05"><?= lang('Google Merchandizing') ?></label>
                     </div>
                     <div class="form-group">
+                        <input name="special_product" type="checkbox" class="checkbox" id="special_product" value="1" <?= empty($product->special_product) ? '' : 'checked="checked"' ?>/>
+                        <label for="special_product" class="padding05"><?= lang('Special Product') ?></label>
+                    </div>
+                    <div class="form-group">
                         <input name="cf" type="checkbox" class="checkbox" id="extras" value="" checked="checked"/><label
                             for="extras" class="padding05"><?= lang('custom_fields') ?></label>
                     </div>
