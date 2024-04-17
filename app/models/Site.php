@@ -1262,19 +1262,16 @@ public function getallCountry()
     {
         if ($product = $this->getProductByID($clause['product_id'])) {
             if ($pi = $this->getPurchasedItem($clause) && $type != 'supplier') {
-                if (isset($pi->quantity_balance) && $pi->quantity_balance > 0) {
+                echo '<pre>';
+                print_r($pi);
+                if ($pi->quantity_balance > 0) {
                     $quantity_balance = $pi->quantity_balance + $qty;
                     log_message('error', 'More than zero: ' . $quantity_balance . ' = ' . $pi->quantity_balance . ' + ' . $qty . ' PI: ' . print_r($pi, true));
-                }else if(!isset($pi->quantity_balance)){
-                    $quantity_balance = $qty;
                 } else {
                     $quantity_balance = $pi->quantity_balance + $qty;
                     log_message('error', 'Less than zero: ' . $quantity_balance . ' = ' . $pi->quantity_balance . ' + ' . $qty . ' PI: ' . print_r($pi, true));
                 }
-
-                if (isset($pi->id)) {
-                    return $this->db->update('purchase_items', ['quantity_balance' => $quantity_balance], ['id' => $pi->id]);
-                }  
+                return $this->db->update('purchase_items', ['quantity_balance' => $quantity_balance], ['id' => $pi->id]);
             }
             $unit                        = $this->getUnitByID($product->unit);
             $clause['product_unit_id']   = $product->unit;
