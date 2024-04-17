@@ -463,9 +463,6 @@ class Transfers extends MY_Controller
         $this->form_validation->set_rules('from_warehouse', lang('warehouse') . ' (' . lang('from') . ')', 'required|is_natural_no_zero');
 
         if ($this->form_validation->run()) {
-            ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
             $transfer_no = $this->input->post('reference_no');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));

@@ -1262,8 +1262,6 @@ public function getallCountry()
     {
         if ($product = $this->getProductByID($clause['product_id'])) {
             if ($pi = $this->getPurchasedItem($clause) && $type != 'supplier') {
-                echo '<pre>';
-                print_r($pi);
                 if ($pi->quantity_balance > 0) {
                     $quantity_balance = $pi->quantity_balance + $qty;
                     log_message('error', 'More than zero: ' . $quantity_balance . ' = ' . $pi->quantity_balance . ' + ' . $qty . ' PI: ' . print_r($pi, true));
