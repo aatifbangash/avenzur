@@ -202,15 +202,15 @@
 
 
                         <?php if ($GP['transfer_pharmacist']) { ?>
-                        <div class="col-md-6">
+                        <!--<div class="col-md-6">
                             <div class="form-group">
-                                <?= lang('status', 'tostatus'); ?>
+                                <?php //echo lang('status', 'tostatus'); ?>
                                 <?php
-                                 $post = ['save' => lang('save'), 'sent' => lang('sent'), 'approved' => lang('Approved'), 'completed' => lang('completed')];
-                                 echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="tostatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
+                                 //$post = ['save' => lang('save'), 'sent' => lang('sent'), 'approved' => lang('Approved'), 'completed' => lang('completed')];
+                                 //echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="tostatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
                                 ?>
                             </div>
-                        </div>
+                        </div>-->
                         <?php } ?>
 
                         <?php if ($GP['transfer_warehouse_supervisor']) { ?>
