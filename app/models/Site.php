@@ -741,6 +741,8 @@ public function getallCountry()
         }
         $q = $this->db->get_where('purchase_items', $clause);
         if ($q->num_rows() > 0) {
+            echo '<pre>';
+            print_r($q->num_rows());exit;
             return $q->row();
         }
         return false;
@@ -1262,8 +1264,6 @@ public function getallCountry()
     {
         if ($product = $this->getProductByID($clause['product_id'])) {
             if ($pi = $this->getPurchasedItem($clause) && $type != 'supplier') {
-                echo '<pre>';
-                print_r($pi);
                 if ($pi->quantity_balance > 0) {
                     $quantity_balance = $pi->quantity_balance + $qty;
                     log_message('error', 'More than zero: ' . $quantity_balance . ' = ' . $pi->quantity_balance . ' + ' . $qty . ' PI: ' . print_r($pi, true));
