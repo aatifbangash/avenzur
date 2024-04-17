@@ -662,6 +662,9 @@ class Purchases extends MY_Controller
 
         $this->session->unset_userdata('csrf_token');
         if ($this->form_validation->run() == true) {
+            ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
             $reference = $this->input->post('reference_no');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
@@ -700,7 +703,8 @@ class Purchases extends MY_Controller
                 $item_sale_price    = $this->sma->formatDecimal($_POST['sale_price'][$r]);
 
                 $item_unit_quantity = $_POST['quantity'][$r];
-                $quantity_received  = $_POST['received_base_quantity'][$r];
+                //$quantity_received  = $_POST['received_base_quantity'][$r];
+                $quantity_received = $item_unit_quantity;
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'undefined' ? $_POST['product_option'][$r] : null;
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
                 //$item_discount      = $_POST['product_discount'][$r] ?? null;
@@ -709,7 +713,8 @@ class Purchases extends MY_Controller
                 $item_expiry        = (isset($_POST['expiry'][$r]) && !empty($_POST['expiry'][$r])) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
                 $supplier_part_no   = (isset($_POST['part_no'][$r]) && !empty($_POST['part_no'][$r])) ? $_POST['part_no'][$r] : null;
                 $quantity_balance   = $_POST['quantity_balance'][$r];
-                $ordered_quantity   = $_POST['ordered_quantity'][$r];
+                //$ordered_quantity   = $_POST['ordered_quantity'][$r];
+                $ordered_quantity   = $item_unit_quantity;
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
@@ -723,13 +728,15 @@ class Purchases extends MY_Controller
                 $warehouse_shelf = $_POST['warehouse_shelf'][$r];
 
                 if ($status == 'received' || $status == 'partial') {
-                    if ($quantity_received < $item_quantity) {
+                    /*if ($quantity_received < $item_quantity) {
                         $partial = 'partial';
                     } elseif ($quantity_received > $item_quantity) {
                         $this->session->set_flashdata('error', lang('received_more_than_ordered'));
                         redirect($_SERVER['HTTP_REFERER']);
                     }
-                    $balance_qty = $quantity_received - ($ordered_quantity - $quantity_balance);
+                    $balance_qty = $quantity_received - ($ordered_quantity - $quantity_balance);*/
+                    $balance_qty       = $item_quantity;
+                    $quantity_received = $item_quantity;
                 } else {
                     $balance_qty       = $item_quantity;
                     $quantity_received = $item_quantity;
