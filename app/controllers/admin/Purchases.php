@@ -662,6 +662,7 @@ class Purchases extends MY_Controller
 
         $this->session->unset_userdata('csrf_token');
         if ($this->form_validation->run() == true) {
+            echo 'Here validated...';exit;
             $reference = $this->input->post('reference_no');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
