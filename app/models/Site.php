@@ -1271,7 +1271,10 @@ public function getallCountry()
                     $quantity_balance = $pi->quantity_balance + $qty;
                     log_message('error', 'Less than zero: ' . $quantity_balance . ' = ' . $pi->quantity_balance . ' + ' . $qty . ' PI: ' . print_r($pi, true));
                 }
-                return $this->db->update('purchase_items', ['quantity_balance' => $quantity_balance], ['id' => $pi->id]);
+
+                if (isset($pi->id)) {
+                    return $this->db->update('purchase_items', ['quantity_balance' => $quantity_balance], ['id' => $pi->id]);
+                }  
             }
             $unit                        = $this->getUnitByID($product->unit);
             $clause['product_unit_id']   = $product->unit;
