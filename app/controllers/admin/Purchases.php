@@ -662,6 +662,9 @@ class Purchases extends MY_Controller
 
         $this->session->unset_userdata('csrf_token');
         if ($this->form_validation->run() == true) {
+            ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
             $reference = $this->input->post('reference_no');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
@@ -681,7 +684,6 @@ class Purchases extends MY_Controller
             $shipping         = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
             $supplier_details = $this->site->getCompanyByID($supplier_id);
             $supplier         = $supplier_details->company && $supplier_details->company != '-' ? $supplier_details->company : $supplier_details->name;
-            print_r($supplier);exit;
             $note             = $this->sma->clear_tags($this->input->post('note'));
             $payment_term     = $this->input->post('payment_term');
             $due_date         = $payment_term ? date('Y-m-d', strtotime('+' . $payment_term . ' days', strtotime($date))) : null;
