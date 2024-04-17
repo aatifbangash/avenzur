@@ -225,7 +225,11 @@ class Transfers_model extends CI_Model
 
         if ($totalPurchseResultSet->num_rows() > 0) {
             foreach ($totalPurchseResultSet->result() as $row) {
-                $row->cost_price = ($row->total_cost_price / $row->quantity);
+                if($row->quantity > 0){
+                    $row->cost_price = ($row->total_cost_price / $row->quantity);
+                }else{
+                    $row->cost_price = 0;
+                }
                 $totalPurchases[] = $row;
             }
         }
