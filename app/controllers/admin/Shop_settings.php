@@ -375,6 +375,29 @@ class Shop_settings extends MY_Controller
         
     }
 
+    public function tags(){
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        if ($_POST['submit']) {
+            $tags_array = $this->shop_admin_model->getAllTags();
+            $this->data['tags_array'] = $tags_array;
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('shop_settings'), 'page' => lang('shop_settings')], ['link' => '#', 'page' => lang('shop_settings')]];
+            $meta = ['page_title' => lang('tags'), 'bc' => $bc];
+            $this->page_construct('settings/tags', $meta, $this->data);
+        } else {
+
+            $tags_array = $this->shop_admin_model->getAllTags();
+            $this->data['tags_array'] = $tags_array;
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('shop_settings'), 'page' => lang('shop_settings')], ['link' => '#', 'page' => lang('shop_settings')]];
+            $meta = ['page_title' => lang('tags'), 'bc' => $bc];
+            $this->page_construct('settings/tags', $meta, $this->data);
+        }
+    }
+
     public function slider()
     {
         // $this->form_validation->set_rules('image1', lang('image1'), 'trim|required');

@@ -1256,6 +1256,11 @@
                                             <i class="fa fa-file"></i><span class="text"> <?= lang('slider_settings'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="tag_settings_index">
+                                        <a href="<?= admin_url('shop_settings/tags') ?>">
+                                            <i class="fa fa-tag"></i><span class="text"> <?= lang('Tag Settings'); ?></span>
+                                        </a>
+                                    </li>
                                     <?php if ($Settings->apis) {
                                         ?>
                                     <li id="api_settings_index">

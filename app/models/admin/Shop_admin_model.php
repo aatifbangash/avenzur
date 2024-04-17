@@ -108,6 +108,13 @@ class Shop_admin_model extends CI_Model
         return $this->db->get('categories')->result();
     }
 
+    public function getAllTags(){
+        $this->db->select('sma_tags.*');
+        $this->db->from('sma_tags');
+        $this->db->order_by('sma_tags.id', 'ASC');
+        return $this->db->get()->result();
+    }
+
     public function getAbandonedCart($start_date, $end_date){
         $this->db->select('cart.*, users.email');
         $this->db->from('cart');
