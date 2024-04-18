@@ -593,7 +593,7 @@ function gen_html(t) {
       e += '<div class="cardImg">';
       if (r.promotion && r.price > 0 && r.promo_price > 0) {
         e +=
-          '<span class="position-absolute badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:11px">' +
+          '<span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:10px;font-size:11px">' +
           Math.round(((r.price - r.promo_price) / r.price) * 100) +
           "% OFF</span>";
       }
