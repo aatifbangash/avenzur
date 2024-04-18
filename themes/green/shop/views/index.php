@@ -374,7 +374,7 @@
                                                     <?php 
                                                       if($popular_product->promotion && $popular_product->price > 0 && $popular_product->promo_price > 0){
                                                         ?>
-                                                          <span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:10px;font-size:11px">
+                                                          <span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:0px;font-size:10px">
                                                             <?php echo round((($popular_product->price - $popular_product->promo_price) / $popular_product->price) * 100); ?>% OFF
                                                         </span>
                                                         <?php
