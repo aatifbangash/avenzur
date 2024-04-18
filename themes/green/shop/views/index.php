@@ -323,7 +323,7 @@
             </a>
           </div>
 
-          <div class="col-lg-5 col-md-12 col-sm-12 pt-lg-0 pt-md-3">
+          <!--<div class="col-lg-5 col-md-12 col-sm-12 pt-lg-0 pt-md-3">
             <div class="px-4">
               <div class="skinareaTitle"><h2 class="fw-bold">Beauty starts from inside</h2></div>
               <div class="skinareatext"><p class="m-0 py-2">Discover our specially formulated products that helps you shine from inside out.</p></div>
@@ -331,7 +331,7 @@
               <button type="button" class="btn primary-buttonAV my-3 py-2 discoverbtn">Discover <i class="bi bi-chevron-right ms-1"></i></button>
               </a>
             </div>
-          </div>
+          </div>-->
          
         </div>
       </div>
