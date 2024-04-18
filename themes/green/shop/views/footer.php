@@ -222,6 +222,7 @@
         carouselItems[2].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_3 + '.jpg?timestamp=' + Date.now();
         // set english promo banner
         document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/promo_offers_2023-04-16_en.jpg?timestamp=' + Date.now();
+        document.getElementById('skincare-banner-1').src = site.site_url + '/assets/images/banners/SkinCare_Banner_2024-04-16.jpg?timestamp=' + Date.now();
       }else{
         document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo_inner_2023-04-16_en.jpg?timestamp=' + Date.now();
       }
@@ -273,6 +274,7 @@
 
         // set arabic promo banner
         document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/promo_offers_2023-04-16_ar.jpg?timestamp=' + Date.now();
+        document.getElementById('skincare-banner-1').src = site.site_url + '/assets/images/banners/SkinCare_Banner_2024-04-16_ar.jpg?timestamp=' + Date.now();
       }else{
         document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo_inner_2023-04-16_ar.jpg?timestamp=' + Date.now();
       }

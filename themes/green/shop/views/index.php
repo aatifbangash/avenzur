@@ -306,7 +306,7 @@
       <div class="container container-max-width">
         <div class="sideBannerImg">
           <a href="<?= site_url('category/skin-care'); ?>">
-            <img loading="lazy" src="<?= base_url('assets/images/banners/SkinCare_Banner_2024-04-16.jpg'.'?timestamp='.time()); ?>" alt="Skin Care" class="w-100" />
+            <img id="skincare-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/SkinCare_Banner_2024-04-16.jpg'.'?timestamp='.time()); ?>" alt="Skin Care" class="w-100" />
           </a>
         </div>
       </div>
