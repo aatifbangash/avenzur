@@ -313,31 +313,6 @@
     </section>
     <!-- banner area 1 end -->
 
-    <!-- skin container area -->
-    <section class="skin-container section-marg-top">
-      <div class="container container-max-width ">
-        <div class=" row skinBannerRow  rounded-4 align-items-center justify-content-between">
-          <!--<div class="col-lg-6 col-md-12 col-sm-12 ps-0 skinbnnerimg">
-            
-                <img loading="lazy" src="<?= base_url('assets/images/banners/skinbanner.jpg'.'?timestamp='.time()); ?>" alt="Skin Care" class="w-100    rounded-start-3 rounded-end-5" />
-            </a>
-          </div>-->
-
-          <!--<div class="col-lg-5 col-md-12 col-sm-12 pt-lg-0 pt-md-3">
-            <div class="px-4">
-              <div class="skinareaTitle"><h2 class="fw-bold">Beauty starts from inside</h2></div>
-              <div class="skinareatext"><p class="m-0 py-2">Discover our specially formulated products that helps you shine from inside out.</p></div>
-              <a href="https://avenzur.com/category/beauty1">
-              <button type="button" class="btn primary-buttonAV my-3 py-2 discoverbtn">Discover <i class="bi bi-chevron-right ms-1"></i></button>
-              </a>
-            </div>
-          </div>-->
-         
-        </div>
-      </div>
-    </section>
-    <!-- skin container area end -->
-
     <section class="popularCat-container section-marg-top">
         <div class="container container-max-width">
             <div class="categoryTabs">
