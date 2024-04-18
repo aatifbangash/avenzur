@@ -317,11 +317,11 @@
     <section class="skin-container section-marg-top">
       <div class="container container-max-width ">
         <div class=" row skinBannerRow  rounded-4 align-items-center justify-content-between">
-          <div class="col-lg-6 col-md-12 col-sm-12 ps-0 skinbnnerimg">
+          <!--<div class="col-lg-6 col-md-12 col-sm-12 ps-0 skinbnnerimg">
             
                 <img loading="lazy" src="<?= base_url('assets/images/banners/skinbanner.jpg'.'?timestamp='.time()); ?>" alt="Skin Care" class="w-100    rounded-start-3 rounded-end-5" />
             </a>
-          </div>
+          </div>-->
 
           <!--<div class="col-lg-5 col-md-12 col-sm-12 pt-lg-0 pt-md-3">
             <div class="px-4">
