@@ -371,9 +371,16 @@
                                         <div class="card" style="width: 100%">
                                             <!--<a href="#" class="text-decoration-none">-->
                                                 <div class="cardImg position-relative">
-                                                    <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
-                                                        Sale 20% OFF
-                                                    </span>-->
+                                                    <?php 
+                                                      if($popular_product->promotion && $popular_product->price > 0 && $popular_product->promo_price > 0){
+                                                        ?>
+                                                          <span class="position-absolute badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:11px">
+                                                            <?php echo round((($popular_product->price - $popular_product->promo_price) / $popular_product->price) * 100); ?>% OFF
+                                                        </span>
+                                                        <?php
+                                                      }
+                                                    ?>
+                                                    
                                                     <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none">
                                                         <img src="<?= base_url('assets/uploads/' . $popular_product->image); ?>" class="card-img-top" alt="<?= $popular_product->name; ?>">
                                                     </a>

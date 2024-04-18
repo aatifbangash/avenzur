@@ -591,6 +591,12 @@ function gen_html(t) {
       e += '<div class="card" style="width: 100%">';
       //e += '<a href="#" class="text-decoration-none">';
       e += '<div class="cardImg">';
+      if (r.promotion && r.price > 0 && r.promo_price > 0) {
+        e +=
+          '<span class="position-absolute badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:11px">' +
+          Math.round(((r.price - r.promo_price) / r.price) * 100) +
+          "% OFF</span>";
+      }
       e +=
         '<a href="' +
         site.base_url +
