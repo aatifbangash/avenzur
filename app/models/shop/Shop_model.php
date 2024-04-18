@@ -631,7 +631,7 @@ class Shop_model extends CI_Model
     {
         $this->db->select("{$this->db->dbprefix('categories')}.id as id, {$this->db->dbprefix('categories')}.name as name, {$this->db->dbprefix('categories')}.code as code, {$this->db->dbprefix('categories')}.image as image, {$this->db->dbprefix('categories')}.slug as slug")
             ->where('categories.popular', 1)
-            ->order_by('id desc')
+            ->order_by('name asc')
             ->limit($limit);
         $popular_categories = $this->db->get('categories')->result();
 
