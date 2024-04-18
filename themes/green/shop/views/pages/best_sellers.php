@@ -56,7 +56,17 @@
                               <div class="col-xl-3 col-lg-4 col-md-6 col-6 product-cards-cont product-cards-wrapper">  
                                         <div class="card" style="width: 100%">
                                         <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
-                                        <div class="cardImg"><img src="<?= base_url('assets/uploads/thumbs/' . $sp->image); ?>" class="card-img-top" alt="..."></div>
+                                        <div class="cardImg">
+                                        <?php 
+                                        if($sp->promotion && $sp->price > 0 && $sp->promo_price > 0){
+                                            ?>
+                                            <span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:0px;font-size:10px">
+                                                <?php echo round((($sp->price - $sp->promo_price) / $sp->price) * 100); ?>% OFF
+                                            </span>
+                                            <?php
+                                        }
+                                        ?>
+                                            <img src="<?= base_url('assets/uploads/thumbs/' . $sp->image); ?>" class="card-img-top" alt="..."></div>
                                         <div class="card-body px-0 text-start pb-0">
                                             <div class="product-cat-title"><span class="text-uppercase">Medical</span></div>
                                             <h5 class="card-title text-start"><?= $sp->name; ?></h5>

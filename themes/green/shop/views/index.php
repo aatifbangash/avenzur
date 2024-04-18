@@ -513,10 +513,10 @@
                             
                             <div class="cardImg position-relative">
                             <?php 
-                              if($sps->promotion && $sps->price > 0 && $sps->promo_price > 0){
+                              if($sp->promotion && $sp->price > 0 && $sp->promo_price > 0){
                                 ?>
                                   <span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:0px;font-size:10px">
-                                    <?php echo round((($sps->price - $sps->promo_price) / $sps->price) * 100); ?>% OFF
+                                    <?php echo round((($sp->price - $sp->promo_price) / $sp->price) * 100); ?>% OFF
                                 </span>
                                 <?php
                               }
@@ -634,10 +634,10 @@
                             
                             <div class="cardImg position-relative">
                             <?php 
-                              if($sps->promotion && $sps->price > 0 && $sps->promo_price > 0){
+                              if($sp->promotion && $sp->price > 0 && $sp->promo_price > 0){
                                 ?>
                                   <span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:0px;font-size:10px">
-                                    <?php echo round((($sps->price - $sps->promo_price) / $sps->price) * 100); ?>% OFF
+                                    <?php echo round((($sp->price - $sp->promo_price) / $sp->price) * 100); ?>% OFF
                                 </span>
                                 <?php
                               }
@@ -732,10 +732,10 @@
                             
                             <div class="cardImg position-relative">
                             <?php 
-                              if($sps->promotion && $sps->price > 0 && $sps->promo_price > 0){
+                              if($sp->promotion && $sp->price > 0 && $sp->promo_price > 0){
                                 ?>
                                   <span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:0px;font-size:10px">
-                                    <?php echo round((($sps->price - $sps->promo_price) / $sps->price) * 100); ?>% OFF
+                                    <?php echo round((($sp->price - $sp->promo_price) / $sp->price) * 100); ?>% OFF
                                 </span>
                                 <?php
                               }
@@ -867,10 +867,10 @@
                     
                                 <div class="cardImg rounded-3">
                                     <?php 
-                                      if($sps->promotion && $sps->price > 0 && $sps->promo_price > 0){
+                                      if($sp->promotion && $sp->price > 0 && $sp->promo_price > 0){
                                         ?>
                                           <span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:0px;font-size:10px">
-                                            <?php echo round((($sps->price - $sps->promo_price) / $sps->price) * 100); ?>% OFF
+                                            <?php echo round((($sp->price - $sp->promo_price) / $sp->price) * 100); ?>% OFF
                                         </span>
                                         <?php
                                       }
