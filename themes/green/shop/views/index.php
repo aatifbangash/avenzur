@@ -512,9 +512,15 @@
                         <div class="card" style="width: 100%">
                             
                             <div class="cardImg position-relative">
-                            <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
-                                Sale 20% OFF
-                            </span>-->
+                            <?php 
+                              if($sps->promotion && $sps->price > 0 && $sps->promo_price > 0){
+                                ?>
+                                  <span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:0px;font-size:10px">
+                                    <?php echo round((($sps->price - $sps->promo_price) / $sps->price) * 100); ?>% OFF
+                                </span>
+                                <?php
+                              }
+                            ?>
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
                             <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="<?= $sp->name; ?>">
                             </a>
@@ -627,9 +633,15 @@
                         <div class="card" style="width: 100%">
                             
                             <div class="cardImg position-relative">
-                            <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
-                                Sale 20% OFF
-                            </span>-->
+                            <?php 
+                              if($sps->promotion && $sps->price > 0 && $sps->promo_price > 0){
+                                ?>
+                                  <span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:0px;font-size:10px">
+                                    <?php echo round((($sps->price - $sps->promo_price) / $sps->price) * 100); ?>% OFF
+                                </span>
+                                <?php
+                              }
+                            ?>
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
                             <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="<?= $sp->name; ?>">
                             </a>
@@ -719,9 +731,15 @@
                         <div class="card" style="width: 100%">
                             
                             <div class="cardImg position-relative">
-                            <!--<span class="position-absolute   badge rounded-pill bg-danger" style="top:20px;left:10px;font-size:14px">
-                                Sale 20% OFF
-                            </span>-->
+                            <?php 
+                              if($sps->promotion && $sps->price > 0 && $sps->promo_price > 0){
+                                ?>
+                                  <span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:0px;font-size:10px">
+                                    <?php echo round((($sps->price - $sps->promo_price) / $sps->price) * 100); ?>% OFF
+                                </span>
+                                <?php
+                              }
+                            ?>
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
                             <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="<?= $sp->name; ?>">
                             </a>
