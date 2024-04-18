@@ -462,12 +462,13 @@
         <div class="row">
           <div class="col-md-12">
             <div class="sideBannerImg">
-              <a id="vitamins-banner-1" href="<?= site_url('category/vitamins'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/Vitamins_Banner_2024-04-16.jpg'.'?timestamp='.time()); ?>" alt="Vitamins" class="w-100 h-100 " > </a>
+              <a href="<?= site_url('category/vitamins'); ?>"> 
+              <img id="vitamins-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/Vitamins_Banner_2024-04-16.jpg'.'?timestamp='.time()); ?>" alt="Vitamins" class="w-100 h-100 " > </a>
             </div>
           </div>
           <div class="col-md-12 mt-3">
             <div class="sideBannerImg">
-              <a id="makeup-banner-1" href="<?= site_url('category/beauty1'); ?>"> <img loading="lazy" src="<?= base_url('assets/images/banners/Makeup_Banner_2024-04-16.jpg'.'?timestamp='.time()); ?>" alt="Makeup" class="w-100  " ></a>
+              <a href="<?= site_url('category/beauty1'); ?>"> <img id="makeup-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/Makeup_Banner_2024-04-16.jpg'.'?timestamp='.time()); ?>" alt="Makeup" class="w-100  " ></a>
             </div>
           </div>
         </div>
@@ -808,7 +809,7 @@
           </div>
           <div class="col-md-6">
             <div class="sideBannerImg my-2">
-              <a href="<?= site_url('category/personal-care'); ?>"> <img id="persc-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/persC.jpg'.'?timestamp='.time()); ?>" alt="Personal Care Promotion" class="w-100  rounded-4" ></a>
+              <a href="<?= site_url('category/personal-care'); ?>"> <img id="perc-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/persC.jpg'.'?timestamp='.time()); ?>" alt="Personal Care Promotion" class="w-100  rounded-4" ></a>
             </div>
           </div>
         </div>
