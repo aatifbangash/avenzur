@@ -1287,14 +1287,12 @@ class Shop_model extends CI_Model
             if (!empty($filters['promo'])) {
                 $today = date('Y-m-d');
                 $this->db->where('promotion', 1)->where('start_date <=', $today)->where('end_date >=', $today);
-                $this->db->where_not_in('code', array('HON002', 'HON007', 'HON008', 'HON010', 'HON006'));
             }
             if (!empty($filters['featured'])) {
                 $this->db->where('featured', 1);
             }
             if (!empty($filters['special_product'])) {
                 $this->db->where('special_product', 1);
-                $this->db->where_not_in('code', array('HON002', 'HON007', 'HON008', 'HON010', 'HON006'));
             }
             $sortcase = '';
             if (!empty($filters['query'])) {
@@ -1417,11 +1415,9 @@ class Shop_model extends CI_Model
             if (!empty($filters['promo'])) {
                 $today = date('Y-m-d');
                 $this->db->where('promotion', 1)->where('start_date <=', $today)->where('end_date >=', $today);
-                $this->db->where_not_in('code', array('HON002', 'HON007', 'HON008', 'HON010', 'HON006'));
             }
             if (!empty($filters['special_product'])) {
                 $this->db->where('special_product', 1);
-                $this->db->where_not_in('code', array('HON002', 'HON007', 'HON008', 'HON010', 'HON006'));
             }
             if (!empty($filters['featured'])) {
                 $this->db->where('featured', 1);
