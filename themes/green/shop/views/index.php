@@ -734,7 +734,7 @@
                             <?php 
                               if($sp->promotion && $sp->price > 0 && $sp->promo_price > 0){
                                 ?>
-                                  <span class="position-absolute badge rounded-pill bg-danger" style="top:8px;left:8px;font-size:10px">
+                                  <span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:0px;font-size:10px">
                                     <?php echo round((($sp->price - $sp->promo_price) / $sp->price) * 100); ?>% OFF
                                 </span>
                                 <?php
@@ -869,7 +869,7 @@
                                     <?php 
                                       if($sp->promotion && $sp->price > 0 && $sp->promo_price > 0){
                                         ?>
-                                          <span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:0px;font-size:10px">
+                                          <span class="position-absolute badge rounded-pill bg-danger" style="top:8px;left:8px;font-size:10px">
                                             <?php echo round((($sp->price - $sp->promo_price) / $sp->price) * 100); ?>% OFF
                                         </span>
                                         <?php
