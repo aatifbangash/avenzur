@@ -1349,7 +1349,7 @@ class Shop_model extends CI_Model
             }
 
             if(!empty($filters['promo']) || !empty($filters['special_product'])){
-                //$this->db->where_not_in('sma_products.code', array('HON002', 'HON007', 'HON008', 'HON010', 'HON006'));
+                $this->db->where_not_in('sma_products.code', array('HON002', 'HON007', 'HON008', 'HON010', 'HON006'));
             }
 
             if (empty($filters['query'])) {
@@ -1370,7 +1370,7 @@ class Shop_model extends CI_Model
 
 
         $results = $this->db->get();
-        echo $this->db->last_query();exit;
+        
         $data = array();
 
         if ($results !== FALSE && $results->num_rows() > 0) {
