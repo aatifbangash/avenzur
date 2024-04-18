@@ -1347,6 +1347,11 @@ class Shop_model extends CI_Model
             if (!empty($filters['in_stock'])) {
                 $this->db->group_start()->where('warehouses_products.quantity >=', 1)->or_where('type !=', 'standard')->group_end();
             }
+
+            if(!empty($filters['promo']) || !empty($filters['special_product'])){
+                $this->db->where_not_in('sma_products.code', array('HON002', 'HON007', 'HON008', 'HON010', 'HON006'));
+            }
+
             if (empty($filters['query'])) {
                 if (!empty($filters['sorting'])) {
                     $sort = explode('-', $filters['sorting']);
@@ -1365,6 +1370,7 @@ class Shop_model extends CI_Model
 
 
         $results = $this->db->get();
+        echo $this->db->last_query();exit;
         $data = array();
 
         if ($results !== FALSE && $results->num_rows() > 0) {
@@ -1440,6 +1446,11 @@ class Shop_model extends CI_Model
             if (!empty($filters['max_price'])) {
                 $this->db->where('products.price <=', $filters['max_price']);
             }
+
+            if(!empty($filters['promo']) || !empty($filters['special_product'])){
+                $this->db->where_not_in('sma_products.code', array('HON002', 'HON007', 'HON008', 'HON010', 'HON006'));
+            }
+
             if (!empty($filters['in_stock'])) {
                 $this->db->group_start()->where('warehouses_products.quantity >=', 1)->or_where('type !=', 'standard')->group_end();
             }
