@@ -291,6 +291,15 @@
                                 <div class="col-md-5 col-sm-12">
                     
                                 <div class="cardImg rounded-3">
+                                    <?php 
+                                      if($sp->promotion && $sp->price > 0 && $sp->promo_price > 0){
+                                        ?>
+                                          <span class="position-absolute badge rounded-pill bg-danger" style="top:8px;left:8px;font-size:10px">
+                                            <?php echo round((($sp->price - $sp->promo_price) / $sp->price) * 100); ?>% OFF
+                                        </span>
+                                        <?php
+                                      }
+                                    ?>
                                     <a href="<?= site_url('product/' . $sp->slug); ?>">
                                         <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" style="object-fit: contain !important;width: 100% !important;max-height: 140px !important;" class="card-img-top rounded-3" alt="<?= $sp->name; ?>">
                                     </a>
@@ -376,6 +385,15 @@
                                 <div class="col-md-5 col-sm-12">
                     
                                 <div class="cardImg rounded-3">
+                                    <?php 
+                                      if($sp->promotion && $sp->price > 0 && $sp->promo_price > 0){
+                                        ?>
+                                          <span class="position-absolute badge rounded-pill bg-danger" style="top:8px;left:8px;font-size:10px">
+                                            <?php echo round((($sp->price - $sp->promo_price) / $sp->price) * 100); ?>% OFF
+                                        </span>
+                                        <?php
+                                      }
+                                    ?>
                                     <a href="<?= site_url('product/' . $sp->slug); ?>">
                                         <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" style="object-fit: contain !important;width: 100% !important;max-height: 140px !important;" class="card-img-top rounded-3" alt="<?= $sp->name; ?>">
                                     </a>
