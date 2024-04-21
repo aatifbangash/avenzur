@@ -835,7 +835,7 @@ if ($this->Settings->indian_gst) {
                     deliveryDays = "4 to 6 days"
                 }
             } else {
-                shipping = 38
+                shipping = 62
                 deliveryDays = "5 to 8 days"
             }
 
