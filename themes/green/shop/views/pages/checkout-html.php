@@ -861,6 +861,8 @@ if ($this->Settings->indian_gst) {
             $('#shipping-price').text(parseFloat(shipping).toFixed(2))
             if(shipping > 0){
                 $('#shipping-fees-span').text(parseFloat(shipping).toFixed(2));
+            }else{
+                $('#shipping-fees-span').text('Free');
             }
             
             $('#grand-total-price').text(parseFloat(grandTotalPrice).toFixed(2))
