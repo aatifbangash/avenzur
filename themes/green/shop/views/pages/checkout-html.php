@@ -8,6 +8,7 @@ $cart_contents = $this->cart->contents();
 
 // print_r($cart_contents);
 $not_express_items = 0;
+$cart_total_items = 0;
 foreach ($cart_contents as $cartItem) {
     $cart_item_code = $cartItem['code'];
     if (strpos($cart_item_code, 'AM-') !== false || strpos($cart_item_code, 'IH-') !== false) {
@@ -259,7 +260,22 @@ if ($this->Settings->indian_gst) {
                                                    value="<?= $calculateShipping ?>"/>
                                             <!--<input type="button" name="proceed_pay" class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k" value="Proceed to Pay" id="proceed-payment" />-->
                                             <?php
-                                           echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment"');
+                                                if($default_address->country != 'saudi arabia' && $default_address->country != 'saudi' && $default_address->country != 'saudia' && $default_address->country != 'al saudi arabia' && $default_address->country != 'al-saudi arabia' && $default_address->country != 'al-saudi' && $default_address->country != 'ksa' && $default_address->country != 'kingdom of saudi arabia' && $default_address->country != 'al saudi' && $default_address->country != 'al saudia' && $default_address->country != 'al-saudia' &&
+                                                    $default_address->country != 'سعودی عرب' &&
+                                                    $default_address->country != 'آلسعوديه' &&
+                                                    $default_address->country != 'سعودی' &&
+                                                    $default_address->country != 'سعودية' &&
+                                                    $default_address->country != 'السعودية' &&
+                                                    $default_address->country != 'المملكة العربية السعودية' &&
+                                                    $default_address->country != 'SA'){
+                                                    if($this->cart->total_items() > 2){
+                                                        echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment"');
+                                                    }else{
+                                                        echo '<button class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" disabled>'.lang('Proceed to Pay').'</button>';
+                                                    }
+                                                }else{
+                                                    echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment"');
+                                                }
                                             } elseif ($this->Staff) {
                                                 echo '<div class="alert alert-warning margin-bottom-no">' . lang('staff_not_allowed') . '</div>';
                                             } else {
