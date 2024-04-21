@@ -128,7 +128,7 @@ if ($this->Settings->indian_gst) {
                         </label>
                         </div>
                         <div>
-                            <p class="m-0 fst-italic text-white px-4  rounded" style="background:#662d91">Free</p>
+                            <p class="m-0 fst-italic text-white px-4  rounded" id="shipping-fees-span" style="background:#662d91">Free</p>
                         </div>
                     </div>
                     <div class="d-flex align-items-center  py-3 standard-div" id="express-delivery-details" style="display: none !important;">
@@ -859,6 +859,10 @@ if ($this->Settings->indian_gst) {
             }
 
             $('#shipping-price').text(parseFloat(shipping).toFixed(2))
+            if(shipping > 0){
+                $('#shipping-fees-span').text(parseFloat(shipping).toFixed(2));
+            }
+            
             $('#grand-total-price').text(parseFloat(grandTotalPrice).toFixed(2))
             $('#shipping-input').val(parseFloat(shipping).toFixed(2));
             $('#delivery-days').text(deliveryDays);
