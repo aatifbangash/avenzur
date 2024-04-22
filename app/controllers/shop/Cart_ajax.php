@@ -47,6 +47,34 @@ class Cart_ajax extends MY_Shop_Controller
         }
     }
 
+    public function remove_coupon_code(){
+        $coupon_details = $this->session->userdata('coupon_details');
+        if(isset($coupon_details['code'])){
+            $c_code = $coupon_details['code'];
+
+            // Remove any discount if no coupon is detected
+            $cart_arr = $this->cart;
+            $cart_total = $cart_arr->cart_contents['cart_total'];
+
+            $coupon_disc = $this->cart->get_total_discount();
+            $cart_total = $cart_total + $coupon_disc;
+
+            $cart_contents = $this->cart->contents();
+            $cart_arr = array();
+            foreach ($cart_contents as $item => $val) {
+                $data = [
+                    'rowid'  => $val['rowid'],
+                    'discount'  => 0
+                ];
+                array_push($cart_arr, $data);
+            }
+
+            $this->cart->update($cart_arr);
+
+            $this->session->unset_userdata('coupon_details');
+        }
+    }
+
     public function remove_coupon(){
         $coupon_details = $this->session->userdata('coupon_details');
         if(isset($coupon_details['code'])){
@@ -552,6 +580,8 @@ class Cart_ajax extends MY_Shop_Controller
 
     public function update($data = null)
     {
+
+        $this->remove_coupon_code();
         if (is_array($data)) {
             return $this->cart->update($data);
         }
