@@ -61,7 +61,7 @@ class Products extends MY_Controller
 
         foreach($product_photos as $photo){
             //array_push(base_url().'assets/uploads/'.$photo->photo, $photos_arr);
-            array_push($photos_arr, base_url().'assets/uploads/'.$photo->photo);
+            array_push($photos_arr, site_url().'assets/uploads/'.$photo->photo);
         }
 
         $clientId = '216256641186-ord7an72cbi6jhtrhmb1knb93jbera1p.apps.googleusercontent.com';
@@ -94,8 +94,8 @@ class Products extends MY_Controller
                     'productId' => $productContentId,
                     'title' => $data['name'],
                     'description' => $data['details'],
-                    'link' => base_url().'product/'.$data['slug'],
-                    'imageLink' => base_url().'assets/uploads/'.$product_details->image,
+                    'link' => site_url().'product/'.$data['slug'],
+                    'imageLink' => site_url().'assets/uploads/'.$product_details->image,
                     'brand' => $brand_details->name,
                     'price' => [
                         'value' => $data['price'],
@@ -116,8 +116,8 @@ class Products extends MY_Controller
                     'offerId' => $data['code'],
                     'title' => $data['name'],
                     'description' => $data['details'],
-                    'link' => base_url().'product/'.$data['slug'],
-                    'imageLink' => base_url().'assets/uploads/'.$product_details->image,
+                    'link' => site_url().'product/'.$data['slug'],
+                    'imageLink' => site_url().'assets/uploads/'.$product_details->image,
                     'brand' => $brand_details->name,
                     'price' => [
                         'value' => $data['price'],
