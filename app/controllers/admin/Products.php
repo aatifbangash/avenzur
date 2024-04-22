@@ -85,11 +85,12 @@ error_reporting(E_ALL);
             $contentService = new Google_Service_ShoppingContent($client);
             $merchantId = '5086892798';
             $productContentId = 'online:en:SA:'.$data['code'];
-            $existingProduct = $contentService->products->get($merchantId, $productContentId);
 
             $productContent = new Google_Service_ShoppingContent_Product();
 
-            if($existingProduct->id){
+            try {
+                $existingProduct = $contentService->products->get($merchantId, $productContentId);
+
                 $productData = [
                     'channel' => 'online',
                     'contentLanguage' => 'En',
@@ -111,7 +112,8 @@ error_reporting(E_ALL);
                     'additionalImageLinks' => $photos_arr,
                     'availability' => 'in stock',
                 ];
-            }else{
+                
+            } catch (Google\Service\Exception $e) {
                 $productData = [
                     'channel' => 'online',
                     'contentLanguage' => 'En',
@@ -139,7 +141,6 @@ error_reporting(E_ALL);
                 $productContent->setContentLanguage($productData['contentLanguage']);
                 $productContent->setTargetCountry($productData['targetCountry']);
             }
-            
 
             $productContent->setTitle($productData['title']);
             $productContent->setDescription($productData['description']);
