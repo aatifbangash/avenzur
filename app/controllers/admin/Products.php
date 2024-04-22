@@ -85,7 +85,6 @@ error_reporting(E_ALL);
             $contentService = new Google_Service_ShoppingContent($client);
             $merchantId = '5086892798';
             $productContentId = 'online:en:SA:'.$data['code'];
-            print_r($productContentId);exit;
             $existingProduct = $contentService->products->get($merchantId, $productContentId);
 
             $productContent = new Google_Service_ShoppingContent_Product();
