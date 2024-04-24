@@ -1702,7 +1702,8 @@ class Shop_model extends CI_Model
         $searchquery = explode(' ', $booksearch);
         foreach ($searchquery as $booksearch) {
             if (!empty(trim($booksearch))) {
-                $wheres[] = "( {$this->db->dbprefix('products')}.name LIKE '%" . $booksearch . "%' OR  {$this->db->dbprefix('products')}.code LIKE '%" . $booksearch . "%')";
+                $wheres[] = "( {$this->db->dbprefix('products')}.name LIKE '%" . $booksearch . "%' OR  {$this->db->dbprefix('products')}.code LIKE '%" . $booksearch . "%'
+                OR  {$this->db->dbprefix('products')}.product_details LIKE '%" . $booksearch . "%')";
             }
         }
         if (!empty($wheres)) {
