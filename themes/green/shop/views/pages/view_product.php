@@ -82,6 +82,15 @@
                         <div class="product-name">
                             <h1 class=" override-h1">
                                 <?= stripslashes($product->name); ?>
+                                <?php 
+                                    if($product->global){
+                                        ?>
+                                          <span class="position-absolute badge" style="margin-left: 10px;">
+                                            <img src="<?= base_url('assets/images/global.jpg'); ?>" style="height:20px;" class="card-img-top" alt="Global">
+                                        </span>
+                                        <?php
+                                      }
+                                ?>
                             </h1>
                         </div>
                         <div class="rating">
@@ -92,7 +101,10 @@
                                     $class = 'rated';
                                 } ?>
                                 <i class="bi bi-star-fill <?php echo $class; ?>"></i>
-                            <?php } ?>
+                            <?php } 
+                            
+                            
+                            ?>
                         </div>
                     </div>
 
