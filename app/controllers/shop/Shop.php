@@ -1696,7 +1696,7 @@ class Shop extends MY_Shop_Controller
                 $row->serial = '';
                 $options = $this->shop_model->getProductOptions($row->id, $warehouse_id);
 
-
+                $original_price = $row->price;
                 if ($options) {
                     $opt = $option_id && $r == 0 ? $this->shop_model->getProductOptionByID($option_id) : $options[0];
                     if (!$option_id || $r > 0) {
@@ -1750,7 +1750,7 @@ class Shop extends MY_Shop_Controller
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
                 $brand = $this->site->getBrandByID($row->brand);
                 $row->brand_name = $brand->name;
-                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'image' => $row->image, 'label' => $row->name, 'category' => $row->category_id,
+                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'original_price' => $original_price, 'image' => $row->image, 'label' => $row->name, 'category' => $row->category_id,
                     'row' => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, 'plink' => base_url() . 'product/' . $row->slug];
                 $r++;
             }
