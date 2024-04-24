@@ -65,6 +65,17 @@
                                             </span>
                                             <?php
                                         }
+
+                                        if($sp->global == 1){
+                                            ?>
+                                              <!--<span class="position-absolute badge rounded-pill bg-info" style="top:0px;right:0px;font-size:10px">
+                                                Global
+                                              </span>-->
+                                              <span class="position-absolute badge" style="top:0px;right:0px;width: 90px;">
+                                                <img src="<?= base_url('assets/images/global.jpg'); ?>" style="height:20px;" class="card-img-top" alt="Global">
+                                              </span>
+                                            <?php
+                                          }
                                         ?>
                                             <img src="<?= base_url('assets/uploads/thumbs/' . $sp->image); ?>" class="card-img-top" alt="..."></div>
                                         <div class="card-body px-0 text-start pb-0">
