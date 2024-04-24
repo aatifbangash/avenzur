@@ -66,6 +66,14 @@
   <meta name="description" content="<?php echo htmlspecialchars($seo_description); ?>">
   <meta name="keywords" content="<?php echo $seo_keywords; ?>">
   <meta name="p:domain_verify" content="0704e772b1ab59012494397c16667a45"/>
+  <meta property="og:title" content="avenzur | Health, Wellness & Beauty">
+  <meta property="og:description" content="Avenzur is a Health, Wellness and Beauty Store. Shop daily vitamins, supplements, beauty, skin care products and more.">
+  <meta property="og:image" content="https://avenzur.com/assets/uploads/logos/avenzur-logov2-024.png">
+  <meta property="og:url" content="https://avenzur.com">
+  <meta name="twitter:title" content="avenzur | Health, Wellness & Beauty">
+  <meta name="twitter:description" content="Avenzur is a Health, Wellness and Beauty Store. Shop daily vitamins, supplements, beauty, skin care products and more.">
+  <meta name="twitter:url" content="https://avenzur.com/assets/uploads/logos/avenzur-logov2-024.png">
+  <meta name="twitter:card" content="summary">
   <!--<link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>-->
   <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;1,100;1,300;1,400;1,700&family=Manrope:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
