@@ -586,7 +586,7 @@ function gen_html(t) {
       //1 != site.settings.products_page && (0 === a ? e += '<div class="row">' : a % s == 0 && (e += '</div><div class="row">')),
       //e += '<div class="product-container ' + i + " " + (1 == site.settings.products_page ? "grid-item" : "") + '">\n        <div class="product ' + o + " " + (1 == site.settings.products_page ? "grid-sizer" : "") + '">\n        ' + (r.promo_price ? '<span class="badge badge-right theme">Promo</span>' : "") + '\n        <div class="product-top">\n        <div class="product-image">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <img class="img-responsive" src="' + site.base_url + "assets/uploads/" + r.image + '" alt=""/>\n        </a>\n        </div>\n        <div class="product-desc">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <h2 class="product-name">' + r.name + "</h2>\n        </a>\n        <p>" + r.details + '</p>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        ' + (1 == site.shop_settings.hide_price ? "" : '\n        <div class="product-bottom">\n        <div class="product-price">\n        ' + (r.promo_price ? '<del class="text-danger text-size-sm">' + l + "</del>" : "") + "\n        " + c + '\n        </div>\n        <div class="product-rating">\n        <div class="form-group" style="margin-bottom:0;">\n        <div class="input-group">\n        <span class="input-group-addon pointer btn-minus"><span class="fa fa-minus"></span></span>\n        <input type="text" name="quantity" class="form-control text-center quantity-input" value="1" required="required">\n        <span class="input-group-addon pointer btn-plus"><span class="fa fa-plus"></span></span>\n        </div>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        <div class="product-cart-button">\n        <div class="btn-group" role="group" aria-label="...">\n        <button class="btn btn-info add-to-wishlist" data-id="' + r.id + '"><i class="fa fa-heart-o"></i></button>\n        <button class="btn btn-theme add-to-cart" data-id="' + r.id + '"><i class="fa fa-shopping-cart padding-right-md"></i> ' + lang.add_to_cart + '</button>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        </div>') + '\n        </div>\n        <div class="clearfix"></div>\n        </div>',
       //1 != site.settings.products_page && a + 1 === t.length && (e += "</div>")
-
+      
       e += '<div class="col-xl-3 col-lg-4 col-md-6 col-6 product-cards-cont">';
       e += '<div class="card" style="width: 100%">';
       //e += '<a href="#" class="text-decoration-none">';
@@ -596,6 +596,13 @@ function gen_html(t) {
           '<span class="position-absolute badge rounded-pill bg-danger" style="top:12px;left:12px;font-size:10px">' +
           Math.round(((r.price - r.promo_price) / r.price) * 100) +
           "% OFF</span>";
+      }
+
+      if (r.global) {
+        e +=
+          '<span class="position-absolute badge" style="top:0px;right:0px;width: 90px;">' +
+          '<img src="'+site.base_url+'assets/images/global.jpg" style="height:20px;" class="card-img-top" alt="Global">' +
+          "</span>";
       }
       e +=
         '<a href="' +

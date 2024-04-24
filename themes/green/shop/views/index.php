@@ -354,6 +354,17 @@
                                                         </span>
                                                         <?php
                                                       }
+
+                                                      if($popular_product->global == 1){
+                                                        ?>
+                                                          <!--<span class="position-absolute badge rounded-pill bg-info" style="top:0px;right:0px;font-size:10px">
+                                                            Global
+                                                          </span>-->
+                                                          <span class="position-absolute badge" style="top:0px;right:0px;width: 90px;">
+                                                            <img src="<?= base_url('assets/images/global.jpg'); ?>" style="height:20px;" class="card-img-top" alt="Global">
+                                                          </span>
+                                                        <?php
+                                                      }
                                                     ?>
                                                     
                                                     <a href="<?= site_url('product/' . $popular_product->slug); ?>" class="text-decoration-none">
