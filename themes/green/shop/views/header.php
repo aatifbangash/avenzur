@@ -62,6 +62,7 @@
     <?php echo htmlspecialchars($seo_title); ?>
   </title>
   <link rel="icon" type="image/x-icon" href="<?= base_url('assets/images/avenzur-png.png'); ?>">
+  <link rel="canonical" href="https://avenzur.com" />
   <meta name="description" content="<?php echo htmlspecialchars($seo_description); ?>">
   <meta name="keywords" content="<?php echo $seo_keywords; ?>">
   <meta name="p:domain_verify" content="0704e772b1ab59012494397c16667a45"/>
