@@ -495,6 +495,17 @@
                                 </span>
                                 <?php
                               }
+
+                              if($sp->global == 1){
+                                ?>
+                                  <!--<span class="position-absolute badge rounded-pill bg-info" style="top:0px;right:0px;font-size:10px">
+                                    Global
+                                  </span>-->
+                                  <span class="position-absolute badge" style="top:0px;right:0px;width: 90px;">
+                                    <img src="<?= base_url('assets/images/global.jpg'); ?>" style="height:20px;" class="card-img-top" alt="Global">
+                                  </span>
+                                <?php
+                              }
                             ?>
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
                             <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="<?= $sp->name; ?>">
@@ -616,6 +627,17 @@
                                 </span>
                                 <?php
                               }
+
+                              if($sp->global == 1){
+                                ?>
+                                  <!--<span class="position-absolute badge rounded-pill bg-info" style="top:0px;right:0px;font-size:10px">
+                                    Global
+                                  </span>-->
+                                  <span class="position-absolute badge" style="top:0px;right:0px;width: 90px;">
+                                    <img src="<?= base_url('assets/images/global.jpg'); ?>" style="height:20px;" class="card-img-top" alt="Global">
+                                  </span>
+                                <?php
+                              }
                             ?>
                             <a href="<?= site_url('product/' . $sp->slug); ?>" class="text-decoration-none">
                             <img src="<?= base_url('assets/uploads/' . $sp->image); ?>" class="card-img-top" alt="<?= $sp->name; ?>">
@@ -712,6 +734,17 @@
                                   <span class="position-absolute badge rounded-pill bg-danger" style="top:0px;left:0px;font-size:10px">
                                     <?php echo round((($sp->price - $sp->promo_price) / $sp->price) * 100); ?>% OFF
                                 </span>
+                                <?php
+                              }
+
+                              if($sp->global == 1){
+                                ?>
+                                  <!--<span class="position-absolute badge rounded-pill bg-info" style="top:0px;right:0px;font-size:10px">
+                                    Global
+                                  </span>-->
+                                  <span class="position-absolute badge" style="top:0px;right:0px;width: 90px;">
+                                    <img src="<?= base_url('assets/images/global.jpg'); ?>" style="height:20px;" class="card-img-top" alt="Global">
+                                  </span>
                                 <?php
                               }
                             ?>
@@ -847,6 +880,17 @@
                                           <span class="position-absolute badge rounded-pill bg-danger" style="top:8px;left:8px;font-size:10px">
                                             <?php echo round((($sp->price - $sp->promo_price) / $sp->price) * 100); ?>% OFF
                                         </span>
+                                        <?php
+                                      }
+
+                                      if($sp->global == 1){
+                                        ?>
+                                          <!--<span class="position-absolute badge rounded-pill bg-info" style="top:0px;right:0px;font-size:10px">
+                                            Global
+                                          </span>-->
+                                          <span class="position-absolute badge" style="top:0px;right:0px;width: 90px;">
+                                            <img src="<?= base_url('assets/images/global.jpg'); ?>" style="height:20px;" class="card-img-top" alt="Global">
+                                          </span>
                                         <?php
                                       }
                                     ?>
