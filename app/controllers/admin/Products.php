@@ -45,9 +45,6 @@ class Products extends MY_Controller
     }
 
     public function google_merch_apis($id, $data){
-        ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
         $data['details'] = str_replace('<p><strong>Highlights:</strong></p>','',$data['details']);
         $data['details'] = str_replace('<p>','',$data['details']);
         $data['details'] = str_replace('</p>','',$data['details']);
@@ -56,9 +53,9 @@ error_reporting(E_ALL);
         $data['details'] = str_replace('<li>','',$data['details']);
         $data['details'] = str_replace('</li>','',$data['details']);
         
-        $brand_details = $this->products_model->getBrandByID($data['brand']);
         $product_photos = $this->products_model->getProductPhotos($id);
         $product_details = $this->products_model->getProductByID($id);
+        $brand_details = $this->products_model->getBrandByID($product_details->brand);
 
         $photos_arr = array();
 
