@@ -1850,6 +1850,7 @@ button.modalcloseBtn {
     width: 40%;
   }
   .heroSlider .carousel-indicators {
+    z-index: 1;
    /* width: 21%;
     margin: 0;
     margin-left: 0px;
