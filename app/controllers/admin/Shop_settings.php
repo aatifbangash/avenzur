@@ -250,7 +250,7 @@ class Shop_settings extends MY_Controller
     public function abandoned_cart(){
         $this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-
+        
         $response_arr = array();
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
@@ -375,12 +375,37 @@ class Shop_settings extends MY_Controller
         
     }
 
+    public function activate_tag(){
+        $tag_id = $_POST['id'];
+        $tag_detail = $this->shop_admin_model->getTagById($tag_id);
+        $field_detail = $tag_detail->field;
+        $operator = $tag_detail->operator;
+        $value = $tag_detail->value;
+        $tag_name = $tag_detail->name;
+
+        $field_arr = explode('.', $field_detail);
+        $table_name = $field_arr[0];
+        $field_name = $field_arr[1];
+        $field_type = str_replace('sma_', "", $table_name);
+        $records = $this->shop_admin_model->executeTag($table_name, $field_name, $operator, $value, $tag_id);
+        foreach ($records as $record){
+            $inserted = $this->shop_admin_model->assignTag($record->id, $tag_id, $field_type);
+        }
+
+        $this->shop_admin_model->updateTagStatus($tag_id);
+
+        header('Location: ' . admin_url('shop_settings/tags'));
+        
+    }
+
     public function tags(){
         $this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-
+        
         $response_arr = array();
-        if ($_POST['submit']) {
+        if (isset($_POST['add_tag'])) {
+            $this->shop_admin_model->addTag($_POST);
+
             $tags_array = $this->shop_admin_model->getAllTags();
             $this->data['tags_array'] = $tags_array;
 
@@ -396,6 +421,13 @@ class Shop_settings extends MY_Controller
             $meta = ['page_title' => lang('tags'), 'bc' => $bc];
             $this->page_construct('settings/tags', $meta, $this->data);
         }
+    }
+
+    public function addTag(){
+        $this->sma->checkPermissions();
+
+        $this->data[] = [];
+        $this->load->view($this->theme . 'settings/add_tags', $this->data);
     }
 
     public function slider()

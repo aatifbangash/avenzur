@@ -55,6 +55,7 @@
                                     <th>#</th>
                                     <th><?= lang('customerId'); ?></th>
                                     <th><?= lang('email'); ?></th>
+                                    <th><?= lang('mobile'); ?></th>
                                     <th><?= lang('time'); ?></th>
                                     <th><?= lang('cart_total'); ?></th>
                                     <th><?= lang('total_items'); ?></th>
@@ -78,6 +79,7 @@
                                         <td><?= $count; ?></td>
                                         <td><?= $rec->user_id; ?></td>
                                         <td><?= $rec->email; ?></td>
+                                        <td><?= $rec->phone; ?></td>
                                         <td><?= date('Y-m-d H:i:s', $rec->time); ?></td>
                                         <td><?= $cart_obj->cart_total; ?></td>
                                         <td><?= $cart_obj->total_items; ?></td>

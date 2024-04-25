@@ -108,6 +108,52 @@ class Shop_admin_model extends CI_Model
         return $this->db->get('categories')->result();
     }
 
+    public function assignTag($record_id, $tag_id, $field_type){
+        $data = array('type' => $field_type, 'type_id' => $record_id, 'tag_id' => $tag_id);
+        if ($this->db->insert('assigned_tags', $data)) {
+            return true;
+        }
+        return false;
+    }
+
+    public function updateTagStatus($tag_id){
+        if ($this->db->update('tags', ['status' => 1], ['id' => $tag_id])) {
+            return true;
+        }
+        return false;
+    }
+
+    public function executeTag($table_name, $field_name, $operator, $value, $tag_id){
+        $this->db->delete('assigned_tags', ['tag_id' => $tag_id]);
+        $q = $this->db->where($field_name.' '.$operator, $value)
+                ->get($table_name);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        
+        return false;
+    }
+
+    public function addTag($post_array){
+        unset($post_array['add_tag']);
+        $post_array['date_created'] = date('Y-m-d h:i:s');
+        if ($this->db->insert('tags', $post_array)) {
+            return true;
+        }
+        return false;
+    }
+
+    public function getTagById($id){
+        $q = $this->db->get_where('tags', ['id' => $id]);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }   
+
     public function getAllTags(){
         $this->db->select('sma_tags.*');
         $this->db->from('sma_tags');
@@ -116,9 +162,10 @@ class Shop_admin_model extends CI_Model
     }
 
     public function getAbandonedCart($start_date, $end_date){
-        $this->db->select('cart.*, users.email');
+        $this->db->select('cart.*, users.email, companies.phone');
         $this->db->from('cart');
         $this->db->join('users', 'cart.user_id = users.id', 'left');
+        $this->db->join('companies', 'users.company_id = companies.id', 'left');
         $this->db->order_by('cart.time', 'DESC');
         return $this->db->get()->result();
     }
