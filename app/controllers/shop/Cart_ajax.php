@@ -523,7 +523,7 @@ class Cart_ajax extends MY_Shop_Controller
                 $product_id = $item['product_id'];
                 $warehouse_quantities = $this->shop_model->getProductQuantitiesInWarehouses($product_id);
                 foreach ($warehouse_quantities as $wh_quantity){
-                    if($wh_quantity->warehouse_id == '6' || $wh_quantity->warehouse_id == '7'){
+                    if($wh_quantity->warehouse_id == '7'){
                         $virtual_pharmacy_items += $wh_quantity->quantity;
                     }
                 }

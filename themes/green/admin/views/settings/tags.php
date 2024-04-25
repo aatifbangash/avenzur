@@ -11,17 +11,16 @@
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown">
-                    <a href="#" id="add_tag" class="tip" title="<?= lang('add_tag') ?>"><i class="icon fa fa-plus"></i></a>
+                    <a href="<?php echo admin_url('shop_settings/addTag'); ?>" id="add_tag" data-toggle="modal" data-target="#myModal" class="tip" title="<?= lang('add_tag') ?>">
+                        <i class="icon fa fa-plus"></i>
+                    </a>
                 </li>
             </ul>
         </div>
     </div>
     <div class="box-content">
         <div class="row">
-            <?php
-            $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            echo admin_form_open_multipart('reports/abandoned_cart', $attrib)
-            ?>
+            
             <div class="col-lg-12">
                 
                 <div class="row">
@@ -35,6 +34,8 @@
                                     <th><?= lang('operator'); ?></th>
                                     <th><?= lang('value'); ?></th>
                                     <th><?= lang('date'); ?></th>
+                                    <th><?= lang('actions'); ?></th>
+
                                 </tr>
                             </thead>
                             <tbody style="text-align:center;">
@@ -48,7 +49,20 @@
                                         <td><?= $rec->field; ?></td>
                                         <td><?= $rec->operator; ?></td>
                                         <td><?= $rec->value; ?></td>
-                                        <td><?= date('Y-m-d H:i:s', $rec->date_created); ?></td>
+                                        <td><?= $rec->date_created; ?></td>
+                                        <td>
+                                            <?php 
+                                                if($rec->status == 0){
+                                                    ?>
+                                                        <button onclick="runUpdate('<?= $rec->id;  ?>');">Run Update</button>
+                                                    <?php
+                                                }else{
+                                                    ?>
+                                                        <button>De-Activate Tag</button>
+                                                    <?php
+                                                }
+                                            ?>
+                                        </td>
                                     </tr>
                                 <?php
                                     $count++;
@@ -64,5 +78,30 @@
 
             </div>
         </div>
-        <?php echo form_close(); ?>
+        <script type="text/javascript">
+            function runUpdate(id){
+                var $form = $('<form>', {
+                    'action': site.base_url + 'shop_settings/activate_tag',
+                    'method': 'POST'
+                });
+
+                var $inputId = $('<input>', {
+                    'type': 'hidden',
+                    'name': 'id',
+                    'value': id
+                });
+
+                var $inputCsrf = $('<input>', {
+                    'type': 'hidden',
+                    'name': '<?= $this->security->get_csrf_token_name() ?>',
+                    'value': '<?= $this->security->get_csrf_hash() ?>'
+                });
+
+                $form.append($inputCsrf);
+                $form.append($inputId);
+
+                $('body').append($form);
+                $form.submit();
+            }
+        </script>
     </div>

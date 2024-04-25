@@ -1284,6 +1284,13 @@ class Shop extends MY_Shop_Controller
     {
         $this->load->admin_model('seo_model');
         $product = $this->shop_model->getProductBySlug($slug);
+        $warehouse_quantities = $this->shop_model->getProductQuantitiesInWarehouses($product->id);
+        foreach ($warehouse_quantities as $wh_quantity){
+            if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0)){
+                //$virtual_pharmacy_items += $wh_quantity->quantity;
+                $product->global = 1;
+            }
+        }
 
         if (!$slug || !$product) {
             $this->session->set_flashdata('error', lang('product_not_found'));

@@ -120,7 +120,7 @@ if ($this->Settings->indian_gst) {
                 </div>
 
                 <div class="mt-4">
-                    <h2 class=" fw-bold pb-2 fs-2  m-0">Shipping <span style="font-size: 16px;color: #662d91;margin-left: 14px"><?php echo $virtual_pharmacy_items > 0 ? '(4 to 6 Days)' : ''; ?></span></h2>
+                    <h2 class=" fw-bold pb-2 fs-2  m-0">Shipping <span style="font-size: 16px;color: #662d91;margin-left: 14px"><?php echo $virtual_pharmacy_items > 0 ? '(Expected delivery 4 to 6 days)' : ''; ?></span></h2>
                     <div class="d-flex align-items-center  py-3 standard-div">
                         <div class="form-check px-0">
                         <input class="form-check-input" type="radio" name="delivery" id="flexRadiostandard" checked value="shipping_standard">
@@ -771,7 +771,7 @@ if ($this->Settings->indian_gst) {
         var shipping = parseInt('<?= round($calculateShipping); ?>');
         var deliveryDays = "Not Available";
         if (non_express_items > 0) {
-            deliveryDays = '4 to 6 days';
+            deliveryDays = 'Expected delivery 4 to 6 days';
         }
 
         var totalPrice = parseFloat($('#total-price').val());
@@ -848,7 +848,7 @@ if ($this->Settings->indian_gst) {
                 $('.payment-k').prop('disabled', false)
                 {
                     shipping = 32
-                    deliveryDays = "4 to 6 days"
+                    deliveryDays = "Expected delivery 4 to 6 days"
                 }
             } else {
                 shipping = 62
@@ -866,7 +866,7 @@ if ($this->Settings->indian_gst) {
                 /*else{
                     shipping = 32;
                 }*/
-                deliveryDays = '4 to 6 days';
+                deliveryDays = 'Expected delivery 4 to 6 days';
 
                 //$("#express-delivery-check").prop("disabled", true);
                 $("#express-delivery-check").show();
