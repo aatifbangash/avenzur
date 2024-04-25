@@ -7,19 +7,7 @@ require 'vendor/autoload.php';
 $mail = new PHPMailer\PHPMailer\PHPMailer();
 
 // Set up your mailer here as needed
-$mail->isSMTP();
-$mail->Host = 'smtp.gmail.com'; // Specify main and backup SMTP servers
-$mail->SMTPAuth = true; // Enable SMTP authentication
-$mail->Username = 'aleemktk@gmail.com'; // SMTP username
-$mail->Password = 'bpnzmdrbhwbrxclc'; // SMTP password
-$mail->SMTPSecure = 'tls'; // Enable TLS encryption, `ssl` also accepted
-$mail->Port = 587; // TCP port to connect to
 
-$mail->setFrom('aleemktk@gmail.com', 'Avenzur');
-$mail->addAddress('aleemktk@gmail.com', 'Aleem Nawaz'); // Add a recipient
-
-$mail->isHTML(true); // Set email format to HTML
-$mail->Subject = 'Your Order is on the way';
 
 // Assuming you have variables like $orderID, $orderTotal, $productName, etc.
 $orderID = 'NSAG30073449315';
@@ -249,6 +237,24 @@ $username =  "remote_user";
 $password = 're$Pa1msee$ot_ur';
 $database = "retaj";
 
+
+$mail->isSMTP();
+$mail->Host = 'smtp.gmail.com'; // Specify main and backup SMTP servers
+$mail->SMTPAuth = true; // Enable SMTP authentication
+$mail->Username = 'info@avenzur.com'; // SMTP username
+$mail->Password = 'aheoyqmsowyhclea'; //'bpnzmdrbhwbrxclc'; // SMTP password
+$mail->SMTPSecure = 'ssl'; // Enable TLS encryption, `ssl` also accepted
+$mail->Port = 465; // TCP port to connect to
+
+// $mail->isSMTP();
+// $mail->Host = 'smtp.gmail.com'; // Specify main and backup SMTP servers
+// $mail->SMTPAuth = true; // Enable SMTP authentication
+// $mail->Username = 'aleemktk@gmail.com'; // SMTP username
+// $mail->Password = 'bpnzmdrbhwbrxclc'; //'bpnzmdrbhwbrxclc'; // SMTP password
+// $mail->SMTPSecure = 'tls'; // Enable TLS encryption, `ssl` also accepted
+// $mail->Port = 587; // TCP port to connect to
+// $mail->isHTML(true); // Set email format to HTML
+
 // $hostname = "localhost";
 // $username = "root";
 // $password = '';
@@ -307,8 +313,8 @@ if ($result_sales->num_rows > 0) {
         $tracking_status = $billResponse->data[0]->details[0]->scanType;
         echo $order_id.' $$ '.$tracking_status;
 
-        // $stmt = $conn->prepare("UPDATE sma_sales SET courier_order_tracking_id = ?, courier_order_status = ? WHERE id = ?");
-        // $stmt->bind_param("ssi", $tracking_id, $tracking_status, $order_id);
+        $stmt = $conn->prepare("UPDATE sma_sales SET courier_order_tracking_id = ?, courier_order_status = ? WHERE id = ?");
+        $stmt->bind_param("ssi", $tracking_id, $tracking_status, $order_id);
         //if ($stmt->execute() === TRUE) {
         if (1==1) {
             //echo 'cusotmerid'.$sale['customer_id'];
@@ -346,7 +352,6 @@ if ($result_sales->num_rows > 0) {
 
             //sending delivered email for status update
             if ($tracking_status == 'Sign scan') { // Assuming 'Sign scan' indicates delivered
-                
 
                 $messageBody = '
                 <!DOCTYPE html>
@@ -386,7 +391,7 @@ if ($result_sales->num_rows > 0) {
                         padding: 20px;
                     }
                     .button {
-                        background-color: #008000;
+                        background-color: #4062B9;
                         color: white;
                         padding: 10px;
                         text-decoration: none;
@@ -433,27 +438,29 @@ if ($result_sales->num_rows > 0) {
                       }
                       .progress-bar-fill {
                         width: 100%; /* Could be dynamic based on delivery status */
-                        height: 15px; /* Fixed height of the fill */
+                        height: 18px; /* Fixed height of the fill */
                         background-color: #4CAF50; /* Green background */
                         text-align: center; /* Center text in the fill */
                         line-height: 15px; /* Center text vertically */
                         color: white; /* Text color */
+                        font-weight: bold;
+                        font-size: 15px;
                       }
                 
                 </style>
                 </head>
                 <body>
                 <div class="container">
-                    <div class="header">
+                    <div class="header" style="background-image: url(https://avenzur.com/assets/images/great_news.jpg); background-size: cover; background-position: center; background-repeat: no-repeat; color: white; padding: 20px 0;">
                         <!-- Header Content -->
-                        <p style="text-align: left"><img src="https://avenzur.com/assets/uploads/logos/avenzur-logov2-024.png" alt="Logo" width="100"></p>
-                        <h1>Great news!</h1>
+                        <p style="text-align: left"></p>
+                        <h1>&nbsp;</h1>
                     </div>
                     <div class="main-content">
                        
                         <!-- Main Content -->
-                        <p>Hala '.$customer_name.',</p>
-                        <p>An item from your order has been delivered. We hope you enjoy your purchase.</p>
+                        <p>Dear '.$customer_name.',</p>
+                        <p>An item(s) from your order has been delivered. We hope you enjoy your purchase.</p>
                         <p>Click on the review button below to let us know how we can deliver better products and services.</p>
                         <div class="progress-bar">
                           <div class="progress-bar-fill">Delivered</div>
@@ -463,7 +470,7 @@ if ($result_sales->num_rows > 0) {
                         <div class="column">
                           <p><strong>Order Summary</strong></p>
                           <p>Order No: '.$order_id.'</p>
-                          <p>Order Total: SAR '.$sale['total'].'</p>
+                          <p>Order Total: SAR '.number_format($sale['total'], 2, '.', '').'</p>
                           <p>Payment: DirectPay</p>
                         </div>
                         <div class="column">
@@ -483,10 +490,10 @@ if ($result_sales->num_rows > 0) {
                       </div>
                       <div class="product-description">
                         <p>'.$item['product_name'].'</p>
-                        <p>Quantity: '.$item['quantity'].'</p>
+                        <p>Quantity: '.(int) $item['quantity'].'</p>
                       </div>
                       <div class="product-price">
-                        <p>SAR '.$item['subtotal'].'</p>
+                        <p>SAR '.number_format($item['subtotal'], 2, '.', '').'</p>
                       </div>
                     </div>';
                     } 
@@ -494,8 +501,8 @@ if ($result_sales->num_rows > 0) {
                     $messageBody .= '</div>
                     <div class="footer">
                         <!-- Footer Content --> 
-                        <p>You are receiving this email as you register on <a href="avenzor.com">Avenzor.com</a></p>
-                        <p><strong>2024 Avenzor E-Commerce</strong> </p>
+                        <p>You are receiving this email as you register on <a href="avenzur.com">Avenzur.com</a></p>
+                        <p><strong>2024 Avenzur E-Commerce</strong> </p>
                     </div>
                 </div>
                 </body>
@@ -503,7 +510,30 @@ if ($result_sales->num_rows > 0) {
 
                 echo "Cusotmer Email :".$customer_data['email'] ;
                 echo '<br>'.$messageBody.'<br>';
+            
+               
+                $mail->Subject = 'Your avenzur order has been delivered!';
 
+                $mail->setFrom('aleemktk@gmail.com', 'Avenzur');
+                $mail->addAddress($customer_data['email'] , $customer_name ); // Add a recipient
+                //$mail->addAddress('braphael@avenzur.com', 'Benoy');
+                //$mail->addAddress('ama@pharma.com.sa','Dr Amr');
+
+                $mail->Body = $messageBody;
+
+
+                if (!$mail->send()) {
+                    echo 'Message could not be sent. Mailer Error: ', $mail->ErrorInfo;
+                } else {
+                    $stmt = $conn->prepare("UPDATE sma_sales SET courier_order_tracking_id = ?, courier_order_status = ? WHERE id = ?");
+                    $stmt->bind_param("ssi", $tracking_id, $tracking_status, $order_id);
+                    $stmt->execute() ;
+        //if ($stmt->execute() === TRUE) {
+                    echo 'Message has been sent';
+                }
+
+                $mail->clearAddresses(); 
+            
 
             } 
             $stmt_items->close();
