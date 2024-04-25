@@ -375,27 +375,36 @@ class Shop_settings extends MY_Controller
         
     }
 
+    public function delete_tag(){
+        $tag_id = $_POST['id'];
+        $this->shop_admin_model->deleteTag($tag_id);
+
+        header('Location: ' . admin_url('shop_settings/tags'));
+    }
+
     public function activate_tag(){
         $tag_id = $_POST['id'];
         $tag_detail = $this->shop_admin_model->getTagById($tag_id);
-        $field_detail = $tag_detail->field;
+        $field_detail = json_decode($tag_detail->field, true);
         $operator = $tag_detail->operator;
         $value = $tag_detail->value;
         $tag_name = $tag_detail->name;
 
-        $field_arr = explode('.', $field_detail);
-        $table_name = $field_arr[0];
-        $field_name = $field_arr[1];
-        $field_type = str_replace('sma_', "", $table_name);
-        $records = $this->shop_admin_model->executeTag($table_name, $field_name, $operator, $value, $tag_id);
+        $field_arr = json_decode($field_detail, true);
+        $source_table = $field_arr['source_table'];
+        $source_field = $field_arr['source_field'];
+        $destination_field = $field_arr['destination_field'];
+        $destination_table = $field_arr['destination_table'];
+        
+        $field_type = str_replace('sma_', "", $destination_table);
+        $records = $this->shop_admin_model->executeTag($source_table, $source_field, $operator, $value, $tag_id);
         foreach ($records as $record){
-            $inserted = $this->shop_admin_model->assignTag($record->id, $tag_id, $field_type);
+            $inserted = $this->shop_admin_model->assignTag($record->{$destination_field}, $tag_id, $field_type);
         }
 
         $this->shop_admin_model->updateTagStatus($tag_id);
 
         header('Location: ' . admin_url('shop_settings/tags'));
-        
     }
 
     public function tags(){

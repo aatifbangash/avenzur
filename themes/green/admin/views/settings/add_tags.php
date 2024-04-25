@@ -1,11 +1,26 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
 <?php 
-    $fields = array('price' => 'sma_products.price', 
-                    'locality' => 'sma_companies.city', 
-                    'order items' => 'sma_sales.total_items',
-                    'order_value' => 'sma_sales.grand_total'
-                );
+    $fields = array(
+        'price' => '{
+            "source_table": "sma_products",
+            "source_field": "price",
+            "destination_table": "sma_products",
+            "destination_field": "id"
+        }', 
+        'locality' => '{
+            "source_table": "sma_companies",
+            "source_field": "city",
+            "destination_table": "sma_companies",
+            "destination_field": "id"
+        }',
+        'product_warehouse' => '{
+            "source_table": "sma_warehouses_products",
+            "source_field": "warehouse_id",
+            "destination_table": "sma_products",
+            "destination_field": "product_id"
+        }'
+    );
 
     $operators = array('=', '<', '>', '<=', '>=', '!=', 'LIKE');
 ?>
@@ -37,7 +52,7 @@
                         <?php 
                             foreach($fields as $field => $value){
                                 ?>
-                                    <option value="<?= $value; ?>"><?= $field; ?></option>
+                                    <option value="<?= htmlspecialchars(json_encode($value)); ?>"><?= $field; ?></option>
                                 <?php
                             }
                         ?>

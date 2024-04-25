@@ -143,11 +143,19 @@ class Products extends MY_Controller
             $productContent->setDescription($productData['description']);
             $productContent->setLink($productData['link']);
             $productContent->setImageLink($productData['imageLink']);
+            $productContent->setBrand($productData['brand']);
 
             $price = new Google_Service_ShoppingContent_Price();
             $price->setValue($productData['price']['value']);
             $price->setCurrency($productData['price']['currency']);
             $productContent->setPrice($price);
+
+            if($productData['salePrice']['value']){
+                $salePrice = new Google_Service_ShoppingContent_Price();
+                $salePrice->setValue($productData['salePrice']['value']);
+                $salePrice->setCurrency($productData['salePrice']['currency']);
+                $productContent->setSalePrice($salePrice);
+            }
 
             $productContent->setAvailability($productData['availability']);
             

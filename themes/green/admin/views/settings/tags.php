@@ -42,26 +42,20 @@
                                 <?php
                                 $count = 1;
                                 foreach ($tags_array as $rec) {
+                                    $field_details = json_decode($rec->field, true);
+                                    $field_arr = json_decode($field_details, true);
+                                    
                                 ?>
                                     <tr>
                                         <td><?= $count; ?></td>
                                         <td><?= $rec->name; ?></td>
-                                        <td><?= $rec->field; ?></td>
+                                        <td><?= $field_arr['source_field']; ?></td>
                                         <td><?= $rec->operator; ?></td>
                                         <td><?= $rec->value; ?></td>
                                         <td><?= $rec->date_created; ?></td>
                                         <td>
-                                            <?php 
-                                                if($rec->status == 0){
-                                                    ?>
-                                                        <button onclick="runUpdate('<?= $rec->id;  ?>');">Run Update</button>
-                                                    <?php
-                                                }else{
-                                                    ?>
-                                                        <button>De-Activate Tag</button>
-                                                    <?php
-                                                }
-                                            ?>
+                                            <button onclick="runUpdate('<?= $rec->id;  ?>');">Run Update</button>
+                                            <button style="margin-left: 5px;" onclick="deleteTag('<?= $rec->id;  ?>');">Delete Tag</button>
                                         </td>
                                     </tr>
                                 <?php
@@ -79,6 +73,31 @@
             </div>
         </div>
         <script type="text/javascript">
+            function deleteTag(id){
+                var $form = $('<form>', {
+                    'action': site.base_url + 'shop_settings/delete_tag',
+                    'method': 'POST'
+                });
+
+                var $inputId = $('<input>', {
+                    'type': 'hidden',
+                    'name': 'id',
+                    'value': id
+                });
+
+                var $inputCsrf = $('<input>', {
+                    'type': 'hidden',
+                    'name': '<?= $this->security->get_csrf_token_name() ?>',
+                    'value': '<?= $this->security->get_csrf_hash() ?>'
+                });
+
+                $form.append($inputCsrf);
+                $form.append($inputId);
+
+                $('body').append($form);
+                $form.submit();
+            }
+
             function runUpdate(id){
                 var $form = $('<form>', {
                     'action': site.base_url + 'shop_settings/activate_tag',
