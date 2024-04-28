@@ -16,7 +16,9 @@
                             <div class="panel-heading text-bold" style="font-size: 17px !important">
                                 <?= $page->title; ?>
                             </div>
-                            <img class="card-img-top" src="<?php echo site_url('assets/uploads/'.$page->image); ?>" style=";margin-bottom: 15px;" >
+                            <div class="card-img-top" style=";margin-bottom: 15px;">
+                                <img src="<?php echo site_url('assets/uploads/'.$page->image); ?>" >
+                            </div>
                             <div class="panel-body">
                                 <?= $this->sma->decode_html($page->body); ?>
                                 <?php
