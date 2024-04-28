@@ -12,7 +12,7 @@
                 <div class="row">
                     <div class="col-sm-9 col-md-10">
                         <div class="panel panel-default margin-top-lg">
-                            <img class="card-img-top" src="<?php echo site_url('assets/uploads/'.$post['image']); ?>" >
+                            <img class="card-img-top" src="<?php echo site_url('assets/uploads/'.$page->image); ?>" >
                             <div class="panel-heading text-bold" style="font-size: 17px !important;margin-bottom: 15px;">
                                 <?= $page->title; ?>
                             </div>
