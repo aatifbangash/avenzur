@@ -356,71 +356,79 @@ class Shop extends MY_Shop_Controller
                 $gst_data = [];
                 $pro_weight = [];
                 $total_cgst = $total_sgst = $total_igst = 0;
+                $out_stock_item_found = false;
                 foreach ($this->cart->contents() as $item) {
                     $item_option = null;
                     if ($product_details = $this->shop_model->getProductForCart($item['product_id'])) {
-                        $price = $this->sma->setCustomerGroupPrice(($this->loggedIn && isset($product_details->special_price) ? $product_details->special_price : $product_details->price), $this->customer_group);
-                        $price = $this->sma->isPromo($product_details) ? $product_details->promo_price : $price;
-                        if ($item['option']) {
-                            if ($product_variant = $this->shop_model->getProductVariantByID($item['option'])) {
-                                $item_option = $product_variant->id;
-                                $price = $product_variant->price + $price;
+                        if($product_details->quantity > 0){
+                            $price = $this->sma->setCustomerGroupPrice(($this->loggedIn && isset($product_details->special_price) ? $product_details->special_price : $product_details->price), $this->customer_group);
+                            $price = $this->sma->isPromo($product_details) ? $product_details->promo_price : $price;
+                            if ($item['option']) {
+                                if ($product_variant = $this->shop_model->getProductVariantByID($item['option'])) {
+                                    $item_option = $product_variant->id;
+                                    $price = $product_variant->price + $price;
+                                }
                             }
+
+                            $item_net_price = $unit_price = $price;
+                            $item_quantity = $item_unit_quantity = $item['qty'];
+                            $pr_item_tax = $item_tax = 0;
+                            $tax = '';
+
+                            if (!empty($product_details->tax_rate)) {
+                                $tax_details = $this->site->getTaxRateByID($product_details->tax_rate);
+                                $ctax = $this->site->calculateTax($product_details, $tax_details, $unit_price);
+                                $item_tax = $ctax['amount'];
+                                $tax = $ctax['tax'];
+                                if ($product_details->tax_method != 1) {
+                                    $item_net_price = $unit_price - $item_tax;
+                                }
+                                $pr_item_tax = $this->sma->formatDecimal(($item_tax * $item_unit_quantity), 4);
+                                if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($biller->state == $customer->state), $tax_details)) {
+                                    $total_cgst += $gst_data['cgst'];
+                                    $total_sgst += $gst_data['sgst'];
+                                    $total_igst += $gst_data['igst'];
+                                }
+                            }
+
+                            $product_tax += $pr_item_tax;
+                            $subtotal = (($item_net_price * $item_unit_quantity) + $pr_item_tax);
+
+                            $unit = $this->site->getUnitByID($product_details->unit);
+
+                            $product = [
+                                'product_id' => $product_details->id,
+                                'product_code' => $product_details->code,
+                                'product_name' => $product_details->name,
+                                'product_type' => $product_details->type,
+                                'option_id' => $item_option,
+                                'net_unit_price' => $item_net_price,
+                                'unit_price' => $this->sma->formatDecimal($item_net_price + $item_tax),
+                                'quantity' => $item_quantity,
+                                'product_unit_id' => $unit ? $unit->id : null,
+                                'product_unit_code' => $unit ? $unit->code : null,
+                                'unit_quantity' => $item_unit_quantity,
+                                'warehouse_id' => $this->shop_settings->warehouse,
+                                'item_tax' => $pr_item_tax,
+                                'tax_rate_id' => $product_details->tax_rate,
+                                'tax' => $tax,
+                                'discount' => null,
+                                'item_discount' => 0,
+                                'subtotal' => $this->sma->formatDecimal($subtotal),
+                                'serial_no' => null,
+                                'real_unit_price' => $price,
+                            ];
+                            $ww = $this->shop_model->getProductByID($product_details->id);
+                            $ww2 = array('product_weight' => $ww->weight);
+                            $pro_weight[] = $ww2;
+                            $products[] = ($product + $gst_data);
+                            $total += $this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                        }else{
+                            $out_stock_item_found = true;
+                            $this->session->set_flashdata('error', lang('out of stock item') . ' (' . $item['name'] . ')');
+                            redirect('cart');
                         }
-
-                        $item_net_price = $unit_price = $price;
-                        $item_quantity = $item_unit_quantity = $item['qty'];
-                        $pr_item_tax = $item_tax = 0;
-                        $tax = '';
-
-                        if (!empty($product_details->tax_rate)) {
-                            $tax_details = $this->site->getTaxRateByID($product_details->tax_rate);
-                            $ctax = $this->site->calculateTax($product_details, $tax_details, $unit_price);
-                            $item_tax = $ctax['amount'];
-                            $tax = $ctax['tax'];
-                            if ($product_details->tax_method != 1) {
-                                $item_net_price = $unit_price - $item_tax;
-                            }
-                            $pr_item_tax = $this->sma->formatDecimal(($item_tax * $item_unit_quantity), 4);
-                            if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($biller->state == $customer->state), $tax_details)) {
-                                $total_cgst += $gst_data['cgst'];
-                                $total_sgst += $gst_data['sgst'];
-                                $total_igst += $gst_data['igst'];
-                            }
-                        }
-
-                        $product_tax += $pr_item_tax;
-                        $subtotal = (($item_net_price * $item_unit_quantity) + $pr_item_tax);
-
-                        $unit = $this->site->getUnitByID($product_details->unit);
-
-                        $product = [
-                            'product_id' => $product_details->id,
-                            'product_code' => $product_details->code,
-                            'product_name' => $product_details->name,
-                            'product_type' => $product_details->type,
-                            'option_id' => $item_option,
-                            'net_unit_price' => $item_net_price,
-                            'unit_price' => $this->sma->formatDecimal($item_net_price + $item_tax),
-                            'quantity' => $item_quantity,
-                            'product_unit_id' => $unit ? $unit->id : null,
-                            'product_unit_code' => $unit ? $unit->code : null,
-                            'unit_quantity' => $item_unit_quantity,
-                            'warehouse_id' => $this->shop_settings->warehouse,
-                            'item_tax' => $pr_item_tax,
-                            'tax_rate_id' => $product_details->tax_rate,
-                            'tax' => $tax,
-                            'discount' => null,
-                            'item_discount' => 0,
-                            'subtotal' => $this->sma->formatDecimal($subtotal),
-                            'serial_no' => null,
-                            'real_unit_price' => $price,
-                        ];
-                        $ww = $this->shop_model->getProductByID($product_details->id);
-                        $ww2 = array('product_weight' => $ww->weight);
-                        $pro_weight[] = $ww2;
-                        $products[] = ($product + $gst_data);
-                        $total += $this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                        
                     } else {
                         $this->session->set_flashdata('error', lang('product_x_found') . ' (' . $item['name'] . ')');
                         redirect($_SERVER['HTTP_REFERER'] ?? 'cart');
@@ -502,7 +510,11 @@ class Shop extends MY_Shop_Controller
                 }
                 // $this->sma->print_arrays($data, $products, $customer, $address);
 
-                if ($sale_id = $this->shop_model->addSale($data, $products, $customer, $address)) {
+                if($out_stock_item_found == true){
+                    $this->session->set_flashdata('error', lang('out of stock item in cart'));
+                    redirect($_SERVER['HTTP_REFERER'] ?? 'cart');
+                }
+                else if ($sale_id = $this->shop_model->addSale($data, $products, $customer, $address)) {
                     //$added_record = $this->aramexshipment($sale_id, $data, $products, $customer, $address,$pro_weight);
                     //$email = $this->order_received($sale_id, $data['hash'], $added_record);
 
