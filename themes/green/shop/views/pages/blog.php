@@ -5,7 +5,6 @@
             <div class="col-xs-12">
                 <style>
                     h3{
-                        color: purple;
                         font-size: 15px;
                         font-weight: bold;
                     }
