@@ -1786,7 +1786,7 @@
                                 </a>
                                 <ul>
                                   <?php
-                                    if($GP['blog_view']){
+                                    if($GP['blog_view'] || ($Owner || $Admin)){
                                         ?>
                                         <li id="shop_settings_pages">
                                             <a href="<?= admin_url('Blog/allBlogs') ?>">
@@ -1797,7 +1797,7 @@
                                     }
                                   ?>
                                   <?php
-                                    if($GP['blog_add']){
+                                    if($GP['blog_add'] || ($Owner || $Admin)){
                                         ?>
                                         <li id="shop_settings_pages">
                                             <a href="<?= admin_url('Blog/add_blog') ?>">
