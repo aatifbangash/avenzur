@@ -1822,7 +1822,7 @@
                                 </ul>
                             </li>
                             <?php } ?>
-                             <?php //if ($Owner || $Admin || $GP['stock_request_view']) { ?>
+                             <?php if ($Owner || $Admin || $GP['stock_request_view']) { ?>
                              <li class="mm_stock_requests">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star-o"></i>
@@ -1866,7 +1866,7 @@
                                     </li>-->
                                 </ul>
                              </li>
-                             <?php //} ?>
+                             <?php } ?>
 
                             <?php 
                              if (isset($GP) && $GP['accountant'] || ($Owner || $Admin) ) {
