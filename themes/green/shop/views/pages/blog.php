@@ -3,11 +3,17 @@
     <div class="container">
         <div class="row">
             <div class="col-xs-12">
-
+                <style>
+                    h3{
+                        color: purple;
+                        font-size: 15px;
+                        font-weight: bold;
+                    }
+                </style>
                 <div class="row">
                     <div class="col-sm-9 col-md-10">
                         <div class="panel panel-default margin-top-lg">
-                            <div class="panel-heading text-bold">
+                            <div class="panel-heading text-bold" style="font-size: 17px !important;margin-bottom: 15px;">
                                 <?= $page->title; ?>
                             </div>
                             <div class="panel-body">
