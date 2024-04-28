@@ -2403,7 +2403,7 @@ class Products extends MY_Controller
             . lang('view_image') . '</a></li>
             <li>' . $single_barcode . '</li>
             <li class="divider"></li>';
-        if($this->Admin){
+        if($this->Admin || $this->Owner){
             $action .= '<li>' . $delete_link . '</li>';
         }
         $action .= '</ul>
