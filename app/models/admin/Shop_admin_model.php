@@ -123,10 +123,23 @@ class Shop_admin_model extends CI_Model
         return false;
     }
 
+    public function deleteTag($tag_id){
+        $this->db->delete('tags', ['id' => $tag_id]);
+        $this->db->delete('assigned_tags', ['tag_id' => $tag_id]);
+    }
+
     public function executeTag($table_name, $field_name, $operator, $value, $tag_id){
         $this->db->delete('assigned_tags', ['tag_id' => $tag_id]);
-        $q = $this->db->where($field_name.' '.$operator, $value)
-                ->get($table_name);
+        $value = strtolower($value);
+
+        if ($operator === 'LIKE') {
+            $this->db->where("$field_name LIKE '%$value%'", NULL, FALSE);
+        } else {
+            $this->db->where("$field_name $operator", $value);
+        }
+        
+        $q = $this->db->get($table_name);
+
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;

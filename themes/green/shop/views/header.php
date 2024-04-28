@@ -57,12 +57,13 @@
         $seo_description = substr($seo_description, 0, $max_length);
     }
   
+    $actual_link_href = (empty($_SERVER['HTTPS']) ? 'http' : 'https') . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
   ?>
   <title>
     <?php echo htmlspecialchars($seo_title); ?>
   </title>
   <link rel="icon" type="image/x-icon" href="<?= base_url('assets/images/avenzur-png.png'); ?>">
-  <link rel="canonical" href="https://avenzur.com" />
+  <link rel="canonical" href="<?= $actual_link_href; ?>" />
   <meta name="description" content="<?php echo htmlspecialchars($seo_description); ?>">
   <meta name="keywords" content="<?php echo $seo_keywords; ?>">
   <meta name="p:domain_verify" content="0704e772b1ab59012494397c16667a45"/>
@@ -490,6 +491,7 @@
                       echo 'active';
                     } ?>" href="<?= site_url('shop/bestsellers'); ?>">Best Sellers</a>
                   </li>
+                  
 
 
                   <div id="mobnav">

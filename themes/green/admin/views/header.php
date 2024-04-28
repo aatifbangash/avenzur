@@ -1778,23 +1778,37 @@
 
                             <?php
                         } ?>
-                        <?php if ($Owner || $Admin) { ?>
+                        <?php if (isset($this->GP) && $GP['blog_view'] || ($Owner || $Admin) ) { ?>
                         <li class="mm_shop_settings mm_api_settings">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-shopping-cart"></i><span class="text"> <?= lang('Blog_Module'); ?> </span>
                                     <span class="chevron closed"></span>
                                 </a>
                                 <ul>
-                                  <li id="shop_settings_pages">
-                                        <a href="<?= admin_url('Blog/allBlogs') ?>">
-                                            <i class="fa fa-file"></i><span class="text"> <?= lang('List_blog'); ?></span>
-                                        </a>
-                                    </li>
-                                    <li id="shop_settings_pages">
-                                        <a href="<?= admin_url('Blog/add_blog') ?>">
-                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_blog'); ?></span>
-                                        </a>
-                                    </li>
+                                  <?php
+                                    if($GP['blog_view'] || ($Owner || $Admin)){
+                                        ?>
+                                        <li id="shop_settings_pages">
+                                            <a href="<?= admin_url('Blog/allBlogs') ?>">
+                                                <i class="fa fa-file"></i><span class="text"> <?= lang('List_blog'); ?></span>
+                                            </a>
+                                        </li>
+                                        <?php
+                                    }
+                                  ?>
+                                  <?php
+                                    if($GP['blog_add'] || ($Owner || $Admin)){
+                                        ?>
+                                        <li id="shop_settings_pages">
+                                            <a href="<?= admin_url('Blog/add_blog') ?>">
+                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_blog'); ?></span>
+                                            </a>
+                                        </li>
+                                        <?php
+                                    }
+                                  ?>
+                                  
+                                    
                                     <!--<li id="shop_settings_pages">-->
                                     <!--    <a href="<?= admin_url('Blog/add_bcategory') ?>">-->
                                     <!--        <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add Blog Category'); ?></span>-->
@@ -1808,7 +1822,7 @@
                                 </ul>
                             </li>
                             <?php } ?>
-                             <?php //if ($Owner || $Admin || $GP['stock_request_view']) { ?>
+                             <?php if ($Owner || $Admin || $GP['stock_request_view']) { ?>
                              <li class="mm_stock_requests">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star-o"></i>
@@ -1852,7 +1866,7 @@
                                     </li>-->
                                 </ul>
                              </li>
-                             <?php //} ?>
+                             <?php } ?>
 
                             <?php 
                              if (isset($GP) && $GP['accountant'] || ($Owner || $Admin) ) {

@@ -143,11 +143,19 @@ class Products extends MY_Controller
             $productContent->setDescription($productData['description']);
             $productContent->setLink($productData['link']);
             $productContent->setImageLink($productData['imageLink']);
+            $productContent->setBrand($productData['brand']);
 
             $price = new Google_Service_ShoppingContent_Price();
             $price->setValue($productData['price']['value']);
             $price->setCurrency($productData['price']['currency']);
             $productContent->setPrice($price);
+
+            if($productData['salePrice']['value']){
+                $salePrice = new Google_Service_ShoppingContent_Price();
+                $salePrice->setValue($productData['salePrice']['value']);
+                $salePrice->setCurrency($productData['salePrice']['currency']);
+                $productContent->setSalePrice($salePrice);
+            }
 
             $productContent->setAvailability($productData['availability']);
             
@@ -2384,19 +2392,27 @@ class Products extends MY_Controller
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
-            <li>' . $detail_link . '</li>
-            <li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>
-            <li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
+            <li>' . $detail_link . '</li>';
+        if($this->Admin || $this->Owner){
+            $action .= '<li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>'; 
+        }
+            
+        $action .= '<li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
         if ($warehouse_id) {
             $action .= '<li><a href="' . admin_url('products/set_rack/$1/' . $warehouse_id) . '" data-toggle="modal" data-target="#myModal"><i class="fa fa-bars"></i> '
                 . lang('set_rack') . '</a></li>';
         }
         $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
-            . lang('view_image') . '</a></li>
-            <li>' . $single_barcode . '</li>
-            <li class="divider"></li>
-            <li>' . $delete_link . '</li>
-            </ul>
+            . lang('view_image') . '</a></li>';
+        if($this->Admin || $this->Owner){
+           $action .=  '<li>' . $single_barcode . '</li>';
+        }
+            
+        $action .=  '<li class="divider"></li>';
+        if($this->Admin || $this->Owner){
+            $action .= '<li>' . $delete_link . '</li>';
+        }
+        $action .= '</ul>
         </div></div>';
         $this->load->library('datatables');
         if ($warehouse_id) {
