@@ -2402,9 +2402,11 @@ class Products extends MY_Controller
         $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
             . lang('view_image') . '</a></li>
             <li>' . $single_barcode . '</li>
-            <li class="divider"></li>
-            <li>' . $delete_link . '</li>
-            </ul>
+            <li class="divider"></li>';
+        if($this->Admin){
+            $action .= '<li>' . $delete_link . '</li>';
+        }
+        $action .= '</ul>
         </div></div>';
         $this->load->library('datatables');
         if ($warehouse_id) {
