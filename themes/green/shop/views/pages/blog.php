@@ -13,12 +13,10 @@
                     <div class="col-sm-9 col-md-10">
                         <div class="panel panel-default margin-top-lg">
                             
-                            <div class="panel-heading text-bold" style="font-size: 17px !important">
+                            <div class="panel-heading text-bold" style="font-size: 17px !important;margin-bottom: 15px;">
                                 <?= $page->title; ?>
                             </div>
-                            <div class="card-img-top" style=";margin-bottom: 15px;">
-                                <img src="<?php echo site_url('assets/uploads/'.$page->image); ?>" >
-                            </div>
+                            
                             <div class="panel-body">
                                 <?= $this->sma->decode_html($page->body); ?>
                                 <?php
