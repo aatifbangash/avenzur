@@ -504,13 +504,13 @@
                                      
                                     <span style="display:inline-block;">
                                         <input type="checkbox" value="1" class="checkbox" id="bulk_actions"
-                                            name="blog_add" <?php echo $p->blog_view ? 'checked' : ''; ?>>
+                                            name="blog_add" <?php echo $p->blog_edit ? 'checked' : ''; ?>>
                                             <label for="bulk_actions" class="padding05"><?= lang('Add') ?></label>
                                     </span>
                             
                                     <span style="display:inline-block;">
                                         <input type="checkbox" value="1" class="checkbox" id="bulk_actions"
-                                            name="blog_edit" <?php echo $p->blog_view ? 'checked' : ''; ?>>
+                                            name="blog_edit" <?php echo $p->blog_add ? 'checked' : ''; ?>>
                                             <label for="bulk_actions" class="padding05"><?= lang('Edit') ?></label>
                                     </span>
                                      </td>
