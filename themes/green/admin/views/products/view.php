@@ -46,6 +46,8 @@
                                         <i class="fa fa-download"></i> <?= lang('pdf') ?>
                                     </a>
                                 </li>
+                                <?php if ($Owner || $Admin) {
+                                ?>
                                 <li class="divider"></li>
                                 <li>
                                     <a href="#" class="bpo" title="<b><?= lang('delete_product') ?></b>"
@@ -54,6 +56,7 @@
                                         <i class="fa fa-trash-o"></i> <?= lang('delete') ?>
                                     </a>
                                 </li>
+                                <?php } ?>
                             </ul>
                         </li>
                     </ul>
