@@ -1262,7 +1262,7 @@ class Shop extends MY_Shop_Controller
         } else {
             $page = $this->shop_model->getBlogBySlug($slug);
             if (!$page) {
-                redirect('notify/error_404');
+                redirect('/');
             }
             $this->data['page'] = $page;
             $this->data['page_title'] = $page->title;
