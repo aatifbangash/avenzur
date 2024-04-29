@@ -175,8 +175,8 @@
       })(window, document,
         'https://sc-static.net/scevent.min.js');
 
-      var normalizedEmail = normalizeEmail('');
-      var normalizedPhone = normalizePhone('');
+      var normalizedEmail = normalizeEmail('marketing@avenzur.com');
+      var normalizedPhone = normalizePhone('+966551251997');
 
       snaptr('init', '48414e12-17e7-4ba1-bfd6-407aa41991b0', {
         'user_email': normalizedEmail,
