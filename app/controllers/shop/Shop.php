@@ -362,7 +362,7 @@ class Shop extends MY_Shop_Controller
                     $qty_on_hold = $this->shop_model->getProductOnholdQty($item['product_id']);
                     if ($product_details = $this->shop_model->getProductForCart($item['product_id'])) {
                         $qty_available = $product_details->quantity - $qty_on_hold;
-                        if($qty_available >= $item['qty']){
+                        if($qty_available > 0){
                             $price = $this->sma->setCustomerGroupPrice(($this->loggedIn && isset($product_details->special_price) ? $product_details->special_price : $product_details->price), $this->customer_group);
                             $price = $this->sma->isPromo($product_details) ? $product_details->promo_price : $price;
                             if ($item['option']) {
