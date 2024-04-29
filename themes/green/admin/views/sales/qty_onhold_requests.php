@@ -32,6 +32,7 @@
                             <th>Product Customer</th>
                             <th>Quantity</th>
                             <th>Status</th>
+                            <th>Virtual Pharma</th>
                             
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
@@ -51,6 +52,7 @@
                             <td><?php echo $item->customer_name;?></td>
                             <td><?php echo $item->quantity;?></td>
                             <td><?php echo $item->status;?></td>
+                            <td><?php echo $item->virtual_pharmacy == 0 ? 'No': 'Yes';?></td>
                             <td><a href="<?php echo admin_url('sales/delete_qty_onhold/' . $item->id); ?>" class="tip" title="" data-original-title="Delete Request"><i class="fa fa-trash-o"></i></a></td>
                            
                         </tr>
