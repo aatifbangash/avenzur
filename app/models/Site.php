@@ -1382,6 +1382,16 @@ public function getallCountry()
         if(isset($items) && !empty($items)) {
 
             foreach ($items as $item) {
+                $virtual_pharmacy = 0;
+                $query = $this->db->select('warehouses_products.*')
+                        ->from('warehouses_products')
+                        ->where('warehouses_products.warehouse_id', 6)
+                        ->where('warehouses_products.product_id', $item->product_id);
+                $result = $query->get();
+                if ($result->num_rows() > 0) {
+                    $virtual_pharmacy = 1;
+                }
+                
                 $this->db->insert('product_qty_onhold_request',
                  ['sale_id' => $sale_id, 
                  'product_id' => $item->product_id, 
@@ -1391,7 +1401,8 @@ public function getallCountry()
                  'customer_id' => $item->customer_id,
                  'customer_name' => $item->customer_name,
                  'status' => 'onhold',
-                 'date_created' => NOW()
+                 'virtual_pharmacy' => $virtual_pharmacy,
+                 'date_created' => date('Y-m-d H:i:s')
                 ]);
             }
         }
