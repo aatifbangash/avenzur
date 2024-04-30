@@ -8,6 +8,10 @@
                         font-size: 15px;
                         font-weight: bold;
                     }
+                    img{
+                        max-width: 500px;
+                        max-height: 300px;
+                    }
                 </style>
                 <div class="row">
                     <div class="col-sm-9 col-md-10">

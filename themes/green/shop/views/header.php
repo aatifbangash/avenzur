@@ -154,6 +154,17 @@
       }(window, document, 'ttq');
     </script>
 
+    <script type="text/javascript">
+      function normalizeEmail(email){
+        return email.trim().toLowerCase();
+      }
+
+      function normalizePhone(phone){
+        var numbers = phone.replace(/\D/g, '');
+        return parseInt(numbers, 10).toString();
+      }
+    </script>
+
     <!-- Snap Pixel Code -->
     <script type='text/javascript'>
       (function (e, t, n) {
@@ -164,8 +175,12 @@
       })(window, document,
         'https://sc-static.net/scevent.min.js');
 
+      var normalizedEmail = normalizeEmail('marketing@avenzur.com');
+      var normalizedPhone = normalizePhone('+966551251997');
+
       snaptr('init', '48414e12-17e7-4ba1-bfd6-407aa41991b0', {
-        'user_email': '__INSERT_USER_EMAIL__'
+        'user_email': normalizedEmail,
+        'user_phone': normalizedPhone
       });
 
       snaptr('track', 'PAGE_VIEW');

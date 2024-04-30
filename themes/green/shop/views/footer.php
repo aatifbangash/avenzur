@@ -99,6 +99,7 @@
                     <a href="<?= site_url('shop/page/about-us'); ?>" class="text-dark text-decoration-none"> About Avenzur</a></li>
                     <li> <a href="<?= site_url('shop/contact_us'); ?>" class="text-dark text-decoration-none" >Contact Us </a> </li>
                     <li> <a href="<?= site_url('profile'); ?>" class="text-dark text-decoration-none" >My Account </a> </li>
+                    <li> <a href="<?= site_url('shop/blog'); ?>" class="text-dark text-decoration-none" >Blog </a> </li>
                   </ul>
                 </div>
               </div>
