@@ -5,6 +5,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class Blog extends MY_Controller {
      public function __construct()
     {
+        exit;
         parent::__construct();
 
         if (!$this->loggedIn) {
@@ -136,7 +137,6 @@ class Blog extends MY_Controller {
 }
   public function edit_blog($id = null)
     {
-        echo 'here';exit;
         $page = $this->Blog_model->getBlogByID($id);
         $this->form_validation->set_rules('name', lang('name'), 'required|max_length[60]');
         $this->form_validation->set_rules('title', lang('title'), 'required|max_length[60]');
