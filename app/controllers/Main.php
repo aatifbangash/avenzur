@@ -272,10 +272,10 @@ class Main extends MY_Shop_Controller
     }*/
 
     public function logout($m = null)
-    {
-        if (!SHOP) {
-            redirect('admin/logout');
-        }
+    {  
+        // if (!SHOP) {
+        //     redirect('admin/logout');
+        // }
         $logout = $this->ion_auth->logout();
         $this->cart->destroy();
         if (isset($_COOKIE['companyID'])) {
