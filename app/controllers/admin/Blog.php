@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Blog extends MY_Controller {
+class Blog extends MYTEST_Controller {
      public function __construct()
     {
         parent::__construct();
