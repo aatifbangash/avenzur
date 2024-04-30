@@ -5,7 +5,6 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class Blog extends MY_Controller {
      public function __construct()
     {
-        exit;
         parent::__construct();
 
         if (!$this->loggedIn) {
