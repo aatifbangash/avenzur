@@ -243,6 +243,15 @@ class Products extends MY_Controller
             'inventory' => (int) $product_details->quantity
         ];
 
+        // Calculate prices according to Facebook requirements
+        $price = (int) ($product_details->price * 100); // Convert to cents
+        $productData['price'] = $price;
+
+        if($product_details->promotion == 1){
+            $sale_price = (int) ($product_details->promo_price * 100); // Convert to cents
+            $productData['sale_price'] = $sale_price;
+        }
+
         $filter = ["retailer_id" => ['eq' => $productCode]];
         $queryUrl = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products?fields=category,name,errors&filter=".urlencode(json_encode($filter))."&summary=true&access_token={$access_token}";
 
@@ -255,18 +264,6 @@ class Products extends MY_Controller
             $product = json_decode($response, true);
             if ($product && sizeOf($product['data']) > 0) {
                 // update existing date
-
-                if($product_details->promotion == 1){
-                    $sale_price = $product_details->promo_price;
-                }else{
-                    $sale_price = $product_details->price;
-                }
-        
-                $price = $product_details->price;
-
-                $productData['price'] = $price;
-                $productData['sale_price'] = $sale_price;
-
                 $requestData = [
                     [
                         'method' => 'UPDATE',
@@ -295,18 +292,6 @@ class Products extends MY_Controller
                 }
             }else{
                 // Insert if product does not exit
-
-                if($product_details->promotion == 1){
-                    $sale_price = (int) str_replace('.','',$product_details->promo_price);
-                }else{
-                    $sale_price = (int) str_replace('.','',$product_details->price);
-                }
-        
-                $price = (int) str_replace('.','',$product_details->price);
-
-                $productData['price'] = $price;
-                $productData['sale_price'] = $sale_price;
-
                 $productData['retailer_id'] = $productCode; 
                 $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products";
 
