@@ -44,86 +44,6 @@ class Products extends MY_Controller
         }
     }
 
-    public function facebook_catalogue_push(){
-        $product_id = $_POST['id'];
-        // Set the access token, product catalog ID, and API version
-        $access_token = "EAAGF5LPatEwBO90n2xGJ2pZBOnMisRHxodMGMZABWb0e2RarluGu54VZAhdZCaYkQwfic9bfG7lj290r28zaryl5VTUkscrMplxXCeHpkhKJ8YJcZB3bWeoloB5ZC1X3SV6WUyW0zrKZAcufGKxEs66irz9XIDBY6yk3ntSKZArqvQ1Q3ZCxE1SFUrsjNFnOUnaG4";
-        $product_catalog_id = "374060218547895";
-        $api_version = "v19.0";
-
-        $product_photos = $this->products_model->getProductPhotos($product_id);
-        $product_details = $this->products_model->getProductByID($product_id);
-        $brand_details = $this->products_model->getBrandByID($product_details->brand);
-
-        $photos_arr = array();
-
-        foreach($product_photos as $photo){
-            //array_push(base_url().'assets/uploads/'.$photo->photo, $photos_arr);
-            array_push($photos_arr, site_url().'assets/uploads/'.$photo->photo);
-        }
-
-        $product_details->details = str_replace('<p><strong>Highlights:</strong></p>','', $product_details->details);
-        $product_details->details = str_replace('<p>','',$product_details->details);
-        $product_details->details = str_replace('</p>','',$product_details->details);
-        $product_details->details = str_replace('<ul>','',$product_details->details);
-        $product_details->details = str_replace('</ul>','',$product_details->details);
-        $product_details->details = str_replace('<li>','',$product_details->details);
-        $product_details->details = str_replace('</li>','',$product_details->details);
-     
-        if($product_details->promotion == 1){
-            $sale_price = (int) str_replace('.','',$product_details->promo_price);
-        }else{
-            $sale_price = (int) str_replace('.','',$product_details->price);
-        }
-
-        $price = (int) str_replace('.','',$product_details->price);
-
-        // Define the product data
-        $productCode = $product_details->code; // Assuming this is the unique identifier for your product
-        $productData = [
-            'name' => $product_details->name,
-            'description' => $product_details->details,
-            'availability' => 'in stock',
-            'condition' => 'new',
-            'price' => $price,
-            'sale_price' => $sale_price,
-            'currency' => 'SAR',
-            'url' => site_url().'product/'.$product_details->slug,
-            'image_url' => site_url().'assets/uploads/'.$product_details->image,
-            'brand' => $brand_details->name,
-            'gtin' => $productCode,
-            //'retailer_id' => $productCode,
-            'inventory' => $product_details->quantity
-        ];
-        
-        $requestData = [
-            [
-                'method' => 'UPDATE',
-                'retailer_id' => $productCode, // The retailer_id of the product to update
-                'data' => $productData
-            ]
-            // You can add more requests for other items here...
-        ];
-
-        $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/batch";
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['requests' => json_encode($requestData), 'access_token' => $access_token]));
-
-        $response = curl_exec($ch);
-        curl_close($ch);
-    
-        // Handle the response
-        if ($response === false) {
-            $this->session->set_flashdata('error', lang('error connecting to meta'));
-            admin_redirect('products/edit/' . $product_id);
-        } else {
-            $this->session->set_flashdata('message', lang('product pushed to meta'));
-            admin_redirect('products/edit/' . $product_id);
-        }
-    }
-
     /*public function facebook_catalogue_push(){
         // Set the access token, product catalog ID, and API version
         $access_token = "EAAGF5LPatEwBO90n2xGJ2pZBOnMisRHxodMGMZABWb0e2RarluGu54VZAhdZCaYkQwfic9bfG7lj290r28zaryl5VTUkscrMplxXCeHpkhKJ8YJcZB3bWeoloB5ZC1X3SV6WUyW0zrKZAcufGKxEs66irz9XIDBY6yk3ntSKZArqvQ1Q3ZCxE1SFUrsjNFnOUnaG4";
@@ -274,17 +194,15 @@ class Products extends MY_Controller
         exit;
     }
 
-    public function google_merch_apis($id, $data){
-        $data['details'] = str_replace('<p><strong>Highlights:</strong></p>','',$data['details']);
-        $data['details'] = str_replace('<p>','',$data['details']);
-        $data['details'] = str_replace('</p>','',$data['details']);
-        $data['details'] = str_replace('<ul>','',$data['details']);
-        $data['details'] = str_replace('</ul>','',$data['details']);
-        $data['details'] = str_replace('<li>','',$data['details']);
-        $data['details'] = str_replace('</li>','',$data['details']);
-        
-        $product_photos = $this->products_model->getProductPhotos($id);
-        $product_details = $this->products_model->getProductByID($id);
+    public function facebook_catalogue_push(){
+        $product_id = $_POST['id'];
+        // Set the access token, product catalog ID, and API version
+        $access_token = "EAAGF5LPatEwBO90n2xGJ2pZBOnMisRHxodMGMZABWb0e2RarluGu54VZAhdZCaYkQwfic9bfG7lj290r28zaryl5VTUkscrMplxXCeHpkhKJ8YJcZB3bWeoloB5ZC1X3SV6WUyW0zrKZAcufGKxEs66irz9XIDBY6yk3ntSKZArqvQ1Q3ZCxE1SFUrsjNFnOUnaG4";
+        $product_catalog_id = "374060218547895";
+        $api_version = "v19.0";
+
+        $product_photos = $this->products_model->getProductPhotos($product_id);
+        $product_details = $this->products_model->getProductByID($product_id);
         $brand_details = $this->products_model->getBrandByID($product_details->brand);
 
         $photos_arr = array();
@@ -293,6 +211,90 @@ class Products extends MY_Controller
             //array_push(base_url().'assets/uploads/'.$photo->photo, $photos_arr);
             array_push($photos_arr, site_url().'assets/uploads/'.$photo->photo);
         }
+
+        $product_details->details = str_replace('<p><strong>Highlights:</strong></p>','', $product_details->details);
+        $product_details->details = str_replace('<p>','',$product_details->details);
+        $product_details->details = str_replace('</p>','',$product_details->details);
+        $product_details->details = str_replace('<ul>','',$product_details->details);
+        $product_details->details = str_replace('</ul>','',$product_details->details);
+        $product_details->details = str_replace('<li>','',$product_details->details);
+        $product_details->details = str_replace('</li>','',$product_details->details);
+     
+        if($product_details->promotion == 1){
+            $sale_price = (int) str_replace('.','',$product_details->promo_price);
+        }else{
+            $sale_price = (int) str_replace('.','',$product_details->price);
+        }
+
+        $price = (int) str_replace('.','',$product_details->price);
+
+        // Define the product data
+        $productCode = $product_details->code; // Assuming this is the unique identifier for your product
+        $productData = [
+            'name' => $product_details->name,
+            'description' => $product_details->details,
+            'availability' => 'in stock',
+            'condition' => 'new',
+            'price' => $price,
+            'sale_price' => $sale_price,
+            'currency' => 'SAR',
+            'url' => site_url().'product/'.$product_details->slug,
+            'image_url' => site_url().'assets/uploads/'.$product_details->image,
+            'brand' => $brand_details->name,
+            'gtin' => $productCode,
+            //'retailer_id' => $productCode,
+            'inventory' => $product_details->quantity
+        ];
+        
+        $requestData = [
+            [
+                'method' => 'UPDATE',
+                'retailer_id' => $productCode, // The retailer_id of the product to update
+                'data' => $productData
+            ]
+            // You can add more requests for other items here...
+        ];
+
+        $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/batch";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['requests' => json_encode($requestData), 'access_token' => $access_token]));
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+    
+        // Handle the response
+        if ($response === false) {
+            $this->session->set_flashdata('error', lang('error connecting to meta'));
+            admin_redirect('products/edit/' . $product_id);
+        } else {
+            $this->session->set_flashdata('message', lang('product pushed to meta'));
+            admin_redirect('products/edit/' . $product_id);
+        }
+    }
+
+    public function google_merch_apis(){
+        $product_id = $_POST['id'];
+        
+        $product_photos = $this->products_model->getProductPhotos($product_id);
+        $product_details = $this->products_model->getProductByID($product_id);
+        $brand_details = $this->products_model->getBrandByID($product_details->brand);
+
+        $photos_arr = array();
+
+        foreach($product_photos as $photo){
+            //array_push(base_url().'assets/uploads/'.$photo->photo, $photos_arr);
+            array_push($photos_arr, site_url().'assets/uploads/'.$photo->photo);
+        }
+
+        $product_details->details = str_replace('<p><strong>Highlights:</strong></p>','', $product_details->details);
+        $product_details->details = str_replace('<p>','',$product_details->details);
+        $product_details->details = str_replace('</p>','',$product_details->details);
+        $product_details->details = str_replace('<ul>','',$product_details->details);
+        $product_details->details = str_replace('</ul>','',$product_details->details);
+        $product_details->details = str_replace('<li>','',$product_details->details);
+        $product_details->details = str_replace('</li>','',$product_details->details);
 
         $clientId = '216256641186-ord7an72cbi6jhtrhmb1knb93jbera1p.apps.googleusercontent.com';
         $clientSecret = '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';
@@ -311,7 +313,7 @@ class Products extends MY_Controller
 
             $contentService = new Google_Service_ShoppingContent($client);
             $merchantId = '5086892798';
-            $productContentId = 'online:en:SA:'.$data['code'];
+            $productContentId = 'online:en:SA:'.$product_details->code;
 
             $productContent = new Google_Service_ShoppingContent_Product();
 
@@ -323,17 +325,17 @@ class Products extends MY_Controller
                     'contentLanguage' => 'En',
                     'targetCountry' => 'SA',
                     'productId' => $productContentId,
-                    'title' => $data['name'],
-                    'description' => $data['details'],
-                    'link' => site_url().'product/'.$data['slug'],
+                    'title' => $product_details->name,
+                    'description' => $product_details->details,
+                    'link' => site_url().'product/'.$product_details->slug,
                     'imageLink' => site_url().'assets/uploads/'.$product_details->image,
                     'brand' => $brand_details->name,
                     'price' => [
-                        'value' => $data['price'],
+                        'value' => $product_details->price,
                         'currency' => 'SAR',
                     ],
                     'salePrice' => [
-                        'value' => $data['promo_price'],
+                        'value' => $product_details->promo_price,
                         'currency' => 'SAR',
                     ],
                     'additionalImageLinks' => $photos_arr,
@@ -345,18 +347,18 @@ class Products extends MY_Controller
                     'channel' => 'online',
                     'contentLanguage' => 'En',
                     'targetCountry' => 'SA',
-                    'offerId' => $data['code'],
-                    'title' => $data['name'],
-                    'description' => $data['details'],
-                    'link' => site_url().'product/'.$data['slug'],
+                    'offerId' => $product_details->code,
+                    'title' => $product_details->name,
+                    'description' => $product_details->details,
+                    'link' => site_url().'product/'.$product_details->slug,
                     'imageLink' => site_url().'assets/uploads/'.$product_details->image,
                     'brand' => $brand_details->name,
                     'price' => [
-                        'value' => $data['price'],
+                        'value' => $product_details->price,
                         'currency' => 'SAR',
                     ],
                     'salePrice' => [
-                        'value' => $data['promo_price'],
+                        'value' => $product_details->promo_price,
                         'currency' => 'SAR',
                     ],
                     'additionalImageLinks' => $photos_arr,
@@ -2004,13 +2006,16 @@ class Products extends MY_Controller
         }
 
         if ($this->form_validation->run() == true && $this->products_model->updateProduct($id, $data, $items, $warehouse_qty, $product_attributes, $photos, $update_variants)) {
-            if($data['google_merch'] == 1){
+            /*if($data['google_merch'] == 1){
                 $this->google_merch_apis($id, $data);
             }else{
                 $this->session->set_flashdata('message', lang('product_updated'));
                 //admin_redirect('products');
                 admin_redirect('products/edit/' . $id);
-            }
+            }*/
+
+            $this->session->set_flashdata('message', lang('product_updated'));
+            admin_redirect('products/edit/' . $id);
             
         } else {
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
