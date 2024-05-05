@@ -245,33 +245,63 @@ class Products extends MY_Controller
             //'retailer_id' => $productCode,
             'inventory' => $product_details->quantity
         ];
-        
-        $requestData = [
-            [
-                'method' => 'UPDATE',
-                'retailer_id' => $productCode, // The retailer_id of the product to update
-                'data' => $productData
-            ]
-            // You can add more requests for other items here...
-        ];
 
-        $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/batch";
-        $ch = curl_init($url);
+        $filter = ["retailer_id" => ['eq' => $productCode]];
+        $queryUrl = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products?fields=category,name,errors&filter=".urlencode(json_encode($filter))."&summary=true&access_token={$access_token}";
+
+        $ch = curl_init($queryUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['allow_upsert' => true, 'requests' => json_encode($requestData), 'access_token' => $access_token]));
-
         $response = curl_exec($ch);
-        curl_close($ch);
-    
-        // Handle the response
-        if ($response === false) {
-            $this->session->set_flashdata('error', lang('error connecting to meta'));
-            admin_redirect('products/edit/' . $product_id);
-        } else {
-            $this->session->set_flashdata('message', lang('product pushed to meta'));
-            admin_redirect('products/edit/' . $product_id);
+        if (curl_errno($ch)) {
+            echo 'Curl error: ' . curl_error($ch);
+        }else{
+            $product = json_decode($response, true);
+            if ($product && sizeOf($product['data']) > 0) {
+                // update existing date
+                $requestData = [
+                    [
+                        'method' => 'UPDATE',
+                        'retailer_id' => $productCode, // The retailer_id of the product to update
+                        'data' => $productData
+                    ]
+                    // You can add more requests for other items here...
+                ];
+        
+                $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/batch";
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['requests' => json_encode($requestData), 'access_token' => $access_token]));
+        
+                $response = curl_exec($ch);
+                curl_close($ch);
+            
+                // Handle the response
+                if ($response === false) {
+                    $this->session->set_flashdata('error', lang('error connecting to meta'));
+                    admin_redirect('products/edit/' . $product_id);
+                } else {
+                    $this->session->set_flashdata('message', lang('product pushed to meta'));
+                    admin_redirect('products/edit/' . $product_id);
+                }
+            }else{
+                // Insert if product does not exit
+                $productData['retailer_id'] = $productCode; 
+
+                $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products";
+
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($productData));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/x-www-form-urlencoded',
+                    'Authorization: Bearer ' . $access_token
+                ]);
+                $response = curl_exec($ch);
+            }
         }
+        
     }
 
     public function google_merch_apis(){
