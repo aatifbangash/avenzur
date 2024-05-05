@@ -306,7 +306,7 @@ class Products extends MY_Controller
                 ]);
                 $response = curl_exec($ch);
                 curl_close($ch);
-                print_r($response);exit;
+                
                 // Handle the response
                 if ($response === false) {
                     $this->session->set_flashdata('error', lang('error connecting to meta'));
