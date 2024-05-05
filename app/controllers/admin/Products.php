@@ -230,10 +230,17 @@ class Products extends MY_Controller
 
         // Define the product data
         $productCode = $product_details->code; // Assuming this is the unique identifier for your product
+
+        if($product_details->quantity > 0){
+            $availibility = 'in stock';
+        }else{
+            $availibility = 'out of stock';
+        }
+
         $productData = [
             'name' => $product_details->name,
             'description' => $product_details->details,
-            'availability' => 'in stock',
+            'availability' => $availibility,
             'condition' => 'new',
             'price' => $price,
             'sale_price' => $sale_price,
@@ -243,7 +250,7 @@ class Products extends MY_Controller
             'brand' => $brand_details->name,
             'gtin' => $productCode,
             //'retailer_id' => $productCode,
-            'inventory' => $product_details->quantity
+            'inventory' => (int) $product_details->quantity
         ];
 
         $filter = ["retailer_id" => ['eq' => $productCode]];
@@ -287,7 +294,6 @@ class Products extends MY_Controller
             }else{
                 // Insert if product does not exit
                 $productData['retailer_id'] = $productCode; 
-
                 $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products";
 
                 $ch = curl_init($url);
@@ -299,6 +305,16 @@ class Products extends MY_Controller
                     'Authorization: Bearer ' . $access_token
                 ]);
                 $response = curl_exec($ch);
+                curl_close($ch);
+                print_r($response);exit;
+                // Handle the response
+                if ($response === false) {
+                    $this->session->set_flashdata('error', lang('error connecting to meta'));
+                    admin_redirect('products/edit/' . $product_id);
+                } else {
+                    $this->session->set_flashdata('message', lang('product pushed to meta'));
+                    admin_redirect('products/edit/' . $product_id);
+                }
             }
         }
         
