@@ -44,6 +44,236 @@ class Products extends MY_Controller
         }
     }
 
+    public function facebook_catalogue_push(){
+        $product_id = $_POST['id'];
+        // Set the access token, product catalog ID, and API version
+        $access_token = "EAAGF5LPatEwBO90n2xGJ2pZBOnMisRHxodMGMZABWb0e2RarluGu54VZAhdZCaYkQwfic9bfG7lj290r28zaryl5VTUkscrMplxXCeHpkhKJ8YJcZB3bWeoloB5ZC1X3SV6WUyW0zrKZAcufGKxEs66irz9XIDBY6yk3ntSKZArqvQ1Q3ZCxE1SFUrsjNFnOUnaG4";
+        $product_catalog_id = "374060218547895";
+        $api_version = "v19.0";
+
+        $product_photos = $this->products_model->getProductPhotos($product_id);
+        $product_details = $this->products_model->getProductByID($product_id);
+        $brand_details = $this->products_model->getBrandByID($product_details->brand);
+
+        $photos_arr = array();
+
+        foreach($product_photos as $photo){
+            //array_push(base_url().'assets/uploads/'.$photo->photo, $photos_arr);
+            array_push($photos_arr, site_url().'assets/uploads/'.$photo->photo);
+        }
+
+        $product_details->details = str_replace('<p><strong>Highlights:</strong></p>','', $product_details->details);
+        $product_details->details = str_replace('<p>','',$product_details->details);
+        $product_details->details = str_replace('</p>','',$product_details->details);
+        $product_details->details = str_replace('<ul>','',$product_details->details);
+        $product_details->details = str_replace('</ul>','',$product_details->details);
+        $product_details->details = str_replace('<li>','',$product_details->details);
+        $product_details->details = str_replace('</li>','',$product_details->details);
+     
+        if($product_details->promotion == 1){
+            $sale_price = (int) str_replace('.','',$product_details->promo_price);
+        }else{
+            $sale_price = (int) str_replace('.','',$product_details->price);
+        }
+
+        $price = (int) str_replace('.','',$product_details->price);
+
+        // Define the product data
+        $productCode = $product_details->code; // Assuming this is the unique identifier for your product
+        $productData = [
+            'name' => $product_details->name,
+            'description' => $product_details->details,
+            'availability' => 'in stock',
+            'condition' => 'new',
+            'price' => $price,
+            'sale_price' => $sale_price,
+            'currency' => 'SAR',
+            'url' => site_url().'product/'.$product_details->slug,
+            'image_url' => site_url().'assets/uploads/'.$product_details->image,
+            'brand' => $brand_details->name,
+            'gtin' => $productCode,
+            //'retailer_id' => $productCode,
+            'inventory' => $product_details->quantity
+        ];
+        
+        $requestData = [
+            [
+                'method' => 'UPDATE',
+                'retailer_id' => $productCode, // The retailer_id of the product to update
+                'data' => $productData
+            ]
+            // You can add more requests for other items here...
+        ];
+
+        $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/batch";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['requests' => json_encode($requestData), 'access_token' => $access_token]));
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+    
+        // Handle the response
+        if ($response === false) {
+            $this->session->set_flashdata('error', lang('error connecting to meta'));
+            admin_redirect('products/edit/' . $product_id);
+        } else {
+            $this->session->set_flashdata('message', lang('product pushed to meta'));
+            admin_redirect('products/edit/' . $product_id);
+        }
+    }
+
+    /*public function facebook_catalogue_push(){
+        // Set the access token, product catalog ID, and API version
+        $access_token = "EAAGF5LPatEwBO90n2xGJ2pZBOnMisRHxodMGMZABWb0e2RarluGu54VZAhdZCaYkQwfic9bfG7lj290r28zaryl5VTUkscrMplxXCeHpkhKJ8YJcZB3bWeoloB5ZC1X3SV6WUyW0zrKZAcufGKxEs66irz9XIDBY6yk3ntSKZArqvQ1Q3ZCxE1SFUrsjNFnOUnaG4";
+        $product_catalog_id = "374060218547895";
+        $api_version = "v19.0";
+
+        $productCode = '076950450431';
+
+        $productData = [
+            'name' => 'Yogi Tea, Raspberry Leaf, Caffeine Free, 16 Tea Bags, 1.02 oz (29 g)',
+            'description' => 'Supports the Reproductive System
+            Caffeine Free
+            Herbal Supplement
+            Non-GMO Project Verified
+            USDA Organic
+            Certified Organic by QAI
+            Kosher
+            Vegan
+            Certified B Corporation
+            Find Support With Raspberry Leaf
+            
+            Raspberry Leaf has been traditionally used by midwives and Western herbalists during pregnancy as well as to help ease the discomfort of menstruation, and to support the uterus. Enjoy the pleasant, earthy-sweet flavor of Woman\'s Raspberry Leaf tea to support the female system.
+            
+            At Yogi, it\'s about more than creating deliciously purposeful teas.
+            
+            Yogi Principles
+            
+            We blend with intention. Our flavorful teas are created to support body and mind.
+            
+            We believe in the synergetic benefit of herbs, combining ingredients to enhance their wellness-supporting potential.
+            
+            We blend the best of what nature has to offer using the finest spices and botanicals from around the globe.',
+            'availability' => 'in stock',
+            'condition' => 'new',
+            'price' => 2160,
+            'sale_price' => 2160,
+            'currency' => 'SAR',
+            'url' => 'https://avenzur.com/product/yogi-tea-raspberry-leaf-caffeine-free-16-tea-bags-1-02-oz-29-g-IH-61',
+            'image_url' => 'https://avenzur.com/assets/uploads/44d5a46bfc8759746b0e8c96440eb856.avif',
+            'brand' => 'Yogi Tea',
+            'gtin' => '076950450431',
+            'retailer_id' => '076950450431',
+            'inventory' => 3
+        ];
+
+        $filter = ["retailer_id" => ['eq' => $productCode]];
+        //$queryUrl = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products/{$productCode}?access_token={$access_token}";
+        $queryUrl = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products?fields=category,name,errors&filter=".urlencode(json_encode($filter))."&summary=true&access_token={$access_token}";
+
+        $ch = curl_init($queryUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            echo 'Curl error: ' . curl_error($ch);
+        }else{
+            $product = json_decode($response, true);
+            if ($product && sizeOf($product['data']) > 0) {
+                // Update if product exists
+                $productID = $product['data'][0]['id'];
+                $updateUrl = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/items_batch/{$productID}?access_token={$access_token}";
+                $updateData = json_encode($productData);
+
+                $ch = curl_init($updateUrl);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT'); // Use PUT method for update
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $updateData);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+
+                $response = curl_exec($ch);
+            }else{
+                // Insert if product does not exit
+                $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products";
+
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($productData));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/x-www-form-urlencoded',
+                    'Authorization: Bearer ' . $access_token
+                ]);
+                $response = curl_exec($ch);
+
+            }
+        }
+
+        if(curl_errno($ch)){
+            echo 'Curl error: ' . curl_error($ch);
+        }
+
+        curl_close($ch);
+        if ($response === false) {
+            echo "Error pushing product to Facebook catalog.";
+        } else {
+            $result = json_decode($response, true);
+            print_r($result);
+        }
+    }*/
+
+    public function facebook_catalogue_read(){
+        // Set the parameters
+        //$fields = ["category", "name", "errors"];
+        $filter = ["name" => ["i_contains" => "sulfad"]];
+        $summary = true;
+        $access_token = "EAAGF5LPatEwBO90n2xGJ2pZBOnMisRHxodMGMZABWb0e2RarluGu54VZAhdZCaYkQwfic9bfG7lj290r28zaryl5VTUkscrMplxXCeHpkhKJ8YJcZB3bWeoloB5ZC1X3SV6WUyW0zrKZAcufGKxEs66irz9XIDBY6yk3ntSKZArqvQ1Q3ZCxE1SFUrsjNFnOUnaG4";
+        $product_catalog_id = "374060218547895";
+        //$api_version = "v19.0";
+        $api_version = "v19.0";
+
+        // Build the query string
+        $query_params = http_build_query([
+            'fields' => json_encode($fields),
+            'filter' => json_encode($filter),
+            'summary' => $summary,
+            'access_token' => $access_token
+        ]);
+
+        // Construct the URL
+        $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products?{$query_params}";
+
+        // Initialize cURL session
+        $ch = curl_init($url);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        // Execute the request
+        $response = curl_exec($ch);
+
+        // Check for errors
+        if(curl_errno($ch)){
+            echo 'Curl error: ' . curl_error($ch);
+        }
+
+        // Close cURL session
+        curl_close($ch);
+
+        // Handle the response
+        if ($response === false) {
+            // Request failed
+            echo "Error fetching products.";
+        } else {
+            // Parse and process the JSON response
+            $products = json_decode($response, true);
+            // Handle the products data as needed
+            print_r($products);
+        }
+        exit;
+    }
+
     public function google_merch_apis($id, $data){
         $data['details'] = str_replace('<p><strong>Highlights:</strong></p>','',$data['details']);
         $data['details'] = str_replace('<p>','',$data['details']);
