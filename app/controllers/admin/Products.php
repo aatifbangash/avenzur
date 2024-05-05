@@ -259,7 +259,7 @@ class Products extends MY_Controller
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['requests' => json_encode($requestData), 'access_token' => $access_token]));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['allow_upsert' => true, 'requests' => json_encode($requestData), 'access_token' => $access_token]));
 
         $response = curl_exec($ch);
         curl_close($ch);
