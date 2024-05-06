@@ -14,6 +14,8 @@ class Shop extends MY_Shop_Controller
         if ($this->shop_settings->private && !$this->loggedIn) {
             redirect('/login');
         }
+        // echo "<pre>";
+        // print_r($this->session);
     }
 
     // Add/edit customer address
@@ -1473,12 +1475,10 @@ class Shop extends MY_Shop_Controller
     // Products,  categories and brands page
     public function products($category_slug = null, $subcategory_slug = null, $brand_slug = null, $promo = null)
     {
-
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
         if ($this->input->get('category')) {
             $category_slug = $this->input->get('category', true);
         }
-
         if ($this->input->get('brand')) {
             $brand_slug = $this->input->get('brand', true);
         }
@@ -1488,7 +1488,6 @@ class Shop extends MY_Shop_Controller
         if ($this->input->get('special_product') && $this->input->get('special_product') == 'yes') {
             $special_product = true;
         }
-
         if ($category_slug != null) {
             $this->data['featureImage'] = $this->shop_model->getCategoryBySlug($category_slug);
         }
@@ -1502,8 +1501,9 @@ class Shop extends MY_Shop_Controller
             'promo' => $promo,
             'special_product' => $special_product,
             'sorting' => $reset ? null : $this->input->get('sorting'),
-            'min_price' => $reset ? null : $this->input->get('min_price'),
-            'max_price' => $reset ? null : $this->input->get('max_price'),
+            'min_price' => $this->input->get('min_price'),
+            'max_price' =>  $this->input->get('max_price'),
+            'brands' =>  $this->input->get('brands'),
             'in_stock' => $reset ? null : $this->input->get('in_stock'),
             'page' => $this->input->get('page') ? $this->input->get('page', true) : 1,
         ];
@@ -1519,7 +1519,12 @@ class Shop extends MY_Shop_Controller
         }else{
             $this->data['page_title2'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products')));
         }
-        
+
+        // print_r($filters);
+
+        // $this->data['catBrands'] = $this->shop_model->getBrandsByCategoy($filters['category']->id);
+        // echo "<pre>";
+        // print_r($this->data);exit;
         $this->data['page_desc'] = !empty($filters['category']) ? $filters['category']->description : (!empty($filters['brand']) ? $filters['brand']->description : $this->shop_settings->products_description);
         $this->data['location'] = $this->shop_model->getProductLocation();
         if ($this->data == 'Saudi Arabia') {

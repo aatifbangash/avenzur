@@ -1850,4 +1850,21 @@ class Shop_model extends CI_Model
         return $this->db->insert_id(); // Return the ID of the inserted row
     }
 
+    public function getBrandsByCategoy($category_id=0){
+       
+        if($category_id > 0) {
+            $this->db->select('' . $this->db->dbprefix('brands') . '.*')
+                ->join('products', 'brands.id=products.brand', 'left')
+                ->group_by('brands.id');
+            return $this->db->get('brands')->row();
+        }else {
+            $this->db->select('' . $this->db->dbprefix('brands') . '.*')
+            ->join('products', 'brands.id=products.brand', 'left')
+            ->where('products.category_id', $category_id)
+            ->group_by('brands.id');
+        return $this->db->get('brands')->result_array();
+        }
+
+    }
+
 }
