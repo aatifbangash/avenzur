@@ -11,6 +11,7 @@ class Products_model extends CI_Model
         // Sequence-Code
         $this->load->library('SequenceCode');
         $this->sequenceCode = new SequenceCode();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function add_products($products = [])
@@ -984,6 +985,9 @@ class Products_model extends CI_Model
             if ($data['option_id']) {
                 $this->site->syncVariantQty($data['option_id'], $data['warehouse_id'], $data['product_id']);
             }
+            $movement_type = $data['type'] == 'subtraction' ? 'adjustment_decrease': 'adjustment_increase';
+            $this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id']);
+               
         }
     }
 
