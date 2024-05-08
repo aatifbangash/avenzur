@@ -7,6 +7,7 @@ class Sales_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function addDelivery($data = [])
@@ -145,6 +146,10 @@ class Sales_model extends CI_Model
 
                 $sale_item_id = $this->db->insert_id();
                 if ($data['sale_status'] == 'completed' && empty($si_return)) {
+
+                      //handle inventory movement
+                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
+
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {

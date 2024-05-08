@@ -7,6 +7,7 @@ class Purchases_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function addExpense($data = [], $attachments = [])
@@ -108,6 +109,8 @@ class Purchases_model extends CI_Model
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 $this->db->insert('purchase_items', $item);
                 
+                //handle inventory movement
+                $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
                 // Code for serials here
                 $serials_reference = $data['reference_no'];
                 $serials_quantity = $item['quantity'];
@@ -774,6 +777,7 @@ class Purchases_model extends CI_Model
                     $this->updateAVCO(['product_id' => $item['product_id'], 'batch' => $item['batchno'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'cost' => $item['real_unit_cost']]);
                 }
 
+                $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
                 // Code for serials here
                 $serials_reference = $data['reference_no'];
                 $serials_quantity = $item['quantity'];
