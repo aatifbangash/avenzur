@@ -220,6 +220,8 @@ class Products extends MY_Controller
         $product_details->details = str_replace('<li>','',$product_details->details);
         $product_details->details = str_replace('</li>','',$product_details->details);
 
+        $tax_details = $this->site->getTaxRateByID($product_details->tax_rate);
+
         // Define the product data
         $productCode = $product_details->code; // Assuming this is the unique identifier for your product
 
@@ -242,6 +244,22 @@ class Products extends MY_Controller
             //'retailer_id' => $productCode,
             'inventory' => (int) $product_details->quantity
         ];
+
+        // Consider tax in prices
+
+        if ($product_details->tax_method == '1' && $tax_details->rate > 0) {
+            $productTaxPercent = $tax_details->rate;
+
+            if ($product_details->promotion == 1) {
+                $productPromoPrice = $product_details->promo_price;
+                $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                $product_details->promo_price = $productPromoPrice + $promoProductTaxAmount;
+            }
+
+            $productPrice = $product_details->price;
+            $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+            $product_details->price = $productPrice + $productTaxAmount;
+        }
 
         // Calculate prices according to Facebook requirements
         $price = (int) ($product_details->price * 100); // Convert to cents
