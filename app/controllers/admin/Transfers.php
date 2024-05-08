@@ -37,7 +37,7 @@ class Transfers extends MY_Controller
     }
 
     public function push_serials_to_rasd_manually(){
-        $transfer_id = 471;
+        $transfer_id = $_GET['transfer_id'];
         $items = $this->transfers_model->getAllTransferItems($transfer_id ,'completed');
         echo '<pre>';
         print_r($items);
