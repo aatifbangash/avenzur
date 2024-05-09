@@ -1050,12 +1050,12 @@ class Shop extends MY_Shop_Controller
 
     public function invoiceorders($id = null, $hash = null, $pdf = null, $buffer_save = null){
         $hash = $hash ? $hash : $this->input->get('hash', true);
-        if (!$this->loggedIn && !$hash) {
+        /*if (!$this->loggedIn && !$hash) {
             redirect('/');
         }
         if ($this->Staff) {
             admin_redirect('sales');
-        }
+        }*/
         //order tracking
        $action = $this->input->get('action');
        
