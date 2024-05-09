@@ -962,7 +962,7 @@ class Pay extends MY_Shop_Controller
             $lowercase_delivery_country = strtolower($delivery_country);
 
             // send sms to customer
-            $message_to_send = 'Hello '.$customer->name.', thank you for your order with Avenzur.com! Your Invoice No: '.$inv->id;
+            $message_to_send = 'Hello '.$customer->first_name.' '.$customer->last_name.', thank you for your order with Avenzur.com! Your Invoice No: '.$inv->id;
             $sms_sent = $this->sma->send_sms_new($customer_mobile, $message_to_send);
             
             $email = $this->manual_order_received($invoice_no);
@@ -1165,10 +1165,6 @@ class Pay extends MY_Shop_Controller
                         $this->create_oto_order($order);
                         /* OTO Order Generation Ends */
 
-                        $message_to_send = 'Hello '.$customer->name.', thank you for your order with Avenzur.com! Your Invoice No: '.$inv->id;
-                        $sms_sent = $this->sma->send_sms_new($address->phone, $message_to_send);
-                        //$this->sendMsegatSMS($address->phone, $inv->id, $customer->name);
-
                     }else{
                         /* Shipway Order Generation Ends */
 
@@ -1247,6 +1243,10 @@ class Pay extends MY_Shop_Controller
 
                         /* Shipway Order Generation Ends */
                     }
+
+                    // send sms to customer
+                    $message_to_send = 'Hello '.$customer->first_name.' '.$customer->last_name.', thank you for your order with Avenzur.com! Your Invoice No: '.$inv->id;
+                    $sms_sent = $this->sma->send_sms_new($customer_mobile, $message_to_send);
                     
                     $email = $this->order_received($invoice_no);
                     if($customer_mobile != ''){
