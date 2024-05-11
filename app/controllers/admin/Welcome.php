@@ -19,6 +19,7 @@ class Welcome extends MY_Controller
 
         $this->load->library('form_validation');
         $this->load->admin_model('db_model');
+        $this->load->admin_model('reports_model');
     }
 
     public function delete($id, $file)
@@ -102,6 +103,16 @@ class Welcome extends MY_Controller
             admin_redirect('sync');
         }
 
+        $filterOnTypeArr = [
+            "" => "-- ALL --",
+            "purchase" => "Purchases",
+            "sale" => "Sales",
+            "customer_return" => "Return Customer",
+            "return_to_supplier" => "Return Supplier",
+            "transfer_in" => "Transfer In",
+            "transfer_out" => "Transfer Out",
+            "adjustment" => "Adjustment"
+        ];
         $this->data['error']     = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $this->data['sales']     = $this->db_model->getLatestSales();
         $this->data['quotes']    = $this->db_model->getLastestQuotes();
@@ -112,11 +123,35 @@ class Welcome extends MY_Controller
         $this->data['chatData']  = $this->db_model->getChartData();
         $this->data['stock']     = $this->db_model->getStockValue();
         $this->data['bs']        = $this->db_model->getBestSeller();
+        $this->data['filterOnTypeArr'] = $filterOnTypeArr;
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
         $lmsdate                 = date('Y-m-d', strtotime('first day of last month')) . ' 00:00:00';
         $lmedate                 = date('Y-m-d', strtotime('last day of last month')) . ' 23:59:59';
         $this->data['lmbs']      = $this->db_model->getBestSeller($lmsdate, $lmedate);
         $bc                      = [['link' => '#', 'page' => lang('dashboard')]];
         $meta                    = ['page_title' => lang('dashboard'), 'bc' => $bc];
+      
+        // $user = $this->site->getUser();
+        // $defaultWareHouseId = ($user->warehouse_id ? $user->warehouse_id : $this->site->Settings->default_warehouse);
+        // $warehouseId = $this->input->post('warehouse') ? $this->input->post('warehouse') : $defaultWareHouseId;
+        
+        $productId = $this->input->post('product') ? $this->input->post('product') : 0;
+        $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
+
+        if ($productId > 0) {
+            
+            $reportData = $this->reports_model->getInventoryItemMovementRecords($productId, $filterOnType);
+            $locationWiseData = $this->reports_model->getInventoryItemMovementByPharmacy($productId, $this->data['warehouses']);
+          
+            $this->data['productId'] = $productId;
+            $this->data['filterOnType'] = $filterOnType;
+            $this->data['reportData'] = $reportData;
+            $this->data['locationWiseData'] = $locationWiseData;
+
+             //$this->page_construct('dashboard', $meta, $this->data);
+
+        }
+
         $this->page_construct('dashboard', $meta, $this->data);
     }
 

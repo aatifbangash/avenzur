@@ -28,17 +28,215 @@ function row_status($x)
     } ?>
     <div class="box" style="margin-bottom: 15px;">
         <div class="box-header">
-            <h2 class="blue"><i class="fa-fw fa fa-bar-chart-o"></i><?= lang('overview_chart'); ?></h2>
+            <h2 class="blue"><i class="fa-fw fa fa-bar-chart-o"></i><?= lang('Item_Movement_History_Report'); ?></h2>
         </div>
         <div class="box-content">
-            <div class="row">
+            <!-- <div class="row">
                 <div class="col-md-12">
                     <p class="introtext"><?php echo lang('overview_chart_heading'); ?></p>
 
                     <div id="ov-chart" style="width:100%; height:450px;"></div>
                     <p class="text-center"><?= lang('chart_lable_toggle'); ?></p>
+
                 </div>
+            </div> -->
+
+            <div class="row">
+            <?php
+            $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
+            echo admin_form_open_multipart('', $attrib)
+            ?>
+            <div class="col-lg-12">
+                <div class="row">
+
+                    <div class="col-lg-12">
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Product', 'product'); ?>
+                                <?php // echo form_dropdown('product', $allProducts, set_value('product',$product),array('class' => 'form-control', 'id'=>'product'));
+                                ?>
+                                <?php echo form_input('sgproduct', (isset($_POST['sgproduct']) ? $_POST['sgproduct'] : ''), 'class="form-control" id="suggest_product2" data-bv-notempty="true"'); ?>
+                                <input type="hidden" name="product" value="<?= isset($_POST['product']) ? $_POST['product'] : 0 ?>" id="report_product_id2" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <?= lang('Type', 'Type'); ?>
+                                <?php echo form_dropdown('filterOnType', $filterOnTypeArr, set_value('filterOnType', $_POST['filterOnType']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'filterOnType'),  array('none')); ?>
+
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="from-group">
+                                <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                   
+                </div>
+                <hr />
+                <div class="row">
+                    <div class="controls table-controls" style="font-size: 12px !important;">
+                        <table id="poTable" class="table items table-striped table-bordered table-condensed table-hover">
+                            <thead>
+                                <tr>
+                                    <th><?= lang('SN'); ?></th>
+                                    <th><?= lang('Date'); ?></th>
+                                    <th><?= lang('Product Name'); ?></th>
+                                    <th><?= lang('Type'); ?></th>
+                                    <th><?= lang('Warehouse/Pharmacy'); ?></th>
+                                 
+                                    <th><?= lang('Batch No.'); ?></th>
+                                  
+                                    <th><?= lang('Quantity'); ?></th>
+                               
+                                </tr>
+                            </thead>
+
+                            <?php if ($reportData) { ?>
+                                <tbody style="text-align:center;">
+                                 
+
+                                    <?php
+                                    $count = 1;
+                                    $balanceQantity = 0;
+                                    $totalValueOfItem  = 0;
+                                    foreach ($reportData as $rp) {
+                                        $balanceQantity += $rp->quantity;
+                                       
+
+                                    ?>
+                                        <tr>
+                                            <td><?= $count; ?></td>
+                                            <td><?= $rp->movement_date; ?></td>
+                                            <td><?= $rp->product_name; ?></td>
+                                            <td><?= $rp->type; ?></td>
+                                            <td><?= $rp->warehouse_name; ?></td>
+                                         
+                                            <td><?= $rp->batch_number; ?></td>
+                                         
+                                          
+                                            <td><?= $this->sma->formatQuantity($rp->quantity); ?></td>
+                                          
+                                        </tr>
+                                    <?php
+                                        $count++;
+                                    }
+
+
+                                    ?>
+
+                                    <tr>
+                                        <td colspan="6"><stong>Total Quantity</strong></td>
+                                       
+                                        <td><?php echo $this->sma->formatQuantity($balanceQantity); ?></td>
+                                      
+
+                                    </tr>
+
+                                </tbody>
+                            <?php } ?>
+                            <tfoot></tfoot>
+                        </table>
+                    </div>
+
+                </div>
+
             </div>
+        </div>
+        <?php echo form_close(); ?>
+
+
+        </div>
+    </div>
+
+    <div class="box" style="margin-bottom: 15px;">
+        <div class="box-header">
+            <h2 class="blue"><i class="fa-fw fa fa-bar-chart-o"></i><?= lang('Item_Current_Quantity_Pharmacy_Wise_Report'); ?></h2>
+        </div>
+        <div class="box-content">
+            <!-- <div class="row">
+                <div class="col-md-12">
+                    <p class="introtext"><?php echo lang('overview_chart_heading'); ?></p>
+
+                    <div id="ov-chart" style="width:100%; height:450px;"></div>
+                    <p class="text-center"><?= lang('chart_lable_toggle'); ?></p>
+
+                </div>
+            </div> -->
+
+            <div class="row">
+            <?php
+            // $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
+            // echo admin_form_open_multipart('', $attrib)
+            ?>
+            <div class="col-lg-12">
+                <div class="row">
+                    <div class="controls table-controls" style="font-size: 12px !important;">
+                        <table id="poTable" class="table items table-striped table-bordered table-condensed table-hover">
+                            <thead>
+                                <tr>
+                                    <th><?= lang('SN'); ?></th>
+                                    <th><?= lang('Product Name'); ?></th>
+                                    <?php foreach($warehouses as $warehouse) {?>
+                                        <th><?= lang($warehouse->name); ?></th>
+                                    <?php }?>    
+                                  
+                                    <th><?= lang('Total Quantity'); ?></th>
+                               
+                                </tr>
+                            </thead>
+
+                            <?php if ($locationWiseData) { ?>
+                                <tbody style="text-align:center;">
+                                 
+
+                                    <?php
+                                    $count = 1;
+                                    $balanceQantity = 0;
+                                    $totalValueOfItem  = 0;
+                                    foreach ($locationWiseData as $row_loc) {
+                                       
+                                    ?>
+                                        <tr>
+                                            <td><?= $count; ?></td>
+                                            <td><?= $row_loc->product_name; ?></td>
+                                            <?php foreach($warehouses as $warehouse) {
+                                                $col = "loc_".$warehouse->id; ?>
+                                                <td><?= $row_loc->$col; ?></td>
+                                            <?php } ?>
+                                          
+                                            <td><?= $this->sma->formatQuantity($row_loc->total_quantity); ?></td>
+                                          
+                                        </tr>
+                                    <?php
+                                        $count++;
+                                    }
+
+
+                                    ?>
+
+
+                                </tbody>
+                            <?php } ?>
+                            <tfoot></tfoot>
+                        </table>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+        <?php 
+        // echo form_close(); 
+        ?>
+
+
         </div>
     </div>
 

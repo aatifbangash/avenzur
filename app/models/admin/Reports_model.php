@@ -351,7 +351,7 @@ class Reports_model extends CI_Model
         }
 
         $response_array = array('ob' => $data_res, 'report' => $data);
-//dd($response_array);
+        //dd($response_array);
         return $response_array;
     }
 
@@ -364,7 +364,7 @@ class Reports_model extends CI_Model
             ->from('sma_accounts_entryitems')
             //->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-//                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            //                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
             ->where('sma_accounts_entries.sid', $supplier_id)
             // need to join with purchase and suppliers( company)
             ->where('sma_accounts_entries.date <', $start_date)
@@ -391,7 +391,7 @@ class Reports_model extends CI_Model
             ->order_by('sma_accounts_entries.date asc');
 
         $q = $this->db->get();
-//        lq($this);
+        //        lq($this);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -401,7 +401,7 @@ class Reports_model extends CI_Model
         }
 
         $response_array = array('ob' => $data_res, 'report' => $data);
-//        dd($response_array);
+        //        dd($response_array);
         return $response_array;
     }
 
@@ -566,7 +566,7 @@ class Reports_model extends CI_Model
             }
         }
         $response['ob'] = $data2;
-//dd($response);
+        //dd($response);
         return $response;
     }
 
@@ -918,8 +918,7 @@ class Reports_model extends CI_Model
 
     public function getProductNames($term, $limit = 5)
     {
-        $this->db->select('id, code, name')
-            ->like('name', $term, 'both')->or_like('code', $term, 'both');
+        $this->db->where("type = 'standard' AND (name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR supplier1_part_no LIKE '%" . $term . "%' OR supplier2_part_no LIKE '%" . $term . "%' OR supplier3_part_no LIKE '%" . $term . "%' OR supplier4_part_no LIKE '%" . $term . "%' OR supplier5_part_no LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
         $this->db->limit($limit);
         $q = $this->db->get('products');
         if ($q->num_rows() > 0) {
@@ -997,7 +996,7 @@ class Reports_model extends CI_Model
                                 ORDER BY p.id ASC, w.id ASC";
 
         $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
-        
+
         if ($totalPurchseResultSet->num_rows() > 0) {
             foreach ($totalPurchseResultSet->result() as $row) {
                 $row->cost_price = ($row->total_cost_price / $row->quantity);
@@ -1014,9 +1013,11 @@ class Reports_model extends CI_Model
         $totalPurchases = [];
         $finalResponse = [];
 
-        if ($at_date) $at_date = $this->sma->fld($at_date);
+        if ($at_date)
+            $at_date = $this->sma->fld($at_date);
 
-        if ($supplier) $supplierJoin = " INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id ";
+        if ($supplier)
+            $supplierJoin = " INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id ";
 
         $totalPurchasesQuery = "SELECT 
                                     p.id, 
@@ -1058,7 +1059,7 @@ class Reports_model extends CI_Model
                                 ORDER BY p.id DESC";
 
         $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
-        
+
         if ($totalPurchseResultSet->num_rows() > 0) {
             foreach ($totalPurchseResultSet->result() as $row) {
                 $row->cost_price = ($row->total_cost_price / $row->quantity);
@@ -1105,7 +1106,7 @@ class Reports_model extends CI_Model
                             && $purchase->batch_no == $sale->batch_no
                             //&& $purchase->expiry == $sale->expiry
                         ) {
-                            $purchase->quantity -= (int)$sale->quantity;
+                            $purchase->quantity -= (int) $sale->quantity;
                         }
                     }, $totalPurchases);
                 }
@@ -1151,7 +1152,7 @@ class Reports_model extends CI_Model
                             && $purchase->batch_no == $returnSupplier->batch_no
                             //&& $purchase->expiry == $returnSupplier->expiry
                         ) {
-                            $purchase->quantity -= (int)abs($returnSupplier->quantity);
+                            $purchase->quantity -= (int) abs($returnSupplier->quantity);
                             //$purchase->cost_price = ($purchase->cost_price + $returnSupplier->cost_price)/2;
                         }
                     }, $totalPurchases);
@@ -1198,7 +1199,7 @@ class Reports_model extends CI_Model
                             && $purchase->batch_no == $returnCustomer->batch_no
                             //&& $purchase->expiry == $returnCustomer->expiry
                         ) {
-                            $purchase->quantity += (int)abs($returnCustomer->quantity);
+                            $purchase->quantity += (int) abs($returnCustomer->quantity);
                         }
                     }, $totalPurchases);
                 }
@@ -1247,14 +1248,14 @@ class Reports_model extends CI_Model
                             && $warehouse == $transfer->to_warehouse_id
                             //&& $purchase->expiry == $transfer->expiry
                         ) {
-                            $purchase->quantity = $purchase->quantity + (int)abs($transfer->quantity);
-                        }else if(
+                            $purchase->quantity = $purchase->quantity + (int) abs($transfer->quantity);
+                        } else if (
                             $purchase->id == $transfer->id
                             && $purchase->item_code == $transfer->item_code
                             && $purchase->batch_no == $transfer->batch_no
                             && $warehouse == $transfer->from_warehouse_id
-                        ){
-                            $purchase->quantity = $purchase->quantity - (int)abs($transfer->quantity);
+                        ) {
+                            $purchase->quantity = $purchase->quantity - (int) abs($transfer->quantity);
                         }
                     }, $totalPurchases);
                 }
@@ -1303,19 +1304,19 @@ class Reports_model extends CI_Model
                             && $warehouse == $transfer->to_warehouse_id
                             //&& $purchase->expiry == $transfer->expiry
                         ) {
-                            $purchase->quantity = $purchase->quantity + (int)abs($transfer->quantity);
-                        }else if(
+                            $purchase->quantity = $purchase->quantity + (int) abs($transfer->quantity);
+                        } else if (
                             $purchase->id == $transfer->id
                             && $purchase->item_code == $transfer->item_code
                             && $purchase->batch_no == $transfer->batch_no
                             && $warehouse == $transfer->from_warehouse_id
-                        ){
-                            $purchase->quantity = $purchase->quantity - (int)abs($transfer->quantity);
+                        ) {
+                            $purchase->quantity = $purchase->quantity - (int) abs($transfer->quantity);
                         }
                     }, $totalPurchases);
                 }
             }
-        }else{
+        } else {
             $totalPurchases = [];
 
             $totalTransferQuery = "SELECT
@@ -1369,9 +1370,9 @@ class Reports_model extends CI_Model
     {
 
         /*
-        * SELECT AVG(purItem.net_unit_cost) AS purchaseUnitPrice FROM `sma_purchases` AS `purchase` 
-        *  INNER JOIN `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id`=`purchase`.`id` WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0
-        */
+         * SELECT AVG(purItem.net_unit_cost) AS purchaseUnitPrice FROM `sma_purchases` AS `purchase` 
+         *  INNER JOIN `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id`=`purchase`.`id` WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0
+         */
 
         $q = $this->db->query("SELECT
         COALESCE(purchaseQuantity, 0) - COALESCE(saleQuantity, 0) - COALESCE(returnSupplierQuantity, 0) + COALESCE(returnQuantity, 0) + COALESCE(transferInQuantity, 0) - COALESCE(transferOutQuantity, 0) AS openingBalance,
@@ -1408,6 +1409,66 @@ class Reports_model extends CI_Model
             foreach (($q->result()) as $row) {
                 $row->unitPrice = ($row->totalAmtBalance / $row->openingBalance);
                 $response = $row;
+            }
+        }
+        return $response;
+    }
+
+    public function getInventoryItemMovementRecords($productId, $filterOnType)
+    {
+        $where = '';
+        if ($filterOnType != '') {
+
+            if ($filterOnType == 'adjustment') {
+                $where .= " AND (a.type = 'adjustment_increase' OR a.type ='adjustment_decrease') ";
+            } else {
+                $where .= " AND a.type = '" . $filterOnType . "'";
+            }
+
+        }
+        $response = array();
+        if ($productId > 0) {
+
+            $q = $this->db->query(
+                "SELECT a.batch_number, a.movement_date,a.type,a.quantity, b.name as product_name, b.code , c.name as warehouse_name
+                                FROM `sma_inventory_movements` a 
+                                LEFT JOIN sma_products b on a.product_id = b.id 
+                                LEFT JOIN sma_warehouses c on a.location_id = c.id 
+                                WHERE a.product_id = " . $productId . $where
+            );
+
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $response[] = $row;
+                }
+            }
+        }
+        return $response;
+    }
+
+    public function getInventoryItemMovementByPharmacy($productId, $warehouses)
+    {
+        $where = '';
+        $response = array();
+        if ($productId > 0) {
+            $sumQuery = '';
+
+            foreach ($warehouses as $warehouse) {
+                $sumQuery .= 'SUM(CASE WHEN a.location_id = ' . $warehouse->id . ' THEN a.quantity ELSE 0 END) AS loc_' . $warehouse->id . ',';
+            }
+            $q = $this->db->query(
+                "SELECT   p.name AS product_name,
+                " . $sumQuery . "
+                    SUM(a.quantity) as total_quantity
+                FROM `sma_inventory_movements` a
+                LEFT JOIN sma_products p ON a.product_id = p.id
+                WHERE a.product_id = " . $productId . " GROUP BY p.name"
+            );
+
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $response[] = $row;
+                }
             }
         }
         return $response;
@@ -1779,7 +1840,6 @@ class Reports_model extends CI_Model
                 WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
 
         }
-
         $response = array();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -1790,7 +1850,8 @@ class Reports_model extends CI_Model
 
     }
 
-    public function getProductsQuantityUnitCost($start_date,$from_warehouse_id){
+    public function getProductsQuantityUnitCost($start_date, $from_warehouse_id)
+    {
         $qry = $this->db->query("SELECT
             product_id,
             SUM(totalPurchaseQuantity) AS total_in_quantity,
@@ -1961,7 +2022,7 @@ class Reports_model extends CI_Model
         $resultSet = array();
         if ($qry->num_rows() > 0) {
             foreach (($qry->result()) as $row) {
-                $resultSet[$row->product_id] = ["total_opening_qty"=>$row->total_in_quantity - $row->total_out_quantity, "avg_unit_cost"=> ($row->avg_unit_cost - $row->avgSaleUnitPrice) / ($row->total_in_quantity - $row->total_out_quantity) , 'all_data'=>$row];
+                $resultSet[$row->product_id] = ["total_opening_qty" => $row->total_in_quantity - $row->total_out_quantity, "avg_unit_cost" => ($row->avg_unit_cost - $row->avgSaleUnitPrice) / ($row->total_in_quantity - $row->total_out_quantity), 'all_data' => $row];
             }
         }
         // echo $this->db->last_query();
@@ -1969,15 +2030,16 @@ class Reports_model extends CI_Model
         return $resultSet;
     }
 
-    public function getInventoryTrialBalanceData($start_date, $end_date, $from_warehouse_id = 0, $to_warehouse_id = 0){
+    public function getInventoryTrialBalanceData($start_date, $end_date, $from_warehouse_id = 0, $to_warehouse_id = 0)
+    {
 
-       # Transfer-OUT
-       // SUM(abs(PI.quantity)) AS movement_out_quantity,
-       // AVG(PI.net_unit_cost) AS movement_out_cost
-    
-       # Transfer-IN
-       // IFNULL(SUM(movement_in_quantity), 0) AS movement_in_quantity,
-       // AVG(net_unit_cost) AS movement_in_cost
+        # Transfer-OUT
+        // SUM(abs(PI.quantity)) AS movement_out_quantity,
+        // AVG(PI.net_unit_cost) AS movement_out_cost
+
+        # Transfer-IN
+        // IFNULL(SUM(movement_in_quantity), 0) AS movement_in_quantity,
+        // AVG(net_unit_cost) AS movement_in_cost
 
 
         $qry = $this->db->query("SELECT 
@@ -2462,7 +2524,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_cost' => 0.00,
             ];
@@ -2486,7 +2548,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_price' => 0.00,
             ];
@@ -2509,7 +2571,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_cost' => 0.00,
             ];
@@ -2533,7 +2595,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_price' => 0.00,
             ];
@@ -2557,7 +2619,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_cost' => 0.00,
             ];
@@ -2581,7 +2643,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_price' => 0.00,
             ];
@@ -2604,7 +2666,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_price' => 0.00,
             ];
