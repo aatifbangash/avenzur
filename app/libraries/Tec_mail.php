@@ -48,7 +48,7 @@ class Tec_mail
             $mail->SMTPSecure = $this->Settings->smtp_crypto;
             $mail->Port = $this->Settings->smtp_port;
              
-            $from_name = 'Info' ;
+            $from_name = 'Avenzur' ;
             $from = $this->Settings->smtp_user;
             // if($from == 'info@avenzur.com') {
             //     $from_name = 'Avenzur' ;

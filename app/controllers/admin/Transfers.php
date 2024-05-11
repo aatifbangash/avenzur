@@ -36,6 +36,38 @@ class Transfers extends MY_Controller
         $this->sequenceCode = new SequenceCode();
     }
 
+    public function push_serials_to_rasd_manually(){
+        $transfer_id = $_GET['transfer_id'];
+        $items = $this->transfers_model->getAllTransferItems($transfer_id ,'completed');
+
+        foreach ($items as $item) {
+            // Code for serials here
+            $serials_quantity = $item['quantity'];
+            $serials_gtin = $item['product_code'];
+            $serials_batch_no = $item['batchno'];
+            
+            $this->db->select('sma_invoice_serials.*');
+            $this->db->from('sma_invoice_serials');
+            $this->db->join('sma_purchases', 'sma_invoice_serials.pid = sma_purchases.id');
+            $this->db->where('sma_invoice_serials.gtin', $serials_gtin);
+            $this->db->where('sma_invoice_serials.batch_no', $serials_batch_no);
+            $this->db->where('sma_invoice_serials.sid', 0);
+            $this->db->where('sma_invoice_serials.rsid', 0);
+            $this->db->where('sma_invoice_serials.tid', 0);
+            $this->db->where('sma_invoice_serials.pid !=', 0);
+            $this->db->where('sma_purchases.status', 'received');
+            $this->db->limit($serials_quantity);
+
+            $notification_serials = $this->db->get();
+            if ($notification_serials->num_rows() > 0) {
+                foreach (($notification_serials->result()) as $row) {
+                    $this->db->update('sma_invoice_serials', ['tid' => $transfer_id], ['serial_number' => $row->serial_number, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
+                }
+            }
+            // Code for serials end here
+        }
+    }
+
     public function add()
     {
         $this->sma->checkPermissions();

@@ -1,4 +1,10 @@
+User-agent: Googlebot
+Disallow: /nogooglebot/
+
 User-agent: *
+Allow: /
+User-agent: Googlebot-Image
+Sitemap: https://avenzur.com/sitemap.xml
 
 Disallow: /product/morganica-8964003 250300
 Disallow: /product/biotin-plus-5156867 893424
