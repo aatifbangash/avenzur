@@ -358,10 +358,9 @@ class Purchases extends MY_Controller
         $items = $this->purchases_model->getAllPurchaseItems($purchase_id);
 
         foreach ($items as $item) {
-            print_r($item);exit;
-            $serials_quantity = $item['quantity'];
-            $serials_gtin = $item['product_code'];
-            $serials_batch_no = $item['batchno'];
+            $serials_quantity = $item->quantity;
+            $serials_gtin = $item->product_code;
+            $serials_batch_no = $item->batchno;
 
             $dispatch_array = $this->db->get_where('sma_rasd_notifications', ['invoice_no' => $serials_reference], 1);
             if ($dispatch_array->num_rows() > 0) {
