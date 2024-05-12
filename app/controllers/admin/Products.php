@@ -514,8 +514,6 @@ class Products extends MY_Controller
             $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$excelCode, NULL, FALSE);
             $query = $this->db->get();
             $product = $query->row();
-
-            print_r($product);exit;
             
             if ($product) {
                 // Update the code in the database with the ic from CSV
