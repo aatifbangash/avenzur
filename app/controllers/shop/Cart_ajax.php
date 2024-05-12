@@ -634,7 +634,7 @@ class Cart_ajax extends MY_Shop_Controller
                 if($product->code == $sulfad_code){
                     //$discounted_quantity = floor($sulfad_new_quantity / 3);
                     $discounted_quantity = 0;
-                    if($total_sulfad > 1){
+                    if($sulfad_new_quantity > 1){
                         $discount_amt = 74;
                     }
 
