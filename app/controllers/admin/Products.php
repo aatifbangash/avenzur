@@ -509,8 +509,14 @@ class Products extends MY_Controller
             $source = isset($rowData[10]) ? $rowData[10] : '';
     
             // Find the product in the database based on the code
-            $product = $this->db->get_where('sma_products', ['code' => $excelCode])->row();
+            $this->db->select('*');
+            $this->db->from('sma_products');
+            $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$excelCode, NULL, FALSE);
+            $query = $this->db->get();
+            $product = $query->row();
+
             print_r($product);exit;
+            
             if ($product) {
                 // Update the code in the database with the ic from CSV
                 $dataToUpdate = [
