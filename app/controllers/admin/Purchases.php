@@ -356,10 +356,9 @@ class Purchases extends MY_Controller
         $serials_reference = $purchase_details->reference_no;
 
         $items = $this->purchases_model->getAllPurchaseItems($purchase_id);
-        echo '<pre>';print_r($items);exit;
-
 
         foreach ($items as $item) {
+            print_r($item);exit;
             $serials_quantity = $item['quantity'];
             $serials_gtin = $item['product_code'];
             $serials_batch_no = $item['batchno'];
