@@ -1288,28 +1288,28 @@ class Products extends MY_Controller
                         $sale_price   = trim($pr['saleprice']);
                         $unit_cost   = trim($pr['unitcost']);
                         
-                        if (!$this->Settings->overselling && $type == 'subtraction') {
-                            if ($variant) {
-                                if ($op_wh_qty = $this->products_model->getProductWarehouseOptionQty($variant, $warehouse_id)) {
-                                    if ($op_wh_qty->quantity < $quantity) {
-                                        $this->session->set_flashdata('error', lang('warehouse_option_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
-                                        redirect($_SERVER['HTTP_REFERER']);
-                                    }
-                                } else {
-                                    $this->session->set_flashdata('error', lang('warehouse_option_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
-                                    redirect($_SERVER['HTTP_REFERER']);
-                                }
-                            }
-                            if ($wh_qty = $this->products_model->getProductQuantity($product->id, $warehouse_id)) {
-                                if ($wh_qty['quantity'] < $quantity) {
-                                    $this->session->set_flashdata('error', lang('warehouse_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
-                                    redirect($_SERVER['HTTP_REFERER']);
-                                }
-                            } else {
-                                $this->session->set_flashdata('error', lang('warehouse_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
-                                redirect($_SERVER['HTTP_REFERER']);
-                            }
-                        }
+                        // if (!$this->Settings->overselling && $type == 'subtraction') {
+                        //     if ($variant) {
+                        //         if ($op_wh_qty = $this->products_model->getProductWarehouseOptionQty($variant, $warehouse_id)) {
+                        //             if ($op_wh_qty->quantity < $quantity) {
+                        //                 $this->session->set_flashdata('error', lang('warehouse_option_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
+                        //                 redirect($_SERVER['HTTP_REFERER']);
+                        //             }
+                        //         } else {
+                        //             $this->session->set_flashdata('error', lang('warehouse_option_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
+                        //             redirect($_SERVER['HTTP_REFERER']);
+                        //         }
+                        //     }
+                        //     if ($wh_qty = $this->products_model->getProductQuantity($product->id, $warehouse_id)) {
+                        //         if ($wh_qty['quantity'] < $quantity) {
+                        //             $this->session->set_flashdata('error', lang('warehouse_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
+                        //             redirect($_SERVER['HTTP_REFERER']);
+                        //         }
+                        //     } else {
+                        //         $this->session->set_flashdata('error', lang('warehouse_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
+                        //         redirect($_SERVER['HTTP_REFERER']);
+                        //     }
+                        // }
 
                         $products[] = [
                             'product_id'   => $product->id,
