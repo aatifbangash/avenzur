@@ -353,11 +353,10 @@ class Purchases extends MY_Controller
     public function push_serials_to_rasd_manually(){
         $purchase_id = $_GET['purchase_id'];
         $purchase_details = $this->purchases_model->getPurchaseByID($purchase_id);
-        echo '<pre>';print_r($purchase_details);exit;
         $serials_reference = $purchase_details->reference_no;
 
         $items = $this->purchases_model->getAllPurchaseItems($purchase_id);
-
+        echo '<pre>';print_r($items);exit;
 
 
         foreach ($items as $item) {
