@@ -516,7 +516,7 @@ class Products extends MY_Controller
                   ->get();
 
             $product = $query->row();
-    
+            print_r($product);exit;
             if ($product) {
                 // Update the code in the database with the ic from CSV
                 $dataToUpdate = [
