@@ -1290,11 +1290,12 @@ class Shop_model extends CI_Model
         {$this->db->dbprefix('products')}.image as image, 
         {$this->db->dbprefix('products')}.slug as slug, 
         {$this->db->dbprefix('products')}.price,
-        {$this->db->dbprefix('warehouses_products')}.quantity as quantity, 
+        {$this->db->dbprefix('warehouses_products')}.quantity as old_quantity, 
         {$this->db->dbprefix('products')}.type, 
         {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
         {$this->db->dbprefix('products')}.tax_method,
         {$this->db->dbprefix('products')}.quantity as product_quantity,
+        {$this->db->dbprefix('inventory_movements')}.quantity as quantity,
         promotion, 
         promo_price, 
         start_date, 
@@ -1307,6 +1308,7 @@ class Shop_model extends CI_Model
             ->from('products')
             ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
             ->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
+            ->join('inventory_movements', 'products.id=inventory_movements.product_id', 'left')
             ->join('categories', 'products.category_id=categories.id', 'left')
             ->join('brands', 'products.brand=brands.id', 'left')
             ->join('product_reviews pr', 'products.id=pr.product_id', 'left');
@@ -1385,7 +1387,7 @@ class Shop_model extends CI_Model
                 $this->db->where('price <=', $filters['max_price']);
             }
             if (!empty($filters['in_stock'])) {
-                $this->db->group_start()->where('warehouses_products.quantity >=', 1)->or_where('type !=', 'standard')->group_end();
+                $this->db->group_start()->where('inventory_movements.quantity >=', 1)->or_where('type !=', 'standard')->group_end();
             }
 
             if(!empty($filters['promo']) || !empty($filters['special_product'])){
