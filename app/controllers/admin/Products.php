@@ -501,13 +501,21 @@ class Products extends MY_Controller
         while (($rowData = fgetcsv($handle)) !== false) {
             // Assuming 'B' and 'C' are the columns for 'code' and 'ic' respectively
             $excelCode = $rowData[1]; // CSV is 0-indexed
+            //$excelCode = ltrim($excelCode, '0');
+
             $tax_rate = $rowData[6] == 0 ? 1 : 5;
             $ascon_code = isset($rowData[11]) ? $rowData[11] : '';
             $imported = 1;
             $source = isset($rowData[10]) ? $rowData[10] : '';
     
             // Find the product in the database based on the code
-            $product = $this->db->get_where('sma_products', ['code' => $excelCode])->row();
+            //$product = $this->db->get_where('sma_products', ['code' => $excelCode])->row();
+            $query = $this->db->select('*')
+                  ->from('sma_products')
+                  ->where('CAST(code AS UNSIGNED)', (int)$excelCode)
+                  ->get();
+
+            $product = $query->row();
     
             if ($product) {
                 // Update the code in the database with the ic from CSV
