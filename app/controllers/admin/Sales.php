@@ -3288,14 +3288,14 @@ class Sales extends MY_Controller
                     exit();
                 }
                 $titles = array_shift($arrResult);
-                $keys   = ['code', 'net_unit_price', 'quantity', 'variant', 'item_tax_rate', 'discount', 'serial'];
+                $keys   = ['code', 'net_unit_price', 'quantity', 'variant', 'item_tax_rate', 'discount', 'serial','batch_no'];
                 $final  = [];
                 foreach ($arrResult as $key => $value) {
                     $final[] = array_combine($keys, $value);
                 }
                 $rw = 2;
                 foreach ($final as $csv_pr) {
-                    if (isset($csv_pr['code']) && isset($csv_pr['net_unit_price']) && isset($csv_pr['quantity'])) {
+                    if (isset($csv_pr['code']) && isset($csv_pr['net_unit_price']) && isset($csv_pr['quantity']) && isset($csv_pr['batch_no'])) {    
                         if ($product_details = $this->sales_model->getProductByCode($csv_pr['code'])) {
                             if ($csv_pr['variant']) {
                                 $item_option = $this->sales_model->getProductVariantByName($csv_pr['variant'], $product_details->id);
@@ -3317,6 +3317,7 @@ class Sales extends MY_Controller
                             $item_tax_rate  = $csv_pr['item_tax_rate'];
                             $item_discount  = $csv_pr['discount'];
                             $item_serial    = $csv_pr['serial'];
+                            $item_batchno    = $csv_pr['batch_no'];  
 
                             if (isset($item_code) && isset($item_net_price) && isset($item_quantity)) {
                                 $product_details  = $this->sales_model->getProductByCode($item_code);
@@ -3368,6 +3369,7 @@ class Sales extends MY_Controller
                                     'item_discount'     => $pr_item_discount,
                                     'subtotal'          => $subtotal,
                                     'serial_no'         => $item_serial,
+                                    'batch_no'          => $item_batchno,
                                     'unit_price'        => $this->sma->formatDecimal($unit_price, 4),
                                     'real_unit_price'   => $this->sma->formatDecimal(($unit_price + $pr_discount), 4),
                                 ];

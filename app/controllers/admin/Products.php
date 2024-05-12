@@ -1267,6 +1267,7 @@ class Products extends MY_Controller
                         $quantity     = $csv_quantity > 0 ? $csv_quantity : (0 - $csv_quantity);
                         $batch        = trim($pr['batch']);
                         $expiry       = trim($pr['expiry']);
+                        $expiry       =  date('Y-m-d', strtotime($expiry)); 
                         $vat          = trim($pr['vat']);
                         $sale_price   = trim($pr['saleprice']);
                         $unit_cost   = trim($pr['unitcost']);
