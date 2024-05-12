@@ -41,12 +41,10 @@ class Transfers extends MY_Controller
         $items = $this->transfers_model->getAllTransferItems($transfer_id ,'completed');
 
         foreach ($items as $item) {
-            echo '<pre>';
-            print_r($item);exit;
             // Code for serials here
-            $serials_quantity = $item['quantity'];
-            $serials_gtin = $item['product_code'];
-            $serials_batch_no = $item['batchno'];
+            $serials_quantity = $item->quantity;
+            $serials_gtin = $item->product_code;
+            $serials_batch_no = $item->batchno;
             
             $this->db->select('sma_invoice_serials.*');
             $this->db->from('sma_invoice_serials');
