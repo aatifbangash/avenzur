@@ -509,7 +509,11 @@ class Products extends MY_Controller
             $source = isset($rowData[10]) ? $rowData[10] : '';
     
             // Find the product in the database based on the code
-            $product = $this->db->get_where('sma_products', ['CAST(code AS UNSIGNED)' => $excelCode])->row();
+            $this->db->select('*');
+            $this->db->from('sma_products');
+            $this->db->where('CAST(code AS UNSIGNED)', $excelCode);
+            $query = $this->db->get();
+            $product = $query->row();
             /*$query = $this->db->select('*')
                   ->from('sma_products')
                   ->where('CAST(code AS UNSIGNED)', (int)$excelCode)
