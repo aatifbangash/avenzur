@@ -481,7 +481,7 @@ class Products extends MY_Controller
         //$csvFile = 'https://avenzur.com/assets/uploads/temp/iherb_updated.csv';
         //$csvFile = '/var/www/backup25May2023/assets/uploads/temp/iherb_updated.csv';
 
-        $csvFile = $this->upload_path.'temp/iherb_updated.csv';
+        $csvFile = $this->upload_path.'temp/12-may-upload-file.csv';
         
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
@@ -500,17 +500,27 @@ class Products extends MY_Controller
         // Iterate through rows in the CSV file
         while (($rowData = fgetcsv($handle)) !== false) {
             // Assuming 'B' and 'C' are the columns for 'code' and 'ic' respectively
-            $excelCode = $rowData[0]; // CSV is 0-indexed
-            $ic = $rowData[0];
+            $excelCode = $rowData[1]; // CSV is 0-indexed
+            $tax_rate = $rowData[6] == 0 ? 1 : 5;
+            $ascon_code = isset($rowData[11]) ? $rowData[11] : '';
+            $imported = 1;
+            $source = isset($rowData[10]) ? $rowData[10] : '';
     
             // Find the product in the database based on the code
             $product = $this->db->get_where('sma_products', ['code' => $excelCode])->row();
     
             if ($product) {
                 // Update the code in the database with the ic from CSV
+                $dataToUpdate = [
+                    'tax_rate' => $tax_rate,
+                    'ascon_code' => $ascon_code,
+                    'imported' => $imported,
+                    'source' => $source
+                ];
+    
                 $this->db->where('id', $product->id);
-                $this->db->update('sma_products', ['code' => $ic]);
-                echo "Updated product with code $excelCode. New code: $ic<br>";
+                $this->db->update('sma_products', $dataToUpdate);
+                echo "Updated product with code $excelCode. Tax rate: $tax_rate<br>";
             } else {
                 echo "Product with code $excelCode not found in the database.<br>";
             }
