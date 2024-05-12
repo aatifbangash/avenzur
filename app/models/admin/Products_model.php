@@ -450,9 +450,14 @@ class Products_model extends CI_Model
 
     public function getProductByCode($code)
     {
-        $q = $this->db->get_where('products', ['code' => $code], 1);
-        if ($q->num_rows() > 0) {
-            return $q->row();
+        $this->db->select('*');
+        $this->db->from('sma_products');
+        $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$code, NULL, FALSE);
+        $query = $this->db->get();
+
+       // $q = $this->db->get_where('products', ['code' => $code], 1);
+        if ($query->num_rows() > 0) {
+            return $query->row();
         }
         return false;
     }
