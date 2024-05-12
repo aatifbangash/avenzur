@@ -324,7 +324,12 @@ class Cart_ajax extends MY_Shop_Controller
 
             if($product->code == $sulfad_code){
                 $total_sulfad = $sulfad_in_cart + $sulfad_count;
-                $discounted_quantity = floor($total_sulfad / 3);
+                //$discounted_quantity = floor($total_sulfad / 3);
+                $discounted_quantity = 0;
+
+                if($total_sulfad > 1){
+                    $discount_amt = 74;
+                }
 
                 $data = [
                     'id'         => $id,
@@ -339,7 +344,7 @@ class Cart_ajax extends MY_Shop_Controller
                     'image'      => $product->image,
                     'option'     => $selected,
                     'options'    => !empty($options) ? $options : null,
-                    'discount'   => 0,
+                    'discount'   => $discount_amt,
                 ];
 
             }else{
@@ -627,7 +632,11 @@ class Cart_ajax extends MY_Shop_Controller
                 $sulfad_new_quantity = $this->input->post('qty', true);
 
                 if($product->code == $sulfad_code){
-                    $discounted_quantity = floor($sulfad_new_quantity / 3);
+                    //$discounted_quantity = floor($sulfad_new_quantity / 3);
+                    $discounted_quantity = 0;
+                    if($total_sulfad > 1){
+                        $discount_amt = 74;
+                    }
 
                     $data = [
                         'rowid'  => $rowid,
@@ -636,6 +645,7 @@ class Cart_ajax extends MY_Shop_Controller
                         'qty'    => $this->input->post('qty', true),
                         'disc_qty'   => $discounted_quantity,
                         'option' => $selected,
+                        'discount' => $discount_amt
                     ];
                     if ($this->cart->update($data)) {
                         $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_updated')]);
