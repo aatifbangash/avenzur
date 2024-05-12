@@ -520,8 +520,8 @@ class Products extends MY_Controller
                 $dataToUpdate = [
                     'tax_rate' => $tax_rate,
                     'ascon_code' => $ascon_code,
-                    'imported' => $imported,
-                    'source' => $source
+                    'imported' => $imported
+                    //'source' => $source
                 ];
     
                 $this->db->where('id', $product->id);
