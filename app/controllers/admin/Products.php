@@ -481,7 +481,7 @@ class Products extends MY_Controller
         //$csvFile = 'https://avenzur.com/assets/uploads/temp/iherb_updated.csv';
         //$csvFile = '/var/www/backup25May2023/assets/uploads/temp/iherb_updated.csv';
 
-        $csvFile = $this->upload_path.'temp/faisal-IBC-and-Ascom.csv';
+        $csvFile = $this->upload_path.'temp/faisals-inventory.csv';
         
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
@@ -500,8 +500,8 @@ class Products extends MY_Controller
         // Iterate through rows in the CSV file
         while (($rowData = fgetcsv($handle)) !== false) {
             // Assuming 'B' and 'C' are the columns for 'code' and 'ic' respectively
-            $ibarCode = $rowData[0]; 
-            $asconCode = $rowData[1]; 
+            $ibarCode = $rowData[1]; 
+            $asconCode = $rowData[0]; 
     
             // Find the product in the database based on the code
             $this->db->select('*');
@@ -511,7 +511,7 @@ class Products extends MY_Controller
             $product = $query->row();
             
             if ($product) {
-                //echo "Product found with IBC $ibarCode and will not be updated.<br>";
+                echo "Product found with IBC $ibarCode and will not be updated.<br>";
             } else {
                 $this->db->select('*');
                 $this->db->from('sma_products');
@@ -521,7 +521,7 @@ class Products extends MY_Controller
 
                 if ($product_new) {
                     // Update the code in the database with the ic from CSV
-                    /*$dataToUpdate = [
+                    $dataToUpdate = [
                         'code' => $ibarCode,
                         'ascon_code' => $asconCode,
                         'imported' => 1
@@ -529,7 +529,7 @@ class Products extends MY_Controller
         
                     $this->db->where('id', $product_new->id);
                     $this->db->update('sma_products', $dataToUpdate);
-                    echo "Updated product with code $asconCode. with the IBC $ibarCode<br>";*/
+                    echo "Updated product with code $asconCode. with the IBC $ibarCode<br>";
                 }else{
                     echo "Product not found in system with IBC $ibarCode and Ascon Code $asconCode <br>";
                 }
