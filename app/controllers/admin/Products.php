@@ -511,7 +511,7 @@ class Products extends MY_Controller
             $product = $query->row();
             
             if ($product) {
-                echo "Product found with IBC $ibarCode and will not be updated.<br>";
+                //echo "Product found with IBC $ibarCode and will not be updated.<br>";
             } else {
                 $this->db->select('*');
                 $this->db->from('sma_products');
@@ -521,7 +521,7 @@ class Products extends MY_Controller
 
                 if ($product_new) {
                     // Update the code in the database with the ic from CSV
-                    $dataToUpdate = [
+                    /*$dataToUpdate = [
                         'code' => $ibarCode,
                         'ascon_code' => $asconCode,
                         'imported' => 1
@@ -529,7 +529,7 @@ class Products extends MY_Controller
         
                     $this->db->where('id', $product_new->id);
                     $this->db->update('sma_products', $dataToUpdate);
-                    echo "Updated product with code $asconCode. with the IBC $ibarCode<br>";
+                    echo "Updated product with code $asconCode. with the IBC $ibarCode<br>";*/
                 }else{
                     echo "Product not found in system with IBC $ibarCode and Ascon Code $asconCode <br>";
                 }
