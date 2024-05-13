@@ -1701,11 +1701,10 @@ class Shop_model extends CI_Model
         $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
 
         $this->db->distinct();
-        $this->db->select('products.*, categories.id as category_id, categories.name as category_name, t.name as taxName, t.rate as taxPercentage, t.code as taxCode', false)
+        $this->db->select('products.*, categories.id as category_id, categories.name as category_name', false)
             // ->join($wp, 'FWP.product_id=products.id', 'left')
             // ->join('warehouses_products FWP', 'FWP.product_id=products.id', 'left')
             ->join('categories', 'categories.id=products.category_id', 'left')
-            ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
             ->group_by('products.id');
 
 
@@ -1737,23 +1736,6 @@ class Shop_model extends CI_Model
         $oneString = '';
         if ($q !== FALSE && $q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
-                
-                if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
-                    $productTaxPercent = $row->taxPercentage;
-
-                    if ($row->promotion == 1) {
-                        $productPromoPrice = $row->promo_price;
-                        $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
-                        $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
-                    }
-
-                    $productPrice = $row->price;
-                    $productTaxAmount = $productPrice * ($productTaxPercent / 100);
-
-                    $row->price = $productPrice + $productTaxAmount;
-                  
-                }
-
 
                 $data[] = $row;
             }
