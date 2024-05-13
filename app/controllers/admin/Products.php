@@ -501,7 +501,7 @@ class Products extends MY_Controller
         while (($rowData = fgetcsv($handle)) !== false) {
             // Assuming 'B' and 'C' are the columns for 'code' and 'ic' respectively
             $ibarCode = $rowData[1]; 
-            $asconCode = $rowData[0]; 
+            $asconCode = $rowData[2]; 
     
             // Find the product in the database based on the code
             $this->db->select('*');
