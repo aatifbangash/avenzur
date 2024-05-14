@@ -2106,9 +2106,6 @@ class Sales extends MY_Controller
         $post_content = array(
             'bizContent' => $post_data
         );
-
-        echo '<pre>';
-        print_r($post_content);
     
         $postdata = http_build_query($post_content);
     
@@ -2141,6 +2138,7 @@ class Sales extends MY_Controller
         $account = $courier->api_account;
         
         $waybillinfo = $this->populateShipmentParams($sale, $courier);
+        echo $waybillinfo;
         $resp = $this->create_order($customerCode, $pwd, $privateKey, $account, $waybillinfo, $url);
         
         return $resp;
