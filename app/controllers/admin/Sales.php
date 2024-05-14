@@ -2104,7 +2104,7 @@ class Sales extends MY_Controller
         $post_content = array(
             'bizContent' => $post_data
         );
-        print_r($post_content);exit;
+    
         $postdata = http_build_query($post_content);
     
         $options = array(
@@ -2119,7 +2119,6 @@ class Sales extends MY_Controller
                 'timeout' => 15 * 60
             )
         );
-        
         $context = stream_context_create($options);
     
         $result = file_get_contents($url, false, $context);
