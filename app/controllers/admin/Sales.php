@@ -2108,7 +2108,7 @@ class Sales extends MY_Controller
         );
     
         $postdata = http_build_query($post_content);
-    
+        echo 'head digest: '.$head_dagest.'<br />';
         $options = array(
             'http' => array(
                 'method' => 'POST',
@@ -2138,7 +2138,6 @@ class Sales extends MY_Controller
         $account = $courier->api_account;
         
         $waybillinfo = $this->populateShipmentParams($sale, $courier);
-        echo $waybillinfo;
         $resp = $this->create_order($customerCode, $pwd, $privateKey, $account, $waybillinfo, $url);
         
         return $resp;
