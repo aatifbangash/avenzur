@@ -2081,8 +2081,6 @@ class Sales extends MY_Controller
                 $response = $this->assignJT($sale, $courier);
                 $order_resp = json_decode($response);
 
-                echo '<pre>';print_r($order_resp);exit;
-
                 if((isset($order_resp->msg) && $order_resp->msg == 'success')){
                     $this->sales_model->updateSaleWithCourier($sale_id, $courier->id);
                     $this->session->set_flashdata('message', 'Courier Assigned Successfully');
@@ -2108,7 +2106,7 @@ class Sales extends MY_Controller
         );
     
         $postdata = http_build_query($post_content);
-        echo 'head digest: '.$head_dagest.'<br />';
+    
         $options = array(
             'http' => array(
                 'method' => 'POST',
@@ -2122,6 +2120,7 @@ class Sales extends MY_Controller
             )
         );
         $context = stream_context_create($options);
+        echo $context;exit;
     
         $result = file_get_contents($url, false, $context);
         
