@@ -2106,6 +2106,9 @@ class Sales extends MY_Controller
         $post_content = array(
             'bizContent' => $post_data
         );
+
+        echo '<pre>';
+        print_r($post_content);
     
         $postdata = http_build_query($post_content);
     
