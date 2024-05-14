@@ -1381,12 +1381,14 @@ class Pay extends MY_Shop_Controller
                     $this->sma->send_email('ama@pharma.com.sa', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                     $this->sma->send_email('Agilkar@avenzur.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                     $this->sma->send_email('inamadnan2@gmail.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
+                    $this->sma->send_email('braphael@avenzur.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                     delete_files($attachment);
                     $sent = true;
                 }else{
                     $this->sma->send_email('ama@pharma.com.sa', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                     $this->sma->send_email('Agilkar@avenzur.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                     $this->sma->send_email('inamadnan2@gmail.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
+                    $this->sma->send_email('braphael@avenzur.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                 }
             } catch (Exception $e) {
                 $error = $e->getMessage();
