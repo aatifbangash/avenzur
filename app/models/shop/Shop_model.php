@@ -1294,7 +1294,7 @@ class Shop_model extends CI_Model
         {$this->db->dbprefix('products')}.type, 
         {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
         {$this->db->dbprefix('products')}.tax_method,
-        (COALESCE(SUM(sma_inventory_movements.quantity), 0) - COALESCE(SUM(sma_product_qty_onhold_request.quantity), 0)) as product_quantity,
+        (COALESCE(SUM(sma_im.quantity), 0) - COALESCE(SUM(sma_phqor.quantity), 0)) as product_quantity,
         promotion, 
         promo_price, 
         start_date, 
@@ -1310,8 +1310,8 @@ class Shop_model extends CI_Model
             ->join('categories', 'products.category_id=categories.id', 'left')
             ->join('brands', 'products.brand=brands.id', 'left')
             ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
-            ->join('sma_inventory_movements', 'products.id=sma_inventory_movements.product_id', 'left')
-            ->join('sma_product_qty_onhold_request', 'products.id=sma_product_qty_onhold_request.product_id', 'left');
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_inventory_movements GROUP BY product_id) AS sma_im', 'products.id=sma_im.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_product_qty_onhold_request GROUP BY product_id) AS sma_phqor', 'products.id=sma_phqor.product_id', 'left');
         if ($this->shop_settings->warehouse > 0) {
            // $this->db->where('warehouses_products.warehouse_id', $this->shop_settings->warehouse);
         }
