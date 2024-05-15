@@ -1305,7 +1305,7 @@ class Shop extends MY_Shop_Controller
        $new_stock = $this->inventory_model->get_current_stock($product_id, null);
        //$onhold_stock = $this->inventory_model->get_onhold_stock($product_id);
        //$new_quantity = $new_stock - $onhold_stock;
-       //$product->quantity = $new_quantity;
+       $product->quantity = $new_stock;
 
         $warehouse_quantities = $this->shop_model->getProductQuantitiesInWarehouses($product->id);
         foreach ($warehouse_quantities as $wh_quantity){
