@@ -1294,7 +1294,7 @@ class Shop_model extends CI_Model
         {$this->db->dbprefix('products')}.type, 
         {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
         {$this->db->dbprefix('products')}.tax_method,
-        SUM(inventory_movements.quantity) as product_quantity,
+        {$this->db->dbprefix('products')}.quantity as product_quantity,
         promotion, 
         promo_price, 
         start_date, 
@@ -1309,8 +1309,7 @@ class Shop_model extends CI_Model
             ->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
             ->join('categories', 'products.category_id=categories.id', 'left')
             ->join('brands', 'products.brand=brands.id', 'left')
-            ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
-            ->join('inventory_movements', 'products.id=inventory_movements.product_id', 'left');
+            ->join('product_reviews pr', 'products.id=pr.product_id', 'left');
         if ($this->shop_settings->warehouse > 0) {
             $this->db->where('warehouses_products.warehouse_id', $this->shop_settings->warehouse);
         }
