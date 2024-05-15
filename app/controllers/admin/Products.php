@@ -1324,19 +1324,27 @@ class Products extends MY_Controller
                 $handle    = fopen($this->digital_upload_path . $csv, 'r');
                 if ($handle) {
                     while (($row = fgetcsv($handle, 5000, ',')) !== false) {
-                        $arrResult[] = $row;
+                        
+                        if($row[0] != '') {
+                            $quantity_int = str_replace(',', '', $row[1]);
+                            $row[1] = $quantity_int;
+                            $arrResult[] = $row;
+                        }
                     }
                     fclose($handle);
                 }
+                // echo "<pre>";
+                // print_r($arrResult);exit;
                 $titles = array_shift($arrResult);
                 $keys   = ['code', 'quantity', 'saleprice', 'unitcost', 'batch', 'expiry', 'vat', 'variant'];
                 $final  = [];
                 foreach ($arrResult as $key => $value) {
-                    $final[] = array_combine($keys, $value);
+                    $final[] = array_combine($keys, $value);                        
                 }
                 
-                // $this->sma->print_arrays($final);
+                //$this->sma->print_arrays($final);
                 $rw = 2;
+                $nonImportedProducts = array();
                 foreach ($final as $pr) {
                     if ($product = $this->products_model->getProductByCode(trim($pr['code']))) {
                         $csv_variant = trim($pr['variant']);
@@ -1388,20 +1396,35 @@ class Products extends MY_Controller
                             'option_id'    => $variant,
                         ];
                     } else {
-                        $this->session->set_flashdata('error', lang('check_product_code') . ' (' . $pr['code'] . '). ' . lang('product_code_x_exist') . ' ' . lang('line_no') . ' ' . $rw);
-                        redirect($_SERVER['HTTP_REFERER']);
+                        //$this->session->set_flashdata('error', lang('check_product_code') . ' (' . $pr['code'] . '). ' . lang('product_code_x_exist') . ' ' . lang('line_no') . ' ' . $rw);
+                        //redirect($_SERVER['HTTP_REFERER']);
+                       
+                        $nonImportedProducts[] = trim($pr['code']);
                     }
                     $rw++;
                 }
             } else {
                 $this->form_validation->set_rules('csv_file', lang('upload_file'), 'required');
             }
-
-            //$this->sma->print_arrays($data, $products);
+        //     echo 'products:';print_r($products_not_exist);
+        //     $this->sma->print_arrays($data, $products);
+        //    exit;
         }
-
+       
         if ($this->form_validation->run() == true && $this->products_model->addAdjustment($data, $products)) {
-            $this->session->set_flashdata('message', lang('quantity_adjusted'));
+            $message = lang('quantity_adjusted');
+            if (!empty($nonImportedProducts)) {
+                $fileName = 'non_imported_products_'.$reference_no.'_'.date('Y-m-d').'.txt';
+                $fileLink =   'admin/products/download_adjusmtent_non_imported/non_imported_products_'.$reference_no.'_'.date('Y-m-d').'.txt'; 
+                $dataToWrite = implode("\n", $nonImportedProducts);
+                $filePath = './files/'.$fileName;
+                if (!write_file($filePath, $dataToWrite, 'w+')) {
+                    //log_message('error', 'Unable to write non-imported product codes to file.');
+                }else{
+                    $message = $message. " <a href='" . site_url($fileLink) . "' target='_blank'>Download Non-Imported Product Codes</a>";
+                }
+            }
+            $this->session->set_flashdata('message', $message);
             admin_redirect('products/quantity_adjustments');
         } else {
             $this->data['error']      = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
@@ -1409,6 +1432,18 @@ class Products extends MY_Controller
             $bc                       = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('products'), 'page' => lang('products')], ['link' => '#', 'page' => lang('add_adjustment')]];
             $meta                     = ['page_title' => lang('add_adjustment_by_csv'), 'bc' => $bc];
             $this->page_construct('products/add_adjustment_by_csv', $meta, $this->data);
+        }
+    }
+
+    public function download_adjusmtent_non_imported($fileName='')
+    {
+        if(file_exists(FCPATH .'files/'.$fileName)) {
+            //echo "yes";
+            $this->load->helper('download');
+            force_download(FCPATH.'files/'.$fileName, NULL);
+            exit;
+        } else {
+            admin_redirect('products/quantity_adjustments'); 
         }
     }
 
