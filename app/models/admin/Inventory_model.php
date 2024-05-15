@@ -44,6 +44,19 @@ class Inventory_model extends CI_Model {
         $this->db->update('inventory_movements',$data, ['product_id' => $product_id, 'batch_number' => $batch_no, 'type' => $type, 'location_id' => $location_id]);
     }
 
+    // Function to calculate current onhold stock for a specific product at a given location
+    public function get_onhold_stock($product_id){
+        $this->db->select('SUM(quantity) as total_quantity');
+        $this->db->from('product_qty_onhold_request');
+        $this->db->where('product_id', $product_id);
+        $query = $this->db->get();
+        if ($query->num_rows() > 0) {
+            $result = $query->row();
+            return $result->total_quantity;
+        }
+        return 0; // Return 0 if no movements found
+    }
+
     // Function to calculate current stock for a specific product at a given location
     public function get_current_stock($product_id, $location_id)
     {
