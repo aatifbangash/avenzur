@@ -201,7 +201,7 @@
                 if($product->code == '06285193000301'){
             ?>
             <div class="banner-pr-detail" style="margin-top: 10px;">
-                <img src="<?= base_url('assets/images/banners/sulfad-small-banner-En.jpg'); ?>" class="sulfad-banner-pr-detail-img" />
+                <img style="width: 80%;" src="<?= base_url('assets/images/banners/sulfad-small-banner-En.jpg'); ?>" class="sulfad-banner-pr-detail-img" />
             </div>
 
             <?php } ?>
