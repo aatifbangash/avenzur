@@ -107,8 +107,8 @@ class Cart_ajax extends MY_Shop_Controller
     }
 
     public function apply_coupon(){
-        $coupon_arr = array('mpay' => 10, 'alf10' => 10, 'mc24' => 10, 'neqaty10' => 10, 'enbd24' => 10, 'anb10' => 10, 'eid10' => 10);
-        $coupon_cap_arr = array('mpay' => 100, 'alf10' => 50, 'mc24' => 50, 'neqaty10' => 50, 'enbd24' => 50, 'anb10' => 50, 'eid10' => 50);
+        $coupon_arr = array('mpay' => 10, 'zaps10' => 10, 'alf10' => 10, 'mc24' => 10, 'neqaty10' => 10, 'enbd24' => 10, 'anb10' => 10, 'eid10' => 10);
+        $coupon_cap_arr = array('mpay' => 100, 'zaps10' => 10, 'alf10' => 50, 'mc24' => 50, 'neqaty10' => 50, 'enbd24' => 50, 'anb10' => 50, 'eid10' => 50);
         $pattern_match = 0;
 
         if($this->input->post('card_number') && preg_match('/^510510/', $this->input->post('card_number'))){
@@ -324,7 +324,12 @@ class Cart_ajax extends MY_Shop_Controller
 
             if($product->code == $sulfad_code){
                 $total_sulfad = $sulfad_in_cart + $sulfad_count;
-                $discounted_quantity = floor($total_sulfad / 3);
+                //$discounted_quantity = floor($total_sulfad / 3);
+                $discounted_quantity = 0;
+
+                if($total_sulfad > 1){
+                    $discount_amt = 75;
+                }
 
                 $data = [
                     'id'         => $id,
@@ -339,7 +344,7 @@ class Cart_ajax extends MY_Shop_Controller
                     'image'      => $product->image,
                     'option'     => $selected,
                     'options'    => !empty($options) ? $options : null,
-                    'discount'   => 0,
+                    'discount'   => $discount_amt,
                 ];
 
             }else{
@@ -627,7 +632,11 @@ class Cart_ajax extends MY_Shop_Controller
                 $sulfad_new_quantity = $this->input->post('qty', true);
 
                 if($product->code == $sulfad_code){
-                    $discounted_quantity = floor($sulfad_new_quantity / 3);
+                    //$discounted_quantity = floor($sulfad_new_quantity / 3);
+                    $discounted_quantity = 0;
+                    if($sulfad_new_quantity > 1){
+                        $discount_amt = 75;
+                    }
 
                     $data = [
                         'rowid'  => $rowid,
@@ -636,6 +645,7 @@ class Cart_ajax extends MY_Shop_Controller
                         'qty'    => $this->input->post('qty', true),
                         'disc_qty'   => $discounted_quantity,
                         'option' => $selected,
+                        'discount' => $discount_amt
                     ];
                     if ($this->cart->update($data)) {
                         $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_updated')]);

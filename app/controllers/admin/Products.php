@@ -481,6 +481,70 @@ class Products extends MY_Controller
         //$csvFile = 'https://avenzur.com/assets/uploads/temp/iherb_updated.csv';
         //$csvFile = '/var/www/backup25May2023/assets/uploads/temp/iherb_updated.csv';
 
+        $csvFile = $this->upload_path.'temp/faisals-inventory.csv';
+        
+        if (!file_exists($csvFile)) {
+            echo 'CSV file not found.';
+            return;
+        }
+    
+        // Read the CSV file
+        $handle = fopen($csvFile, 'r');
+    
+        // Check if the file was opened successfully
+        if ($handle === false) {
+            echo 'Error opening CSV file.';
+            return;
+        }
+    
+        // Iterate through rows in the CSV file
+        while (($rowData = fgetcsv($handle)) !== false) {
+            // Assuming 'B' and 'C' are the columns for 'code' and 'ic' respectively
+            $ibarCode = $rowData[1]; 
+            $asconCode = $rowData[2]; 
+    
+            // Find the product in the database based on the code
+            $this->db->select('*');
+            $this->db->from('sma_products');
+            $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$ibarCode, NULL, FALSE);
+            $query = $this->db->get();
+            $product = $query->row();
+            
+            if ($product) {
+                echo "Product found with IBC $ibarCode and will not be updated.<br>";
+            } else {
+                $this->db->select('*');
+                $this->db->from('sma_products');
+                $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$asconCode, NULL, FALSE);
+                $query_new = $this->db->get();
+                $product_new = $query_new->row();
+
+                if ($product_new) {
+                    // Update the code in the database with the ic from CSV
+                    $dataToUpdate = [
+                        'code' => $ibarCode,
+                        'ascon_code' => $asconCode,
+                        'imported' => 1
+                    ];
+        
+                    $this->db->where('id', $product_new->id);
+                    $this->db->update('sma_products', $dataToUpdate);
+                    echo "Updated product with code $asconCode. with the IBC $ibarCode<br>";
+                }else{
+                    echo "Product not found in system with IBC $ibarCode and Ascon Code $asconCode <br>";
+                }
+            }
+        }
+    
+        // Close the file handle
+        fclose($handle);
+    }
+
+    /*public function update_intl_barcode(){
+
+        //$csvFile = 'https://avenzur.com/assets/uploads/temp/iherb_updated.csv';
+        //$csvFile = '/var/www/backup25May2023/assets/uploads/temp/iherb_updated.csv';
+
         $csvFile = $this->upload_path.'temp/12-may-upload-file.csv';
         
         if (!file_exists($csvFile)) {
@@ -534,7 +598,7 @@ class Products extends MY_Controller
     
         // Close the file handle
         fclose($handle);
-    }
+    }*/
 
     public function setProductSlugs(){
         $products = $this->products_model->getAllProducts();
