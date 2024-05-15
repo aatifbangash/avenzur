@@ -807,7 +807,7 @@ class Shop_model extends CI_Model
             //$this->db->order_by('promotion desc');
         }
         $this->db->group_by('products.id');
-        $this->db->order_by('id desc');
+        $this->db->order_by('products.promotion desc');
         $result = $this->db->get('products')->result();
         //        dd($result);
 
