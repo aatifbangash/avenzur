@@ -107,8 +107,8 @@ class Cart_ajax extends MY_Shop_Controller
     }
 
     public function apply_coupon(){
-        $coupon_arr = array('mpay' => 10, 'alf10' => 10, 'mc24' => 10, 'neqaty10' => 10, 'enbd24' => 10, 'anb10' => 10, 'eid10' => 10);
-        $coupon_cap_arr = array('mpay' => 100, 'alf10' => 50, 'mc24' => 50, 'neqaty10' => 50, 'enbd24' => 50, 'anb10' => 50, 'eid10' => 50);
+        $coupon_arr = array('mpay' => 10, 'zaps10' => 10, 'alf10' => 10, 'mc24' => 10, 'neqaty10' => 10, 'enbd24' => 10, 'anb10' => 10, 'eid10' => 10);
+        $coupon_cap_arr = array('mpay' => 100, 'zaps10' => 10, 'alf10' => 50, 'mc24' => 50, 'neqaty10' => 50, 'enbd24' => 50, 'anb10' => 50, 'eid10' => 50);
         $pattern_match = 0;
 
         if($this->input->post('card_number') && preg_match('/^510510/', $this->input->post('card_number'))){
