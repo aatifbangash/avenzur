@@ -684,7 +684,7 @@ class Shop_model extends CI_Model
                 $this->db->order_by('promotion desc');
             }
             $this->db->group_by('products.id');
-            $this->db->order_by('RAND()');
+            $this->db->order_by('products.promotion desc');
             $products = $this->db->get('products')->result();
 
             array_map(function ($row) {
