@@ -50,7 +50,9 @@ class Inventory_model extends CI_Model {
         $this->db->select('SUM(quantity) as total_quantity');
         $this->db->from('inventory_movements');
         $this->db->where('product_id', $product_id);
-        $this->db->where('location_id', $location_id);
+        if($location_id != null){
+            $this->db->where('location_id', $location_id);
+        }
         $query = $this->db->get();
         if ($query->num_rows() > 0) {
             $result = $query->row();

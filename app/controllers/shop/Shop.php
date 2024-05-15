@@ -1299,7 +1299,14 @@ class Shop extends MY_Shop_Controller
     public function product($slug)
     {
         $this->load->admin_model('seo_model');
+        $this->load->admin_model('inventory_model');
         $product = $this->shop_model->getProductBySlug($slug);
+
+        $new_stock = $this->inventory_model->get_current_stock($product_id, null);
+        $onhold_stock = $this->inventory_model->get_onhold_stock($product_id, null);
+        $new_quantity = $new_stock - $onhold_stock;
+        $product->quantity = $new_quantity;
+
         $warehouse_quantities = $this->shop_model->getProductQuantitiesInWarehouses($product->id);
         foreach ($warehouse_quantities as $wh_quantity){
             if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0)){
