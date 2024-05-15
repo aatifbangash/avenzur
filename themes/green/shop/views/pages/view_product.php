@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php echo $new_stock.' -- '.$onhold_stock.' -- '.$new_quantity;  ?>
+
 <!--product detail page  -->
 <div class="container container-max-width">
 <section class="side-banner py-3">
