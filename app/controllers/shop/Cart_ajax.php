@@ -231,10 +231,12 @@ class Cart_ajax extends MY_Shop_Controller
     public function add($product_id)
     {
         if ($this->input->is_ajax_request() || $this->input->post('quantity')) {
-            
+            $this->load->admin_model('inventory_model');
             $product = $this->shop_model->getProductForCart($product_id);
             $product_quantity_onhold =  $this->shop_model->getProductOnholdQty($product_id);
-            $quantity_in_stock =  intval($product->quantity) - $product_quantity_onhold;
+            //$quantity_in_stock =  intval($product->quantity) - $product_quantity_onhold;
+            $new_stock = $this->inventory_model->get_current_stock($product_id, 'null');
+            $quantity_in_stock =  intval($new_stock) - $product_quantity_onhold;
 
             $product_to_add_quantity = 0;
             $cart_contents = $this->cart->contents();

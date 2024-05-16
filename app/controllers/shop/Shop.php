@@ -1299,7 +1299,14 @@ class Shop extends MY_Shop_Controller
     public function product($slug)
     {
         $this->load->admin_model('seo_model');
+        $this->load->admin_model('inventory_model');
         $product = $this->shop_model->getProductBySlug($slug);
+
+       $new_stock = $this->inventory_model->get_current_stock($product->id, 'null');
+       $onhold_stock = $this->inventory_model->get_onhold_stock($product->id);
+       $new_quantity = $new_stock - $onhold_stock;
+       $product->quantity = $new_quantity;
+
         $warehouse_quantities = $this->shop_model->getProductQuantitiesInWarehouses($product->id);
         foreach ($warehouse_quantities as $wh_quantity){
             if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0)){
@@ -1350,6 +1357,9 @@ class Shop extends MY_Shop_Controller
         $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->data['page_desc'] = character_limiter(strip_tags($product->product_details), 160);
         $this->data['seoSetting'] = $this->seo_model->getSeoSettings(); 
+        $this->data['new_stock'] = $new_stock;
+        $this->data['onhold_stock'] = $onhold_stock;
+        $this->data['new_quantity'] = $new_quantity;
         $this->page_construct('pages/view_product', $this->data);
     }
 
