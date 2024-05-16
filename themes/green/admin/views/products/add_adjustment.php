@@ -107,7 +107,6 @@
     <div class="box-content">
         <div class="row">
             <div class="col-lg-12">
-
                 <p class="introtext"><?php echo lang('enter_info'); ?></p>
                 <?php
                 $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
@@ -192,6 +191,8 @@
                                         <tr>
                                             <th><?= lang('product_name') . ' (' . lang('product_code') . ')'; ?></th>
                                             <th class="col-md-2"><?= lang('variant'); ?></th>
+                                            <th class="col-md-2"><?= lang('Batch'); ?></th>
+                                            <th class="col-md-2"><?= lang('Expiry Date'); ?></th>
                                             <th class="col-md-1"><?= lang('type'); ?></th>
                                             <th class="col-md-1"><?= lang('quantity'); ?></th>
                                             <?php
