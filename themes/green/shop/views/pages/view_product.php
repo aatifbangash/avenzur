@@ -157,7 +157,7 @@
                         </p>
 
                     </div>
-                    <?php if ((int) $product->quantity == 0) { ?>
+                    <?php if ((int) $product->quantity <= 0) { ?>
                         <div>Out of Stock <button type="button" class="btn btn-link btn-notify-add-to-list" href="#"
                                 data-id="<?php echo $product->id;?>" data-title="<?php echo $product->name;?>"
                                 data-image="<?php echo $product->image;?>" data-price="<?php echo isset($product->special_price) ? $product->special_price : $product->price;?> ">Notify me</button>
