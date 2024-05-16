@@ -767,7 +767,8 @@ class Shop_model extends CI_Model
         {$this->db->dbprefix('products')}.quantity, 
         {$this->db->dbprefix('products')}.type, 
         {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
-        {$this->db->dbprefix('products')}.tax_method, 
+        {$this->db->dbprefix('products')}.tax_method,
+        (COALESCE(SUM(sma_im.quantity), 0) - COALESCE(SUM(sma_phqor.quantity), 0)) as product_quantity, 
         promotion, 
         promo_price, 
         start_date, 
@@ -785,6 +786,8 @@ class Shop_model extends CI_Model
             ->join('brands b', 'products.brand=b.id', 'left')
             ->join('categories c', 'products.category_id=c.id', 'left')
             ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_inventory_movements GROUP BY product_id) AS sma_im', 'products.id=sma_im.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_product_qty_onhold_request GROUP BY product_id) AS sma_phqor', 'products.id=sma_phqor.product_id', 'left')
             ->where('products.best_seller', 1)
             ->where('products.quantity >', 0)
             ->where('hide !=', 1)
