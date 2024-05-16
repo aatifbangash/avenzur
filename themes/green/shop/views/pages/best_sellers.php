@@ -133,7 +133,22 @@
                                         
                                             </div>
                                         </a>
-                                        <div> <button type="button" data-id="<?= $sp->id; ?>" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
+                                        <div> 
+                                            <?php 
+                                                if($sp->product_quantity > 0){
+                                                    ?>
+                                                        <button type="button" data-id="<?= $sp->id; ?>" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>
+                                                    <?php
+                                                }else{
+                                                    $notify_price = $sp->promotion == 1 ? $sp->promo_price : $sp->price;
+                                                    ?>
+                                                        Out of Stock
+                                                        <button type="button" class="btn btn-link btn-notify-add-to-list" href="#" data-id="<?= $sp->id; ?>" data-title="<?= $sp->name; ?>" data-image="<?= $sp->image; ?>" data-price="<?= $notify_price; ?>" >Notify me</button>
+                                                    <?php
+                                                }
+                                            ?>
+                                            
+                                        </div>
                                     </div>
                                 </div>
                             <?php

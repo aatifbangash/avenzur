@@ -157,7 +157,7 @@
                         </p>
 
                     </div>
-                    <?php if ((int) $product->quantity == 0) { ?>
+                    <?php if ((int) $product->quantity <= 0) { ?>
                         <div>Out of Stock <button type="button" class="btn btn-link btn-notify-add-to-list" href="#"
                                 data-id="<?php echo $product->id;?>" data-title="<?php echo $product->name;?>"
                                 data-image="<?php echo $product->image;?>" data-price="<?php echo isset($product->special_price) ? $product->special_price : $product->price;?> ">Notify me</button>
@@ -197,6 +197,14 @@
             </div> -->
             </div>
             <!-- product info end -->
+            <?php 
+                if($product->code == '06285193000301'){
+            ?>
+            <div class="banner-pr-detail" style="margin-top: 10px;">
+                <img style="width: 80%;" class="sulfad-banner-image" src="<?= base_url('assets/images/banners/sulfad-small-banner-En.jpg'); ?>" class="sulfad-banner-pr-detail-img" />
+            </div>
+
+            <?php } ?>
 
             <div class="banner-pr-detail">
                 <img src="<?= base_url('assets/images/banners/Mobily-En.jpg'); ?>" id="banner-pr-detail-img" class="banner-pr-detail-img" />
@@ -352,7 +360,22 @@
                                         </div>
                                 
                                     </div>
-                                    <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" style="font-size: 15px;" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
+                                    <div> 
+                                        
+                                        <?php 
+                                            if($sp->product_quantity > 0){
+                                                ?>
+                                                    <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" style="font-size: 15px;" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>
+                                                <?php
+                                            }else{
+                                                $notify_price = $sp->promotion == 1 ? $sp->promo_price : $sp->price;
+                                                ?>
+                                                    Out of Stock
+                                                    <button type="button" class="btn btn-link btn-notify-add-to-list" href="#" data-id="<?= $sp->id; ?>" data-title="<?= $sp->name; ?>" data-image="<?= $sp->image; ?>" data-price="<?= $notify_price; ?>" >Notify me</button>
+                                                <?php
+                                            }
+                                        ?>
+                                    </div>
                                     <!-- price area end -->
                                     
                                     
@@ -446,7 +469,22 @@
                                         </div>
                                 
                                     </div>
-                                    <div> <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" style="font-size: 15px;" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button></div>
+                                    <div> 
+                                        
+                                        <?php 
+                                            if($sp->product_quantity > 0){
+                                                ?>
+                                                    <button type="button" data-id="<?= $sp->id; ?>" aria-controls="offcanvasWithBothOptions" style="font-size: 15px;" class="btn primary-buttonAV mt-1 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>
+                                                <?php
+                                            }else{
+                                                $notify_price = $sp->promotion == 1 ? $sp->promo_price : $sp->price;
+                                                ?>
+                                                    Out of Stock
+                                                    <button type="button" class="btn btn-link btn-notify-add-to-list" href="#" data-id="<?= $sp->id; ?>" data-title="<?= $sp->name; ?>" data-image="<?= $sp->image; ?>" data-price="<?= $notify_price; ?>" >Notify me</button>
+                                                <?php
+                                            }
+                                        ?>
+                                    </div>
                                     <!-- price area end -->
                                     
                                     

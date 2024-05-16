@@ -288,6 +288,9 @@ class Shop extends MY_Shop_Controller
         if (!$guest_checkout && !$this->loggedIn) {
             redirect('login');
         }
+
+        $this->load->admin_model('inventory_model');
+
         $this->form_validation->set_rules('address', lang('address'), 'trim|required');
         $this->form_validation->set_rules('note', lang('comment'), 'trim');
         $this->form_validation->set_rules('payment_method', lang('payment_method'), 'required');
@@ -363,7 +366,9 @@ class Shop extends MY_Shop_Controller
                     $item_option = null;
                     $qty_on_hold = $this->shop_model->getProductOnholdQty($item['product_id']);
                     if ($product_details = $this->shop_model->getProductForCart($item['product_id'])) {
-                        $qty_available = $product_details->quantity - $qty_on_hold;
+                        //$qty_available = $product_details->quantity - $qty_on_hold;
+                        $new_stock = $this->inventory_model->get_current_stock($item['product_id'], 'null');
+                        $qty_available = intval($new_stock) - $qty_on_hold;
                         if($qty_available >= $item['qty']){
                             $price = $this->sma->setCustomerGroupPrice(($this->loggedIn && isset($product_details->special_price) ? $product_details->special_price : $product_details->price), $this->customer_group);
                             $price = $this->sma->isPromo($product_details) ? $product_details->promo_price : $price;
@@ -1302,8 +1307,8 @@ class Shop extends MY_Shop_Controller
         $this->load->admin_model('inventory_model');
         $product = $this->shop_model->getProductBySlug($slug);
 
-       $new_stock = $this->inventory_model->get_current_stock($product_id, null);
-       $onhold_stock = $this->inventory_model->get_onhold_stock($product_id);
+       $new_stock = $this->inventory_model->get_current_stock($product->id, 'null');
+       $onhold_stock = $this->inventory_model->get_onhold_stock($product->id);
        $new_quantity = $new_stock - $onhold_stock;
        $product->quantity = $new_quantity;
 
@@ -1357,6 +1362,9 @@ class Shop extends MY_Shop_Controller
         $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->data['page_desc'] = character_limiter(strip_tags($product->product_details), 160);
         $this->data['seoSetting'] = $this->seo_model->getSeoSettings(); 
+        $this->data['new_stock'] = $new_stock;
+        $this->data['onhold_stock'] = $onhold_stock;
+        $this->data['new_quantity'] = $new_quantity;
         $this->page_construct('pages/view_product', $this->data);
     }
 

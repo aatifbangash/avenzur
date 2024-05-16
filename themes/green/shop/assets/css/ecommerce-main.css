@@ -2531,6 +2531,7 @@ html [lang='ar']  .contact-info  { padding-left: 0px !important; padding-right: 
 
 @media screen and (max-width: 480px) {
   /***************24-1*****************/
+  .sulfad-banner-image{ width: 100% !important; }
   .rating i, .discountPrice h4{font-size: 13px;}
   .product-cards-wrapper.row {margin: 0 -6px !important;}
   .product-cards-cont.col-6 {padding: 0 6px !important;}
