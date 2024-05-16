@@ -779,7 +779,7 @@ class Transfers_model extends CI_Model
                     $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'edit');
                     
                      //Inventory Movement - Transfer IN
-                     $this->Inventory_model->updat_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id']);
+                     $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id']);
                      //Inventory Movement - Transfer Out
                      $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id']);
                 }
