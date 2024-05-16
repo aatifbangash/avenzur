@@ -436,7 +436,7 @@
                                                 </div>
                                             <!--</a>-->
                                             <div> 
-                                              
+                                                
                                                 <button type="button" data-id="<?= $popular_product->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>
                                             </div>
                                         </div> 
