@@ -640,7 +640,9 @@ class Transfers extends MY_Controller
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['transfer'] = $this->transfers_model->getTransferByID($id);
             $transfer_items         = $this->transfers_model->getAllTransferItems($id, $this->data['transfer']->status);
-            krsort($transfer_items);
+            if(!empty($transfer_items)) {
+                krsort($transfer_items);
+            }
             $c = rand(100000, 9999999);
             
             foreach ($transfer_items as $item) {
