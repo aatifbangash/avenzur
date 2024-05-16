@@ -676,6 +676,8 @@ class Cart_ajax extends MY_Shop_Controller
             return false;
         }
        
+        $this->load->admin_model('inventory_model');
+
         $chcek = [];
         if ($product->type == 'standard') {
             $quantity = 0;
@@ -686,7 +688,9 @@ class Cart_ajax extends MY_Shop_Controller
             //     }
             // }
             $product_quantity =  $this->shop_model->getProductOnholdQty($product->id);
-            $quantity =  intval($product->quantity) - $product_quantity;
+            $new_stock = $this->inventory_model->get_current_stock($product->id, 'null');
+            //$quantity =  intval($product->quantity) - $product_quantity;
+            $quantity =  intval($new_stock) - $product_quantity;
            //echo $quantity;exit;
             $chcek[] = ($qty <= $quantity);
         } elseif ($product->type == 'combo') {
@@ -700,7 +704,9 @@ class Cart_ajax extends MY_Shop_Controller
                     //     }
                     // }
                     $product_quantity =  $this->shop_model->getProductOnholdQty($product->id);
-                    $quantity =  intval($product->quantity) - $product_quantity;
+                    $new_stock = $this->inventory_model->get_current_stock($product->id, 'null');
+                    //$quantity =  intval($product->quantity) - $product_quantity;
+                    $quantity =  intval($new_stock) - $product_quantity;
                     $chcek[] = (($combo_item->qty * $qty) <= $quantity);
                 }
             }
