@@ -436,19 +436,8 @@
                                                 </div>
                                             <!--</a>-->
                                             <div> 
-                                              <?php 
-                                                  if($popular_product->product_quantity > 0){
-                                                      ?>
-                                                          <button type="button" data-id="<?= $popular_product->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>
-                                                      <?php
-                                                  }else{
-                                                      $notify_price = $popular_product->promotion == 1 ? $popular_product->promo_price : $popular_product->price;
-                                                      ?>
-                                                          Out of Stock
-                                                          <button type="button" class="btn btn-link btn-notify-add-to-list" href="#" data-id="<?= $popular_product->id; ?>" data-title="<?= $popular_product->name; ?>" data-image="<?= $popular_product->image; ?>" data-price="<?= $notify_price; ?>" >Notify me</button>
-                                                      <?php
-                                                  }
-                                              ?>
+                                              
+                                                <button type="button" data-id="<?= $popular_product->id; ?>" aria-controls="offcanvasWithBothOptions" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>
                                             </div>
                                         </div> 
                                     </div>
