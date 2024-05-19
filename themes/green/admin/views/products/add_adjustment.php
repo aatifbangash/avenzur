@@ -189,10 +189,12 @@
                                     <table id="qaTable" class="table items table-striped table-bordered table-condensed table-hover">
                                         <thead>
                                         <tr>
-                                            <th><?= lang('product_name') . ' (' . lang('product_code') . ')'; ?></th>
+                                            <th class="col-md-3 "><?= lang('product_name') . ' (' . lang('product_code') . ')'; ?></th>
                                             <th class="col-md-2"><?= lang('variant'); ?></th>
                                             <th class="col-md-2"><?= lang('Batch'); ?></th>
                                             <th class="col-md-2"><?= lang('Expiry Date'); ?></th>
+                                            <th class="col-md-2"><?= lang('Sale Price'); ?></th>
+                                            <th class="col-md-2"><?= lang('Unit Cost'); ?></th>
                                             <th class="col-md-1"><?= lang('type'); ?></th>
                                             <th class="col-md-1"><?= lang('quantity'); ?></th>
                                             <?php
