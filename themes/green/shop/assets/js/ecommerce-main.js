@@ -674,7 +674,7 @@ function gen_html(t) {
       //e += '</a>';
       e += "<div>";
       const prod_quantity = parseFloat(r.product_quantity);
-      if (isNaN(prod_quantity) || prod_quantity === 0) {
+      if (isNaN(prod_quantity) || prod_quantity <= 0) {
         e += "Out of Stock ";
         e +=
           '<button type="button" class="btn btn-link btn-notify-add-to-list" href="#" data-id="' +
