@@ -511,9 +511,10 @@ class Products extends MY_Controller
             $product = $query->row();
             
             if ($product) {
-                echo "Product found with IBC $ibarCode and will not be updated.<br>";
+                //echo "Product found with IBC $ibarCode and will not be updated.<br>";
+                echo $ibarCode."<br>";
             } else {
-                echo "Product not found in system with IBC $ibarCode <br>";
+                //echo "Product not found in system with IBC $ibarCode <br>";
                 /*$this->db->select('*');
                 $this->db->from('sma_products');
                 $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$asconCode, NULL, FALSE);
