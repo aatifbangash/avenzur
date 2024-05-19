@@ -293,6 +293,10 @@ class Shop_model extends CI_Model
         $query = $this->db->select('warehouses_products.*')
             ->from('warehouses_products')
             ->where('warehouses_products.product_id', $product_id);
+        /*$query = $this->db->select('location_id as warehouse_id, SUM(quantity) as total_quantity')
+            ->from('inventory_movements')
+            ->where('product_id', $product_id)
+            ->group_by('location_id');*/
         $result = $query->get();
 
         if ($result) {

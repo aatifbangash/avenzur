@@ -1168,6 +1168,8 @@ class Products extends MY_Controller
                 $type       = $_POST['type'][$r];
                 $quantity   = $_POST['quantity'][$r];
                 $serial     = $_POST['serial'][$r];
+                $expiry     = $_POST['expiry'][$r];
+                $batchno   = $_POST['batchno'][$r];
                 $variant    = isset($_POST['variant'][$r]) && !empty($_POST['variant'][$r]) ? $_POST['variant'][$r] : null;
 
                 if (!$this->Settings->overselling && $type == 'subtraction' && !$count_id) {
@@ -1197,6 +1199,8 @@ class Products extends MY_Controller
                     'product_id'   => $product_id,
                     'type'         => $type,
                     'quantity'     => $quantity,
+                    'expiry'     => date('Y-m-d', strtotime($expiry)),
+                    'batchno'     => $batchno,
                     'warehouse_id' => $warehouse_id,
                     'option_id'    => $variant,
                     'serial_no'    => $serial,
@@ -1237,7 +1241,6 @@ class Products extends MY_Controller
 
             // $this->sma->print_arrays($data, $products);
         }
-
         if ($this->form_validation->run() == true && $this->products_model->addAdjustment($data, $products)) {
             $this->session->set_userdata('remove_qals', 1);
             $this->session->set_flashdata('message', lang('quantity_adjusted'));
