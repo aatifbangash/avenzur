@@ -506,7 +506,8 @@ class Products extends MY_Controller
             // Find the product in the database based on the code
             $this->db->select('*');
             $this->db->from('sma_products');
-            $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$ibarCode, NULL, FALSE);
+            //$this->db->where('CAST(code AS UNSIGNED) = ' . (int)$ibarCode, NULL, FALSE);
+            $this->db->where('code', $ibarCode);
             $query = $this->db->get();
             $product = $query->row();
             
