@@ -25,6 +25,7 @@ class Transfers extends MY_Controller
         $this->digital_file_types  = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt';
         $this->allowed_file_size   = '1024000';
         $this->data['logo']        = true;
+        $this->load->admin_model('Inventory_model');
         $this->load->library('attachments', [
             'path'     => $this->digital_upload_path,
             'types'    => $this->digital_file_types,
@@ -989,9 +990,10 @@ class Transfers extends MY_Controller
                 $row->expiry  = null;
 
                 $batches = $this->site->getProductBatchesData($row->id, $warehouse_id);
-
+                $total_quantity = $this->Inventory_model->get_current_stock($row->id, $warehouse_id);
+                
                 $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
-                    'row'     => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options,  'batches'=>$batches ];
+                    'row'     => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options,  'batches'=>$batches, 'total_quantity' => $total_quantity ];
                 $r++;
             }
             $this->sma->send_json($pr);
