@@ -2476,7 +2476,7 @@ class Sales extends MY_Controller
                 ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as sale_id  , 
                 DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, 
                 {$this->db->dbprefix('sales')}.sequence_code as code, biller,  
-                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.name  ELSE CONCAT({$this->db->dbprefix('addresses')}.first_name,' ', {$this->db->dbprefix('addresses')}.last_name) END AS customer,
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN CONCAT({$this->db->dbprefix('companies')}.first_name, ' ',{$this->db->dbprefix('companies')}.last_name )  ELSE CONCAT({$this->db->dbprefix('addresses')}.first_name,' ', {$this->db->dbprefix('addresses')}.last_name) END AS customer,
                 CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.phone  ELSE ({$this->db->dbprefix('addresses')}.phone) END AS phone,  
                 sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, 
                 {$this->db->dbprefix('sales')}.attachment, return_id, {$this->db->dbprefix('courier')}.name as courier_name, 
@@ -2491,7 +2491,7 @@ class Sales extends MY_Controller
             $this->datatables
                 ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as sale_id , DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, 
                 reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, 
-                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.name  ELSE CONCAT({$this->db->dbprefix('addresses')}.first_name,' ', {$this->db->dbprefix('addresses')}.last_name) END AS customer,
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN CONCAT({$this->db->dbprefix('companies')}.first_name, ' ',{$this->db->dbprefix('companies')}.last_name )   ELSE CONCAT({$this->db->dbprefix('addresses')}.first_name,' ', {$this->db->dbprefix('addresses')}.last_name) END AS customer,
                 CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.phone  ELSE ({$this->db->dbprefix('addresses')}.phone) END AS phone,  
                 sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, 
                 return_id, {$this->db->dbprefix('courier')}.name as courier_name,  
@@ -2520,7 +2520,7 @@ class Sales extends MY_Controller
        //  $this->datatables->join('addresses', 'addresses.id=sales.address_id', 'left'); by mm  
        // ({$this->db->dbprefix('sales')}.address_id IS NOT NULL and {$this->db->dbprefix('sales')}.address_id!=0 )
         $this->datatables->join("addresses", "{$this->db->dbprefix('sales')}.address_id>0   AND {$this->db->dbprefix('sales')}.address_id = {$this->db->dbprefix('addresses')}.id", "left");
-        $this->datatables->join("companies", "({$this->db->dbprefix('sales')}.address_id IS NULL or OR {$this->db->dbprefix('sales')}.address_id=0 )  AND {$this->db->dbprefix('sales')}.customer_id = {$this->db->dbprefix('companies')}.id", "left");
+        $this->datatables->join("companies", "({$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 )  AND {$this->db->dbprefix('sales')}.customer_id = {$this->db->dbprefix('companies')}.id", "left");
        
        if(!empty( $keyword)){ 
         
@@ -2532,28 +2532,12 @@ class Sales extends MY_Controller
         $this->datatables->or_where("{$this->db->dbprefix('sales')}.sequence_code",$keyword);  
         $this->datatables->or_where("{$this->db->dbprefix('sales')}.courier_order_status",$keyword); 
         $this->datatables->or_where("{$this->db->dbprefix('courier')}.name",$keyword); 
-        $this->datatables->or_where("{$this->db->dbprefix('sales')}.delivery_type",$keyword); 
-        
+        $this->datatables->or_where("{$this->db->dbprefix('sales')}.delivery_type",$keyword);         
 
         $this->datatables->or_where("({$this->db->dbprefix('sales')}.address_id >0 AND ({$this->db->dbprefix('addresses')}.phone LIKE '%".$keyword."%' OR {$this->db->dbprefix('addresses')}.first_name LIKE '%".$keyword."%' OR {$this->db->dbprefix('addresses')}.last_name LIKE '%".$keyword."%' OR   concat_ws(' ',{$this->db->dbprefix('addresses')}.first_name,{$this->db->dbprefix('addresses')}.last_name) like '%$".$keyword."%'  OR {$this->db->dbprefix('addresses')}.city LIKE '%".$keyword."%')) OR 
-        (({$this->db->dbprefix('sales')}.address_id IS NULL or {$this->db->dbprefix('sales')}.address_id=0) AND ({$this->db->dbprefix('companies')}.phone LIKE '%".$keyword."%' OR {$this->db->dbprefix('companies')}.name LIKE '%".$keyword."%' OR {$this->db->dbprefix('companies')}.city LIKE '%".$keyword."%'))
+        (({$this->db->dbprefix('sales')}.address_id IS NULL or {$this->db->dbprefix('sales')}.address_id=0) AND ({$this->db->dbprefix('companies')}.phone LIKE '%".$keyword."%' OR {$this->db->dbprefix('companies')}.first_name LIKE '%".$keyword."%' OR {$this->db->dbprefix('companies')}.last_name LIKE '%".$keyword."%' OR   concat_ws(' ',{$this->db->dbprefix('companies')}.first_name,{$this->db->dbprefix('companies')}.last_name) like '%$".$keyword."%' OR {$this->db->dbprefix('companies')}.city LIKE '%".$keyword."%'))
         ");   
-
-         
-      // $this->datatables->or_where("{$this->db->dbprefix('sales')}.date",$keyword);
-         
-
-
-
-        $this->db->group_end();     
-
-     /*   (s.address_id >0 AND (a.phone LIKE '%536660697%' OR a.first_name LIKE '%536660697%' OR a.last_name LIKE '%536660697%' OR   concat_ws(' ',a.first_name,a.last_name) like '%$536660697%'  OR a.city LIKE '%Makkah%'))
-        OR
-        ( (s.address_id IS NULL or s.address_id=0) AND (c.phone LIKE '%536660697%' OR c.name LIKE '%536660697%' OR c.city LIKE '%Makkah%'))
-    
-    */ 
-
-
+        $this->db->group_end();   
        }  
         if ($this->input->get('attachment') == 'yes') {
             $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
@@ -2567,6 +2551,7 @@ class Sales extends MY_Controller
         $this->datatables->add_column('Actions', $action, 'id');
         echo $this->datatables->generate();
     }
+
 
     public function getSales($warehouse_id = null)
     {
@@ -2652,13 +2637,10 @@ class Sales extends MY_Controller
                 //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
         } else {
             $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id,")
+                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id")
                 ->from('sales')
-                ->where('shop', 0);
-                
-                
-        }
-        
+                ->where('shop', 0); 
+        } 
         // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
         if ($this->input->get('shop') == 'yes') {
             $this->datatables->where('shop', 1);
