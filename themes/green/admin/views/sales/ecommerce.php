@@ -2,16 +2,26 @@
 <script>
     $(document).ready(function () {
         oTable = $('#SLData').dataTable({
+             'bFilter': false,
+            //  "sScrollY": "500px",
+            //  "sScrollX": "100%",
+            //  "sScrollXInner": "110%",
+            //  "bScrollCollapse": true, 
             "aaSorting": [[1, "desc"], [2, "desc"]],
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?=lang('all')?>"]],
             "iDisplayLength": <?=$Settings->rows_per_page?>,
-            'bProcessing': true, 'bServerSide': true,
+            'bProcessing': true, 
+            'bServerSide': true, 
             'sAjaxSource': '<?=admin_url('sales/getEcommerceSales' . ($warehouse_id ? '/' . $warehouse_id : '') . '?v=1' . ($this->input->get('shop') ? '&shop=' . $this->input->get('shop') : '') . ($this->input->get('attachment') ? '&attachment=' . $this->input->get('attachment') : '') . ($this->input->get('delivery') ? '&delivery=' . $this->input->get('delivery') : '')); ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?=$this->security->get_csrf_token_name()?>",
-                    "value": "<?=$this->security->get_csrf_hash()?>"
-                });
+                    "value": "<?=$this->security->get_csrf_hash()?>" 
+                    
+                }  
+            ); 
+                aoData.push( { "name": "keyword", "value": $('#keyword').val() } );
+             //    aoData['keyword']=$('#keyword').val(); alert(  aoData['keyword']);
                 $.ajax({'dataType': 'json', 'type': 'POST', 'url': sSource, 'data': aoData, 'success': fnCallback});
             },
             'fnRowCallback': function (nRow, aData, iDisplayIndex) {
@@ -23,18 +33,18 @@
                 //if(aData[7] > aData[9]){ nRow.className = "product_link warning"; } else { nRow.className = "product_link"; }
                 return nRow;
             },
-            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld},null, null, null, null, {"mRender": row_status}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}, {"bSortable": false}, {"bSortable": false}, {"bSortable": false}, {"bSortable": false}],
+            "aoColumns": [{"bSortable": false,"mRender": checkbox}, null, {"mRender": fld},null, null, null, null, {"mRender": row_status},null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": true}, {"bSortable": true}, {"bSortable": true}, {"bSortable": true}, {"bSortable": true},{"bSortable": true}],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0, paid = 0, balance = 0;
                 for (var i = 0; i < aaData.length; i++) {
-                    gtotal += parseFloat(aaData[aiDisplay[i]][6]);
-                    paid += parseFloat(aaData[aiDisplay[i]][7]);
-                    balance += parseFloat(formatDecimals(aaData[aiDisplay[i]][8]));
+                    gtotal += parseFloat(aaData[aiDisplay[i]][9]);
+                    paid += parseFloat(aaData[aiDisplay[i]][10]);
+                    balance += parseFloat(formatDecimals(aaData[aiDisplay[i]][11]));
                 }
                 var nCells = nRow.getElementsByTagName('th');
-                nCells[6].innerHTML = currencyFormat(parseFloat(gtotal));
-                nCells[7].innerHTML = currencyFormat(parseFloat(paid));
-                nCells[8].innerHTML = currencyFormat(parseFloat(balance));
+                nCells[9].innerHTML = currencyFormat(parseFloat(gtotal));
+                nCells[10].innerHTML = currencyFormat(parseFloat(paid));
+                nCells[11].innerHTML = currencyFormat(parseFloat(balance));
             }
         }).fnSetFilteringDelay().dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
@@ -47,6 +57,41 @@
             {column_number: 12, filter_default_label: "[<?=lang('courier_name');?>]", filter_type: "text", data: []},
             {column_number: 13, filter_default_label: "[<?=lang('city');?>]", filter_type: "text", data: []},
         ], "footer");
+
+
+
+        // Redraw the table based on the custom input
+        $('.btn_search').bind("click", function(){ 
+            oTable.fnDraw();   
+         }); 
+
+        var typingTimer;
+        var doneTypingInterval = 2000; // 2 seconds
+
+            $('#keyword').keyup(function() {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(function() {
+                    oTable.fnDraw();   
+                }, doneTypingInterval);
+            });
+
+            // If user keeps typing, clear the timeout
+            $('#keyword').keydown(function() {
+                clearTimeout(typingTimer);
+            });
+       
+
+
+
+
+
+
+
+
+
+
+
+       //   $('#keyword').keyup( function() { oTable.fnDraw(); } );
 
         if (localStorage.getItem('remove_slls')) {
             if (localStorage.getItem('slitems')) {
@@ -306,18 +351,27 @@
 
                 <p class="introtext"><?=lang('list_results');?></p>
 
-                <div class="table-responsive">
+                <div class="table-responsive" style="position: relative;">
+                <div class="mycls" style=" position: absolute; right: 0;z-index: 1; display: inline-block;">
+                    <div class="dataTables_filter" id="SLData_filter">
+                        <label>
+                            <input type="text"  name="keyword" id="keyword" aria-controls="SLData" class="input-xs">
+                            <button type="button" class="btn btn-primary btn_search">Search</button></label>
+                        </div>
+                    </div>
                     <table id="SLData" class="table table-bordered table-hover table-striped" cellpadding="0" cellspacing="0" border="0">
                         <thead>
                         <tr>
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
+                            <th><?= lang('sale_id'); ?></th>
                             <th><?= lang('date'); ?></th>
                             <th><?= lang('reference_no'); ?></th>
                             <th>Code</th>
                             <th><?= lang('biller'); ?></th>
                             <th><?= lang('customer'); ?></th>
+                            <th><?= lang('phone'); ?></th>
                             <th><?= lang('sale_status'); ?></th>
                             <th><?= lang('grand_total'); ?></th>
                             <th><?= lang('paid'); ?></th>
@@ -327,14 +381,15 @@
                             <th></th>
                             <th><?= lang('courier_name'); ?></th>
                             <th><?= lang('city'); ?></th>
-                            <th><?= lang('express'); ?></th>
+                            <th><?= lang('express'); ?></th> 
+                            <th><?= lang('courier_status'); ?></th>
                             <th><?= lang('global'); ?></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="12" class="dataTables_empty"><?= lang('loading_data'); ?></td>
+                            <td colspan="13" class="dataTables_empty"><?= lang('loading_data'); ?></td>
                         </tr>
                         </tbody>
                         <tfoot class="dtFilter">
@@ -342,12 +397,24 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
-                            <th></th><th></th><th></th><th></th><th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th> 
+                            <th></th>
                             <th><?= lang('grand_total'); ?></th>
                             <th><?= lang('paid'); ?></th>
                             <th><?= lang('balance'); ?></th>
                             <th></th>
                             <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th> 
+                            <th></th>
                             <th></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
