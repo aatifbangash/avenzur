@@ -58,11 +58,16 @@ class Inventory_model extends CI_Model {
     }
 
     // Function to calculate current stock for a specific product at a given location
-    public function get_current_stock($product_id, $location_id)
+    public function get_current_stock($product_id, $location_id, $batch_no = null)
     {
         $this->db->select('SUM(quantity) as total_quantity');
         $this->db->from('inventory_movements');
         $this->db->where('product_id', $product_id);
+
+        if($batch_no != 'null'){
+            $this->db->where('batch_number', $batch_no);
+        }
+
         if($location_id != 'null'){
             $this->db->where('location_id', $location_id);
         }
