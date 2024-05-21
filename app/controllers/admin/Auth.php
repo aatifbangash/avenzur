@@ -414,7 +414,8 @@ class Auth extends MY_Controller
     public function index()
     {
         if (!$this->loggedIn) {
-            admin_redirect('login');
+            //admin_redirect('login');
+            redirect('/');
         } else {
             $this->data['message'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('message');
             redirect($_SERVER['HTTP_REFERER']);
