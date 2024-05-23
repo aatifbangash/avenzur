@@ -453,6 +453,7 @@ class Products extends MY_Controller
             }
 
             $productContent->setAvailability($productData['availability']);
+            print_r($existingProduct);exit;
             
             try {
                 // Check if the product already exists, if so, update it; otherwise, insert a new product
