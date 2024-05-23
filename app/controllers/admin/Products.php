@@ -340,137 +340,121 @@ class Products extends MY_Controller
     public function google_merch_apis(){
         $product_id = $_POST['id'];
         
+        // Fetch product details and related information
         $product_photos = $this->products_model->getProductPhotos($product_id);
         $product_details = $this->products_model->getProductByID($product_id);
         $brand_details = $this->products_model->getBrandByID($product_details->brand);
-
+    
         $photos_arr = array();
-
         foreach($product_photos as $photo){
-            //array_push(base_url().'assets/uploads/'.$photo->photo, $photos_arr);
             array_push($photos_arr, site_url().'assets/uploads/'.$photo->photo);
         }
-
-        $product_details->details = str_replace('<p><strong>Highlights:</strong></p>','', $product_details->details);
-        $product_details->details = str_replace('<p>','',$product_details->details);
-        $product_details->details = str_replace('</p>','',$product_details->details);
-        $product_details->details = str_replace('<ul>','',$product_details->details);
-        $product_details->details = str_replace('</ul>','',$product_details->details);
-        $product_details->details = str_replace('<li>','',$product_details->details);
-        $product_details->details = str_replace('</li>','',$product_details->details);
-
+    
+        // Clean product details description
+        $product_details->details = str_replace(['<p><strong>Highlights:</strong></p>', '<p>', '</p>', '<ul>', '</ul>', '<li>', '</li>'], '', $product_details->details);
+    
         $clientId = '216256641186-ord7an72cbi6jhtrhmb1knb93jbera1p.apps.googleusercontent.com';
         $clientSecret = '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';
 
+        // Initialize Google Client
         $credentialsPath = 'assets/credentials/credentials_new.json';
         $client = new Google\Client();
         $client->setAuthConfig($credentialsPath);
         $client->setAccessType('offline');
-        $client->setApprovalPrompt('force');
-        
         $client->setScopes(['https://www.googleapis.com/auth/content']);
-        //$client->addScope(Google\Service\Drive::DRIVE);
-
+    
         if (isset($_SESSION['google_access_token']) && $_SESSION['google_access_token']) {
             $client->setAccessToken($_SESSION['google_access_token']);
-
+    
             $contentService = new Google_Service_ShoppingContent($client);
             $merchantId = '5086892798';
-            $productContentId = 'online:en:SA:'.$product_details->code;
-
+            $productContentId = 'online:en:SA:' . $product_details->code;
+    
             $productContent = new Google_Service_ShoppingContent_Product();
-
+            $productData = [
+                'channel' => 'online',
+                'contentLanguage' => 'en',
+                'targetCountry' => 'SA',
+                'offerId' => $product_details->code,
+                'title' => $product_details->name,
+                'description' => $product_details->details,
+                'link' => site_url().'product/'.$product_details->slug,
+                'imageLink' => site_url().'assets/uploads/'.$product_details->image,
+                'brand' => $brand_details->name,
+                'price' => [
+                    'value' => $product_details->price,
+                    'currency' => 'SAR',
+                ],
+                'salePrice' => [
+                    'value' => $product_details->promo_price,
+                    'currency' => 'SAR',
+                ],
+                'additionalImageLinks' => $photos_arr,
+                'availability' => 'in stock',
+            ];
+    
             try {
+                // Attempt to get the existing product
                 $existingProduct = $contentService->products->get($merchantId, $productContentId);
-
-                $productData = [
-                    'channel' => 'online',
-                    'contentLanguage' => 'En',
-                    'targetCountry' => 'SA',
-                    'productId' => $productContentId,
-                    'title' => $product_details->name,
-                    'description' => $product_details->details,
-                    'link' => site_url().'product/'.$product_details->slug,
-                    'imageLink' => site_url().'assets/uploads/'.$product_details->image,
-                    'brand' => $brand_details->name,
-                    'price' => [
-                        'value' => $product_details->price,
-                        'currency' => 'SAR',
-                    ],
-                    'salePrice' => [
-                        'value' => $product_details->promo_price,
-                        'currency' => 'SAR',
-                    ],
-                    'additionalImageLinks' => $photos_arr,
-                    'availability' => 'in stock',
-                ];
                 
+                // If product exists, update the existing product
+                if ($existingProduct) {
+                    $productContent->setOfferId($productData['offerId']);
+                    $productContent->setChannel($productData['channel']);
+                    $productContent->setContentLanguage($productData['contentLanguage']);
+                    $productContent->setTargetCountry($productData['targetCountry']);
+                }
             } catch (Google\Service\Exception $e) {
-                $productData = [
-                    'channel' => 'online',
-                    'contentLanguage' => 'En',
-                    'targetCountry' => 'SA',
-                    'offerId' => $product_details->code,
-                    'title' => $product_details->name,
-                    'description' => $product_details->details,
-                    'link' => site_url().'product/'.$product_details->slug,
-                    'imageLink' => site_url().'assets/uploads/'.$product_details->image,
-                    'brand' => $brand_details->name,
-                    'price' => [
-                        'value' => $product_details->price,
-                        'currency' => 'SAR',
-                    ],
-                    'salePrice' => [
-                        'value' => $product_details->promo_price,
-                        'currency' => 'SAR',
-                    ],
-                    'additionalImageLinks' => $photos_arr,
-                    'availability' => 'in stock',
-                ];
-
-                $productContent->setOfferId($productData['offerId']);
-                $productContent->setChannel($productData['channel']);
-                $productContent->setContentLanguage($productData['contentLanguage']);
-                $productContent->setTargetCountry($productData['targetCountry']);
+                if ($e->getCode() == 404) {
+                    // Product not found, prepare to insert a new one
+                    $productContent->setOfferId($productData['offerId']);
+                    $productContent->setChannel($productData['channel']);
+                    $productContent->setContentLanguage($productData['contentLanguage']);
+                    $productContent->setTargetCountry($productData['targetCountry']);
+                } else {
+                    // Other errors should be handled appropriately
+                    echo "Error fetching product: " . $e->getMessage();
+                    return;
+                }
             }
-
+    
+            // Set remaining product data
             $productContent->setTitle($productData['title']);
             $productContent->setDescription($productData['description']);
             $productContent->setLink($productData['link']);
             $productContent->setImageLink($productData['imageLink']);
             $productContent->setBrand($productData['brand']);
-
+            
             $price = new Google_Service_ShoppingContent_Price();
             $price->setValue($productData['price']['value']);
             $price->setCurrency($productData['price']['currency']);
             $productContent->setPrice($price);
-
-            if($productData['salePrice']['value']){
+    
+            if (!empty($productData['salePrice']['value'])) {
                 $salePrice = new Google_Service_ShoppingContent_Price();
                 $salePrice->setValue($productData['salePrice']['value']);
                 $salePrice->setCurrency($productData['salePrice']['currency']);
                 $productContent->setSalePrice($salePrice);
             }
-
+    
             $productContent->setAvailability($productData['availability']);
+            $productContent->setAdditionalImageLinks($productData['additionalImageLinks']);
             
             try {
-                // Check if the product already exists, if so, update it; otherwise, insert a new product
-                
-                if($existingProduct->id){
-                    $product = $contentService->products->update($merchantId, $productData['productId'], $productContent);
+                if (isset($existingProduct->id)) {
+                    // Update the product if it exists
+                    $contentService->products->update($merchantId, $productContentId, $productContent);
                     $this->session->set_flashdata('message', lang('product_updated'));
-                    admin_redirect('products/edit/' . $id);
-                }else{
-                    $product = $contentService->products->insert($merchantId, $productContent);
-                    $this->session->set_flashdata('message', lang('product_updated'));
-                    admin_redirect('products/edit/' . $id);
+                } else {
+                    // Insert the new product
+                    $contentService->products->insert($merchantId, $productContent);
+                    $this->session->set_flashdata('message', lang('product_inserted'));
                 }
-                
+                admin_redirect('products/edit/' . $product_id);
             } catch (Exception $e) {
-                echo "Error inserting product: " . $e->getMessage();
+                echo "Error inserting/updating product: " . $e->getMessage();
             }
-        }else{
+        } else {
             $redirect_uri = admin_url().'products/oauth2callback';
             header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
         }
