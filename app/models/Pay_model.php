@@ -101,7 +101,7 @@ class Pay_model extends CI_Model
 
         if ($this->db->update('sales', ['sale_status' => $status, 'note' => $note], ['id' => $id])) {
             if ($status == 'completed' && $status != $sale->sale_status) {
-                foreach ($items as $item) {
+                /*foreach ($items as $item) {
                     $item = (array) $item;
                     if ($this->site->getProductByID($item['product_id'])) {
                         $item_costs = $this->site->item_costing($item);
@@ -114,7 +114,7 @@ class Pay_model extends CI_Model
                             }
                         }
                     }
-                }
+                }*/
             }
 
             // Deduct from balance quantity except for ecommerce sales
