@@ -366,7 +366,7 @@ class Products extends MY_Controller
         $client = new Google\Client();
         $client->setAuthConfig($credentialsPath);
         $client->setAccessType('offline');
-        $client->setApprovalPrompt('force');
+        //$client->setApprovalPrompt('force');
         
         $client->setScopes(['https://www.googleapis.com/auth/content']);
         //$client->addScope(Google\Service\Drive::DRIVE);
