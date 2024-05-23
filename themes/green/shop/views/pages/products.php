@@ -15,6 +15,59 @@
     .arrow{
         float: right;
     }
+    .active {
+        color: white;
+    }
+</style>
+<style>
+
+    /* Override the existing rule by setting content to none */
+.list-group.catList a::before {
+    content: none; /* This will remove the custom bullet points */
+    display: none; /* Ensures the previous display property is overridden */
+}
+.catList {
+    padding-left: 0;
+}
+.list-group-item {
+    border: none; /* Remove border from list items */
+    padding-left: 1rem; /* Adjust padding to align text */
+}
+.collapse-toggle{
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    
+}
+a.me-2.collapse-toggle:hover {
+  z-index: 2;
+  color: var(--bs-list-group-active-color);
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  padding-left: 10px;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+.arrow {
+    /* margin-right: 0.5rem; */
+}
+.d-flex {
+    display: flex;
+    align-items: center;
+}
+
+.icon-box {
+    width: 15px;
+  height: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* background-color: black; */
+  color: gray;
+  /* border-radius: 50%; */
+  font-size: 14px;
+  border: 1px solid gray;
+}
 </style>
 <!-- <input type="hidden" id="min-price" value="<?php echo $filters['min_price'];?>">
 <input type="hidden" id="max-price" value="<?php echo $filters['max_price'];?>">
@@ -101,7 +154,7 @@
 
                     <div class="offcanvas-body" style="display: flex; flex-direction: column;">
                         <!-- Categories Section -->
-                        <div class="w-100">
+                        <!-- <div class="w-100">
                             <h5  data-bs-toggle="collapse" href="#categoriesCollapse" role="button"
                                 aria-expanded="true" aria-controls="categoriesCollapse"><b>Categories <i class="bi bi-chevron-down arrow"></i></b></h5>
                             <div class="collapse show" id="categoriesCollapse">
@@ -115,7 +168,119 @@
                                     <?php endforeach; ?>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
+                        
+
+                        <?php
+$this->load->helper('url');
+// Function to recursively render category list
+function renderCategories(&$categories, $parent_id = null, $addQueryString = '', $category_slug = '')
+{
+
+    echo '<div class="list-group catList">';
+    foreach ($categories as $key => $cat) {
+        // echo "<pre>"; var_dump($GLOBALS['CHILD_IDS'], !in_array($cat->id, $GLOBALS['CHILD_IDS']), $cat->id);
+        if ($cat->parent_id == $parent_id || ($parent_id === null || $cat->parent_id === 0) &&  !in_array($cat->id, $GLOBALS['CHILD_IDS'])) {
+            $hasChildren = hasChild($cat->id, $categories);
+            $toggleIcon = '<div class="icon-box"><i class="bi bi-plus arrow"></i></div>';
+            
+            // Determine if this category or any of its children are active
+            $isActive = ($category_slug == $cat->slug || isChildActive($cat->id, $categories, $category_slug));
+            $collapseClass = $isActive ? ' show' : '';
+
+            echo '<div class="list-group-item">';
+            echo '<div class="d-flex align-items-center">';
+            echo '<a href="#" class="me-2 collapse-toggle" data-bs-toggle="collapse" data-bs-target="#collapse-' . $cat->slug . '">';
+            echo $toggleIcon;
+            echo '</a>';
+            
+            echo '<a style="font-weight: none; flex: 1;" href="' . site_url('category/' . $cat->slug . $addQueryString) . '" class="list-group-item-action ' . ($category_slug == $cat->slug ? 'active' : '') . '">';
+            echo ucfirst(strtolower($cat->name));
+            echo '</a>';
+            echo '</div>';
+            if ($cat->parent_id == $parent_id)
+            {
+                $GLOBALS['CHILD_IDS'][] = $cat->id;
+                unset($categories[$key]);
+
+            }
+            // var_dump($childIds);
+
+            if ($hasChildren) {
+                echo '<div class="collapse' . $collapseClass . '" id="collapse-' . $cat->slug . '">';
+                renderCategories($categories, $cat->id, $addQueryString, $category_slug);
+                echo '</div>';
+            }
+            // echo "<pre>"; var_dump("herer", $categories); exit;
+            echo '</div>';
+
+        }
+    }
+    // var_dump($childIds); exit;
+    echo '</div>';
+}
+
+// Function to check if a category has children
+function hasChild($category_id, $categories)
+{
+    foreach ($categories as $cat) {
+        if ($cat->parent_id == $category_id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Function to check if any child category is active
+function isChildActive($parent_id, $categories, $category_slug)
+{
+    foreach ($categories as $cat) {
+        if ($cat->parent_id == $parent_id) {
+            if ($cat->slug == $category_slug || isChildActive($cat->id, $categories, $category_slug)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+$childIds = [];
+
+
+?>
+
+<div class="w-100">
+    <h5 data-bs-toggle="collapse" href="#categoriesCollapse" role="button" aria-expanded="true" aria-controls="categoriesCollapse">
+        <b>Categories <i class="bi bi-chevron-down arrow"></i></b>
+    </h5>
+    <div class="collapse show" id="categoriesCollapse">
+        <?php renderCategories($categories, null, $addQueryString, $category_slug);  ?>
+
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.collapse-toggle').forEach(function (element) {
+        element.addEventListener('click', function (e) {
+            e.preventDefault(); // Prevent default anchor behavior
+            const icon = this.querySelector('.arrow');
+            if (icon) {
+                icon.classList.toggle('bi-plus');
+                icon.classList.toggle('bi-dash');
+            }
+        });
+    });
+
+    // Ensure the correct icon is shown for initially expanded categories
+    document.querySelectorAll('.collapse.show').forEach(function (element) {
+        const toggle = element.previousElementSibling.querySelector('.collapse-toggle .arrow');
+        if (toggle) {
+            toggle.classList.remove('bi-plus');
+            toggle.classList.add('bi-dash');
+        }
+    });
+});
+</script>
 
                         <!-- <hr> -->
 
