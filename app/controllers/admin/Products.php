@@ -453,16 +453,17 @@ class Products extends MY_Controller
             }
 
             $productContent->setAvailability($productData['availability']);
-            print_r($existingProduct);exit;
             
             try {
                 // Check if the product already exists, if so, update it; otherwise, insert a new product
                 
                 if($existingProduct->id){
+                    echo 'Existing product';exit;
                     $product = $contentService->products->update($merchantId, $productData['productId'], $productContent);
                     $this->session->set_flashdata('message', lang('product_updated'));
                     admin_redirect('products/edit/' . $id);
                 }else{
+                    echo 'New product';exit;
                     $product = $contentService->products->insert($merchantId, $productContent);
                     $this->session->set_flashdata('message', lang('product_updated'));
                     admin_redirect('products/edit/' . $id);
