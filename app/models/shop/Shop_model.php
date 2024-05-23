@@ -1,5 +1,7 @@
 <?php
 
+use JetBrains\PhpStorm\Internal\ReturnTypeContract;
+
 defined('BASEPATH') or exit('No direct script access allowed');
 
 class Shop_model extends CI_Model
@@ -262,21 +264,47 @@ class Shop_model extends CI_Model
 
     public function getAllCategories()
     {
+        // if ($this->shop_settings->hide0) {
+        //     $pc = "(SELECT count(*) FROM {$this->db->dbprefix('products')} WHERE {$this->db->dbprefix('products')}.category_id = {$this->db->dbprefix('categories')}.id)";
+        //     $this->db->select("{$this->db->dbprefix('categories')}.*, {$pc} AS product_count", false);
+        //     $this->db->having('product_count >', 0);
+        // }
+        // //$this->db->where('categories.id !=', 29);
+        // $this->db->where_not_in('categories.id', array(29, 32));
+        // $this->db->group_start()->where('parent_id', null)->or_where('parent_id', 0)->group_end()->order_by('name');
+        // $categories = $this->db->get('categories')->result();
+
+        // foreach ($categories as $category) {
+        //     $category->name = ucfirst(strtolower($category->name));
+        // }
+
+        // return $categories;
+        // new code.
         if ($this->shop_settings->hide0) {
             $pc = "(SELECT count(*) FROM {$this->db->dbprefix('products')} WHERE {$this->db->dbprefix('products')}.category_id = {$this->db->dbprefix('categories')}.id)";
             $this->db->select("{$this->db->dbprefix('categories')}.*, {$pc} AS product_count", false);
             $this->db->having('product_count >', 0);
         }
-        //$this->db->where('categories.id !=', 29);
         $this->db->where_not_in('categories.id', array(29, 32));
-        $this->db->group_start()->where('parent_id', null)->or_where('parent_id', 0)->group_end()->order_by('name');
+        $this->db->order_by('name');
         $categories = $this->db->get('categories')->result();
-
-        foreach ($categories as $category) {
-            $category->name = ucfirst(strtolower($category->name));
-        }
-
+        // $categories = $this->buildCategoryHierarchy($categories);
+        // echo "<pre>"; var_dump($categories); exit;
         return $categories;
+    }
+
+    function buildCategoryHierarchy($categories, $parent_id = null) {
+        $result = array();
+        foreach ($categories as $category) {
+            // var_dump($category); exit;
+
+            if ($category->parent_id == $parent_id || ($parent_id === null || $category->parent_id === 0)) {
+                $category->name = ucfirst(strtolower($category->name));
+                $category->children = $this->buildCategoryHierarchy($categories, $category->id);
+                $result[] = $category;
+            }
+        }
+        return $result;
     }
 
     public function getAllCurrencies()
