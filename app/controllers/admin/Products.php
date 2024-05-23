@@ -382,7 +382,7 @@ class Products extends MY_Controller
 
             try {
                 $existingProduct = $contentService->products->get($merchantId, $productContentId);
-
+                echo '<pre>';print_r($existingProduct);exit;
                 $productData = [
                     'channel' => 'online',
                     'contentLanguage' => 'En',
