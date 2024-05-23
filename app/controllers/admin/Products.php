@@ -339,12 +339,13 @@ class Products extends MY_Controller
 
     public function google_merch_apis(){
         $product_id = $_POST['id'];
+        echo $product_id;
         
         // Fetch product details and related information
         $product_photos = $this->products_model->getProductPhotos($product_id);
         $product_details = $this->products_model->getProductByID($product_id);
         $brand_details = $this->products_model->getBrandByID($product_details->brand);
-    
+        print_r($product_details);
         $photos_arr = array();
         foreach($product_photos as $photo){
             array_push($photos_arr, site_url().'assets/uploads/'.$photo->photo);
