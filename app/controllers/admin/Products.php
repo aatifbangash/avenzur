@@ -369,6 +369,9 @@ class Products extends MY_Controller
             $contentService = new Google_Service_ShoppingContent($client);
             $merchantId = '5086892798';
             $productContentId = 'online:en:SA:' . $product_details->code;
+            echo $product_details->code.'<br />';
+            echo $productContentId;
+            exit;
     
             $productContent = new Google_Service_ShoppingContent_Product();
             $productData = [
@@ -393,7 +396,6 @@ class Products extends MY_Controller
                 'availability' => 'in stock',
             ];
 
-            echo $productContentId;exit;
     
             try {
                 // Attempt to get the existing product
