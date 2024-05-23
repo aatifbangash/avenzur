@@ -1434,6 +1434,10 @@ class Shop_model extends CI_Model
             if (!empty($filters['brand'])) {
                 $this->db->where('brand', $filters['brand']['id']);
             }
+            if (!empty($filters['brands'])) {
+                $brandIds = explode(',', $filters['brands']);
+                $this->db->where_in('brand', $brandIds);
+            }
             if (!empty($filters['min_price'])) {
                 $this->db->where('price >=', $filters['min_price']);
             }

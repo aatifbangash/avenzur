@@ -743,6 +743,7 @@ function searchProducts(t) {
   var special_product = 0;
   var callUrl;
   var currentURL = window.location.href;
+  console.log(currentURL);
   if (currentURL.includes("promo=yes")) {
     promo = 1;
     callUrl = site.shop_url + "search?page=" + filters.page + "&promo=yes";
@@ -756,6 +757,30 @@ function searchProducts(t) {
       site.shop_url + "search?page=" + filters.page + "&special_product=yes";
   } else {
     callUrl = site.shop_url + "search?page=" + filters.page;
+  }
+    // Get the current URL
+  const url = new URL(window.location.href);
+
+  // Create a URLSearchParams object from the URL's query string
+  const searchParams = new URLSearchParams(url.search);
+
+  // Get the min_price and max_price values
+  const minPrice = searchParams.get('min_price');
+  const maxPrice = searchParams.get('max_price');
+  const brands = searchParams.get('brand');
+
+   // Set the values of the input fields
+   document.getElementById('input_min_price').value = (minPrice ? minPrice : "0");
+   document.getElementById('input_max_price').value = maxPrice ? maxPrice: "100";
+
+  if (minPrice && maxPrice)
+  {
+    callUrl = callUrl + "&min_price=" + minPrice + "&max_price=" + maxPrice;
+  }
+  if (brands)
+  {
+    callUrl = callUrl + "&brand=" + brands;
+
   }
 
   $("#loading").show();

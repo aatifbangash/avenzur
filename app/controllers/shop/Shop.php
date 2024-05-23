@@ -1613,6 +1613,8 @@ class Shop extends MY_Shop_Controller
     public function search()
     {
         $filters = $this->input->post('filters') ? $this->input->post('filters', true) : [];
+        $filters['min_price'] = $this->input->get('min_price');
+        $filters['max_price'] =  $this->input->get('max_price');
         $limit = 60;
         $total_rows = $this->shop_model->getProductsCount($filters);
         $filters['limit'] = $limit;

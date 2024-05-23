@@ -172,120 +172,120 @@ a.me-2.collapse-toggle:hover {
                         
 
                         <?php
-$this->load->helper('url');
-// Function to recursively render category list
-function renderCategories(&$categories, $parent_id = null, $addQueryString = '', $category_slug = '')
-{
+                            $this->load->helper('url');
+                            // Function to recursively render category list
+                            function renderCategories(&$categories, $parent_id = null, $addQueryString = '', $category_slug = '')
+                            {
 
-    echo '<div class="list-group catList">';
-    foreach ($categories as $key => $cat) {
-        // echo "<pre>"; var_dump($GLOBALS['CHILD_IDS'], !in_array($cat->id, $GLOBALS['CHILD_IDS']), $cat->id);
-        if ($cat->parent_id == $parent_id || ($parent_id === null || $cat->parent_id === 0) &&  !in_array($cat->id, $GLOBALS['CHILD_IDS'])) {
-            $hasChildren = hasChild($cat->id, $categories);
-            $toggleIcon = '<div class="icon-box"><i class="bi bi-plus arrow"></i></div>';
-            
-            // Determine if this category or any of its children are active
-            $isActive = ($category_slug == $cat->slug || isChildActive($cat->id, $categories, $category_slug));
-            $collapseClass = $isActive ? ' show' : '';
+                                echo '<div class="list-group catList">';
+                                foreach ($categories as $key => $cat) {
+                                    // echo "<pre>"; var_dump($GLOBALS['CHILD_IDS'], !in_array($cat->id, $GLOBALS['CHILD_IDS']), $cat->id);
+                                    if ($cat->parent_id == $parent_id || ($parent_id === null || $cat->parent_id === 0) &&  !in_array($cat->id, $GLOBALS['CHILD_IDS'])) {
+                                        $hasChildren = hasChild($cat->id, $categories);
+                                        $toggleIcon = '<div class="icon-box"><i class="bi bi-plus arrow"></i></div>';
+                                        
+                                        // Determine if this category or any of its children are active
+                                        $isActive = ($category_slug == $cat->slug || isChildActive($cat->id, $categories, $category_slug));
+                                        $collapseClass = $isActive ? ' show' : '';
 
-            echo '<div class="list-group-item">';
-            echo '<div class="d-flex align-items-center">';
-            echo '<a href="#" class="me-2 collapse-toggle" data-bs-toggle="collapse" data-bs-target="#collapse-' . $cat->slug . '">';
-            echo $toggleIcon;
-            echo '</a>';
-            
-            echo '<a style="font-weight: none; flex: 1;" href="' . site_url('category/' . $cat->slug . $addQueryString) . '" class="list-group-item-action ' . ($category_slug == $cat->slug ? 'active' : '') . '">';
-            echo ucfirst(strtolower($cat->name));
-            echo '</a>';
-            echo '</div>';
-            if ($cat->parent_id == $parent_id)
-            {
-                $GLOBALS['CHILD_IDS'][] = $cat->id;
-                unset($categories[$key]);
+                                        echo '<div class="list-group-item">';
+                                        echo '<div class="d-flex align-items-center">';
+                                        echo '<a href="#" class="me-2 collapse-toggle" data-bs-toggle="collapse" data-bs-target="#collapse-' . $cat->slug . '">';
+                                        echo $toggleIcon;
+                                        echo '</a>';
+                                        
+                                        echo '<a style="font-weight: none; flex: 1;" href="' . site_url('category/' . $cat->slug . $addQueryString) . '" class="list-group-item-action ' . ($category_slug == $cat->slug ? 'active' : '') . '">';
+                                        echo ucfirst(strtolower($cat->name));
+                                        echo '</a>';
+                                        echo '</div>';
+                                        if ($cat->parent_id == $parent_id)
+                                        {
+                                            $GLOBALS['CHILD_IDS'][] = $cat->id;
+                                            unset($categories[$key]);
 
-            }
-            // var_dump($childIds);
+                                        }
+                                        // var_dump($childIds);
 
-            if ($hasChildren) {
-                echo '<div class="collapse' . $collapseClass . '" id="collapse-' . $cat->slug . '">';
-                renderCategories($categories, $cat->id, $addQueryString, $category_slug);
-                echo '</div>';
-            }
-            // echo "<pre>"; var_dump("herer", $categories); exit;
-            echo '</div>';
+                                        if ($hasChildren) {
+                                            echo '<div class="collapse' . $collapseClass . '" id="collapse-' . $cat->slug . '">';
+                                            renderCategories($categories, $cat->id, $addQueryString, $category_slug);
+                                            echo '</div>';
+                                        }
+                                        // echo "<pre>"; var_dump("herer", $categories); exit;
+                                        echo '</div>';
 
-        }
-    }
-    // var_dump($childIds); exit;
-    echo '</div>';
-}
+                                    }
+                                }
+                                // var_dump($childIds); exit;
+                                echo '</div>';
+                            }
 
-// Function to check if a category has children
-function hasChild($category_id, $categories)
-{
-    foreach ($categories as $cat) {
-        if ($cat->parent_id == $category_id) {
-            return true;
-        }
-    }
-    return false;
-}
+                            // Function to check if a category has children
+                            function hasChild($category_id, $categories)
+                            {
+                                foreach ($categories as $cat) {
+                                    if ($cat->parent_id == $category_id) {
+                                        return true;
+                                    }
+                                }
+                                return false;
+                            }
 
-// Function to check if any child category is active
-function isChildActive($parent_id, $categories, $category_slug)
-{
-    foreach ($categories as $cat) {
-        if ($cat->parent_id == $parent_id) {
-            if ($cat->slug == $category_slug || isChildActive($cat->id, $categories, $category_slug)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
+                            // Function to check if any child category is active
+                            function isChildActive($parent_id, $categories, $category_slug)
+                            {
+                                foreach ($categories as $cat) {
+                                    if ($cat->parent_id == $parent_id) {
+                                        if ($cat->slug == $category_slug || isChildActive($cat->id, $categories, $category_slug)) {
+                                            return true;
+                                        }
+                                    }
+                                }
+                                return false;
+                            }
 
-$childIds = [];
+                            $childIds = [];
 
 
-?>
+                        ?>
 
-<div class="w-100">
-    <h5 data-bs-toggle="collapse" href="#categoriesCollapse" role="button" aria-expanded="true" aria-controls="categoriesCollapse">
-        <b>Categories <i class="bi bi-chevron-down arrow"></i></b>
-    </h5>
-    <div class="collapse show" id="categoriesCollapse">
-        <?php renderCategories($categories, null, $addQueryString, $category_slug);  ?>
+                        <div class="w-100">
+                            <h5 data-bs-toggle="collapse" href="#categoriesCollapse" role="button" aria-expanded="true" aria-controls="categoriesCollapse">
+                                <b>Categories <i class="bi bi-chevron-down arrow"></i></b>
+                            </h5>
+                            <div class="collapse show" id="categoriesCollapse">
+                                <?php renderCategories($categories, null, $addQueryString, $category_slug);  ?>
 
-    </div>
-</div>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.collapse-toggle').forEach(function (element) {
-        element.addEventListener('click', function (e) {
-            e.preventDefault(); // Prevent default anchor behavior
-            const icon = this.querySelector('.arrow');
-            if (icon) {
-                icon.classList.toggle('bi-plus');
-                icon.classList.toggle('bi-dash');
-            }
-        });
-    });
+                            </div>
+                        </div>
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            document.querySelectorAll('.collapse-toggle').forEach(function (element) {
+                                element.addEventListener('click', function (e) {
+                                    e.preventDefault(); // Prevent default anchor behavior
+                                    const icon = this.querySelector('.arrow');
+                                    if (icon) {
+                                        icon.classList.toggle('bi-plus');
+                                        icon.classList.toggle('bi-dash');
+                                    }
+                                });
+                            });
 
-    // Ensure the correct icon is shown for initially expanded categories
-    document.querySelectorAll('.collapse.show').forEach(function (element) {
-        const toggle = element.previousElementSibling.querySelector('.collapse-toggle .arrow');
-        if (toggle) {
-            toggle.classList.remove('bi-plus');
-            toggle.classList.add('bi-dash');
-        }
-    });
-});
-</script>
+                            // Ensure the correct icon is shown for initially expanded categories
+                            document.querySelectorAll('.collapse.show').forEach(function (element) {
+                                const toggle = element.previousElementSibling.querySelector('.collapse-toggle .arrow');
+                                if (toggle) {
+                                    toggle.classList.remove('bi-plus');
+                                    toggle.classList.add('bi-dash');
+                                }
+                            });
+                        });
+                        </script>
 
-                        <!-- <hr> -->
+                        <hr>
 
                         <!-- Price Section -->
-                        <!-- <div class="py-3">
+                        <div class="py-3">
                             <h5 data-bs-toggle="collapse" href="#priceCollapse" role="button" aria-expanded="true"
                                 aria-controls="priceCollapse"><b>Price <i class="bi bi-chevron-down arrow"></i></b></h5>
                             <div class="collapse show" id="priceCollapse">
@@ -298,28 +298,28 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <div class="input-group">
                                         <input type="text" name="max_price" id="input_max_price" class="form-control" value="100">
                                     </div>
-                                    <a href="#" class="px-2" id="goButton">GO</a>
+                                    <a href="#" class="btn btn-sm px-2" style=" margin-left: 2px; background-color: var(--primary-color); color: white;" id="goButton">GO</a>
                                 </div>
 
                             </div>
-                        </div> -->
+                        </div>
 
                         <!-- Brands Section -->
-                        <!-- <div class="py-3">
+                        <div class="py-3">
                             <h5 data-bs-toggle="collapse" href="#brandsCollapse" role="button" aria-expanded="true"
                                 aria-controls="brandsCollapse"><b>Brands <i class="bi bi-chevron-down arrow"></i></b></h5>
                             <div class="collapse show" id="brandsCollapse">
                             <?php foreach ($brands as $brand): ?>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                                    <input class="form-check-input brand-checkbox" type="checkbox" value="<?php echo $brand->id; ?>" id="flexCheckDefault">
                                     <label class="form-check-label" for="flexCheckDefault">
-                                        <a href="#" class="brand-link" data-brand="<?php echo $brand->slug;?>" > <h6 class=""><?php echo ucfirst(strtolower($brand->name));?></h6> </a>
+                                        <a href="#" class="brand-link list-group-item-action " data-brand="<?php echo $brand->slug;?>" > <h6 class=""><?php echo ucfirst(strtolower($brand->name));?></h6> </a>
                                     </label>
                                 </div>
                             <?php endforeach; ?>    
                                 
                             </div>
-                        </div> -->
+                        </div>
                     </div>
 
 
@@ -431,60 +431,98 @@ document.addEventListener('DOMContentLoaded', function () {
 </section>
 
 <script>
-// document.addEventListener('DOMContentLoaded', function() {
-//     // Attach collapse event listeners
-//     var collapsibles = document.querySelectorAll('.collapse');
-//     collapsibles.forEach(function(collapse) {
-//         var toggleButton = collapse.previousElementSibling; 
+document.addEventListener('DOMContentLoaded', function() {
+    // Attach collapse event listeners
+    var collapsibles = document.querySelectorAll('.collapse');
+    collapsibles.forEach(function(collapse) {
+        var toggleButton = collapse.previousElementSibling; 
 
-//         // Show event
-//         collapse.addEventListener('show.bs.collapse', function () {
-//             var icon = toggleButton.querySelector('.arrow');
-//             if (icon) {
-//                 icon.classList.remove('bi-chevron-right');
-//                 icon.classList.add('bi-chevron-down');
-//             }
-//         });
+        // Show event
+        collapse.addEventListener('show.bs.collapse', function () {
+            var icon = toggleButton.querySelector('.arrow');
+            if (icon) {
+                icon.classList.remove('bi-chevron-right');
+                icon.classList.add('bi-chevron-down');
+            }
+        });
 
-//         // Hide event
-//         collapse.addEventListener('hide.bs.collapse', function () {
-//             var icon = toggleButton.querySelector('.arrow');
-//             if (icon) {
-//                 icon.classList.remove('bi-chevron-down');
-//                 icon.classList.add('bi-chevron-right');
-//             }
-//         });
-//     });
-// });
+        // Hide event
+        collapse.addEventListener('hide.bs.collapse', function () {
+            var icon = toggleButton.querySelector('.arrow');
+            if (icon) {
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-right');
+            }
+        });
+    });
+});
 
-// document.getElementById('goButton').addEventListener('click', function() {
-//     var minPrice = document.getElementById('input_min_price').value;
-//     var maxPrice = document.getElementById('input_max_price').value;
-//     var newUrl = updateQueryStringParameter(window.location.href, 'min_price', minPrice);
-//     newUrl = updateQueryStringParameter(newUrl, 'max_price', maxPrice);
-//     window.location.href = newUrl; 
-// });
+document.getElementById('goButton').addEventListener('click', function() {
+    var minPrice = document.getElementById('input_min_price').value;
+    var maxPrice = document.getElementById('input_max_price').value;
+    var newUrl = updateQueryStringParameter(window.location.href, 'min_price', minPrice);
+    newUrl = updateQueryStringParameter(newUrl, 'max_price', maxPrice);
+    window.location.href = newUrl; 
+});
 
-// function updateQueryStringParameter(uri, key, value) {
+function updateQueryStringParameter(uri, key, value) {
     
-//     var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
-//     var separator = uri.indexOf('?') !== -1 ? "&" : "?";
-//     if (uri.match(re)) {
-//         return uri.replace(re, '$1' + key + "=" + value + '$2');
-//     }
-//     else {
-//         return uri + separator + key + "=" + value;
-//     }
+    var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+    var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+    if (uri.match(re)) {
+        return uri.replace(re, '$1' + key + "=" + value + '$2');
+    }
+    else {
+        return uri + separator + key + "=" + value;
+    }
 
-// }
+}
 
-// document.querySelectorAll('.brand-link').forEach(function(link) {
-//     link.addEventListener('click', function(event) {
-//         event.preventDefault(); 
-//         var brandValue = this.getAttribute('data-brand'); 
-//         var newUrl = updateQueryStringParameter(window.location.href, 'brands', brandValue);
-//         window.location.href = newUrl; 
-//     });
-// });
+document.querySelectorAll('.brand-link').forEach(function(link) {
+    link.addEventListener('click', function(event) {
+        event.preventDefault(); 
+        var brandValue = this.getAttribute('data-brand'); 
+        var newUrl = updateQueryStringParameter(window.location.href, 'brands', brandValue);
+        window.location.href = newUrl; 
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+            // Function to update the URL with the selected brands
+            function updateURL() {
+                const checkboxes = document.querySelectorAll('.brand-checkbox');
+                const selectedBrands = Array.from(checkboxes)
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.value);
+
+                const url = new URL(window.location.href);
+                if (selectedBrands.length > 0) {
+                    url.searchParams.set('brands', selectedBrands.join(','));
+                } else {
+                    url.searchParams.delete('brands');
+                }
+                window.history.replaceState({}, '', url);
+                searchProducts();
+            }
+
+            // Attach change event listeners to the checkboxes
+            document.querySelectorAll('.brand-checkbox').forEach(function(checkbox) {
+                checkbox.addEventListener('change', updateURL);
+            });
+            console.log("herere")
+
+            // Initialize checkboxes based on URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const brandsParam = urlParams.get('brands');
+            if (brandsParam) {
+                const selectedBrands = brandsParam.split(',');
+                selectedBrands.forEach(function(brand) {
+                    const checkbox = document.querySelector(`.brand-checkbox[value="${brand}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                });
+            }
+        });
 
 </script>
