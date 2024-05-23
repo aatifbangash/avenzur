@@ -344,7 +344,6 @@ class Products extends MY_Controller
         $product_photos = $this->products_model->getProductPhotos($product_id);
         $product_details = $this->products_model->getProductByID($product_id);
         $brand_details = $this->products_model->getBrandByID($product_details->brand);
-        print_r($product_details);exit;
     
         $photos_arr = array();
         foreach($product_photos as $photo){
@@ -363,6 +362,7 @@ class Products extends MY_Controller
         $client->setAuthConfig($credentialsPath);
         $client->setAccessType('offline');
         $client->setScopes(['https://www.googleapis.com/auth/content']);
+        print_r($product_details);exit;
     
         if (isset($_SESSION['google_access_token']) && $_SESSION['google_access_token']) {
             $client->setAccessToken($_SESSION['google_access_token']);
