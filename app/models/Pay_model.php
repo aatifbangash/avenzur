@@ -93,10 +93,10 @@ class Pay_model extends CI_Model
         }
         $cost = [];
         if ($status == 'completed' && $status != $sale->sale_status) {
-            foreach ($items as $item) {
+            /*foreach ($items as $item) {
                 $items_array[] = (array) $item;
             }
-            $cost = $this->site->costing($items_array);
+            $cost = $this->site->costing($items_array);*/
         }
 
         if ($this->db->update('sales', ['sale_status' => $status, 'note' => $note], ['id' => $id])) {
