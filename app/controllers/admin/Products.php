@@ -362,7 +362,7 @@ class Products extends MY_Controller
         $clientId = '216256641186-ord7an72cbi6jhtrhmb1knb93jbera1p.apps.googleusercontent.com';
         $clientSecret = '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';
 
-        $credentialsPath = 'assets/credentials/credentials_new.json';
+        $credentialsPath = 'assets/credentials/credentials.json';
         $client = new Google\Client();
         $client->setAuthConfig($credentialsPath);
         $client->setAccessType('offline');
