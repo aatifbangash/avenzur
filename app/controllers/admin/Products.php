@@ -362,11 +362,11 @@ class Products extends MY_Controller
         $clientId = '216256641186-ord7an72cbi6jhtrhmb1knb93jbera1p.apps.googleusercontent.com';
         $clientSecret = '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';
 
-        $credentialsPath = 'assets/credentials/credentials_new.json';
+        $credentialsPath = 'assets/credentials/credentials.json';
         $client = new Google\Client();
         $client->setAuthConfig($credentialsPath);
         $client->setAccessType('offline');
-        //$client->setApprovalPrompt('force');
+        $client->setApprovalPrompt('force');
         
         $client->setScopes(['https://www.googleapis.com/auth/content']);
         //$client->addScope(Google\Service\Drive::DRIVE);
@@ -382,7 +382,7 @@ class Products extends MY_Controller
 
             try {
                 $existingProduct = $contentService->products->get($merchantId, $productContentId);
-                echo '<pre>';print_r($existingProduct);exit;
+
                 $productData = [
                     'channel' => 'online',
                     'contentLanguage' => 'En',
@@ -458,12 +458,10 @@ class Products extends MY_Controller
                 // Check if the product already exists, if so, update it; otherwise, insert a new product
                 
                 if($existingProduct->id){
-                    echo 'Existing product';exit;
                     $product = $contentService->products->update($merchantId, $productData['productId'], $productContent);
                     $this->session->set_flashdata('message', lang('product_updated'));
                     admin_redirect('products/edit/' . $id);
                 }else{
-                    echo 'New product';exit;
                     $product = $contentService->products->insert($merchantId, $productContent);
                     $this->session->set_flashdata('message', lang('product_updated'));
                     admin_redirect('products/edit/' . $id);
