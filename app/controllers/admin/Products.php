@@ -369,8 +369,11 @@ class Products extends MY_Controller
             $contentService = new Google_Service_ShoppingContent($client);
             $merchantId = '5086892798';
             $productContentId = 'online:en:SA:' . $product_details->code;
+            
             echo $product_details->code.'<br />';
             echo $productContentId;
+
+            print_r($product_details);exit;
             exit;
     
             $productContent = new Google_Service_ShoppingContent_Product();
