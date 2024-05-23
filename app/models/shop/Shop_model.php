@@ -133,13 +133,14 @@ class Shop_model extends CI_Model
 
     public function addSale($data, $items, $customer, $address)
     {
+
         // Sequence-Code
         $this->load->library('SequenceCode');
         $this->sequenceCode = new SequenceCode();
         $data['sequence_code'] = $this->sequenceCode->generate('SL', 5);
 
-        $cost = $this->site->costing($items);
-        // $this->sma->print_arrays($cost);
+       // $cost = $this->site->costing($items);
+       // $this->sma->print_arrays($cost);
 
         if (is_array($customer) && !empty($customer)) {
             $this->db->insert('companies', $customer);
@@ -151,7 +152,7 @@ class Shop_model extends CI_Model
             $this->db->insert('addresses', $address);
             $data['address_id'] = $this->db->insert_id();
         }
-
+    
         $this->db->trans_start();
         if ($this->db->insert('sales', $data)) {
             $sale_id = $this->db->insert_id();

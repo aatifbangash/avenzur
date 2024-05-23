@@ -7,6 +7,7 @@ class Site extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function calculateAVCost($product_id, $warehouse_id, $batch_no, $net_unit_price, $unit_price, $quantity, $product_name, $option_id, $item_quantity)
@@ -85,7 +86,10 @@ class Site extends CI_Model
                 break;
             }
         }
-        if ($quantity > 0) {
+        // get quantity from inventory movement
+        $quantity = $this->Inventory_model->get_current_stock($product_id, $warehouse_id);
+       
+        if ($quantity <= 0) {
             $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), ($pi->product_name ?? $product_name)));
             redirect($_SERVER['HTTP_REFERER']);
         }
@@ -1111,6 +1115,7 @@ public function getallCountry()
 
     public function item_costing($item, $pi = null)
     {
+
         $item_quantity = $pi ? $item['aquantity'] : $item['quantity'];
         if (!isset($item['option_id']) || empty($item['option_id']) || $item['option_id'] == 'null') {
             $item['option_id'] = null;
