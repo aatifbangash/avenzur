@@ -161,7 +161,7 @@
                         <div>Out of Stock <button type="button" class="btn btn-link btn-notify-add-to-list" href="#"
                                 data-id="<?php echo $product->id;?>" data-title="<?php echo $product->name;?>"
                                 data-image="<?php echo $product->image;?>" data-price="<?php echo isset($product->special_price) ? $product->special_price : $product->price;?> ">Notify me</button>
-                        </div>
+                        
                     <?php } else { ?>
                         <div class="product-detail product-count d-flex align-items-center get-quantity"
                             style="width: fit-content;">
