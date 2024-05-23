@@ -344,6 +344,7 @@ class Products extends MY_Controller
         $product_photos = $this->products_model->getProductPhotos($product_id);
         $product_details = $this->products_model->getProductByID($product_id);
         $brand_details = $this->products_model->getBrandByID($product_details->brand);
+        print_r($product_details);exit;
     
         $photos_arr = array();
         foreach($product_photos as $photo){
