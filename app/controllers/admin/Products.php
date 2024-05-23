@@ -362,7 +362,6 @@ class Products extends MY_Controller
         $client->setAuthConfig($credentialsPath);
         $client->setAccessType('offline');
         $client->setScopes(['https://www.googleapis.com/auth/content']);
-        print_r($product_details);exit;
     
         if (isset($_SESSION['google_access_token']) && $_SESSION['google_access_token']) {
             $client->setAccessToken($_SESSION['google_access_token']);
@@ -370,12 +369,6 @@ class Products extends MY_Controller
             $contentService = new Google_Service_ShoppingContent($client);
             $merchantId = '5086892798';
             $productContentId = 'online:en:SA:' . $product_details->code;
-            
-            echo $product_details->code.'<br />';
-            echo $productContentId;
-
-            print_r($product_details);exit;
-            exit;
     
             $productContent = new Google_Service_ShoppingContent_Product();
             $productData = [
