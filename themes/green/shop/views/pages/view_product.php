@@ -26,6 +26,15 @@
                         ?>
                         <div class="item productzoomImg">
                             <img src="<?= base_url('assets/uploads/' . $product->image); ?>" alt="<?= $product->name; ?>" />
+                            <?php 
+                                if($product->global){
+                                    ?>
+                                        <span class="position-absolute badge" style="margin-left: 10px;top:0px;right:0px;">
+                                        <img src="<?= base_url('assets/images/global.jpg'); ?>" style="height:20px;" class="card-img-top" alt="Global">
+                                    </span>
+                                    <?php
+                                    }
+                            ?>
                         </div>
                         <?php
                     }
@@ -82,15 +91,6 @@
                         <div class="product-name">
                             <h1 class=" override-h1">
                                 <?= stripslashes($product->name); ?>
-                                <?php 
-                                    if($product->global){
-                                        ?>
-                                          <span class="position-absolute badge" style="margin-left: 10px;">
-                                            <img src="<?= base_url('assets/images/global.jpg'); ?>" style="height:20px;" class="card-img-top" alt="Global">
-                                        </span>
-                                        <?php
-                                      }
-                                ?>
                             </h1>
                         </div>
                         <div class="rating">
@@ -161,7 +161,7 @@
                         <div>Out of Stock <button type="button" class="btn btn-link btn-notify-add-to-list" href="#"
                                 data-id="<?php echo $product->id;?>" data-title="<?php echo $product->name;?>"
                                 data-image="<?php echo $product->image;?>" data-price="<?php echo isset($product->special_price) ? $product->special_price : $product->price;?> ">Notify me</button>
-                        </div>
+                        
                     <?php } else { ?>
                         <div class="product-detail product-count d-flex align-items-center get-quantity"
                             style="width: fit-content;">
