@@ -177,7 +177,9 @@ function loadItems() {
             tr_html = '<td><input name="product_id[]" type="hidden" class="rid" value="' + product_id + '"><span class="sname" id="name_' + row_no + '">' + item_code +' - ' + item_name +'</span></td>';
             tr_html += '<td>'+(opt.get(0).outerHTML)+'</td>';
             tr_html += '<td><input class="form-control rbatchno" name="batchno[]" type="text" value=""></td>';
-            tr_html += '<td><input class="form-control date rexpiry" name="expiry[]" type="text" style="width:100%;"></td>';
+            tr_html += '<td><input class="form-control date rexpiry" name="expiry[]" type="text"></td>';
+            tr_html += '<td><input class="form-control rsaleprice" name="sale_price[]" type="text" value=""></td>';
+            tr_html += '<td><input class="form-control runitcost" name="unit_cost[]" type="text" value=""></td>';
             tr_html += '<td><select name="type[]" class="form-contol select rtype" style="width:100%;"><option value="subtraction"'+(type == 'subtraction' ? ' selected' : '')+'>'+type_opt.subtraction+'</option><option value="addition"'+(type == 'addition' ? ' selected' : '')+'>'+type_opt.addition+'</option></select></td>';
             tr_html += '<td><input class="form-control text-center rquantity" tabindex="'+((site.settings.set_focus == 1) ? an : (an+1))+'" name="quantity[]" type="text" value="' + formatQuantity2(item_qty) + '" data-id="' + row_no + '" data-item="' + item_id + '" id="quantity_' + row_no + '" onClick="this.select();"><input type="hidden" name="edit_quantity[]" value="'+oqty+'"></td>';
             if (site.settings.product_serial == 1) {

@@ -1158,6 +1158,8 @@ class Products extends MY_Controller
                 $serial     = $_POST['serial'][$r];
                 $expiry     = $_POST['expiry'][$r];
                 $batchno   = $_POST['batchno'][$r];
+                $sale_price   = $_POST['sale_price'][$r];
+                $unit_cost   = $_POST['unit_cost'][$r];
                 $variant    = isset($_POST['variant'][$r]) && !empty($_POST['variant'][$r]) ? $_POST['variant'][$r] : null;
 
                 if (!$this->Settings->overselling && $type == 'subtraction' && !$count_id) {
@@ -1189,6 +1191,8 @@ class Products extends MY_Controller
                     'quantity'     => $quantity,
                     'expiry'     => date('Y-m-d', strtotime($expiry)),
                     'batchno'     => $batchno,
+                    'sale_price'     => $sale_price,
+                    'unit_cost'     => $unit_cost,
                     'warehouse_id' => $warehouse_id,
                     'option_id'    => $variant,
                     'serial_no'    => $serial,
