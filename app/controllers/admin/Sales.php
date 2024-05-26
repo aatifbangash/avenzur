@@ -19,6 +19,7 @@ class Sales extends MY_Controller
         $this->lang->admin_load('sales', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('sales_model');
+        $this->load->admin_model('Inventory_model');
         $this->load->admin_model('companies_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path         = 'assets/uploads/';
@@ -2640,7 +2641,8 @@ class Sales extends MY_Controller
                 ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id")
                 ->from('sales')
                 ->where('shop', 0); 
-        } 
+        }
+        
         // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
         if ($this->input->get('shop') == 'yes') {
             $this->datatables->where('shop', 1);
@@ -3697,7 +3699,7 @@ class Sales extends MY_Controller
                 $c = uniqid(mt_rand(), true);
                 unset($row->details, $row->product_details, $row->image, $row->barcode_symbology, $row->cf1, $row->cf2, $row->cf3, $row->cf5, $row->cf6, $row->supplier1price, $row->supplier2price, $row->cfsupplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1, $row->supplier2, $row->supplier3, $row->supplier4, $row->supplier5, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
                 $option               = false;
-                $row->quantity        = 0;
+               // $row->quantity        = 0;  // commented by mm
                 $row->item_tax_method = $row->tax_method;
                 $row->qty             = 1;
                 $row->discount        = '0';
@@ -3719,16 +3721,22 @@ class Sales extends MY_Controller
                 }
                 $row->option = $option_id;
                 $pis         = $this->site->getPurchasedItems($row->id, $warehouse_id, $row->option);
-
+ 
                 
                 if ($pis) {
                     $row->expiry = "";
-                    $row->quantity = 0;
+                  //   $row->quantity = 0;
                     foreach ($pis as $pi) {
-                        $row->quantity += $pi->quantity_balance;
+                    //     $row->quantity += $pi->quantity_balance; // commented by mm
                         $row->expiry    = $pi->expiry;
                     }
                 }
+                 
+                // echo $row->id; exit; 
+                //   $product_id= $row->id;    
+                 
+               // $total_quantity = $this->Inventory_model->get_current_stock( $row->id, $warehouse_id); // , $row->batchno
+               // $row->quantity =$total_quantity; 
 
 
                 if ($options) {

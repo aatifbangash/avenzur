@@ -376,9 +376,14 @@ class Products_model extends CI_Model
 
     public function getAllWarehousesWithPQ($product_id)
     {
-        $this->db->select('' . $this->db->dbprefix('warehouses') . '.*, SUM(' . $this->db->dbprefix('warehouses_products') . '.quantity) As quantity,' . $this->db->dbprefix('warehouses_products') . '.rack, ' . $this->db->dbprefix('warehouses_products') . '.avg_cost')
-            ->join('warehouses_products', 'warehouses_products.warehouse_id=warehouses.id', 'left')
-            ->where('warehouses_products.product_id', $product_id)
+        // $this->db->select('' . $this->db->dbprefix('warehouses') . '.*, SUM(' . $this->db->dbprefix('warehouses_products') . '.quantity) As quantity,' . $this->db->dbprefix('warehouses_products') . '.rack, ' . $this->db->dbprefix('warehouses_products') . '.avg_cost')
+        //     ->join('warehouses_products', 'warehouses_products.warehouse_id=warehouses.id', 'left')
+        //     ->where('warehouses_products.product_id', $product_id)
+        //     ->group_by('warehouses.id');
+
+        $this->db->select('' . $this->db->dbprefix('warehouses') . '.*, SUM(' . $this->db->dbprefix('inventory_movements') . '.quantity) As quantity')
+            ->join('inventory_movements', 'inventory_movements.location_id=warehouses.id', 'left')
+            ->where('inventory_movements.product_id', $product_id)
             ->group_by('warehouses.id');
         $q = $this->db->get('warehouses');
         if ($q->num_rows() > 0) {
@@ -387,8 +392,9 @@ class Products_model extends CI_Model
             }
 
             return $data;
-        }
+        } 
         return false;
+        
     }
 
     public function getBrandByName($name)

@@ -72,11 +72,16 @@ class Inventory_model extends CI_Model {
         if($location_id != 'null'){
             $this->db->where('location_id', $location_id);
         }
-        $query = $this->db->get();
+        $query = $this->db->get(); 
+        
         if ($query->num_rows() > 0) {
             $result = $query->row();
             return $result->total_quantity;
         }
         return 0; // Return 0 if no movements found
     }
+
+ 
+
+
 }
