@@ -458,8 +458,6 @@ class Products extends MY_Controller
                 echo "Error inserting/updating product: " . $e->getMessage();
             }
         } else {
-            echo 'Product Id: '.$product_id.'<br />';
-            echo 'First Time:';exit;
             $redirect_uri = admin_url().'products/oauth2callback?product_id='.$product_id;
             header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
         }
