@@ -769,7 +769,7 @@ function searchProducts(t) {
   const maxPrice = searchParams.get('max_price');
   const brands = searchParams.get('brand');
 
-  if(typeof document.getElementById('input_min_price') != 'undefined' && typeof document.getElementById('input_max_price') != 'undefined'){
+  if (document.getElementById('input_min_price') !== null && document.getElementById('input_max_price') !== null) {
     // Set the values of the input fields
    document.getElementById('input_min_price').value = (minPrice ? minPrice : "0");
    document.getElementById('input_max_price').value = maxPrice ? maxPrice: "100";
