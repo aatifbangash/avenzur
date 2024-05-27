@@ -32,14 +32,14 @@ class Products extends MY_Controller
         $client->setRedirectUri(admin_url().'products/oauth2callback');
         //$client->addScope(Google\Service\Drive::DRIVE_METADATA_READONLY);
         $client->setScopes(['https://www.googleapis.com/auth/content']);
-
+        $product_id = $_GET['product_id'];
         if (! isset($_GET['code'])) {
             $auth_url = $client->createAuthUrl();
             header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
         } else {
             $client->authenticate($_GET['code']);
             $_SESSION['google_access_token'] = $client->getAccessToken();
-            $redirect_uri = admin_url().'products/google_merch_apis';
+            $redirect_uri = admin_url().'products/google_merch_apis?id='.$product_id;
             header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
         }
     }
@@ -338,7 +338,7 @@ class Products extends MY_Controller
     }
 
     public function google_merch_apis(){
-        $product_id = $_POST['id'];
+        $product_id = $_REQUEST['id'];
         
         // Fetch product details and related information
         $product_photos = $this->products_model->getProductPhotos($product_id);
@@ -456,7 +456,7 @@ class Products extends MY_Controller
                 echo "Error inserting/updating product: " . $e->getMessage();
             }
         } else {
-            $redirect_uri = admin_url().'products/oauth2callback';
+            $redirect_uri = admin_url().'products/oauth2callback?product_id='.$product_id;
             header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
         }
     }
