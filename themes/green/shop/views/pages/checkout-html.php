@@ -271,7 +271,7 @@ if ($this->Settings->indian_gst) {
                                                     if($this->cart->total_items() > 2){
                                                         echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment"');
                                                     }else{
-                                                        echo '<button class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" disabled>'.lang('Proceed to Pay').'</button>';
+                                                        echo '<button class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment" disabled>'.lang('Proceed to Pay').'</button>';
                                                     }
                                                 }else{
                                                     echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment"');
