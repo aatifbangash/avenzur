@@ -26,7 +26,7 @@ class Products extends MY_Controller
     }
 
     public function oauth2callback(){
-        $credentialsPath = 'assets/credentials/credentials_new.json';
+        $credentialsPath = 'assets/credentials/credentials.json';
         $client = new Google\Client();
         $client->setAuthConfigFile($credentialsPath);
         $client->setRedirectUri(admin_url().'products/oauth2callback');
@@ -357,7 +357,7 @@ class Products extends MY_Controller
         $clientSecret = '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';
 
         // Initialize Google Client
-        $credentialsPath = 'assets/credentials/credentials_new.json';
+        $credentialsPath = 'assets/credentials/credentials.json';
         $client = new Google\Client();
         $client->setAuthConfig($credentialsPath);
         $client->setAccessType('offline');
