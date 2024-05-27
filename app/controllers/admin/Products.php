@@ -32,17 +32,17 @@ class Products extends MY_Controller
         $client->setRedirectUri(admin_url().'products/oauth2callback');
         //$client->addScope(Google\Service\Drive::DRIVE_METADATA_READONLY);
         $client->setScopes(['https://www.googleapis.com/auth/content']);
-        $product_id = $_GET['product_id'];
+        $product_id = $_GET['id'];
         if (! isset($_GET['code'])) {
             // Get the product ID from the query parameters
-            $product_id = $_GET['product_id'];
+            $product_id = $_GET['id'];
             $auth_url = $client->createAuthUrl() . '&state=' . urlencode($product_id);
             header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
         } else {
             $client->authenticate($_GET['code']);
             $_SESSION['google_access_token'] = $client->getAccessToken();
             $product_id = $_GET['state'];
-            $redirect_uri = admin_url().'products/google_merch_apis?product_id=' . urlencode($product_id);
+            $redirect_uri = admin_url().'products/google_merch_apis?id=' . urlencode($product_id);
             header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
         }
     }
