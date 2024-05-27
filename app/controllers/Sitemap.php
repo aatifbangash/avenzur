@@ -19,7 +19,6 @@ class Sitemap extends MY_Shop_Controller
     {
         $this->load->database();
         $query = $this->db->where('hide', 0)->get("products");
-
         $brands = $this->shop_admin_model->getAllBrands();
         $pages = $this->shop_admin_model->getAllPages();
         $categories = $this->shop_admin_model->getAllCategories();
