@@ -342,6 +342,12 @@ class Products extends MY_Controller
 
     public function google_merch_apis(){
         $product_id = $_REQUEST['id'];
+
+        // Debugging: Ensure the product ID is being received correctly
+        if (empty($product_id)) {
+            $this->session->set_flashdata('error', 'Product ID is missing.');
+            return;
+        }
         
         // Fetch product details and related information
         $product_photos = $this->products_model->getProductPhotos($product_id);
