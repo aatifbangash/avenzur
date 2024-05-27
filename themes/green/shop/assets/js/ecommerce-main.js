@@ -769,14 +769,17 @@ function searchProducts(t) {
   const maxPrice = searchParams.get('max_price');
   const brands = searchParams.get('brand');
 
-   // Set the values of the input fields
+  if(typeof document.getElementById('input_min_price') != 'undefined' && typeof document.getElementById('input_max_price') != 'undefined'){
+    // Set the values of the input fields
    document.getElementById('input_min_price').value = (minPrice ? minPrice : "0");
    document.getElementById('input_max_price').value = maxPrice ? maxPrice: "100";
 
-  if (minPrice && maxPrice)
-  {
-    callUrl = callUrl + "&min_price=" + minPrice + "&max_price=" + maxPrice;
+    if (minPrice && maxPrice)
+    {
+      callUrl = callUrl + "&min_price=" + minPrice + "&max_price=" + maxPrice;
+    }
   }
+   
   if (brands)
   {
     callUrl = callUrl + "&brand=" + brands;
