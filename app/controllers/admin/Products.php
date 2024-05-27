@@ -364,6 +364,8 @@ class Products extends MY_Controller
         $client->setScopes(['https://www.googleapis.com/auth/content']);
     
         if (isset($_SESSION['google_access_token']) && $_SESSION['google_access_token']) {
+            echo 'Product Id: '.$product_id.'<br />';
+            echo 'Second Time:';exit;
             $client->setAccessToken($_SESSION['google_access_token']);
     
             $contentService = new Google_Service_ShoppingContent($client);
@@ -456,6 +458,8 @@ class Products extends MY_Controller
                 echo "Error inserting/updating product: " . $e->getMessage();
             }
         } else {
+            echo 'Product Id: '.$product_id.'<br />';
+            echo 'First Time:';exit;
             $redirect_uri = admin_url().'products/oauth2callback?product_id='.$product_id;
             header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
         }
