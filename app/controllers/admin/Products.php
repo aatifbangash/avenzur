@@ -26,7 +26,7 @@ class Products extends MY_Controller
     }
 
     public function oauth2callback(){
-        $credentialsPath = 'assets/credentials/credentials.json';
+        $credentialsPath = 'assets/credentials/credentials_new.json';
         $client = new Google\Client();
         $client->setAuthConfigFile($credentialsPath);
         $client->setRedirectUri(admin_url().'products/oauth2callback');
@@ -39,6 +39,7 @@ class Products extends MY_Controller
         } else {
             $client->authenticate($_GET['code']);
             $_SESSION['google_access_token'] = $client->getAccessToken();
+            echo 'Access Token: '.$_SESSION['google_access_token'];exit;
             $redirect_uri = admin_url().'products/google_merch_apis';
             header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
         }
