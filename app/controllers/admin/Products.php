@@ -373,7 +373,6 @@ class Products extends MY_Controller
         $client->setScopes(['https://www.googleapis.com/auth/content']);
     
         if (isset($_SESSION['google_access_token']) && $_SESSION['google_access_token']) {
-            echo '<pre>';print_r($product_details);exit;
             $client->setAccessToken($_SESSION['google_access_token']);
     
             $contentService = new Google_Service_ShoppingContent($client);
