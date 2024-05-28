@@ -35,14 +35,12 @@ class Products extends MY_Controller
         
         if (! isset($_GET['code'])) {
             // Get the product ID from the query parameters
-            $id = $_GET['id'];
-            $auth_url = $client->createAuthUrl() . '&state=' . urlencode($id);
+            $auth_url = $client->createAuthUrl();
             header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
         } else {
             $client->authenticate($_GET['code']);
             $_SESSION['google_access_token'] = $client->getAccessToken();
-            $id = $_GET['state'];
-            $redirect_uri = admin_url().'products/google_merch_apis?id=' . urlencode($id);
+            $redirect_uri = admin_url().'products/google_merch_apis';
             header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
         }
     }
@@ -345,8 +343,10 @@ class Products extends MY_Controller
 
         // Debugging: Ensure the product ID is being received correctly
         if (empty($product_id)) {
-            $this->session->set_flashdata('error', 'Product ID is missing.');
-            return;
+            $product_id = $this->session->userdata('merch_id');
+            $this->session->unset_userdata('merch_id');
+        }else{
+            $this->session->set_userdata('merch_id', $product_id);
         }
         
         // Fetch product details and related information
@@ -373,6 +373,7 @@ class Products extends MY_Controller
         $client->setScopes(['https://www.googleapis.com/auth/content']);
     
         if (isset($_SESSION['google_access_token']) && $_SESSION['google_access_token']) {
+            echo '<pre>';print_r($product_details);exit;
             $client->setAccessToken($_SESSION['google_access_token']);
     
             $contentService = new Google_Service_ShoppingContent($client);
@@ -465,7 +466,7 @@ class Products extends MY_Controller
                 echo "Error inserting/updating product: " . $e->getMessage();
             }
         } else {
-            $redirect_uri = admin_url().'products/oauth2callback?id='.$product_id;
+            $redirect_uri = admin_url().'products/oauth2callback';
             header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
         }
     }
