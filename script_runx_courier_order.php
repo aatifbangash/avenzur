@@ -60,6 +60,11 @@ if ($result->num_rows > 0) {
     exit;
 }
 
+$token  = getBearerToken($courier);
+$orderResponse = makeOrderRequest($courier->url, $token, '');
+$response = json_decode($orderResponse);
+
+
 /* GET J&T SALES WHICH ARE NOT DELIVERED*/
 $stmt = $conn->prepare("SELECT * FROM sma_sales WHERE `courier_id` = '1'
 and (courier_order_status != 'Delivered' or courier_order_status is null) and payment_status = 'paid' and sale_status = 'completed' and id > 666 ");
@@ -67,34 +72,21 @@ and (courier_order_status != 'Delivered' or courier_order_status is null) and pa
 $stmt->execute();
  $result_sales = $stmt->get_result();
  //echo $result_sales->num_rows;
-if ($result_sales->num_rows > 0) {
-
-    // get bearer token
-    $token  = getBearerToken($courier);
-
+if ($response != '') {
     // Fetch associative array for the row
     $orderIds = array();
     $messageBody = '';
-    while ($sale = $result_sales->fetch_assoc()) {
-
-        // $orderResponse = getJTOrders($courier, $sale['id']);
-        // $billCode = $orderResponse->data[0]->billCode;
-
-        // $billResponse = trackJTOrders($courier, $billCode);
-         $order_id = $sale['id'];
-        $order_tracking_id = $sale['courier_order_tracking_id'];
-
-        //echo 'OrderId #'.$order_id.' TrackingId #'.$order_tracking_id;
-
-        $orderResponse = makeOrderRequest($courier->url, $token, $order_tracking_id);
-
-        $response = json_decode($orderResponse);
-        $order = $response->data;
-        $tracking_id = $order->id;
-        $tracking_status = $order->order_status->en_name;
-
-        // echo "<pre>";
-        // print_r($response);
+    //print_r($response);
+    foreach($response->data->data as $order) {
+    //   echo "<pre>";
+    //     print_r($order);exit;
+    //     $tracking_id = $order->id;
+    //     $tracking_status = $order->order_status->en_name;
+       
+    //     echo "<pre>";
+    //     print_r($response);
+    //     echo "<br> Sale id: ".$order_id;
+    //     echo "<br> Status:". $tracking_status;
         // exit;
 
        
@@ -105,9 +97,22 @@ if ($result_sales->num_rows > 0) {
         // $stmt = $conn->prepare("UPDATE sma_sales SET courier_order_tracking_id = ?, courier_order_status = ? WHERE id = ?");
         // $stmt->bind_param("ssi", $tracking_id, $tracking_status, $order_id);
         //if ($stmt->execute() === TRUE) {
-        if (1==1) {
-            //echo 'cusotmerid'.$sale['customer_id'];
+        if (isset( $order->order_status->en_name)) {
 
+            $tracking_id = $order->id;
+            $tracking_status = $order->order_status->en_name;
+            $order_id = $order->order_number;
+
+            $stmt = $conn->prepare("SELECT * FROM sma_sales WHERE `courier_id` = '1'
+                and (courier_order_status != 'Delivered' or courier_order_status is null) and payment_status = 'paid' and sale_status = 'completed' and id > 666 and id = ?  ");
+              $stmt->bind_param("i", $order_id);
+            $stmt->execute();
+            $result_sales = $stmt->get_result();
+            $sale = $result_sales->fetch_assoc();
+            $stmt->close();
+
+            if($sale) {
+            //echo 'cusotmerid'.$sale['customer_id'];
             $stmt_customer = $conn->prepare("SELECT * FROM sma_companies WHERE `id` = ?");
             if (!$stmt_customer) {
                 die('MySQL prepare error: ' . $conn->error);
@@ -308,7 +313,6 @@ if ($result_sales->num_rows > 0) {
                 
                 // Add a recipient
                 //$mail->addAddress('braphael@avenzur.com', 'Benoy');
-                //$mail->addAddress('ama@pharma.com.sa','Dr Amr');
 
                 $mail->Body = $messageBody;
 
@@ -316,19 +320,24 @@ if ($result_sales->num_rows > 0) {
                 if (!$mail->send()) {
                     echo 'Message could not be sent. Mailer Error: ', $mail->ErrorInfo;
                 } else {
-                    $stmt = $conn->prepare("UPDATE sma_sales SET courier_order_tracking_id = ?, courier_order_status = ? WHERE id = ?");
-                    $stmt->bind_param("ssi", $tracking_id, $tracking_status, $order_id);
-                    $stmt->execute() ;
+                 
                     echo 'Message has been sent';
                 }
 
                 $mail->clearAddresses(); 
             
-
             } 
-            $stmt_items->close();
+
+            $stmt_update = $conn->prepare("UPDATE sma_sales SET courier_order_tracking_id = ?, courier_order_status = ? WHERE id = ?");
+            $stmt_update->bind_param("ssi", $tracking_id, $tracking_status, $order_id);
+            $stmt_update->execute() ;
 
 
+           // $stmt_items->close();
+
+        }else {
+            "Order # ".$order_id." does notexist";
+        }
           
 
             //echo "Record updated successfully";
@@ -337,25 +346,19 @@ if ($result_sales->num_rows > 0) {
         }
 
     }
-    $stmt->close();
     // Process your row here
 } else {
     echo "0 sales";
     exit;
 }
 
-
 exit;
-
-
-
 
 // echo "<pre>";
 // print_r($response->data->data);
 if(!isset($response->data->data)) {
     echo "No data found";exit;
 }
-
 
 
 // $data = $response->data->data;
