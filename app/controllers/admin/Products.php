@@ -32,17 +32,17 @@ class Products extends MY_Controller
         $client->setRedirectUri(admin_url().'products/oauth2callback');
         //$client->addScope(Google\Service\Drive::DRIVE_METADATA_READONLY);
         $client->setScopes(['https://www.googleapis.com/auth/content']);
-        $product_id = $_GET['product_id'];
+        
         if (! isset($_GET['code'])) {
             // Get the product ID from the query parameters
-            $product_id = $_GET['product_id'];
-            $auth_url = $client->createAuthUrl() . '&state=' . urlencode($product_id);
+            $id = $_GET['id'];
+            $auth_url = $client->createAuthUrl() . '&state=' . urlencode($id);
             header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
         } else {
             $client->authenticate($_GET['code']);
             $_SESSION['google_access_token'] = $client->getAccessToken();
-            $product_id = $_GET['state'];
-            $redirect_uri = admin_url().'products/google_merch_apis?product_id=' . urlencode($product_id);
+            $id = $_GET['state'];
+            $redirect_uri = admin_url().'products/google_merch_apis?id=' . urlencode($id);
             header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
         }
     }
@@ -342,6 +342,12 @@ class Products extends MY_Controller
 
     public function google_merch_apis(){
         $product_id = $_REQUEST['id'];
+
+        // Debugging: Ensure the product ID is being received correctly
+        if (empty($product_id)) {
+            $this->session->set_flashdata('error', 'Product ID is missing.');
+            return;
+        }
         
         // Fetch product details and related information
         $product_photos = $this->products_model->getProductPhotos($product_id);
@@ -459,7 +465,7 @@ class Products extends MY_Controller
                 echo "Error inserting/updating product: " . $e->getMessage();
             }
         } else {
-            $redirect_uri = admin_url().'products/oauth2callback?product_id='.$product_id;
+            $redirect_uri = admin_url().'products/oauth2callback?id='.$product_id;
             header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
         }
     }
