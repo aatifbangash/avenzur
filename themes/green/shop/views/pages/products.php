@@ -303,21 +303,23 @@ a.me-2.collapse-toggle:hover {
 
                             </div>
                         </div>
-
                         <!-- Brands Section -->
                         <div class="py-3">
-                            <h5 data-bs-toggle="collapse" href="#brandsCollapse" role="button" aria-expanded="true"
-                                aria-controls="brandsCollapse"><b>Brands <i class="bi bi-chevron-down arrow"></i></b></h5>
-                            <div class="collapse show" id="brandsCollapse">
-                            <?php foreach ($brands as $brand): ?>
-                                <div class="form-check">
-                                    <input class="form-check-input brand-checkbox" type="checkbox" value="<?php echo $brand->id; ?>" id="flexCheckDefault">
-                                    <label class="form-check-label" for="flexCheckDefault">
-                                        <a href="#" class="brand-link list-group-item-action " data-brand="<?php echo $brand->slug;?>" > <h6 class=""><?php echo ucfirst(strtolower($brand->name));?></h6> </a>
-                                    </label>
-                                </div>
-                            <?php endforeach; ?>    
-                                
+                            <h5 data-bs-toggle="collapse" href="#brandsCollapse" role="button" aria-expanded="false"
+                                aria-controls="brandsCollapse" id="brandsHeader">
+                                <b>Brands <i class="bi bi-chevron-right arrow" id="brandsIcon"></i></b>
+                            </h5>
+                            <div class="collapse" id="brandsCollapse">
+                                <?php foreach ($brands as $brand): ?>
+                                    <div class="form-check">
+                                        <input class="form-check-input brand-checkbox" type="checkbox" value="<?php echo $brand->id; ?>" id="flexCheckDefault<?php echo $brand->id; ?>">
+                                        <label class="form-check-label" for="flexCheckDefault<?php echo $brand->id; ?>">
+                                            <a href="#" class="brand-link list-group-item-action" data-brand="<?php echo $brand->slug; ?>">
+                                                <h6><?php echo ucfirst(strtolower($brand->name)); ?></h6>
+                                            </a>
+                                        </label>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
                         </div>
                     </div>
@@ -525,4 +527,28 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
+        document.addEventListener('DOMContentLoaded', function() {
+            var brandsHeader = document.getElementById('brandsHeader');
+            // var brandsIcon = document.getElementById('brandsIcon');
+            var brandsCollapse = new bootstrap.Collapse(document.getElementById('brandsCollapse'), {
+                toggle: false
+            });
+
+            brandsHeader.addEventListener('click', function() {
+                brandsCollapse.toggle();
+                // var isShown = brandsHeader.getAttribute('aria-expanded') === 'true';
+
+                // // Toggle the icon based on the collapse state
+                // if (isShown) {
+                //     brandsIcon.classList.remove('bi-chevron-down');
+                //     brandsIcon.classList.add('bi-chevron-right');
+                // } else {
+                //     brandsIcon.classList.remove('bi-chevron-right');
+                //     brandsIcon.classList.add('bi-chevron-down');
+                // }
+
+                // Update the aria-expanded attribute based on the collapse state
+                brandsHeader.setAttribute('aria-expanded', !isShown);
+            });
+        });
 </script>

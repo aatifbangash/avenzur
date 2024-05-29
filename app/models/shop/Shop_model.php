@@ -252,12 +252,28 @@ class Shop_model extends CI_Model
        return $verify_phone_numbers;
     }
 
-    public function getAllBrands()
+    public function getAllBrands($category_slug = null)
     {
         if ($this->shop_settings->hide0) {
             $pc = "(SELECT count(*) FROM {$this->db->dbprefix('products')} WHERE {$this->db->dbprefix('products')}.brand = {$this->db->dbprefix('brands')}.id)";
             $this->db->select("{$this->db->dbprefix('brands')}.*, {$pc} AS product_count", false)->order_by('name');
+            if ($category_slug) {
+                var_dump("herer"); exit;
+                $this->db->join('sma_categories', 'sma_categories.id = sma_products.category_id', 'left')
+                         ->where('sma_categories.slug', $category_slug);
+            }
             $this->db->having('product_count >', 0);
+        }
+        if ($category_slug) {
+            // Start the query to select brands and their product counts
+            $pc = "(SELECT count(*) FROM {$this->db->dbprefix('products')} WHERE {$this->db->dbprefix('products')}.brand = {$this->db->dbprefix('brands')}.id)";
+            $this->db->select("{$this->db->dbprefix('brands')}.*, {$pc} AS product_count", false)
+                    ->from('brands')
+                    ->order_by('brands.name');
+            $this->db->join('products', 'products.brand = brands.id', 'left')
+                    ->join('categories', 'categories.id = products.category_id', 'left')
+                    ->where('categories.slug', $category_slug);
+            return  $this->db->get()->result();
         }
         return $this->db->get('brands')->result();
     }
@@ -279,6 +295,7 @@ class Shop_model extends CI_Model
         // }
 
         // return $categories;
+        
         // new code.
         if ($this->shop_settings->hide0) {
             $pc = "(SELECT count(*) FROM {$this->db->dbprefix('products')} WHERE {$this->db->dbprefix('products')}.category_id = {$this->db->dbprefix('categories')}.id)";
