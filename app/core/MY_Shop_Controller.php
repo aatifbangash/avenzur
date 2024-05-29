@@ -150,7 +150,7 @@ class MY_Shop_Controller extends CI_Controller
             $data['allCountries']  = $this->shop_model->getallCountryR();
             $data['currencies']    = $this->shop_model->getAllCurrencies();
             $data['pages']         = $this->shop_model->getAllPages();
-            $data['brands']        = $this->shop_model->getAllBrands($data['category_slug']);
+            $data['brands']        = $this->shop_model->getAllBrands($data);
             $categories            = $this->shop_model->getAllCategories();
             foreach ($categories as $category) {
                 $cat                = $category;

@@ -743,7 +743,6 @@ function searchProducts(t) {
   var special_product = 0;
   var callUrl;
   var currentURL = window.location.href;
-  console.log(currentURL);
   if (currentURL.includes("promo=yes")) {
     promo = 1;
     callUrl = site.shop_url + "search?page=" + filters.page + "&promo=yes";
@@ -767,7 +766,7 @@ function searchProducts(t) {
   // Get the min_price and max_price values
   const minPrice = searchParams.get('min_price');
   const maxPrice = searchParams.get('max_price');
-  const brands = searchParams.get('brand');
+  const brands = searchParams.get('brands');
 
   if (document.getElementById('input_min_price') !== null && document.getElementById('input_max_price') !== null) {
     // Set the values of the input fields
@@ -782,7 +781,7 @@ function searchProducts(t) {
    
   if (brands)
   {
-    callUrl = callUrl + "&brand=" + brands;
+    callUrl = callUrl + "&brands=" + brands;
 
   }
 

@@ -1479,11 +1479,17 @@ class Shop extends MY_Shop_Controller
 
     public function bestsellers()
     {
+        $data['filters'] = [
+            'min_price' => $this->input->get('min_price'),
+            'max_price' =>  $this->input->get('max_price'),
+            'brands' =>  $this->input->get('brands'),
+        ];
         $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->data['location'] = $this->shop_model->getProductLocation();
-        $this->data['best_sellers'] = $this->shop_model->getBestSellers(100);
+        $this->data['best_sellers'] = $this->shop_model->getBestSellers(100, true, $data['filters']);
         $this->data['page_title'] = 'Best Sellers';
-
+        
+        
         $this->page_construct('pages/best_sellers', $this->data);
     }
 
@@ -1534,8 +1540,6 @@ class Shop extends MY_Shop_Controller
         }else{
             $this->data['page_title2'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products')));
         }
-        // var_dump($this->data['brands']); exit;
-        // print_r($filters);
 
         // $this->data['catBrands'] = $this->shop_model->getBrandsByCategoy($filters['category']->id);
 
@@ -1615,6 +1619,7 @@ class Shop extends MY_Shop_Controller
         $filters = $this->input->post('filters') ? $this->input->post('filters', true) : [];
         $filters['min_price'] = $this->input->get('min_price');
         $filters['max_price'] =  $this->input->get('max_price');
+        $filters['brands'] =  $this->input->get('brands');
         $limit = 60;
         $total_rows = $this->shop_model->getProductsCount($filters);
         $filters['limit'] = $limit;
