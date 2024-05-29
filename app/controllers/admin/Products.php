@@ -412,7 +412,7 @@ class Products extends MY_Controller
                     //$productContent->setOfferId($productData['offerId']);
                     $productContent->setChannel($productData['channel']);
                     $productContent->setContentLanguage($productData['contentLanguage']);
-                    $productContent->setTargetCountry($productData['targetCountry']);
+                    //$productContent->setTargetCountry($productData['targetCountry']);
                 }
             } catch (Google\Service\Exception $e) {
                 if ($e->getCode() == 404) {
