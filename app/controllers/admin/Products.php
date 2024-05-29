@@ -353,6 +353,7 @@ class Products extends MY_Controller
         $product_photos = $this->products_model->getProductPhotos($product_id);
         $product_details = $this->products_model->getProductByID($product_id);
         $brand_details = $this->products_model->getBrandByID($product_details->brand);
+        $tax_details = $this->site->getTaxRateByID($product_details->tax_rate);
     
         $photos_arr = array();
         foreach($product_photos as $photo){
@@ -380,6 +381,21 @@ class Products extends MY_Controller
             $productContentId = 'online:en:SA:' . $product_details->code;
     
             $productContent = new Google_Service_ShoppingContent_Product();
+
+            if ($product_details->tax_method == '1' && $tax_details->rate > 0) {
+                $productTaxPercent = $tax_details->rate;
+    
+                if ($product_details->promotion == 1) {
+                    $productPromoPrice = $product_details->promo_price;
+                    $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                    $product_details->promo_price = $productPromoPrice + $promoProductTaxAmount;
+                }
+    
+                $productPrice = $product_details->price;
+                $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+                $product_details->price = $productPrice + $productTaxAmount;
+            }
+
             $productData = [
                 'channel' => 'online',
                 'contentLanguage' => 'en',
@@ -410,7 +426,7 @@ class Products extends MY_Controller
                 // If product exists, update the existing product
                 if ($existingProduct) {
                     //$productContent->setOfferId($productData['offerId']);
-                    $productContent->setChannel($productData['channel']);
+                    //$productContent->setChannel($productData['channel']);
                     //$productContent->setContentLanguage($productData['contentLanguage']);
                     //$productContent->setTargetCountry($productData['targetCountry']);
                 }
