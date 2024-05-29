@@ -3637,10 +3637,14 @@ class Products extends MY_Controller
         $option_id = $analyzed['option_id'];
         $sr        = addslashes($sr);
 
-        $rows = $this->products_model->getQASuggestions($sr);
+        $rows = $this->products_model->getQASuggestions($sr); 
         if ($rows) {
             foreach ($rows as $row) {
                 $row->qty    = 1;
+                $row->batchno  = '';
+                $row->expiry   = '';
+                $row->sale_price = '';
+                $row->unit_cost  = '';
                 $options     = $this->products_model->getProductOptions($row->id);
                 $row->option = $option_id;
                 $row->serial = '';
