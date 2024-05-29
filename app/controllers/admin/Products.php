@@ -427,7 +427,9 @@ class Products extends MY_Controller
                     return;
                 }
             }
-    
+            echo '<pre>';
+            print_r($existingProduct);
+            exit;
             // Set remaining product data
             $productContent->setTitle($productData['title']);
             $productContent->setDescription($productData['description']);
