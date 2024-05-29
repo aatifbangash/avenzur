@@ -409,7 +409,7 @@ class Products extends MY_Controller
                 
                 // If product exists, update the existing product
                 if ($existingProduct) {
-                    $productContent->setOfferId($productData['offerId']);
+                    //$productContent->setOfferId($productData['offerId']);
                     $productContent->setChannel($productData['channel']);
                     $productContent->setContentLanguage($productData['contentLanguage']);
                     $productContent->setTargetCountry($productData['targetCountry']);
@@ -427,9 +427,7 @@ class Products extends MY_Controller
                     return;
                 }
             }
-            echo '<pre>';
-            print_r($existingProduct);
-            exit;
+            
             // Set remaining product data
             $productContent->setTitle($productData['title']);
             $productContent->setDescription($productData['description']);
