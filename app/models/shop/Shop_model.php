@@ -252,28 +252,41 @@ class Shop_model extends CI_Model
        return $verify_phone_numbers;
     }
 
-    public function getAllBrands($category_slug = null)
+    public function getAllBrands($data)
     {
+        $category_slug = isset($data['category_slug']) ? $data['category_slug'] : null;
+        $promo = isset($data['filters']['promo']) ? $data['filters']['promo'] : null;
+
         if ($this->shop_settings->hide0) {
             $pc = "(SELECT count(*) FROM {$this->db->dbprefix('products')} WHERE {$this->db->dbprefix('products')}.brand = {$this->db->dbprefix('brands')}.id)";
             $this->db->select("{$this->db->dbprefix('brands')}.*, {$pc} AS product_count", false)->order_by('name');
             if ($category_slug) {
-                var_dump("herer"); exit;
                 $this->db->join('sma_categories', 'sma_categories.id = sma_products.category_id', 'left')
                          ->where('sma_categories.slug', $category_slug);
             }
             $this->db->having('product_count >', 0);
         }
-        if ($category_slug) {
+        if ($category_slug  || $promo) {
             // Start the query to select brands and their product counts
             $pc = "(SELECT count(*) FROM {$this->db->dbprefix('products')} WHERE {$this->db->dbprefix('products')}.brand = {$this->db->dbprefix('brands')}.id)";
             $this->db->select("{$this->db->dbprefix('brands')}.*, {$pc} AS product_count", false)
-                    ->from('brands')
-                    ->order_by('brands.name');
-            $this->db->join('products', 'products.brand = brands.id', 'left')
-                    ->join('categories', 'categories.id = products.category_id', 'left')
-                    ->where('categories.slug', $category_slug);
-            return  $this->db->get()->result();
+                    ->from('brands')->order_by('brands.name')
+                    ->group_by('brands.id');
+                     // Ensure that each brand appears only once
+            $this->db->join('products', 'products.brand = brands.id', 'left');
+
+            // If category_slug is provided, join with products and categories tables and filter by category slug
+            if ($category_slug) {
+                $this->db->join('products', 'products.brand = brands.id', 'left')
+                        ->join('categories', 'categories.id = products.category_id', 'left')
+                        ->where('categories.slug', $category_slug);
+            }
+            if ($promo) {
+                $this->db->where("{$this->db->dbprefix('products')}.promotion", 1);
+            }
+
+            // Execute the query
+            return $this->db->get()->result();
         }
         return $this->db->get('brands')->result();
     }
@@ -816,8 +829,8 @@ class Shop_model extends CI_Model
 
     }
 
-    public function getBestSellers($limit = 16, $promo = true)
-    {
+    public function getBestSellers($limit = 16, $promo = true, $filters)
+    {   
         $countryId = get_cookie('shop_country', true); //$this->session->userdata('country');
         $this->db->select("
         {$this->db->dbprefix('products')}.id as id, 
@@ -852,9 +865,19 @@ class Shop_model extends CI_Model
             ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_product_qty_onhold_request GROUP BY product_id) AS sma_phqor', 'products.id=sma_phqor.product_id', 'left')
             ->where('products.best_seller', 1)
             ->where('products.quantity >', 0)
-            ->where('hide !=', 1)
+            ->where('hide !=', 1);
             //->where('products.cf1', $countryId)
-            ->limit($limit);
+            if (!empty($filters['brands'])) {
+                $brandIds = explode(',', $filters['brands']);
+                $this->db->where_in('brand', $brandIds);
+            }
+            if (!empty($filters['min_price'])) {
+                $this->db->where('price >=', $filters['min_price']);
+            }
+            if (!empty($filters['max_price'])) {
+                $this->db->where('price <=', $filters['max_price']);
+            }
+            $this->db->limit($limit);
 
         /*if($countryId != '0')
         {
@@ -874,7 +897,7 @@ class Shop_model extends CI_Model
         $this->db->group_by('products.id');
         $this->db->order_by('products.promotion desc');
         $result = $this->db->get('products')->result();
-        //        dd($result);
+            //    var_dump($result); exit;
 
         array_map(function ($row) {
             if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
@@ -1349,7 +1372,6 @@ class Shop_model extends CI_Model
 
     public function getProducts($filters = [])
     {
-
         $this->db->select("
         {$this->db->dbprefix('products')}.id as id,
         {$this->db->dbprefix('categories')}.name as category_name,
