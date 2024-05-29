@@ -203,7 +203,7 @@ function loadItems() {
         });
 
         var col = 7;
-        var tfoot = '<tr id="tfoot" class="tfoot active"><th colspan="'+col+'">TotalM</th><th class="text-center">' + formatQty(parseFloat(count) - 1) + '</th>';
+        var tfoot = '<tr id="tfoot" class="tfoot active"><th colspan="'+col+'">Total</th><th class="text-center">' + formatQty(parseFloat(count) - 1) + '</th>';
         if (site.settings.product_serial == 1) { tfoot += '<th></th>'; }
         tfoot += '<th class="text-center"><i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i></th></tr>';
         $('#qaTable tfoot').html(tfoot);
