@@ -106,7 +106,6 @@ class Main extends MY_Shop_Controller
 
     public function index()
     {
-
         if ($_SERVER['HTTP_HOST'] === 'www.avenzur.com') {
             header('Location: https://avenzur.com');
         }
@@ -145,7 +144,7 @@ class Main extends MY_Shop_Controller
         $this->data['featured_categories'] = $this->shop_model->getFeaturedCategories();
         $this->data['popular_categories'] = $this->shop_model->getPopularCategories();
 
-        $this->data['best_sellers'] = $this->shop_model->getBestSellers();
+        $this->data['best_sellers'] = $this->shop_model->getBestSellers(16, true, []);
         $this->data['best_sellers_additional'] = $this->shop_model->getBestSellersAdditional();
         $this->data['featured_products'] = $this->shop_model->getFeaturedProducts();
         $this->data['special_offers'] = $this->shop_model->getSpecialOffers();
