@@ -1009,6 +1009,7 @@ class Sales_model extends CI_Model
 
     public function updateSale($id, $data, $items = [], $attachments = [])
     {
+        
         $this->db->trans_start();
         $this->resetSaleActions($id, false, true);
         if ($data['sale_status'] == 'completed') {
@@ -1083,6 +1084,8 @@ class Sales_model extends CI_Model
             }
 
             if ($data['sale_status'] == 'completed') {
+                  //handle inventory movement
+                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
                 $this->site->syncPurchaseItems($cost);
             }
 

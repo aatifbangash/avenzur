@@ -84,6 +84,7 @@
                     success: function (data) {
                         $(this).removeClass('ui-autocomplete-loading');
                         response(data);
+                         
                     }
                 });
             },
@@ -339,7 +340,7 @@
 
                 <div id="bottom-total" class="well well-sm" style="margin-bottom: 0;">
                     <table class="table table-bordered table-condensed totals" style="margin-bottom:0;">
-                        <tr class="warning">
+                        <tr class="warning"> 
                             <td><?= lang('items') ?> <span class="totals_val pull-right" id="titems">0</span></td>
                             <td><?= lang('total') ?> <span class="totals_val pull-right" id="total">0.00</span></td>
                             <td><?= lang('shipping') ?> <span class="totals_val pull-right" id="tship">0.00</span></td>

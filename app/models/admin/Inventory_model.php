@@ -15,7 +15,7 @@ class Inventory_model extends CI_Model {
             'product_id' => $product_id,
             'batch_number' => $batch_no,
             'type' => $type,
-            'quantity' => ($type === 'sale' || $type === 'return_to_supplier' || $type === 'transfer_out' || $type === 'adjustment_decrease') ? -$quantity : $quantity,
+            'quantity' => ($type === 'sale' || $type === 'pos' || $type === 'return_to_supplier' || $type === 'transfer_out' || $type === 'adjustment_decrease') ? -$quantity : $quantity,
             'location_id' => $location_id,
         );
         //print_r($data);exit;

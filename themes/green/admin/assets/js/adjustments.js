@@ -115,9 +115,14 @@ $(document).ready(function () {
         }
         var new_qty = parseFloat($(this).val()),
         item_id = row.attr('data-item-id');
-        qaitems[item_id].row.qty = new_qty;
+        qaitems[item_id].row.qty = new_qty;   
+        qaitems[item_id].row.batchno = row.find('.rbatchno').val(); 
+        qaitems[item_id].row.expiry = row.find('.rexpiry').val(); 
+        qaitems[item_id].row.sale_price = row.find('.rsaleprice').val(); 
+        qaitems[item_id].row.unit_cost = row.find('.runitcost').val();   
+        qaitems[item_id].row.serial = row.find('.rserial').val();  
         localStorage.setItem('qaitems', JSON.stringify(qaitems));
-        loadItems();
+        loadItems(); 
     });
 
     $(document).on("change", '.rtype', function () {
@@ -148,17 +153,21 @@ function loadItems() {
 
     if (localStorage.getItem('qaitems')) {
         count = 1;
-        an = 1;
-        $("#qaTable tbody").empty();
+        an = 1;  
+        $("#qaTable tbody").empty(); 
         qaitems = JSON.parse(localStorage.getItem('qaitems'));
         sortedItems = (site.settings.item_addition == 1) ? _.sortBy(qaitems, function(o){return [parseInt(o.order)];}) : qaitems;
         $.each(sortedItems, function () {
+        
             var item = this;
             var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
             item.order = item.order ? item.order : new Date().getTime();
             var product_id = item.row.id, oqty = item.row.oqty, item_qty = item.row.qty, item_option = item.row.option, item_code = item.row.code, item_serial = item.row.serial, item_name = item.row.name.replace(/"/g, "&#034;").replace(/'/g, "&#039;");
-            var type = item.row.type ? item.row.type : '';
-
+            var type = item.row.type ? item.row.type : '';  
+            var batchno= item.row.batchno;
+            var expiry= item.row.expiry;
+            var sale_price= item.row.sale_price;
+            var unit_cost= item.row.unit_cost; 
             var opt = $("<select id=\"poption\" name=\"variant\[\]\" class=\"form-control select rvariant\" />");
             if(item.options !== false) {
                 $.each(item.options, function () {
@@ -176,14 +185,14 @@ function loadItems() {
             var newTr = $('<tr id="row_' + row_no + '" class="row_' + item_id + '" data-item-id="' + item_id + '"></tr>');
             tr_html = '<td><input name="product_id[]" type="hidden" class="rid" value="' + product_id + '"><span class="sname" id="name_' + row_no + '">' + item_code +' - ' + item_name +'</span></td>';
             tr_html += '<td>'+(opt.get(0).outerHTML)+'</td>';
-            tr_html += '<td><input class="form-control rbatchno" name="batchno[]" type="text" value=""></td>';
-            tr_html += '<td><input class="form-control date rexpiry" name="expiry[]" type="text"></td>';
-            tr_html += '<td><input class="form-control rsaleprice" name="sale_price[]" type="text" value=""></td>';
-            tr_html += '<td><input class="form-control runitcost" name="unit_cost[]" type="text" value=""></td>';
+            tr_html += '<td><input class="form-control rbatchno" name="batchno[]" type="text" value="'+batchno+'" autocomplete="off"></td>';
+            tr_html += '<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="'+expiry+'" autocomplete="off"></td>';
+            tr_html += '<td><input class="form-control rsaleprice" name="sale_price[]" type="text" value="'+sale_price+'" autocomplete="off"></td>';
+            tr_html += '<td><input class="form-control runitcost" name="unit_cost[]" type="text" value="'+unit_cost+'" autocomplete="off"></td>';
             tr_html += '<td><select name="type[]" class="form-contol select rtype" style="width:100%;"><option value="subtraction"'+(type == 'subtraction' ? ' selected' : '')+'>'+type_opt.subtraction+'</option><option value="addition"'+(type == 'addition' ? ' selected' : '')+'>'+type_opt.addition+'</option></select></td>';
             tr_html += '<td><input class="form-control text-center rquantity" tabindex="'+((site.settings.set_focus == 1) ? an : (an+1))+'" name="quantity[]" type="text" value="' + formatQuantity2(item_qty) + '" data-id="' + row_no + '" data-item="' + item_id + '" id="quantity_' + row_no + '" onClick="this.select();"><input type="hidden" name="edit_quantity[]" value="'+oqty+'"></td>';
             if (site.settings.product_serial == 1) {
-                tr_html += '<td class="text-right"><input class="form-control input-sm rserial" name="serial[]" type="text" id="serial_' + row_no + '" value="'+item_serial+'"></td>';
+                tr_html += '<td class="text-right"><input class="form-control input-sm rserial" name="serial[]" type="text" id="serial_' + row_no + '" value="'+item_serial+'" autocomplete="off"></td>';
             }
             tr_html += '<td class="text-center"><i class="fa fa-times tip qadel" id="' + row_no + '" title="Remove" style="cursor:pointer;"></i></td>';
             newTr.html(tr_html);
@@ -193,7 +202,7 @@ function loadItems() {
 
         });
 
-        var col = 3;
+        var col = 7;
         var tfoot = '<tr id="tfoot" class="tfoot active"><th colspan="'+col+'">Total</th><th class="text-center">' + formatQty(parseFloat(count) - 1) + '</th>';
         if (site.settings.product_serial == 1) { tfoot += '<th></th>'; }
         tfoot += '<th class="text-center"><i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i></th></tr>';
@@ -234,9 +243,11 @@ function add_adjustment_item(item) {
         }
         qaitems[item_id].row.qty = new_qty;
 
+       
+
     } else {
         qaitems[item_id] = item;
-    }
+    }  
     qaitems[item_id].order = new Date().getTime();
     localStorage.setItem('qaitems', JSON.stringify(qaitems));
     loadItems();
