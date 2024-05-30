@@ -175,12 +175,18 @@
       })(window, document,
         'https://sc-static.net/scevent.min.js');
 
-      var normalizedEmail = normalizeEmail('marketing@avenzur.com');
-      var normalizedPhone = normalizePhone('+966551251997');
+      var userSessionEmail = "<?php echo $this->session->userdata('email'); ?>";
+      if (userSessionEmail) {
+        var normalizedEmail = normalizeEmail(userSessionEmail);
+      }else{
+        var normalizedEmail = '';
+      }
+      
+      //var normalizedPhone = normalizePhone('+966551251997');
 
       snaptr('init', '48414e12-17e7-4ba1-bfd6-407aa41991b0', {
         'user_email': normalizedEmail,
-        'user_phone': normalizedPhone
+        //'user_phone': normalizedPhone
       });
 
       snaptr('track', 'PAGE_VIEW');
@@ -191,6 +197,7 @@
     <?php
   }
   ?>
+
   <style>
     .inputs input.error-border {
       border: 1px solid red;

@@ -297,6 +297,12 @@ if ($this->Settings->indian_gst) {
 
 
 <script>
+
+    if (userSessionEmail) {
+
+        snaptr('track', 'ADD_CART');
+    }
+
     function showCardDetails(){
         document.getElementById('card_name').style.display = 'block';
         document.getElementById('card_number').style.display = 'block';
