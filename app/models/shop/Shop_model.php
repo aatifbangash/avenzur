@@ -268,21 +268,23 @@ class Shop_model extends CI_Model
         }
         if ($category_slug  || $promo) {
             // Start the query to select brands and their product counts
-            $pc = "(SELECT count(*) FROM {$this->db->dbprefix('products')} WHERE {$this->db->dbprefix('products')}.brand = {$this->db->dbprefix('brands')}.id)";
+            $pc = "(SELECT count(*) FROM {$this->db->dbprefix('products')} AS p1 WHERE p1.brand = {$this->db->dbprefix('brands')}.id)";
             $this->db->select("{$this->db->dbprefix('brands')}.*, {$pc} AS product_count", false)
                     ->from('brands')->order_by('brands.name')
                     ->group_by('brands.id');
-                     // Ensure that each brand appears only once
-            $this->db->join('products', 'products.brand = brands.id', 'left');
+
+            // Ensure that each brand appears only once
+            $this->db->join("{$this->db->dbprefix('products')} AS p2", 'p2.brand = brands.id', 'left');
 
             // If category_slug is provided, join with products and categories tables and filter by category slug
             if ($category_slug) {
-                $this->db->join('products', 'products.brand = brands.id', 'left')
-                        ->join('categories', 'categories.id = products.category_id', 'left')
+                $this->db->join("{$this->db->dbprefix('products')} AS p3", 'p3.brand = brands.id', 'left')
+                        ->join('categories', 'categories.id = p3.category_id', 'left')
                         ->where('categories.slug', $category_slug);
             }
+
             if ($promo) {
-                $this->db->where("{$this->db->dbprefix('products')}.promotion", 1);
+                $this->db->where("p2.promotion", 1); // Adjusted this line to reference the correct alias
             }
 
             // Execute the query
