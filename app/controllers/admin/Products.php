@@ -330,8 +330,6 @@ class Products extends MY_Controller
                     $this->session->set_flashdata('error', lang('error connecting to meta'));
                     admin_redirect('products/edit/' . $product_id);
                 } else {
-                    echo '<pre>';
-                    print_r($response);exit;
                     $this->session->set_flashdata('message', lang('product pushed to meta'));
                     admin_redirect('products/edit/' . $product_id);
                 }
