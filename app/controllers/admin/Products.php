@@ -491,7 +491,7 @@ class Products extends MY_Controller
         //$csvFile = 'https://avenzur.com/assets/uploads/temp/iherb_updated.csv';
         //$csvFile = '/var/www/backup25May2023/assets/uploads/temp/iherb_updated.csv';
 
-        $csvFile = $this->upload_path.'temp/Master-Data-actual-file.csv';
+        $csvFile = $this->upload_path.'temp/new-products-sheet.csv';
         
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
@@ -510,8 +510,11 @@ class Products extends MY_Controller
         // Iterate through rows in the CSV file
         while (($rowData = fgetcsv($handle)) !== false) {
             // Assuming 'B' and 'C' are the columns for 'code' and 'ic' respectively
-            $ibarCode = $rowData[1]; 
-            //$asconCode = $rowData[2]; 
+            $ibarCode = $rowData[0]; 
+            $asconCode = $rowData[1]; 
+            $itemName = $rowData[2];
+            $itemPrice = $rowData[3];
+            $itemVat = $rowData[4];
     
             // Find the product in the database based on the code
             $this->db->select('*');
@@ -522,11 +525,11 @@ class Products extends MY_Controller
             $product = $query->row();
             
             if ($product) {
-                //echo "Product found with IBC $ibarCode and will not be updated.<br>";
-                echo $ibarCode."<br>";
+                echo "Product found with IBC $ibarCode and will not be updated.<br>";
+                //echo $ibarCode."<br>";
             } else {
                 //echo "Product not found in system with IBC $ibarCode <br>";
-                /*$this->db->select('*');
+                $this->db->select('*');
                 $this->db->from('sma_products');
                 $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$asconCode, NULL, FALSE);
                 $query_new = $this->db->get();
@@ -534,18 +537,18 @@ class Products extends MY_Controller
 
                 if ($product_new) {
                     // Update the code in the database with the ic from CSV
-                    $dataToUpdate = [
+                    /*$dataToUpdate = [
                         'code' => $ibarCode,
                         'ascon_code' => $asconCode,
                         'imported' => 1
                     ];
         
                     $this->db->where('id', $product_new->id);
-                    $this->db->update('sma_products', $dataToUpdate);
-                    echo "Updated product with code $asconCode. with the IBC $ibarCode<br>";
+                    $this->db->update('sma_products', $dataToUpdate);*/
+                    echo "Product with code $asconCode will be updated with the IBC $ibarCode<br>";
                 }else{
                     echo "Product not found in system with IBC $ibarCode and Ascon Code $asconCode <br>";
-                }*/
+                }
             }
         }
     
