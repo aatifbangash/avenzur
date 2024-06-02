@@ -106,7 +106,7 @@
             </div>
             <div class="d-flex justify-content-between pb-2 align-items-center  footer-end">
               
-              <img src="<?= base_url('assets/images/banners/pay.png'); ?>" alt="logo" class="footer-pay w-50 mt-3">
+              <img src="<?= base_url('assets/images/banners/pay-new.png'); ?>" alt="logo" class="footer-pay w-50 mt-3">
               
               
                 <div class="mobficon justify-content-start mt-3" style="text-align:center;">
