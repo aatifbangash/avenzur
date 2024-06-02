@@ -544,8 +544,8 @@ class Products extends MY_Controller
                         'code' => $ibarCode,
                         'name' => $itemName,
                         'price' => $itemPrice,
-                        'ascon_code' => $asconCode,
-                        'imported' => 3
+                        'ascon_code' => $asconCode
+                        //'imported' => 3
                     ];
         
                     $this->db->where('id', $product_new->id);
