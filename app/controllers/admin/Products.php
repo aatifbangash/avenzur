@@ -514,7 +514,9 @@ class Products extends MY_Controller
             $asconCode = $rowData[1]; 
             $itemName = $rowData[2];
             $itemPrice = $rowData[3];
-            $itemVat = $rowData[4];
+            //$itemVat = $rowData[4];
+
+            $tax_rate = $rowData[4] == 0 ? 1 : 5;
     
             // Find the product in the database based on the code
             $this->db->select('*');
@@ -537,14 +539,17 @@ class Products extends MY_Controller
 
                 if ($product_new) {
                     // Update the code in the database with the ic from CSV
-                    /*$dataToUpdate = [
+                    $dataToUpdate = [
+                        'tax_rate' => $tax_rate,
                         'code' => $ibarCode,
+                        'name' => $itemName,
+                        'price' => $itemPrice,
                         'ascon_code' => $asconCode,
-                        'imported' => 1
+                        'imported' => 3
                     ];
         
                     $this->db->where('id', $product_new->id);
-                    $this->db->update('sma_products', $dataToUpdate);*/
+                    $this->db->update('sma_products', $dataToUpdate);
                     echo "Product with code $asconCode will be updated with the IBC $ibarCode<br>";
                 }else{
                     echo "Product not found in system with IBC $ibarCode and Ascon Code $asconCode <br>";
