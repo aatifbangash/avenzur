@@ -235,8 +235,8 @@ if ($this->Settings->indian_gst) {
                         <div class="text-end">
                             <h4 class="m-0 my-2" id="sub-total-amt"> <?= $this->sma->formatMoney($total + $this->cart->get_total_discount(), $selected_currency->symbol); ?>
                                                </h4>
-                            <h4 class="text-success m-0 my-2" id="shipping-price"> <?= $this->sma->formatNumber($shipping); ?></span><?= $selected_currency->symbol ?></h4>
-                            <h4 class="text-success m-0 my-2" id="discount-amt"> <?= $this->sma->formatNumber($this->cart->get_total_discount()); ?></span><?= $selected_currency->symbol ?></h4>
+                            <h4 class="text-success m-0 my-2" id="shipping-price"> <?= $this->sma->formatNumber($shipping); ?><?= $selected_currency->symbol ?></h4>
+                            <h4 class="text-success m-0 my-2" id="discount-amt"> <?= $this->sma->formatNumber($this->cart->get_total_discount()); ?><?= $selected_currency->symbol ?></h4>
                         </div>
                     </div>
                     <hr class="mb-0 mt-2">
@@ -888,10 +888,12 @@ if ($this->Settings->indian_gst) {
                 $("#express-delivery-details").show();
             }
 
-            $('#shipping-price').text(parseFloat(shipping).toFixed(2))
+            
             if(shipping > 0){
+                $('#shipping-price').text(parseFloat(shipping).toFixed(2))
                 $('#shipping-fees-span').text(parseFloat(shipping).toFixed(2));
             }else{
+                $('#shipping-price').text('Free');
                 $('#shipping-fees-span').text('Free');
             }
             
