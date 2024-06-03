@@ -3100,7 +3100,7 @@ class Reports extends MY_Controller
             ->group_by('sale_items.product_id') 
             ->order_by("total_pieces",'DESC')
             ;  
-            $this->db->where("{$this->db->dbprefix('sales')}.shop",0);  
+            $this->db->where("{$this->db->dbprefix('sales')}.shop",1);  
             
             if(!empty( $keyword)){  
                 $this->db->group_start();  
@@ -3191,7 +3191,7 @@ class Reports extends MY_Controller
                 ; 
                 //->join($si, 'FSI.sale_id=sales.id', 'left')
                 //->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')   
-            $this->datatables->where("{$this->db->dbprefix('sales')}.shop",0);  
+            $this->datatables->where("{$this->db->dbprefix('sales')}.shop",1);  
             $keyword=  trim($this->input->post('keyword'));  
             if(!empty( $keyword)){  
                 $this->db->group_start();  
