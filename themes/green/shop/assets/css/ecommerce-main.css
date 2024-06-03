@@ -408,7 +408,7 @@ html[lang='ar'] .specialOfferP .card-title {
   height: 150px;
 }
 
-html[lang='ar'] .addtocart{font-size: 16px}
+html[lang='ar'] .addtocart{font-size: 12px}
 .addtocart:hover {
   color: white !important;
 }
