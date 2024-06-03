@@ -1641,6 +1641,8 @@ class Shop extends MY_Shop_Controller
                     $value['special_price'] = isset($value['special_price']) && !empty($value['special_price']) ? $this->sma->setCustomerGroupPrice($value['special_price'], $this->customer_group) : 0;
                     $value['formated_special_price'] = $this->sma->convertMoney($value['special_price']);
                 }
+
+                $value['promotion'] = $this->sma->isPromo($value) ? 1 : null;
             }
 
             $pagination = pagination('shop/products', $total_rows, $limit);
