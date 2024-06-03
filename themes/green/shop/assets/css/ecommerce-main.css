@@ -2648,7 +2648,7 @@ html [lang='ar']  .contact-info  { padding-left: 0px !important; padding-right: 
     .feature-cards .card-body h5 {
       font-size: 14px;}
       .feature-cards .slick-track {margin-left: -6px;}
-      .address-but {margin-bottom: 10px !important; }
+      .address-but {margin-bottom: 10px !important;float:right; }
  
 
 /****************/
