@@ -12,6 +12,16 @@ $v = '';
 ?>
 
 <script>
+
+function integerFormat(data, type, row) {
+        if (type === 'display' || type === 'filter') {
+            return parseInt(data).toLocaleString();
+        }
+        return data;
+    }
+
+
+
     $(document).ready(function () {
         oTable = $('#SlRData').dataTable({
             'bFilter': false,
@@ -37,7 +47,8 @@ $v = '';
               //  nRow.className = (aData[5] > 0) ? "invoice_link2" : "invoice_link2 warning";
                 return nRow;
             },
-            "aoColumns": [{"bSortable": false,"mRender": img_hl},null, null, null, null],
+            "aoColumns": [{"bSortable": false,"mRender": img_hl},null, null,  {"mRender": integerFormat}
+            , {"mRender": currencyFormat}],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0, total_qty = 0, balance = 0;
                 for (var i = 0; i < aaData.length; i++) {
