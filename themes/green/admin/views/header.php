@@ -1017,6 +1017,14 @@
                                             <i class="fa fa-building"></i><span class="text"> <?= lang('warehouse_stock'); ?></span>
                                         </a>
                                     </li>
+
+                                    
+                                    <li id="reports_fast_moving_items">
+                                        <a href="<?= admin_url('reports/fast_moving_items') ?>">
+                                            <i class="fa fa-line-chart"></i><span class="text"> <?= lang('Fast_Moving_Items'); ?></span>
+                                        </a>
+                                    </li>
+
                                     <li id="reports_best_sellers">
                                         <a href="<?= admin_url('reports/best_sellers') ?>">
                                             <i class="fa fa-line-chart"></i><span class="text"> <?= lang('best_sellers'); ?></span>

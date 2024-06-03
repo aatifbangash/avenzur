@@ -29,8 +29,7 @@ class Reports extends MY_Controller
         ];
 
         $this->load->admin_model('deals_model');
-    }
-
+    } 
     public function adjustments($warehouse_id = null)
     {
         $this->sma->checkPermissions('products');
@@ -3056,6 +3055,160 @@ class Reports extends MY_Controller
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('register_report')]];
         $meta = ['page_title' => lang('register_report'), 'bc' => $bc];
         $this->page_construct('reports/register', $meta, $this->data);
+    }
+
+    public function fast_moving_items()
+    {
+        $this->sma->checkPermissions('sales');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['users'] = $this->reports_model->getStaff();
+       // $this->data['warehouses'] = $this->site->getAllWarehouses();
+       // $this->data['billers'] = $this->site->getAllCompanies('biller');
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('fast_moving_items')]];
+        $meta = ['page_title' => lang('fast_moving_items'), 'bc' => $bc];
+        $this->page_construct('reports/fast_moving_items', $meta, $this->data);
+    }
+
+    public function ecommerce_fast_moving_items($pdf = null, $xls = null)
+    {
+        $this->sma->checkPermissions('sales', true);
+        // $product = $this->input->get('product') ? $this->input->get('product') : null; 
+        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null; 
+        $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;
+
+        if ($start_date) {
+            $start_date = $this->sma->fld($start_date);
+            $end_date = $this->sma->fld($end_date);
+        }
+        if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+            $user = $this->session->userdata('user_id');
+        }
+
+        if ($pdf || $xls) {
+           
+            $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null; 
+            $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
+            $keyword = $this->input->get('keyword') ? $this->input->get('keyword') : null;
+
+            $this->db
+            ->select(" {$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name,  
+            SUM({$this->db->dbprefix('sale_items')}.quantity) as total_pieces, SUM({$this->db->dbprefix('sale_items')}.subtotal) as total_amount 
+            ", false)
+            ->from('sale_items')
+            ->join('sales', 'sales.id=sale_items.sale_id', 'left')
+            ->join('products', 'products.id=sale_items.product_id', 'left')
+            ->group_by('sale_items.product_id') 
+            ->order_by("total_pieces",'DESC')
+            ;  
+            $this->db->where("{$this->db->dbprefix('sales')}.shop",0);  
+            
+            if(!empty( $keyword)){  
+                $this->db->group_start();  
+                $this->db->where("{$this->db->dbprefix('products')}.code",$keyword);  
+                $this->db->or_like("{$this->db->dbprefix('products')}.name",$keyword,'both');  
+                $this->db->group_end();   
+             } 
+            // if ($product) {
+            //     $this->db->where('sale_items.product_id', $product);
+            // }  
+            if ($start_date) {
+                $this->db->where($this->db->dbprefix('sales') . '.date BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+            }
+
+            $q = $this->db->get();
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data[] = $row;
+                }
+            } else {
+                $data = null;
+            }
+
+            if (!empty($data)) {
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('ecommerce_fast_moving_items'));
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('quantities_sold'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('total_amount')); 
+                $row = 2;
+                $gtotal_pieces = 0;
+                $gtotal_amount = 0;
+                
+                foreach ($data as $data_row) {         //  $row, $this->sma->hrld($data_row->code) // 
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->total_pieces);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->total_amount); 
+                    $gtotal_pieces += $data_row->total_pieces;
+                    $gtotal_amount += $data_row->total_amount; 
+                    $row++;
+                }
+                $this->excel->getActiveSheet()->getStyle('C' . $row . ':D' . $row)->getBorders()
+                    ->getTop()->setBorderStyle('medium');
+                $this->excel->getActiveSheet()->SetCellValue('C' . $row, $gtotal_pieces);
+                $this->excel->getActiveSheet()->SetCellValue('D' . $row, $gtotal_amount);
+                // $this->excel->getActiveSheet()->SetCellValue('H' . $row, $balance); 
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20); 
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+                $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
+                $filename = 'ecomerce_fast_moving_report';
+                $this->load->helper('excel');
+                create_excel($this->excel, $filename);
+            }
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER['HTTP_REFERER']);
+        } else {
+ 
+            $si = "( SELECT sale_id, product_id, serial_no, GROUP_CONCAT(CONCAT({$this->db->dbprefix('sale_items')}.product_name, '__', {$this->db->dbprefix('sale_items')}.quantity) SEPARATOR '___') as item_nane from {$this->db->dbprefix('sale_items')} ";
+            if ($product || $serial) {
+                $si .= ' WHERE ';
+            }
+            if ($product) {
+                $si .= " {$this->db->dbprefix('sale_items')}.product_id = {$product} ";
+            }
+            if ($product && $serial) {
+                $si .= ' AND ';
+            }
+            if ($serial) {
+                $si .= " {$this->db->dbprefix('sale_items')}.serial_no LIKe '%{$serial}%' ";
+            }
+            $si .= " GROUP BY {$this->db->dbprefix('sale_items')}.sale_id ) FSI";
+            $this->load->library('datatables'); 
+            $this->datatables
+                ->select("{$this->db->dbprefix('products')}.image, {$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name,  
+                SUM({$this->db->dbprefix('sale_items')}.quantity) as total_pieces, SUM({$this->db->dbprefix('sale_items')}.subtotal) as total_amount 
+                ", false)
+                ->from('sale_items')
+                ->join('sales', 'sales.id=sale_items.sale_id', 'left')
+                ->join('products', 'products.id=sale_items.product_id', 'left')
+                ->group_by('sale_items.product_id') 
+               // ->order_by("{$this->db->dbprefix('sale_items')}.product_code",'DESC')
+                ; 
+                //->join($si, 'FSI.sale_id=sales.id', 'left')
+                //->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')   
+            $this->datatables->where("{$this->db->dbprefix('sales')}.shop",0);  
+            $keyword=  trim($this->input->post('keyword'));  
+            if(!empty( $keyword)){  
+                $this->db->group_start();  
+                $this->datatables->where("{$this->db->dbprefix('products')}.code",$keyword);  
+                $this->db->or_like("{$this->db->dbprefix('products')}.name",$keyword,'both');  
+                $this->db->group_end();   
+               }
+
+            if ($start_date) {
+                $this->datatables->where($this->db->dbprefix('sales') . '.date BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+            } 
+           // $this->db->order_by("total_pieces",'DESC');  
+          $action =''; 
+          $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
+          . lang('view_image') . '</a></li>';  
+           echo $this->datatables->generate();
+        }
     }
 
     public function sales()
