@@ -1330,6 +1330,8 @@ class Shop extends MY_Shop_Controller
         }
         $this->shop_model->updateProductViews($product->id, $product->views);
 
+        $product->promotion = $this->sma->isPromo($product) ? 1 : 0;
+
         if ($product->tax_method == '1' && $product->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
             $productTaxPercent = $product->taxPercentage;
 
