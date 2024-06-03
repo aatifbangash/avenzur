@@ -169,7 +169,8 @@
 <!--<script src="<?php //echo $assets; ?>js/weglot.min.js"></script>-->
 <script>
   Weglot.initialize({
-    api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55'
+    api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55',
+    translate_search: true
   });
 
   var currentLanguage = Weglot.getCurrentLang();
