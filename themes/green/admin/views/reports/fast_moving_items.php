@@ -46,7 +46,7 @@ $v = '';
                     // balance += parseFloat(aaData[aiDisplay[i]][7]);
                 }
                 var nCells = nRow.getElementsByTagName('th');
-                 nCells[3].innerHTML = currencyFormat(parseFloat(total_qty));
+                 nCells[3].innerHTML = currencyFormat(total_qty);
                  nCells[4].innerHTML = currencyFormat(parseFloat(gtotal));
                 // nCells[7].innerHTML = currencyFormat(parseFloat(balance));
             }
@@ -263,13 +263,13 @@ $v = '';
                         <div class="col-sm-3">
                             <div class="form-group">
                                 <?= lang('start_date', 'start_date'); ?>
-                                <?php echo form_input('start_date', (isset($_POST['start_date']) ? $_POST['start_date'] : ''), 'class="form-control datetime" id="start_date"'); ?>
+                                <?php echo form_input('start_date', (isset($_POST['start_date']) ? $_POST['start_date'] : ''), 'class="form-control date" id="start_date"'); ?>
                             </div>
                         </div>
                         <div class="col-sm-3">
                             <div class="form-group">
                                 <?= lang('end_date', 'end_date'); ?>
-                                <?php echo form_input('end_date', (isset($_POST['end_date']) ? $_POST['end_date'] : ''), 'class="form-control datetime" id="end_date"'); ?>
+                                <?php echo form_input('end_date', (isset($_POST['end_date']) ? $_POST['end_date'] : ''), 'class="form-control date" id="end_date"'); ?>
                             </div>
                         </div>
 
