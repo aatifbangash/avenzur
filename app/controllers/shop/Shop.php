@@ -1636,7 +1636,7 @@ class Shop extends MY_Shop_Controller
                 } else {
                     $value['price'] = $this->sma->setCustomerGroupPrice($value['price'], $this->customer_group);
                     $value['formated_price'] = $this->sma->convertMoney($value['price']);
-                    $value['promo_price'] = $this->sma->isPromo($value) ? $value['promo_price'] : 0;
+                    $value['promo_price'] = $this->sma->isPromo($value) ? $value['promo_price'] : $value['formated_price'];
                     $value['formated_promo_price'] = $this->sma->convertMoney($value['promo_price']);
                     $value['special_price'] = isset($value['special_price']) && !empty($value['special_price']) ? $this->sma->setCustomerGroupPrice($value['special_price'], $this->customer_group) : 0;
                     $value['formated_special_price'] = $this->sma->convertMoney($value['special_price']);
