@@ -1000,6 +1000,22 @@
                                 </li>
                                 <?php
                             } ?>
+
+                            <li class="ec_reports">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-bar-chart-o"></i>
+                                    <span class="text"> <?= lang('Ecommerce Reports'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="reports_fast_moving_items">
+                                        <a href="<?= admin_url('reports/fast_moving_items') ?>">
+                                            <i class="fa fa-line-chart"></i><span class="text"> <?= lang('Fast_Moving_Items'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
                             <li class="mm_reports">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-bar-chart-o"></i>
@@ -1015,13 +1031,6 @@
                                     <li id="reports_warehouse_stock">
                                         <a href="<?= admin_url('reports/warehouse_stock') ?>">
                                             <i class="fa fa-building"></i><span class="text"> <?= lang('warehouse_stock'); ?></span>
-                                        </a>
-                                    </li>
-
-                                    
-                                    <li id="reports_fast_moving_items">
-                                        <a href="<?= admin_url('reports/fast_moving_items') ?>">
-                                            <i class="fa fa-line-chart"></i><span class="text"> <?= lang('Fast_Moving_Items'); ?></span>
                                         </a>
                                     </li>
 
