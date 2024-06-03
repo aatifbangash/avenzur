@@ -3072,14 +3072,7 @@ class Reports extends MY_Controller
     public function ecommerce_fast_moving_items($pdf = null, $xls = null)
     {
         $this->sma->checkPermissions('sales', true);
-        // $product = $this->input->get('product') ? $this->input->get('product') : null;
-        // $user = $this->input->get('user') ? $this->input->get('user') : null;
-        // $customer = $this->input->get('customer') ? $this->input->get('customer') : null;
-        // $biller = $this->input->get('biller') ? $this->input->get('biller') : null;
-        // $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
-        // $reference_no = $this->input->get('reference_no') ? $this->input->get('reference_no') : null; 
-        // $serial = $this->input->get('serial') ? $this->input->get('serial') : null;
-
+        // $product = $this->input->get('product') ? $this->input->get('product') : null; 
         $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null; 
         $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;
 
@@ -3138,13 +3131,7 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
                 $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
                 $this->excel->getActiveSheet()->SetCellValue('C1', lang('quantities_sold'));
-                $this->excel->getActiveSheet()->SetCellValue('D1', lang('total_amount'));
-                // $this->excel->getActiveSheet()->SetCellValue('E1', lang('product_qty'));
-                // $this->excel->getActiveSheet()->SetCellValue('F1', lang('grand_total'));
-                // $this->excel->getActiveSheet()->SetCellValue('G1', lang('paid'));
-                // $this->excel->getActiveSheet()->SetCellValue('H1', lang('balance'));
-                // $this->excel->getActiveSheet()->SetCellValue('I1', lang('payment_status'));
-
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('total_amount')); 
                 $row = 2;
                 $gtotal_pieces = 0;
                 $gtotal_amount = 0;
@@ -3153,32 +3140,20 @@ class Reports extends MY_Controller
                     $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
                     $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
                     $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->total_pieces);
-                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->total_amount);
-                    // $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->iname);
-                    // $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->grand_total);
-                    // $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->paid);
-                    // $this->excel->getActiveSheet()->SetCellValue('H' . $row, ($data_row->grand_total - $data_row->paid));
-                    // $this->excel->getActiveSheet()->SetCellValue('I' . $row, lang($data_row->payment_status));
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->total_amount); 
                     $gtotal_pieces += $data_row->total_pieces;
-                    $gtotal_amount += $data_row->total_amount;
-                     
+                    $gtotal_amount += $data_row->total_amount; 
                     $row++;
                 }
                 $this->excel->getActiveSheet()->getStyle('C' . $row . ':D' . $row)->getBorders()
                     ->getTop()->setBorderStyle('medium');
                 $this->excel->getActiveSheet()->SetCellValue('C' . $row, $gtotal_pieces);
                 $this->excel->getActiveSheet()->SetCellValue('D' . $row, $gtotal_amount);
-                // $this->excel->getActiveSheet()->SetCellValue('H' . $row, $balance);
-
+                // $this->excel->getActiveSheet()->SetCellValue('H' . $row, $balance); 
                 $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
-                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
-                // $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(30);
-                // $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-                // $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(15);
-                // $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(15);
-                // $this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20); 
                 $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
                 $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
                 $filename = 'ecomerce_fast_moving_report';
@@ -3203,14 +3178,7 @@ class Reports extends MY_Controller
                 $si .= " {$this->db->dbprefix('sale_items')}.serial_no LIKe '%{$serial}%' ";
             }
             $si .= " GROUP BY {$this->db->dbprefix('sale_items')}.sale_id ) FSI";
-            $this->load->library('datatables');
-           /*  $this->datatables
-                ->select("DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, biller, customer, FSI.item_nane as iname, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.id as id", false)
-                ->from('sales')
-                ->join($si, 'FSI.sale_id=sales.id', 'left')
-                ->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left'); */
-            // ->group_by('sales.id');
-
+            $this->load->library('datatables'); 
             $this->datatables
                 ->select("{$this->db->dbprefix('products')}.image, {$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name,  
                 SUM({$this->db->dbprefix('sale_items')}.quantity) as total_pieces, SUM({$this->db->dbprefix('sale_items')}.subtotal) as total_amount 
@@ -3236,13 +3204,9 @@ class Reports extends MY_Controller
                 $this->datatables->where($this->db->dbprefix('sales') . '.date BETWEEN "' . $start_date . '" and "' . $end_date . '"');
             } 
            // $this->db->order_by("total_pieces",'DESC');  
-         
           $action =''; 
           $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
-          . lang('view_image') . '</a></li>';
-
-
-         // $this->datatables->add_column('Actions', $action, 'image');
+          . lang('view_image') . '</a></li>';  
            echo $this->datatables->generate();
         }
     }

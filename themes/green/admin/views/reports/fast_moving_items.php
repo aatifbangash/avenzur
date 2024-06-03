@@ -7,31 +7,7 @@ $v = '';
   } */
 /* if ($this->input->post('product')) {
     $v .= '&product=' . $this->input->post('product');
-}
-if ($this->input->post('reference_no')) {
-    $v .= '&reference_no=' . $this->input->post('reference_no');
-}
-if ($this->input->post('customer')) {
-    $v .= '&customer=' . $this->input->post('customer');
-}
-if ($this->input->post('biller')) {
-    $v .= '&biller=' . $this->input->post('biller');
-}
-if ($this->input->post('warehouse')) {
-    $v .= '&warehouse=' . $this->input->post('warehouse');
-}
-if ($this->input->post('user')) {
-    $v .= '&user=' . $this->input->post('user');
-}
-if ($this->input->post('serial')) {
-    $v .= '&serial=' . $this->input->post('serial');
-}
-if ($this->input->post('start_date')) {
-    $v .= '&start_date=' . $this->input->post('start_date');
-}
-if ($this->input->post('end_date')) {
-    $v .= '&end_date=' . $this->input->post('end_date');
-}
+} 
  */ 
 ?>
 
