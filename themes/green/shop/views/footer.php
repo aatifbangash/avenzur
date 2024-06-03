@@ -170,7 +170,7 @@
 <script>
   Weglot.initialize({
     api_key: 'wg_42c9daf242af8316a7b7d92e5a2aa0e55',
-    translate_search: trueو
+    translate_search: true,
     search_forms: "#product-search",
     search_parameter: "query"
   });
