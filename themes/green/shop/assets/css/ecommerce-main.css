@@ -73,6 +73,21 @@ a:hover , button:hover {transition: all .5s;}
 .card {
   height: 100%;
 }
+#remove_coupon {
+  background: none;
+  border: none;
+  float: right;
+  text-decoration: underline;
+  overflow: hidden;
+}
+
+html[lang='ar'] #remove_coupon {
+  background: none;
+  border: none;
+  float: left;
+  text-decoration: underline;
+  overflow: hidden;
+}
 .container-max-width {
   max-width: 1440px;
   padding-left: 50px;

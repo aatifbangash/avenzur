@@ -44,7 +44,7 @@ $cart_contents = $this->cart->contents();
                                     if(isset($this->session->userdata('coupon_details')['code'])){
                                         echo form_open('remove_coupon', $attrib); 
                                         ?>
-                                            <input type="submit" name="remove_coupon" style="background: none;border: none;float: right;text-decoration: underline;overflow: hidden;" id="remove_coupon" value="Remove Code" />
+                                            <input type="submit" name="remove_coupon" id="remove_coupon" value="Remove Code" />
                                         <?php
                                         echo form_close();
                                     }
