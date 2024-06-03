@@ -104,6 +104,9 @@ class MY_Shop_Controller extends CI_Controller
         if ($this->session->userdata('company_id')) {
             $this->customer       = $this->site->getCompanyByID($this->session->userdata('company_id'));
             $this->customer_group = $this->shop_model->getCustomerGroup($this->customer->customer_group_id);
+            if(!$this->session->userdata('phone')){
+                $this->session->set_userdata('phone', $this->customer->phone);
+            }
         } elseif ($this->shop_settings->warehouse) {
             $this->warehouse = $this->site->getWarehouseByID($this->shop_settings->warehouse);
         }

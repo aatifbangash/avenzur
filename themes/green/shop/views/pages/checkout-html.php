@@ -298,7 +298,7 @@ if ($this->Settings->indian_gst) {
 
 <script>
 
-    if (userSessionEmail) {
+    if (userSessionEmail || userSessionPhone) {
 
         snaptr('track', 'ADD_CART');
     }
@@ -597,6 +597,11 @@ if ($this->Settings->indian_gst) {
                 $.notify('<?= trim(str_replace(["\r", "\n", "\r\n"], '', addslashes('Please enter payment details'))); ?>', 'warn');
                 
             }
+        });
+
+        $('#proceed-to-payment').click(function (e) {
+            // On purchase track on snapchat
+            snaptr('track', 'PURCHASE');
         });
 
         $('#proceed-payment').click(function (e) {

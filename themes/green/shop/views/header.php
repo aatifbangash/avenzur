@@ -181,12 +181,17 @@
       }else{
         var normalizedEmail = '';
       }
-      
-      //var normalizedPhone = normalizePhone('+966551251997');
+
+      var userSessionPhone = "<?php echo $this->session->userdata('phone'); ?>";
+      if (userSessionPhone) {
+        var normalizedPhone = normalizeEmail(userSessionPhone);
+      }else{
+        var normalizedPhone = '';
+      }
 
       snaptr('init', '48414e12-17e7-4ba1-bfd6-407aa41991b0', {
         'user_email': normalizedEmail,
-        //'user_phone': normalizedPhone
+        'user_phone': normalizedPhone
       });
 
       snaptr('track', 'PAGE_VIEW');
