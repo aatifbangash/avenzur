@@ -133,7 +133,7 @@
                                         class="btn btn-lg cancel-button rounded-2 fw-normal px-4 py-1 address-but"
                                       > Cancel</a>
                                     <button type="submit"
-                                        id="confirm-address" class="btn btn-lg  primary-buttonAV rounded-2 fw-normal px-4 py-1 address-but"
+                                        id="confirm-address" style="float:right;" class="btn btn-lg  primary-buttonAV rounded-2 fw-normal px-4 py-1 address-but"
                                        > Confirm</button>
 
                                     <?= form_close(); ?>
