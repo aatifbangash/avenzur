@@ -287,7 +287,10 @@ if ($this->Settings->indian_gst) {
                 <div class=" opacity-50 purpColor mt-4">
                     <h4 class="fw-semibold fs-5 "><i class="bi bi-shield-check me-1"></i> Security and Privacy</h4>
                     <h4 class="fs-6 "> Our checkout is safe and secure. Your Personal and payment information is securely transmitted via 128-bit encryption. We do not store any payment card information on our systems</h4>
-                    <h4 class="fs-6 mt-4"> Terms of USe Terms of Sale Privacy Policy</h4>
+                    <h4 class="fs-6 mt-4"> 
+                        <a href="https://avenzur.com/shop/page/Terms-Conditions">Terms of USe</a> 
+                        <a href="https://avenzur.com/shop/page/privacy-policy">Privacy Policy</a>
+                    </h4>
                 </div>
             </div>
             <?php  echo form_close();?>
