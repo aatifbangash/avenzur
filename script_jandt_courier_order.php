@@ -313,8 +313,12 @@ if ($result_sales->num_rows > 0) {
         $tracking_status = $billResponse->data[0]->details[0]->scanType;
         echo $order_id.' $$ '.$tracking_status;
 
+        //$stmt = $conn->prepare("UPDATE sma_sales SET courier_order_tracking_id = ?, courier_order_status = ? WHERE id = ?");
+        //$stmt->bind_param("ssi", $tracking_id, $tracking_status, $order_id);
+
         $stmt = $conn->prepare("UPDATE sma_sales SET courier_order_tracking_id = ?, courier_order_status = ? WHERE id = ?");
         $stmt->bind_param("ssi", $tracking_id, $tracking_status, $order_id);
+        $stmt->execute() ;
         
         /*if (1==1) {
 
