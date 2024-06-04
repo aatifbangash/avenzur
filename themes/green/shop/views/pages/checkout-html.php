@@ -190,7 +190,7 @@ if ($this->Settings->indian_gst) {
                     $promo_applied = true;
                     $promo_code = $this->session->userdata('coupon_details')['code'].' Applied';
                 }else{
-                    $promo_code = 'No Code Applied';
+                    $promo_code = '';
                 }
             ?>
 
@@ -436,7 +436,7 @@ if ($this->Settings->indian_gst) {
                                 $('#promo_span').text(promo_code+' Applied');
                             }else{
                                 $('#promo_span').css('color', 'grey');
-                                $('#promo_span').text('No Code Applied');
+                                $('#promo_span').text('');
                             }
 
                             $('#discount-amt').html(parseFloat(response.discount).toFixed(2) + '<?php echo $selected_currency->symbol; ?>');
