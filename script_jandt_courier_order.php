@@ -318,20 +318,18 @@ if ($result_sales->num_rows > 0) {
         //$stmt->bind_param("ssi", $tracking_id, $tracking_status, $order_id);
         //if ($stmt->execute() === TRUE) {
         if (1==1) {
-            echo 'cusotmerid'.$sale['customer_id'];
+            //echo 'cusotmerid'.$sale['customer_id'];
 
             $stmt_customer = $conn->prepare("SELECT * FROM sma_companies WHERE `id` = ?");
             if (!$stmt_customer) {
                 die('MySQL prepare error: ' . $conn->error);
             }
-            
             $stmt_customer->bind_param("i", $sale['customer_id']);
             $stmt_customer->execute();
             $result_customer = $stmt_customer->get_result();
             $customer_data = $result_customer->fetch_assoc();
             $stmt_customer->close();
-            echo '<pre>';
-            print_r($customer_data);
+
             if($sale['address_id'] == 0) {
                   $customer_name = $customer_data['first_name'].' '.$customer_data['last_name'];
                   $customer_address = $customer_data['address'];
@@ -346,6 +344,8 @@ if ($result_sales->num_rows > 0) {
                 $customer_name = $result_customer_address['firstname'].' '.$result_customer_address['last_name'];
                 $customer_address = $result_customer_address['line1'];
             }
+
+            echo $customer_address.'<br />';
 
             $stmt_items = $conn->prepare("SELECT si.product_name, si.net_unit_price, si.quantity, si.subtotal, p.image FROM sma_sale_items AS si JOIN sma_products AS p ON si.product_id = p.id WHERE si.sale_id = ?");
             $stmt_items->bind_param("i", $order_id);
