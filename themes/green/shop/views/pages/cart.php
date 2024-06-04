@@ -84,7 +84,7 @@ $cart_contents = $this->cart->contents();
                                 <h4 class="m-0 fw-semibold">Subtotal (<span id="total-unique_items">0</span> items)</h4>
                                 <h4 class="m-0 fw-semibold"><span id="total-price">0 SAR</span></h4>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center my-3" id="discount_block" style="display:none;">
+                            <div class="d-flex justify-content-between align-items-center my-3" id="discount_block" style="display:none !important;">
                                 <h4 class="m-0 ">Discount</h4>
                                 <h4 class="m-0 "><span id="total-discount">SAR 0</span></h4>
                             </div>
