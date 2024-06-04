@@ -1740,8 +1740,12 @@ public function getallCountry()
                 }else{
                     $batch_sale_price = 0;
                 }
-                $total_batch_quantity = $this->Inventory_model->get_current_stock( $product_id, $warehouse, $row->batchno);
-                $row->quantity = $total_batch_quantity;
+
+                if($this->db->platform == 'pharma'){
+                    $total_batch_quantity = $this->Inventory_model->get_current_stock( $product_id, $warehouse, $row->batchno);
+                    $row->quantity = $total_batch_quantity;
+                }
+
                 $row->batch_sale_price = $batch_sale_price;
                 $data[] = $row;
             }
