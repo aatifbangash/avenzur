@@ -140,7 +140,7 @@ if ($this->Settings->indian_gst) {
                         </label>
                         </div>
                         <div>
-                            <p class="m-0 fs-6 fw-semibold px-3 mx-1">21 SAR</p>
+                            <p class="m-0 fs-6 fw-semibold px-3 mx-1 delivery_pg">21 SAR</p>
                         </div>
                     </div>
                 </div>
