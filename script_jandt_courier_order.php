@@ -318,7 +318,7 @@ if ($result_sales->num_rows > 0) {
         //$stmt->bind_param("ssi", $tracking_id, $tracking_status, $order_id);
         //if ($stmt->execute() === TRUE) {
         if (1==1) {
-            //echo 'cusotmerid'.$sale['customer_id'];
+            echo 'cusotmerid'.$sale['customer_id'];
 
             $stmt_customer = $conn->prepare("SELECT * FROM sma_companies WHERE `id` = ?");
             if (!$stmt_customer) {
