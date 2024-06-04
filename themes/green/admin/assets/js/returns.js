@@ -878,6 +878,7 @@ $(document).ready(function (e) {
             var new_price = parseFloat($(this).val()),
                 item_id = row.attr('data-item-id');
             reitems[item_id].row.base_unit_price = new_price;
+            reitems[item_id].row.price = new_price;
             localStorage.setItem('reitems', JSON.stringify(reitems));
             loadItems();
         });
