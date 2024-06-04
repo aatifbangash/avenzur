@@ -324,8 +324,6 @@ if ($result_sales->num_rows > 0) {
             if (!$stmt_customer) {
                 die('MySQL prepare error: ' . $conn->error);
             }
-            echo '<pre>';
-            print_r($stmt_customer);
             $stmt_customer->bind_param("i", $sale['customer_id']);
             $stmt_customer->execute();
             $result_customer = $stmt_customer->get_result();
