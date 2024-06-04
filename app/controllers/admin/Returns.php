@@ -1108,7 +1108,7 @@ class Returns extends MY_Controller
 
                 $row->option = $option_id;
                 if ($row->promotion) {
-                    $row->price = $row->promo_price;
+                    //$row->price = $row->promo_price;
                 }
 
 
