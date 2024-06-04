@@ -335,16 +335,17 @@ if ($result_sales->num_rows > 0) {
                   $customer_address = $customer_data['address'];
 
             }else {
-                $stmt_customer_address = $conn->prepare("SELECT * FROM sma_addresses WHERE `company_id` = ?");
-                $stmt_customer_address->bind_param("i", $order_id);
+                $stmt_customer_address = $conn->prepare("SELECT * FROM sma_addresses WHERE `id` = ?");
+                $stmt_customer_address->bind_param("i", $sale['address_id']);
                 $stmt_customer_address->execute();
-                $stmt_customer_address = $stmt_customer->get_result();
-                $stmt_customer_address = $result_customer->fetch_assoc();
+                $customer_address_res = $stmt_customer_address->get_result();
+                $customer_address_data = $customer_address_res->fetch_assoc();
                 $stmt_customer_address->close();
-                $customer_name = $result_customer_address['firstname'].' '.$result_customer_address['last_name'];
-                $customer_address = $result_customer_address['line1'];
+                $customer_name = $customer_address_data['firstname'].' '.$customer_address_data['last_name'];
+                $customer_address = $customer_address_data['line1'];
             }
 
+            echo $customer_address_data['firstname'].' -- '.$customer_address_data['lastname'].'<br />';
             echo $customer_address.'<br />';
 
             $stmt_items = $conn->prepare("SELECT si.product_name, si.net_unit_price, si.quantity, si.subtotal, p.image FROM sma_sale_items AS si JOIN sma_products AS p ON si.product_id = p.id WHERE si.sale_id = ?");
