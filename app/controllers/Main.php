@@ -691,7 +691,6 @@ class Main extends MY_Shop_Controller
 
     public function login()
     {
-        redirect('/');
         $this->form_validation->set_rules('identity', lang('Email or Mobile'), 'required');
 
         if ($this->form_validation->run('') == true) {
