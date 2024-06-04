@@ -14,7 +14,9 @@ class Products extends MY_Controller
         $this->lang->admin_load('products', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('products_model');
-         $this->load->admin_model('settings_model');
+        $this->load->admin_model('settings_model');
+        $this->load->helper(array('form', 'url'));
+        $this->load->library('upload');
         
         $this->digital_upload_path = 'files/';
         $this->upload_path         = 'assets/uploads/';
@@ -1156,6 +1158,46 @@ class Products extends MY_Controller
             $bc                                = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('products'), 'page' => lang('products')], ['link' => '#', 'page' => lang('add_product')]];
             $meta                              = ['page_title' => lang('add_product'), 'bc' => $bc];
             $this->page_construct('products/add', $meta, $this->data);
+        }
+    }
+
+    public function upload_image()
+    {
+        // Set the content type to application/json
+        header('Content-Type: application/json');
+        dd("herer"); exit;
+        if (isset($_FILES['upload']) && $_FILES['upload']['size'] > 0) {
+            $config['upload_path'] = './themes/green/admin/assets/images/product/';
+            $config['allowed_types'] = 'jpg|jpeg|png|gif';
+            $config['max_size'] = 2048; // Maximum size in kilobytes
+            $config['file_name'] = time() . '_' . $_FILES['upload']['name'];
+
+            $this->load->library('upload', $config);
+
+            if ($this->upload->do_upload('upload')) {
+                $uploadData = $this->upload->data();
+                $url = base_url('themes/green/admin/assets/images/product/' . $uploadData['file_name']);
+
+                echo json_encode([
+                    'uploaded' => 1,
+                    'fileName' => $uploadData['file_name'],
+                    'url' => $url
+                ]);
+            } else {
+                echo json_encode([
+                    'uploaded' => 0,
+                    'error' => [
+                        'message' => $this->upload->display_errors()
+                    ]
+                ]);
+            }
+        } else {
+            echo json_encode([
+                'uploaded' => 0,
+                'error' => [
+                    'message' => 'No file uploaded.'
+                ]
+            ]);
         }
     }
 

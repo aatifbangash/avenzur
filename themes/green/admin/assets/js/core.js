@@ -435,6 +435,120 @@ $(document).ready(function () {
         radioClass: 'iradio_square-blue',
         increaseArea: '20%',
     });
+    var formData = new FormData();
+    //         formData.append('upload', file);
+
+    //         // Append the CSRF token to the formData object
+    formData.append(site.csrf_token_name, site.csrf_token);
+    $.ajax({
+        url: '/admin/products/upload_image',
+        type: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function(response) {
+            if (response.uploaded) {
+                // Manually update the file URL in the editor
+                var dialog = CKEDITOR.dialog.getCurrent();
+                var urlField = dialog.getContentElement('info', 'txtUrl');
+                urlField.setValue(response.url);
+
+                // Close the dialog
+                dialog.hide();
+            } else {
+                alert('Image upload failed: ' + response.error.message);
+            }
+        },
+        error: function() {
+            alert('Image upload failed due to an AJAX error.');
+        }
+    });
+    // var editor = CKEDITOR.replace('product_details', {
+    //     filebrowserUploadUrl: '/admin/products/upload_image',
+    //     filebrowserUploadMethod: 'form',
+    //     on: {
+    //         instanceReady: function() {
+    //             console.log('CKEditor instance ready');
+    //         }
+    //     }
+    // });
+
+    // // Attach event handler to the file upload button
+    // $(document).on('click', '.cke_dialog_ui_fileButton', function() {
+    //     console.log('Send it to the Server button clicked');
+
+    //     // Find the file input element within the CKEditor dialog
+    //     var fileInput = $('.cke_dialog_ui_input_file input[type="file"]');
+    //     if (fileInput.length > 0 && fileInput[0].files.length > 0) {
+    //         var file = fileInput[0].files[0];
+    //         var formData = new FormData();
+    //         formData.append('upload', file);
+
+    //         // Append the CSRF token to the formData object
+    //         formData.append(site.csrf_token, site.csrf_token_value);
+
+    //         // Log FormData content for debugging
+    //         for (var pair of formData.entries()) {
+    //             console.log(pair[0] + ', ' + pair[1]);
+    //         }
+
+    //         // Perform the AJAX request manually
+    //         $.ajax({
+    //             url: '/admin/products/upload_image',
+    //             type: 'POST',
+    //             data: formData,
+    //             contentType: false,
+    //             processData: false,
+    //             success: function(response) {
+    //                 if (response.uploaded) {
+    //                     // Manually update the file URL in the editor
+    //                     var dialog = CKEDITOR.dialog.getCurrent();
+    //                     var urlField = dialog.getContentElement('info', 'txtUrl');
+    //                     urlField.setValue(response.url);
+
+    //                     // Close the dialog
+    //                     dialog.hide();
+    //                 } else {
+    //                     alert('Image upload failed: ' + response.error.message);
+    //                 }
+    //             },
+    //             error: function() {
+    //                 alert('Image upload failed due to an AJAX error.');
+    //             }
+    //         });
+    //     } else {
+    //         alert('No file selected.');
+    //     }
+    // });
+    // CKEDITOR.replace('product_details', {
+    //     filebrowserUploadUrl: '/admin/products/upload_image?' + site.csrf_token_name +"="+ site.csrf_token,
+    //     filebrowserUploadMethod: 'form',
+    //     on: {
+    //         instanceReady: function() {
+    //             console.log('CKEditor instance ready');
+    //             this.on('fileUploadRequest', function(evt) {
+    //                 console.log('fileUploadRequest event triggered');
+    
+    //                 var xhr = evt.data.fileLoader.xhr;
+    //                 var formData = new FormData();
+    //                 formData.append('upload', evt.data.fileLoader.file, evt.data.fileLoader.fileName);
+    
+    //                 // Append the CSRF token to the formData object
+    //                 formData.append(site.csrf_token_name, site.csrf_token);
+    
+    //                 // Log FormData content for debugging
+    //                 for (var pair of formData.entries()) {
+    //                     console.log(pair[0] + ', ' + pair[1]);
+    //                 }
+    
+    //                 // Prevent the default request from being sent
+    //                 evt.stop();
+    //             });
+    //         }
+    //     }
+    // });
+    
+
     $('textarea')
         .not('.skip')
         .redactor({
@@ -453,12 +567,27 @@ $(document).ready(function () {
                 'unorderedlist',
                 'orderedlist',
                 '|',
-                /*'image', 'video',*/ 'link',
+                'image', '|', /*'video',*/ 'link',
                 '|',
                 'html',
             ],
             formattingTags: ['p', 'pre', 'h3', 'h4'],
             minHeight: 100,
+            imageUpload: '/admin/products/upload_image', // Specify the URL of your upload handler
+            imageUploadCallback: function (image, json) {
+                try {
+                    console.log("hrete", json);
+                    if (json && json.filelink) {
+                        // Insert the uploaded image into the editor
+                        this.image.insert(json.filelink);
+                    } else {
+                        alert('Image upload failed: ' + (json.error || 'Unknown error'));
+                    }
+                } catch (e) {
+                    console.error('Invalid JSON response:', e, json);
+                    alert('Image upload failed: Invalid JSON response');
+                }
+            },
             changeCallback: function (e) {
                 var editor = this.$editor.next('textarea');
                 if ($(editor).attr('required')) {
@@ -466,6 +595,63 @@ $(document).ready(function () {
                 }
             },
         });
+    console.log(site);
+    // $('textarea')
+    // .not('.skip')
+    // .redactor({
+    //     buttons: [
+    //         'formatting',
+    //         '|',
+    //         'alignleft',
+    //         'aligncenter',
+    //         'alignright',
+    //         'justify',
+    //         '|',
+    //         'bold',
+    //         'italic',
+    //         'underline',
+    //         '|',
+    //         'unorderedlist',
+    //         'orderedlist',
+    //         '|',
+    //         'image', '|', /*'video',*/ 'link',
+    //         '|',
+    //         'html',
+    //     ],
+    //     formattingTags: ['p', 'pre', 'h3', 'h4'],
+    //     minHeight: 100,
+    //     imageUpload: '/admin/products/upload_image?' + site.csrf_token_name + '=' + site.csrf_token, 
+    //     // imageUpload: '/admin/products/upload_image?' + csrfTokenName + '=' + csrfTokenValue,
+    //     callbacks: {
+    //         imageUpload: function(response) {
+    //             // Handle the response from the server after a successful upload
+    //             console.log("Image uploaded successfully:", response);
+    //             try {
+    //                 if (response && response.filelink) {
+    //                     // Insert the uploaded image into the editor
+    //                     this.image.insert(response.filelink);
+    //                 } else {
+    //                     alert('Image upload failed: ' + (response.error || 'Unknown error'));
+    //                 }
+    //             } catch (e) {
+    //                 console.error('Invalid JSON response:', e, response);
+    //                 alert('Image upload failed: Invalid JSON response');
+    //             }
+    //         },
+    //         imageUploadError: function(json) {
+    //             // Handle any errors during the upload
+    //             console.error('Image upload failed:', json);
+    //             alert('Image upload failed: ' + (json.error || 'Unknown error'));
+    //         },
+    //         changeCallback: function(e) {
+    //             var editor = this.$editor.next('textarea');
+    //             if ($(editor).attr('required')) {
+    //                 $('form[data-toggle="validator"]').bootstrapValidator('revalidateField', $(editor).attr('name'));
+    //             }
+    //         }
+    //     }
+    // });
+    
     $(document).on('click', '.file-caption', function () {
         $(this).next('.input-group-btn').children('.btn-file').children('input.file').trigger('click');
     });

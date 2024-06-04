@@ -18,6 +18,7 @@ $route['category/(:any)/(:any)'] = 'shop/shop/products/$1/$2';
 $route['pay/process_payment']    = 'pay/process_payment';
 $route['pay/test_directpay_post']  = 'pay/test_directpay_post';
 
+
 //$route['sitemapold\.xml']           = "Sitemap/index";
 $route['sitemap.xml']        = "Sitemap/index";
 
@@ -68,6 +69,8 @@ $route['admin/login']                = 'admin/auth/login';
 $route['admin/login/(:any)']         = 'admin/auth/login/$1';
 $route['admin/logout']               = 'admin/auth/logout';
 $route['admin/logout/(:any)']        = 'admin/auth/logout/$1';
+$route['admin/products/upload_image'] = 'admin/products/upload_image';
+
 // $route['admin/register'] = 'admin/auth/register';
 $route['admin/forgot_password']  = 'admin/auth/forgot_password';
 $route['admin/sales/(:num)']     = 'admin/sales/index/$1';

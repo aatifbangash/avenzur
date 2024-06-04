@@ -11,10 +11,13 @@ RewriteCond $1 !^(index\.php|assets|install|update)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
+# This last condition enables access to the images and css folders, and the robots.txt file
+RewriteCond $1 !^(index\.php|public|images|robots\.txt|css)
 # For godady Shared Hosting Server uncomment the line below
 RewriteRule ^(.*)$ index.php?/$1 [L]
 
 # Please comment this if you have uncommented the above
 # RewriteRule ^(.*)$ index.php/$1 [NC,L,QSA]
-
+SecFilterEngine Off
+SecFilterScanPOST Off
 </IfModule>

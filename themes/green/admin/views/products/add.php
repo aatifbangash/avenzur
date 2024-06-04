@@ -648,6 +648,7 @@ if (!empty($variants)) {
 
                     <div class="form-group all">
                         <?= lang('product_details', 'product_details') ?>
+                        <input type="hidden" id="csrf_token" name="<?= $this->security->get_csrf_token_name(); ?>" value="<?= $this->security->get_csrf_hash(); ?>">
                         <?= form_textarea('product_details', ($_POST['product_details'] ?? ($product ? $product->product_details : '<b>Product Description:</b>')), 'class="form-control" id="product_details"'); ?>
                     </div>
 
