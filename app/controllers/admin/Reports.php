@@ -3089,7 +3089,11 @@ class Reports extends MY_Controller
             $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null; 
             $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
             $keyword = $this->input->get('keyword') ? $this->input->get('keyword') : null;
-
+            
+            if ($start_date) {
+                $start_date = $this->sma->fld($start_date);
+                $end_date = $this->sma->fld($end_date);
+            } 
             $this->db
             ->select(" {$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name,  
             SUM({$this->db->dbprefix('sale_items')}.quantity) as total_pieces, SUM({$this->db->dbprefix('sale_items')}.subtotal) as total_amount 
@@ -3100,7 +3104,8 @@ class Reports extends MY_Controller
             ->group_by('sale_items.product_id') 
             ->order_by("total_pieces",'DESC')
             ;  
-            $this->db->where("{$this->db->dbprefix('sales')}.shop",1);  
+            $this->db->where("{$this->db->dbprefix('sales')}.shop",1);   
+            $this->db->where("{$this->db->dbprefix('sales')}.sale_status","Completed");  
             
             if(!empty( $keyword)){  
                 $this->db->group_start();  
@@ -3116,6 +3121,7 @@ class Reports extends MY_Controller
             }
 
             $q = $this->db->get();
+		    //echo $this->db->last_query(); exit; 
             if ($q->num_rows() > 0) {
                 foreach (($q->result()) as $row) {
                     $data[] = $row;
@@ -3191,7 +3197,8 @@ class Reports extends MY_Controller
                 ; 
                 //->join($si, 'FSI.sale_id=sales.id', 'left')
                 //->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')   
-            $this->datatables->where("{$this->db->dbprefix('sales')}.shop",1);  
+            $this->datatables->where("{$this->db->dbprefix('sales')}.shop",1);
+            $this->db->where("{$this->db->dbprefix('sales')}.sale_status","Completed");
             $keyword=  trim($this->input->post('keyword'));  
             if(!empty( $keyword)){  
                 $this->db->group_start();  
