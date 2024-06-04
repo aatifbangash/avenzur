@@ -297,6 +297,7 @@ $stmt->execute();
 
 $result_sales = $stmt->get_result();
 //echo $result_sales->num_rows;
+echo '<pre>';print_r($result_sales);exit;
 if ($result_sales->num_rows > 0) {
     // Fetch associative array for the row
     $orderIds = array();
@@ -514,9 +515,9 @@ if ($result_sales->num_rows > 0) {
                
                 $mail->Subject = 'Your avenzur order has been delivered!';
 
-                $mail->setFrom('aleemktk@gmail.com', 'Avenzur');
+                $mail->setFrom('info@avenzur.com', 'Avenzur');
                 $mail->addAddress($customer_data['email'] , $customer_name ); // Add a recipient
-                //$mail->addAddress('braphael@avenzur.com', 'Benoy');
+                $mail->addAddress('fabbas@avenzur.com', 'Faisal Abbas');
                 //$mail->addAddress('ama@pharma.com.sa','Dr Amr');
 
                 $mail->Body = $messageBody;
