@@ -194,7 +194,7 @@ if ($this->Settings->indian_gst) {
                 }
             ?>
 
-            <h3 class=" fw-bold pb-2 order-summary-title">Order Summary <span id="promo_span" style="<?php echo isset($promo_applied) ? ($promo_applied ? 'color:green;' : 'color:grey;') : ''; ?> font-size:16px; float:right;"><?php echo $promo_code; ?></span></h3>  
+            <h3 class=" fw-bold pb-2 order-summary-title">Order Summary <span id="promo_span" style="<?php echo isset($promo_applied) ? ($promo_applied ? 'color:green;' : 'color:grey;') : ''; ?> font-size:16px; "><?php echo $promo_code; ?></span></h3>  
             
            <?php
                 $total = $this->sma->convertMoney($this->cart->total(), false, false);

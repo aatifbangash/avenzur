@@ -88,6 +88,15 @@ html[lang='ar'] #remove_coupon {
   text-decoration: underline;
   overflow: hidden;
 }
+
+#promo_span{
+  float:right;
+}
+
+html[lang='ar'] #promo_span{
+  float:left;
+}
+
 .container-max-width {
   max-width: 1440px;
   padding-left: 50px;
