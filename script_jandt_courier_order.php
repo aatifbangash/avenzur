@@ -353,7 +353,7 @@ if ($result_sales->num_rows > 0) {
 
             //sending delivered email for status update
             if ($tracking_status == 'Sign scan') { // Assuming 'Sign scan' indicates delivered
-
+                echo 'Here Sign Scan...<br />';
                 $messageBody = '
                 <!DOCTYPE html>
                 <html lang="en">
