@@ -297,7 +297,6 @@ $stmt->execute();
 
 $result_sales = $stmt->get_result();
 //echo $result_sales->num_rows;
-echo '<pre>';print_r($result_sales);exit;
 if ($result_sales->num_rows > 0) {
     // Fetch associative array for the row
     $orderIds = array();
@@ -314,11 +313,14 @@ if ($result_sales->num_rows > 0) {
         $tracking_status = $billResponse->data[0]->details[0]->scanType;
         echo $order_id.' $$ '.$tracking_status;
 
+        //$stmt = $conn->prepare("UPDATE sma_sales SET courier_order_tracking_id = ?, courier_order_status = ? WHERE id = ?");
+        //$stmt->bind_param("ssi", $tracking_id, $tracking_status, $order_id);
+
         $stmt = $conn->prepare("UPDATE sma_sales SET courier_order_tracking_id = ?, courier_order_status = ? WHERE id = ?");
         $stmt->bind_param("ssi", $tracking_id, $tracking_status, $order_id);
-        //if ($stmt->execute() === TRUE) {
-        if (1==1) {
-            //echo 'cusotmerid'.$sale['customer_id'];
+        $stmt->execute() ;
+        
+        /*if (1==1) {
 
             $stmt_customer = $conn->prepare("SELECT * FROM sma_companies WHERE `id` = ?");
             if (!$stmt_customer) {
@@ -335,14 +337,14 @@ if ($result_sales->num_rows > 0) {
                   $customer_address = $customer_data['address'];
 
             }else {
-                $stmt_customer_address = $conn->prepare("SELECT * FROM sma_addresses WHERE `company_id` = ?");
-                $stmt_customer_address->bind_param("i", $order_id);
+                $stmt_customer_address = $conn->prepare("SELECT * FROM sma_addresses WHERE `id` = ?");
+                $stmt_customer_address->bind_param("i", $sale['address_id']);
                 $stmt_customer_address->execute();
-                $stmt_customer_address = $stmt_customer->get_result();
-                $stmt_customer_address = $result_customer->fetch_assoc();
+                $customer_address_res = $stmt_customer_address->get_result();
+                $customer_address_data = $customer_address_res->fetch_assoc();
                 $stmt_customer_address->close();
-                $customer_name = $result_customer_address['firstname'].' '.$result_customer_address['last_name'];
-                $customer_address = $result_customer_address['line1'];
+                $customer_name = $customer_address_data['firstname'].' '.$customer_address_data['last_name'];
+                $customer_address = $customer_address_data['line1'];
             }
 
             $stmt_items = $conn->prepare("SELECT si.product_name, si.net_unit_price, si.quantity, si.subtotal, p.image FROM sma_sale_items AS si JOIN sma_products AS p ON si.product_id = p.id WHERE si.sale_id = ?");
@@ -408,7 +410,7 @@ if ($result_sales->num_rows > 0) {
                       }
                       .column {
                         padding: 10px;
-                        width: 48%; /* Slightly less than half to account for padding */
+                        width: 48%; 
                         box-sizing: border-box;
                       }
                       body p {
@@ -433,17 +435,17 @@ if ($result_sales->num_rows > 0) {
                         text-align: right;
                       }
                       .progress-bar {
-                        width: 100%; /* Full width */
-                        background-color: #ddd; /* Light grey background */
-                        margin-bottom: 20px; /* Spacing below the bar */
+                        width: 100%; 
+                        background-color: #ddd; 
+                        margin-bottom: 20px; 
                       }
                       .progress-bar-fill {
-                        width: 100%; /* Could be dynamic based on delivery status */
-                        height: 18px; /* Fixed height of the fill */
-                        background-color: #4CAF50; /* Green background */
-                        text-align: center; /* Center text in the fill */
-                        line-height: 15px; /* Center text vertically */
-                        color: white; /* Text color */
+                        width: 100%; 
+                        height: 18px; 
+                        background-color: #4CAF50; 
+                        text-align: center; 
+                        line-height: 15px; 
+                        color: white; 
                         font-weight: bold;
                         font-size: 15px;
                       }
@@ -529,7 +531,7 @@ if ($result_sales->num_rows > 0) {
                     $stmt = $conn->prepare("UPDATE sma_sales SET courier_order_tracking_id = ?, courier_order_status = ? WHERE id = ?");
                     $stmt->bind_param("ssi", $tracking_id, $tracking_status, $order_id);
                     $stmt->execute() ;
-        //if ($stmt->execute() === TRUE) {
+        
                     echo 'Message has been sent';
                 }
 
@@ -539,13 +541,9 @@ if ($result_sales->num_rows > 0) {
             } 
             $stmt_items->close();
 
-
-          
-
-            //echo "Record updated successfully";
         } else {
             echo "Error updating record: " . $stmt->error;
-        }
+        }*/
 
     }
     $stmt->close();
