@@ -249,11 +249,7 @@ function update_cart(t) {
 
     $("#total-unique_items").html(t.total_unique_items);
     $("#total-price").html(t.subtotal);
-    if(t.total_discount > 0){
-      $('#discount_block').show();
-      $("#total-discount").html(t.total_discount);
-    }
-    
+    $("#total-discount").html(t.total_discount);
     $("#total-after_discount").html(t.total);
 
     /*$("#cart-table tbody").empty();
@@ -349,10 +345,7 @@ function update_cart(t) {
 
     $("#total-unique_items").html(t.total_unique_items);
     $("#total-price").html(t.subtotal);
-    if(t.total_discount > 0){
-      $('#discount_block').show();
-      $("#total-discount").html(t.total_discount);
-    }
+    $("#total-discount").html(t.total_discount);
     $("#total-after_discount").html(t.total);
   }
 }
