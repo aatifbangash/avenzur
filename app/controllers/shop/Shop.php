@@ -1146,7 +1146,7 @@ class Shop extends MY_Shop_Controller
     {
         $hash = $hash ? $hash : $this->input->get('hash', true);
         if (!$this->loggedIn && !$hash) {
-            redirect('/');
+            //redirect('/');
         }
         if ($this->Staff) {
             admin_redirect('sales');
