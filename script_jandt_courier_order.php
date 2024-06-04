@@ -324,6 +324,8 @@ if ($result_sales->num_rows > 0) {
             if (!$stmt_customer) {
                 die('MySQL prepare error: ' . $conn->error);
             }
+            echo '<pre>';
+            print_r($stmt_customer);
             $stmt_customer->bind_param("i", $sale['customer_id']);
             $stmt_customer->execute();
             $result_customer = $stmt_customer->get_result();
@@ -353,7 +355,7 @@ if ($result_sales->num_rows > 0) {
 
             //sending delivered email for status update
             if ($tracking_status == 'Sign scan') { // Assuming 'Sign scan' indicates delivered
-                echo 'Here Sign Scan...<br />';
+
                 $messageBody = '
                 <!DOCTYPE html>
                 <html lang="en">
