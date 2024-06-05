@@ -1362,15 +1362,12 @@ function loadItems() {
             const isFormattedDate = pattern.test(item.row.expiry);
            
             var item_expiry_date='';
-            if(item.row.expiry){                
+            if(item.row.expiry != null){                
                 if(isFormattedDate){
                     item_expiry_date = item.row.expiry;
                 }else{
                     item_expiry_date = new Date(item.row.expiry).toLocaleDateString('en-GB');
                 }
-            } else {
-                item.row.expiry = new Date();
-                item_expiry_date = new Date(item.row.expiry).toLocaleDateString('en-GB');
             }
             var product_id = item.row.id,
                 item_type = item.row.type,
