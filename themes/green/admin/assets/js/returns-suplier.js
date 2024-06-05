@@ -825,8 +825,13 @@ function loadItems() {
              var cost_price  = item.row.cost;  
              var batch_no    = item.row.batch_no;
              var bonus       = item.row.bonus;
-             var expiry       = item.row.expiry;
-             
+             var expiry;
+             if(item.row.expiry){                
+                expiry = new Date(item.row.expiry).toLocaleDateString('en-GB');
+            } else {
+                item.row.expiry = new Date();
+                expiry = new Date(item.row.expiry).toLocaleDateString('en-GB');
+            }
             var unit_price = item.row.real_unit_price;
             if (item.units && item.row.fup != 1 && product_unit != item.row.base_unit) {
                 $.each(item.units, function () {
