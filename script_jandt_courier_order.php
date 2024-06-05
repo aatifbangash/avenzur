@@ -355,7 +355,7 @@ if ($result_sales->num_rows > 0) {
             $result_sales_items = $stmt_items->get_result();
 
             //sending delivered email for status update
-            if ($tracking_status == 'Delivery scan') { // Assuming 'Sign scan' indicates delivered
+            if ($tracking_status == 'Sign scan') { // Assuming 'Sign scan' indicates delivered
 
                 $messageBody = '
                 <!DOCTYPE html>
@@ -519,8 +519,8 @@ if ($result_sales->num_rows > 0) {
                 $mail->Subject = 'Your avenzur order has been delivered!';
 
                 $mail->setFrom('info@avenzur.com', 'Avenzur');
-                //$mail->addAddress($customer_data['email'] , $customer_name ); // Add a recipient
-                $mail->addAddress('fabbas@avenzur.com', 'Faisal Abbas');
+                $mail->addAddress($customer_data['email'] , $customer_name ); // Add a recipient
+                //$mail->addAddress('fabbas@avenzur.com', 'Faisal Abbas');
                 //$mail->addAddress('ama@pharma.com.sa','Dr Amr');
 
                 $mail->Body = $messageBody;
