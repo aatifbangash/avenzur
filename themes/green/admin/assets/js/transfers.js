@@ -426,12 +426,9 @@ function loadItems() {
                 check = false;
 
             var item_expiry='';
-            if(item.row.expiry){   
-                  item_expiry = new Date(item.row.expiry).toLocaleDateString('en-GB'); 
-                //   item_expiry = item.row.expiry;
-            } else {
-                item.row.expiry = new Date();
-                item_expiry = new Date(item.row.expiry).toLocaleDateString('en-GB');
+            if(item.row.expiry != null){   
+                  // item_expiry = new Date(item.row.expiry).toLocaleDateString('en-GB'); 
+                  item_expiry = item.row.expiry;
             }
 
             item.row.cost = item.row.price;
