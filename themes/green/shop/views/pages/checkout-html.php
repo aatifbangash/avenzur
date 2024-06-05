@@ -880,7 +880,7 @@ if ($this->Settings->indian_gst) {
                 /*else{
                     shipping = 32;
                 }*/
-                deliveryDays = 'Expected delivery 4 to 6 days';
+                deliveryDays = 'Expected delivery 5 to 8 days';
 
                 //$("#express-delivery-check").prop("disabled", true);
                 $("#express-delivery-check").show();
