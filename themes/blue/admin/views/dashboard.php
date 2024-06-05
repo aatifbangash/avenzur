@@ -68,10 +68,36 @@ function row_status($x)
 
                             </div>
                         </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="control-label" for="warehouse"><?= lang('warehouse'); ?></label>
+                                <?php 
+                                $wh[''] = lang('select') . ' ' . lang('warehouse');
+                                foreach ($warehouses as $warehouse) {
+                                    $wh[$warehouse->id] = $warehouse->name;
+                                }
+                                echo form_dropdown('warehouse', $wh, set_value('warehouse', $_POST['warehouse']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'warehouse'),  array('none'));
+                                ?> 
+
+                            </div>
+                        </div> 
+                        <div class="col-md-2">
+                                <div class="form-group">
+                                <?= lang('start_date', 'start_date'); ?>
+                                <?php echo form_input('start_date', (isset($_POST['start_date']) ? $_POST['start_date'] : ''), 'class="form-control date" id="start_date"'); ?>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                <?= lang('end_date', 'end_date'); ?>
+                                <?php echo form_input('end_date', (isset($_POST['end_date']) ? $_POST['end_date'] : ''), 'class="form-control date" id="end_date"'); ?>
+                                </div>
+                            </div>
+
 
                         <div class="col-md-2">
                             <div class="from-group">
-                                <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
+                                <button type="submit" style="" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
                             </div>
                         </div>
 
