@@ -1416,6 +1416,15 @@ class Reports_model extends CI_Model
 
     public function getInventoryItemMovementRecords($productId, $filterOnType)
     {
+        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : null; 
+        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null; 
+        $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;  
+        if ($start_date) {
+            $start_date = $this->sma->fld($start_date);   
+        } 
+        if ($end_date) {
+            $end_date = $this->sma->fld($end_date);
+        }
         $where = '';
         if ($filterOnType != '') {
 
@@ -1423,8 +1432,13 @@ class Reports_model extends CI_Model
                 $where .= " AND (a.type = 'adjustment_increase' OR a.type ='adjustment_decrease') ";
             } else {
                 $where .= " AND a.type = '" . $filterOnType . "'";
-            }
-
+            } 
+        }     
+        if(!empty($warehouse)){
+            $where .= " AND a.location_id = '" . $warehouse . "'";
+        } 
+        if (!empty($start_date) and !empty($end_date)) {
+            $where .=' AND DATE(a.movement_date) BETWEEN "' . $start_date . '" and "' . $end_date . '"';
         }
         $response = array();
         if ($productId > 0) {
