@@ -355,7 +355,7 @@ if ($result_sales->num_rows > 0) {
             $result_sales_items = $stmt_items->get_result();
 
             //sending delivered email for status update
-            if ($tracking_status == 'Sign scan') { // Assuming 'Sign scan' indicates delivered
+            if ($tracking_status == 'Delivery scan') { // Assuming 'Sign scan' indicates delivered
 
                 $messageBody = '
                 <!DOCTYPE html>
