@@ -871,7 +871,7 @@ function loadItems() {
                 item_oqty = item.row.oqty,
                 item_qty = item.row.qty,
                 item_bqty = item.row.quantity_balance,
-                item_expiry = item.row.expiry,
+                item_expiry = (item.row.expiry) ? new Date(item.row.expiry).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB'),
                 item_batchno = item.row.batchno,
                 item_serialno = item.row.serial_number,
                 item_tax_method = item.row.tax_method,
