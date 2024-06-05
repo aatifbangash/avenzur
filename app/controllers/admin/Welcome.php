@@ -107,6 +107,7 @@ class Welcome extends MY_Controller
             "" => "-- ALL --",
             "purchase" => "Purchases",
             "sale" => "Sales",
+            "pos" => "POS",
             "customer_return" => "Return Customer",
             "return_to_supplier" => "Return Supplier",
             "transfer_in" => "Transfer In",
@@ -125,6 +126,7 @@ class Welcome extends MY_Controller
         $this->data['bs']        = $this->db_model->getBestSeller();
         $this->data['filterOnTypeArr'] = $filterOnTypeArr;
         $this->data['warehouses'] = $this->site->getAllWarehouses();
+       // echo '<pre>'; print_r( $this->data['warehouses']);  exit; 
         $lmsdate                 = date('Y-m-d', strtotime('first day of last month')) . ' 00:00:00';
         $lmedate                 = date('Y-m-d', strtotime('last day of last month')) . ' 23:59:59';
         $this->data['lmbs']      = $this->db_model->getBestSeller($lmsdate, $lmedate);
