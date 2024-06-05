@@ -171,7 +171,7 @@
 
 
                                 <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
-                                <input type="text" name="quantity" value="1" class="qty Qnum text-center w-100 p-0 ">
+                                <input type="text" readonly name="quantity" value="1" class="qty Qnum text-center w-100 p-0 ">
                                 <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
 
 
@@ -354,7 +354,7 @@
                                 
                                         <div class="quantity text-end py-2 d-flex align-items-center">
                                         <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
-                                        <input type="text" name="quantity" class="Qnum" value="1" required="required" />
+                                        <input type="text" name="quantity" readonly class="Qnum" value="1" required="required" />
                                         <!--<span class="Qnum ">1</span>-->
                                         <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
                                         </div>
@@ -463,7 +463,7 @@
                                 
                                         <div class="quantity text-end py-2 d-flex align-items-center">
                                         <span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>
-                                        <input type="text" name="quantity" class="Qnum" value="1" required="required" />
+                                        <input type="text" name="quantity" readonly class="Qnum" value="1" required="required" />
                                         <!--<span class="Qnum ">1</span>-->
                                         <span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>
                                         </div>

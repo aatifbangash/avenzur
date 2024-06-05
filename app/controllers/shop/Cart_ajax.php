@@ -36,10 +36,18 @@ class Cart_ajax extends MY_Shop_Controller
     {
         $this->session->unset_userdata('coupon_details');
         if ($rowid) {
+            $item = $this->cart->get_item($rowid);
+            if($item['code'] == '06285193000301'){
+
+            }
             return $this->cart->remove($rowid);
         }
         if ($this->input->is_ajax_request()) {
             if ($rowid = $this->input->post('rowid', true)) {
+                $item = $this->cart->get_item($rowid);
+                if($item['code'] == '06285193000301'){
+
+                }
                 if ($this->cart->remove($rowid)) {
                     $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_item_deleted')]);
                 }
@@ -49,30 +57,27 @@ class Cart_ajax extends MY_Shop_Controller
 
     public function remove_coupon_code(){
         $coupon_details = $this->session->userdata('coupon_details');
-        if(isset($coupon_details['code'])){
-            $c_code = $coupon_details['code'];
+        
+        // Remove any discount if no coupon is detected
+        $cart_arr = $this->cart;
+        $cart_total = $cart_arr->cart_contents['cart_total'];
 
-            // Remove any discount if no coupon is detected
-            $cart_arr = $this->cart;
-            $cart_total = $cart_arr->cart_contents['cart_total'];
+        $coupon_disc = $this->cart->get_total_discount();
+        $cart_total = $cart_total + $coupon_disc;
 
-            $coupon_disc = $this->cart->get_total_discount();
-            $cart_total = $cart_total + $coupon_disc;
-
-            $cart_contents = $this->cart->contents();
-            $cart_arr = array();
-            foreach ($cart_contents as $item => $val) {
-                $data = [
-                    'rowid'  => $val['rowid'],
-                    'discount'  => 0
-                ];
-                array_push($cart_arr, $data);
-            }
-
-            $this->cart->update($cart_arr);
-
-            $this->session->unset_userdata('coupon_details');
+        $cart_contents = $this->cart->contents();
+        $cart_arr = array();
+        foreach ($cart_contents as $item => $val) {
+            $data = [
+                'rowid'  => $val['rowid'],
+                'discount'  => 0
+            ];
+            array_push($cart_arr, $data);
         }
+
+        $this->cart->update($cart_arr);
+
+        $this->session->unset_userdata('coupon_details');
     }
 
     public function remove_coupon(){
@@ -249,7 +254,7 @@ class Cart_ajax extends MY_Shop_Controller
 
             $quantity_added = $this->input->get('qty') + $product_to_add_quantity;
 
-            if($quantity_added > 3){
+            if($quantity_added > 3 && $product->code != '06285193000301'){
                 $this->sma->send_json(['error' => 1, 'message' => 'Maximum allowed order 3 pieces']);
                 //return false;
             }
@@ -330,7 +335,7 @@ class Cart_ajax extends MY_Shop_Controller
                 $discounted_quantity = 0;
 
                 if($total_sulfad > 1){
-                    $discount_amt = 75;
+                    $discount_amt = 75 * (floor($total_sulfad/ 2) );
                 }
 
                 $data = [
@@ -602,7 +607,7 @@ class Cart_ajax extends MY_Shop_Controller
                 $price   = $this->sma->isPromo($product) ? $product->promo_price : $price;
                 // $price = $this->sma->isPromo($product) ? $product->promo_price : $product->price;
 
-                if($this->input->post('qty', true) > 3){
+                if($this->input->post('qty', true) > 3 && $product->code != '06285193000301'){
                     $this->sma->send_json(['error' => 1, 'message' => 'Maximum allowed order 3 pieces']);
                 }
 
@@ -637,7 +642,7 @@ class Cart_ajax extends MY_Shop_Controller
                     //$discounted_quantity = floor($sulfad_new_quantity / 3);
                     $discounted_quantity = 0;
                     if($sulfad_new_quantity > 1){
-                        $discount_amt = 75;
+                        $discount_amt = 75 * (floor($sulfad_new_quantity/ 2) );
                     }
 
                     $data = [

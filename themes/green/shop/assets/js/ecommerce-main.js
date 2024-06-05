@@ -185,6 +185,7 @@ function update_cart_item(t, e, a, s, i) {
           sa_alert("Error!", t.message, "error", !0))
         : t.cart &&
           ((cart = t.cart), update_mini_cart(cart), update_cart(cart));
+        location.reload();
       //sa_alert(t.status, t.message));
     },
     error: function () {
@@ -228,10 +229,10 @@ function update_cart(t) {
           this.rowid +
           '" class="text-red remove-item text-decoration-none text-dark"><i class="fa fa-trash-o"></i> Remove</a></div>' +
           '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between cartQuantity"><h6 class="my-1 me-2">Quantity</h6>' +
-          '<span class="plus btn-plus-update"><i class="bi bi-plus-circle-fill"></i></span>' +
+          '<span class="plus btn-plus-update" data-code="'+this.code+'"><i class="bi bi-plus-circle-fill"></i></span>' +
           '<span class="fs-6 px-2"><input type="text" style="width: 50px;" name="' +
           e +
-          '[qty]" class="form-control text-center input-qty cart-item-qty" value="' +
+          '[qty]" readonly class="form-control text-center input-qty cart-item-qty" value="' +
           this.qty +
           '"></span>' +
           '<span class="minus btn-minus-update"><i class="bi bi-dash-circle-fill"></i></span>' +
@@ -455,6 +456,7 @@ function saa_alert(t, e, a, s) {
           window.location.href = "shop/products";
         } else {
           console.log(t.total_items);
+          location.reload();
         }
         //sa_alert(t.status, t.message);
       },
@@ -671,7 +673,7 @@ function gen_html(t) {
         '<span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>';
       //e += '<span class="Qnum ">1</span>';
       e +=
-        '<input type="text" name="quantity" class="Qnum" value="1" required="required" />';
+        '<input type="text" name="quantity" readonly class="Qnum" value="1" required="required" />';
       e +=
         '<span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>';
       e += "</div>";
@@ -1196,10 +1198,27 @@ $(document).ready(function () {
   });
 
   $(document).on("click", ".btn-plus", function (t) {
-    var e = $(this).parent().find("input");
-    if (e.val() < 3) {
-      e.val(parseInt(e.val()) + 1);
+    // Find the closest parent .products-card
+    let productCard = t.target.closest('.products-card');
+    if (productCard) {
+      // Find the anchor tag with the product URL
+      let productLink = productCard.querySelector('a[href*="product"]');
+      var e = $(this).parent().find("input");
+      if (e.val() < 3) {
+        e.val(parseInt(e.val()) + 1);
+      } else if (productLink && productLink.href.includes('06285193000301')) {
+        e.val(parseInt(e.val()) + 1);
+      }
+    }else{
+      var currentUrl = window.location.href;
+      var e = $(this).parent().find("input");
+      if(currentUrl.includes('06285193000301')){
+        e.val(parseInt(e.val()) + 1);
+      }else if(e.val() < 3){
+        e.val(parseInt(e.val()) + 1);
+      }
     }
+
   });
 
   $(document).on("click", ".btn-minus-update", function (t) {
@@ -1219,8 +1238,22 @@ $(document).ready(function () {
   });
 
   $(document).on("click", ".btn-plus-update", function (t) {
+    let target = t.target.closest('.btn-plus-update');
+    var datacode = target.getAttribute('data-code');
+    
     var e = $(this).parent().find("input");
     if (e.val() < 3) {
+      e.val(parseInt(e.val()) + 1);
+
+      var a = $(this).closest(".cart-content-wrapper"),
+        s = a.attr("id"),
+        i = site.site_url + "cart/update",
+        o = {};
+      (o[site.csrf_token] = site.csrf_token_value),
+        (o.rowid = s),
+        (o.qty = e.val()),
+        update_cart_item(i, o, e, $(this), t.target.type);
+    }else if(datacode == '06285193000301'){
       e.val(parseInt(e.val()) + 1);
 
       var a = $(this).closest(".cart-content-wrapper"),
