@@ -189,9 +189,33 @@
         var normalizedPhone = '';
       }
 
+      var userSessionFirstName = "<?php echo $this->session->userdata('customer_first_name'); ?>";
+      if (userSessionFirstName) {
+        var normalizedFirstName = normalizeEmail(userSessionFirstName);
+      }else{
+        var normalizedFirstName = '';
+      }
+
+      var userSessionLastName = "<?php echo $this->session->userdata('customer_last_name'); ?>";
+      if (userSessionLastName) {
+        var normalizedLastName = normalizeEmail(userSessionLastName);
+      }else{
+        var normalizedLastName = '';
+      }
+
+      var userSessionZipCode = "<?php echo $this->session->userdata('customer_zip_code'); ?>";
+      if (userSessionZipCode) {
+        var normalizedZipCode = normalizeEmail(userSessionZipCode);
+      }else{
+        var normalizedZipCode = '';
+      }
+
       snaptr('init', '48414e12-17e7-4ba1-bfd6-407aa41991b0', {
         'user_email': normalizedEmail,
-        'user_phone': normalizedPhone
+        'user_phone': normalizedPhone,
+        'firstname': normalizedFirstName,
+        'lastname': normalizedLastName,
+        'geo_postal_code': normalizedZipCode
       });
 
       snaptr('track', 'PAGE_VIEW');
