@@ -303,7 +303,7 @@ if ($this->Settings->indian_gst) {
 
     if (userSessionEmail || userSessionPhone) {
 
-        snaptr('track', 'ADD_CART');
+        snaptr('track', 'ADD_CART', {'currency': 'SAR', 'price': '<?php  echo $total; ?>', 'payment_info_available':1, 'item_category': 'Medical' });
     }
 
     function showCardDetails(){
@@ -604,7 +604,7 @@ if ($this->Settings->indian_gst) {
 
         $('#proceed-to-payment').click(function (e) {
             // On purchase track on snapchat
-            snaptr('track', 'PURCHASE');
+            snaptr('track', 'PURCHASE', {'currency': 'SAR', 'price': '<?php  echo $total; ?>', 'payment_info_available':1, 'item_category': 'Medical' });
         });
 
         $('#proceed-payment').click(function (e) {

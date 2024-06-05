@@ -107,6 +107,15 @@ class MY_Shop_Controller extends CI_Controller
             if(!$this->session->userdata('phone')){
                 $this->session->set_userdata('phone', $this->customer->phone);
             }
+            if(!$this->session->userdata('customer_first_name')){
+                $this->session->set_userdata('customer_first_name', $this->customer->first_name);
+            }
+            if(!$this->session->userdata('customer_last_name')){
+                $this->session->set_userdata('customer_last_name', $this->customer->last_name);
+            }
+            if(!$this->session->userdata('customer_zip_code')){
+                $this->session->set_userdata('customer_zip_code', $this->customer->postal_code);
+            }
         } elseif ($this->shop_settings->warehouse) {
             $this->warehouse = $this->site->getWarehouseByID($this->shop_settings->warehouse);
         }
