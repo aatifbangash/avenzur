@@ -68,11 +68,14 @@ class Cart_ajax extends MY_Shop_Controller
         $cart_contents = $this->cart->contents();
         $cart_arr = array();
         foreach ($cart_contents as $item => $val) {
-            $data = [
-                'rowid'  => $val['rowid'],
-                'discount'  => 0
-            ];
-            array_push($cart_arr, $data);
+            if($val['code'] != '06285193000301'){
+                $data = [
+                    'rowid'  => $val['rowid'],
+                    'discount'  => 0
+                ];
+                array_push($cart_arr, $data);
+            }
+            
         }
 
         $this->cart->update($cart_arr);
