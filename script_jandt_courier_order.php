@@ -245,6 +245,7 @@ $mail->Username = 'info@avenzur.com'; // SMTP username
 $mail->Password = 'aheoyqmsowyhclea'; //'bpnzmdrbhwbrxclc'; // SMTP password
 $mail->SMTPSecure = 'ssl'; // Enable TLS encryption, `ssl` also accepted
 $mail->Port = 465; // TCP port to connect to
+$mail->isHTML(true); 
 
 // $mail->isSMTP();
 // $mail->Host = 'smtp.gmail.com'; // Specify main and backup SMTP servers
@@ -253,7 +254,7 @@ $mail->Port = 465; // TCP port to connect to
 // $mail->Password = 'bpnzmdrbhwbrxclc'; //'bpnzmdrbhwbrxclc'; // SMTP password
 // $mail->SMTPSecure = 'tls'; // Enable TLS encryption, `ssl` also accepted
 // $mail->Port = 587; // TCP port to connect to
-// $mail->isHTML(true); // Set email format to HTML
+ //$mail->isHTML(true); // Set email format to HTML
 
 // $hostname = "localhost";
 // $username = "root";
@@ -518,7 +519,7 @@ if ($result_sales->num_rows > 0) {
                 $mail->Subject = 'Your avenzur order has been delivered!';
 
                 $mail->setFrom('info@avenzur.com', 'Avenzur');
-                $mail->addAddress($customer_data['email'] , $customer_name ); // Add a recipient
+                //$mail->addAddress($customer_data['email'] , $customer_name ); // Add a recipient
                 $mail->addAddress('fabbas@avenzur.com', 'Faisal Abbas');
                 //$mail->addAddress('ama@pharma.com.sa','Dr Amr');
 
