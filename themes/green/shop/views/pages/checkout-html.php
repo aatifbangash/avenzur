@@ -861,7 +861,7 @@ if ($this->Settings->indian_gst) {
             ].includes(country)) { //GCC
                 $('.payment-k').prop('disabled', false)
                 {
-                    shipping = 32
+                    shipping = 62
                     deliveryDays = "Expected delivery 4 to 6 days"
                 }
             } else {
@@ -875,7 +875,7 @@ if ($this->Settings->indian_gst) {
                 if (saudiOrder == 1 && orderWithTax > 200) {
                     shipping = 0;
                 } else {
-                    shipping = 32;
+                    shipping = 62;
                 }
                 /*else{
                     shipping = 32;
