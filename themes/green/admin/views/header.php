@@ -1013,6 +1013,13 @@
                                             <i class="fa fa-line-chart"></i><span class="text"> <?= lang('Fast_Moving_Items'); ?></span>
                                         </a>
                                     </li>
+
+                                    <li id="promotion_items_report">
+                                        <a href="<?= admin_url('reports/promotion_items_report') ?>">
+                                            <i class="fa fa-line-chart"></i><span class="text"> <?= lang('Promotion_Items_Report'); ?></span>
+                                        </a>
+                                    </li>
+                                    
                                 </ul>
                             </li>
 

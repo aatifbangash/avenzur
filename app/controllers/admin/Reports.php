@@ -3057,6 +3057,158 @@ class Reports extends MY_Controller
         $this->page_construct('reports/register', $meta, $this->data);
     }
 
+    
+
+    public function promotion_items_report()
+    {
+        $this->sma->checkPermissions(); //'sales'
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['users'] = $this->reports_model->getStaff(); 
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('promotion_items_report')]];
+        $meta = ['page_title' => lang('promotion_items_report'), 'bc' => $bc];
+        $this->page_construct('reports/promotion_items_report', $meta, $this->data);
+    }
+    public function get_promotion_items($pdf = null, $xls = null)
+    {
+          
+        $this->sma->checkPermissions('sales', true);
+        // $product = $this->input->get('product') ? $this->input->get('product') : null; 
+        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null; 
+        $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;
+
+        if ($start_date) {
+            $start_date = $this->sma->fld($start_date);
+            $end_date = $this->sma->fld($end_date);
+        }
+        if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+            $user = $this->session->userdata('user_id');
+        }
+
+        if ($pdf || $xls) {
+           
+            $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null; 
+            $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
+            $keyword = $this->input->get('keyword') ? $this->input->get('keyword') : null;
+            
+            if ($start_date) {
+                $start_date = $this->sma->fld($start_date);
+                $end_date = $this->sma->fld($end_date);
+            } 
+            $this->db
+                ->select("{$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name,  
+                {$this->db->dbprefix('products')}.start_date,  {$this->db->dbprefix('products')}.end_date,  
+                {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname,
+                {$this->db->dbprefix('products')}.promo_price,
+                {$this->db->dbprefix('products')}.price,
+                ", false)
+                ->from('products');
+                $this->db->join('categories', 'products.category_id=categories.id', 'left') 
+                ->join('brands', 'products.brand=brands.id', 'left')
+                ->group_by("products.id"); 
+            $this->db->where("{$this->db->dbprefix('products')}.promotion",1); 
+            $keyword=  trim($this->input->post('keyword'));  
+            if(!empty( $keyword)){  
+                $this->db->group_start();  
+                $this->db->where("{$this->db->dbprefix('products')}.code",$keyword);  
+                $this->db->or_like("{$this->db->dbprefix('products')}.name",$keyword,'both');  
+                $this->db->or_like("{$this->db->dbprefix('brands')}.name",$keyword,'both');   
+                $this->db->or_like("{$this->db->dbprefix('categories')}.name",$keyword,'both'); 
+                $this->db->group_end();   
+               } 
+            if ($start_date) {
+                $this->db->where($this->db->dbprefix('products') . '.start_date BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+            } 
+
+            $q = $this->db->get();
+		    //echo $this->db->last_query(); exit; 
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data[] = $row;
+                }
+            } else {
+                $data = null;
+            }
+
+            if (!empty($data)) {
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('promo_items'));
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('start_date'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('end_date')); 
+                $this->excel->getActiveSheet()->SetCellValue('E1', lang('brand')); 
+                $this->excel->getActiveSheet()->SetCellValue('F1', lang('category')); 
+                $this->excel->getActiveSheet()->SetCellValue('G1', lang('promo_price')); 
+                $this->excel->getActiveSheet()->SetCellValue('H1', lang('Price'));  
+                $row = 2;
+                $gtotal_promo_price = 0;
+                $gtotal_Price = 0;
+                
+                foreach ($data as $data_row) {         //  $row, $this->sma->hrld($data_row->code) // 
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->start_date);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->end_date);
+                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->brand); 
+                    $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->cname); 
+                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->promo_price); 
+                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $data_row->price);  
+
+                    $gtotal_promo_price += $data_row->promo_price;
+                    $gtotal_Price += $data_row->price; 
+                    $row++;
+                }
+                $this->excel->getActiveSheet()->getStyle('G' . $row . ':H' . $row)->getBorders()
+                    ->getTop()->setBorderStyle('medium');
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $gtotal_promo_price);
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, $gtotal_Price);
+                // $this->excel->getActiveSheet()->SetCellValue('H' . $row, $balance); 
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20); 
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+                $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
+                $filename = 'promotion_items_report';
+                $this->load->helper('excel');
+                create_excel($this->excel, $filename);
+                  
+            }
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER['HTTP_REFERER']);
+        } else { 
+          
+            $this->load->library('datatables'); 
+            $this->datatables
+                ->select("{$this->db->dbprefix('products')}.image, {$this->db->dbprefix('products')}.code, 
+                {$this->db->dbprefix('products')}.name,  
+                {$this->db->dbprefix('products')}.start_date,  {$this->db->dbprefix('products')}.end_date,  
+                {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname,
+                {$this->db->dbprefix('products')}.promo_price,
+                {$this->db->dbprefix('products')}.price,
+                ", false)
+                ->from('products');
+                $this->datatables->join('categories', 'products.category_id=categories.id', 'left') 
+                ->join('brands', 'products.brand=brands.id', 'left')
+                ->group_by("products.id"); 
+            $this->datatables->where("{$this->db->dbprefix('products')}.promotion",1); 
+            $keyword=  trim($this->input->post('keyword'));  
+            if(!empty( $keyword)){  
+                $this->db->group_start();  
+                $this->datatables->where("{$this->db->dbprefix('products')}.code",$keyword);  
+                $this->db->or_like("{$this->db->dbprefix('products')}.name",$keyword,'both');  
+                $this->db->or_like("{$this->db->dbprefix('brands')}.name",$keyword,'both');   
+                $this->db->or_like("{$this->db->dbprefix('categories')}.name",$keyword,'both'); 
+                $this->db->group_end();   
+               } 
+            if (!empty($start_date) and !empty($end_date)) {
+                $this->datatables->where($this->db->dbprefix('products') . '.start_date BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+            } 
+           // $this->db->order_by("total_pieces",'DESC');  
+           echo $this->datatables->generate();
+        }
+    }
     public function fast_moving_items()
     {
         $this->sma->checkPermissions('sales');
@@ -3117,7 +3269,7 @@ class Reports extends MY_Controller
             //     $this->db->where('sale_items.product_id', $product);
             // }  
             if ($start_date) {
-                $this->db->where($this->db->dbprefix('sales') . '.date BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+                $this->db->where('DATE('.$this->db->dbprefix('sales') . '.date) BETWEEN "' . $start_date . '" and "' . $end_date . '"');
             }
 
             $q = $this->db->get();
@@ -3208,7 +3360,7 @@ class Reports extends MY_Controller
                }
 
             if ($start_date) {
-                $this->datatables->where($this->db->dbprefix('sales') . '.date BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+                $this->datatables->where('DATE('.$this->db->dbprefix('sales') . '.date) BETWEEN "' . $start_date . '" and "' . $end_date . '"');
             } 
            // $this->db->order_by("total_pieces",'DESC');  
           $action =''; 
