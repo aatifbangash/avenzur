@@ -261,7 +261,7 @@ table#poTable td input.form-control {
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <?= lang('date', 'podate'); ?>
-                                    <?php echo form_input('date', ($_POST['date'] ?? ''), 'class="form-control input-tip datetime" id="podate" required="required"'); ?>
+                                    <?php echo form_input('date', ($_POST['date'] ?? date("d/m/Y H:i")), 'class="form-control input-tip datetime" id="podate" required="required"'); ?>
                                 </div>
                             </div>
                         <?php

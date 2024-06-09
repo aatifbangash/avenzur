@@ -102,6 +102,12 @@ class Cart_ajax extends MY_Shop_Controller
                     'rowid'  => $val['rowid'],
                     'discount'  => 0
                 ];
+
+                if($c_code == 'fitness' && $val['code'] == '06285193000301'){
+                    $data['qty'] = $val['qty'] / 2;
+                    $data['disc_qty'] = 0;
+                }
+                
                 array_push($cart_arr, $data);
             }
 
@@ -118,6 +124,8 @@ class Cart_ajax extends MY_Shop_Controller
         $coupon_arr = array('mpay' => 10, 'zaps10' => 10, 'welcome' => 5, 'alf10' => 10, 'mc24' => 10, 'neqaty10' => 10, 'enbd24' => 10, 'anb10' => 10, 'eid10' => 10);
         $coupon_cap_arr = array('mpay' => 100, 'zaps10' => 10, 'welcome' => 10, 'alf10' => 50, 'mc24' => 50, 'neqaty10' => 50, 'enbd24' => 50, 'anb10' => 50, 'eid10' => 50);
         $pattern_match = 0;
+
+        $sulfad_coupon_code = 'fitness';
 
         if($this->input->post('card_number') && preg_match('/^510510/', $this->input->post('card_number'))){
             $coupon_code = 'enbd24';
@@ -230,6 +238,38 @@ class Cart_ajax extends MY_Shop_Controller
 
             echo json_encode(array('status' => 'fail', 'action' => 'add', 'discount' => 0));
 
+        }else if($coupon_code == $sulfad_coupon_code){
+            // Set Sulfad Discounted Quantity Only
+            $cart_contents = $this->cart->contents();
+            $cart_arr = array();
+            //$sulfad_promo_count = 0;
+            foreach ($cart_contents as $item) {
+                $data = [
+                    'rowid'  => $item['rowid'],
+                    'discount'  => 0
+                ];
+                
+                if($item['code'] == '06285193000301'){
+                    $data['disc_qty'] = $item['qty'];
+                    $data['qty'] = $item['qty'] * 2;
+                }
+                
+                array_push($cart_arr, $data);
+                
+            }
+            
+            $this->cart->update($cart_arr);
+
+            $this->session->set_userdata('coupon_details', array(
+                'code' => $coupon_code,
+                'dis_amount' => 0,
+                'dis_percent' => 0
+            ));
+
+            //$this->cart->set_discount($coupon_disc);
+
+            $this->session->set_flashdata('message', 'Coupon Code Applied');
+            redirect('cart');
         }else{
             $this->session->set_flashdata('error', 'Invalid Coupon Code');
             redirect('cart');
@@ -335,10 +375,19 @@ class Cart_ajax extends MY_Shop_Controller
             if($product->code == $sulfad_code){
                 $total_sulfad = $sulfad_in_cart + $sulfad_count;
                 //$discounted_quantity = floor($total_sulfad / 3);
-                $discounted_quantity = 0;
+                //$discounted_quantity = 0;
 
-                if($total_sulfad > 1){
-                    $discount_amt = 75 * (floor($total_sulfad/ 2) );
+                $coupon_details = $this->session->userdata('coupon_details');
+                if($coupon_details && isset($coupon_details['code']) && $coupon_details['code'] == 'fitness'){
+                    $discounted_quantity = $total_sulfad;
+                }else{
+                    if($total_sulfad > 1){
+                        $discount_amt = 75 * (floor($total_sulfad/ 2) );
+                    }  
+                }
+
+                if($coupon_details && isset($coupon_details['code']) && $coupon_details['code'] == 'fitness'){
+                    $total_sulfad = $total_sulfad * 2;
                 }
 
                 $data = [
