@@ -314,7 +314,7 @@ a.me-2.collapse-toggle:hover {
                                     <div class="form-check">
                                         <input class="form-check-input brand-checkbox" type="checkbox" value="<?php echo $brand->id; ?>" id="flexCheckDefault<?php echo $brand->id; ?>">
                                         <label class="form-check-label" for="flexCheckDefault<?php echo $brand->id; ?>">
-                                            <a href="#" class="brand-link list-group-item-action" data-brand="<?php echo $brand->slug; ?>">
+                                            <a class="brand-link list-group-item-action" data-brand="<?php echo $brand->slug; ?>" style="text-decoration:none;">
                                                 <h6><?php echo ucfirst(strtolower($brand->name)); ?></h6>
                                             </a>
                                         </label>
