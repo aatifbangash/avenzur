@@ -478,6 +478,11 @@ class Products_model extends CI_Model
         return false;
     }
 
+    public function remove_image($id) {
+        $this->db->where('id', $id);
+        $this->db->update('products', ['image' => NULL]);
+    }
+
     public function getProductComboItems($pid)
     {
         $this->db->select($this->db->dbprefix('products') . '.id as id, ' . $this->db->dbprefix('products') . '.code as code, ' . $this->db->dbprefix('combo_items') . '.quantity as qty, ' . $this->db->dbprefix('products') . '.name as name, ' . $this->db->dbprefix('combo_items') . '.unit_price as price')->join('products', 'products.code=combo_items.item_code', 'left')->group_by('combo_items.id');

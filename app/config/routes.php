@@ -14,6 +14,7 @@ $route['product/(:any)']         = 'shop/shop/product/$1';
 $route['blog/(:any)']            = 'shop/shop/blog/$1';
 $route['category/(:any)']        = 'shop/shop/products/$1';
 $route['brand/(:any)']           = 'shop/shop/products/0/0/$1';
+
 $route['category/(:any)/(:any)'] = 'shop/shop/products/$1/$2';
 $route['pay/process_payment']    = 'pay/process_payment';
 $route['pay/test_directpay_post']  = 'pay/test_directpay_post';
@@ -77,3 +78,4 @@ $route['admin/quotes/(:num)']    = 'admin/quotes/index/$1';
 $route['admin/returns/(:num)']   = 'admin/returns/index/$1';
 $route['admin/returns_supplier/(:num)']   = 'admin/returns_supplier/index/$1';
 $route['admin/sales/qty_onhold_requests']     = 'admin/sales/qty_onhold_requests'; 
+$route['admin/product/remove_image/(:num)'] = 'product/remove_image/$1';
