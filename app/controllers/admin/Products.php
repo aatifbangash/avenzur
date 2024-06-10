@@ -521,7 +521,8 @@ class Products extends MY_Controller
             // Find the product in the database based on the code
             $this->db->select('*');
             $this->db->from('sma_products');
-            $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$ibarCode, NULL, FALSE);
+            //$this->db->where('CAST(code AS UNSIGNED) = ' . (int)$ibarCode, NULL, FALSE);
+            $this->db->where('code', $ibarCode);
             $query = $this->db->get();
             $product = $query->row();
             
@@ -537,8 +538,6 @@ class Products extends MY_Controller
                 $product_new = $query_new->row();
 
                 if ($product_new) {
-
-                    
                     // Update the code in the database with the ic from CSV
                     /*$dataToUpdate = [
                         'tax_rate' => $tax_rate,
