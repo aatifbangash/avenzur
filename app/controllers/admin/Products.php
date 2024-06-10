@@ -491,7 +491,7 @@ class Products extends MY_Controller
         //$csvFile = 'https://avenzur.com/assets/uploads/temp/iherb_updated.csv';
         //$csvFile = '/var/www/backup25May2023/assets/uploads/temp/iherb_updated.csv';
 
-        $csvFile = $this->upload_path.'temp/new-products-sheet.csv';
+        $csvFile = $this->upload_path.'temp/localizer_to_be_checked.csv';
         
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
@@ -539,7 +539,7 @@ class Products extends MY_Controller
 
                 if ($product_new) {
                     // Update the code in the database with the ic from CSV
-                    $dataToUpdate = [
+                    /*$dataToUpdate = [
                         'tax_rate' => $tax_rate,
                         'code' => $ibarCode,
                         'name' => $itemName,
@@ -549,7 +549,7 @@ class Products extends MY_Controller
                     ];
         
                     $this->db->where('id', $product_new->id);
-                    $this->db->update('sma_products', $dataToUpdate);
+                    $this->db->update('sma_products', $dataToUpdate);*/
                     echo "Product with code $asconCode will be updated with the IBC $ibarCode<br>";
                 }else{
                     echo "Product not found in system with IBC $ibarCode and Ascon Code $asconCode <br>";
