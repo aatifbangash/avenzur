@@ -453,18 +453,23 @@ $(document).ready(function () {
                 'unorderedlist',
                 'orderedlist',
                 '|',
+                'image',
                 /*'image', 'video',*/ 'link',
                 '|',
                 'html',
             ],
-            formattingTags: ['p', 'pre', 'h3', 'h4'],
+            formattingTags: ['p', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
             minHeight: 100,
+            imageUpload: site.base_url +'Editor/image_upload/',
             changeCallback: function (e) {
                 var editor = this.$editor.next('textarea');
                 if ($(editor).attr('required')) {
                     $('form[data-toggle="validator"]').bootstrapValidator('revalidateField', $(editor).attr('name'));
                 }
             },
+            uploadFields: {
+                ['token']: $("input[name='token']").val() 
+            }
         });
     $(document).on('click', '.file-caption', function () {
         $(this).next('.input-group-btn').children('.btn-file').children('input.file').trigger('click');

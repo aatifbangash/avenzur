@@ -453,18 +453,29 @@ $(document).ready(function () {
                 'unorderedlist',
                 'orderedlist',
                 '|',
+                'image',
                 /*'image', 'video',*/ 'link',
                 '|',
                 'html',
             ],
-            formattingTags: ['p', 'pre', 'h3', 'h4'],
+            //plugins: ['fontsize', 'fontcolor', 'fontfamily', 'imagemanager', 'filemanager', 'fullscreen'], // Plugins for additional features
+            formattingTags: ['p', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
             minHeight: 100,
-            changeCallback: function (e) {
+            imageUpload: site.base_url +'Editor/image_upload/',
+            fileUpload:'assets/uploads/editor_upload',
+            imageUploadErrorCallback: function (json) {
+                console.log('Image upload error: ', json);
+            },
+            changeCallback: function (e) { 
+                //alert(path);
                 var editor = this.$editor.next('textarea');
                 if ($(editor).attr('required')) {
                     $('form[data-toggle="validator"]').bootstrapValidator('revalidateField', $(editor).attr('name'));
                 }
             },
+            uploadFields: {
+                ['token']: $("input[name='token']").val() 
+            }
         });
     $(document).on('click', '.file-caption', function () {
         $(this).next('.input-group-btn').children('.btn-file').children('input.file').trigger('click');
