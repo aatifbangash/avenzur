@@ -397,9 +397,7 @@ if (!empty($variants)) {
                     <div class="standard">
                         <div style="margin-bottom: 15px;">
                         <img src="<?= site_url('assets/uploads/'.$product->image) ?>" width="150" height="150" />
-                        <form action="<?= site_url('product/remove_image/'.$product->id) ?>" method="post">
-                            <button class="btn btn-danger" type="submit" onclick="return confirm('Are you sure you want to remove this image?')">Remove Image</button>
-                        </form>
+                        
                         <!-- <button type="button" onclick="return confirm('Are you sure you want to remove this image?')">Remove Image</button> -->
                         </div>
 
