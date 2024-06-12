@@ -348,6 +348,20 @@ a.me-2.collapse-toggle:hover {
                             </div>
                         </section>
                         <?php
+                    }else if($suppliment_banner){
+                        ?>
+                        <section class="side-banner section-marg-top" style="margin-top:10px;margin-bottom: 40px;">
+                            <div class="container container-max-width" style="padding-left: 0px;padding-right: 0px;">
+                                <div class="sideBannerImg">
+                                    <a href="<?= site_url('category/supplements'); ?>">
+                                        <img id="promo-page-banner-2" loading="lazy"
+                                            src="<?= base_url('assets/images/banners/supplement_inner_banner_2024-06-12_en.jpg' . '?timestamp=' . time()); ?>"
+                                            alt="placeholder" class="w-100" />
+                                    </a>
+                                </div>
+                            </div>
+                        </section>
+                        <?php
                     }
                     ?>
                     <!--<div class="col-md-6 col-6">
