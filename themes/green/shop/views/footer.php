@@ -243,7 +243,7 @@
         document.getElementById('mombaby-banner-1').src = site.site_url + '/assets/images/banners/momBaby.jpg?timestamp=' + Date.now();
         document.getElementById('perc-banner-1').src = site.site_url + '/assets/images/banners/persC.jpg?timestamp=' + Date.now();
       } else {
-        document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo_inner_2023-04-16_en.jpg?timestamp=' + Date.now();
+        document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo_inner_2024-06-12_en.jpg?timestamp=' + Date.now();
       }
 
     } else if (newLang === 'ar') {
@@ -300,7 +300,7 @@
         document.getElementById('mombaby-banner-1').src = site.site_url + '/assets/images/banners/momBaby_ar.jpg?timestamp=' + Date.now();
         document.getElementById('perc-banner-1').src = site.site_url + '/assets/images/banners/persC_ar.jpg?timestamp=' + Date.now();
       } else {
-        document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo_inner_2023-04-16_ar.jpg?timestamp=' + Date.now();
+        document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo_inner_2024-06-12_ar.jpg?timestamp=' + Date.now();
       }
     }
 
