@@ -1539,6 +1539,8 @@ class Shop extends MY_Shop_Controller
         if ($this->input->get('promo') && $this->input->get('promo') == 'yes') {
             $this->data['page_title2'] = 'Promotions';
             $this->data['promo_banner'] = true;
+        }else if($this->shop_model->getCategoryBySlug($category_slug) == 25){
+            $this->data['suppliment_banner'] = true;
         }else{
             $this->data['page_title2'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products')));
         }
@@ -1711,6 +1713,52 @@ class Shop extends MY_Shop_Controller
         $this->data['page_title'] = lang('wishlist');
         $this->data['page_desc'] = '';
         $this->page_construct('pages/wishlist', $this->data);
+    }
+
+    public function getArabicToEnglish(){
+        // Set API endpoint and your API key
+        $apiKey = 'wg_42c9daf242af8316a7b7d92e5a2aa0e55';
+        $apiEndpoint = 'https://api.weglot.com/translate?api_key='.$apiKey;
+
+        // Prepare the JSON payload
+        $data = [
+            "l_from" => "ar",
+            "l_to" => "en",
+            "request_url" => "https://www.avenzur.com/",
+            "words" => [
+                ["w" => "الصفحة الرئيسية", "t" => 1]
+            ]
+        ];
+
+        // Convert the payload to JSON format
+        $jsonData = json_encode($data);
+
+        // Initialize cURL session
+        $ch = curl_init($apiEndpoint);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($jsonData)
+        ]);
+
+        // Execute the POST request
+        $response = curl_exec($ch);
+
+        // Check for errors
+        if (curl_errno($ch)) {
+            echo 'Error:' . curl_error($ch);
+        } else {
+            // Decode the response
+            $responseData = json_decode($response, true);
+            print_r($responseData);
+        }
+        exit;
+        // Close the cURL session
+        curl_close($ch);
     }
 
     public function suggestions($pos = 0)
