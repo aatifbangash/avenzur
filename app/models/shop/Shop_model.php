@@ -1517,6 +1517,51 @@ class Shop_model extends CI_Model
         if ($results !== FALSE && $results->num_rows() > 0) {
             $data = $results->result_array();
 
+            // If category_id is 25, fetch product_id 3 and add it to the result set
+            if (!empty($filters['category_id']) && $filters['category_id'] == 25) {
+                $this->db->select("
+                {$this->db->dbprefix('products')}.id as id,
+                {$this->db->dbprefix('categories')}.name as category_name,
+                {$this->db->dbprefix('categories')}.slug as category_slug,
+                {$this->db->dbprefix('brands')}.name as brand_name,
+                {$this->db->dbprefix('brands')}.slug as brand_slug, 
+                {$this->db->dbprefix('products')}.name as name, 
+                {$this->db->dbprefix('products')}.code as code, 
+                {$this->db->dbprefix('products')}.image as image, 
+                {$this->db->dbprefix('products')}.slug as slug, 
+                {$this->db->dbprefix('products')}.price,
+                {$this->db->dbprefix('products')}.quantity as quantity, 
+                {$this->db->dbprefix('products')}.type, 
+                {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
+                {$this->db->dbprefix('products')}.tax_method,
+                (COALESCE(SUM(sma_im.quantity), 0) - COALESCE(SUM(sma_phqor.quantity), 0)) as product_quantity,
+                promotion, 
+                promo_price, 
+                start_date, 
+                end_date, 
+                product_details as details,
+                t.name as taxName,
+                t.rate as taxPercentage,
+                t.code as taxCode,
+                CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating")
+                ->from('products')
+                ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
+                ->join('categories', 'products.category_id=categories.id', 'left')
+                ->join('brands', 'products.brand=brands.id', 'left')
+                ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
+                ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_inventory_movements GROUP BY product_id) AS sma_im', 'products.id=sma_im.product_id', 'left')
+                ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_product_qty_onhold_request GROUP BY product_id) AS sma_phqor', 'products.id=sma_phqor.product_id', 'left')
+                ->where('products.id', 3)
+                ->group_by('products.id')
+                ->limit(1);
+            
+                $additional_product = $this->db->get();
+                if ($additional_product !== FALSE && $additional_product->num_rows() > 0) {
+                    $additional_product_data = $additional_product->result_array();
+                    $data = array_merge($additional_product_data, $data);
+                }
+            }
+
             $mapData = array_map(function ($row) {
                 if ($row['tax_method'] == '1' && $row['taxPercentage'] > 0) { // tax_method = 0 means inclusiveTax
                     $productTaxPercent = $row['taxPercentage'];
