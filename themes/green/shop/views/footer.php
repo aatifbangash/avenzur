@@ -243,7 +243,10 @@
         document.getElementById('mombaby-banner-1').src = site.site_url + '/assets/images/banners/momBaby.jpg?timestamp=' + Date.now();
         document.getElementById('perc-banner-1').src = site.site_url + '/assets/images/banners/persC.jpg?timestamp=' + Date.now();
       } else {
-        document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo_inner_2024-06-12_en.jpg?timestamp=' + Date.now();
+        if (document.getElementById('promo-page-banner-1')) {
+          document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo_inner_2024-06-12_en.jpg?timestamp=' + Date.now();
+        }
+        
         document.getElementById('promo-page-banner-2').src = site.site_url + '/assets/images/banners/supplement_inner_banner_2024-06-12_en.jpg?timestamp=' + Date.now();
       }
 
@@ -301,7 +304,10 @@
         document.getElementById('mombaby-banner-1').src = site.site_url + '/assets/images/banners/momBaby_ar.jpg?timestamp=' + Date.now();
         document.getElementById('perc-banner-1').src = site.site_url + '/assets/images/banners/persC_ar.jpg?timestamp=' + Date.now();
       } else {
-        document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo_inner_2024-06-12_ar.jpg?timestamp=' + Date.now();
+        if (document.getElementById('promo-page-banner-1')) {
+          document.getElementById('promo-page-banner-1').src = site.site_url + '/assets/images/banners/promo_inner_2024-06-12_ar.jpg?timestamp=' + Date.now();
+        }
+        
         document.getElementById('promo-page-banner-2').src = site.site_url + '/assets/images/banners/supplement_inner_banner_2024-06-12_ar.jpg?timestamp=' + Date.now();
       }
     }
