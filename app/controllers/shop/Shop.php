@@ -1539,7 +1539,7 @@ class Shop extends MY_Shop_Controller
         if ($this->input->get('promo') && $this->input->get('promo') == 'yes') {
             $this->data['page_title2'] = 'Promotions';
             $this->data['promo_banner'] = true;
-        }else if($this->shop_model->getCategoryBySlug($category_slug) == 25){
+        }else if(isset($filters['category']) && $filters['category']->id == 25){
             $this->data['suppliment_banner'] = true;
         }else{
             $this->data['page_title2'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products')));
