@@ -2222,7 +2222,7 @@ class Products extends MY_Controller
             
         } else {
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
-
+            $this->data['images']              = $this->products_model->getProductPhotos($id);
             $this->data['categories']          = $this->site->getAllCategories();
             $this->data['tax_rates']           = $this->site->getAllTaxRates();
             $this->data['brands']              = $this->site->getAllBrands();
@@ -2243,35 +2243,31 @@ class Products extends MY_Controller
         
     }
 
-    public function remove_image($id) {
-        // Load the product model
-        $this->load->model('Product_model');
+    // public function remove_image($id) {
+    //     // Load the product model
+    //     $this->load->model('Product_model');
+    //     // Get the product by id
+    //     $product = $this->products_model->getProductByID($id);
         
-        // Get the product by id
-        $product = $this->products_model->getProductByID($id);
-        
-        if ($product) {
-            // Path to the image file
-            $image_path = './assets/uploads/'.$product->image;
+    //     if ($product) {
+    //         // Path to the image file
+    //         $image_path = './assets/uploads/'.$product->image;
             
-            // Delete the image file from the server
-            if (file_exists($image_path)) {
-                unlink($image_path);
-            }
+    //         // Delete the image file from the server
+    //         if (file_exists($image_path)) {
+    //             unlink($image_path);
+    //         }
             
-            // Update the database to remove the image reference
-            $this->Product_model->remove_image($id);
+    //         // Update the database to remove the image reference
+    //         $this->Product_model->remove_image($id);
             
-            // Set a success message
-            $this->session->set_flashdata('message', 'Image removed successfully.');
-        } else {
-            // Set an error message
-            $this->session->set_flashdata('message', 'Product not found.');
-        }
-        
-        // Redirect to the appropriate page (e.g., product list or edit page)
-        redirect('product/edit/'.$id);
-    }
+    //         // Set a success message
+    //         echo json_encode(['status' => 'Image removed successfully.']);
+    //     } else {
+    //         // Set an error message
+    //         echo json_encode(['status' => 'Product not found.']);
+    //     }
+    // }
 
     public function edit_adjustment($id)
     {

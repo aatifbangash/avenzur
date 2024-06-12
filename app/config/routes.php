@@ -78,4 +78,4 @@ $route['admin/quotes/(:num)']    = 'admin/quotes/index/$1';
 $route['admin/returns/(:num)']   = 'admin/returns/index/$1';
 $route['admin/returns_supplier/(:num)']   = 'admin/returns_supplier/index/$1';
 $route['admin/sales/qty_onhold_requests']     = 'admin/sales/qty_onhold_requests'; 
-$route['admin/product/remove_image/(:num)'] = 'product/remove_image/$1';
+$route['admin/product_image/remove_image/(:num)'] = 'admin/product_image/remove_image/$1';
