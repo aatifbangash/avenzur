@@ -235,7 +235,7 @@
         carouselItems[1].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_2 + '.jpg?timestamp=' + Date.now();
         carouselItems[2].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_3 + '.jpg?timestamp=' + Date.now();
         // set english promo banner
-        document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/promo_offers_2023-04-16_en.jpg?timestamp=' + Date.now();
+        document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/promo_offers_2024-06-12_en.jpg?timestamp=' + Date.now();
         document.getElementById('skincare-banner-1').src = site.site_url + '/assets/images/banners/SkinCare_Banner_2024-04-16.jpg?timestamp=' + Date.now();
         document.getElementById('vitamins-banner-1').src = site.site_url + '/assets/images/banners/Vitamins_Banner_2024-04-16.jpg?timestamp=' + Date.now();
         document.getElementById('makeup-banner-1').src = site.site_url + '/assets/images/banners/Makeup_Banner_2024-04-16.jpg?timestamp=' + Date.now();
@@ -292,7 +292,7 @@
         carouselItems[2].querySelector('img').src = site.site_url + '/assets/uploads/' + imageName_3 + '.jpg?timestamp=' + Date.now();
 
         // set arabic promo banner
-        document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/promo_offers_2023-04-16_ar.jpg?timestamp=' + Date.now();
+        document.getElementById('promo-banner-1').src = site.site_url + '/assets/images/banners/promo_offers_2024-06-12_ar.jpg?timestamp=' + Date.now();
         document.getElementById('skincare-banner-1').src = site.site_url + '/assets/images/banners/SkinCare_Banner_2024-04-16_ar.jpg?timestamp=' + Date.now();
         document.getElementById('vitamins-banner-1').src = site.site_url + '/assets/images/banners/Vitamins_Banner_2024-04-16_ar.jpg?timestamp=' + Date.now();
         document.getElementById('makeup-banner-1').src = site.site_url + '/assets/images/banners/Makeup_Banner_2024-04-16_ar.jpg?timestamp=' + Date.now();

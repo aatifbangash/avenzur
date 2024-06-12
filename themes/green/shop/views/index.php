@@ -181,7 +181,7 @@
       <div class="container container-max-width">
         <div class="sideBannerImg">
           <a href="<?= site_url('shop/products?promo=yes'); ?>">
-            <img id="promo-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/promo_offers_2023-04-16_en.jpg'.'?timestamp='.time()); ?>" alt="Promotion" class="w-100" />
+            <img id="promo-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/promo_offers_2024-06-12_en.jpg'.'?timestamp='.time()); ?>" alt="Promotion" class="w-100" />
           </a>
         </div>
       </div>
