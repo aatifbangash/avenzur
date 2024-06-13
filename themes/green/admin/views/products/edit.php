@@ -383,6 +383,7 @@ if (!empty($variants)) {
                                 <i class="fa fa-times"></i>
                             </a>
                         </div>
+                        <br>
                         <?= lang('product_image', 'product_image') ?>
                         
                         <input id="product_image_link" type="text" placeholder="upload from link"  name="product_image_link" class="form-control file" /><br />
@@ -402,7 +403,7 @@ if (!empty($variants)) {
                     </div>
                     <div id="multiimages" class="padding10">
                                     <?php if (!empty($images)) {
-                                            echo '<a class="img-thumbnail" data-toggle="lightbox" data-gallery="multiimages" data-parent="#multiimages" href="' . base_url() . 'assets/uploads/' . $product->image . '" style="margin-right:5px;"><img class="img-responsive" src="' . base_url() . 'assets/uploads/thumbs/' . $product->image . '" alt="' . $product->image . '" style="width:' . $Settings->twidth . 'px; height:' . $Settings->theight . 'px;" /></a>';
+                                            // echo '<a class="img-thumbnail" data-toggle="lightbox" data-gallery="multiimages" data-parent="#multiimages" href="' . base_url() . 'assets/uploads/' . $product->image . '" style="margin-right:5px;"><img class="img-responsive" src="' . base_url() . 'assets/uploads/thumbs/' . $product->image . '" alt="' . $product->image . '" style="width:' . $Settings->twidth . 'px; height:' . $Settings->theight . 'px;" /></a>';
                                             foreach ($images as $ph) {
                                                 if ($ph->photo != $product->image)
                                                 {
