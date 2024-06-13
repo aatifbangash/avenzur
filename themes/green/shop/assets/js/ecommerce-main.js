@@ -181,8 +181,7 @@ function update_cart_item(t, e, a, s, i) {
     data: e,
     success: function (t) {
       t.error
-        ? ("text" == i ? s.val(a) : s.selectpicker("val", $po),
-          sa_alert("Error!", t.message, "error", !0))
+        ? $.notify(t.message, "warning")
         : t.cart &&
           ((cart = t.cart), update_mini_cart(cart), update_cart(cart));
         location.reload();
