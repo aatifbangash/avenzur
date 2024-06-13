@@ -12,6 +12,8 @@ class Editor extends MY_Controller {
         }
         $config['upload_path'] =  $upload_path;   
         $config['allowed_types'] = 'gif|jpg|jpeg|png';
+        $config['encrypt_name']  = true;
+        $config['max_filename']  = 25;
         $config['max_size'] = 2048; // 2MB 
         $this->load->library('upload', $config);  
         if (!$this->upload->do_upload('file')) {
