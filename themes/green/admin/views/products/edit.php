@@ -373,7 +373,16 @@ if (!empty($variants)) {
                     </div>
 
                     <div class="form-group all">
-                        <img src="<?= site_url('assets/uploads/'.$product->image) ?>" width="50" height="50" /><br />
+                        <!-- <img src="<?= site_url('assets/uploads/'.$product->image) ?>" width="50" height="50" /><br /> -->
+                        <!-- <button class="btn btn-danger" type="type" onclick="removeImage(<?= $product->id ?>, '<?= $product->image ?>')"><i class="fa fa-close"></i></button> -->
+                        <div class="gallery-image">
+                            <a class="img-thumbnail" data-toggle="lightbox" data-gallery="multiimages" data-parent="#multiimages" href="<?= site_url('assets/uploads/'.$product->image) ?>" style="margin-right:5px;">
+                                <img class="img-responsive" src="<?= site_url('assets/uploads/'.$product->image) ?>"   width="100" height="100"  />
+                            </a>
+                            <a style="position: absolute; top: 0; right: 9px;" onclick="removeImage(<?= $product->id ?>, '<?= $product->image ?>')">
+                                <i class="fa fa-times"></i>
+                            </a>
+                        </div>
                         <?= lang('product_image', 'product_image') ?>
                         
                         <input id="product_image_link" type="text" placeholder="upload from link"  name="product_image_link" class="form-control file" /><br />
@@ -391,14 +400,33 @@ if (!empty($variants)) {
                         <input id="images" type="file" data-browse-label="<?= lang('browse'); ?>" name="userfile[]" multiple="true" data-show-upload="false"
                                data-show-preview="true" class="form-control file" accept="image/*">
                     </div>
-                    <div id="img-details"></div>
+                    <div id="multiimages" class="padding10">
+                                    <?php if (!empty($images)) {
+                                            echo '<a class="img-thumbnail" data-toggle="lightbox" data-gallery="multiimages" data-parent="#multiimages" href="' . base_url() . 'assets/uploads/' . $product->image . '" style="margin-right:5px;"><img class="img-responsive" src="' . base_url() . 'assets/uploads/thumbs/' . $product->image . '" alt="' . $product->image . '" style="width:' . $Settings->twidth . 'px; height:' . $Settings->theight . 'px;" /></a>';
+                                            foreach ($images as $ph) {
+                                                if ($ph->photo != $product->image)
+                                                {
+                                                    echo '<div class="gallery-image"><a class="img-thumbnail" data-toggle="lightbox" data-gallery="multiimages" data-parent="#multiimages" href="' . base_url() . 'assets/uploads/' . $ph->photo . '" style="margin-right:5px;"><img class="img-responsive" src="' . base_url() . 'assets/uploads/thumbs/' . $ph->photo . '" alt="' . $ph->photo . '" style="width:' . $Settings->twidth . 'px; height:' . $Settings->theight . 'px;" /></a>';
+                                                    if ($Owner || $Admin || $GP['products-edit']) {
+                                                        echo '<a href="#" class="delimg" data-item-id="' . $ph->id . '"><i class="fa fa-times"></i></a>';
+                                                    }
+                                                    echo '</div>';
+                                                }
+                                               
+                                            }
+                                        }
+                                    ?>
+                                    <div class="clearfix"></div>
+                                </div>
+                    <div id="img-details">
+                        
+                    </div>
                 </div>
                 <div class="col-md-6 col-md-offset-1">
                     <div class="standard">
                         <div style="margin-bottom: 15px;">
                         <img src="<?= site_url('assets/uploads/'.$product->image) ?>" width="150" height="150" />
-                        
-                        <!-- <button type="button" onclick="return confirm('Are you sure you want to remove this image?')">Remove Image</button> -->
+
                         </div>
 
                         <div>
@@ -742,6 +770,28 @@ if (!empty($variants)) {
 </div>
 
 <script type="text/javascript">
+    function removeImage(productId, productImage)
+    {
+        console.log(productId, productImage);
+        if (confirm('Are you sure you want to remove this image?')) {
+            $.ajax({
+                url: '<?= site_url('admin/product_image/remove_image/') ?>' + productId,
+                type: 'GET',
+                success: function(response) {
+                    response = JSON.parse(response);
+                    if (response.status === 'success') {
+                        alert('Image removed successfully.');
+                        location.reload(); // Refresh the page
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        }
+    }
     $(document).ready(function () {
         $('form[data-toggle="validator"]').bootstrapValidator({ excluded: [':disabled'] });
         var audio_success = new Audio('<?= $assets ?>sounds/sound2.mp3');
@@ -777,7 +827,7 @@ if (!empty($variants)) {
         $('.attributes').on('ifUnchecked', function (event) {
             $('#options_' + $(this).attr('id')).slideUp();
         });
-
+        
         //$('#cost').removeAttr('required');
         $('#type').change(function () {
             var t = $(this).val();
