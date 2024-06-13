@@ -1518,7 +1518,7 @@ class Shop_model extends CI_Model
             $data = $results->result_array();
 
             // If category_id is 25, fetch product_id 3 and add it to the result set
-            if (!empty($filters['category']['id']) && $filters['category']['id'] == 25 && !empty($filters['offset'])) {
+            if (!empty($filters['category']['id']) && $filters['category']['id'] == 25 && empty($filters['offset'])) {
                 $this->db->select("
                 {$this->db->dbprefix('products')}.id as id,
                 {$this->db->dbprefix('categories')}.name as category_name,
