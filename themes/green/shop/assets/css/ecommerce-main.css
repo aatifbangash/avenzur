@@ -642,7 +642,7 @@ button.btn.btn-primary.d-lg-none.catsidebarmob {
 .product-price-discount {
   font-size: 22px;
   font-weight: 400;
-  padding: 10px 0;
+  padding: 0px 0;
   clear: both;
 }
 .product-price-discount span.line-through {
