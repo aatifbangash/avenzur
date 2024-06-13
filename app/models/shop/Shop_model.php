@@ -1517,6 +1517,17 @@ class Shop_model extends CI_Model
         if ($results !== FALSE && $results->num_rows() > 0) {
             $data = $results->result_array();
 
+            // Sort the data so that products with brand 407 come last
+            usort($data, function($a, $b) {
+                if ($a['brand'] == 407 && $b['brand'] != 407) {
+                    return 1;
+                } elseif ($a['brand'] != 407 && $b['brand'] == 407) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            });
+
             // If category_id is 25, fetch product_id 3 and add it to the result set
             if (!empty($filters['category']['id']) && $filters['category']['id'] == 25) {
                 $this->db->select("
