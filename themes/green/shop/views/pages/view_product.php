@@ -21,10 +21,20 @@
             <!-- product image col and thumb slider -->
             <div class="col-md-5 col-12 pe-md-5 view_product_ar">
                 <div id="slider" class="owl-carousel product-slider">
+
                     <?php
                     if (isset($product->image)) {
                         ?>
                         <div class="item productzoomImg">
+                            <?php
+                            if($product->promotion == 1){
+                                ?>
+                                    <span class="position-absolute badge rounded-pill bg-danger" style="top:12px;left:12px;font-size:10px">
+                                    <?php echo round((($product->price - $product->promo_price) / $product->price) * 100) ?>
+                                    % OFF</span>
+                                <?php
+                            }
+                            ?>
                             <img src="<?= base_url('assets/uploads/' . $product->image); ?>" alt="<?= $product->name; ?>" />
                             <?php 
                                 if($product->global){
