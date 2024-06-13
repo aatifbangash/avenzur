@@ -1138,7 +1138,7 @@ function img_hl(x) {
         image_link +
         '" data-toggle="lightbox"><img src="' +
         site.url +
-        'assets/uploads/thumbs/' +
+        'assets/uploads/' +
         image_link +
         '" alt="" style="width:30px; height:30px;" /></a></div>'
     );
