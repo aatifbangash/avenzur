@@ -1519,9 +1519,9 @@ class Shop_model extends CI_Model
 
             // Sort the data so that products with brand 407 come last
             usort($data, function($a, $b) {
-                if ($a['brand'] == 407 && $b['brand'] != 407) {
+                if ($a['brand_slug'] == 'bioherba' && $b['brand_slug'] != 'bioherba') {
                     return 1;
-                } elseif ($a['brand'] != 407 && $b['brand'] == 407) {
+                } elseif ($a['brand_slug'] != 'bioherba' && $b['brand_slug'] == 'bioherba') {
                     return -1;
                 } else {
                     return 0;
