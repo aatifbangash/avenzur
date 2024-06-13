@@ -97,6 +97,7 @@ Disallow: /product/
 Disallow: /sulfad-main/
 Disallow: /element_category/elements/
 Disallow: /product/traditional-medicinals-organic-mothers-milk-original-with-fennel-fenugreek-caffeine-free-16-wrapped-tea-bags-006-oz-175-g-each
+Disallow: /product/mass-high-proteine-and-high-calorie-gainer-powder-vanilia-6lb-121021001
 Disallow: /product/121019146
 Disallow: /product/ea38
 Disallow: /product/121020673
