@@ -272,8 +272,8 @@
   <section class="top-bar py-1 ">
     <div class="container container-max-width">
       <div class="row align-items-center">
-        <div class="col-md-6 topBartxt" style="font-weight: bold;font-size: medium;color: red;">
-          Free shipping. Limited time offer. Due to eid holidays order delivery will be delayed *
+        <div class="col-md-6 topBartxt" style="font-weight: bold;font-size: medium;">
+          Free shipping. Limited time offer. <span style="color: red;">Due to eid holidays order delivery will be delayed *</span>
         </div>
         <div class="col-md-6 d-flex justify-content-end topbarBtns">
           <div class="dropdown me-2">
