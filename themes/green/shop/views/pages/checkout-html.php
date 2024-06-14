@@ -821,8 +821,8 @@ if ($this->Settings->indian_gst) {
                     deliveryDays = "1 to 2 days"
                     //$("#express-delivery-check").prop("disabled", false);
                     $("#express-delivery-check").show();
-                    //$("#express-delivery-details").css("display", "block !important");
-                    $("#express-delivery-details").show();
+                    
+                    //$("#express-delivery-details").show(); // After Eid uncomment this line
 
                     if (isExpressDelivery == true) {
                         shipping = 21
@@ -884,8 +884,8 @@ if ($this->Settings->indian_gst) {
 
                 //$("#express-delivery-check").prop("disabled", true);
                 $("#express-delivery-check").show();
-                //$("#express-delivery-details").css("display", "block !important");
-                $("#express-delivery-details").show();
+                
+                //$("#express-delivery-details").show(); // After eid uncomment this line
             }
 
             
