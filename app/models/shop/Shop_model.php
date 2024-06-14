@@ -1586,6 +1586,16 @@ class Shop_model extends CI_Model
                         //$virtual_pharmacy_items += $wh_quantity->quantity;
                         $row['global'] = 1;
                     }
+
+                    if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0)){
+                        
+                        $row['global'] = 1;
+                    }
+
+                    if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0)){
+                        
+                        $row['global'] = 1;
+                    }
                 }
 
                 $row['name'] = stripslashes($row['name']);
