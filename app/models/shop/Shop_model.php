@@ -1458,7 +1458,11 @@ class Shop_model extends CI_Model
         t.name as taxName,
         t.rate as taxPercentage,
         t.code as taxCode,
-        CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating")
+        CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating,
+        CASE 
+        WHEN price > 0 AND promo_price IS NOT NULL THEN (price - promo_price) / price * 100 
+        ELSE 0 
+        END as discount_percentage")
             ->from('products')
             ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
             //->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
@@ -1565,7 +1569,11 @@ class Shop_model extends CI_Model
                     $sort = explode('-', $filters['sorting']);
                     $this->db->order_by($sort[0], $this->db->escape_str($sort[1]));
                 } else {
-                    $this->db->order_by('sortby asc, promotion desc, id desc');
+                    if (!empty($filters['promo'])) {
+                        $this->db->order_by('discount_percentage desc, promotion desc, id desc');
+                    }else{
+                        $this->db->order_by('sortby asc, promotion desc, id desc');
+                    }
                 }
             } else {
                 $this->db->order_by($sortcase . ' desc');
