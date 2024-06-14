@@ -1558,7 +1558,7 @@ class Shop_model extends CI_Model
                     $sort = explode('-', $filters['sorting']);
                     $this->db->order_by($sort[0], $this->db->escape_str($sort[1]));
                 } else {
-                    $this->db->order_by('promotion desc, id desc');
+                    $this->db->order_by('promotion desc, id desc, sortby asc');
                 }
             } else {
                 $this->db->order_by($sortcase . ' desc');
