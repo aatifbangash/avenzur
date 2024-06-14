@@ -1318,6 +1318,18 @@ class Shop extends MY_Shop_Controller
                 //$virtual_pharmacy_items += $wh_quantity->quantity;
                 $product->global = 1;
             }
+
+            // remove the below block after eid
+            if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0)){
+                        
+                $product->global = 1;
+            }
+
+            // remove the below block after eid
+            if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0)){
+                
+                $product->global = 1;
+            }
         }
 
         if (!$slug || !$product) {

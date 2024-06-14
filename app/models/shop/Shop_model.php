@@ -1587,11 +1587,14 @@ class Shop_model extends CI_Model
                         $row['global'] = 1;
                     }
 
+
+                    // remove the below block after eid
                     if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0)){
                         
                         $row['global'] = 1;
                     }
 
+                    // remove the below block after eid
                     if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0)){
                         
                         $row['global'] = 1;
