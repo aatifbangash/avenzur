@@ -273,7 +273,7 @@
     <div class="container container-max-width">
       <div class="row align-items-center">
         <div class="col-md-6 topBartxt" style="font-weight: bold;font-size: medium;">
-          Free shipping. Limited time offer. <span style="color: #f59f9f;">Due to eid holidays order delivery will be delayed *</span>
+          Free shipping. Limited time offer. <span style="color: #f59f9f;">Due to eid holidays order delivery might be delayed *</span>
         </div>
         <div class="col-md-6 d-flex justify-content-end topbarBtns">
           <div class="dropdown me-2">
