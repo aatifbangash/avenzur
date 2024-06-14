@@ -1481,6 +1481,8 @@ class Shop_model extends CI_Model
 
         if (!empty($filters['category']['id']) && $filters['category']['id'] == 25 && empty($filters['offset'])) {
             $this->db->where('hide !=', 1)->limit($filters['limit'] - 1, $filters['offset']);
+        }else if(!empty($filters['category']['id']) && $filters['category']['id'] == 25 && !empty($filters['offset'])){
+            $this->db->where('hide !=', 1)->limit($filters['limit'], $filters['offset'] - 1);
         }else{
             $this->db->where('hide !=', 1)->limit($filters['limit'], $filters['offset']);
         }
