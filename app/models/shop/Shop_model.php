@@ -1479,7 +1479,12 @@ class Shop_model extends CI_Model
             $this->db->select('wgp.price as special_price', false)->join($sp->wgp, 'products.id=wgp.product_id', 'left');
         }
 
-        $this->db->where('hide !=', 1)->limit($filters['limit'], $filters['offset']);
+        if (!empty($filters['category']['id']) && $filters['category']['id'] == 25 && empty($filters['offset'])) {
+            $this->db->where('hide !=', 1)->limit($filters['limit'] - 1, $filters['offset']);
+        }else{
+            $this->db->where('hide !=', 1)->limit($filters['limit'], $filters['offset']);
+        }
+        
         if (!empty($filters)) {
             if (!empty($filters['promo'])) {
                 $today = date('Y-m-d');
