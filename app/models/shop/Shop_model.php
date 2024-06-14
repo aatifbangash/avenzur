@@ -1570,7 +1570,7 @@ class Shop_model extends CI_Model
                     $this->db->order_by($sort[0], $this->db->escape_str($sort[1]));
                 } else {
                     if (!empty($filters['promo'])) {
-                        $this->db->order_by('discount_percentage desc, promotion desc, id desc');
+                        $this->db->order_by('sortby asc, discount_percentage desc, promotion desc, id desc');
                     }else{
                         $this->db->order_by('sortby asc, promotion desc, id desc');
                     }
