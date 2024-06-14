@@ -273,7 +273,7 @@
     <div class="container container-max-width">
       <div class="row align-items-center">
         <div class="col-md-6 topBartxt" style="font-weight: bold;font-size: medium;">
-          Free shipping. Limited time offer *
+          Free shipping. Limited time offer. Orders delayed on Eid
         </div>
         <div class="col-md-6 d-flex justify-content-end topbarBtns">
           <div class="dropdown me-2">
