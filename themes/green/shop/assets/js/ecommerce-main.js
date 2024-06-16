@@ -202,6 +202,15 @@ function update_cart(t) {
   $("#cart-table-new").empty();
   if (t.total_items && t.total_items > 0) {
     var e = 1;
+
+    var fitnessCodeMessage = '';
+    var inputElement = document.querySelector('input[name="coupon_code"]');
+    if (inputElement) {
+      if (inputElement.placeholder === "fitness") {
+        fitnessCodeMessage = 'Fitness code applied. Extra sulfad added to cart';
+      }
+    }
+
     $.each(t.contents, function () {
       var t = this,
         a =
@@ -235,7 +244,7 @@ function update_cart(t) {
           this.qty +
           '"></span>' +
           '<span class="minus btn-minus-update"><i class="bi bi-dash-circle-fill"></i></span>' +
-          "</div></div></div> </div>";
+          "</div></div></div><span>"+ fitnessCodeMessage +"</span></div>";
 
       $(
         '<div class="cart-content-wrapper" id="' +
