@@ -244,7 +244,8 @@ function update_cart(t) {
           this.qty +
           '"></span>' +
           '<span class="minus btn-minus-update"><i class="bi bi-dash-circle-fill"></i></span>' +
-          "</div></div></div><span>"+ fitnessCodeMessage +"</span></div>";
+          "</div></div></div><span>"+ 
+          (this.code == '06285193000301' ? fitnessCodeMessage : "") +"</span></div>";
 
       $(
         '<div class="cart-content-wrapper" id="' +
