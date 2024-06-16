@@ -244,8 +244,8 @@ function update_cart(t) {
           this.qty +
           '"></span>' +
           '<span class="minus btn-minus-update"><i class="bi bi-dash-circle-fill"></i></span>' +
-          "</div></div><span style'color:green !important;'>"+ 
-          (this.code == '06285193000301' && fitnessCode == true ? "Fitness code applied. "+ (this.qty / 2) +"pieces extra sulfad added to cart" : "") +"</span></div></div>";
+          "</div></div><span><b style'color:green !important;'>"+ 
+          (this.code == '06285193000301' && fitnessCode == true ? "Fitness code applied. "+ (this.qty / 2) +" pieces extra sulfad added to cart" : "") +"</b></span></div></div>";
 
       $(
         '<div class="cart-content-wrapper" id="' +
