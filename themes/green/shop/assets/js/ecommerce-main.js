@@ -203,11 +203,11 @@ function update_cart(t) {
   if (t.total_items && t.total_items > 0) {
     var e = 1;
 
-    var fitnessCodeMessage = '';
+    var fitnessCode = false;
     var inputElement = document.querySelector('input[name="coupon_code"]');
     if (inputElement) {
       if (inputElement.placeholder === "fitness") {
-        fitnessCodeMessage = 'Fitness code applied. Extra sulfad added to cart';
+        fitnessCode = true;
       }
     }
 
@@ -245,7 +245,7 @@ function update_cart(t) {
           '"></span>' +
           '<span class="minus btn-minus-update"><i class="bi bi-dash-circle-fill"></i></span>' +
           "</div></div></div><span>"+ 
-          (this.code == '06285193000301' ? fitnessCodeMessage : "") +"</span></div>";
+          (this.code == '06285193000301' && fitnessCode == true ? "Fitness code applied. "+ (this.qty / 2) +" pieces extra sulfad added to cart" : "") +"</span></div>";
 
       $(
         '<div class="cart-content-wrapper" id="' +
