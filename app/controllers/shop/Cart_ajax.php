@@ -244,14 +244,20 @@ class Cart_ajax extends MY_Shop_Controller
             $cart_arr = array();
             //$sulfad_promo_count = 0;
             foreach ($cart_contents as $item) {
-                $data = [
-                    'rowid'  => $item['rowid'],
-                    'discount'  => 0
-                ];
                 
                 if($item['code'] == '06285193000301'){
+                    $data = [
+                        'rowid'  => $item['rowid'],
+                        'discount'  => 0
+                    ];
+
                     $data['disc_qty'] = $item['qty'];
                     $data['qty'] = $item['qty'] * 2;
+                }else{
+                    $data = [
+                        'rowid'  => $item['rowid'],
+                        'discount'  => ($item['price'] * 10) / 100
+                    ];
                 }
                 
                 array_push($cart_arr, $data);
