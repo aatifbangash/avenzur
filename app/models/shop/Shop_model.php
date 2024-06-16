@@ -700,19 +700,19 @@ class Shop_model extends CI_Model
 
             $warehouse_quantities = $this->getProductQuantitiesInWarehouses($row->id);
             foreach ($warehouse_quantities as $wh_quantity){
-                if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0)){
+                if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0 && $row->id != 3)){
                     //$virtual_pharmacy_items += $wh_quantity->quantity;
                     $row->global = 1;
                 }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0)){
+                if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
                             
                     $row->global = 1;
                 }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0)){
+                if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
                     
                     $row->global = 1;
                 }
@@ -793,19 +793,19 @@ class Shop_model extends CI_Model
 
                 $warehouse_quantities = $this->getProductQuantitiesInWarehouses($row->id);
                 foreach ($warehouse_quantities as $wh_quantity){
-                    if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0)){
+                    if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0 && $row->id != 3)){
                         //$virtual_pharmacy_items += $wh_quantity->quantity;
                         $row->global = 1;
                     }
 
                     // remove the below block after eid
-                    if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0)){
+                    if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
                                 
                         $row->global = 1;
                     }
 
                     // remove the below block after eid
-                    if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0)){
+                    if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
                         
                         $row->global = 1;
                     }
@@ -942,19 +942,19 @@ class Shop_model extends CI_Model
 
             $warehouse_quantities = $this->getProductQuantitiesInWarehouses($row->id);
             foreach ($warehouse_quantities as $wh_quantity){
-                if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0)){
+                if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0 && $row->id != 3)){
                     //$virtual_pharmacy_items += $wh_quantity->quantity;
                     $row->global = 1;
                 }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0)){
+                if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
                             
                     $row->global = 1;
                 }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0)){
+                if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
                     
                     $row->global = 1;
                 }
@@ -1040,19 +1040,19 @@ class Shop_model extends CI_Model
 
             $warehouse_quantities = $this->getProductQuantitiesInWarehouses($row->id);
             foreach ($warehouse_quantities as $wh_quantity){
-                if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0)){
+                if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0 && $row->id != 3)){
                     //$virtual_pharmacy_items += $wh_quantity->quantity;
                     $row->global = 1;
                 }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0)){
+                if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
                             
                     $row->global = 1;
                 }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0)){
+                if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
                     
                     $row->global = 1;
                 }
@@ -1138,19 +1138,19 @@ class Shop_model extends CI_Model
 
             $warehouse_quantities = $this->getProductQuantitiesInWarehouses($row->id);
             foreach ($warehouse_quantities as $wh_quantity){
-                if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0)){
+                if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0 && $row->id != 3)){
                     //$virtual_pharmacy_items += $wh_quantity->quantity;
                     $row->global = 1;
                 }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0)){
+                if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
                             
                     $row->global = 1;
                 }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0)){
+                if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
                     
                     $row->global = 1;
                 }
@@ -1657,20 +1657,20 @@ class Shop_model extends CI_Model
 
                 $warehouse_quantities = $this->getProductQuantitiesInWarehouses($row['id']);
                 foreach ($warehouse_quantities as $wh_quantity){
-                    if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0)){
+                    if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0) && $row['id'] != 3){
                         //$virtual_pharmacy_items += $wh_quantity->quantity;
                         $row['global'] = 1;
                     }
 
 
                     // remove the below block after eid
-                    if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0)){
+                    if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0) && $row['id'] != 3){
                         
                         $row['global'] = 1;
                     }
 
                     // remove the below block after eid
-                    if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0)){
+                    if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0) && $row['id'] != 3){
                         
                         $row['global'] = 1;
                     }
