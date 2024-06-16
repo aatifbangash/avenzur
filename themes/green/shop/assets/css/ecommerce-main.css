@@ -723,6 +723,10 @@ button.btn.btn-primary.d-lg-none.catsidebarmob {
   margin-top: 15px;
 }
 
+.green-color {
+  color: green !important;
+}
+
 .product-count .qtyminus {
   border-radius: 3px 0 0 3px;
 }
