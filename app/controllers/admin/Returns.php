@@ -863,7 +863,7 @@ class Returns extends MY_Controller
                     $option_id  = false;
                 }
                 if ($row->promotion) {
-                    $row->price = $row->promo_price;
+                    //$row->price = $row->promo_price;
                 }
                 $row->cost_price      = $item->net_cost;
                 $row->real_unit_price = $item->real_unit_price ?? $row->price;
@@ -1108,7 +1108,7 @@ class Returns extends MY_Controller
 
                 $row->option = $option_id;
                 if ($row->promotion) {
-                    $row->price = $row->promo_price;
+                    //$row->price = $row->promo_price;
                 }
 
 

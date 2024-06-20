@@ -7,6 +7,7 @@ class Purchases_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function addExpense($data = [], $attachments = [])
@@ -52,7 +53,12 @@ class Purchases_model extends CI_Model
 
         if ($totalPurchseResultSet->num_rows() > 0) {
             foreach ($totalPurchseResultSet->result() as $row) {
-                $row->cost_price = ($row->total_cost_price / $row->quantity);
+                if($row->quantity > 0){
+                    $row->cost_price = ($row->total_cost_price / $row->quantity);
+                }else{
+                    $row->cost_price = 0;
+                }
+                
                 $totalPurchases[] = $row;
             }
         }
@@ -88,7 +94,7 @@ class Purchases_model extends CI_Model
     }
 
     public function addPurchase($data, $items, $attachments = [])
-    {
+    {  
         $this->db->trans_start();
         if ($this->db->insert('purchases', $data)) {
             $purchase_id = $this->db->insert_id();
@@ -103,6 +109,10 @@ class Purchases_model extends CI_Model
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 $this->db->insert('purchase_items', $item);
                 
+                //handle inventory movement
+                if($item['status']=='received'){
+                $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
+                }
                 // Code for serials here
                 $serials_reference = $data['reference_no'];
                 $serials_quantity = $item['quantity'];
@@ -768,7 +778,11 @@ class Purchases_model extends CI_Model
                 if ($data['status'] == 'received' || $data['status'] == 'partial') {
                     $this->updateAVCO(['product_id' => $item['product_id'], 'batch' => $item['batchno'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'cost' => $item['real_unit_cost']]);
                 }
-
+                
+                if($item['status']=='received'){
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
+                }
+                // $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
                 // Code for serials here
                 $serials_reference = $data['reference_no'];
                 $serials_quantity = $item['quantity'];

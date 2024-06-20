@@ -1,4 +1,5 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?><!DOCTYPE html>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -885,6 +886,15 @@
                                                 <i class="fa fa-upload"></i><span class="text"> <?= lang('change_logo'); ?></span>
                                             </a>
                                         </li>
+                                         <?php if( $this->input->cookie('companyID') == 999 ) {?>
+                                        <li id="system_settings_seo">
+                                            <a href="<?= admin_url('seo_setting/index') ?>">
+                                                <i class="fa fa-search"></i><span class="text"> <?= lang('SEO_Settings'); ?></span>
+                                            </a>
+                                        </li> 
+                                        <?php }?>
+                                        
+
                                         <li id="system_settings_currencies">
                                             <a href="<?= admin_url('system_settings/currencies') ?>">
                                                 <i class="fa fa-money"></i><span class="text"> <?= lang('currencies'); ?></span>
@@ -990,6 +1000,29 @@
                                 </li>
                                 <?php
                             } ?>
+
+                            <li class="ec_reports">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-bar-chart-o"></i>
+                                    <span class="text"> <?= lang('Ecommerce Reports'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="reports_fast_moving_items">
+                                        <a href="<?= admin_url('reports/fast_moving_items') ?>">
+                                            <i class="fa fa-line-chart"></i><span class="text"> <?= lang('Fast_Moving_Items'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li id="promotion_items_report">
+                                        <a href="<?= admin_url('reports/promotion_items_report') ?>">
+                                            <i class="fa fa-line-chart"></i><span class="text"> <?= lang('Promotion_Items_Report'); ?></span>
+                                        </a>
+                                    </li>
+                                    
+                                </ul>
+                            </li>
+
                             <li class="mm_reports">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-bar-chart-o"></i>
@@ -1007,6 +1040,7 @@
                                             <i class="fa fa-building"></i><span class="text"> <?= lang('warehouse_stock'); ?></span>
                                         </a>
                                     </li>
+
                                     <li id="reports_best_sellers">
                                         <a href="<?= admin_url('reports/best_sellers') ?>">
                                             <i class="fa fa-line-chart"></i><span class="text"> <?= lang('best_sellers'); ?></span>
@@ -1246,6 +1280,11 @@
                                             <i class="fa fa-file"></i><span class="text"> <?= lang('slider_settings'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="tag_settings_index">
+                                        <a href="<?= admin_url('shop_settings/tags') ?>">
+                                            <i class="fa fa-tag"></i><span class="text"> <?= lang('Tag Settings'); ?></span>
+                                        </a>
+                                    </li>
                                     <?php if ($Settings->apis) {
                                         ?>
                                     <li id="api_settings_index">
@@ -1278,6 +1317,11 @@
                                     <li id="shop_settings_sms_log">
                                         <a href="<?= admin_url('shop_settings/sms_log') ?>">
                                             <i class="fa fa-file-text-o"></i><span class="text"> <?= lang('sms_log'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="shop_settings_abandoned_cart">
+                                        <a href="<?= admin_url('shop_settings/abandoned_cart') ?>">
+                                            <i class="fa fa-file-text-o"></i><span class="text"> <?= lang('abandoned_cart'); ?></span>
                                         </a>
                                     </li>
                                 </ul>
@@ -1758,23 +1802,37 @@
 
                             <?php
                         } ?>
-                        <?php if ($Owner || $Admin) { ?>
+                        <?php if (isset($this->GP) && $GP['blog_view'] || ($Owner || $Admin) ) { ?>
                         <li class="mm_shop_settings mm_api_settings">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-shopping-cart"></i><span class="text"> <?= lang('Blog_Module'); ?> </span>
                                     <span class="chevron closed"></span>
                                 </a>
                                 <ul>
-                                  <li id="shop_settings_pages">
-                                        <a href="<?= admin_url('Blog/allBlogs') ?>">
-                                            <i class="fa fa-file"></i><span class="text"> <?= lang('List_blog'); ?></span>
-                                        </a>
-                                    </li>
-                                    <li id="shop_settings_pages">
-                                        <a href="<?= admin_url('Blog/add_blog') ?>">
-                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_blog'); ?></span>
-                                        </a>
-                                    </li>
+                                  <?php
+                                    if($GP['blog_view'] || ($Owner || $Admin)){
+                                        ?>
+                                        <li id="shop_settings_pages">
+                                            <a href="<?= admin_url('Blog/allBlogs') ?>">
+                                                <i class="fa fa-file"></i><span class="text"> <?= lang('List_blog'); ?></span>
+                                            </a>
+                                        </li>
+                                        <?php
+                                    }
+                                  ?>
+                                  <?php
+                                    if($GP['blog_add'] || ($Owner || $Admin)){
+                                        ?>
+                                        <li id="shop_settings_pages">
+                                            <a href="<?= admin_url('Blog/add_blog') ?>">
+                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_blog'); ?></span>
+                                            </a>
+                                        </li>
+                                        <?php
+                                    }
+                                  ?>
+                                  
+                                    
                                     <!--<li id="shop_settings_pages">-->
                                     <!--    <a href="<?= admin_url('Blog/add_bcategory') ?>">-->
                                     <!--        <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add Blog Category'); ?></span>-->
@@ -1788,7 +1846,7 @@
                                 </ul>
                             </li>
                             <?php } ?>
-                             <?php //if ($Owner || $Admin || $GP['stock_request_view']) { ?>
+                             <?php if ($Owner || $Admin || $GP['stock_request_view']) { ?>
                              <li class="mm_stock_requests">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star-o"></i>
@@ -1832,7 +1890,7 @@
                                     </li>-->
                                 </ul>
                              </li>
-                             <?php //} ?>
+                             <?php } ?>
 
                             <?php 
                              if (isset($GP) && $GP['accountant'] || ($Owner || $Admin) ) {

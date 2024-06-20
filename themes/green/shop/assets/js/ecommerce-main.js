@@ -49,9 +49,10 @@ function sa_img(t, e) {
 }
 
 function update_popup_cart(t) {
-  if (t.total_items && t.total_items > 0) {
-    $.each(t.contents, function () {
-      var t =
+  //if (t.total_items && t.total_items > 0) {
+  $("#product-canvas-body").html("");
+  $.each(t.contents, function () {
+    /*var t =
         '<div class=" row align-items-center">' +
         '<div class="addicon col-md-3 px-0">' +
         '<img src="' +
@@ -69,10 +70,36 @@ function update_popup_cart(t) {
         "</p>" +
         "</div></div><hr>";
 
-      $("#product-popup-modal-body").append(t);
-    });
+        $("#product-popup-modal-body").append(t);*/
 
-    var e =
+    var t =
+      '<div class="d-flex align-items-center justify-content-center cart-cont-row">' +
+      '<div class="addicon">' +
+      '<img width="80" height="80" src="' +
+      site.base_url +
+      "assets/uploads/" +
+      this.image +
+      '" class="w-100" />' +
+      "</div>" +
+      '<div class=" title-price-cont">' +
+      '<p class="m-0 product-title fw-semibold text-start">' +
+      this.name + '<span style="margin-left:5px;">('+ this.qty +')</span>' +
+      "</p>" +
+      '<p class="m-0 product-price fw-semibold mt-2 text-end pe-4 d-flex justify-content-between align-items-center">' +
+      '<a href="#" data-rowid="' +
+      this.rowid +
+      '" class="text-red remove-item-sidepopup text-decoration-none text-danger fs-6 fw-normal"><i class="fa fa-trash-o"></i> Remove</a>' +
+      this.subtotal +
+      "</p>" +
+      "</div>" +
+      "</div><hr />";
+
+    $("#product-canvas-body").append(t);
+  });
+
+  $("#product-canvas-total").html(t.total);
+
+  /*var e =
       '<div class=" row align-items-center mt-4">' +
       '<div class="addicon col-md-3 px-0">' +
       '<p class="m-0 fs-5 fw-semibold text-start text-dark">Cart Total</p>' +
@@ -82,8 +109,8 @@ function update_popup_cart(t) {
       t.total +
       "</p>" +
       "</div></div>";
-    $("#product-popup-modal-body").append(e);
-  }
+    $("#product-popup-modal-body").append(e);*/
+  //}
 }
 function update_mini_cart(t) {
   if (t.total_items && t.total_items > 0) {
@@ -154,10 +181,10 @@ function update_cart_item(t, e, a, s, i) {
     data: e,
     success: function (t) {
       t.error
-        ? ("text" == i ? s.val(a) : s.selectpicker("val", $po),
-          sa_alert("Error!", t.message, "error", !0))
+        ? $.notify(t.message, "warning")
         : t.cart &&
           ((cart = t.cart), update_mini_cart(cart), update_cart(cart));
+        location.reload();
       //sa_alert(t.status, t.message));
     },
     error: function () {
@@ -175,49 +202,68 @@ function update_cart(t) {
   $("#cart-table-new").empty();
   if (t.total_items && t.total_items > 0) {
     var e = 1;
+
+    var fitnessCode = false;
+    var inputElement = document.querySelector('input[name="coupon_code"]');
+    if (inputElement) {
+      if (inputElement.placeholder === "fitness") {
+        fitnessCode = true;
+      }
+    }
+
     $.each(t.contents, function () {
       var t = this,
         a =
-          '<div class="col-md-2"><span class="cart-item-image">' +
-          '<img style="width: 100px;height: 90px;object-fit: contain;" src="' +
+          '<div class="d-flex align-items-center  py-4">' +
+          '<div class="cart-item-image pe-3">' +
+          '<img class="cart-img" style="object-fit: contain;" src="' +
           site.base_url +
           "assets/uploads/" +
           this.image +
           '" class="card-img-top" alt="...">' +
-          "</span></div>" +
-          '<div class="col-md-10 d-flex flex-column justify-content-between"><div class="d-flex justify-content-between ">' +
+          "</div>" +
+          '<div class="d-flex flex-column justify-content-between w-100"><div class="d-flex align-items-center justify-content-between flex-mobile-column">' +
           '<h5 class="m-0">' +
           this.name +
           "</h5>" +
           "<div>" +
-          '<h4 class="m-0 fw-semibold fs-5" >' +
+          '<h4 class="m-0 fw-semibold fs-5 price-label" >' +
           this.price +
           "</h4>" +
           //'<p class="m-0 text-decoration-line-through text-danger text-center fw-semibold mb-4">SAR 10</p>' +
           "</div></div>" +
-          '<div class="d-flex justify-content-between align-items-center"><div>' +
+          '<div class="d-flex justify-content-between align-items-center flex-mobile-column remove-quatity-container"><div>' +
           '<a href="#" data-rowid="' +
           this.rowid +
           '" class="text-red remove-item text-decoration-none text-dark"><i class="fa fa-trash-o"></i> Remove</a></div>' +
           '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between cartQuantity"><h6 class="my-1 me-2">Quantity</h6>' +
-          '<span class="plus btn-plus-update"><i class="bi bi-plus-circle-fill"></i></span>' +
+          '<span class="plus btn-plus-update" data-code="'+this.code+'"><i class="bi bi-plus-circle-fill"></i></span>' +
           '<span class="fs-6 px-2"><input type="text" style="width: 50px;" name="' +
           e +
-          '[qty]" class="form-control text-center input-qty cart-item-qty" value="' +
+          '[qty]" readonly class="form-control text-center input-qty cart-item-qty" value="' +
           this.qty +
           '"></span>' +
           '<span class="minus btn-minus-update"><i class="bi bi-dash-circle-fill"></i></span>' +
-          "</div></div></div><hr />";
+          '</div></div><span><b class="green-color">'+ 
+          (this.code == '06285193000301' && fitnessCode == true ? "Fitness code applied. "+ (this.qty / 2) +" pieces extra sulfad added to cart" : "") +"</b></span></div></div>";
 
       $(
-        '<div class="row row-class" id="' + this.rowid + '">' + a + "</div>"
+        '<div class="cart-content-wrapper" id="' +
+          this.rowid +
+          '">' +
+          a +
+          "</div>"
       ).appendTo("#cart-table-new");
       //$(a).appendTo('#cart-table-new');
     });
 
     $("#total-unique_items").html(t.total_unique_items);
     $("#total-price").html(t.subtotal);
-    $("#total-discount").html(t.total_discount);
+    if(parseFloat(t.total_discount.replace("SAR", "").trim()) > 0){
+      $('#discount_block').show();
+      $("#total-discount").html(t.total_discount);
+    }
+    
     $("#total-after_discount").html(t.total);
 
     /*$("#cart-table tbody").empty();
@@ -313,7 +359,10 @@ function update_cart(t) {
 
     $("#total-unique_items").html(t.total_unique_items);
     $("#total-price").html(t.subtotal);
-    $("#total-discount").html(t.total_discount);
+    if(parseFloat(t.total_discount.replace("SAR", "").trim()) > 0){
+      $('#discount_block').show();
+      $("#total-discount").html(t.total_discount);
+    }
     $("#total-after_discount").html(t.total);
   }
 }
@@ -366,6 +415,35 @@ function sa_alert(t, e, a, s) {
     }).catch(swal.noop);
 }
 
+function saaa_alert(t, e, a, s) {
+  (a = a || lang.delete),
+    (e = e || lang.x_reverted_back),
+    (s = s || {}),
+    (s._method = a),
+    (s[site.csrf_token] = site.csrf_token_value),
+    $.ajax({
+      url: t,
+      type: "POST",
+      data: s,
+      success: function (t) {
+        if (t.redirect) return (window.location.href = t.redirect), !1;
+        t.cart &&
+          ((cart = t.cart),
+          update_mini_cart(cart),
+          update_cart(cart),
+          update_popup_cart(cart));
+      },
+      error: function () {
+        /*sa_alert(
+        "Error!",
+        "Ajax call failed, please try again or contact site owner.",
+        "error",
+        !0
+      );*/
+      },
+    });
+}
+
 function saa_alert(t, e, a, s) {
   (a = a || lang.delete),
     (e = e || lang.x_reverted_back),
@@ -387,6 +465,7 @@ function saa_alert(t, e, a, s) {
           window.location.href = "shop/products";
         } else {
           console.log(t.total_items);
+          location.reload();
         }
         //sa_alert(t.status, t.message);
       },
@@ -494,6 +573,7 @@ function remove(t) {
     ? localStorage.removeItem(t)
     : alert("Please use a modern browser as this site needs localstroage!");
 }
+
 function gen_html(t) {
   var e = "";
   if (get_width() > 992)
@@ -507,7 +587,7 @@ function gen_html(t) {
   if (
     (t ||
       (e +=
-        '<div class="col-lg-3 col-md-4 col-sm-12"><div class="alert alert-warning text-center padding-xl margin-top-lg"><h4 class="margin-bottom-no">' +
+        '<div class=" col-lg-12"><div class="alert alert-warning text-center padding-xl margin-top-lg"><h4 class="margin-bottom-no">' +
         lang.x_product +
         "</h4></div></div>"),
     1 == site.settings.products_page &&
@@ -520,14 +600,28 @@ function gen_html(t) {
           r.promotion && r.promo_price && 0 != r.promo_price
             ? r.formated_promo_price
             : l);
+      //  console.log('quantitiy', parseFloat(r.quantity));
       //1 != site.settings.products_page && (0 === a ? e += '<div class="row">' : a % s == 0 && (e += '</div><div class="row">')),
       //e += '<div class="product-container ' + i + " " + (1 == site.settings.products_page ? "grid-item" : "") + '">\n        <div class="product ' + o + " " + (1 == site.settings.products_page ? "grid-sizer" : "") + '">\n        ' + (r.promo_price ? '<span class="badge badge-right theme">Promo</span>' : "") + '\n        <div class="product-top">\n        <div class="product-image">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <img class="img-responsive" src="' + site.base_url + "assets/uploads/" + r.image + '" alt=""/>\n        </a>\n        </div>\n        <div class="product-desc">\n        <a href="' + site.site_url + "product/" + r.slug + '">\n        <h2 class="product-name">' + r.name + "</h2>\n        </a>\n        <p>" + r.details + '</p>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        ' + (1 == site.shop_settings.hide_price ? "" : '\n        <div class="product-bottom">\n        <div class="product-price">\n        ' + (r.promo_price ? '<del class="text-danger text-size-sm">' + l + "</del>" : "") + "\n        " + c + '\n        </div>\n        <div class="product-rating">\n        <div class="form-group" style="margin-bottom:0;">\n        <div class="input-group">\n        <span class="input-group-addon pointer btn-minus"><span class="fa fa-minus"></span></span>\n        <input type="text" name="quantity" class="form-control text-center quantity-input" value="1" required="required">\n        <span class="input-group-addon pointer btn-plus"><span class="fa fa-plus"></span></span>\n        </div>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        <div class="product-cart-button">\n        <div class="btn-group" role="group" aria-label="...">\n        <button class="btn btn-info add-to-wishlist" data-id="' + r.id + '"><i class="fa fa-heart-o"></i></button>\n        <button class="btn btn-theme add-to-cart" data-id="' + r.id + '"><i class="fa fa-shopping-cart padding-right-md"></i> ' + lang.add_to_cart + '</button>\n        </div>\n        </div>\n        <div class="clearfix"></div>\n        </div>') + '\n        </div>\n        <div class="clearfix"></div>\n        </div>',
       //1 != site.settings.products_page && a + 1 === t.length && (e += "</div>")
-
-      e += '<div class="col-lg-3 col-md-4 col-sm-12">';
+      
+      e += '<div class="col-xl-3 col-lg-4 col-md-6 col-6 product-cards-cont">';
       e += '<div class="card" style="width: 100%">';
       //e += '<a href="#" class="text-decoration-none">';
       e += '<div class="cardImg">';
+      if (r.promotion && r.price > 0 && r.promo_price > 0) {
+        e +=
+          '<span class="position-absolute badge rounded-pill bg-danger" style="top:12px;left:12px;font-size:10px">' +
+          Math.round(((r.price - r.promo_price) / r.price) * 100) +
+          "% OFF</span>";
+      }
+
+      if (r.global) {
+        e +=
+          '<span class="position-absolute badge" style="top:0px;right:0px;width: 90px;">' +
+          '<img src="'+site.base_url+'assets/images/global.jpg" style="height:20px;" class="card-img-top" alt="Global">' +
+          "</span>";
+      }
       e +=
         '<a href="' +
         site.base_url +
@@ -555,8 +649,8 @@ function gen_html(t) {
         '" class="text-decoration-none">';
       e += '<h5 class="card-title text-start">' + r.name + "</h5>";
       e += "</a>";
-      e += '<div class="row align-items-center justify-content-between">';
-      e += '<div class="col-md-6 col-6"><div class="rating">';
+      e += '<div class="d-flex align-items-center justify-content-between">';
+      e += '<div class="rating">';
       for (i = 1; i <= 5; i++) {
         if (i <= r.avg_rating) {
           e += '<i class="bi bi-star-fill rated"></i>';
@@ -564,44 +658,58 @@ function gen_html(t) {
           e += '<i class="bi bi-star-fill"></i>';
         }
       }
-      e += "</div></div>";
+      e += "</div>";
 
       if (r.promotion) {
         e +=
-          '<div class="col-md-6 col-6"><div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">' +
+          '<div class="discountPrice price text-end py-2"><h4 class="m-0 text-decoration-line-through">' +
           l +
-          "</h4></div></div>";
+          "</h4></div>";
       }
       e += "</div>";
-      e += '<div class="row align-items-center justify-content-between">';
-      e +=
-        '<div class="col-md-6 col-6"><div class="price text-start  py-2"><h4 class="m-0 fw-bold">';
+      e += '<div class="d-flex align-items-center justify-content-between">';
+      e += '<div class="price text-start  py-2"><h4 class="m-0 fw-bold">';
       if (r.promotion) {
         e += r.formated_promo_price;
       } else {
         e += l;
       }
-      e += "</h4></div></div>";
-      e += '<div class="col-md-6 col-6">';
+      e += "</h4></div>";
+
       e +=
         '<div class="quantity text-end py-2 d-flex align-items-center justify-content-between">';
       e +=
         '<span class="plus btn-plus"><i class="bi bi-plus-circle-fill"></i></span>';
       //e += '<span class="Qnum ">1</span>';
       e +=
-        '<input type="text" name="quantity" class="Qnum" value="1" required="required" />';
+        '<input type="text" name="quantity" readonly class="Qnum" value="1" required="required" />';
       e +=
         '<span class="minus btn-minus"><i class="bi bi-dash-circle-fill"></i></span>';
       e += "</div>";
       e += "</div>";
       e += "</div>";
-      e += "</div>";
+
       //e += '</a>';
       e += "<div>";
-      e +=
-        '<button type="button" data-id="' +
-        r.id +
-        '" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart">Add to cart </button>';
+      const prod_quantity = parseFloat(r.product_quantity);
+      if (isNaN(prod_quantity) || prod_quantity <= 0) {
+        e += "Out of Stock ";
+        e +=
+          '<button type="button" class="btn btn-link btn-notify-add-to-list" href="#" data-id="' +
+          r.id +
+          '" data-title="' +
+          r.name +
+          '" data-image="' +
+          r.image +
+          '" data-price="' +
+          (r.promotion ? r.formated_promo_price : l) +
+          '" >Notify me</button>';
+      } else {
+        e +=
+          '<button type="button" data-id="' +
+          r.id +
+          '" class="btn primary-buttonAV mt-3 py-1 addtocart w-100 text-dark add-to-cart" aria-controls="offcanvasWithBothOptions">Add to cart </button>';
+      }
       e += "</div>";
       e += "</div>";
       e += "</div>";
@@ -667,6 +775,33 @@ function searchProducts(t) {
   } else {
     callUrl = site.shop_url + "search?page=" + filters.page;
   }
+    // Get the current URL
+  const url = new URL(window.location.href);
+
+  // Create a URLSearchParams object from the URL's query string
+  const searchParams = new URLSearchParams(url.search);
+
+  // Get the min_price and max_price values
+  const minPrice = searchParams.get('min_price');
+  const maxPrice = searchParams.get('max_price');
+  const brands = searchParams.get('brands');
+
+  if (document.getElementById('input_min_price') !== null && document.getElementById('input_max_price') !== null) {
+    // Set the values of the input fields
+   document.getElementById('input_min_price').value = (minPrice ? minPrice : "0");
+   document.getElementById('input_max_price').value = maxPrice ? maxPrice: "100";
+
+    if (minPrice && maxPrice)
+    {
+      callUrl = callUrl + "&min_price=" + minPrice + "&max_price=" + maxPrice;
+    }
+  }
+   
+  if (brands)
+  {
+    callUrl = callUrl + "&brands=" + brands;
+
+  }
 
   $("#loading").show();
   var a = {};
@@ -726,6 +861,14 @@ $(document).ready(function () {
   }
 
   $(document).on("click", function (event) {
+
+    if (!$('.offcanvas').is(event.target) && $('.offcanvas').has(event.target).length === 0 && $('.offcanvas').hasClass('show')) {
+        // Hide the offcanvas
+        //$('.offcanvas').offcanvas('hide');
+        $('.offcanvas').removeClass('show');
+        $('.offcanvas-backdropaddP').removeClass('show');
+    }
+
     var popup = $("#myaccountForm");
     var link = $(".checkout-link");
     var logintrigegr = $("#login-btn-trigger");
@@ -794,6 +937,12 @@ $(document).ready(function () {
     (e.rowid = $(this).attr("data-rowid")),
       saa_alert(site.site_url + "cart/remove", !1, "post", e);
   }),
+    $(document).on("click", ".remove-item-sidepopup", function (t) {
+      t.preventDefault();
+      var e = {};
+      (e.rowid = $(this).attr("data-rowid")),
+        saaa_alert(site.site_url + "cart/remove", !1, "post", e);
+    }),
     $("#empty-cart").click(function (t) {
       t.preventDefault(), saa_alert($(this).attr("href"));
     });
@@ -803,7 +952,7 @@ $(document).ready(function () {
   $(document).on("change", ".cart-item-option, .cart-item-qty", function (t) {
     t.preventDefault();
     var e = this.defaultValue,
-      a = $(this).closest("div.row-class"),
+      a = $(this).closest(".cart-content-wrapper"),
       s = a.attr("id"),
       i = site.site_url + "cart/update",
       o = {};
@@ -980,8 +1129,15 @@ $(document).ready(function () {
     });
   });
 
+  $(document).on("click", ".offcanvasClose", function () {
+    $(".addcartcanvas").removeClass("show");
+    $(".offcanvas-backdropaddP").removeClass("show");
+    $(".offcanvas-backdropaddP").hide();
+  });
+
   $(document).on("click", ".add-to-cart", function (t) {
     t.preventDefault();
+    $(".offcanvas-backdropaddP").removeClass("show");
     var e = $(this).attr("data-id"),
       a = $(".shopping-cart:visible"),
       s = $(this).parents(".card").find("input");
@@ -989,6 +1145,10 @@ $(document).ready(function () {
     if (typeof s.val() === "undefined") {
       s = $(this).parents(".get-quantity").find("input");
     }
+    
+    ttq.track('AddToCart', {
+      content_id: e
+    });
 
     //, s = $(this).parents(".product-bottom").find(".quantity-input");
     /*,i=$(this).parents(".product").find("img").eq(0);if(i){i.clone().offset({top:i.offset().top,left:i.offset().left}).css({opacity:"0.5",position:"absolute",height:"150px",width:"150px","z-index":"1000"}).appendTo($("body")).animate({top:a.offset().top+10,left:a.offset().left+10,width:"50px",height:"50px"},400).animate({width:0,height:0},function(){$(this).detach()})}*/
@@ -1006,10 +1166,21 @@ $(document).ready(function () {
       //(a = t, update_mini_cart(t));
       t.error
         ? $.notify(t.message, "warning") //alert('out of stock')//sa_alert("Error!", t.message, "error", !0)
-        : ((a = t),
-          update_mini_cart(t),
-          update_popup_cart(t),
-          $("#productPop").modal("show"));
+        : ((a = t), update_mini_cart(t), update_popup_cart(t));
+      if (t.error) {
+        $(".addcartcanvas").removeClass("show");
+        $(".offcanvas-backdropaddP").removeClass("show");
+      } else {
+        $(".addcartcanvas").addClass("show");
+        $(".offcanvas-backdropaddP").addClass("show");
+        $(".offcanvas-backdropaddP").show();
+      }
+      //$("#productPop").modal("show"));
+      /*$('#product-canvas-toggle').attr({
+            "data-bs-toggle": "offcanvas",
+            "data-bs-target": "#offcanvasWithBothOptions"
+          });*/
+
       /*$.toast({
             heading: "Success",
             text: "Product Added To The Cart.",
@@ -1040,10 +1211,27 @@ $(document).ready(function () {
   });
 
   $(document).on("click", ".btn-plus", function (t) {
-    var e = $(this).parent().find("input");
-    if (e.val() < 3) {
-      e.val(parseInt(e.val()) + 1);
+    // Find the closest parent .products-card
+    let productCard = t.target.closest('.products-card');
+    if (productCard) {
+      // Find the anchor tag with the product URL
+      let productLink = productCard.querySelector('a[href*="product"]');
+      var e = $(this).parent().find("input");
+      if (e.val() < 3) {
+        e.val(parseInt(e.val()) + 1);
+      } else if (productLink && productLink.href.includes('06285193000301')) {
+        e.val(parseInt(e.val()) + 1);
+      }
+    }else{
+      var currentUrl = window.location.href;
+      var e = $(this).parent().find("input");
+      if(currentUrl.includes('06285193000301')){
+        e.val(parseInt(e.val()) + 1);
+      }else if(e.val() < 3){
+        e.val(parseInt(e.val()) + 1);
+      }
     }
+
   });
 
   $(document).on("click", ".btn-minus-update", function (t) {
@@ -1051,7 +1239,7 @@ $(document).ready(function () {
     if (e.val() > 1) {
       parseInt(e.val()) > 1 && e.val(parseInt(e.val()) - 1);
 
-      var a = $(this).closest("div.row-class"),
+      var a = $(this).closest(".cart-content-wrapper"),
         s = a.attr("id"),
         i = site.site_url + "cart/update",
         o = {};
@@ -1063,11 +1251,25 @@ $(document).ready(function () {
   });
 
   $(document).on("click", ".btn-plus-update", function (t) {
+    let target = t.target.closest('.btn-plus-update');
+    var datacode = target.getAttribute('data-code');
+    
     var e = $(this).parent().find("input");
     if (e.val() < 3) {
       e.val(parseInt(e.val()) + 1);
 
-      var a = $(this).closest("div.row-class"),
+      var a = $(this).closest(".cart-content-wrapper"),
+        s = a.attr("id"),
+        i = site.site_url + "cart/update",
+        o = {};
+      (o[site.csrf_token] = site.csrf_token_value),
+        (o.rowid = s),
+        (o.qty = e.val()),
+        update_cart_item(i, o, e, $(this), t.target.type);
+    }else if(datacode == '06285193000301'){
+      e.val(parseInt(e.val()) + 1);
+
+      var a = $(this).closest(".cart-content-wrapper"),
         s = a.attr("id"),
         i = site.site_url + "cart/update",
         o = {};
@@ -1077,6 +1279,107 @@ $(document).ready(function () {
         update_cart_item(i, o, e, $(this), t.target.type);
     }
   });
+
+  if (window.innerWidth < 1030) {
+
+    $(".feature-cards").slick({
+      infinite: false,
+      speed: 300,
+      slidesToShow: 4,
+      slidesToScroll: 1,
+      responsive: [
+        {
+          breakpoint: 1024,
+          settings: {
+            slidesToShow: 4,
+            slidesToScroll: 1,
+            infinite: true,
+            dots: true,
+          },
+        },
+        {
+          breakpoint: 991,
+          settings: {
+            slidesToShow: 4,
+            slidesToScroll: 1,
+            prevArrow: false,
+            nextArrow: false,
+            autoplay: true,
+            infinite: true,
+          },
+        },
+        {
+          breakpoint: 480,
+          settings: {
+            slidesToShow: 4,
+            slidesToScroll: 1,
+            prevArrow: false,
+            nextArrow: false,
+            autoplay: true,
+            infinite: true,
+          },
+        },
+
+     
+        // You can unslick at a given breakpoint now by adding:
+        // settings: "unslick"
+        // instead of a settings object
+      ],
+      prevArrow:
+        "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
+      nextArrow:
+        "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
+    });
+
+  }
+
+  $(".popularCat").slick({
+    infinite: false,
+    speed: 300,
+    slidesToShow: 5,
+    slidesToScroll: 1,
+    responsive: [
+      {
+        breakpoint: 1025,
+        settings: {
+          slidesToShow: 3,
+          slidesToScroll: 1,
+          infinite: true,
+          dots: true,
+        },
+      },
+      {
+        breakpoint: 991,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
+        },
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
+        },
+      },
+      // You can unslick at a given breakpoint now by adding:
+      // settings: "unslick"
+      // instead of a settings object
+    ],
+    prevArrow:
+      "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
+    nextArrow:
+      "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
+  });
+
   // special offer slider
   $(".speacialOfferMove").slick({
     slidesToShow: 6,
@@ -1087,19 +1390,23 @@ $(document).ready(function () {
     infinite: true,
     responsive: [
       {
-        breakpoint: 1024,
+        breakpoint: 1025,
         settings: {
           slidesToShow: 4,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
-          dots: true,
+          dots: false,
         },
       },
       {
-        breakpoint: 770,
+        breakpoint: 991,
         settings: {
-          slidesToShow: 2,
-          slidesToScroll: 2,
+          slidesToShow: 3,
+          slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
@@ -1107,6 +1414,10 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1118,6 +1429,54 @@ $(document).ready(function () {
   $(".feature_products").slick({
     infinite: false,
     speed: 300,
+    slidesToShow: 5,
+    slidesToScroll: 1,
+    margin: 20,
+    prevArrow:
+      "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
+    nextArrow:
+      "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
+    responsive: [
+      {
+        breakpoint: 1025,
+        settings: {
+          slidesToShow: 3,
+          slidesToScroll: 1,
+          infinite: true,
+          dots: false,
+        },
+      },
+      {
+        breakpoint: 991,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
+        },
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
+        },
+      },
+      // You can unslick at a given breakpoint now by adding:
+      // settings: "unslick"
+      // instead of a settings object
+    ],
+  });
+
+  $(".customer_viewed_products").slick({
+    infinite: false,
+    speed: 300,
     slidesToShow: 4,
     slidesToScroll: 1,
     margin: 10,
@@ -1127,19 +1486,23 @@ $(document).ready(function () {
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
     responsive: [
       {
-        breakpoint: 1024,
+        breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
-          dots: true,
+          dots: false,
         },
       },
       {
-        breakpoint: 770,
+        breakpoint: 991,
         settings: {
           slidesToShow: 2,
-          slidesToScroll: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
@@ -1147,6 +1510,10 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1160,26 +1527,30 @@ $(document).ready(function () {
     speed: 300,
     slidesToShow: 3,
     slidesToScroll: 1,
-    margin: 10,
+    margin: 20,
     prevArrow:
       "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
     nextArrow:
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
     responsive: [
       {
-        breakpoint: 1024,
+        breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
-          dots: true,
+          dots: false,
         },
       },
       {
-        breakpoint: 770,
+        breakpoint: 991,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
@@ -1187,6 +1558,10 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1200,6 +1575,10 @@ $(document).ready(function () {
     speed: 300,
     slidesToShow: 5,
     slidesToScroll: 1,
+    autoplay: true,
+    infinite: true,
+    prevArrow: false,
+    nextArrow: false,
 
     prevArrow:
       "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
@@ -1207,19 +1586,27 @@ $(document).ready(function () {
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
     responsive: [
       {
-        breakpoint: 1024,
+        breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
-          dots: true,
+          dots: false,
+          autoplay: true,
+      
+          prevArrow: false,
+          nextArrow: false,
         },
       },
       {
-        breakpoint: 770,
+        breakpoint: 991,
         settings: {
-          slidesToShow: 2,
-          slidesToScroll: 2,
+          slidesToShow: 3,
+          slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       {
@@ -1227,6 +1614,10 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1247,19 +1638,23 @@ $(document).ready(function () {
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
     responsive: [
       {
-        breakpoint: 1024,
+        breakpoint: 1025,
         settings: {
           slidesToShow: 3,
-          slidesToScroll: 3,
+          slidesToScroll: 1,
           infinite: true,
           dots: true,
         },
       },
       {
-        breakpoint: 770,
+        breakpoint: 991,
         settings: {
           slidesToShow: 2,
-          slidesToScroll: 2,
+          slidesToScroll: 1,
+          prevArrow: false,
+            nextArrow: false,
+            autoplay: true,
+            infinite: true,
         },
       },
       {
@@ -1267,6 +1662,11 @@ $(document).ready(function () {
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
+          dots: true,
+          prevArrow: false,
+          nextArrow: false,
+          autoplay: true,
+          infinite: true,
         },
       },
       // You can unslick at a given breakpoint now by adding:
@@ -1842,7 +2242,7 @@ function add_address(t) {
       }
   });
 });*/
-if (window.innerWidth < 500) {
+/*if (window.innerWidth < 500) {
   //  // Remove the button from the source div
   cartsourceDiv.removeChild(cartToMove);
 
@@ -1857,12 +2257,40 @@ if (window.innerWidth < 500) {
   $(".popularCat").slick({
     infinite: false,
     speed: 300,
-    slidesToShow: 2,
+    slidesToShow: 4,
     slidesToScroll: 1,
     prevArrow:
       "<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
     nextArrow:
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
+    responsive: [
+      {
+        breakpoint: 1025,
+        settings: {
+          slidesToShow: 3,
+          slidesToScroll: 3,
+          infinite: true,
+          dots: true,
+        },
+      },
+      {
+        breakpoint: 991,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 2,
+        },
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+        },
+      },
+      // You can unslick at a given breakpoint now by adding:
+      // settings: "unslick"
+      // instead of a settings object
+    ],
   });
 
   $(".feature-cards").slick({
@@ -1875,9 +2303,26 @@ if (window.innerWidth < 500) {
     nextArrow:
       "<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
   });
-}
+}*/
 
 // New login workflow functionality
+
+if (window.innerWidth < 991) {
+
+  //  // Remove the button from the source div
+  cartsourceDiv.removeChild(cartToMove);
+
+
+  catsourceDiv.removeChild(allCatToMove);
+
+  // Append the button to the target div
+  targetmenuDiv.prepend(allCatToMove);
+
+  targetDiv.prepend(cartToMove);
+
+
+
+}
 
 function LoginFn(obj) {
   $("#loginBtn").addClass("active");
@@ -1913,10 +2358,10 @@ $(document).ready(function () {
           } else {
             var identityVal = $("#email_phone").val();
           }
-          
+
           document.getElementById("identifier").innerHTML = identityVal;
-          document.getElementById("identifier_input").value = identityVal ;
-           
+          document.getElementById("identifier_input").value = identityVal;
+
           const countdownDuration = 60; // Duration in seconds
           const countdownDisplay = document.getElementById("register-clock");
 
@@ -1949,60 +2394,80 @@ $(document).ready(function () {
 
   $("#registerBtnCall").click(function (e) {
     e.preventDefault();
-
+    //$("#registerBtnCall").prop("disabled", true);
+    $("#spinner").removeClass("d-none");
     var formData = $("#registrationForm").serialize();
     $.ajax({
       type: "POST",
       url: $("#registrationForm").attr("action"),
       data: formData,
       success: function (response) {
-        var respObj = JSON.parse(response);
-        if (respObj.status == "success" || respObj.code == 1) {
-          if (respObj.link) {
-            window.location.href = respObj.link;
-          } else {
-            $(".myaccountForm").removeClass("show");
-            $("#registerOTP").off("click", handleRegisterOTPClick);
-            document.getElementById("registerOTP").style.color = "grey";
-            document.getElementById("registerOTP").style.cursor = "none";
-            $("#registerModal").modal("show");
+        try {
+          var respObj = JSON.parse(response);
 
-           if ($("#email").length) {
-            var identityVal = $("#email").val();
-          } else {
-            var identityVal = $("#email_phone").val();
-          }
-          
-          document.getElementById("identifier").innerHTML = identityVal;
-          document.getElementById("identifier_input").value = identityVal ;
+          if (respObj.status == "success" || respObj.code == 1) {
+            if (respObj.link) {
+              window.location.href = respObj.link;
+            } else {
+              $(".myaccountForm").removeClass("show");
+              $("#registerOTP").off("click", handleRegisterOTPClick);
+              document.getElementById("registerOTP").style.color = "grey";
+              document.getElementById("registerOTP").style.cursor = "none";
+              $("#registerModal").modal("show");
 
-            const countdownDuration = 60; // Duration in seconds
-            const countdownDisplay = document.getElementById("register-clock");
-
-            let timer = countdownDuration,
-              minutes,
-              seconds;
-            const intervalId = setInterval(function () {
-              minutes = parseInt(timer / 60, 10);
-              seconds = parseInt(timer % 60, 10);
-
-              countdownDisplay.textContent =
-                minutes + "." + (seconds < 10 ? "0" : "") + seconds;
-
-              if (--timer < 0) {
-                clearInterval(intervalId);
-                document.getElementById("registerOTP").style.color = "#662d91";
-                document.getElementById("registerOTP").style.cursor = "pointer";
-                $("#registerOTP").click(handleRegisterOTPClick);
+              if ($("#email").length) {
+                var identityVal = $("#email").val();
+              } else {
+                var identityVal = $("#email_phone").val();
               }
-            }, 1000);
+
+              document.getElementById("identifier").innerHTML = identityVal;
+              document.getElementById("identifier_input").value = identityVal;
+
+              const countdownDuration = 60; // Duration in seconds
+              const countdownDisplay =
+                document.getElementById("register-clock");
+
+              let timer = countdownDuration,
+                minutes,
+                seconds;
+              const intervalId = setInterval(function () {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                countdownDisplay.textContent =
+                  minutes + "." + (seconds < 10 ? "0" : "") + seconds;
+
+                if (--timer < 0) {
+                  clearInterval(intervalId);
+                  document.getElementById("registerOTP").style.color =
+                    "#662d91";
+                  document.getElementById("registerOTP").style.cursor =
+                    "pointer";
+                  $("#registerOTP").click(handleRegisterOTPClick);
+                }
+              }, 1000);
+            }
+          } else {
+           
+            document.getElementById("registerBtnCall").remove();
+            $("#register-message").html(message.message);
           }
-        } else {
-          $("#register-message").html(respObj.message);
+        } catch (error) {
+          // If there's an error in parsing JSON, catch the exception and handle it
+          
+          //ocument.getElementById("registerBtnCall").remove();
+          //$("#register-message").html(errorMessage);
+          //console.error("Error parsing JSON:", error);
+          // You can display an error message to the user or perform other actions
+        } finally {
+          // Hide the spinner after the AJAX request is complete
+          $("#spinner").addClass("d-none");
+          //$("#registerBtnCall").prop("disabled", false);
         }
       },
       error: function (error) {
-        console.error(error);
+        //console.error(error);
       },
     });
   });
@@ -2022,6 +2487,9 @@ $(document).ready(function () {
           document.getElementById("loginOTP").style.color = "grey";
           document.getElementById("loginOTP").style.cursor = "none";
           $("#loginModal").modal("show");
+          $("#loginModal").on("shown.bs.modal", function () {
+            $("#login_otp_1").focus();
+          });
           if ($("#identity").length) {
             var identityVal = $("#identity").val();
           } else {
@@ -2140,29 +2608,6 @@ $(document).ready(function () {
     }
   }
 
-  // function handlePaste(currentInput, totalFields) {
-  //   setTimeout(function () {
-  //     const pastedValue = currentInput.value;
-  //     const characters = pastedValue.split("");
-  //     console.log(characters);
-  //     for (let i = 0; i < characters.length; i++) {
-  //       let char = characters[i];
-  //       currentInput.value = char;
-
-  //       if (i < characters.length - 1) {
-  //         let nextInputId = `${currentInput.id.substring(
-  //           0,
-  //           currentInput.id.lastIndexOf("_") + 1
-  //         )}${i + 2}`;
-  //         let nextInput = document.getElementById(nextInputId);
-  //         if (nextInput) {
-  //           nextInput.focus();
-  //         }
-  //       }
-  //     }
-  //   }, 0);
-  // }
-
   function bindOtpKeyupEvents(prefix, totalFields) {
     //document.getElementById('login_otp_1').focus();
     //document.getElementById('register_otp_1').focus();
@@ -2183,60 +2628,9 @@ $(document).ready(function () {
     }
   }
 
-  // $(".ap-otp-input").on("paste", function (ev) {
-  //   console.log("paste", ev);
-  //   // Handle paste event
-  //   const clip = ev.originalEvent.clipboardData.getData("text").trim();
-  //   console.log(clip);
-  //   //handlePaste(this, totalFields);
-  // });
-
-  //   const $inp = $(".ap-otp-input");
-  // console.log('inp', $inp);
-
-  // $inp.on({
-  //   paste(ev) { // Handle Pasting
-  //     console.log('testing');
-  //     const clip = ev.originalEvent.clipboardData.getData('text').trim();
-  //     // Allow numbers only
-  //     if (!/\d{6}/.test(clip)) return ev.preventDefault(); // Invalid. Exit here
-  //     // Split string to Array or characters
-  //     const s = [...clip];
-  //     // Populate inputs. Focus last input.
-  //     $inp.val(i => s[i]).eq(5).focus();
-  //   },
-  //   keyup(ev) { // Handle typing
-  //     console.log('test');
-  //     const i = $inp.index(this);
-  //     if (this.value) $inp.eq(i + 1).focus();
-  //   },
-  //   keydown(ev) { // Handle Deleting
-  //     console.log('down');
-  //     const i = $inp.index(this);
-  //     if (!this.value && ev.key === "Backspace" && i) $inp.eq(i - 1).focus();
-  //   }
-
-  // });
-
   // Bind keyup events for login OTP
   bindOtpKeyupEvents("login_otp", 6);
 
-  // Bind keyup events for register OTP
-//   const target = document.querySelector(".ap-otp-input");
-// if(target) {
-//   target.addEventListener("paste", (event) => {
-//     event.preventDefault();
-  
-//     let paste = (event.clipboardData || window.clipboardData).getData("text");
-//     paste = paste.toUpperCase();
-//     console.log('paste', paste);
-//     const selection = window.getSelection();
-//     if (!selection.rangeCount) return;
-//     selection.deleteFromDocument();
-//     selection.getRangeAt(0).insertNode(document.createTextNode(paste));
-//     selection.collapseToEnd();
-//   });
-// }
   bindOtpKeyupEvents("register_otp", 6);
 
   bindOtpKeyupEvents("checkout_login", 6);
@@ -2245,53 +2639,62 @@ $(document).ready(function () {
 
   bindOtpKeyupEvents("first_login", 6);
 
-  //     const loginInput =  $("#identity");
+  $(document).on("click", ".btn-notify-add-to-list", function (t) {
+    t.preventDefault();
+    var dataId = $(this).data("id");
+    var imageSrc = site.base_url + "assets/uploads/" + $(this).data("image");
+    var dataTitle = $(this).data("title");
+    var dataPrice = $(this).data("price");
+    // Log the value to the console (optional)
+    console.log("data-id:", dataId);
+    $("#product_input").val(dataId);
+    $("#notify_product_title").text(dataTitle);
+    $("#notify_product_price").text(dataPrice);
+    $("#notify_product_image").attr("src", imageSrc);
 
-  //     // var input_address_phone = document.querySelector("#identity");
-  //     // window.intlTelInput(input_address_phone, {
-  //     //   //initialCountry: "SA"
-  //     // });
+    $("#notifyModal").on("shown.bs.modal", function () {
+      $("#notify_content").show();
+      $("#notify_content").addClass('d-flex');
+      $("#notify-response").text("");
+    });
+    $("#notifyModal").modal("show");
+  });
 
-  //     // Initialize intlTelInput with default options
+  $("#notifyMeBtn").click(function (e) {
+    e.preventDefault();
+    // Clear previous error messages
+    $("#notify-response").text("");
+    // Check if email field is empty
+    if ($("#notify_email").val() == "") {
+      // Display an error message
+      $("#notify-response").text("Please enter your email.");
+    } else {
+      // Proceed with the AJAX call if the email field is not empty
+      var formData = $("#notifyMeForm").serialize();
 
-  //   //   const iti = window.intlTelInput(loginInput, {
-  //   //     initialCountry: 'auto',
-  //   //     onlyCountries: ['sa', 'ae'],
-  //   //     separateDialCode: true,
-  //   //     utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
-  //   // });
-
-  //   const iti = loginInput.intlTelInput({
-  //     initialCountry: 'auto',
-  //     onlyCountries: ['sa', 'ae'], // Saudi Arabia, United Arab Emirates
-  //     separateDialCode: true,
-  //     utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
-  // });
-
-  //   // Keep track of the last entered value
-  //   let lastValue = $("#identity").val();
-
-  //   // Add event listener for input changes
-  //   loginInput.on('input', function () {
-  //       const inputValue = $("#identity").val();
-  //       const isFirstCharacterDigit = /^\d/.test(inputValue);
-
-  //       // Change input type and reinitialize intlTelInput accordingly
-  //       if (isFirstCharacterDigit) {
-  //         console.log('firs character') ;
-  //           if (lastValue !== inputValue) {
-  //             console.log('test');
-  //               iti.destroy(); // Destroy the previous instance
-  //               loginInput.prop('type', 'text'); // Change input type to tel
-  //               window.intlTelInput(loginInput, { onlyCountries: ['sa', 'ae'] }); // Reinitialize intlTelInput on the updated input
-  //               loginInput.focus(); // Set focus back to the input
-  //               lastValue = inputValue; // Update last entered value
-  //           }
-  //       } else {
-  //           iti.destroy(); // Destroy the previous instance
-  //           loginInput.prop('type', 'text'); // Change input type to text
-  //           loginInput.focus(); // Set focus back to the input
-  //           lastValue = inputValue; // Update last entered value
-  //       }
-  //   });
+      $.ajax({
+        type: "POST",
+        url: $("#notifyMeForm").attr("action"),
+        data: formData,
+        success: function (response) {
+          if (response && typeof response === "object") {
+            
+            $("#notify-response").html("<p style='color: "+response.color+"'>" + response.message + "</p>");
+            if(response.status == 'success' || response.status == 'info') {
+              $("#notify_content").hide();
+              $("#notify_content").removeClass('d-flex');
+            }
+          } else {
+            console.error("Invalid response format:", response);
+            $("#notify-response").html(
+              "<p style='color: #FF5252'>Failed to process the server response.</p>"
+            );
+          }
+        },
+        error: function (error) {
+          console.error(error);
+        },
+      });
+    }
+  });
 });

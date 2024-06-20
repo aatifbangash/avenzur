@@ -10,9 +10,9 @@ if (!empty($variants)) {
 ?>
 <script type="text/javascript">
     $(document).ready(function () {
-        $('.gen_slug').change(function(e) {
+        /*$('.gen_slug').change(function(e) {
             getSlug($(this).val(), 'products');
-        });
+        });*/
         $("#subcategory").select2("destroy").empty().attr("placeholder", "<?= lang('select_category_to_load') ?>").select2({
             placeholder: "<?= lang('select_category_to_load') ?>", data: [
                 {id: '', text: '<?= lang('select_category_to_load') ?>'}

@@ -267,7 +267,9 @@ class Pay extends MY_Shop_Controller
                 $clientIp = $this->getclientIP();
                 $generateToken = "yes";
                 $paymentDescription = "Payment From Avenzur";
-                $paymentMethod = 1;
+
+                $card_details = $this->session->userdata('card_details');
+                $paymentMethod = $card_details['payment_method_details'];
                 
                 //Required parameters to generate hash code 
                 $hashData['TransactionID'] = $transactionId;
@@ -311,12 +313,20 @@ class Pay extends MY_Shop_Controller
                  $finalData['PaymentMethod'] = $paymentMethod;
                  $finalData["SecureHash"] = $secureHash;
                  
+                 if ($card_details && $paymentMethod == 1) {
+                    $finalData["card_name"] = $card_details['card_name'];
+                    $finalData["card_number"] = $card_details['card_number'];
+                    $finalData["card_cvv"] = $card_details['card_cvv'];
+                    $finalData["card_expiry_month"] = $card_details['card_expiry_month'];
+                    $finalData["card_expiry_year"] = $card_details['card_expiry_year'];
+                 }
                  
+                $this->session->unset_userdata('card_details');
                             
-                            $data["formdata"] = $finalData;
+                $data["formdata"] = $finalData;
                         
                       
-               $this->load->view('green/directpay', $data);
+                $this->load->view('green/directpay', $data);
             }
         }
         //$this->session->set_flashdata('error', lang('sale_x_found'));
@@ -863,6 +873,191 @@ class Pay extends MY_Shop_Controller
         // Output the API response
         return $response;
     }
+
+    public function directTestOrder($inv_no){
+        $paypal = $this->pay_model->getPaypalSettings();
+        $this->sma->log_payment('INFO', 'DirectPay Payment URLL Called');
+        $ipnstatus = false;
+
+        $req = 'cmd=_notify-validate';
+
+        $this->sma->log_payment('INFO', 'DirectPay Payment Request', $req);
+        $invoice_no = $inv_no;
+        $response_status = '00000';
+
+        if($response_status == '00000')
+        {
+            $this->session->unset_userdata('coupon_details');
+            $reference  = 'TESTTRS112233';
+
+            if ($inv = $this->pay_model->getSaleByID($invoice_no)) {
+                $this->cart->destroy();
+                $payment = [
+                    'date'           => date('Y-m-d H:i:s'),
+                    'sale_id'        => $invoice_no,
+                    'reference_no'   => $this->site->getReference('pay'),
+                    'amount'         => $inv->total,
+                    'paid_by'        => 'DirectPay',
+                    'transaction_id' => 'TESTTRS112233',
+                    'type'           => 'received',
+                    'note'           => 'Test transaction from Faisal Card had been paid for the Sale Reference No ' . $inv->reference_no,
+                ];
+                if ($this->pay_model->addPayment($payment)) {
+                    $address_id = $inv->address_id;
+                    $customer = $this->pay_model->getCompanyByID($inv->customer_id);
+                    $address = $this->pay_model->getAddressByID($address_id);
+                    $this->pay_model->updateStatus($inv->id, 'completed');
+                    $ipnstatus = true;
+                    $sale_items = $this->pay_model->getSaleItems($invoice_no);
+
+                    if($address_id == 0){
+                        $customer_mobile = $customer->phone;
+                    }else{
+                        $customer_mobile = $address->phone;
+                    }
+
+                    $delivery_country = $address->country;
+                    $lowercase_delivery_country = strtolower($delivery_country);
+
+                    if (strpos($lowercase_delivery_country, 'saudi') > -1 || strpos($lowercase_delivery_country, 'ksa') > -1) {
+
+                        $message_to_send = 'Hello '.$customer->name.', thank you for your order with Avenzur.com! Your Invoice No: '.$inv->id;
+                        $sms_sent = $this->sma->send_sms_new($address->phone, $message_to_send);
+
+                    }
+                    
+                    $email = $this->order_received($invoice_no);
+                    if($customer_mobile != ''){
+                        //$attachment = $this->orders($invoice_no, null, true, 'S');
+                        $whatsapp_order_message = $this->sma->whatsapp_order_confirmation($customer_mobile, $invoice_no, site_url('shop/invoiceorders/'.$invoice_no));
+                    }
+                    
+                    $this->session->set_flashdata('message', lang('payment_added'));
+                    
+                }
+            }
+        }
+    }
+
+    public function manualEmailTest(){
+        $invoice_no = $_GET['inv_id'];
+        if ($inv = $this->pay_model->getSaleByID($invoice_no)) {
+            $amount = $inv->total;
+            $reference = $inv->reference_no;
+
+            $address_id = $inv->address_id;
+            $customer = $this->pay_model->getCompanyByID($inv->customer_id);
+            //$address = $this->pay_model->getCompanyAddress($customer->id);
+            $address = $this->pay_model->getAddressByID($address_id);
+            $ipnstatus = true;
+            $sale_items = $this->pay_model->getSaleItems($invoice_no);
+
+            if($address_id == 0){
+                $customer_mobile = $customer->phone;
+            }else{
+                $customer_mobile = $address->phone;
+            }
+
+            $delivery_country = $address->country;
+            $lowercase_delivery_country = strtolower($delivery_country);
+
+            // send sms to customer
+            $message_to_send = 'Hello '.$customer->first_name.' '.$customer->last_name.', thank you for your order with Avenzur.com! Your Invoice No: '.$inv->id;
+            $sms_sent = $this->sma->send_sms_new($customer_mobile, $message_to_send);
+            
+            $email = $this->manual_order_received($invoice_no);
+            if($customer_mobile != ''){
+                //$attachment = $this->orders($invoice_no, null, true, 'S');
+                $whatsapp_order_message = $this->sma->whatsapp_order_confirmation($customer_mobile, $invoice_no, site_url('shop/invoiceorders/'.$invoice_no));
+            }
+            
+            echo 'Customer notified successfully...';   
+            
+        }else{
+            echo 'Sale not found...';
+        }
+    }
+
+    public function manual_order_received($id = null, $hash = null)
+    {
+        if ($inv = $this->shop_model->getOrder(['id' => $id])) {
+            $user     = $inv->created_by ? $this->site->getUser($inv->created_by) : null;
+            $customer = $this->site->getCompanyByID($inv->customer_id);
+            $biller   = $this->site->getCompanyByID($inv->biller_id);
+            $this->load->library('parser');
+            $parse_data = [
+                'reference_number' => $inv->id,
+                'contact_person'   => $customer->first_name.' '.$customer->last_name,
+                'company'          => $customer->company && $customer->company != '-' ? '(' . $customer->company . ')' : '',
+                'order_link'       => shop_url('orders/' . $id . '/' . ($this->loggedIn ? '' : $inv->hash)),
+                'site_link'        => base_url(),
+                'site_name'        => 'Avenzur',
+                'logo'             => '<img src="' . base_url() . 'assets/uploads/logos/' . $biller->logo . '" alt="' . ($biller->company && $biller->company != '-' ? $biller->company : $biller->name) . '"/>',
+            ];
+            $msg     = file_get_contents('./themes/' . $this->Settings->theme . '/admin/views/email_templates/sale.html');
+            $message = $this->parser->parse_string($msg, $parse_data);
+            $this->load->model('pay_model');
+            $paypal   = $this->pay_model->getPaypalSettings();
+            $skrill   = $this->pay_model->getSkrillSettings();
+            $btn_code = '<div id="payment_buttons" class="text-center margin010">';
+            if (!empty($this->shop_settings->bank_details)) {
+                $btn_code .= '<div style="width:100%;">' . $this->shop_settings->bank_details . '</div><hr class="divider or">';
+            }
+            if (!empty($paypal) && $paypal->active == '1' && $inv->grand_total != '0.00') {
+                if (trim(strtolower($customer->country)) == $biller->country) {
+                    $paypal_fee = $paypal->fixed_charges + ($inv->grand_total * $paypal->extra_charges_my / 100);
+                } else {
+                    $paypal_fee = $paypal->fixed_charges + ($inv->grand_total * $paypal->extra_charges_other / 100);
+                }
+                $btn_code .= '<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=' . $paypal->account_email . '&item_name=' . $inv->reference_no . '&item_number=' . $inv->id . '&image_url=' . base_url() . 'assets/uploads/logos/' . $this->Settings->logo . '&amount=' . (($inv->grand_total - $inv->paid) + $paypal_fee) . '&no_shipping=1&no_note=1&currency_code=' . $this->default_currency->code . '&bn=BuyNow&rm=2&return=' . admin_url('sales/view/' . $inv->id) . '&cancel_return=' . admin_url('sales/view/' . $inv->id) . '&notify_url=' . admin_url('payments/paypalipn') . '&custom=' . $inv->reference_no . '__' . ($inv->grand_total - $inv->paid) . '__' . $paypal_fee . '"><img src="' . base_url('assets/images/btn-paypal.png') . '" alt="Pay by PayPal"></a> ';
+            }
+            if (!empty($skrill) && $skrill->active == '1' && $inv->grand_total != '0.00') {
+                if (trim(strtolower($customer->country)) == $biller->country) {
+                    $skrill_fee = $skrill->fixed_charges + ($inv->grand_total * $skrill->extra_charges_my / 100);
+                } else {
+                    $skrill_fee = $skrill->fixed_charges + ($inv->grand_total * $skrill->extra_charges_other / 100);
+                }
+                $btn_code .= ' <a href="https://www.moneybookers.com/app/payment.pl?method=get&pay_to_email=' . $skrill->account_email . '&language=EN&merchant_fields=item_name,item_number&item_name=' . $inv->reference_no . '&item_number=' . $inv->id . '&logo_url=' . base_url() . 'assets/uploads/logos/' . $this->Settings->logo . '&amount=' . (($inv->grand_total - $inv->paid) + $skrill_fee) . '&return_url=' . admin_url('sales/view/' . $inv->id) . '&cancel_url=' . admin_url('sales/view/' . $inv->id) . '&detail1_description=' . $inv->reference_no . '&detail1_text=Payment for the sale invoice ' . $inv->reference_no . ': ' . $inv->grand_total . '(+ fee: ' . $skrill_fee . ') = ' . $this->sma->formatMoney($inv->grand_total + $skrill_fee) . '&currency=' . $this->default_currency->code . '&status_url=' . admin_url('payments/skrillipn') . '"><img src="' . base_url('assets/images/btn-skrill.png') . '" alt="Pay by Skrill"></a>';
+            }
+
+            $btn_code .= '<div class="clearfix"></div></div>';
+            $message    = $message . $btn_code;
+            $attachment = $this->orders($id, $hash, true, 'S');
+            //$subject    = lang('new_order_received');
+            $subject = 'Thank you for your order!';
+            $sent       = false;
+            $error      = false;
+            $cc         = [];
+            $bcc        = [];
+            /*if ($user) {
+                $cc[] = $customer->email;
+            }
+            $cc[]      = $biller->email;*/
+            $warehouse = $this->site->getWarehouseByID($inv->warehouse_id);
+            $customer_email = $customer ? $customer->email : $user->email;
+            /*if ($warehouse->email) {
+                $cc[] = $warehouse->email;
+            }*/
+            try {
+                if (isset($customer_email) && !empty($customer_email) && $customer_email) {
+                    $this->sma->send_email(($customer_email), $subject, $message, null, null, $attachment, $cc, $bcc);
+
+                    //$whatsapp_sent = $this->sma->send_whatsapp_notify('+966534525101', 'New Order Generated On Avenzur');
+                    //$whatsapp_data = json_decode($whatsapp_sent, true);
+                    $this->sma->send_email('fabbbas@avenzur.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, [], []);
+                    
+                    delete_files($attachment);
+                    $sent = true;
+                }else{
+                    $this->sma->send_email('fabbbas@avenzur.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, [], []);
+                    
+                }
+            } catch (Exception $e) {
+                $error = $e->getMessage();
+            }
+            return ['sent' => $sent, 'error' => $error];
+        }
+    }
     
     public function RedirectPaymentResponsePage()
     {
@@ -882,6 +1077,7 @@ class Pay extends MY_Shop_Controller
         
         if($response_status == '00000')
         {
+            $this->session->unset_userdata('coupon_details');
             $amount = $_POST['Response_Amount'] / 100;
             
             $reference  = $_POST['Response_ApprovalCode'];
@@ -912,6 +1108,12 @@ class Pay extends MY_Shop_Controller
                     $this->pay_model->updateStatus($inv->id, 'completed');
                     $ipnstatus = true;
                     $sale_items = $this->pay_model->getSaleItems($invoice_no);
+
+                    if($address_id == 0){
+                        $customer_mobile = $customer->phone;
+                    }else{
+                        $customer_mobile = $address->phone;
+                    }
 
                     $delivery_country = $address->country;
                     $lowercase_delivery_country = strtolower($delivery_country);
@@ -962,8 +1164,6 @@ class Pay extends MY_Shop_Controller
 
                         $this->create_oto_order($order);
                         /* OTO Order Generation Ends */
-
-                        $this->sendMsegatSMS($address->phone, $inv->id, $customer->name);
 
                     }else{
                         /* Shipway Order Generation Ends */
@@ -1043,8 +1243,17 @@ class Pay extends MY_Shop_Controller
 
                         /* Shipway Order Generation Ends */
                     }
+
+                    // send sms to customer
+                    $message_to_send = 'Hello '.$customer->first_name.' '.$customer->last_name.', thank you for your order with Avenzur.com! Your Invoice No: '.$inv->id;
+                    $sms_sent = $this->sma->send_sms_new($customer_mobile, $message_to_send);
                     
                     $email = $this->order_received($invoice_no);
+                    if($customer_mobile != ''){
+                        //$attachment = $this->orders($invoice_no, null, true, 'S');
+                        $whatsapp_order_message = $this->sma->whatsapp_order_confirmation($customer_mobile, $invoice_no, site_url('shop/invoiceorders/'.$invoice_no));
+                    }
+                    
                     $this->sma->log_payment('SUCCESS', 'Payment has been made for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));
                     $this->session->set_flashdata('message', lang('payment_added'));
                     
@@ -1058,9 +1267,11 @@ class Pay extends MY_Shop_Controller
         if ($inv->shop) {
             shop_redirect('orders/' . $inv->id . '/' . ($this->loggedIn ? '' : $inv->hash));
         }
-
-        redirect(SHOP ? '/' : site_url($ipnstatus ? 'notify/payment_success' : 'notify/payment_failed'));
-        exit();
+        
+        $this->page_construct('pages/payment_error', $this->data);
+        
+        //redirect(SHOP ? '/' : site_url($ipnstatus ? 'notify/payment_success' : 'notify/payment_failed'));
+        //exit();
     }
 
     public function sendMsegatSMS($receiver_number, $order_id, $receiver_name){
@@ -1109,12 +1320,12 @@ class Pay extends MY_Shop_Controller
             $biller   = $this->site->getCompanyByID($inv->biller_id);
             $this->load->library('parser');
             $parse_data = [
-                'reference_number' => $inv->reference_no,
-                'contact_person'   => $customer->name,
+                'reference_number' => $inv->id,
+                'contact_person'   => $customer->first_name.' '.$customer->last_name,
                 'company'          => $customer->company && $customer->company != '-' ? '(' . $customer->company . ')' : '',
                 'order_link'       => shop_url('orders/' . $id . '/' . ($this->loggedIn ? '' : $inv->hash)),
                 'site_link'        => base_url(),
-                'site_name'        => $this->Settings->site_name,
+                'site_name'        => 'Avenzur',
                 'logo'             => '<img src="' . base_url() . 'assets/uploads/logos/' . $biller->logo . '" alt="' . ($biller->company && $biller->company != '-' ? $biller->company : $biller->name) . '"/>',
             ];
             $msg     = file_get_contents('./themes/' . $this->Settings->theme . '/admin/views/email_templates/sale.html');
@@ -1146,7 +1357,8 @@ class Pay extends MY_Shop_Controller
             $btn_code .= '<div class="clearfix"></div></div>';
             $message    = $message . $btn_code;
             $attachment = $this->orders($id, $hash, true, 'S');
-            $subject    = lang('new_order_received');
+            //$subject    = lang('new_order_received');
+            $subject = 'Thank you for your order!';
             $sent       = false;
             $error      = false;
             $cc         = [];
@@ -1156,16 +1368,27 @@ class Pay extends MY_Shop_Controller
             }
             $cc[]      = $biller->email;*/
             $warehouse = $this->site->getWarehouseByID($inv->warehouse_id);
+            $customer_email = $customer ? $customer->email : $user->email;
             /*if ($warehouse->email) {
                 $cc[] = $warehouse->email;
             }*/
             try {
-                if ($this->sma->send_email(($customer ? $customer->email : $user->email), $subject, $message, null, null, $attachment, $cc, $bcc)) {
+                if (isset($customer_email) && !empty($customer_email) && $customer_email) {
+                    $this->sma->send_email(($customer_email), $subject, $message, null, null, $attachment, $cc, $bcc);
+
+                    //$whatsapp_sent = $this->sma->send_whatsapp_notify('+966534525101', 'New Order Generated On Avenzur');
+                    //$whatsapp_data = json_decode($whatsapp_sent, true);
                     $this->sma->send_email('ama@pharma.com.sa', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                     $this->sma->send_email('Agilkar@avenzur.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                     $this->sma->send_email('inamadnan2@gmail.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
+                    $this->sma->send_email('braphael@avenzur.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                     delete_files($attachment);
                     $sent = true;
+                }else{
+                    $this->sma->send_email('ama@pharma.com.sa', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
+                    $this->sma->send_email('Agilkar@avenzur.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
+                    $this->sma->send_email('inamadnan2@gmail.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
+                    $this->sma->send_email('braphael@avenzur.com', 'New Order Generated On Avenzur', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['fabbas@avenzur.com']);
                 }
             } catch (Exception $e) {
                 $error = $e->getMessage();
@@ -1220,7 +1443,7 @@ class Pay extends MY_Shop_Controller
                 echo $html;
                 exit;
             }
-            $name = lang('invoice') . '_' . str_replace('/', '_', $order->reference_no) . '.pdf';
+            $name = lang('invoice') . '_' . str_replace('/', '_', $order->id) . '.pdf';
             if ($buffer_save) {
                 return $this->sma->generate_pdf($html, $name, $buffer_save, $this->data['biller']->invoice_footer);
             }

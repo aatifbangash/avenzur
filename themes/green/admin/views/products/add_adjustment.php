@@ -107,7 +107,6 @@
     <div class="box-content">
         <div class="row">
             <div class="col-lg-12">
-
                 <p class="introtext"><?php echo lang('enter_info'); ?></p>
                 <?php
                 $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
@@ -120,7 +119,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <?= lang('date', 'qadate'); ?>
-                                    <?php echo form_input('date', (isset($_POST['date']) ? $_POST['date'] : ''), 'class="form-control input-tip datetime" id="qadate" required="required"'); ?>
+                                    <?php echo form_input('date', (isset($_POST['date']) ? $_POST['date'] : date("d/m/Y H:i")), 'class="form-control input-tip datetime" id="qadate" required="required"'); ?>
                                 </div>
                             </div>
                         <?php
@@ -190,8 +189,12 @@
                                     <table id="qaTable" class="table items table-striped table-bordered table-condensed table-hover">
                                         <thead>
                                         <tr>
-                                            <th><?= lang('product_name') . ' (' . lang('product_code') . ')'; ?></th>
+                                            <th class="col-md-3 "><?= lang('product_name') . ' (' . lang('product_code') . ')'; ?></th>
                                             <th class="col-md-2"><?= lang('variant'); ?></th>
+                                            <th class="col-md-2"><?= lang('Batch'); ?></th>
+                                            <th class="col-md-2"><?= lang('Expiry Date'); ?></th>
+                                            <th class="col-md-2"><?= lang('Sale Price'); ?></th>
+                                            <th class="col-md-2"><?= lang('Unit Cost'); ?></th>
                                             <th class="col-md-1"><?= lang('type'); ?></th>
                                             <th class="col-md-1"><?= lang('quantity'); ?></th>
                                             <?php

@@ -19,6 +19,7 @@ class Notifications extends MY_Controller
         $this->lang->admin_load('notifications', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('cmt_model');
+        $this->upload_path = 'assets/uploads/';
     }
 
     public function addRasdNotification(){
@@ -31,12 +32,52 @@ class Notifications extends MY_Controller
                 'status' => 'pending',
                 'date' => date('Y-m-d')
             ];
+
+            $batch_data = [];
+            if ($_FILES && $_FILES['csv_file_upload']['name']) {
+
+                $config['upload_path'] = $this->upload_path.'temp/';
+                $config['allowed_types'] = 'csv';
+                $config['max_size'] = 10240;
+
+                $this->load->library('upload', $config);
+
+                if ($this->upload->do_upload('csv_file_upload')) {
+                    $upload_data = $this->upload->data();
+                    $file_path = $config['upload_path'] . $upload_data['file_name'];
+
+                    $csv_data = array_map('str_getcsv', file($file_path));
+
+                    $i = 0;
+                    
+                    foreach ($csv_data as $row) {
+                        if($i > 0){
+                            $batch_data[] = array(
+                                'notification_id' => $this->input->post('dispatch_id'),
+                                'dispatch_id' => $this->input->post('dispatch_id'),
+                                'gtin' => $row[0],
+                                'serial_no' => $row[1],
+                                'batch_no' => $row[2],
+                                'expiry' => $row[3],
+                                'used' => 0
+                            );
+                        }
+
+                        $i++;
+                    }
+                }else{
+                    $upload_error = $this->upload->display_errors();
+                    echo $upload_error;
+                }
+
+                
+            }
         } elseif ($this->input->post('submit')) {
             $this->session->set_flashdata('error', validation_errors());
             admin_redirect('notifications/rasd');
         }
 
-        if ($this->form_validation->run() == true && $this->cmt_model->addRasdNotification($data)) {
+        if ($this->form_validation->run() == true && $this->cmt_model->addRasdNotification($data, $batch_data)) {
             $this->session->set_flashdata('message', lang('notification_added'));
             admin_redirect('notifications/rasd');
         } else {

@@ -11,6 +11,7 @@ class Products_model extends CI_Model
         // Sequence-Code
         $this->load->library('SequenceCode');
         $this->sequenceCode = new SequenceCode();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function add_products($products = [])
@@ -399,6 +400,15 @@ class Products_model extends CI_Model
         return false;
     }
 
+    public function getBrandByID($id)
+    {
+        $q = $this->db->get_where('brands', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getCategoryByCode($code)
     {
         $q = $this->db->get_where('categories', ['code' => $code], 1);
@@ -440,10 +450,22 @@ class Products_model extends CI_Model
 
     public function getProductByCode($code)
     {
-        $q = $this->db->get_where('products', ['code' => $code], 1);
-        if ($q->num_rows() > 0) {
-            return $q->row();
+        //echo $code.'###';
+        $this->db->select('*');
+        $this->db->from('sma_products');
+       
+        if (preg_match('/^[A-Za-z]/', $code)) {
+            $this->db->where('code', $code);
+        } else {
+            $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$code, NULL, FALSE);
         }
+        $query = $this->db->get();
+       //echo $query->num_rows();
+       // $q = $this->db->get_where('products', ['code' => $code], 1);
+        if ($query->num_rows() > 0) {
+           return $query->row();
+        }
+
         return false;
     }
 
@@ -454,6 +476,11 @@ class Products_model extends CI_Model
             return $q->row();
         }
         return false;
+    }
+
+    public function remove_image($id) {
+        $this->db->where('id', $id);
+        $this->db->update('products', ['image' => NULL]);
     }
 
     public function getProductComboItems($pid)
@@ -975,6 +1002,9 @@ class Products_model extends CI_Model
             if ($data['option_id']) {
                 $this->site->syncVariantQty($data['option_id'], $data['warehouse_id'], $data['product_id']);
             }
+            $movement_type = $data['type'] == 'subtraction' ? 'adjustment_decrease': 'adjustment_increase';
+            $this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id']);
+               
         }
     }
 

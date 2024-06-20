@@ -1834,7 +1834,25 @@ class Sales extends MY_Controller
 
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
-        $address = $this->site->getAddressByID($address_id);
+
+        if($address_id == 0){
+            $address = new stdClass();
+            $address->line1 = $customer->address;
+            $address->phone = $customer->phone;
+            $address->longitude = $customer->longitude;
+            $address->latitude = $customer->latitude;
+            $address->first_name = $customer->first_name;
+            $address->last_name = $customer->last_name;
+        }else{
+            $address = $this->site->getAddressByID($address_id);
+        }
+
+        if (strpos($address->phone, "+966") !== false) {
+            //echo "The string contains +966.";
+        } else {
+            $address->phone = '+966'.$address->phone;
+        }
+
         $sale_items = $this->site->getAllSaleItems($sale->id);
 
         $items_data = array();
@@ -1868,7 +1886,7 @@ class Sales extends MY_Controller
             'source_location_long' => 0.0,
             'source_address' => '-',
             'destination_customer_phone' => $address->phone,
-            'destination_customer_name' => $customer->name,
+            'destination_customer_name' => $address->first_name.' '.$address->last_name,
             'destination_customer_reference' => $sale->reference_no,
             'destination_location_lat' => !empty($address->latitude) ? $address->latitude : 0.0,
             'destination_location_long' => !empty($address->longitude) ? $address->longitude : 0.0,
@@ -2147,12 +2165,35 @@ class Sales extends MY_Controller
     {
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
-        $address = $this->site->getAddressByID($address_id);
+
+        if($address_id == 0){
+            $address = new stdClass();
+            $address->line1 = $customer->address;
+            $address->line2 = '';
+            $address->phone = $customer->phone;
+            $address->longitude = $customer->longitude;
+            $address->latitude = $customer->latitude;
+            $address->city = $customer->city;
+            $address->state = $customer->state;
+            $address->postal_code = $customer->postal_code;
+            $address->country = $customer->country;
+            $address->first_name = $customer->first_name;
+            $address->last_name = $customer->last_name;
+        }else{
+            $address = $this->site->getAddressByID($address_id);
+        }
+
+        if (strpos($address->phone, "+966") !== false) {
+            //echo "The string contains +966.";
+        } else {
+            $address->phone = '+966'.$address->phone;
+        }
+
         $sale_items = $this->site->getAllSaleItems($sale->id);
 
         $address->phone = $this->arabicToEnglishNumber($address->phone);
 
-        $countryArr = $this->site->getCountryByName($address->country);
+        //$countryArr = $this->site->getCountryByName($address->country);
 
         $items_data = array();
         $items_str = '';
@@ -2162,7 +2203,6 @@ class Sales extends MY_Controller
             $product = $this->site->getProductByID($sale_item->product_id);
             $strippedDescription = str_replace('<p><strong>Product Description:</strong></p>', '', $product->product_details);
             $strippedDescription = strip_tags($strippedDescription, '<ul><li><strong>');
-            // Remove additional line
 
             if($count > 0){
                 $items_str .= ',';
@@ -2192,7 +2232,7 @@ class Sales extends MY_Controller
                 "mobile":"'.$address->phone.'",
                 "phone":"'.$address->phone.'",
                 "countryCode":"KSA",
-                "name":"'.$customer->name.'",
+                "name":"'.$address->first_name.' '.$address->last_name.'",
                 "postCode":"'.$address->postal_code.'",
                 "prov":"'.$address->state.'"
             },
@@ -2214,7 +2254,7 @@ class Sales extends MY_Controller
             "items":['.$items_str.'],
             "operateType":1
         }';
-
+        
         return $waybillinfo;
     }
 
@@ -2353,6 +2393,9 @@ class Sales extends MY_Controller
     }
 
     public function getEcommerceSales($warehouse_id = null){
+       
+        //  echo '<pre>'; print_r($this->input->post()); exit; 
+        $keyword=  trim($this->input->post('keyword'));  
         $this->sma->checkPermissions('index');
 
         if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
@@ -2430,20 +2473,34 @@ class Sales extends MY_Controller
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id, {$this->db->dbprefix('courier')}.name as courier_name, {$this->db->dbprefix('addresses')}.city, {$this->db->dbprefix('sales')}.delivery_type")
+                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as sale_id  , 
+                DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, 
+                {$this->db->dbprefix('sales')}.sequence_code as code, biller,  
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN CONCAT({$this->db->dbprefix('companies')}.first_name, ' ',{$this->db->dbprefix('companies')}.last_name )  ELSE CONCAT({$this->db->dbprefix('addresses')}.first_name,' ', {$this->db->dbprefix('addresses')}.last_name) END AS customer,
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.phone  ELSE ({$this->db->dbprefix('addresses')}.phone) END AS phone,  
+                sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, 
+                {$this->db->dbprefix('sales')}.attachment, return_id, {$this->db->dbprefix('courier')}.name as courier_name, 
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.city  ELSE ({$this->db->dbprefix('addresses')}.city) END AS city,
+
+                {$this->db->dbprefix('sales')}.delivery_type,{$this->db->dbprefix('sales')}.courier_order_status")
                 ->from('sales')
                 ->where('warehouse_id', $warehouse_id)
                 ->where('shop', 1);
                 //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
         } else {
             $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id, {$this->db->dbprefix('courier')}.name as courier_name, {$this->db->dbprefix('addresses')}.city, {$this->db->dbprefix('sales')}.delivery_type")
+                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as sale_id , DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, 
+                reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, 
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN CONCAT({$this->db->dbprefix('companies')}.first_name, ' ',{$this->db->dbprefix('companies')}.last_name )   ELSE CONCAT({$this->db->dbprefix('addresses')}.first_name,' ', {$this->db->dbprefix('addresses')}.last_name) END AS customer,
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.phone  ELSE ({$this->db->dbprefix('addresses')}.phone) END AS phone,  
+                sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, 
+                return_id, {$this->db->dbprefix('courier')}.name as courier_name,  
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.city  ELSE ({$this->db->dbprefix('addresses')}.city) END AS city,
+                {$this->db->dbprefix('sales')}.delivery_type,{$this->db->dbprefix('sales')}.courier_order_status")
                 ->from('sales')
-                ->where('shop', 1);
-                
-                
+                ->where('shop', 1);  
         }
-
+ 
         $subquery = "(SELECT COUNT(*) FROM sma_sale_items WHERE sma_sale_items.sale_id = sma_sales.id AND (sma_sale_items.product_code LIKE 'AM-%' OR sma_sale_items.product_code LIKE 'IH-%'))";
         $this->datatables
             ->select("{$subquery} > 0 AS global_product", false); // Use a subquery to determine global_product
@@ -2458,11 +2515,30 @@ class Sales extends MY_Controller
             $this->datatables->join('deliveries', 'deliveries.sale_id=sales.id', 'left')
             ->where('sales.sale_status', 'completed')->where('sales.payment_status', 'paid')
             ->where("({$this->db->dbprefix('deliveries')}.status != 'delivered' OR {$this->db->dbprefix('deliveries')}.status IS NULL)", null);
-        }
-
+        } 
         $this->datatables->join('courier', 'courier.id=sales.courier_id', 'left');
-        $this->datatables->join('addresses', 'addresses.id=sales.address_id', 'left');
+       //  $this->datatables->join('addresses', 'addresses.id=sales.address_id', 'left'); by mm  
+       // ({$this->db->dbprefix('sales')}.address_id IS NOT NULL and {$this->db->dbprefix('sales')}.address_id!=0 )
+        $this->datatables->join("addresses", "{$this->db->dbprefix('sales')}.address_id>0   AND {$this->db->dbprefix('sales')}.address_id = {$this->db->dbprefix('addresses')}.id", "left");
+        $this->datatables->join("companies", "({$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 )  AND {$this->db->dbprefix('sales')}.customer_id = {$this->db->dbprefix('companies')}.id", "left");
+       
+       if(!empty( $keyword)){ 
+        
+        $this->db->group_start();  
+        $this->datatables->where("{$this->db->dbprefix('sales')}.sale_status",$keyword); 
+        $this->datatables->or_where("{$this->db->dbprefix('sales')}.payment_status",$keyword); 
+        $this->datatables->or_where("{$this->db->dbprefix('sales')}.id",$keyword);  
+        $this->datatables->or_where("{$this->db->dbprefix('sales')}.reference_no",$keyword);  
+        $this->datatables->or_where("{$this->db->dbprefix('sales')}.sequence_code",$keyword);  
+        $this->datatables->or_where("{$this->db->dbprefix('sales')}.courier_order_status",$keyword); 
+        $this->datatables->or_where("{$this->db->dbprefix('courier')}.name",$keyword); 
+        $this->datatables->or_where("{$this->db->dbprefix('sales')}.delivery_type",$keyword);         
 
+        $this->datatables->or_where("({$this->db->dbprefix('sales')}.address_id >0 AND ({$this->db->dbprefix('addresses')}.phone LIKE '%".$keyword."%' OR {$this->db->dbprefix('addresses')}.first_name LIKE '%".$keyword."%' OR {$this->db->dbprefix('addresses')}.last_name LIKE '%".$keyword."%' OR   concat_ws(' ',{$this->db->dbprefix('addresses')}.first_name,{$this->db->dbprefix('addresses')}.last_name) like '%$".$keyword."%'  OR {$this->db->dbprefix('addresses')}.city LIKE '%".$keyword."%')) OR 
+        (({$this->db->dbprefix('sales')}.address_id IS NULL or {$this->db->dbprefix('sales')}.address_id=0) AND ({$this->db->dbprefix('companies')}.phone LIKE '%".$keyword."%' OR {$this->db->dbprefix('companies')}.first_name LIKE '%".$keyword."%' OR {$this->db->dbprefix('companies')}.last_name LIKE '%".$keyword."%' OR   concat_ws(' ',{$this->db->dbprefix('companies')}.first_name,{$this->db->dbprefix('companies')}.last_name) like '%$".$keyword."%' OR {$this->db->dbprefix('companies')}.city LIKE '%".$keyword."%'))
+        ");   
+        $this->db->group_end();   
+       }  
         if ($this->input->get('attachment') == 'yes') {
             $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
         }
@@ -2561,13 +2637,10 @@ class Sales extends MY_Controller
                 //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
         } else {
             $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id,")
+                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id")
                 ->from('sales')
-                ->where('shop', 0);
-                
-                
-        }
-        
+                ->where('shop', 0); 
+        } 
         // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
         if ($this->input->get('shop') == 'yes') {
             $this->datatables->where('shop', 1);
@@ -3248,14 +3321,14 @@ class Sales extends MY_Controller
                     exit();
                 }
                 $titles = array_shift($arrResult);
-                $keys   = ['code', 'net_unit_price', 'quantity', 'variant', 'item_tax_rate', 'discount', 'serial'];
+                $keys   = ['code', 'net_unit_price', 'quantity', 'variant', 'item_tax_rate', 'discount', 'serial','batch_no'];
                 $final  = [];
                 foreach ($arrResult as $key => $value) {
                     $final[] = array_combine($keys, $value);
                 }
                 $rw = 2;
                 foreach ($final as $csv_pr) {
-                    if (isset($csv_pr['code']) && isset($csv_pr['net_unit_price']) && isset($csv_pr['quantity'])) {
+                    if (isset($csv_pr['code']) && isset($csv_pr['net_unit_price']) && isset($csv_pr['quantity']) && isset($csv_pr['batch_no'])) {    
                         if ($product_details = $this->sales_model->getProductByCode($csv_pr['code'])) {
                             if ($csv_pr['variant']) {
                                 $item_option = $this->sales_model->getProductVariantByName($csv_pr['variant'], $product_details->id);
@@ -3277,6 +3350,7 @@ class Sales extends MY_Controller
                             $item_tax_rate  = $csv_pr['item_tax_rate'];
                             $item_discount  = $csv_pr['discount'];
                             $item_serial    = $csv_pr['serial'];
+                            $item_batchno    = $csv_pr['batch_no'];  
 
                             if (isset($item_code) && isset($item_net_price) && isset($item_quantity)) {
                                 $product_details  = $this->sales_model->getProductByCode($item_code);
@@ -3328,6 +3402,7 @@ class Sales extends MY_Controller
                                     'item_discount'     => $pr_item_discount,
                                     'subtotal'          => $subtotal,
                                     'serial_no'         => $item_serial,
+                                    'batch_no'          => $item_batchno,
                                     'unit_price'        => $this->sma->formatDecimal($unit_price, 4),
                                     'real_unit_price'   => $this->sma->formatDecimal(($unit_price + $pr_discount), 4),
                                 ];

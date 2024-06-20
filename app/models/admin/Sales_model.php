@@ -7,6 +7,7 @@ class Sales_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function addDelivery($data = [])
@@ -145,6 +146,10 @@ class Sales_model extends CI_Model
 
                 $sale_item_id = $this->db->insert_id();
                 if ($data['sale_status'] == 'completed' && empty($si_return)) {
+
+                      //handle inventory movement
+                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
+
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
@@ -570,19 +575,49 @@ class Sales_model extends CI_Model
         }
     }
 
+    // public function getProductNames($term, $warehouse_id, $pos = false, $limit = 5)
+    // {
+    //     $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
+
+    //     $this->db->select('products.*, FWP.quantity as quantity, categories.id as category_id, categories.name as category_name', false)
+    //         ->join($wp, 'FWP.product_id=products.id', 'left')
+    //         // ->join('warehouses_products FWP', 'FWP.product_id=products.id', 'left')
+    //         ->join('categories', 'categories.id=products.category_id', 'left')
+    //         ->group_by('products.id');
+    //     if ($this->Settings->overselling) {
+    //         $this->db->where("({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
+    //     } else {
+    //         $this->db->where("((({$this->db->dbprefix('products')}.track_quantity = 0 OR FWP.quantity > 0) AND FWP.warehouse_id = '" . $warehouse_id . "') OR {$this->db->dbprefix('products')}.type != 'standard') AND "
+    //             . "({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
+    //     }
+    //     // $this->db->order_by('products.name ASC');
+    //     if ($pos) {
+    //         $this->db->where('hide_pos !=', 1);
+    //     }
+    //     $this->db->limit($limit);
+    //     $q = $this->db->get('products');
+    //     if ($q->num_rows() > 0) {
+    //         foreach (($q->result()) as $row) {
+    //             $data[] = $row;
+    //         }
+    //         return $data;
+    //     }
+    // }
+
     public function getProductNames($term, $warehouse_id, $pos = false, $limit = 5)
     {
-        $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
+       //  $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
 
-        $this->db->select('products.*, FWP.quantity as quantity, categories.id as category_id, categories.name as category_name', false)
-            ->join($wp, 'FWP.product_id=products.id', 'left')
+        $this->db->select('products.*, SUM(FWP.quantity) as quantity, categories.id as category_id, categories.name as category_name', false)
+        ->join("inventory_movements FWP", "FWP.product_id=products.id", "left")
+        //  ->join($wp, 'FWP.product_id=products.id', 'left')
             // ->join('warehouses_products FWP', 'FWP.product_id=products.id', 'left')
             ->join('categories', 'categories.id=products.category_id', 'left')
             ->group_by('products.id');
         if ($this->Settings->overselling) {
             $this->db->where("({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
-        } else {
-            $this->db->where("((({$this->db->dbprefix('products')}.track_quantity = 0 OR FWP.quantity > 0) AND FWP.warehouse_id = '" . $warehouse_id . "') OR {$this->db->dbprefix('products')}.type != 'standard') AND "
+        } else { 
+            $this->db->where("(( FWP.location_id = '" . $warehouse_id . "') OR {$this->db->dbprefix('products')}.type != 'standard') AND "
                 . "({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
         }
         // $this->db->order_by('products.name ASC');
@@ -591,13 +626,15 @@ class Sales_model extends CI_Model
         }
         $this->db->limit($limit);
         $q = $this->db->get('products');
+        // $this->output->enable_profiler(TRUE); 
+        //   echo $this->db->last_query();  exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
             }
             return $data;
         }
-    }
+    }   
 
     public function getProductOptionByID($id)
     {
@@ -972,6 +1009,7 @@ class Sales_model extends CI_Model
 
     public function updateSale($id, $data, $items = [], $attachments = [])
     {
+        
         $this->db->trans_start();
         $this->resetSaleActions($id, false, true);
         if ($data['sale_status'] == 'completed') {
@@ -1046,6 +1084,8 @@ class Sales_model extends CI_Model
             }
 
             if ($data['sale_status'] == 'completed') {
+                  //handle inventory movement
+                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
                 $this->site->syncPurchaseItems($cost);
             }
 

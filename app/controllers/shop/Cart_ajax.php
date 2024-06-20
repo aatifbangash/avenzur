@@ -34,11 +34,20 @@ class Cart_ajax extends MY_Shop_Controller
 
     public function remove($rowid = null)
     {
+        $this->session->unset_userdata('coupon_details');
         if ($rowid) {
+            $item = $this->cart->get_item($rowid);
+            if($item['code'] == '06285193000301'){
+
+            }
             return $this->cart->remove($rowid);
         }
         if ($this->input->is_ajax_request()) {
             if ($rowid = $this->input->post('rowid', true)) {
+                $item = $this->cart->get_item($rowid);
+                if($item['code'] == '06285193000301'){
+
+                }
                 if ($this->cart->remove($rowid)) {
                     $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_item_deleted')]);
                 }
@@ -46,14 +55,141 @@ class Cart_ajax extends MY_Shop_Controller
         }
     }
 
-    public function apply_coupon(){
-        $coupon_code    = strtolower($this->input->post('coupon_code'));
-    
-        if($coupon_code == 'welcom20'){
+    public function remove_coupon_code(){
+        $coupon_details = $this->session->userdata('coupon_details');
+        
+        // Remove any discount if no coupon is detected
+        $cart_arr = $this->cart;
+        $cart_total = $cart_arr->cart_contents['cart_total'];
 
+        $coupon_disc = $this->cart->get_total_discount();
+        $cart_total = $cart_total + $coupon_disc;
+
+        $cart_contents = $this->cart->contents();
+        $cart_arr = array();
+        foreach ($cart_contents as $item => $val) {
+            if($val['code'] != '06285193000301'){
+                $data = [
+                    'rowid'  => $val['rowid'],
+                    'discount'  => 0
+                ];
+                array_push($cart_arr, $data);
+            }
+            
+        }
+
+        $this->cart->update($cart_arr);
+
+        $this->session->unset_userdata('coupon_details');
+    }
+
+    public function remove_coupon(){
+        $coupon_details = $this->session->userdata('coupon_details');
+        if(isset($coupon_details['code'])){
+            $c_code = $coupon_details['code'];
+
+            // Remove any discount if no coupon is detected
             $cart_arr = $this->cart;
             $cart_total = $cart_arr->cart_contents['cart_total'];
-            $discount = 25;
+
+            $coupon_disc = $this->cart->get_total_discount();
+            $cart_total = $cart_total + $coupon_disc;
+
+            $cart_contents = $this->cart->contents();
+            $cart_arr = array();
+            foreach ($cart_contents as $item => $val) {
+                $data = [
+                    'rowid'  => $val['rowid'],
+                    'discount'  => 0
+                ];
+
+                if($c_code == 'fitness' && $val['code'] == '06285193000301'){
+                    $data['qty'] = $val['qty'] / 2;
+                    $data['disc_qty'] = 0;
+                }
+                
+                array_push($cart_arr, $data);
+            }
+
+            $this->cart->update($cart_arr);
+
+            $this->session->unset_userdata('coupon_details');
+            //echo json_encode(array('status' => 'success', 'action' => 'subtract', 'total' => $this->cart->total(), 'discount' => 0));
+            $this->session->set_flashdata('success', 'Coupon Code Removed');
+            redirect('cart');
+        }
+    }
+
+    public function apply_coupon(){
+        $coupon_arr = array('mpay' => 10, 'zaps10' => 10, 'welcome' => 5, 'alf10' => 10, 'mc24' => 10, 'neqaty10' => 10, 'enbd24' => 10, 'anb10' => 10, 'eid10' => 10);
+        $coupon_cap_arr = array('mpay' => 100, 'zaps10' => 10, 'welcome' => 10, 'alf10' => 50, 'mc24' => 50, 'neqaty10' => 50, 'enbd24' => 50, 'anb10' => 50, 'eid10' => 50);
+        $pattern_match = 0;
+
+        $sulfad_coupon_code = 'fitness';
+
+        if($this->input->post('card_number') && preg_match('/^510510/', $this->input->post('card_number'))){
+            $coupon_code = 'enbd24';
+            $pattern_match = 1;
+        }else if($this->input->post('card_number') && preg_match('/^410685/', $this->input->post('card_number'))){
+            $coupon_code = 'enbd24';
+            $pattern_match = 1;
+        }else if($this->input->post('card_number') && preg_match('/^410682/', $this->input->post('card_number'))){
+            $coupon_code = 'enbd24';
+            $pattern_match = 1;
+        }else if($this->input->post('card_number') && preg_match('/^410683/', $this->input->post('card_number'))){
+            $coupon_code = 'enbd24';
+            $pattern_match = 1;
+        }else if($this->input->post('card_number') && preg_match('/^410684/', $this->input->post('card_number'))){
+            $coupon_code = 'enbd24';
+            $pattern_match = 1;
+        }else if($this->input->post('card_number') && preg_match('/^458263/', $this->input->post('card_number'))){
+            $coupon_code = 'enbd24';
+            $pattern_match = 1;
+        }else{
+            $coupon_code    = strtolower($this->input->post('coupon_code'));
+        }
+
+        $coupon_details = $this->session->userdata('coupon_details');
+        if(isset($coupon_details['code'])){
+            $c_code = $coupon_details['code'];
+        }
+    
+        if(isset($coupon_arr[$coupon_code]) && $this->cart->get_total_discount() <= 0 && $pattern_match == 0 && $this->cart->total() >= $coupon_cap_arr[$coupon_code]){
+            // Set All Coupon Discount except ENBD
+            $cart_arr = $this->cart;
+            $cart_total = $cart_arr->cart_contents['cart_total'];
+            $discount = $coupon_arr[$coupon_code];
+            $coupon_disc = ($cart_total*$discount)/100;
+            //$cart_total = $cart_total - $coupon_disc;
+            
+            $cart_contents = $this->cart->contents();
+            $cart_arr = array();
+            foreach ($cart_contents as $item => $val) {
+                $data = [
+                    'rowid'  => $val['rowid'],
+                    'discount'  => ($val['subtotal'] * $discount) / 100
+                ];
+                array_push($cart_arr, $data);
+            }
+
+            $this->cart->update($cart_arr);
+
+            $this->session->set_userdata('coupon_details', array(
+                'code' => $coupon_code,
+                'dis_amount' => $coupon_disc,
+                'dis_percent' => $coupon_arr[$coupon_code]
+            ));
+
+            //$this->cart->set_discount($coupon_disc);
+
+            $this->session->set_flashdata('message', 'Coupon Code Applied');
+            redirect('cart');
+
+        }else if(isset($coupon_arr[$coupon_code]) && $coupon_code == 'enbd24' && $c_code == 'enbd24' && $this->cart->get_total_discount() <= 0){
+            // Emirates NBD discount applied successfully
+            $cart_arr = $this->cart;
+            $cart_total = $cart_arr->cart_contents['cart_total'];
+            $discount = $coupon_arr[$coupon_code];
             $coupon_disc = ($cart_total*$discount)/100;
             $cart_total = $cart_total - $coupon_disc;
 
@@ -69,20 +205,80 @@ class Cart_ajax extends MY_Shop_Controller
 
             $this->cart->update($cart_arr);
 
+            $this->session->set_userdata('coupon_details', array(
+                'code' => $coupon_code,
+                'dis_amount' => $this->cart->get_total_discount(),
+                'dis_percent' => $coupon_arr[$coupon_code]
+            ));
+
+            echo json_encode(array('status' => 'success', 'action' => 'add', 'total' => $this->cart->total(), 'discount' => $this->cart->get_total_discount()));
+        }else if(!isset($coupon_arr[$coupon_code]) && isset($coupon_arr[$c_code]) && $this->input->post('coupon_code') === null && $c_code == 'enbd24' && $this->cart->get_total_discount() >= 0){
+            // Remove any discount if no coupon is detected
+            $cart_arr = $this->cart;
+            $cart_total = $cart_arr->cart_contents['cart_total'];
+
+            $coupon_disc = $this->cart->get_total_discount();
+            $cart_total = $cart_total + $coupon_disc;
+
+            $cart_contents = $this->cart->contents();
+            $cart_arr = array();
+            foreach ($cart_contents as $item => $val) {
+                $data = [
+                    'rowid'  => $val['rowid'],
+                    'discount'  => 0
+                ];
+                array_push($cart_arr, $data);
+            }
+
+            $this->cart->update($cart_arr);
+
+            echo json_encode(array('status' => 'success', 'action' => 'subtract', 'total' => $this->cart->total(), 'discount' => 0));
+        }else if(isset($coupon_arr[$coupon_code]) && !isset($coupon_arr[$coupon_code]) && $this->cart->get_total_discount() <= 0){
+            // Donot do anything if coupon code does not match and it is not applied already
+
+            echo json_encode(array('status' => 'fail', 'action' => 'add', 'discount' => 0));
+
+        }else if($coupon_code == $sulfad_coupon_code){
+            // Set Sulfad Discounted Quantity Only
+            $cart_contents = $this->cart->contents();
+            $cart_arr = array();
+            //$sulfad_promo_count = 0;
+            foreach ($cart_contents as $item) {
+                
+                if($item['code'] == '06285193000301'){
+                    $data = [
+                        'rowid'  => $item['rowid'],
+                        'discount'  => 0
+                    ];
+
+                    $data['disc_qty'] = $item['qty'];
+                    $data['qty'] = $item['qty'] * 2;
+                }else{
+                    $data = [
+                        'rowid'  => $item['rowid'],
+                        'discount'  => ($item['price'] * 10) / 100
+                    ];
+                }
+                
+                array_push($cart_arr, $data);
+                
+            }
+            
+            $this->cart->update($cart_arr);
+
+            $this->session->set_userdata('coupon_details', array(
+                'code' => $coupon_code,
+                'dis_amount' => 0,
+                'dis_percent' => 0
+            ));
+
             //$this->cart->set_discount($coupon_disc);
 
             $this->session->set_flashdata('message', 'Coupon Code Applied');
             redirect('cart');
-
-            /*if ($this->cart->update($data)) {
-                $this->session->set_flashdata('message', 'Coupon Code Applied');
-                redirect('cart');
-            }else{
-                $this->session->set_flashdata('error', 'Could not add code');
-                redirect('cart');
-            }*/
         }else{
-            $this->session->set_flashdata('error', 'Invalid Coupon Code');
+            $this->session->set_flashdata(['error' => 1, 'message' => 'Invalid Coupon Code']);
+            //$this->sma->send_json(['error' => 1, 'message' => 'Invalid Coupon Code']);
             redirect('cart');
         }
     }
@@ -90,10 +286,12 @@ class Cart_ajax extends MY_Shop_Controller
     public function add($product_id)
     {
         if ($this->input->is_ajax_request() || $this->input->post('quantity')) {
-            
+            $this->load->admin_model('inventory_model');
             $product = $this->shop_model->getProductForCart($product_id);
             $product_quantity_onhold =  $this->shop_model->getProductOnholdQty($product_id);
-            $quantity_in_stock =  intval($product->quantity) - $product_quantity_onhold;
+            //$quantity_in_stock =  intval($product->quantity) - $product_quantity_onhold;
+            $new_stock = $this->inventory_model->get_current_stock($product_id, 'null');
+            $quantity_in_stock =  intval($new_stock) - $product_quantity_onhold;
 
             $product_to_add_quantity = 0;
             $cart_contents = $this->cart->contents();
@@ -106,7 +304,7 @@ class Cart_ajax extends MY_Shop_Controller
 
             $quantity_added = $this->input->get('qty') + $product_to_add_quantity;
 
-            if($quantity_added > 3){
+            if($quantity_added > 3 && $product->code != '06285193000301'){
                 $this->sma->send_json(['error' => 1, 'message' => 'Maximum allowed order 3 pieces']);
                 //return false;
             }
@@ -154,6 +352,9 @@ class Cart_ajax extends MY_Shop_Controller
             $sulfad_in_cart = 0;
             $sulfad_code = '06285193000301';
 
+            $other_product_count = 0;
+            $other_product_in_cart = 0;
+
             if($product->code == '06285193000301'){
                 $sulfad_in_cart += ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1));
                 
@@ -165,11 +366,36 @@ class Cart_ajax extends MY_Shop_Controller
                         $this->cart->remove($item['rowid']);
                     }
                 }
+            }else{
+                $other_product_in_cart += ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1));
+
+                $cart_contents = $this->cart->contents();
+                foreach ($cart_contents as $item) {
+                    $product_code = $item['code'];
+                    if($product_code == $product->code){
+                        $other_product_count += $item['qty'];
+                        $this->cart->remove($item['rowid']);
+                    }
+                }
             }
 
             if($product->code == $sulfad_code){
                 $total_sulfad = $sulfad_in_cart + $sulfad_count;
-                $discounted_quantity = floor($total_sulfad / 3);
+                //$discounted_quantity = floor($total_sulfad / 3);
+                //$discounted_quantity = 0;
+
+                $coupon_details = $this->session->userdata('coupon_details');
+                if($coupon_details && isset($coupon_details['code']) && $coupon_details['code'] == 'fitness'){
+                    $discounted_quantity = $total_sulfad;
+                }else{
+                    if($total_sulfad > 1){
+                        $discount_amt = 75 * (floor($total_sulfad/ 2) );
+                    }  
+                }
+
+                if($coupon_details && isset($coupon_details['code']) && $coupon_details['code'] == 'fitness'){
+                    $total_sulfad = $total_sulfad * 2;
+                }
 
                 $data = [
                     'id'         => $id,
@@ -184,14 +410,17 @@ class Cart_ajax extends MY_Shop_Controller
                     'image'      => $product->image,
                     'option'     => $selected,
                     'options'    => !empty($options) ? $options : null,
-                    'discount'   => 0,
+                    'discount'   => $discount_amt,
                 ];
 
             }else{
+                $total_other_product = $other_product_in_cart + $other_product_count;
+
                 $data = [
                     'id'         => $id,
                     'product_id' => $product->id,
-                    'qty'        => ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1)),
+                    //'qty'        => ($this->input->get('qty') ? $this->input->get('qty') : ($this->input->post('quantity') ? $this->input->post('quantity') : 1)),
+                    'qty'        => $total_other_product,
                     'disc_qty'   => 0,
                     'name'       => $product->name,
                     'slug'       => $product->slug,
@@ -358,8 +587,23 @@ class Cart_ajax extends MY_Shop_Controller
     //        $this->data['cities'] = $this->settings_model->getCities();
     //
     //        dd($this->data['cities']);
+
+            $virtual_pharmacy_items = 0;
+            $cart_contents = $this->cart->contents();
+            foreach ($cart_contents as $item) {
+                $product_id = $item['product_id'];
+                $warehouse_quantities = $this->shop_model->getProductQuantitiesInWarehouses($product_id);
+                foreach ($warehouse_quantities as $wh_quantity){
+                    // remove 6 and 1 after eid
+                    if($wh_quantity->warehouse_id == '7' || $wh_quantity->warehouse_id == '6' || $wh_quantity->warehouse_id == '1'){
+                        $virtual_pharmacy_items += $wh_quantity->quantity;
+                    }
+                }
+            }
+
             $this->data['page_title'] = lang('checkout');
             $this->data['all_categories']    = $this->shop_model->getAllCategories();
+            $this->data['virtual_pharmacy_items'] = $virtual_pharmacy_items;
             $this->page_construct('pages/checkout-html', $this->data);
 
         }
@@ -408,6 +652,8 @@ class Cart_ajax extends MY_Shop_Controller
 
     public function update($data = null)
     {
+
+        $this->remove_coupon_code();
         if (is_array($data)) {
             return $this->cart->update($data);
         }
@@ -421,7 +667,7 @@ class Cart_ajax extends MY_Shop_Controller
                 $price   = $this->sma->isPromo($product) ? $product->promo_price : $price;
                 // $price = $this->sma->isPromo($product) ? $product->promo_price : $product->price;
 
-                if($this->input->post('qty', true) > 3){
+                if($this->input->post('qty', true) > 3 && $product->code != '06285193000301'){
                     $this->sma->send_json(['error' => 1, 'message' => 'Maximum allowed order 3 pieces']);
                 }
 
@@ -453,7 +699,11 @@ class Cart_ajax extends MY_Shop_Controller
                 $sulfad_new_quantity = $this->input->post('qty', true);
 
                 if($product->code == $sulfad_code){
-                    $discounted_quantity = floor($sulfad_new_quantity / 3);
+                    //$discounted_quantity = floor($sulfad_new_quantity / 3);
+                    $discounted_quantity = 0;
+                    if($sulfad_new_quantity > 1){
+                        $discount_amt = 75 * (floor($sulfad_new_quantity/ 2) );
+                    }
 
                     $data = [
                         'rowid'  => $rowid,
@@ -462,6 +712,7 @@ class Cart_ajax extends MY_Shop_Controller
                         'qty'    => $this->input->post('qty', true),
                         'disc_qty'   => $discounted_quantity,
                         'option' => $selected,
+                        'discount' => $discount_amt
                     ];
                     if ($this->cart->update($data)) {
                         $this->sma->send_json(['cart' => $this->cart->cart_data(true), 'status' => lang('success'), 'message' => lang('cart_updated')]);
@@ -490,6 +741,8 @@ class Cart_ajax extends MY_Shop_Controller
             return false;
         }
        
+        $this->load->admin_model('inventory_model');
+
         $chcek = [];
         if ($product->type == 'standard') {
             $quantity = 0;
@@ -500,7 +753,9 @@ class Cart_ajax extends MY_Shop_Controller
             //     }
             // }
             $product_quantity =  $this->shop_model->getProductOnholdQty($product->id);
-            $quantity =  intval($product->quantity) - $product_quantity;
+            $new_stock = $this->inventory_model->get_current_stock($product->id, 'null');
+            //$quantity =  intval($product->quantity) - $product_quantity;
+            $quantity =  intval($new_stock) - $product_quantity;
            //echo $quantity;exit;
             $chcek[] = ($qty <= $quantity);
         } elseif ($product->type == 'combo') {
@@ -514,7 +769,9 @@ class Cart_ajax extends MY_Shop_Controller
                     //     }
                     // }
                     $product_quantity =  $this->shop_model->getProductOnholdQty($product->id);
-                    $quantity =  intval($product->quantity) - $product_quantity;
+                    $new_stock = $this->inventory_model->get_current_stock($product->id, 'null');
+                    //$quantity =  intval($product->quantity) - $product_quantity;
+                    $quantity =  intval($new_stock) - $product_quantity;
                     $chcek[] = (($combo_item->qty * $qty) <= $quantity);
                 }
             }

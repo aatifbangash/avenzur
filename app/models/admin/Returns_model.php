@@ -7,6 +7,7 @@ class Returns_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function addReturn($data = [], $items = [])
@@ -28,6 +29,8 @@ class Returns_model extends CI_Model
                     $clause = ['product_id' => $item['product_id'], 'warehouse_id' => $item['warehouse_id'], 'batchno' => $item['batch_no'], 'purchase_id' => null, 'transfer_id' => null, 'option_id' => $item['option_id']];
                     $this->site->setPurchaseItem($clause, $item['quantity']);
                     $this->site->syncQuantityReturn($return_id, $item['product_id']);
+
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'customer_return', $item['quantity'], $item['warehouse_id']); 
                     
                 } elseif ($item['product_type'] == 'combo') {
                     $combo_items = $this->site->getProductComboItems($item['product_id']);
@@ -244,6 +247,7 @@ class Returns_model extends CI_Model
                     $clause = ['product_id' => $item['product_id'], 'purchase_id' => null, 'transfer_id' => null, 'option_id' => $item['option_id']];
                     $this->site->setPurchaseItem($clause, $item['quantity']);
                     $this->site->syncQuantity(null, null, null, $item['product_id']);
+                    $this->Inventory_model->update_movement($item['product_id'], $item['batch_no'], 'customer_return', $item['quantity'], $item['warehouse_id']);
                 } elseif ($item['product_type'] == 'combo') {
                     $combo_items = $this->site->getProductComboItems($item['product_id']);
                     foreach ($combo_items as $combo_item) {

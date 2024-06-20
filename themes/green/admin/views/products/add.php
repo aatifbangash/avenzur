@@ -541,7 +541,10 @@ if (!empty($variants)) {
                         <input name="hide" type="checkbox" class="checkbox" id="hide" value="1" <?= isset($_POST['hide']) ? 'checked="checked"' : '' ?>/>
                         <label for="hide" class="padding05"><?= lang('hide_in_shop') ?></label>
                     </div>
-
+                    <div class="form-group">
+                        <input name="special_product" type="checkbox" class="checkbox" id="special_product" value="1" <?= isset($_POST['special_product']) ? 'checked="checked"' : '' ?>/>
+                        <label for="special_product" class="padding05"><?= lang('special_product Offer') ?></label>
+                    </div>
                     <div class="form-group">
                         <input name="cf" type="checkbox" class="checkbox" id="extras" value="" <?= isset($_POST['cf']) ? 'checked="checked"' : '' ?>/>
                         <label for="extras" class="padding05"><?= lang('custom_fields') ?></label>

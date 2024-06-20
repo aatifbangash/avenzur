@@ -7,6 +7,7 @@ class Site extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function calculateAVCost($product_id, $warehouse_id, $batch_no, $net_unit_price, $unit_price, $quantity, $product_name, $option_id, $item_quantity)
@@ -85,10 +86,15 @@ class Site extends CI_Model
                 break;
             }
         }
-        if ($quantity > 0) {
-            $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), ($pi->product_name ?? $product_name)));
-            redirect($_SERVER['HTTP_REFERER']);
-        }
+        // get quantity from inventory movement
+       
+        // $quantity = $this->Inventory_model->get_current_stock($product_id, $warehouse_id);
+       
+        // if ($quantity <= 0) {
+        //     $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), ($pi->product_name ?? $product_name)));
+        //     redirect($_SERVER['HTTP_REFERER']);
+        // }
+
         return $cost;
     }
 
@@ -502,6 +508,7 @@ class Site extends CI_Model
 
 public function getallCountry()
 {
+    $this->db->order_by('name', 'ASC');
     $q = $this->db->get('countries');
     if ($q->num_rows() > 0) {
         foreach (($q->result()) as $row) {
@@ -531,6 +538,15 @@ public function getallCountry()
     public function getBrandByID($id)
     {
         $q = $this->db->get_where('brands', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getSMSServiceByName($name)
+    {
+        $q = $this->db->get_where('sms_services', ['name' => $name], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -987,6 +1003,18 @@ public function getallCountry()
         return false;
     }
 
+    public function getUserFromCompany($id = null)
+    {
+        if (!$id) {
+            $id = $this->session->userdata('company_id');
+        }
+        $q = $this->db->get_where('companies', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getUser($id = null)
     {
         if (!$id) {
@@ -1089,6 +1117,7 @@ public function getallCountry()
 
     public function item_costing($item, $pi = null)
     {
+
         $item_quantity = $pi ? $item['aquantity'] : $item['quantity'];
         if (!isset($item['option_id']) || empty($item['option_id']) || $item['option_id'] == 'null') {
             $item['option_id'] = null;
@@ -1360,6 +1389,16 @@ public function getallCountry()
         if(isset($items) && !empty($items)) {
 
             foreach ($items as $item) {
+                $virtual_pharmacy = 0;
+                $query = $this->db->select('warehouses_products.*')
+                        ->from('warehouses_products')
+                        ->where('warehouses_products.warehouse_id', 6)
+                        ->where('warehouses_products.product_id', $item->product_id);
+                $result = $query->get();
+                if ($result->num_rows() > 0) {
+                    $virtual_pharmacy = 1;
+                }
+                
                 $this->db->insert('product_qty_onhold_request',
                  ['sale_id' => $sale_id, 
                  'product_id' => $item->product_id, 
@@ -1369,7 +1408,8 @@ public function getallCountry()
                  'customer_id' => $item->customer_id,
                  'customer_name' => $item->customer_name,
                  'status' => 'onhold',
-                 'date_created' => NOW()
+                 'virtual_pharmacy' => $virtual_pharmacy,
+                 'date_created' => date('Y-m-d H:i:s')
                 ]);
             }
         }
@@ -1684,9 +1724,12 @@ public function getallCountry()
         return 0;
     }
 
+     
+
     public function getProductBatchesData($product_id, $warehouse)
     {
-        $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);
+        //$q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);
+        $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);  
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
 
@@ -1698,10 +1741,15 @@ public function getallCountry()
                     $batch_sale_price = 0;
                 }
 
+                if($this->db->platform == 'pharma'){
+                    $total_batch_quantity = $this->Inventory_model->get_current_stock( $product_id, $warehouse, $row->batchno);
+                    $row->quantity = $total_batch_quantity;
+                }
+
                 $row->batch_sale_price = $batch_sale_price;
                 $data[] = $row;
             }
-        
+            // echo '<pre>'; print_r($data); exit; 
             return $data;
         }
         return false;

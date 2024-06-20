@@ -10,9 +10,9 @@ if (!empty($variants)) {
 ?>
 <script type="text/javascript">
     $(document).ready(function () {
-        $('.gen_slug').change(function(e) {
+        /*$('.gen_slug').change(function(e) {
             getSlug($(this).val(), 'products');
-        });
+        });*/
         $("#subcategory").select2("destroy").empty().attr("placeholder", "<?= lang('select_category_to_load') ?>").select2({
             placeholder: "<?= lang('select_category_to_load') ?>", data: [
                 {id: '', text: '<?= lang('select_category_to_load') ?>'}
@@ -69,6 +69,58 @@ if (!empty($variants)) {
             editForm.submit();
         });
 
+        $('#google_product').on("click", function(t) {
+            var productId = '<?= $product->id; ?>';
+            var $form = $('<form>', {
+                'action': site.base_url + 'products/google_merch_apis',
+                'method': 'POST'
+            });
+
+            var $inputId = $('<input>', {
+                'type': 'hidden',
+                'name': 'id',
+                'value': productId
+            });
+
+            var $inputCsrf = $('<input>', {
+                'type': 'hidden',
+                'name': '<?= $this->security->get_csrf_token_name() ?>',
+                'value': '<?= $this->security->get_csrf_hash() ?>'
+            });
+
+            $form.append($inputCsrf);
+            $form.append($inputId);
+
+            $('body').append($form);
+            $form.submit();
+        });
+
+        $('#meta_product').on("click", function(t) {
+            var productId = '<?= $product->id; ?>';
+            var $form = $('<form>', {
+                'action': site.base_url + 'products/facebook_catalogue_push',
+                'method': 'POST'
+            });
+
+            var $inputId = $('<input>', {
+                'type': 'hidden',
+                'name': 'id',
+                'value': productId
+            });
+
+            var $inputCsrf = $('<input>', {
+                'type': 'hidden',
+                'name': '<?= $this->security->get_csrf_token_name() ?>',
+                'value': '<?= $this->security->get_csrf_hash() ?>'
+            });
+
+            $form.append($inputCsrf);
+            $form.append($inputId);
+
+            $('body').append($form);
+            $form.submit();
+        });
+
         $('#live_product').on("click", function(t) {
             var draft = document.getElementById('draft');
             draft.checked = false;
@@ -95,6 +147,8 @@ if (!empty($variants)) {
         </h2>
         <span style="position: fixed;z-index: 9999999999;top: 100px;right: 100px;">
             <!--<input type="button" id="link_product" name="link_product" value="Link" class="btn btn-primary" />-->
+            <input type="button" id="google_product" name="google_product" value="Google Push" class="btn btn-primary" />
+            <input type="button" id="meta_product" name="meta_product" value="Meta Push" class="btn btn-primary" />
             <input type="button" id="live_product" name="live_product" value="Make Live" class="btn btn-primary" />
             <input type="button" id="save_product" name="save_product" value="Save" class="btn btn-primary" />
             <input type="button" id="back_product" name="back_product" value="Back" class="btn btn-primary" />
@@ -319,7 +373,17 @@ if (!empty($variants)) {
                     </div>
 
                     <div class="form-group all">
-                        <img src="<?= site_url('assets/uploads/'.$product->image) ?>" width="50" height="50" /><br />
+                        <!-- <img src="<?= site_url('assets/uploads/'.$product->image) ?>" width="50" height="50" /><br /> -->
+                        <!-- <button class="btn btn-danger" type="type" onclick="removeImage(<?= $product->id ?>, '<?= $product->image ?>')"><i class="fa fa-close"></i></button> -->
+                        <div class="gallery-image">
+                            <a class="img-thumbnail" data-toggle="lightbox" data-gallery="multiimages" data-parent="#multiimages" href="<?= site_url('assets/uploads/'.$product->image) ?>" style="margin-right:5px;">
+                                <img class="img-responsive" src="<?= site_url('assets/uploads/'.$product->image) ?>"   width="100" height="100"  />
+                            </a>
+                            <a style="position: absolute; top: 0; right: 9px;" onclick="removeImage(<?= $product->id ?>, '<?= $product->image ?>')">
+                                <i class="fa fa-times"></i>
+                            </a>
+                        </div>
+                        <br>
                         <?= lang('product_image', 'product_image') ?>
                         
                         <input id="product_image_link" type="text" placeholder="upload from link"  name="product_image_link" class="form-control file" /><br />
@@ -337,12 +401,33 @@ if (!empty($variants)) {
                         <input id="images" type="file" data-browse-label="<?= lang('browse'); ?>" name="userfile[]" multiple="true" data-show-upload="false"
                                data-show-preview="true" class="form-control file" accept="image/*">
                     </div>
-                    <div id="img-details"></div>
+                    <div id="multiimages" class="row">
+                                    <?php if (!empty($images)) {
+                                            // echo '<a class="img-thumbnail" data-toggle="lightbox" data-gallery="multiimages" data-parent="#multiimages" href="' . base_url() . 'assets/uploads/' . $product->image . '" style="margin-right:5px;"><img class="img-responsive" src="' . base_url() . 'assets/uploads/thumbs/' . $product->image . '" alt="' . $product->image . '" style="width:' . $Settings->twidth . 'px; height:' . $Settings->theight . 'px;" /></a>';
+                                            foreach ($images as $ph) {
+                                                if ($ph->photo != $product->image)
+                                                {
+                                                    echo '<div class="gallery-image "><a class="img-thumbnail" data-toggle="lightbox" data-gallery="multiimages" data-parent="#multiimages" href="' . base_url() . 'assets/uploads/' . $ph->photo . '" style="margin-right:5px;"><img class="img-responsive" src="' . base_url() . 'assets/uploads/' . $ph->photo . '" alt="" style="width: 100px; height: 100px;" /></a>';
+                                                    if ($Owner || $Admin || $GP['products-edit']) {
+                                                        echo '<a href="#" class="delimg" data-item-id="' . $ph->id . '"><i class="fa fa-times"></i></a>';
+                                                    }
+                                                    echo '</div>';
+                                                }
+                                               
+                                            }
+                                        }
+                                    ?>
+                                    <div class="clearfix"></div>
+                                </div>
+                    <div id="img-details">
+                        
+                    </div>
                 </div>
                 <div class="col-md-6 col-md-offset-1">
                     <div class="standard">
                         <div style="margin-bottom: 15px;">
                         <img src="<?= site_url('assets/uploads/'.$product->image) ?>" width="150" height="150" />
+
                         </div>
 
                         <div>
@@ -561,6 +646,14 @@ if (!empty($variants)) {
                         <label for="hide" class="padding05"><?= lang('hide_in_shop') ?></label>
                     </div>
                     <div class="form-group">
+                        <input name="google_merch" type="checkbox" class="checkbox" id="google Merhandizing" value="1" <?= empty($product->google_merch) ? '' : 'checked="checked"' ?>/>
+                        <label for="Google Merchandizing" class="padding05"><?= lang('Google Merchandizing') ?></label>
+                    </div>
+                    <div class="form-group">
+                        <input name="special_product" type="checkbox" class="checkbox" id="special_product" value="1" <?= empty($product->special_product) ? '' : 'checked="checked"' ?>/>
+                        <label for="special_product" class="padding05"><?= lang('Special Product') ?></label>
+                    </div>
+                    <div class="form-group">
                         <input name="cf" type="checkbox" class="checkbox" id="extras" value="" checked="checked"/><label
                             for="extras" class="padding05"><?= lang('custom_fields') ?></label>
                     </div>
@@ -678,6 +771,28 @@ if (!empty($variants)) {
 </div>
 
 <script type="text/javascript">
+    function removeImage(productId, productImage)
+    {
+        console.log(productId, productImage);
+        if (confirm('Are you sure you want to remove this image?')) {
+            $.ajax({
+                url: '<?= site_url('admin/product_image/remove_image/') ?>' + productId,
+                type: 'GET',
+                success: function(response) {
+                    response = JSON.parse(response);
+                    if (response.status === 'success') {
+                        alert('Image removed successfully.');
+                        location.reload(); // Refresh the page
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        }
+    }
     $(document).ready(function () {
         $('form[data-toggle="validator"]').bootstrapValidator({ excluded: [':disabled'] });
         var audio_success = new Audio('<?= $assets ?>sounds/sound2.mp3');
@@ -713,7 +828,7 @@ if (!empty($variants)) {
         $('.attributes').on('ifUnchecked', function (event) {
             $('#options_' + $(this).attr('id')).slideUp();
         });
-
+        
         //$('#cost').removeAttr('required');
         $('#type').change(function () {
             var t = $(this).val();

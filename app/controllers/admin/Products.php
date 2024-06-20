@@ -25,12 +25,473 @@ class Products extends MY_Controller
         $this->popup_attributes    = ['width' => '900', 'height' => '600', 'window_name' => 'sma_popup', 'menubar' => 'yes', 'scrollbars' => 'yes', 'status' => 'no', 'resizable' => 'yes', 'screenx' => '0', 'screeny' => '0'];
     }
 
+    public function oauth2callback(){
+        $credentialsPath = 'assets/credentials/credentials.json';
+        $client = new Google\Client();
+        $client->setAuthConfigFile($credentialsPath);
+        $client->setRedirectUri(admin_url().'products/oauth2callback');
+        //$client->addScope(Google\Service\Drive::DRIVE_METADATA_READONLY);
+        $client->setScopes(['https://www.googleapis.com/auth/content']);
+        
+        if (! isset($_GET['code'])) {
+            // Get the product ID from the query parameters
+            $auth_url = $client->createAuthUrl();
+            header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
+        } else {
+            $client->authenticate($_GET['code']);
+            $_SESSION['google_access_token'] = $client->getAccessToken();
+            $redirect_uri = admin_url().'products/google_merch_apis';
+            header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
+        }
+    }
+
+    /*public function facebook_catalogue_push(){
+        // Set the access token, product catalog ID, and API version
+        $access_token = "EAAGF5LPatEwBO90n2xGJ2pZBOnMisRHxodMGMZABWb0e2RarluGu54VZAhdZCaYkQwfic9bfG7lj290r28zaryl5VTUkscrMplxXCeHpkhKJ8YJcZB3bWeoloB5ZC1X3SV6WUyW0zrKZAcufGKxEs66irz9XIDBY6yk3ntSKZArqvQ1Q3ZCxE1SFUrsjNFnOUnaG4";
+        $product_catalog_id = "374060218547895";
+        $api_version = "v19.0";
+
+        $productCode = '076950450431';
+
+        $productData = [
+            'name' => 'Yogi Tea, Raspberry Leaf, Caffeine Free, 16 Tea Bags, 1.02 oz (29 g)',
+            'description' => 'Supports the Reproductive System
+            Caffeine Free
+            Herbal Supplement
+            Non-GMO Project Verified
+            USDA Organic
+            Certified Organic by QAI
+            Kosher
+            Vegan
+            Certified B Corporation
+            Find Support With Raspberry Leaf
+            
+            Raspberry Leaf has been traditionally used by midwives and Western herbalists during pregnancy as well as to help ease the discomfort of menstruation, and to support the uterus. Enjoy the pleasant, earthy-sweet flavor of Woman\'s Raspberry Leaf tea to support the female system.
+            
+            At Yogi, it\'s about more than creating deliciously purposeful teas.
+            
+            Yogi Principles
+            
+            We blend with intention. Our flavorful teas are created to support body and mind.
+            
+            We believe in the synergetic benefit of herbs, combining ingredients to enhance their wellness-supporting potential.
+            
+            We blend the best of what nature has to offer using the finest spices and botanicals from around the globe.',
+            'availability' => 'in stock',
+            'condition' => 'new',
+            'price' => 2160,
+            'sale_price' => 2160,
+            'currency' => 'SAR',
+            'url' => 'https://avenzur.com/product/yogi-tea-raspberry-leaf-caffeine-free-16-tea-bags-1-02-oz-29-g-IH-61',
+            'image_url' => 'https://avenzur.com/assets/uploads/44d5a46bfc8759746b0e8c96440eb856.avif',
+            'brand' => 'Yogi Tea',
+            'gtin' => '076950450431',
+            'retailer_id' => '076950450431',
+            'inventory' => 3
+        ];
+
+        $filter = ["retailer_id" => ['eq' => $productCode]];
+        //$queryUrl = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products/{$productCode}?access_token={$access_token}";
+        $queryUrl = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products?fields=category,name,errors&filter=".urlencode(json_encode($filter))."&summary=true&access_token={$access_token}";
+
+        $ch = curl_init($queryUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            echo 'Curl error: ' . curl_error($ch);
+        }else{
+            $product = json_decode($response, true);
+            if ($product && sizeOf($product['data']) > 0) {
+                // Update if product exists
+                $productID = $product['data'][0]['id'];
+                $updateUrl = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/items_batch/{$productID}?access_token={$access_token}";
+                $updateData = json_encode($productData);
+
+                $ch = curl_init($updateUrl);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT'); // Use PUT method for update
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $updateData);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+
+                $response = curl_exec($ch);
+            }else{
+                // Insert if product does not exit
+                $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products";
+
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($productData));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/x-www-form-urlencoded',
+                    'Authorization: Bearer ' . $access_token
+                ]);
+                $response = curl_exec($ch);
+
+            }
+        }
+
+        if(curl_errno($ch)){
+            echo 'Curl error: ' . curl_error($ch);
+        }
+
+        curl_close($ch);
+        if ($response === false) {
+            echo "Error pushing product to Facebook catalog.";
+        } else {
+            $result = json_decode($response, true);
+            print_r($result);
+        }
+    }*/
+
+    public function facebook_catalogue_read(){
+        // Set the parameters
+        //$fields = ["category", "name", "errors"];
+        $filter = ["name" => ["i_contains" => "sulfad"]];
+        $summary = true;
+        $access_token = "EAAGF5LPatEwBO90n2xGJ2pZBOnMisRHxodMGMZABWb0e2RarluGu54VZAhdZCaYkQwfic9bfG7lj290r28zaryl5VTUkscrMplxXCeHpkhKJ8YJcZB3bWeoloB5ZC1X3SV6WUyW0zrKZAcufGKxEs66irz9XIDBY6yk3ntSKZArqvQ1Q3ZCxE1SFUrsjNFnOUnaG4";
+        $product_catalog_id = "374060218547895";
+        //$api_version = "v19.0";
+        $api_version = "v19.0";
+
+        // Build the query string
+        $query_params = http_build_query([
+            'fields' => json_encode($fields),
+            'filter' => json_encode($filter),
+            'summary' => $summary,
+            'access_token' => $access_token
+        ]);
+
+        // Construct the URL
+        $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products?{$query_params}";
+
+        // Initialize cURL session
+        $ch = curl_init($url);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        // Execute the request
+        $response = curl_exec($ch);
+
+        // Check for errors
+        if(curl_errno($ch)){
+            echo 'Curl error: ' . curl_error($ch);
+        }
+
+        // Close cURL session
+        curl_close($ch);
+
+        // Handle the response
+        if ($response === false) {
+            // Request failed
+            echo "Error fetching products.";
+        } else {
+            // Parse and process the JSON response
+            $products = json_decode($response, true);
+            // Handle the products data as needed
+            print_r($products);
+        }
+        exit;
+    }
+
+    public function facebook_catalogue_push(){
+        $product_id = $_POST['id'];
+        // Set the access token, product catalog ID, and API version
+        $access_token = "EAAGF5LPatEwBO90n2xGJ2pZBOnMisRHxodMGMZABWb0e2RarluGu54VZAhdZCaYkQwfic9bfG7lj290r28zaryl5VTUkscrMplxXCeHpkhKJ8YJcZB3bWeoloB5ZC1X3SV6WUyW0zrKZAcufGKxEs66irz9XIDBY6yk3ntSKZArqvQ1Q3ZCxE1SFUrsjNFnOUnaG4";
+        $product_catalog_id = "374060218547895";
+        $api_version = "v19.0";
+
+        $product_photos = $this->products_model->getProductPhotos($product_id);
+        $product_details = $this->products_model->getProductByID($product_id);
+        $brand_details = $this->products_model->getBrandByID($product_details->brand);
+
+        $photos_arr = array();
+
+        foreach($product_photos as $photo){
+            //array_push(base_url().'assets/uploads/'.$photo->photo, $photos_arr);
+            array_push($photos_arr, site_url().'assets/uploads/'.$photo->photo);
+        }
+
+        $product_details->details = str_replace('<p><strong>Highlights:</strong></p>','', $product_details->details);
+        $product_details->details = str_replace('<p>','',$product_details->details);
+        $product_details->details = str_replace('</p>','',$product_details->details);
+        $product_details->details = str_replace('<ul>','',$product_details->details);
+        $product_details->details = str_replace('</ul>','',$product_details->details);
+        $product_details->details = str_replace('<li>','',$product_details->details);
+        $product_details->details = str_replace('</li>','',$product_details->details);
+
+        $tax_details = $this->site->getTaxRateByID($product_details->tax_rate);
+
+        // Define the product data
+        $productCode = $product_details->code; // Assuming this is the unique identifier for your product
+
+        if($product_details->quantity > 0){
+            $availibility = 'in stock';
+        }else{
+            $availibility = 'out of stock';
+        }
+
+        $productData = [
+            'name' => $product_details->name,
+            'description' => $product_details->details,
+            'availability' => $availibility,
+            'condition' => 'new',
+            'currency' => 'SAR',
+            'url' => site_url().'product/'.$product_details->slug,
+            'image_url' => site_url().'assets/uploads/'.$product_details->image,
+            'brand' => $brand_details->name,
+            'gtin' => $productCode,
+            //'retailer_id' => $productCode,
+            'inventory' => (int) $product_details->quantity
+        ];
+
+        // Consider tax in prices
+
+        if ($product_details->tax_method == '1' && $tax_details->rate > 0) {
+            $productTaxPercent = $tax_details->rate;
+
+            if ($product_details->promotion == 1) {
+                $productPromoPrice = $product_details->promo_price;
+                $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                $product_details->promo_price = $productPromoPrice + $promoProductTaxAmount;
+            }
+
+            $productPrice = $product_details->price;
+            $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+            $product_details->price = $productPrice + $productTaxAmount;
+        }
+
+        // Calculate prices according to Facebook requirements
+        $price = (int) ($product_details->price * 100); // Convert to cents
+        $productData['price'] = $price;
+
+        if($product_details->promotion == 1){
+            $sale_price = (int) ($product_details->promo_price * 100); // Convert to cents
+            $productData['sale_price'] = $sale_price;
+        }
+
+        $filter = ["retailer_id" => ['eq' => $productCode]];
+        $queryUrl = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products?fields=category,name,errors&filter=".urlencode(json_encode($filter))."&summary=true&access_token={$access_token}";
+
+        $ch = curl_init($queryUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            echo 'Curl error: ' . curl_error($ch);
+        }else{
+            $product = json_decode($response, true);
+            if ($product && sizeOf($product['data']) > 0) {
+                // update existing date
+                $requestData = [
+                    [
+                        'method' => 'UPDATE',
+                        'retailer_id' => $productCode, // The retailer_id of the product to update
+                        'data' => $productData
+                    ]
+                    // You can add more requests for other items here...
+                ];
+        
+                $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/batch";
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['requests' => json_encode($requestData), 'access_token' => $access_token]));
+        
+                $response = curl_exec($ch);
+                curl_close($ch);
+            
+                // Handle the response
+                if ($response === false) {
+                    $this->session->set_flashdata('error', lang('error connecting to meta'));
+                    admin_redirect('products/edit/' . $product_id);
+                } else {
+                    $this->session->set_flashdata('message', lang('product pushed to meta'));
+                    admin_redirect('products/edit/' . $product_id);
+                }
+            }else{
+                // Insert if product does not exit
+                $productData['retailer_id'] = $productCode; 
+                $url = "https://graph.facebook.com/{$api_version}/{$product_catalog_id}/products";
+
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($productData));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/x-www-form-urlencoded',
+                    'Authorization: Bearer ' . $access_token
+                ]);
+                $response = curl_exec($ch);
+                curl_close($ch);
+                
+                // Handle the response
+                if ($response === false) {
+                    $this->session->set_flashdata('error', lang('error connecting to meta'));
+                    admin_redirect('products/edit/' . $product_id);
+                } else {
+                    $this->session->set_flashdata('message', lang('product pushed to meta'));
+                    admin_redirect('products/edit/' . $product_id);
+                }
+            }
+        }
+        
+    }
+
+    public function google_merch_apis(){
+        $product_id = $_REQUEST['id'];
+
+        // Debugging: Ensure the product ID is being received correctly
+        if (empty($product_id)) {
+            $product_id = $this->session->userdata('merch_id');
+            $this->session->unset_userdata('merch_id');
+        }else{
+            $this->session->set_userdata('merch_id', $product_id);
+        }
+        
+        // Fetch product details and related information
+        $product_photos = $this->products_model->getProductPhotos($product_id);
+        $product_details = $this->products_model->getProductByID($product_id);
+        $brand_details = $this->products_model->getBrandByID($product_details->brand);
+        $tax_details = $this->site->getTaxRateByID($product_details->tax_rate);
+    
+        $photos_arr = array();
+        foreach($product_photos as $photo){
+            array_push($photos_arr, site_url().'assets/uploads/'.$photo->photo);
+        }
+    
+        // Clean product details description
+        $product_details->details = str_replace(['<p><strong>Highlights:</strong></p>', '<p>', '</p>', '<ul>', '</ul>', '<li>', '</li>'], '', $product_details->details);
+    
+        $clientId = '216256641186-ord7an72cbi6jhtrhmb1knb93jbera1p.apps.googleusercontent.com';
+        $clientSecret = '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';
+
+        // Initialize Google Client
+        $credentialsPath = 'assets/credentials/credentials.json';
+        $client = new Google\Client();
+        $client->setAuthConfig($credentialsPath);
+        $client->setAccessType('offline');
+        $client->setScopes(['https://www.googleapis.com/auth/content']);
+    
+        if (isset($_SESSION['google_access_token']) && $_SESSION['google_access_token']) {
+            $client->setAccessToken($_SESSION['google_access_token']);
+    
+            $contentService = new Google_Service_ShoppingContent($client);
+            $merchantId = '5086892798';
+            $productContentId = 'online:en:SA:' . $product_details->code;
+    
+            $productContent = new Google_Service_ShoppingContent_Product();
+
+            if ($product_details->tax_method == '1' && $tax_details->rate > 0) {
+                $productTaxPercent = $tax_details->rate;
+    
+                if ($product_details->promotion == 1) {
+                    $productPromoPrice = $product_details->promo_price;
+                    $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                    $product_details->promo_price = $productPromoPrice + $promoProductTaxAmount;
+                }
+    
+                $productPrice = $product_details->price;
+                $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+                $product_details->price = $productPrice + $productTaxAmount;
+            }
+
+            $productData = [
+                'channel' => 'online',
+                'contentLanguage' => 'en',
+                'targetCountry' => 'SA',
+                'offerId' => $product_details->code,
+                'title' => $product_details->name,
+                'description' => $product_details->details,
+                'link' => site_url().'product/'.$product_details->slug,
+                'imageLink' => site_url().'assets/uploads/'.$product_details->image,
+                'brand' => $brand_details->name,
+                'price' => [
+                    'value' => $product_details->price,
+                    'currency' => 'SAR',
+                ],
+                'salePrice' => [
+                    'value' => $product_details->promo_price,
+                    'currency' => 'SAR',
+                ],
+                'additionalImageLinks' => $photos_arr,
+                'availability' => 'in stock',
+            ];
+
+    
+            try {
+                // Attempt to get the existing product
+                $existingProduct = $contentService->products->get($merchantId, $productContentId);
+                
+                // If product exists, update the existing product
+                if ($existingProduct) {
+                    //$productContent->setOfferId($productData['offerId']);
+                    //$productContent->setChannel($productData['channel']);
+                    //$productContent->setContentLanguage($productData['contentLanguage']);
+                    //$productContent->setTargetCountry($productData['targetCountry']);
+                }
+            } catch (Google\Service\Exception $e) {
+                if ($e->getCode() == 404) {
+                    // Product not found, prepare to insert a new one
+                    $productContent->setOfferId($productData['offerId']);
+                    $productContent->setChannel($productData['channel']);
+                    $productContent->setContentLanguage($productData['contentLanguage']);
+                    $productContent->setTargetCountry($productData['targetCountry']);
+                } else {
+                    // Other errors should be handled appropriately
+                    echo "Error fetching product: " . $e->getMessage();
+                    return;
+                }
+            }
+            
+            // Set remaining product data
+            $productContent->setTitle($productData['title']);
+            $productContent->setDescription($productData['description']);
+            $productContent->setLink($productData['link']);
+            $productContent->setImageLink($productData['imageLink']);
+            $productContent->setBrand($productData['brand']);
+            
+            $price = new Google_Service_ShoppingContent_Price();
+            $price->setValue($productData['price']['value']);
+            $price->setCurrency($productData['price']['currency']);
+            $productContent->setPrice($price);
+    
+            if (!empty($productData['salePrice']['value'])) {
+                $salePrice = new Google_Service_ShoppingContent_Price();
+                $salePrice->setValue($productData['salePrice']['value']);
+                $salePrice->setCurrency($productData['salePrice']['currency']);
+                $productContent->setSalePrice($salePrice);
+            }
+    
+            $productContent->setAvailability($productData['availability']);
+            $productContent->setAdditionalImageLinks($productData['additionalImageLinks']);
+            
+            try {
+                if (isset($existingProduct->id)) {
+                    // Update the product if it exists
+                    $contentService->products->update($merchantId, $productContentId, $productContent);
+                    $this->session->set_flashdata('message', lang('product_updated'));
+                } else {
+                    // Insert the new product
+                    $contentService->products->insert($merchantId, $productContent);
+                    $this->session->set_flashdata('message', lang('product_inserted'));
+                }
+                admin_redirect('products/edit/' . $product_id);
+            } catch (Exception $e) {
+                echo "Error inserting/updating product: " . $e->getMessage();
+            }
+        } else {
+            $redirect_uri = admin_url().'products/oauth2callback';
+            header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
+        }
+    }
+
     public function update_intl_barcode(){
 
         //$csvFile = 'https://avenzur.com/assets/uploads/temp/iherb_updated.csv';
         //$csvFile = '/var/www/backup25May2023/assets/uploads/temp/iherb_updated.csv';
 
-        $csvFile = $this->upload_path.'temp/iherb_updated.csv';
+        $csvFile = $this->upload_path.'temp/localizer_to_be_checked.csv';
         
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
@@ -49,17 +510,104 @@ class Products extends MY_Controller
         // Iterate through rows in the CSV file
         while (($rowData = fgetcsv($handle)) !== false) {
             // Assuming 'B' and 'C' are the columns for 'code' and 'ic' respectively
-            $excelCode = $rowData[0]; // CSV is 0-indexed
-            $ic = $rowData[0];
+            $ibarCode = $rowData[0]; 
+            $asconCode = $rowData[1]; 
+            $itemName = $rowData[2];
+            $itemPrice = $rowData[3];
+            //$itemVat = $rowData[4];
+
+            $tax_rate = $rowData[4] == 0 ? 1 : 5;
     
             // Find the product in the database based on the code
-            $product = $this->db->get_where('sma_products', ['code' => $excelCode])->row();
+            $this->db->select('*');
+            $this->db->from('sma_products');
+            //$this->db->where('CAST(code AS UNSIGNED) = ' . (int)$ibarCode, NULL, FALSE);
+            $this->db->where('code', $ibarCode);
+            $query = $this->db->get();
+            $product = $query->row();
+            
+            if ($product) {
+                echo "Product found with IBC $ibarCode and will not be updated.<br>";
+                //echo $ibarCode."<br>";
+            } else {
+                //echo "Product not found in system with IBC $ibarCode <br>";
+                $this->db->select('*');
+                $this->db->from('sma_products');
+                $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$asconCode, NULL, FALSE);
+                $query_new = $this->db->get();
+                $product_new = $query_new->row();
+
+                if ($product_new) {
+                    // Update the code in the database with the ic from CSV
+                    $dataToUpdate = [
+                        'code' => $ibarCode,
+                        'ascon_code' => $asconCode
+                    ];
+        
+                    $this->db->where('id', $product_new->id);
+                    $this->db->update('sma_products', $dataToUpdate);
+                    echo "Product with code $asconCode will be updated with the IBC $ibarCode<br>";
+                }else{
+                    echo "Product not found in system with IBC $ibarCode and Ascon Code $asconCode <br>";
+                }
+            }
+        }
     
+        // Close the file handle
+        fclose($handle);
+    }
+
+    /*public function update_intl_barcode(){
+
+        //$csvFile = 'https://avenzur.com/assets/uploads/temp/iherb_updated.csv';
+        //$csvFile = '/var/www/backup25May2023/assets/uploads/temp/iherb_updated.csv';
+
+        $csvFile = $this->upload_path.'temp/12-may-upload-file.csv';
+        
+        if (!file_exists($csvFile)) {
+            echo 'CSV file not found.';
+            return;
+        }
+    
+        // Read the CSV file
+        $handle = fopen($csvFile, 'r');
+    
+        // Check if the file was opened successfully
+        if ($handle === false) {
+            echo 'Error opening CSV file.';
+            return;
+        }
+    
+        // Iterate through rows in the CSV file
+        while (($rowData = fgetcsv($handle)) !== false) {
+            // Assuming 'B' and 'C' are the columns for 'code' and 'ic' respectively
+            $excelCode = $rowData[1]; // CSV is 0-indexed
+            //$excelCode = ltrim($excelCode, '0');
+
+            $tax_rate = $rowData[6] == 0 ? 1 : 5;
+            $ascon_code = isset($rowData[11]) ? $rowData[11] : '';
+            $imported = 1;
+            $source = isset($rowData[10]) ? $rowData[10] : '';
+    
+            // Find the product in the database based on the code
+            $this->db->select('*');
+            $this->db->from('sma_products');
+            $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$excelCode, NULL, FALSE);
+            $query = $this->db->get();
+            $product = $query->row();
+            
             if ($product) {
                 // Update the code in the database with the ic from CSV
+                $dataToUpdate = [
+                    'tax_rate' => $tax_rate,
+                    'ascon_code' => $ascon_code,
+                    'imported' => $imported
+                    //'source' => $source
+                ];
+    
                 $this->db->where('id', $product->id);
-                $this->db->update('sma_products', ['code' => $ic]);
-                echo "Updated product with code $excelCode. New code: $ic<br>";
+                $this->db->update('sma_products', $dataToUpdate);
+                echo "Updated product with code $excelCode. Tax rate: $tax_rate<br>";
             } else {
                 echo "Product with code $excelCode not found in the database.<br>";
             }
@@ -67,7 +615,7 @@ class Products extends MY_Controller
     
         // Close the file handle
         fclose($handle);
-    }
+    }*/
 
     public function setProductSlugs(){
         $products = $this->products_model->getAllProducts();
@@ -222,8 +770,8 @@ class Products extends MY_Controller
                 'tax_method'        => $this->input->post('tax_method'),
                 'alert_quantity'    => $this->input->post('alert_quantity'),
                 'track_quantity'    => $this->input->post('track_quantity') ? $this->input->post('track_quantity') : '0',
-                'details'           => $this->input->post('details'),
-                'product_details'   => $this->input->post('product_details'),
+                'details'           => $_POST['details'], //$this->input->post('details',false),
+                'product_details'   =>  $_POST['product_details'], //$this->input->post('product_details',false),
                 'incentive_qty'     => $this->input->post('incentive_qty'),
                 'incentive_value'   => $this->input->post('incentive_value'),
                 'supplier1'         => $this->input->post('supplier'),
@@ -263,6 +811,7 @@ class Products extends MY_Controller
                 'manufacture_name'   => $this->input->post('manufacture_name'),
                 'main_agent'         => $this->input->post('main_agent'),
                 'draft'              => $this->input->post('draft'),
+                'special_product'    => $this->input->post('special_product'),
                 // 'purchase_account'   => $this->input->post('purchase_account'),
                 // 'sale_account'       => $this->input->post('sale_account'),
                 // 'inventory_account'  => $this->input->post('inventory_account'),
@@ -636,6 +1185,10 @@ class Products extends MY_Controller
                 $type       = $_POST['type'][$r];
                 $quantity   = $_POST['quantity'][$r];
                 $serial     = $_POST['serial'][$r];
+                $expiry     = $_POST['expiry'][$r];
+                $batchno   = $_POST['batchno'][$r];
+                $sale_price   = $_POST['sale_price'][$r];
+                $unit_cost   = $_POST['unit_cost'][$r];
                 $variant    = isset($_POST['variant'][$r]) && !empty($_POST['variant'][$r]) ? $_POST['variant'][$r] : null;
 
                 if (!$this->Settings->overselling && $type == 'subtraction' && !$count_id) {
@@ -665,6 +1218,10 @@ class Products extends MY_Controller
                     'product_id'   => $product_id,
                     'type'         => $type,
                     'quantity'     => $quantity,
+                    'expiry'     => date('Y-m-d', strtotime($expiry)),
+                    'batchno'     => $batchno,
+                    'sale_price'     => $sale_price,
+                    'unit_cost'     => $unit_cost,
                     'warehouse_id' => $warehouse_id,
                     'option_id'    => $variant,
                     'serial_no'    => $serial,
@@ -705,7 +1262,6 @@ class Products extends MY_Controller
 
             // $this->sma->print_arrays($data, $products);
         }
-
         if ($this->form_validation->run() == true && $this->products_model->addAdjustment($data, $products)) {
             $this->session->set_userdata('remove_qals', 1);
             $this->session->set_flashdata('message', lang('quantity_adjusted'));
@@ -792,19 +1348,27 @@ class Products extends MY_Controller
                 $handle    = fopen($this->digital_upload_path . $csv, 'r');
                 if ($handle) {
                     while (($row = fgetcsv($handle, 5000, ',')) !== false) {
-                        $arrResult[] = $row;
+                        
+                        if($row[0] != '') {
+                            $quantity_int = str_replace(',', '', $row[1]);
+                            $row[1] = $quantity_int;
+                            $arrResult[] = $row;
+                        }
                     }
                     fclose($handle);
                 }
+                // echo "<pre>";
+                // print_r($arrResult);exit;
                 $titles = array_shift($arrResult);
                 $keys   = ['code', 'quantity', 'saleprice', 'unitcost', 'batch', 'expiry', 'vat', 'variant'];
                 $final  = [];
                 foreach ($arrResult as $key => $value) {
-                    $final[] = array_combine($keys, $value);
+                    $final[] = array_combine($keys, $value);                        
                 }
                 
-                // $this->sma->print_arrays($final);
+                //$this->sma->print_arrays($final);
                 $rw = 2;
+                $nonImportedProducts = array();
                 foreach ($final as $pr) {
                     if ($product = $this->products_model->getProductByCode(trim($pr['code']))) {
                         $csv_variant = trim($pr['variant']);
@@ -815,32 +1379,33 @@ class Products extends MY_Controller
                         $quantity     = $csv_quantity > 0 ? $csv_quantity : (0 - $csv_quantity);
                         $batch        = trim($pr['batch']);
                         $expiry       = trim($pr['expiry']);
+                        $expiry       =  date('Y-m-d', strtotime($expiry)); 
                         $vat          = trim($pr['vat']);
                         $sale_price   = trim($pr['saleprice']);
                         $unit_cost   = trim($pr['unitcost']);
                         
-                        if (!$this->Settings->overselling && $type == 'subtraction') {
-                            if ($variant) {
-                                if ($op_wh_qty = $this->products_model->getProductWarehouseOptionQty($variant, $warehouse_id)) {
-                                    if ($op_wh_qty->quantity < $quantity) {
-                                        $this->session->set_flashdata('error', lang('warehouse_option_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
-                                        redirect($_SERVER['HTTP_REFERER']);
-                                    }
-                                } else {
-                                    $this->session->set_flashdata('error', lang('warehouse_option_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
-                                    redirect($_SERVER['HTTP_REFERER']);
-                                }
-                            }
-                            if ($wh_qty = $this->products_model->getProductQuantity($product->id, $warehouse_id)) {
-                                if ($wh_qty['quantity'] < $quantity) {
-                                    $this->session->set_flashdata('error', lang('warehouse_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
-                                    redirect($_SERVER['HTTP_REFERER']);
-                                }
-                            } else {
-                                $this->session->set_flashdata('error', lang('warehouse_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
-                                redirect($_SERVER['HTTP_REFERER']);
-                            }
-                        }
+                        // if (!$this->Settings->overselling && $type == 'subtraction') {
+                        //     if ($variant) {
+                        //         if ($op_wh_qty = $this->products_model->getProductWarehouseOptionQty($variant, $warehouse_id)) {
+                        //             if ($op_wh_qty->quantity < $quantity) {
+                        //                 $this->session->set_flashdata('error', lang('warehouse_option_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
+                        //                 redirect($_SERVER['HTTP_REFERER']);
+                        //             }
+                        //         } else {
+                        //             $this->session->set_flashdata('error', lang('warehouse_option_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
+                        //             redirect($_SERVER['HTTP_REFERER']);
+                        //         }
+                        //     }
+                        //     if ($wh_qty = $this->products_model->getProductQuantity($product->id, $warehouse_id)) {
+                        //         if ($wh_qty['quantity'] < $quantity) {
+                        //             $this->session->set_flashdata('error', lang('warehouse_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
+                        //             redirect($_SERVER['HTTP_REFERER']);
+                        //         }
+                        //     } else {
+                        //         $this->session->set_flashdata('error', lang('warehouse_qty_is_less_than_damage') . ' - ' . lang('line_no') . ' ' . $rw);
+                        //         redirect($_SERVER['HTTP_REFERER']);
+                        //     }
+                        // }
 
                         $products[] = [
                             'product_id'   => $product->id,
@@ -855,20 +1420,35 @@ class Products extends MY_Controller
                             'option_id'    => $variant,
                         ];
                     } else {
-                        $this->session->set_flashdata('error', lang('check_product_code') . ' (' . $pr['code'] . '). ' . lang('product_code_x_exist') . ' ' . lang('line_no') . ' ' . $rw);
-                        redirect($_SERVER['HTTP_REFERER']);
+                        //$this->session->set_flashdata('error', lang('check_product_code') . ' (' . $pr['code'] . '). ' . lang('product_code_x_exist') . ' ' . lang('line_no') . ' ' . $rw);
+                        //redirect($_SERVER['HTTP_REFERER']);
+                       
+                        $nonImportedProducts[] = trim($pr['code']);
                     }
                     $rw++;
                 }
             } else {
                 $this->form_validation->set_rules('csv_file', lang('upload_file'), 'required');
             }
-
-            //$this->sma->print_arrays($data, $products);
+        //     echo 'products:';print_r($products_not_exist);
+        //     $this->sma->print_arrays($data, $products);
+        //    exit;
         }
-
+       
         if ($this->form_validation->run() == true && $this->products_model->addAdjustment($data, $products)) {
-            $this->session->set_flashdata('message', lang('quantity_adjusted'));
+            $message = lang('quantity_adjusted');
+            if (!empty($nonImportedProducts)) {
+                $fileName = 'non_imported_products_'.$reference_no.'_'.date('Y-m-d').'.txt';
+                $fileLink =   'admin/products/download_adjusmtent_non_imported/non_imported_products_'.$reference_no.'_'.date('Y-m-d').'.txt'; 
+                $dataToWrite = implode("\n", $nonImportedProducts);
+                $filePath = './files/'.$fileName;
+                if (!write_file($filePath, $dataToWrite, 'w+')) {
+                    //log_message('error', 'Unable to write non-imported product codes to file.');
+                }else{
+                    $message = $message. " <a href='" . site_url($fileLink) . "' target='_blank'>Download Non-Imported Product Codes</a>";
+                }
+            }
+            $this->session->set_flashdata('message', $message);
             admin_redirect('products/quantity_adjustments');
         } else {
             $this->data['error']      = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
@@ -876,6 +1456,18 @@ class Products extends MY_Controller
             $bc                       = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('products'), 'page' => lang('products')], ['link' => '#', 'page' => lang('add_adjustment')]];
             $meta                     = ['page_title' => lang('add_adjustment_by_csv'), 'bc' => $bc];
             $this->page_construct('products/add_adjustment_by_csv', $meta, $this->data);
+        }
+    }
+
+    public function download_adjusmtent_non_imported($fileName='')
+    {
+        if(file_exists(FCPATH .'files/'.$fileName)) {
+            //echo "yes";
+            $this->load->helper('download');
+            force_download(FCPATH.'files/'.$fileName, NULL);
+            exit;
+        } else {
+            admin_redirect('products/quantity_adjustments'); 
         }
     }
 
@@ -1225,6 +1817,13 @@ class Products extends MY_Controller
             }
             
            $product_countries = rtrim($product_countries, ',');
+
+           $hide_product = $this->input->post('hide') ? $this->input->post('hide') : 0;
+
+           $draft_set = $this->input->post('draft');
+           if($draft_set == 1){
+                $hide_product = 1;
+           }
             
             $data = ['code'         => $this->input->post('code'),
                 'barcode_symbology' => $this->input->post('barcode_symbology'),
@@ -1242,8 +1841,8 @@ class Products extends MY_Controller
                 'tax_method'        => $this->input->post('tax_method'),
                 'alert_quantity'    => $this->input->post('alert_quantity'),
                 'track_quantity'    => $this->input->post('track_quantity') ? $this->input->post('track_quantity') : '0',
-                'details'           => $this->input->post('details'),
-                'product_details'   => $this->input->post('product_details'),
+                'details'           => $_POST['details'], //$this->input->post('details',false),
+                'product_details'   => $_POST['product_details'], //$this->input->post('product_details',false),
                 'supplier1'         => $this->input->post('supplier'),
                 'supplier1price'    => $this->sma->formatDecimal($this->input->post('supplier_price')),
                 'supplier2'         => $this->input->post('supplier_2'),
@@ -1274,13 +1873,15 @@ class Products extends MY_Controller
                 'featured'          => $this->input->post('featured'),
                 'special_offer'     => $this->input->post('special_offer'),
                 'hsn_code'          => $this->input->post('hsn_code'),
-                'hide'              => $this->input->post('hide') ? $this->input->post('hide') : 0,
+                'hide'              => $hide_product,
                 'hide_pos'          => $this->input->post('hide_pos') ? $this->input->post('hide_pos') : 0,
                 'second_name'       => $this->input->post('second_name'),
                 'trade_name'       => $this->input->post('trade_name'),
                 'manufacture_name'       => $this->input->post('manufacture_name'),
                 'main_agent'       => $this->input->post('main_agent'),
                 'draft'            => $this->input->post('draft'),
+                'special_product'     => $this->input->post('special_product'),
+                'google_merch'      => $this->input->post('google_merch'),
                 // 'purchase_account'       => $this->input->post('purchase_account'),
                 // 'sale_account'       => $this->input->post('sale_account'),
                 // 'inventory_account'       => $this->input->post('inventory_account'),
@@ -1608,12 +2209,20 @@ class Products extends MY_Controller
         }
 
         if ($this->form_validation->run() == true && $this->products_model->updateProduct($id, $data, $items, $warehouse_qty, $product_attributes, $photos, $update_variants)) {
+            /*if($data['google_merch'] == 1){
+                $this->google_merch_apis($id, $data);
+            }else{
+                $this->session->set_flashdata('message', lang('product_updated'));
+                //admin_redirect('products');
+                admin_redirect('products/edit/' . $id);
+            }*/
+
             $this->session->set_flashdata('message', lang('product_updated'));
-            //admin_redirect('products');
             admin_redirect('products/edit/' . $id);
+            
         } else {
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
-
+            $this->data['images']              = $this->products_model->getProductPhotos($id);
             $this->data['categories']          = $this->site->getAllCategories();
             $this->data['tax_rates']           = $this->site->getAllTaxRates();
             $this->data['brands']              = $this->site->getAllBrands();
@@ -1633,6 +2242,32 @@ class Products extends MY_Controller
         }
         
     }
+
+    // public function remove_image($id) {
+    //     // Load the product model
+    //     $this->load->model('Product_model');
+    //     // Get the product by id
+    //     $product = $this->products_model->getProductByID($id);
+        
+    //     if ($product) {
+    //         // Path to the image file
+    //         $image_path = './assets/uploads/'.$product->image;
+            
+    //         // Delete the image file from the server
+    //         if (file_exists($image_path)) {
+    //             unlink($image_path);
+    //         }
+            
+    //         // Update the database to remove the image reference
+    //         $this->Product_model->remove_image($id);
+            
+    //         // Set a success message
+    //         echo json_encode(['status' => 'Image removed successfully.']);
+    //     } else {
+    //         // Set an error message
+    //         echo json_encode(['status' => 'Product not found.']);
+    //     }
+    // }
 
     public function edit_adjustment($id)
     {
@@ -2221,19 +2856,27 @@ class Products extends MY_Controller
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
-            <li>' . $detail_link . '</li>
-            <li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>
-            <li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
+            <li>' . $detail_link . '</li>';
+        if($this->Admin || $this->Owner){
+            $action .= '<li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>'; 
+        }
+            
+        $action .= '<li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
         if ($warehouse_id) {
             $action .= '<li><a href="' . admin_url('products/set_rack/$1/' . $warehouse_id) . '" data-toggle="modal" data-target="#myModal"><i class="fa fa-bars"></i> '
                 . lang('set_rack') . '</a></li>';
         }
         $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
-            . lang('view_image') . '</a></li>
-            <li>' . $single_barcode . '</li>
-            <li class="divider"></li>
-            <li>' . $delete_link . '</li>
-            </ul>
+            . lang('view_image') . '</a></li>';
+        if($this->Admin || $this->Owner){
+           $action .=  '<li>' . $single_barcode . '</li>';
+        }
+            
+        $action .=  '<li class="divider"></li>';
+        if($this->Admin || $this->Owner){
+            $action .= '<li>' . $delete_link . '</li>';
+        }
+        $action .= '</ul>
         </div></div>';
         $this->load->library('datatables');
         if ($warehouse_id) {
@@ -2378,42 +3021,42 @@ class Products extends MY_Controller
                         'barcode_symbology' => isset($value[2]) ? mb_strtolower(trim($value[2]), 'UTF-8') : '',
                         'brand'             => isset($value[3]) ? trim($value[3]) : '',
                         'category_code'     => isset($value[4]) ? trim($value[4]) : '',
-                        'unit'              => isset($value[5]) ? trim($value[5]) : '',
-                        'sale_unit'         => isset($value[6]) ? trim($value[6]) : '',
-                        'purchase_unit'     => isset($value[7]) ? trim($value[7]) : '',
+                        'unit'              => isset($value[5]) ? trim($value[5]) : 1,
+                        'sale_unit'         => isset($value[6]) ? trim($value[6]) : 1,
+                        'purchase_unit'     => isset($value[7]) ? trim($value[7]) : 1,
                         'cost'              => isset($value[8]) ? trim($value[8]) : '',
                         'price'             => isset($value[9]) ? trim($value[9]) : '',
-                        'alert_quantity'    => isset($value[10]) ? trim($value[10]) : '',
+                        'alert_quantity'    => isset($value[10]) ? trim($value[10]) : 2,
                         'tax_rate'          => isset($value[11]) ? trim($value[11]) : '',
                         'tax_method'        => isset($value[12]) ? (trim($value[12]) == 'exclusive' ? 1 : 0) : '',
-                        'image'             => isset($value[13]) ? trim($value[13]) : '',
+                        //'image'             => isset($value[13]) ? trim($value[13]) : '',
                         'subcategory_code'  => isset($value[14]) ? trim($value[14]) : '',
-                        'variants'          => isset($value[15]) ? trim($value[15]) : '',
-                        'cf1'               => isset($value[16]) ? trim($value[16]) : '',
-                        'cf2'               => isset($value[17]) ? trim($value[17]) : '',
-                        'cf3'               => isset($value[18]) ? trim($value[18]) : '',
-                        'cf4'               => isset($value[19]) ? trim($value[19]) : '',
-                        'cf5'               => isset($value[20]) ? trim($value[20]) : '',
-                        'cf6'               => isset($value[21]) ? trim($value[21]) : '',
-                        'hsn_code'          => isset($value[22]) ? trim($value[22]) : '',
-                        'second_name'       => isset($value[23]) ? trim($value[23]) : '',
-                        'details'           => isset($value[24]) ? trim($value[24]) : '',
-                        'product_details'   => isset($value[25]) ? trim($value[25]) : '',
-                        'supplier1'         => $supplier1 ? $supplier1->id : null,
-                        'supplier1_part_no' => isset($value[27]) ? trim($value[27]) : '',
-                        'supplier1price'    => isset($value[28]) ? trim($value[28]) : '',
-                        'supplier2'         => $supplier2 ? $supplier2->id : null,
-                        'supplier2_part_no' => isset($value[30]) ? trim($value[30]) : '',
-                        'supplier2price'    => isset($value[31]) ? trim($value[31]) : '',
-                        'supplier3'         => $supplier3 ? $supplier3->id : null,
-                        'supplier3_part_no' => isset($value[33]) ? trim($value[33]) : '',
-                        'supplier3price'    => isset($value[34]) ? trim($value[34]) : '',
-                        'supplier4'         => $supplier4 ? $supplier4->id : null,
-                        'supplier4_part_no' => isset($value[36]) ? trim($value[36]) : '',
-                        'supplier4price'    => isset($value[37]) ? trim($value[37]) : '',
-                        'supplier5'         => $supplier5 ? $supplier5->id : null,
-                        'supplier5_part_no' => isset($value[39]) ? trim($value[39]) : '',
-                        'supplier5price'    => isset($value[40]) ? trim($value[40]) : '',
+                        //'variants'          => isset($value[15]) ? trim($value[15]) : '',
+                        'cf1'               => isset($value[16]) ? trim($value[16]) : 8,
+                        //'cf2'               => isset($value[17]) ? trim($value[17]) : '',
+                        //'cf3'               => isset($value[18]) ? trim($value[18]) : '',
+                        //'cf4'               => isset($value[19]) ? trim($value[19]) : '',
+                        //'cf5'               => isset($value[20]) ? trim($value[20]) : '',
+                        //'cf6'               => isset($value[21]) ? trim($value[21]) : '',
+                        //'hsn_code'          => isset($value[22]) ? trim($value[22]) : '',
+                        //'second_name'       => isset($value[23]) ? trim($value[23]) : '',
+                        //'details'           => isset($value[24]) ? trim($value[24]) : '',
+                        //'product_details'   => isset($value[25]) ? trim($value[25]) : '',
+                        //'supplier1'         => $supplier1 ? $supplier1->id : null,
+                        //'supplier1_part_no' => isset($value[27]) ? trim($value[27]) : '',
+                        //'supplier1price'    => isset($value[28]) ? trim($value[28]) : '',
+                        //'supplier2'         => $supplier2 ? $supplier2->id : null,
+                        //'supplier2_part_no' => isset($value[30]) ? trim($value[30]) : '',
+                        //'supplier2price'    => isset($value[31]) ? trim($value[31]) : '',
+                        //'supplier3'         => $supplier3 ? $supplier3->id : null,
+                        //'supplier3_part_no' => isset($value[33]) ? trim($value[33]) : '',
+                        //'supplier3price'    => isset($value[34]) ? trim($value[34]) : '',
+                        //'supplier4'         => $supplier4 ? $supplier4->id : null,
+                        //'supplier4_part_no' => isset($value[36]) ? trim($value[36]) : '',
+                        //'supplier4price'    => isset($value[37]) ? trim($value[37]) : '',
+                        //'supplier5'         => $supplier5 ? $supplier5->id : null,
+                        //'supplier5_part_no' => isset($value[39]) ? trim($value[39]) : '',
+                        //'supplier5price'    => isset($value[40]) ? trim($value[40]) : '',
                         //'slug'              => $this->Settings->use_code_for_slug ? $this->sma->slug($value[1]) : $this->sma->slug($value[0]),
                         'slug'              => $slug,
                         'hide'              => isset($value[41]) ? trim($value[41]) : 1,

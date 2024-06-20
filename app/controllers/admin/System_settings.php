@@ -2564,8 +2564,9 @@ class system_settings extends MY_Controller
                 'stock_warehouse_supervisor'        => $this->input->post('stock_warehouse_supervisor'),
                 'transfer_pharmacist'        => $this->input->post('transfer_pharmacist'),
                 'transfer_warehouse_supervisor'        => $this->input->post('transfer_warehouse_supervisor'),
-
-
+                'blog_view'                  => $this->input->post('blog_view'),
+                'blog_edit'                  => $this->input->post('blog_edit'),
+                'blog_add'                   => $this->input->post('blog_add')
                 
             ];
 

@@ -350,6 +350,45 @@ class Purchases extends MY_Controller
         }
     }
 
+    public function push_serials_to_rasd_manually(){
+        $purchase_id = $_GET['purchase_id'];
+        $purchase_details = $this->purchases_model->getPurchaseByID($purchase_id);
+        $serials_reference = $purchase_details->reference_no;
+
+        $items = $this->purchases_model->getAllPurchaseItems($purchase_id);
+
+        foreach ($items as $item) {
+            $serials_quantity = $item->quantity;
+            $serials_gtin = $item->product_code;
+            $serials_batch_no = $item->batchno;
+
+            $dispatch_array = $this->db->get_where('sma_rasd_notifications', ['invoice_no' => $serials_reference], 1);
+            if ($dispatch_array->num_rows() > 0) {
+                foreach (($dispatch_array->result()) as $d_array) {
+                    $dispatch_id = $d_array->dispatch_id;
+                    $notification_serials = $this->db->get_where('sma_notification_serials', ['gtin' => $serials_gtin, 'dispatch_id' => $dispatch_id, 'batch_no' => $serials_batch_no, 'used' => 0], $serials_quantity);
+                    if ($notification_serials->num_rows() > 0) {
+                        foreach (($notification_serials->result()) as $row) {
+                            $serials_data[] = $row;
+                            $invoice_serials = array();
+                            $invoice_serials['serial_number'] = $row->serial_no;
+                            $invoice_serials['gtin'] = $row->gtin;
+                            $invoice_serials['batch_no'] = $row->batch_no;
+                            $invoice_serials['pid'] = $purchase_id;
+                            $invoice_serials['date'] = date('Y-m-d');
+
+                            $this->db->update('sma_notification_serials', ['used' => 1], ['serial_no' => $row->serial_no, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
+                            $this->db->insert('sma_invoice_serials', $invoice_serials);
+                        }
+                    }
+                }
+            }
+
+        }
+        
+        // Code for serials end here
+    }
+
     public function add_expense()
     {
         $this->sma->checkPermissions('expenses', true);
@@ -700,7 +739,8 @@ class Purchases extends MY_Controller
                 $item_sale_price    = $this->sma->formatDecimal($_POST['sale_price'][$r]);
 
                 $item_unit_quantity = $_POST['quantity'][$r];
-                $quantity_received  = $_POST['received_base_quantity'][$r];
+                //$quantity_received  = $_POST['received_base_quantity'][$r];
+                $quantity_received = $item_unit_quantity;
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'undefined' ? $_POST['product_option'][$r] : null;
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
                 //$item_discount      = $_POST['product_discount'][$r] ?? null;
@@ -709,7 +749,8 @@ class Purchases extends MY_Controller
                 $item_expiry        = (isset($_POST['expiry'][$r]) && !empty($_POST['expiry'][$r])) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
                 $supplier_part_no   = (isset($_POST['part_no'][$r]) && !empty($_POST['part_no'][$r])) ? $_POST['part_no'][$r] : null;
                 $quantity_balance   = $_POST['quantity_balance'][$r];
-                $ordered_quantity   = $_POST['ordered_quantity'][$r];
+                //$ordered_quantity   = $_POST['ordered_quantity'][$r];
+                $ordered_quantity   = $item_unit_quantity;
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
@@ -723,13 +764,15 @@ class Purchases extends MY_Controller
                 $warehouse_shelf = $_POST['warehouse_shelf'][$r];
 
                 if ($status == 'received' || $status == 'partial') {
-                    if ($quantity_received < $item_quantity) {
+                    /*if ($quantity_received < $item_quantity) {
                         $partial = 'partial';
                     } elseif ($quantity_received > $item_quantity) {
                         $this->session->set_flashdata('error', lang('received_more_than_ordered'));
                         redirect($_SERVER['HTTP_REFERER']);
                     }
-                    $balance_qty = $quantity_received - ($ordered_quantity - $quantity_balance);
+                    $balance_qty = $quantity_received - ($ordered_quantity - $quantity_balance);*/
+                    $balance_qty       = $item_quantity;
+                    $quantity_received = $item_quantity;
                 } else {
                     $balance_qty       = $item_quantity;
                     $quantity_received = $item_quantity;
