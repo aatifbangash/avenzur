@@ -706,16 +706,16 @@ class Shop_model extends CI_Model
                 }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
                             
-                    $row->global = 1;
-                }
+                //     $row->global = 1;
+                // }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
                     
-                    $row->global = 1;
-                }
+                //     $row->global = 1;
+                // }
             }
         }, $result);
         return $result;
@@ -799,16 +799,16 @@ class Shop_model extends CI_Model
                     }
 
                     // remove the below block after eid
-                    if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                    // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
                                 
-                        $row->global = 1;
-                    }
+                    //     $row->global = 1;
+                    // }
 
                     // remove the below block after eid
-                    if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                    // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
                         
-                        $row->global = 1;
-                    }
+                    //     $row->global = 1;
+                    // }
                 }
             }, $products);
             $category->products = $products;
@@ -948,16 +948,16 @@ class Shop_model extends CI_Model
                 }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
                             
-                    $row->global = 1;
-                }
+                //     $row->global = 1;
+                // }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
                     
-                    $row->global = 1;
-                }
+                //     $row->global = 1;
+                // }
             }
         }, $result);
         return $result;
@@ -1046,16 +1046,16 @@ class Shop_model extends CI_Model
                 }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
                             
-                    $row->global = 1;
-                }
+                //     $row->global = 1;
+                // }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
                     
-                    $row->global = 1;
-                }
+                //     $row->global = 1;
+                // }
             }
         }, $result);
         return $result;
@@ -1144,16 +1144,16 @@ class Shop_model extends CI_Model
                 }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
                             
-                    $row->global = 1;
-                }
+                //     $row->global = 1;
+                // }
 
                 // remove the below block after eid
-                if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
                     
-                    $row->global = 1;
-                }
+                //     $row->global = 1;
+                // }
             }
         }, $result);
         return $result;
@@ -1664,16 +1664,16 @@ class Shop_model extends CI_Model
 
 
                     // remove the below block after eid
-                    if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0) && $row['id'] != 3){
+                    // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0) && $row['id'] != 3){
                         
-                        $row['global'] = 1;
-                    }
+                    //     $row['global'] = 1;
+                    // }
 
                     // remove the below block after eid
-                    if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0) && $row['id'] != 3){
+                    // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0) && $row['id'] != 3){
                         
-                        $row['global'] = 1;
-                    }
+                    //     $row['global'] = 1;
+                    // }
                 }
 
                 $row['name'] = stripslashes($row['name']);

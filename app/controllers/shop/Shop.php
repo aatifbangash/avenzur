@@ -1320,16 +1320,16 @@ class Shop extends MY_Shop_Controller
             }
 
             // remove the below block after eid
-            if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $product->id != 3)){
+            // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $product->id != 3)){
                         
-                $product->global = 1;
-            }
+            //     $product->global = 1;
+            // }
 
             // remove the below block after eid
-            if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $product->id != 3)){
+            // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $product->id != 3)){
                 
-                $product->global = 1;
-            }
+            //     $product->global = 1;
+            // }
         }
 
         if (!$slug || !$product) {
