@@ -248,7 +248,7 @@ class Cart_ajax extends MY_Shop_Controller
                 if($item['code'] == '06285193000301'){
                     $data = [
                         'rowid'  => $item['rowid'],
-                        'discount'  => 0
+                        //'discount'  => 0
                     ];
 
                     $data['disc_qty'] = $item['qty'];
