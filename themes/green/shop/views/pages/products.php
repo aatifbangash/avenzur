@@ -178,6 +178,7 @@ a.me-2.collapse-toggle:hover {
                             {
 
                                 echo '<div class="list-group catList">';
+                                if(isset( $GLOBALS['CHILD_IDS']) && !empty( $GLOBALS['CHILD_IDS'])) {
                                 foreach ($categories as $key => $cat) {
                                     // echo "<pre>"; var_dump($GLOBALS['CHILD_IDS'], !in_array($cat->id, $GLOBALS['CHILD_IDS']), $cat->id);
                                     if ($cat->parent_id == $parent_id || ($parent_id === null || $cat->parent_id === 0) &&  !in_array($cat->id, $GLOBALS['CHILD_IDS'])) {
@@ -219,6 +220,7 @@ a.me-2.collapse-toggle:hover {
                             }
                                 // var_dump($childIds); exit;
                                 echo '</div>';
+                            }
 
                             // Function to check if a category has children
                             function hasChild($category_id, $categories)
