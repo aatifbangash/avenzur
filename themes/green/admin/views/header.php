@@ -433,6 +433,23 @@
                                             <span class="text"> <?= lang('add_adjustment'); ?></span>
                                         </a>
                                     </li>
+
+                                    <li id="products_product_bundles">
+                                        <a class="submenu" href="<?= admin_url('products/product_bundles'); ?>">
+                                            <i class="fa fa-filter"></i>
+                                            <span class="text"> <?= lang('Product_Bundles'); ?></span>
+                                        </a>
+                                    </li>
+
+                                     <li id="products_add_bundle">
+                                        <a class="submenu" href="<?= admin_url('products/add_bundle'); ?>">
+                                            <i class="fa fa-filter"></i>
+                                            <span class="text"> <?= lang('Add_Bundle'); ?></span>
+                                        </a>
+                                    </li>
+
+
+
                                     <li id="products_stock_counts">
                                         <a class="submenu" href="<?= admin_url('products/stock_counts'); ?>">
                                             <i class="fa fa-list-ol"></i>

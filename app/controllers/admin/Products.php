@@ -1163,6 +1163,193 @@ class Products extends MY_Controller
         }
     }
 
+    public function add_bundle($count_id = null)
+    {
+        $this->sma->checkPermissions('bundles', true);
+        $this->form_validation->set_rules('bundle_name', lang('bundle_name'), 'required');
+        //$this->form_validation->set_rules('discount', lang('discount'), 'required'); 
+        if ($this->form_validation->run() == true) { 
+            
+            $date = date('Y-m-d H:s:i');  
+          //  $discount = $this->input->post('discount');
+            $bundle_name = $this->input->post('bundle_name');
+            $bundle_description = $this->input->post('bundle_description');
+           // $note         = $this->sma->clear_tags($this->input->post('note'));
+
+            $i = isset($_POST['product_id']) ? sizeof($_POST['product_id']) : 0;
+            for ($r = 0; $r < $i; $r++) {
+                $product_id = $_POST['product_id'][$r];
+                 $discount       = $_POST['discount'][$r];
+                //$quantity   = $_POST['quantity'][$r];  
+                $products[] = [
+                    'product_id'   => $product_id, 
+                    'discount'   => $discount, 
+                ];
+            }
+
+            if (empty($products)) {
+                $this->form_validation->set_rules('product', lang('products'), 'required');
+            } else {
+                krsort($products);
+            } 
+            $data = [
+                'date_created'         => $date,
+                'date_updated'         => $date,
+                'bundle_name' => $bundle_name, 
+                //'discount' => $discount,
+                'bundle_description' => $bundle_description, 
+                'created_by'   => $this->session->userdata('user_id'), 
+            ];  
+            // $this->sma->print_arrays($data, $products);
+        }
+        if ($this->form_validation->run() == true && $this->products_model->addBundle($data, $products)) {
+            $this->session->set_userdata('remove_buls', 1);
+            $this->session->set_flashdata('message', lang('Bundle_Created'));
+            admin_redirect('products/product_bundles');
+        } else {
+            if ($count_id) {
+                $stock_count = $this->products_model->getStouckCountByID($count_id);
+                $items       = $this->products_model->getStockCountItems($count_id);
+                foreach ($items as $item) {
+                    $c = sha1(uniqid(mt_rand(), true));
+                    if ($item->counted != $item->expected) {
+                        $product     = $this->site->getProductByID($item->product_id);
+                        $row         = json_decode('{}');
+                        $row->id     = $item->product_id;
+                        $row->code   = $product->code;
+                        $row->name   = $product->name;
+                        // $row->qty    = $item->counted - $item->expected;
+                        // $row->type   = $row->qty > 0 ? 'addition' : 'subtraction';
+                        // $row->qty    = $row->qty > 0 ? $row->qty : (0 - $row->qty);
+                        $options     = $this->products_model->getProductOptions($product->id);
+                        $row->option = $item->product_variant_id ? $item->product_variant_id : 0;
+                        $row->serial = '';
+                        $ri          = $this->Settings->item_addition ? $product->id : $c;
+
+                        $pr[$ri] = ['id' => $c, 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
+                            'row'        => $row, 'options' => $options, ];
+                        $c++;
+                    }
+                }
+            }
+            $this->data['bundle_items'] = $count_id ? json_encode($pr) : false; 
+            $this->data['count_id']         = $count_id;
+            $this->data['error']            = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            //$this->data['warehouses']       = $this->site->getAllWarehouses();
+            $bc                             = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('products'), 'page' => lang('products')], ['link' => '#', 'page' => lang('add_bundle')]];
+            $meta                           = ['page_title' => lang('add_bundle'), 'bc' => $bc];
+            $this->page_construct('products/add_bundle', $meta, $this->data);
+        }
+    } 
+    public function edit_bundle($id)
+    {
+        $this->sma->checkPermissions('bundles', true);
+        $bundle = $this->products_model->getBundleByID($id);
+        if (!$id || !$bundle) {
+            $this->session->set_flashdata('error', lang('bundle_not_found'));
+            $this->sma->md();
+        }
+        $this->form_validation->set_rules('bundle_name', lang('bundle_name'), 'required');
+
+        if ($this->form_validation->run() == true) { 
+            $date = date('Y-m-d H:s:i');   
+            $bundle_name = $this->input->post('bundle_name');
+            $bundle_description = $this->input->post('bundle_description');  
+            $i = isset($_POST['product_id']) ? sizeof($_POST['product_id']) : 0;
+            for ($r = 0; $r < $i; $r++) {
+                    $product_id = $_POST['product_id'][$r];
+                    $discount       = $_POST['discount'][$r];                     
+                    $products[] = [
+                        'product_id'   => $product_id, 
+                        'discount'   => $discount, 
+                    ];
+            }
+
+            if (empty($products)) {
+                $this->form_validation->set_rules('product', lang('products'), 'required');
+            } else {
+                krsort($products);
+            } 
+            $data = [ 
+                'date_updated'         => $date,
+                'bundle_name' => $bundle_name,  
+                'bundle_description' => $bundle_description, 
+                'updated_by'   => $this->session->userdata('user_id'), 
+            ]; 
+            // $this->sma->print_arrays($data, $products);
+        }
+
+        if ($this->form_validation->run() == true && $this->products_model->updateBundle($id, $data, $products)) {
+            $this->session->set_userdata('remove_buls', 1);
+            $this->session->set_flashdata('message', lang('bundle_updated'));
+            admin_redirect('products/product_bundles');
+        } else {
+            $inv_items = $this->products_model->getBundleItems($id);
+           //echo '<pre>';  print_r($inv_items); exit; 
+             // krsort($inv_items);
+            foreach ($inv_items as $item) {
+                $c           = sha1(uniqid(mt_rand(), true));
+                $product     = $this->site->getProductByID($item->product_id);
+                $row         = json_decode('{}');
+                $row->id     = $item->product_id;
+                $row->code   = $product->code;
+                $row->name   = $product->name;
+                $row->price    = $product->price; 
+                $row->discount    = $item->discount;  
+                $ri          = $this->Settings->item_addition ? $product->id : $c; 
+                $pr[$ri] = ['id' => $c, 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
+                    'row'        => $row, 'options' => $options, ];
+                $c++;
+            }
+
+            $this->data['bundle']       = $bundle;
+            $this->data['bundle_items'] = json_encode($pr);
+            $this->data['error']            = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+           // $this->data['warehouses']       = $this->site->getAllWarehouses();
+            $bc                             = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('products'), 'page' => lang('products')], ['link' => '#', 'page' => lang('edit_bundlet')]];
+            $meta                           = ['page_title' => lang('edit_bundle'), 'bc' => $bc];
+            $this->page_construct('products/edit_bundle', $meta, $this->data);
+        }
+    }
+
+    public function product_bundles($warehouse_id = null)
+    {
+        $this->sma->checkPermissions('bundles');  
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $bc                  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('products'), 'page' => lang('products')], ['link' => '#', 'page' => lang('product_bundles')]];
+        $meta                = ['page_title' => lang('product_bundles'), 'bc' => $bc];
+        $this->page_construct('products/product_bundles', $meta, $this->data);
+    }
+
+    public function getbundles($warehouse_id = null)
+    {
+        $this->sma->checkPermissions('bundles');
+
+        $delete_link = "<a href='#' class='tip po' title='<b>" . $this->lang->line('delete_bundle') . "</b>' data-content=\"<p>"
+            . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('products/delete_bundle/$1') . "'>"
+            . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a>";
+
+        $this->load->library('datatables');
+        $this->datatables
+            ->select("{$this->db->dbprefix('bundles')}.id as id, bundle_name, date_created, CONCAT({$this->db->dbprefix('users')}.first_name, ' ', {$this->db->dbprefix('users')}.last_name) as created_by, bundle_description")
+            ->from('bundles') 
+            ->join('users', 'users.id=bundles.created_by', 'left')
+            ->group_by('bundles.id'); 
+        $this->datatables->add_column('Actions', "<div class='text-center'><a href='" . admin_url('products/edit_bundle/$1') . "' class='tip' title='" . lang('edit_bundle') . "'><i class='fa fa-edit'></i></a> " . $delete_link . '</div>', 'id');
+
+        echo $this->datatables->generate();
+    }
+    public function delete_bundle($id = null)
+    {
+            $this->sma->checkPermissions('delete', true);
+            if (!$id) {
+                $this->sma->send_json(['error' => 1, 'msg' => lang('id_not_found')]);
+            }
+            if ($this->products_model->deleteBundle($id)) {
+                $this->sma->send_json(['error' => 0, 'msg' => lang('Bundle_deleted')]);
+            }
+    }
     public function add_adjustment($count_id = null)
     {
         $this->sma->checkPermissions('adjustments', true);
@@ -1511,6 +1698,77 @@ class Products extends MY_Controller
         }
     }
 
+    public function bundle_actions()
+    {
+        if (!$this->Owner && !$this->GP['bulk_actions']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+
+        $this->form_validation->set_rules('form_action', lang('form_action'), 'required');
+
+        if ($this->form_validation->run() == true) {
+            if (!empty($_POST['val'])) {
+                if ($this->input->post('form_action') == 'delete') {
+                    $this->sma->checkPermissions('delete');
+                    foreach ($_POST['val'] as $id) {
+                        $this->products_model->deleteBundle($id);
+                    }
+                    $this->session->set_flashdata('message', $this->lang->line('Bundle_deleted'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                } elseif ($this->input->post('form_action') == 'export_excel') {
+                    $this->load->library('excel');
+                    $this->excel->setActiveSheetIndex(0);
+                    $this->excel->getActiveSheet()->setTitle('quantity_adjustments');
+                    $this->excel->getActiveSheet()->SetCellValue('A1', lang('date'));
+                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('reference_no'));
+                    $this->excel->getActiveSheet()->SetCellValue('C1', lang('warehouse'));
+                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('created_by'));
+                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('note'));
+                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('items'));
+
+                    $row = 2;
+                    foreach ($_POST['val'] as $id) {
+                        $adjustment = $this->products_model->getAdjustmentByID($id);
+                        $created_by = $this->site->getUser($adjustment->created_by);
+                        $warehouse  = $this->site->getWarehouseByID($adjustment->warehouse_id);
+                        $items      = $this->products_model->getAdjustmentItems($id);
+                        $products   = '';
+                        if ($items) {
+                            foreach ($items as $item) {
+                                $products .= $item->product_name . '(' . $this->sma->formatQuantity($item->type == 'subtraction' ? -$item->quantity : $item->quantity) . ')' . "\n";
+                            }
+                        }
+
+                        $this->excel->getActiveSheet()->SetCellValue('A' . $row, $this->sma->hrld($adjustment->date));
+                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $adjustment->reference_no);
+                        $this->excel->getActiveSheet()->SetCellValue('C' . $row, $warehouse->name);
+                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $created_by->first_name . ' ' . $created_by->last_name);
+                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $this->sma->decode_html($adjustment->note));
+                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $products);
+                        $row++;
+                    }
+
+                    $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
+                    $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(40);
+                    $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(30);
+                    $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+                    $filename = 'quantity_adjustments_' . date('Y_m_d_H_i_s');
+                    $this->load->helper('excel');
+                    create_excel($this->excel, $filename);
+                }
+            } else {
+                $this->session->set_flashdata('error', $this->lang->line('no_record_selected'));
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+        } else {
+            $this->session->set_flashdata('error', validation_errors());
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+    }
     public function adjustment_actions()
     {
         if (!$this->Owner && !$this->GP['bulk_actions']) {
@@ -1758,8 +2016,7 @@ class Products extends MY_Controller
         if ($this->products_model->deleteAdjustment($id)) {
             $this->sma->send_json(['error' => 0, 'msg' => lang('adjustment_deleted')]);
         }
-    }
-
+    } 
     public function delete_image($id = null)
     {
         $this->sma->checkPermissions('edit', true);
@@ -3683,6 +3940,37 @@ class Products extends MY_Controller
         }
     }
 
+    public function bu_suggestions()
+    {
+        $term = $this->input->get('term', true);
+
+        if (strlen($term) < 1 || !$term) {
+            die("<script type='text/javascript'>setTimeout(function(){ window.top.location.href = '" . admin_url('welcome') . "'; }, 10);</script>");
+        }
+
+        $analyzed  = $this->sma->analyze_term($term);
+        $sr        = $analyzed['term'];
+        $option_id = $analyzed['option_id'];
+        $sr        = addslashes($sr);
+
+        $rows = $this->products_model->getBUSuggestions($sr);
+        if ($rows) {
+            foreach ($rows as $row) {
+                $row->qty    = 1; 
+                $row->discount    = 1;
+                $options     = $this->products_model->getProductOptions($row->id);
+                $row->option = $option_id;
+                $row->serial = '';
+                $c           = sha1(uniqid(mt_rand(), true));
+                $pr[]        = ['id' => $c, 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
+                    'row'            => $row, 'options' => $options, ];
+            }
+            $this->sma->send_json($pr);
+        } else {
+            $this->sma->send_json([['id' => 0, 'label' => lang('no_match_found'), 'value' => $term]]);
+        }
+    }
+
     public function qa_suggestions()
     {
         $term = $this->input->get('term', true);
@@ -3927,6 +4215,24 @@ class Products extends MY_Controller
         $this->data['updated_by'] = $this->site->getUser($adjustment->updated_by);
         $this->data['warehouse']  = $this->site->getWarehouseByID($adjustment->warehouse_id);
         $this->load->view($this->theme . 'products/view_adjustment', $this->data);
+    }
+
+    public function view_bundle($id)
+    {
+        $this->sma->checkPermissions('bundles', true);
+
+        $bundle = $this->products_model->getBundleByID($id);
+        if (!$id || !$bundle) {
+            $this->session->set_flashdata('error', lang('bundle_not_found'));
+            $this->sma->md();
+        }
+
+        $this->data['bundle']        = $bundle;
+        $this->data['rows']       = $this->products_model->getBundleItems($id);
+        $this->data['created_by'] = $this->site->getUser($bundle->created_by);
+        //$this->data['updated_by'] = $this->site->getUser($bundle->updated_by);
+       // $this->data['warehouse']  = $this->site->getWarehouseByID($bundle->warehouse_id);
+        $this->load->view($this->theme . 'products/view_bundle', $this->data);
     }
 
     public function view_count($id)
