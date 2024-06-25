@@ -822,7 +822,7 @@ if ($this->Settings->indian_gst) {
                     //$("#express-delivery-check").prop("disabled", false);
                     $("#express-delivery-check").show();
                     
-                    //$("#express-delivery-details").show(); // After Eid uncomment this line
+                    $("#express-delivery-details").show(); // After Eid uncomment this line
 
                     if (isExpressDelivery == true) {
                         shipping = 21
@@ -885,7 +885,7 @@ if ($this->Settings->indian_gst) {
                 //$("#express-delivery-check").prop("disabled", true);
                 $("#express-delivery-check").show();
                 
-                //$("#express-delivery-details").show(); // After eid uncomment this line
+                $("#express-delivery-details").show(); // After eid uncomment this line
             }
 
             
