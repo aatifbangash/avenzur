@@ -1195,8 +1195,7 @@ class Products extends MY_Controller
             $data = [
                 'date_created'         => $date,
                 'date_updated'         => $date,
-                'bundle_name' => $bundle_name, 
-                //'discount' => $discount,
+                'bundle_name' => $bundle_name,  
                 'bundle_description' => $bundle_description, 
                 'created_by'   => $this->session->userdata('user_id'), 
             ];  
@@ -1716,49 +1715,6 @@ class Products extends MY_Controller
                     }
                     $this->session->set_flashdata('message', $this->lang->line('Bundle_deleted'));
                     redirect($_SERVER['HTTP_REFERER']);
-                } elseif ($this->input->post('form_action') == 'export_excel') {
-                    $this->load->library('excel');
-                    $this->excel->setActiveSheetIndex(0);
-                    $this->excel->getActiveSheet()->setTitle('quantity_adjustments');
-                    $this->excel->getActiveSheet()->SetCellValue('A1', lang('date'));
-                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('reference_no'));
-                    $this->excel->getActiveSheet()->SetCellValue('C1', lang('warehouse'));
-                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('created_by'));
-                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('note'));
-                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('items'));
-
-                    $row = 2;
-                    foreach ($_POST['val'] as $id) {
-                        $adjustment = $this->products_model->getAdjustmentByID($id);
-                        $created_by = $this->site->getUser($adjustment->created_by);
-                        $warehouse  = $this->site->getWarehouseByID($adjustment->warehouse_id);
-                        $items      = $this->products_model->getAdjustmentItems($id);
-                        $products   = '';
-                        if ($items) {
-                            foreach ($items as $item) {
-                                $products .= $item->product_name . '(' . $this->sma->formatQuantity($item->type == 'subtraction' ? -$item->quantity : $item->quantity) . ')' . "\n";
-                            }
-                        }
-
-                        $this->excel->getActiveSheet()->SetCellValue('A' . $row, $this->sma->hrld($adjustment->date));
-                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $adjustment->reference_no);
-                        $this->excel->getActiveSheet()->SetCellValue('C' . $row, $warehouse->name);
-                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $created_by->first_name . ' ' . $created_by->last_name);
-                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $this->sma->decode_html($adjustment->note));
-                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $products);
-                        $row++;
-                    }
-
-                    $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
-                    $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
-                    $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-                    $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
-                    $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(40);
-                    $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(30);
-                    $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
-                    $filename = 'quantity_adjustments_' . date('Y_m_d_H_i_s');
-                    $this->load->helper('excel');
-                    create_excel($this->excel, $filename);
                 }
             } else {
                 $this->session->set_flashdata('error', $this->lang->line('no_record_selected'));
