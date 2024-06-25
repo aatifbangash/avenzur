@@ -1727,18 +1727,19 @@ class Shop extends MY_Shop_Controller
         $this->page_construct('pages/wishlist', $this->data);
     }
 
-    public function getArabicToEnglish(){
+    public function getArabicToEnglish($term) {
         // Set API endpoint and your API key
         $apiKey = 'wg_42c9daf242af8316a7b7d92e5a2aa0e55';
         $apiEndpoint = 'https://api.weglot.com/translate?api_key='.$apiKey;
 
         // Prepare the JSON payload
+        // "الصفحة الرئيسية"
         $data = [
             "l_from" => "ar",
             "l_to" => "en",
             "request_url" => "https://www.avenzur.com/",
             "words" => [
-                ["w" => "الصفحة الرئيسية", "t" => 1]
+                ["w" => $term, "t" => 1]
             ]
         ];
 
@@ -1766,6 +1767,7 @@ class Shop extends MY_Shop_Controller
         } else {
             // Decode the response
             $responseData = json_decode($response, true);
+            return $responseData;
             print_r($responseData);
         }
         exit;
@@ -1786,8 +1788,10 @@ class Shop extends MY_Shop_Controller
 
         $analyzed = $this->sma->analyze_term($term);
         $sr = $analyzed['term'];
-        //$option_id = $analyzed['option_id'];
+        $convertedData = $this->getArabicToEnglish($sr);
+        $sr = isset($convertedData['to_words'][0]) ? $convertedData['to_words'][0] : "";
 
+        //$option_id = $analyzed['option_id'];
         $warehouse = $this->site->getWarehouseByID($warehouse_id);
         $customer_group = "Retail"; //$this->site->getCustomerGroupByID($customer->customer_group_id);
         $rows = $this->shop_model->getProductNames($sr, $warehouse_id, $category_id, $pos);
