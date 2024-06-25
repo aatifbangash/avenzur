@@ -1,5 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); 
-
+if(!isset($GLOBALS['CHILD_IDS'])) {
+    $GLOBALS['CHILD_IDS'] = [];
+} 
 // $queryString = $_SERVER['QUERY_STRING'];
 // parse_str($queryString, $queryParams);
 //  $addQueryString = '';
@@ -364,6 +366,21 @@ a.me-2.collapse-toggle:hover {
                             </div>
                         </section>
                         <?php
+                    }
+                    else if($honst_banner) {
+                        ?>
+                        <section class="side-banner section-marg-top" style="margin-top:10px;margin-bottom: 40px;">
+                            <div class="container container-max-width" style="padding-left: 0px;padding-right: 0px;">
+                                <div class="sideBannerImg">
+                                    <a href="<?= site_url('brand/honstHonst'); ?>">
+                                        <img id="honst-page-banner" loading="lazy"
+                                            src="<?= base_url('assets/images/banners/honst_2024-06-25_en.png' . '?timestamp=' . time()); ?>"
+                                            alt="placeholder" class="w-100" />
+                                    </a>
+                                </div> 
+                            </div>
+                        </section>
+                   <?php     
                     }
                     ?>
                     <!--<div class="col-md-6 col-6">

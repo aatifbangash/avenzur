@@ -193,9 +193,11 @@
     console.log("The full name of the language is: " + Weglot.getLanguageName(newLang))
 
     var carouselItems = document.querySelectorAll('.carousel-item');
-
     if (newLang === 'en') {
 
+      if (document.getElementById('honst-page-banner')) {
+          document.getElementById('honst-page-banner').src = site.site_url + '/assets/images/banners/honst_2024-06-25_en.png?timestamp=' + Date.now();
+        }
       if (document.getElementById('banner-pr-detail-img')) {
         document.getElementById('banner-pr-detail-img').src = site.site_url + '/assets/images/banners/Mobily-En.jpg?timestamp=' + Date.now();
       }
@@ -251,6 +253,9 @@
       }
 
     } else if (newLang === 'ar') {
+      if (document.getElementById('honst-page-banner')) {
+      document.getElementById('honst-page-banner').src = site.site_url + '/assets/images/banners/honst_2024-06-25_ar.png?timestamp=' + Date.now();
+      }
       if (document.getElementById('banner-pr-detail-img')) {
         document.getElementById('banner-pr-detail-img').src = site.site_url + '/assets/images/banners/Mobily-Ar.jpg?timestamp=' + Date.now();
       }
