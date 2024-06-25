@@ -1775,6 +1775,153 @@ class Shop extends MY_Shop_Controller
         curl_close($ch);
     }
 
+    public function getEnglishToArabic($term) {
+        // Set API endpoint and your API key
+        $apiKey = 'wg_42c9daf242af8316a7b7d92e5a2aa0e55';
+        $apiEndpoint = 'https://api.weglot.com/translate?api_key=' . $apiKey;
+    
+        // Prepare the JSON payload
+        $data = [
+            "l_to" => "ar",
+            "l_from" => "en",
+            "request_url" => "https://www.avenzur.com/",
+            "words" => [
+                ["w" => "$term", "t" => 1]
+            ]
+        ];
+    
+        // Convert the payload to JSON format
+        $jsonData = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    
+        // Initialize cURL session
+        $ch = curl_init();
+    
+        // Set cURL options
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $apiEndpoint,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $jsonData,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($jsonData)
+            ],
+        ]);
+    
+        // Execute the POST request
+        $response = curl_exec($ch);
+    
+        // Check for errors
+        if (curl_errno($ch)) {
+            echo 'Error:' . curl_error($ch);
+            curl_close($ch);
+            return null;
+        } else {
+            // Decode the response
+            $responseData = json_decode($response, true);
+            curl_close($ch);
+    
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                echo 'JSON decode error: ' . json_last_error_msg();
+                return "JSON decode error.";
+            }
+    
+            // Debug: Print the decoded response
+            // var_dump($responseData['to_words'], $term);
+    
+            if (isset($responseData['to_words']) && is_array($responseData['to_words'])) {
+                return $responseData['to_words'];
+            } else {
+                // Handle the case where the response doesn't have the expected data
+                echo "Unexpected response format.";
+                return "Translation error or unexpected response format.";
+            }
+        }
+    }
+
+    // public function getEnglishToArabic($term) {
+    //     try {
+    //         // Set API endpoint and your API key
+    //         $apiKey = 'wg_42c9daf242af8316a7b7d92e5a2aa0e55';
+    //         $apiEndpoint = 'https://api.weglot.com/translate?api_key=' . $apiKey;
+        
+    //         // Prepare the JSON payload
+    //         $data = [
+    //             "l_to" => "ar",
+    //             "l_from" => "en",
+    //             "request_url" => "https://www.avenzur.com/",
+    //             "words" => [
+    //                 ["w" => $term, "t" => 1]
+    //             ]
+    //         ];
+        
+    //         // Convert the payload to JSON format
+    //         $jsonData = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        
+    //         // Initialize cURL session
+    //         $ch = curl_init();
+        
+    //         // Set cURL options
+    //         curl_setopt_array($ch, [
+    //             CURLOPT_URL => $apiEndpoint,
+    //             CURLOPT_RETURNTRANSFER => true,
+    //             CURLOPT_ENCODING => '',
+    //             CURLOPT_MAXREDIRS => 10,
+    //             CURLOPT_TIMEOUT => 0,
+    //             CURLOPT_FOLLOWLOCATION => true,
+    //             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    //             CURLOPT_CUSTOMREQUEST => 'POST',
+    //             CURLOPT_POSTFIELDS => $jsonData,
+    //             CURLOPT_HTTPHEADER => [
+    //                 'Content-Type: application/json',
+    //                 'Content-Length: ' . strlen($jsonData)
+    //             ],
+    //         ]);
+        
+    //         // Execute the POST request
+    //         $response = curl_exec($ch);
+        
+    //         // Check for errors
+    //         if (curl_errno($ch)) {
+    //             echo 'Error:' . curl_error($ch);
+    //             curl_close($ch);
+    //             return null;
+    //         } else {
+    //             // Decode the response
+    //             $responseData = json_decode($response, true);
+    //             curl_close($ch);
+        
+    //             // Debug: Print the raw response
+    //             echo "Raw response: " . $response . "\n";
+        
+    //             if (json_last_error() !== JSON_ERROR_NONE) {
+    //                 echo 'JSON decode error: ' . json_last_error_msg();
+    //                 return "JSON decode error.";
+    //             }
+        
+    //             // Debug: Print the decoded response
+    //             // print_r($responseData);
+        
+    //             if (isset($responseData['to_words'][0])) {
+    //                 return $responseData['to_words'][0];
+    //             } else {
+    //                 // Handle the case where the response doesn't have the expected data
+    //                 echo "Unexpected response format.";
+    //                 return "Translation error or unexpected response format.";
+    //             }
+    //         }
+    //         //code...
+    //     } catch (\Throwable $th) {
+    //         dd($th->getMessage());
+    //         //throw $th;
+    //     }
+    // }
+
     public function suggestions($pos = 0)
     {
         $term = $this->input->get('term', true);
@@ -1804,6 +1951,9 @@ class Shop extends MY_Shop_Controller
 
                 $c = uniqid(mt_rand(), true);
                 unset($row->cost, $row->details, $row->product_details, $row->barcode_symbology, $row->cf1, $row->cf2, $row->cf3, $row->cf4, $row->cf5, $row->cf6, $row->supplier1price, $row->supplier2price, $row->cfsupplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1, $row->supplier2, $row->supplier3, $row->supplier4, $row->supplier5, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
+                $convertedData = $this->getEnglishToArabic($row->name);
+                $row->name = isset($convertedData[0]) ? $convertedData[0] : "";
+
                 $option = false;
                 $row->quantity = 0;
                 $row->item_tax_method = $row->tax_method;
