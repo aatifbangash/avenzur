@@ -1556,7 +1556,9 @@ class Shop extends MY_Shop_Controller
         }else{
             $this->data['page_title2'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products')));
         }
-
+        if($brand_slug == 'honstHonst') {
+            $this->data['honst_banner'] = true;
+        }
         // $this->data['catBrands'] = $this->shop_model->getBrandsByCategoy($filters['category']->id);
 
         $this->data['page_desc'] = !empty($filters['category']) ? $filters['category']->description : (!empty($filters['brand']) ? $filters['brand']->description : $this->shop_settings->products_description);

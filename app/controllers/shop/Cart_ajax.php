@@ -248,8 +248,11 @@ class Cart_ajax extends MY_Shop_Controller
                 if($item['code'] == '06285193000301'){
                     $data = [
                         'rowid'  => $item['rowid'],
-                        'discount'  => 0
+                        //'discount'  => 0
                     ];
+                    if($item['qty'] >= 2) {
+                        $data['discount'] = ($item['qty'] * 37.5);
+                    }
 
                     $data['disc_qty'] = $item['qty'];
                     $data['qty'] = $item['qty'] * 2;
@@ -595,7 +598,7 @@ class Cart_ajax extends MY_Shop_Controller
                 $warehouse_quantities = $this->shop_model->getProductQuantitiesInWarehouses($product_id);
                 foreach ($warehouse_quantities as $wh_quantity){
                     // remove 6 and 1 after eid
-                    if($wh_quantity->warehouse_id == '7' || $wh_quantity->warehouse_id == '6' || $wh_quantity->warehouse_id == '1'){
+                    if($wh_quantity->warehouse_id == '7' ){
                         $virtual_pharmacy_items += $wh_quantity->quantity;
                     }
                 }

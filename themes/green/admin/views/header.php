@@ -1055,6 +1055,13 @@
                                     </li>
                                         <?php
                                     } ?>
+
+                                    <li id="reports_out_of_stock_dashboard">
+                                        <a href="<?= admin_url('reports/out_of_stock_dashboard') ?>">
+                                            <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('Out_Of_Stock_Dashboard'); ?></span>
+                                        </a>
+                                    </li>
+
                                     <li id="reports_quantity_alerts">
                                         <a href="<?= admin_url('reports/quantity_alerts') ?>">
                                             <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('product_quantity_alerts'); ?></span>
@@ -1067,7 +1074,7 @@
                                             <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('product_expiry_alerts'); ?></span>
                                         </a>
                                     </li>
-                                        <?php
+                                    <?php
                                     } ?>
                                     <li id="reports_products">
                                         <a href="<?= admin_url('reports/products') ?>">

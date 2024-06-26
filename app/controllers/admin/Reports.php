@@ -3057,8 +3057,125 @@ class Reports extends MY_Controller
         $this->page_construct('reports/register', $meta, $this->data);
     }
 
-    
+    public function out_of_stock_dashboard()
+    {
+        $this->sma->checkPermissions(); //'sales'
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+       // $this->data['users'] = $this->reports_model->getStaff(); 
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('out_of_stock_dashboard')]];
+        $meta = ['page_title' => lang('out_of_stock_dashboard'), 'bc' => $bc];
+        $this->page_construct('reports/out_of_stock_dashboard', $meta, $this->data);
+    } 
+    public function get_out_of_stock_products($pdf = null, $xls = null)
+    {
+          
+        $this->sma->checkPermissions('sales', true);
+        // $product = $this->input->get('product') ? $this->input->get('product') : null;  
+        if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+            $user = $this->session->userdata('user_id');
+        }
+        $status = $this->input->post('status') ? $this->input->post('status') : null;   
 
+        if ($pdf || $xls) {  
+            $keyword = $this->input->get('keyword') ? $this->input->get('keyword') : null;
+            $status = $this->input->get('status') ? $this->input->get('status') : null; 
+            $this->db
+            ->select(" {$this->db->dbprefix('products')}.code, 
+            {$this->db->dbprefix('products')}.name,  
+            {$this->db->dbprefix('products')}.alert_quantity, 
+            SUM({$this->db->dbprefix('inventory_movements')}.quantity) as total_quantity
+            ", false)
+            ->from('inventory_movements'); 
+            $this->db->join('products', 'products.id=inventory_movements.product_id') 
+            ->group_by("inventory_movements.product_id"); 
+            if($status=='out_of_stock'){
+                $this->db->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<=0"); 
+            }else{
+                $this->db->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<={$this->db->dbprefix('products')}.alert_quantity"); 
+            } 
+            $keyword=  trim($this->input->post('keyword'));  
+            if(!empty( $keyword)){  
+                $this->db->group_start();  
+                $this->db->where("{$this->db->dbprefix('products')}.code",$keyword);  
+                $this->db->or_like("{$this->db->dbprefix('products')}.name",$keyword,'both');   
+                $this->db->group_end();   
+            }  
+            $q = $this->db->get();
+		    //echo $this->db->last_query(); exit; 
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data[] = $row;
+                }
+            } else {
+                $data = null;
+            }
+
+            if (!empty($data)) {
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('Stock_dashboard'));
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('alert_quantity'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('quantity'));  
+                $row = 2; 
+                foreach ($data as $data_row) {         //  $row, $this->sma->hrld($data_row->code) // 
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->alert_quantity);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->total_quantity); 
+                    $row++;
+                }
+                $this->excel->getActiveSheet()->getStyle('G' . $row . ':H' . $row)->getBorders()
+                    ->getTop()->setBorderStyle('medium');
+               
+                // $this->excel->getActiveSheet()->SetCellValue('H' . $row, $balance); 
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20); 
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+                $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
+                $filename = 'Stock_dashboard';
+                $this->load->helper('excel');
+                create_excel($this->excel, $filename);
+                  
+            }
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER['HTTP_REFERER']);
+        } else { 
+          
+            $this->load->library('datatables');  
+            $this->datatables
+                ->select("{$this->db->dbprefix('products')}.image, {$this->db->dbprefix('products')}.code, 
+                {$this->db->dbprefix('products')}.name,  
+                {$this->db->dbprefix('products')}.alert_quantity, 
+                SUM({$this->db->dbprefix('inventory_movements')}.quantity) as total_quantity
+                ", false)
+                ->from('inventory_movements'); 
+                $this->datatables->join('products', 'products.id=inventory_movements.product_id') 
+                ->group_by("inventory_movements.product_id"); 
+               if($status=='out_of_stock'){
+                $this->datatables->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<=0"); 
+               }else{
+                $this->datatables->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<={$this->db->dbprefix('products')}.alert_quantity"); 
+               }
+               
+                
+                $keyword=  trim($this->input->post('keyword'));  
+                if(!empty( $keyword)){  
+                     $this->db->group_start();  
+                    $this->datatables->where("{$this->db->dbprefix('products')}.code",$keyword);  
+                    $this->db->or_like("{$this->db->dbprefix('products')}.name",$keyword,'both');  
+                   // $this->db->or_like("{$this->db->dbprefix('brands')}.name",$keyword,'both');   
+                   // $this->db->or_like("{$this->db->dbprefix('categories')}.name",$keyword,'both'); 
+                     $this->db->group_end();   
+                } 
+                 
+           // $this->db->order_by("total_pieces",'DESC');  
+           echo $this->datatables->generate();
+        }
+    } 
     public function promotion_items_report()
     {
         $this->sma->checkPermissions(); //'sales'

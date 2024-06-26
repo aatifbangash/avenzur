@@ -341,7 +341,7 @@ function integerFormat(data, type, row) {
     $(document).ready(function () {
         // $('#pdf').click(function (event) {
         //     event.preventDefault();
-        //     window.location.href = "<?=admin_url('reports/getSalesReport/pdf/?v=1' . $v)?>";
+        //     window.location.href = "<?=admin_url('reports/ecommerce_fast_moving_items/pdf/?v=1' . $v)?>";
         //     return false;
         // });
         $('#xls').click(function (event) {
@@ -351,7 +351,7 @@ function integerFormat(data, type, row) {
             var end_date=$('#end_date').val(); 
             var keyword=$('#keyword').val(); 
             var queryString = '';
-            if(start_date){ 
+            if(keyword){ 
                 queryString += '&keyword=' + keyword ;
             } 
             if(start_date){ 
