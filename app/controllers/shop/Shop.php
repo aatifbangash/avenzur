@@ -1770,9 +1770,7 @@ class Shop extends MY_Shop_Controller
             // Decode the response
             $responseData = json_decode($response, true);
             return $responseData;
-            print_r($responseData);
         }
-        exit;
         // Close the cURL session
         curl_close($ch);
     }
