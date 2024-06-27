@@ -448,7 +448,19 @@
                                         </a>
                                     </li>
 
+                                    <li id="products_product_combos">
+                                        <a class="submenu" href="<?= admin_url('products/product_combos'); ?>">
+                                            <i class="fa fa-filter"></i>
+                                            <span class="text"> <?= lang('Product_Combos'); ?></span>
+                                        </a>
+                                    </li>
 
+                                     <li id="products_add_combo">
+                                        <a class="submenu" href="<?= admin_url('products/add_combo'); ?>">
+                                            <i class="fa fa-filter"></i>
+                                            <span class="text"> <?= lang('Add_Combo'); ?></span>
+                                        </a>
+                                    </li>
 
                                     <li id="products_stock_counts">
                                         <a class="submenu" href="<?= admin_url('products/stock_counts'); ?>">

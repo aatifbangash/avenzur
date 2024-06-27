@@ -56,6 +56,7 @@ $s2_file_date = $this->parser->parse_string($s2_lang_file, $s2_data, true);
 
 <?= ($m == 'returns_supplier' && ($v == 'add' || $v == 'edit')) ? '<script type="text/javascript" src="' . $assets . 'js/returns_supplier.js"></script>' : ''; ?>
 <?= ($m == 'products' && ($v == 'add_bundle' || $v == 'edit_bundle')) ? '<script type="text/javascript" src="' . $assets . 'js/bundle.js"></script>' : ''; ?>
+<?= ($m == 'products' && ($v == 'add_combo' || $v == 'edit_combo')) ? '<script type="text/javascript" src="' . $assets . 'js/combo.js"></script>' : ''; ?>
 <?= ($m == 'quotes' && ($v == 'add' || $v == 'edit')) ? '<script type="text/javascript" src="' . $assets . 'js/quotes.js"></script>' : ''; ?>
 <?= ($m == 'products' && ($v == 'add_adjustment' || $v == 'edit_adjustment')) ? '<script type="text/javascript" src="' . $assets . 'js/adjustments.js"></script>' : ''; 
   
