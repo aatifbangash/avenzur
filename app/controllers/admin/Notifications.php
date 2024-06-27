@@ -52,13 +52,15 @@ class Notifications extends MY_Controller
                     
                     foreach ($csv_data as $row) {
                         if($i > 0){
+                            $timestamp = strtotime($row[3]);
+                            $expiry_date = date('Y-m-d', $timestamp);
                             $batch_data[] = array(
                                 'notification_id' => $this->input->post('dispatch_id'),
                                 'dispatch_id' => $this->input->post('dispatch_id'),
                                 'gtin' => $row[0],
                                 'serial_no' => $row[1],
                                 'batch_no' => $row[2],
-                                'expiry' => $row[3],
+                                'expiry' => $expiry_date,
                                 'used' => 0
                             );
                         }
