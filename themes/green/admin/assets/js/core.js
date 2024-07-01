@@ -1498,6 +1498,14 @@ $(document).ready(function () {
         });
         $('#myModal').modal('show');
     });
+ 
+    $('body').on('click', '.bundle_link td:not(:first-child, :nth-last-child(2), :last-child)', function () {
+        $('#myModal').modal({
+            remote: site.base_url + 'products/view_bundle/' + $(this).parent('.bundle_link').attr('id'),
+        });
+        $('#myModal').modal('show');
+    });
+
     $('body').on('click', '.adjustment_link2', function () {
         $('#myModal').modal({ remote: site.base_url + 'products/view_adjustment/' + $(this).attr('id') });
         $('#myModal').modal('show');

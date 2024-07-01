@@ -58,6 +58,158 @@ class Products_model extends CI_Model
         return false;
     }
 
+    public function addCombo($data, $products)
+    {
+        if ($this->db->insert('combos', $data)) {
+            $combo_id = $this->db->insert_id();
+            foreach ($products as $product) {
+                $product['combo_id'] = $combo_id;
+                $this->db->insert('combo_products', $product); 
+            } 
+            return true;
+        }
+        return false;
+    }
+    public function updateCombo($id, $data, $products)
+    {   
+        if ($this->db->update('combos', $data, ['id' => $id]) && $this->db->delete('combo_products', ['combo_id' => $id])) {
+            foreach ($products as $product) {
+                $product['combo_id'] = $id;
+                $this->db->insert('combo_products', $product); 
+            }
+            return true;
+        }
+        return false;
+    }
+    public function getComboByID($id)
+    {
+        
+        $this->db->select('combos.*, products.code as product_code, products.name as product_name, products.price')
+            ->join('products', 'products.id=combos.primary_product_id', 'left') ;  
+        $this->db->where('combos.id', $id); 
+        $q = $this->db->get('combos'); 
+       // $q = $this->db->get_where('combos', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+    public function getComboItems($combo_id)
+    {
+        $this->db->select('combo_products.*, products.code as product_code, products.name as product_name, products.price, products.image, products.details as details')
+            ->join('products', 'products.id=combo_products.product_id', 'left') 
+            ->group_by('combo_products.id')
+            ->order_by('id', 'asc');
+
+        $this->db->where('combo_id', $combo_id); 
+        $q = $this->db->get('combo_products');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+    public function deleteCombo($id)
+    { 
+        $this->site->log('Deleted Combo', ['model' => $this->getComboByID($id), 'items' => $this->getComboItems($id)]);
+        if ($this->db->delete('combos', ['id' => $id]) && $this->db->delete('combo_products', ['combo_id' => $id])) {
+            return true;
+        }
+        return false;
+    }
+
+    public function addBundle($data, $products)
+    {
+        if ($this->db->insert('bundles', $data)) {
+            $bundle_id = $this->db->insert_id();
+            foreach ($products as $product) {
+                $product['bundle_id'] = $bundle_id;
+                $this->db->insert('bundle_items', $product); 
+            } 
+            return true;
+        }
+        return false;
+    }
+    public function updateBundle($id, $data, $products)
+    {   
+        if ($this->db->update('bundles', $data, ['id' => $id]) && $this->db->delete('bundle_items', ['bundle_id' => $id])) {
+            foreach ($products as $product) {
+                $product['bundle_id'] = $id;
+                $this->db->insert('bundle_items', $product); 
+            }
+            return true;
+        }
+        return false;
+    }
+    public function deleteBundle($id)
+    { 
+        $this->site->log('Deleted Bundle', ['model' => $this->getBundleByID($id), 'items' => $this->getBundleItems($id)]);
+        if ($this->db->delete('bundles', ['id' => $id]) && $this->db->delete('bundle_items', ['bundle_id' => $id])) {
+            return true;
+        }
+        return false;
+    }
+    public function getBundleByID($id)
+    {
+        $q = $this->db->get_where('bundles', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+    public function getBundleItems($bundle_id)
+    {
+        $this->db->select('bundle_items.*, products.code as product_code, products.name as product_name, products.price, products.image, products.details as details')
+            ->join('products', 'products.id=bundle_items.product_id', 'left') 
+            ->group_by('bundle_items.id')
+            ->order_by('id', 'asc');
+
+        $this->db->where('bundle_id', $bundle_id); 
+        $q = $this->db->get('bundle_items');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+    public function getBUSuggestions($term, $limit = 5)
+    {
+        $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name, '.$this->db->dbprefix('products') . '.price')
+            ->where("type != 'combo' AND "
+                . '(' . $this->db->dbprefix('products') . ".name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR
+                concat(" . $this->db->dbprefix('products') . ".name, ' (', code, ')') LIKE '%" . $term . "%')")
+            ->limit($limit);
+        $q = $this->db->get('products');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+    public function getComboSuggestions($term, $limit = 5)
+    {
+        $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name, '.$this->db->dbprefix('products') . '.price')
+            ->where("type != 'combo' AND "
+                . '(' . $this->db->dbprefix('products') . ".name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR
+                concat(" . $this->db->dbprefix('products') . ".name, ' (', code, ')') LIKE '%" . $term . "%')")
+            ->limit($limit);
+        $q = $this->db->get('products');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+
     public function addAjaxProduct($data)
     {
         // Sequence-Code
@@ -256,7 +408,7 @@ class Products_model extends CI_Model
         }
         return false;
     }
-
+    
     public function deleteAdjustment($id)
     {
         $this->reverseAdjustment($id);
@@ -311,7 +463,6 @@ class Products_model extends CI_Model
         }
         return false;
     }
-
     public function getAdjustmentByCountID($count_id)
     {
         $q = $this->db->get_where('adjustments', ['count_id' => $count_id], 1);
@@ -694,8 +845,7 @@ class Products_model extends CI_Model
             return $data;
         }
         return false;
-    }
-
+    } 
     public function getQASuggestions($term, $limit = 5)
     {
         $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name')
