@@ -1729,18 +1729,19 @@ class Shop extends MY_Shop_Controller
         $this->page_construct('pages/wishlist', $this->data);
     }
 
-    public function getArabicToEnglish(){
+    public function getArabicToEnglish($term) {
         // Set API endpoint and your API key
         $apiKey = 'wg_42c9daf242af8316a7b7d92e5a2aa0e55';
         $apiEndpoint = 'https://api.weglot.com/translate?api_key='.$apiKey;
 
         // Prepare the JSON payload
+        // "الصفحة الرئيسية"
         $data = [
             "l_from" => "ar",
             "l_to" => "en",
             "request_url" => "https://www.avenzur.com/",
             "words" => [
-                ["w" => "الصفحة الرئيسية", "t" => 1]
+                ["w" => $term, "t" => 1]
             ]
         ];
 
@@ -1768,13 +1769,93 @@ class Shop extends MY_Shop_Controller
         } else {
             // Decode the response
             $responseData = json_decode($response, true);
-            print_r($responseData);
+            return $responseData;
         }
-        exit;
         // Close the cURL session
         curl_close($ch);
     }
 
+    public function getEnglishToArabic($term) {
+        // Set API endpoint and your API key
+        $apiKey = 'wg_42c9daf242af8316a7b7d92e5a2aa0e55';
+        $apiEndpoint = 'https://api.weglot.com/translate?api_key=' . $apiKey;
+    
+        // Prepare the JSON payload
+        $data = [
+            "l_to" => "ar",
+            "l_from" => "en",
+            "request_url" => "https://www.avenzur.com/",
+            "words" => [
+                ["w" => "$term", "t" => 1]
+            ]
+        ];
+    
+        // Convert the payload to JSON format
+        $jsonData = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    
+        // Initialize cURL session
+        $ch = curl_init();
+    
+        // Set cURL options
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $apiEndpoint,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $jsonData,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($jsonData)
+            ],
+        ]);
+    
+        // Execute the POST request
+        $response = curl_exec($ch);
+    
+        // Check for errors
+        if (curl_errno($ch)) {
+            echo 'Error:' . curl_error($ch);
+            curl_close($ch);
+            return null;
+        } else {
+            // Decode the response
+            $responseData = json_decode($response, true);
+            curl_close($ch);
+    
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                echo 'JSON decode error: ' . json_last_error_msg();
+                return "JSON decode error.";
+            }
+    
+            // Debug: Print the decoded response
+            // var_dump($responseData['to_words'], $term);
+    
+            if (isset($responseData['to_words']) && is_array($responseData['to_words'])) {
+                return $responseData['to_words'];
+            } else {
+                // Handle the case where the response doesn't have the expected data
+                echo "Unexpected response format.";
+                return "Translation error or unexpected response format.";
+            }
+        }
+    }
+
+    function containsArabic($text) {
+        // Regular expression pattern to match Arabic characters
+        $pattern = '/[\x{0600}-\x{06FF}\x{0750}-\x{077F}\x{08A0}-\x{08FF}\x{FB50}-\x{FDFF}\x{FE70}-\x{FEFF}\x{10E60}-\x{10E7F}]/u';
+        
+        // Check if the text matches the pattern
+        if (preg_match($pattern, $text)) {
+            return true; // The text contains Arabic characters
+        } else {
+            return false; // The text does not contain Arabic characters
+        }
+    }
+    
     public function suggestions($pos = 0)
     {
         $term = $this->input->get('term', true);
@@ -1788,13 +1869,20 @@ class Shop extends MY_Shop_Controller
 
         $analyzed = $this->sma->analyze_term($term);
         $sr = $analyzed['term'];
-        //$option_id = $analyzed['option_id'];
+        $convertToAr = false;
+        if ($this->containsArabic($sr)) {
+            $convertToAr = true;
+            $convertedData = $this->getArabicToEnglish($sr);
+            $sr = isset($convertedData['to_words'][0]) ? $convertedData['to_words'][0] : "";
+        }
 
+        //$option_id = $analyzed['option_id'];
         $warehouse = $this->site->getWarehouseByID($warehouse_id);
         $customer_group = "Retail"; //$this->site->getCustomerGroupByID($customer->customer_group_id);
         $rows = $this->shop_model->getProductNames($sr, $warehouse_id, $category_id, $pos);
         $currencies = $this->site->getAllCurrencies();
 
+        
 
         if ($rows) {
             $r = 0;
@@ -1802,6 +1890,12 @@ class Shop extends MY_Shop_Controller
 
                 $c = uniqid(mt_rand(), true);
                 unset($row->cost, $row->details, $row->product_details, $row->barcode_symbology, $row->cf1, $row->cf2, $row->cf3, $row->cf4, $row->cf5, $row->cf6, $row->supplier1price, $row->supplier2price, $row->cfsupplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1, $row->supplier2, $row->supplier3, $row->supplier4, $row->supplier5, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
+                
+                if ($convertToAr) {
+                    $convertedData = $this->getEnglishToArabic($row->name);
+                    $row->name = isset($convertedData[0]) ? $convertedData[0] : "";
+                }
+
                 $option = false;
                 $row->quantity = 0;
                 $row->item_tax_method = $row->tax_method;
