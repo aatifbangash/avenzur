@@ -2123,7 +2123,10 @@ class Sales extends MY_Controller
             )
         );
         $context = stream_context_create($options);
-    
+        echo $url;
+        echo "<br>";
+        echo $context;
+        exit;
         $result = file_get_contents($url, false, $context);
         
         return $result;
@@ -2258,7 +2261,7 @@ class Sales extends MY_Controller
             "operateType":1
         }';
 
-        echo "data:".$waybillinfo;
+        //echo "data:".$waybillinfo;
         
         return $waybillinfo;
     }
