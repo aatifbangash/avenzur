@@ -32,7 +32,7 @@
           </div>
 
           <div class="row pt-5">
-            <div class="col-lg-5 col-md-5 col-sm-12">
+            <div class="col-lg-4 col-md-4 col-sm-12">
               <h5 class="first-h5 footer-header-collapse arrow-down"><a
                   class="text-dark text-decoration-none"><b>Contact Us</b></a> </h5>
               <ul class="contact-info hide ">
@@ -103,7 +103,24 @@
                   </ul>
                 </div>
               </div>
+
+
+              <div class="col-lg-2 col-md-2 col-sm-12">
+                <div class="footer-icons">
+                  <h5 class="footer-header-collapse arrow-down"><a class="text-dark text-decoration-none" ><b>Order Tracking</b></a></h5>
+                  <ul class="hide"> 
+                   
+                    <li> <a href="<?= site_url('shop/track_order'); ?>" class="text-dark text-decoration-none" >Track Your Order </a> </li>
+                   
+                  </ul>
+                </div>
+              </div>
+
             </div>
+
+            
+           
+
             <div class="d-flex justify-content-between pb-2 align-items-center  footer-end">
               
               <img src="<?= base_url('assets/images/banners/pay-new.png'); ?>" alt="logo" class="footer-pay w-50 mt-3">

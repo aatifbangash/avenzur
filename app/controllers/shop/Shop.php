@@ -1230,7 +1230,21 @@ class Shop extends MY_Shop_Controller
             $this->page_construct('pages/orders', $this->data);
         }
     }
-
+    public function track_order($id = null, $hash = null, $pdf = null, $buffer_save = null)
+    {
+        $order_number=$this->input->post('order_number'); 
+        $id= $order_number; 
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['page_title'] = lang('Order_Tracking');
+        if(!empty($id)){ 
+            $order = $this->shop_model->getOrderByID(['id' => $id, 'hash' => $hash]); 
+            // $this->cart->destroy(); 
+            $this->data['order'] = $order;
+            $this->data['order_number'] = $order_number;
+        }
+        $this->page_construct('pages/track_orders', $this->data); 
+        
+    }
     public function contact_us()
     {
 
