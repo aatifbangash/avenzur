@@ -443,7 +443,7 @@
 
                                      <li id="products_add_bundle">
                                         <a class="submenu" href="<?= admin_url('products/add_bundle'); ?>">
-                                            <i class="fa fa-filter"></i>
+                                            <i class="fa fa-plus-circle"></i>
                                             <span class="text"> <?= lang('Add_Bundle'); ?></span>
                                         </a>
                                     </li>
@@ -457,7 +457,7 @@
 
                                      <li id="products_add_combo">
                                         <a class="submenu" href="<?= admin_url('products/add_combo'); ?>">
-                                            <i class="fa fa-filter"></i>
+                                            <i class="fa fa-plus-circle"></i>
                                             <span class="text"> <?= lang('Add_Combo'); ?></span>
                                         </a>
                                     </li>
