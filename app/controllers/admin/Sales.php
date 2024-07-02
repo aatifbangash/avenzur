@@ -2086,6 +2086,9 @@ class Sales extends MY_Controller
                     $this->session->set_flashdata('message', 'Courier Assigned Successfully');
                     admin_redirect('sales/ecommerce');
                 }else{
+                    echo $order_resp->message;
+                    print_r($order_resp);
+                    exit;
                     $this->session->set_flashdata('error', $order_resp->message);
                     admin_redirect('sales/ecommerce');
                 }
