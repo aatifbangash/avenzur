@@ -2257,6 +2257,8 @@ class Sales extends MY_Controller
             "items":['.$items_str.'],
             "operateType":1
         }';
+
+        echo "data:".$waybillinfo;
         
         return $waybillinfo;
     }
