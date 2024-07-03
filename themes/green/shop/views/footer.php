@@ -258,7 +258,7 @@
         document.getElementById('skincare-banner-1').src = site.site_url + '/assets/images/banners/SkinCare_Banner_2024-04-16.jpg?timestamp=' + Date.now();
         document.getElementById('vitamins-banner-1').src = site.site_url + '/assets/images/banners/Vitamins_Banner_2024-04-16.jpg?timestamp=' + Date.now();
         document.getElementById('makeup-banner-1').src = site.site_url + '/assets/images/banners/Makeup_Banner_2024-04-16.jpg?timestamp=' + Date.now();
-        document.getElementById('supplements-banner-1').src = site.site_url + '/assets/images/banners/Supplements_Banner_2024-04-17.jpg?timestamp=' + Date.now();
+        document.getElementById('supplements-banner-1').src = site.site_url + '/assets/images/banners/supplement_inner_banner_2024-06-12_en.jpg?timestamp=' + Date.now();
         document.getElementById('mombaby-banner-1').src = site.site_url + '/assets/images/banners/momBaby.jpg?timestamp=' + Date.now();
         document.getElementById('perc-banner-1').src = site.site_url + '/assets/images/banners/persC.jpg?timestamp=' + Date.now();
       } else {
@@ -322,7 +322,7 @@
         document.getElementById('skincare-banner-1').src = site.site_url + '/assets/images/banners/SkinCare_Banner_2024-04-16_ar.jpg?timestamp=' + Date.now();
         document.getElementById('vitamins-banner-1').src = site.site_url + '/assets/images/banners/Vitamins_Banner_2024-04-16_ar.jpg?timestamp=' + Date.now();
         document.getElementById('makeup-banner-1').src = site.site_url + '/assets/images/banners/Makeup_Banner_2024-04-16_ar.jpg?timestamp=' + Date.now();
-        document.getElementById('supplements-banner-1').src = site.site_url + '/assets/images/banners/Supplements_Banner_2024-04-17_ar.jpg?timestamp=' + Date.now();
+        document.getElementById('supplements-banner-1').src = site.site_url + '/assets/images/banners/supplement_inner_banner_2024-06-12_ar.jpg?timestamp=' + Date.now();
         document.getElementById('mombaby-banner-1').src = site.site_url + '/assets/images/banners/momBaby_ar.jpg?timestamp=' + Date.now();
         document.getElementById('perc-banner-1').src = site.site_url + '/assets/images/banners/persC_ar.jpg?timestamp=' + Date.now();
       } else {
