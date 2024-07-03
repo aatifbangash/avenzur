@@ -2071,7 +2071,8 @@ class Sales extends MY_Controller
                             $this->session->set_flashdata('error', $order_resp->message);
                             admin_redirect('sales/ecommerce');
                         }else{
-                            $this->sales_model->updateSaleWithCourier($sale_id, $courier->id);
+                            $tracking_id = isset($order_resp->data->id) ? $order_resp->data->id : '';
+                            $this->sales_model->updateSaleWithCourier($sale_id, $courier->id, $tracking_id);
                             $this->session->set_flashdata('message', 'Courier Assigned Successfully');
                             admin_redirect('sales/ecommerce');
                         }
@@ -2082,7 +2083,9 @@ class Sales extends MY_Controller
                 $order_resp = json_decode($response);
 
                 if((isset($order_resp->msg) && $order_resp->msg == 'success')){
-                    $this->sales_model->updateSaleWithCourier($sale_id, $courier->id);
+
+                    $billCode = isset($order_resp->data->billCode) ? $order_resp->data->billCode : '';
+                    $this->sales_model->updateSaleWithCourier($sale_id, $courier->id, $billCode);
                     $this->session->set_flashdata('message', 'Courier Assigned Successfully');
                     admin_redirect('sales/ecommerce');
                 }else{
@@ -2101,7 +2104,6 @@ class Sales extends MY_Controller
     }
 
     public function create_order($customerCode,$pwd,$key,$account,$waybillinfo,$url) {
-
         $post_data = $this->get_post_data($customerCode,$pwd,$key,$waybillinfo);
         $head_dagest = $this->get_header_digest($post_data,$key);
         $post_content = array(
@@ -2109,7 +2111,6 @@ class Sales extends MY_Controller
         );
     
         $postdata = http_build_query($post_content);
-    
         $options = array(
             'http' => array(
                 'method' => 'POST',
@@ -2122,11 +2123,9 @@ class Sales extends MY_Controller
                 'timeout' => 15 * 60
             )
         );
+       
         $context = stream_context_create($options);
-        echo $url;
-        echo "<br>";
-        echo $context;
-        exit;
+       
         $result = file_get_contents($url, false, $context);
         
         return $result;
@@ -2140,7 +2139,6 @@ class Sales extends MY_Controller
         $customerCode= $courier->username;
         $pwd  = $courier->password;
         $account = $courier->api_account;
-        
         $waybillinfo = $this->populateShipmentParams($sale, $courier);
         $resp = $this->create_order($customerCode, $pwd, $privateKey, $account, $waybillinfo, $url);
         
@@ -2149,11 +2147,9 @@ class Sales extends MY_Controller
     }
 
     public function get_post_data($customerCode,$pwd,$key,$waybillinfo){
-
-        $postdate = json_decode($waybillinfo,true);
+        $postdate = json_decode($waybillinfo, true);
         $postdate['customerCode'] = $customerCode;
         $postdate['digest'] = $this->get_content_digest($customerCode,$pwd,$key);
-    
         return json_encode($postdate);
     }
 
@@ -2204,6 +2200,7 @@ class Sales extends MY_Controller
         $items_data = array();
         $items_str = '';
         $count = 0;
+        $jand_items = [];
         foreach ($sale_items as $sale_item){
 
             $product = $this->site->getProductByID($sale_item->product_id);
@@ -2224,8 +2221,20 @@ class Sales extends MY_Controller
                 "desc":"'.$sale_item->product_name.'"
             }';
 
+            $jand_items[] = [
+                "number" => $sale_item->product_id,
+                "itemType" => "ITN4",
+                "itemName" => $sale_item->product_name,
+                "priceCurrency" => "SAR",
+                "itemValue" => $sale_item->subtotal,
+                "itemUrl" => "https://www.avenzur.com/product/" . $product->slug,
+                "desc" => $sale_item->product_name
+            ];
+
             $count++;
         }
+
+        $jandt_items_str = json_encode($jand_items, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         $waybillinfo = '{
             "serviceType": "01",
@@ -2257,7 +2266,7 @@ class Sales extends MY_Controller
                 "prov":"Riyadh"
             },
             "itemsValue":"0",
-            "items":['.$items_str.'],
+            "items":'.$jandt_items_str.',
             "operateType":1
         }';
 
