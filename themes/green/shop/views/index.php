@@ -186,6 +186,16 @@
         </div>
       </div>
     </section>
+
+     <!-- feature products  end-->
+
+     <section class="side-banner section-marg-top">
+      <div class="container container-max-width">
+        <div class="sideBannerImg">
+          <a href="<?= site_url('category/supplements'); ?>"><img id="supplements-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/supplement_inner_banner_2024-06-12_en.jpg'.'?timestamp='.time()); ?>" alt="Supplements Promotion" class="w-100"></a>
+        </div>
+      </div>
+    </section>
     <!-- banner area 1 end -->
 
     <!-- boom categores -->
@@ -627,15 +637,7 @@
         </div>
       </div>
      </section>
-     <!-- feature products  end-->
-
-     <section class="side-banner section-marg-top">
-      <div class="container container-max-width">
-        <div class="sideBannerImg">
-          <a href="<?= site_url('category/supplements'); ?>"><img id="supplements-banner-1" loading="lazy" src="<?= base_url('assets/images/banners/Supplements_Banner_2024-04-17.jpg'.'?timestamp='.time()); ?>" alt="Supplements Promotion" class="w-100"></a>
-        </div>
-      </div>
-    </section>
+    
 
     <!-- best seller product   -->
     <section class="popularCat-container section-marg-top" >
