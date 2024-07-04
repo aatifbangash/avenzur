@@ -1787,14 +1787,14 @@ class Products extends MY_Controller
             $this->session->set_flashdata('error', lang('prduct_not_found'));
             redirect($_SERVER['HTTP_REFERER']);
         }
-        $this->form_validation->set_rules('category', lang('category'), 'required|is_natural_no_zero');
+        // $this->form_validation->set_rules('category', lang('category'), 'required|is_natural_no_zero');
         if ($this->input->post('type') == 'standard') {
             //$this->form_validation->set_rules('cost', lang('product_cost'), 'required');
-            $this->form_validation->set_rules('unit', lang('product_unit'), 'required');
+            // $this->form_validation->set_rules('unit', lang('product_unit'), 'required');
         }
         $this->form_validation->set_rules('code', lang('product_code'), 'alpha_dash');
         if ($this->input->post('code') !== $product->code) {
-            $this->form_validation->set_rules('code', lang('product_code'), 'is_unique[products.code]');
+            // $this->form_validation->set_rules('code', lang('product_code'), 'is_unique[products.code]');
         }
         if (SHOP) {
             $this->form_validation->set_rules('slug', lang('slug'), 'required|alpha_dash');

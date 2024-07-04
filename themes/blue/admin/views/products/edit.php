@@ -159,7 +159,8 @@ if (!empty($variants)) {
             <div class="col-lg-12">
                 <p class="introtext"><?php echo lang('update_info'); ?></p>
                 <?php
-                $attrib = ['data-toggle' => 'validator', 'role' => 'form',  'id' => 'editForm'];
+                // $attrib = ['data-toggle' => 'validator', 'role' => 'form',  'id' => 'editForm'];
+                $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
                 echo admin_form_open_multipart('products/edit/' . $product->id, $attrib)
                 ?>
                 <div class="col-md-5">
@@ -167,7 +168,7 @@ if (!empty($variants)) {
                         <?= lang('product_type', 'type') ?>
                         <?php
                         $opts = ['standard' => lang('standard'), 'combo' => lang('combo'), 'digital' => lang('digital'), 'service' => lang('service')];
-                        echo form_dropdown('type', $opts, (isset($_POST['type']) ? $_POST['type'] : ($product ? $product->type : '')), 'class="form-control" id="type" required="required"');
+                        echo form_dropdown('type', $opts, (isset($_POST['type']) ? $_POST['type'] : ($product ? $product->type : '')), 'class="form-control" id="type"');
                         ?>
                     </div>
                     
@@ -217,14 +218,14 @@ if (!empty($variants)) {
                                 $opts += [$cdata->id => $cdata->name];
                             }
                         
-                        echo form_dropdown('cf1[]', $opts, (isset($_POST['cf1']) ? $_POST['cf1'] : ($product ? explode(',',$product->cf1) : '')), 'class="form-control" id="cf1" required="required" multiple="multiple"');
+                        echo form_dropdown('cf1[]', $opts, (isset($_POST['cf1']) ? $_POST['cf1'] : ($product ? explode(',',$product->cf1) : '')), 'class="form-control" id="cf1" multiple="multiple"');
                         ?>
                     </div>
                     <div class="form-group">
                         <?= lang('product_precription', 'Product Required Prescription') ?>
                         <?php
                         $opts = ['no' => 'no','yes' => 'Yes'];
-                        echo form_dropdown('cf2', $opts, (isset($_POST['cf2'])? $_POST['cf2'] : ($product ? $product->cf2 : '')), 'class="form-control" id="cf2" required="required"');
+                        echo form_dropdown('cf2', $opts, (isset($_POST['cf2'])? $_POST['cf2'] : ($product ? $product->cf2 : '')), 'class="form-control" id="cf2" ');
                         ?>
                     </div>
                     <div class="form-group">
@@ -239,7 +240,7 @@ if (!empty($variants)) {
                         <?= lang('barcode_symbology', 'barcode_symbology') ?>
                         <?php
                         $bs = ['code25' => 'Code25', 'code39' => 'Code39', 'code128' => 'Code128', 'ean8' => 'EAN8', 'ean13' => 'EAN13', 'upca' => 'UPC-A', 'upce' => 'UPC-E'];
-                        echo form_dropdown('barcode_symbology', $bs, (isset($_POST['barcode_symbology']) ? $_POST['barcode_symbology'] : ($product ? $product->barcode_symbology : 'code128')), 'class="form-control select" id="barcode_symbology" required="required" style="width:100%;"');
+                        echo form_dropdown('barcode_symbology', $bs, (isset($_POST['barcode_symbology']) ? $_POST['barcode_symbology'] : ($product ? $product->barcode_symbology : 'code128')), 'class="form-control select" id="barcode_symbology"  style="width:100%;"');
                         ?>
                     </div>
                     <div class="form-group all">
@@ -259,7 +260,7 @@ if (!empty($variants)) {
                         foreach ($categories as $category) {
                             $cat[$category->id] = $category->name;
                         }
-                        echo form_dropdown('category', $cat, (isset($_POST['category']) ? $_POST['category'] : ($product ? $product->category_id : '')), 'class="form-control select" id="category" placeholder="' . lang('select') . ' ' . lang('category') . '" required="required" style="width:100%"')
+                        echo form_dropdown('category', $cat, (isset($_POST['category']) ? $_POST['category'] : ($product ? $product->category_id : '')), 'class="form-control select" id="category" placeholder="' . lang('select') . ' ' . lang('category') . '" style="width:100%"')
                         ?>
                     </div>
                     <div class="form-group all">
@@ -277,7 +278,7 @@ if (!empty($variants)) {
                             $pu[$bu->id] = $bu->name . ' (' . $bu->code . ')';
                         }
                         ?>
-                        <?= form_dropdown('unit', $pu, set_value('unit', $product->unit), 'class="form-control tip" required="required" id="unit" style="width:100%;"'); ?>
+                        <?= form_dropdown('unit', $pu, set_value('unit', $product->unit), 'class="form-control tip" id="unit" style="width:100%;"'); ?>
                     </div>
                     <div class="form-group standard">
                         <?= lang('default_sale_unit', 'default_sale_unit'); ?>
