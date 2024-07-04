@@ -588,11 +588,18 @@ $(document).ready(function () {
         $.ajax({ url: site.base_url + 'welcome/hideNotification/' + $(this).attr('id') });
     });
     $('.tip').tooltip();
+    $(document).on('click', '#add_to_catalog', function (e) {
+        e.preventDefault();
+        $('#form_action').val($(this).attr('data-action'));
+        $('#action-form').submit();
+    });
+
     $(document).on('click', '#delete', function (e) {
         e.preventDefault();
         $('#form_action').val($(this).attr('data-action'));
         $('#action-form').submit();
     });
+
     $(document).on('click', '#sync_quantity', function (e) {
         e.preventDefault();
         $('#form_action').val($(this).attr('data-action'));

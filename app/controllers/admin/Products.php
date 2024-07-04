@@ -3499,6 +3499,27 @@ class Products extends MY_Controller
                     }
                     $this->session->set_flashdata('message', $this->lang->line('products_deleted'));
                     redirect($_SERVER['HTTP_REFERER']);
+                } elseif ($this->input->post('form_action') == 'add_to_catalog') {
+                    foreach ($_POST['val'] as $id) {
+                        $product = $this->products_model->getProductByID($id);
+                        var_dump($product); exit;
+                    }
+                    $this->session->set_flashdata('message', $this->lang->line('Added in catalog'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                } elseif ($this->input->post('form_action') == 'out_of_stock') {
+                    foreach ($_POST['val'] as $id) {
+                        $product = $this->products_model->getProductByID($id);
+                        var_dump($product); exit;
+                    }
+                    $this->session->set_flashdata('message', $this->lang->line('Added in catalog'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                } elseif ($this->input->post('form_action') == 'deactivated') {
+                    foreach ($_POST['val'] as $id) {
+                        $product = $this->products_model->getProductByID($id);
+                        var_dump($product); exit;
+                    }
+                    $this->session->set_flashdata('message', $this->lang->line('Added in catalog'));
+                    redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'labels') {
                     foreach ($_POST['val'] as $id) {
                         $row               = $this->products_model->getProductByID($id);
