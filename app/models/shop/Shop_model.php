@@ -1970,7 +1970,8 @@ class Shop_model extends CI_Model
         foreach ($searchquery as $booksearch) {
             if (!empty(trim($booksearch))) {
                 $wheres[] = "( {$this->db->dbprefix('products')}.name LIKE '%" . $booksearch . "%' OR  {$this->db->dbprefix('products')}.code LIKE '%" . $booksearch . "%'
-                OR  {$this->db->dbprefix('products')}.product_details LIKE '%" . $booksearch . "%')";
+                OR  {$this->db->dbprefix('products')}.product_details LIKE '%" . $booksearch . "%' OR  {$this->db->dbprefix('products')}.name_ar LIKE '%" . $booksearch . "%'
+                 OR  {$this->db->dbprefix('products')}.product_details_ar LIKE '%" . $booksearch . "%')";
             }
         }
         if (!empty($wheres)) {
@@ -1987,6 +1988,7 @@ class Shop_model extends CI_Model
         $this->db->where('hide !=', 1);
         $this->db->limit($limit);
         $q = $this->db->get('products');
+        //echo  $this->db->last_query();exit;
         $checkCounter = 1;
         $oneString = '';
         if ($q !== FALSE && $q->num_rows() > 0) {

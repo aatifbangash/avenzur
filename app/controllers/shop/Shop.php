@@ -1884,11 +1884,11 @@ class Shop extends MY_Shop_Controller
         $analyzed = $this->sma->analyze_term($term);
         $sr = $analyzed['term'];
         $convertToAr = false;
-        if ($this->containsArabic($sr)) {
-            $convertToAr = true;
-            $convertedData = $this->getArabicToEnglish($sr);
-            $sr = isset($convertedData['to_words'][0]) ? $convertedData['to_words'][0] : "";
-        }
+        // if ($this->containsArabic($sr)) {
+        //     $convertToAr = true;
+        //     $convertedData = $this->getArabicToEnglish($sr);
+        //     $sr = isset($convertedData['to_words'][0]) ? $convertedData['to_words'][0] : "";
+        // }
 
         //$option_id = $analyzed['option_id'];
         $warehouse = $this->site->getWarehouseByID($warehouse_id);
@@ -1896,7 +1896,10 @@ class Shop extends MY_Shop_Controller
         $rows = $this->shop_model->getProductNames($sr, $warehouse_id, $category_id, $pos);
         $currencies = $this->site->getAllCurrencies();
 
-        
+        $arabic_lang = false;
+        if ($this->containsArabic($sr)) {
+            $arabic_lang = true;
+        }
 
         if ($rows) {
             $r = 0;
@@ -1905,10 +1908,10 @@ class Shop extends MY_Shop_Controller
                 $c = uniqid(mt_rand(), true);
                 unset($row->cost, $row->details, $row->product_details, $row->barcode_symbology, $row->cf1, $row->cf2, $row->cf3, $row->cf4, $row->cf5, $row->cf6, $row->supplier1price, $row->supplier2price, $row->cfsupplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1, $row->supplier2, $row->supplier3, $row->supplier4, $row->supplier5, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
                 
-                if ($convertToAr) {
-                    $convertedData = $this->getEnglishToArabic($row->name);
-                    $row->name = isset($convertedData[0]) ? $convertedData[0] : "";
-                }
+                // if ($convertToAr) {
+                //     $convertedData = $this->getEnglishToArabic($row->name);
+                //     $row->name = isset($convertedData[0]) ? $convertedData[0] : "";
+                // }
 
                 $option = false;
                 $row->quantity = 0;
@@ -1972,7 +1975,8 @@ class Shop extends MY_Shop_Controller
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
                 $brand = $this->site->getBrandByID($row->brand);
                 $row->brand_name = $brand->name;
-                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'original_price' => $original_price, 'image' => $row->image, 'label' => $row->name, 'category' => $row->category_id,
+                $label_name = ($arabic_lang) ? $row->name_ar : $row->name;
+                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'original_price' => $original_price, 'image' => $row->image, 'label' => $label_name, 'category' => $row->category_id,
                     'row' => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, 'plink' => base_url() . 'product/' . $row->slug];
                 $r++;
             }
