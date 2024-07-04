@@ -141,12 +141,12 @@
 echo form_open(base_url().'shop/track_order/'.$id, $attributes); ?> 
                               <div class="card">
                               <div class="card-body ">
-                              <div class="row">
-                                        <label class="form-label col col-2 pt-2">Enter Order Number</label>
-                                        <div class="col col-4"> 
+                              <div class="row mb-2">
+                                        <label class="form-label  col-lg-2 col-md-2 col-sm-12  mt-2 pt-2">Enter Order Number</label>
+                                        <div class="col-lg-4 col-md-4 col-sm-12 mt-2" > 
                                             <div><input name="order_number" class="form-control" value="<?php echo set_value('order_number');?>" placeholder="Please Enter Order Number" required="">  </div>  
-					                    </div> 
-                                        <div class="col col-2"> <button type="submit" class="btn btn-info btn-sm1 view " style="background-color: #662d91;color: #fff;border-color: #662d91;" >Submit</button></div>
+					                              </div> 
+                                        <div class="col-lg-4 col-md-4 col-sm-12 mt-2"> <button type="submit" class="btn btn-info btn-sm1 view " style="background-color: #662d91;color: #fff;border-color: #662d91;" >Submit</button></div>
                                         
                               </div> 
                               <?php echo form_close();?> 
