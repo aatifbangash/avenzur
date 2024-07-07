@@ -35,6 +35,11 @@
                                 <i class="fa fa-file-pdf-o"></i> <?= lang('export_to_pdf') ?>
                             </a>
                         </li>
+                        <li>
+                            <a href="<?= admin_url('purchases/download_csv/' . $inv->id) ?>">
+                                    <i class="fa fa-file-excel-o"></i> <?= lang('Export_Items_to_csv') ?>
+                            </a>
+                        </li>
                     </ul>
                 </li>
             </ul>

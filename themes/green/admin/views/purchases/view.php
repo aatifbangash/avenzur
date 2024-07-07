@@ -35,6 +35,11 @@
                                 <i class="fa fa-file-pdf-o"></i> <?= lang('export_to_pdf') ?>
                             </a>
                         </li>
+                        <li>
+                            <a href="<?= admin_url('purchases/download_csv/' . $inv->id) ?>">
+                                    <i class="fa fa-file-excel-o"></i> <?= lang('Export_Items_to_csv') ?>
+                            </a>
+                        </li>
                     </ul>
                 </li>
             </ul>
@@ -194,10 +199,10 @@
                                 <td style="width: 80px; text-align:center; vertical-align:middle;"><?= $row->hsn_code ?: ''; ?></td>
                                 <?php
                             } ?>
-                                <td style="width: 120px; text-align:center; vertical-align:middle;"><?= $this->sma->formatQuantity($row->unit_quantity) . ' ' . $row->product_unit_code; ?></td>
+                                <td style="width: 120px; text-align:center; vertical-align:middle;"><?= $this->sma->formatQuantity($row->unit_quantity) ; ?></td>
                                 <?php
                                 if ($inv->status == 'partial') {
-                                    echo '<td style="text-align:center;vertical-align:middle;width:120px;">' . $this->sma->formatQuantity($row->quantity_received) . ' ' . $row->product_unit_code . '</td>';
+                                    echo '<td style="text-align:center;vertical-align:middle;width:120px;">' . $this->sma->formatQuantity($row->quantity_received) . '</td>';
                                 }
                                 ?>
                                 <td style="text-align:right; width:120px; padding-right:10px;">
