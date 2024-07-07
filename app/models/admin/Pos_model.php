@@ -710,23 +710,70 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function getProductQuantityWithNearestExpiry($product_id, $warehouse)
+    public function getProductQuantityWithNearestExpiry($product_id, $item_code, $warehouse)
     {
         $now = date('Y-m-d');  // Current date in the format 'YYYY-MM-DD'
 
+        $batch_details = false;
+
         $this->db->select('*');
-        $this->db->from('warehouses_products');
-        $this->db->where('product_id', $product_id);
-        $this->db->where('warehouse_id', $warehouse);
-        $this->db->where('quantity >', 0);
-        $this->db->where('expiry >=', $now);  // Select products with expiry greater than or equal to the current date
-        $this->db->order_by('expiry', 'ASC'); // Order by expiry in ascending order
+        $this->db->from('invoice_serials');
+        $this->db->where('gtin', $item_code);
+        $this->db->where('tid >', 0);
+        $this->db->where('sid =', 0);
         $this->db->limit(1);
         $q = $this->db->get();
-
         if ($q->num_rows() > 0) {
-            return $q->row_array(); //$q->row();
+            $invoice_details = $q->row_array();
+            $batch_details = $invoice_details['batch_no'];
         }
+
+        if($batch_details){
+            $this->db->select('*');
+            $this->db->from('warehouses_products');
+            $this->db->where('product_id', $product_id);
+            $this->db->where('warehouse_id', $warehouse);
+            $this->db->where('quantity >', 0);
+            $this->db->where('batchno =', $batch_details);
+            $this->db->where('expiry >=', $now);  // Select products with expiry greater than or equal to the current date
+            $this->db->order_by('expiry', 'ASC'); // Order by expiry in ascending order
+            $this->db->limit(1);
+            $q = $this->db->get();
+
+            if ($q->num_rows() > 0) {
+                return $q->row_array(); //$q->row();
+            }else{
+                $this->db->select('*');
+                $this->db->from('warehouses_products');
+                $this->db->where('product_id', $product_id);
+                $this->db->where('warehouse_id', $warehouse);
+                $this->db->where('quantity >', 0);
+                $this->db->where('expiry >=', $now);  // Select products with expiry greater than or equal to the current date
+                $this->db->order_by('expiry', 'ASC'); // Order by expiry in ascending order
+                $this->db->limit(1);
+                $q = $this->db->get();
+    
+                if ($q->num_rows() > 0) {
+                    return $q->row_array(); //$q->row();
+                }  
+            }
+        }else{
+            $this->db->select('*');
+            $this->db->from('warehouses_products');
+            $this->db->where('product_id', $product_id);
+            $this->db->where('warehouse_id', $warehouse);
+            $this->db->where('quantity >', 0);
+            $this->db->where('expiry >=', $now);  // Select products with expiry greater than or equal to the current date
+            $this->db->order_by('expiry', 'ASC'); // Order by expiry in ascending order
+            $this->db->limit(1);
+            $q = $this->db->get();
+
+            if ($q->num_rows() > 0) {
+                return $q->row_array(); //$q->row();
+            }
+        }
+
+        
         return false;
     }
 
