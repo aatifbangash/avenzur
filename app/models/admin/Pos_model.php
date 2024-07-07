@@ -158,6 +158,7 @@ class Pos_model extends CI_Model
                 $this->db->where('sma_invoice_serials.rsid', 0);
                 $this->db->where('sma_invoice_serials.pid !=', 0);
                 $this->db->where('sma_invoice_serials.tid !=', 0);
+                $this->db->where('sma_invoice_serials.batch_no =', $item['batch_no']);
                 $this->db->where('sma_transfers.to_warehouse_id', $item['warehouse_id']);
                 $this->db->where('sma_transfers.status', 'completed');
                 $this->db->limit($serials_quantity);
