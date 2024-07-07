@@ -714,65 +714,48 @@ class Pos_model extends CI_Model
     {
         $now = date('Y-m-d');  // Current date in the format 'YYYY-MM-DD'
 
-        $batch_details = false;
-
-        $this->db->select('*');
+        $this->db->select('batch_no');
         $this->db->from('invoice_serials');
         $this->db->where('gtin', $item_code);
         $this->db->where('tid >', 0);
         $this->db->where('sid =', 0);
+        $q = $this->db->get();
+        
+        $batch_details = $q->result_array();
+        
+        if(!empty($batch_details)){
+            $batch_nos = array_column($batch_details, 'batch_no');
+
+            $this->db->select('*');
+            $this->db->from('warehouses_products');
+            $this->db->where('product_id', $product_id);
+            $this->db->where('warehouse_id', $warehouse);
+            $this->db->where('quantity >', 0);
+            $this->db->where('expiry >=', $now);  // Select products with expiry greater than or equal to the current date
+            $this->db->where_in('batchno', $batch_nos); // Check for batch numbers in the serials
+            $this->db->order_by('expiry', 'ASC'); // Order by expiry in ascending order
+            $this->db->limit(1);
+            $q = $this->db->get();
+            
+            if ($q->num_rows() > 0) {
+                return $q->row_array();
+            }
+        }  
+
+
+        $this->db->select('*');
+        $this->db->from('warehouses_products');
+        $this->db->where('product_id', $product_id);
+        $this->db->where('warehouse_id', $warehouse);
+        $this->db->where('quantity >', 0);
+        $this->db->where('expiry >=', $now);  // Select products with expiry greater than or equal to the current date
+        $this->db->order_by('expiry', 'ASC'); // Order by expiry in ascending order
         $this->db->limit(1);
         $q = $this->db->get();
+
         if ($q->num_rows() > 0) {
-            $invoice_details = $q->row_array();
-            $batch_details = $invoice_details['batch_no'];
+            return $q->row_array(); //$q->row();
         }
-
-        if($batch_details){
-            $this->db->select('*');
-            $this->db->from('warehouses_products');
-            $this->db->where('product_id', $product_id);
-            $this->db->where('warehouse_id', $warehouse);
-            $this->db->where('quantity >', 0);
-            $this->db->where('batchno =', $batch_details);
-            $this->db->where('expiry >=', $now);  // Select products with expiry greater than or equal to the current date
-            $this->db->order_by('expiry', 'ASC'); // Order by expiry in ascending order
-            $this->db->limit(1);
-            $q = $this->db->get();
-
-            if ($q->num_rows() > 0) {
-                return $q->row_array(); //$q->row();
-            }else{
-                $this->db->select('*');
-                $this->db->from('warehouses_products');
-                $this->db->where('product_id', $product_id);
-                $this->db->where('warehouse_id', $warehouse);
-                $this->db->where('quantity >', 0);
-                $this->db->where('expiry >=', $now);  // Select products with expiry greater than or equal to the current date
-                $this->db->order_by('expiry', 'ASC'); // Order by expiry in ascending order
-                $this->db->limit(1);
-                $q = $this->db->get();
-    
-                if ($q->num_rows() > 0) {
-                    return $q->row_array(); //$q->row();
-                }  
-            }
-        }else{
-            $this->db->select('*');
-            $this->db->from('warehouses_products');
-            $this->db->where('product_id', $product_id);
-            $this->db->where('warehouse_id', $warehouse);
-            $this->db->where('quantity >', 0);
-            $this->db->where('expiry >=', $now);  // Select products with expiry greater than or equal to the current date
-            $this->db->order_by('expiry', 'ASC'); // Order by expiry in ascending order
-            $this->db->limit(1);
-            $q = $this->db->get();
-
-            if ($q->num_rows() > 0) {
-                return $q->row_array(); //$q->row();
-            }
-        }
-
         
         return false;
     }
