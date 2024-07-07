@@ -2147,6 +2147,7 @@ class Sales extends MY_Controller
     }
 
     public function get_post_data($customerCode,$pwd,$key,$waybillinfo){
+        //echo $waybillinfo;exit;
         $postdate = json_decode($waybillinfo, true);
         $postdate['customerCode'] = $customerCode;
         $postdate['digest'] = $this->get_content_digest($customerCode,$pwd,$key);
@@ -2236,43 +2237,80 @@ class Sales extends MY_Controller
 
         $jandt_items_str = json_encode($jand_items, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        $waybillinfo = '{
-            "serviceType": "01",
-            "orderType": "1",
-            "deliveryType": "04",
-            "countryCode": "KSA",
-            "receiver":{
-                "address":"'.$address->line1.' '.$address->line2.'",
-                "city":"'.$address->city.'",
-                "mobile":"'.$address->phone.'",
-                "phone":"'.$address->phone.'",
-                "countryCode":"KSA",
-                "name":"'.$address->first_name.' '.$address->last_name.'",
-                "postCode":"'.$address->postal_code.'",
-                "prov":"'.$address->state.'"
-            },
-            "expressType":"EZKSA",
-            "remark":"",
-            "txlogisticId":"'.$sale->id.'",
-            "goodsType":"ITN4",
-            "priceCurrency":"SAR",
-            "sender":{
-                "address":"Business Gate, Riyadh KSA",
-                "city":"Riyadh",
-                "mobile":"0114654636",
-                "phone":"0114654636",
-                "countryCode":"KSA",
-                "name":"Avenzur.com",
-                "prov":"Riyadh"
-            },
-            "itemsValue":"0",
-            "items":'.$jandt_items_str.',
-            "operateType":1
-        }';
+        // $waybillinfo = '{
+        //     "serviceType": "01",
+        //     "orderType": "1",
+        //     "deliveryType": "04",
+        //     "countryCode": "KSA",
+        //     "receiver":{
+        //         "address":"'.$address->line1.' '.$address->line2.'",
+        //         "city":"'.$address->city.'",
+        //         "mobile":"'.$address->phone.'",
+        //         "phone":"'.$address->phone.'",
+        //         "countryCode":"KSA",
+        //         "name":"'.$address->first_name.' '.$address->last_name.'",
+        //         "postCode":"'.$address->postal_code.'",
+        //         "prov":"'.$address->state.'"
+        //     },
+        //     "expressType":"EZKSA",
+        //     "remark":"",
+        //     "txlogisticId":"'.$sale->id.'",
+        //     "goodsType":"ITN4",
+        //     "priceCurrency":"SAR",
+        //     "sender":{
+        //         "address":"Business Gate, Riyadh KSA",
+        //         "city":"Riyadh",
+        //         "mobile":"0114654636",
+        //         "phone":"0114654636",
+        //         "countryCode":"KSA",
+        //         "name":"Avenzur.com",
+        //         "prov":"Riyadh"
+        //     },
+        //     "itemsValue":"0",
+        //     "items":'.$jandt_items_str.',
+        //     "operateType":1
+        // }';
+
+
+        $waybillInfo = [
+            "serviceType" => "01",
+            "orderType" => "1",
+            "deliveryType" => "04",
+            "countryCode" => "KSA",
+            "receiver" => [
+                "address" => $address->line1 . ' ' . $address->line2,
+                "city" => $address->city,
+                "mobile" => $address->phone,
+                "phone" => $address->phone,
+                "countryCode" => "KSA",
+                "name" => $address->first_name . ' ' . $address->last_name,
+                "postCode" => $address->postal_code,
+                "prov" => $address->state
+            ],
+            "expressType" => "EZKSA",
+            "remark" => "",
+            "txlogisticId" => $sale->id,
+            "goodsType" => "ITN4",
+            "priceCurrency" => "SAR",
+            "sender" => [
+                "address" => "Business Gate, Riyadh KSA",
+                "city" => "Riyadh",
+                "mobile" => "0114654636",
+                "phone" => "0114654636",
+                "countryCode" => "KSA",
+                "name" => "Avenzur.com",
+                "prov" => "Riyadh"
+            ],
+            "itemsValue" => "0",
+            "items" => json_decode($jandt_items_str, true),  
+            "operateType" => 1
+        ];
+
+        $jsonWaybillInfo = json_encode($waybillInfo, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         //echo "data:".$waybillinfo;
         
-        return $waybillinfo;
+        return $jsonWaybillInfo;
     }
 
     public function get_content_digest($customerCode,$pwd,$key)
