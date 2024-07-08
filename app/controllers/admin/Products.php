@@ -816,6 +816,13 @@ class Products extends MY_Controller
                 // 'sale_account'       => $this->input->post('sale_account'),
                 // 'inventory_account'  => $this->input->post('inventory_account'),
             ];
+
+            if( $this->input->post('name_ar')!=''){
+                $data['name_ar']= $this->input->post('name_ar'); 
+            }
+            if($this->input->post('product_details_ar')!=''){
+                $data['product_details_ar']= $this->input->post('product_details_ar'); 
+            } 
             $warehouse_qty      = null;
             $product_attributes = null;
             $this->load->library('upload');
@@ -2223,6 +2230,91 @@ class Products extends MY_Controller
 
     /* -------------------------------------------------------- */
 
+    public function getEnglishToArabic() {
+        $term= $this->input->post('term'); 
+        $term= strip_tags($term); 
+        // Set API endpoint and your API key
+        $apiKey = 'wg_42c9daf242af8316a7b7d92e5a2aa0e55';
+        $apiEndpoint = 'https://api.weglot.com/translate?api_key=' . $apiKey;
+    
+        // Prepare the JSON payload
+        $data = [
+            "l_to" => "ar",
+            "l_from" => "en",
+            "request_url" => "https://www.avenzur.com/",
+            "words" => [
+                ["w" => "$term", "t" => 1]
+            ]
+        ];
+    
+        // Convert the payload to JSON format
+        $jsonData = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    
+        // Initialize cURL session
+        $ch = curl_init();
+    
+        // Set cURL options
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $apiEndpoint,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $jsonData,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($jsonData)
+            ],
+            CURLOPT_SSL_VERIFYPEER=>0,
+            CURLOPT_SSL_VERIFYPEER=>0
+        ]);  
+        // Execute the POST request
+        $response = curl_exec($ch);  
+        // Check for errors
+        if (curl_errno($ch)) {
+            $status	= 'Error'; 
+            $message	= 'Error:' . curl_error($ch);
+            $to_words=null; 
+            curl_close($ch); 
+        } else {
+            // Decode the response
+            $responseData = json_decode($response, true);
+            curl_close($ch); 
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $status	= 'Error'; 
+                $message	='JSON decode error: ' . json_last_error_msg(); 
+                $to_words=null; 
+            } 
+            if (isset($responseData['to_words']) && is_array($responseData['to_words'])) {
+                $status	= 'Success'; 
+                $to_words= $responseData['to_words'];
+            } else {
+                // Handle the case where the response doesn't have the expected data
+                $status	= 'Error'; 
+                $message	= "Translation error or unexpected response format.";
+                $to_words=null; 
+            }
+        }
+
+          $reponse = array(
+			'csrfName' => $this->security->get_csrf_token_name(),
+			'csrfHash' => $this->security->get_csrf_hash(), 
+			'to_words' => $to_words,
+			'status' => $status,
+            'message' => $message,
+
+			);
+			
+			 return $this->output
+			->set_content_type('application/json')
+			->set_output(json_encode($reponse));
+			exit; 
+    }
+
+
     public function edit($id = null)
     {
         $this->sma->checkPermissions();
@@ -2336,6 +2428,14 @@ class Products extends MY_Controller
                 // 'sale_account'       => $this->input->post('sale_account'),
                 // 'inventory_account'       => $this->input->post('inventory_account'),
             ];
+         
+            if( $this->input->post('name_ar')!=''){
+                $data['name_ar']= $this->input->post('name_ar'); 
+            }
+            if($this->input->post('product_details_ar')!=''){
+                $data['product_details_ar']= $this->input->post('product_details_ar'); 
+            } 
+
             $warehouse_qty      = null;
             $product_attributes = null;
             $update_variants    = [];
