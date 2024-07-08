@@ -839,11 +839,6 @@
                                     <i class="fa fa-calendar"></i><span class="text"> <?= lang('calendar'); ?></span>
                                 </a>
                             </li>
-                            <li class="">
-                                <a class="submenu" href="<?= admin_url('/'); ?>">
-                                    <i class="fa fa-catalog"></i><span class="text"> <?= lang('Catalog'); ?></span>
-                                </a>
-                            </li>
                             <?php if ($Owner) { //Anus change
                                 ?>
                                 <li class="mm_system_settings <?= strtolower($this->router->fetch_method()) == 'sales' ? '' : 'mm_pos' ?>">
