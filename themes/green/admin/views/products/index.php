@@ -150,7 +150,7 @@
                              </a>
                          </li>
                          <!-- Option for snapchat -->
-                         <li>
+                         <!-- <li>
                             <a href="#" class="bpo" title="<b><?= $this->lang->line('Add to catalog') ?></b>"
                                 data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='add_to_catalog' data-action='add_to_catalog'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
                                 data-html="true" data-placement="left">
@@ -166,11 +166,11 @@
                          </li>
                          <li>
                             <a href="#" class="bpo" title="<b><?= $this->lang->line('Deactivated') ?></b>"
-                                data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='deactivated' data-action='deactivated'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
+                                data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='out_of_stock' data-action='deactivated'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
                                 data-html="true" data-placement="left">
                             <i class="fa fa-barcode"></i> <?= lang('Deactivated') ?>
                              </a>
-                         </li>
+                         </li> -->
                          <!-- end option for snap chat -->
                          <!-- <li>
                             <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_products') ?></b>"

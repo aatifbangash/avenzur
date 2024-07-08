@@ -234,7 +234,7 @@ class Products extends MY_Controller
 
         $productData = [
             'name' => $product_details->name,
-            'description' => $product_details->details,
+            'description' => strip_tags($product_details->details),
             'availability' => $availibility,
             'condition' => 'new',
             'currency' => 'SAR',
@@ -497,9 +497,10 @@ class Products extends MY_Controller
         try {
             $response = $this->getCSVData();
             $csvData = $response['csvData'];
-            $header = $response['header'];
+            $firstHeader = $response['firstHeader'];
+            $secondHeader = $response['secondHeader'];
             $type = 'in stock';
-            $this->process_csv_data($header, $csvData, $type);
+            $this->process_csv_data($firstHeader,$secondHeader, $csvData, $type);
             $this->session->set_flashdata('message', $this->lang->line('Added in catalog'));
             admin_redirect('products/edit/' . $product_id[0]);
         } catch (Exception $e) {
@@ -3490,20 +3491,7 @@ class Products extends MY_Controller
         }
     }
 
-    private function process_csv_data($header, $csvData, $type) {
-        // Print the header
-        // echo '<h3>CSV Header:</h3>';
-        // echo '<pre>';
-        // print_r($header);
-        // echo '</pre>';
-
-        // // Print each data row
-        // echo '<h3>CSV Data:</h3>';
-        // foreach ($csvData as $row) {
-        //     echo '<pre>';
-        //     print_r($row);
-        //     echo '</pre>';
-        // }
+    private function process_csv_data($firstHeader,$secondHeader, $csvData, $type) {
 
         // Assume the first column of CSV contains the product ID
         $csvProductIds = array_column($csvData, 0);
@@ -3544,8 +3532,8 @@ class Products extends MY_Controller
         }
 
         // Write the updated CSV data back to the file
-        array_unshift($csvData, $header); // Add the header back to the data
-        // echo "<pre>"; var_dump($header, $csvData); exit;
+        array_unshift($csvData, $secondHeader); // Add the header back to the data
+        array_unshift($csvData, $firstHeader); // Add the header back to the data
 
         $file = fopen(FCPATH . 'snapchat-product-feed.csv', 'w');
         foreach ($csvData as $row) {
@@ -3572,10 +3560,18 @@ class Products extends MY_Controller
             return;
         }
 
-        // Read the header
-        $header = fgetcsv($file);
-        if ($header === FALSE) {
-            echo "Unable to read the header.";
+        // Read the first header row
+        $firstHeader = fgetcsv($file);
+        if ($firstHeader === FALSE) {
+            echo "Unable to read the first header.";
+            fclose($file);
+            return;
+        }
+
+        // Read the second header row
+        $secondHeader = fgetcsv($file);
+        if ($secondHeader === FALSE) {
+            echo "Unable to read the second header.";
             fclose($file);
             return;
         }
@@ -3586,15 +3582,12 @@ class Products extends MY_Controller
             $csvData[] = $row;
         }
         fclose($file);
-        // Separate the header from the data
-        $header = $csvData[0];
-        unset($csvData[0]);
 
-        // Re-index the array to start from 0 again
-        $csvData = array_values($csvData);
+        // Return the headers and the data
         return [
+            'firstHeader' => $firstHeader,
+            'secondHeader' => $secondHeader,
             'csvData' => $csvData,
-            'header' => $header,
         ];
     }
 
@@ -3631,26 +3624,29 @@ class Products extends MY_Controller
                 } elseif ($this->input->post('form_action') == 'add_to_catalog') {
                     $response = $this->getCSVData();
                     $csvData = $response['csvData'];
-                    $header = $response['header'];
+                    $firstHeader = $response['firstHeader'];
+                    $secondHeader = $response['secondHeader'];
                     $type = 'in stock';
-                    $this->process_csv_data($header, $csvData, $type);
+                    $this->process_csv_data($firstHeader,$secondHeader, $csvData, $type);
                     $this->session->set_flashdata('message', $this->lang->line('Added in catalog'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'out_of_stock') {
                     $response = $this->getCSVData();
                     $csvData = $response['csvData'];
-                    $header = $response['header'];
-                    $type = 'out of stock';
-                    $this->process_csv_data($header, $csvData, $type);
-                    $this->session->set_flashdata('message', $this->lang->line('Added in catalog'));
+                    $firstHeader = $response['firstHeader'];
+                    $secondHeader = $response['secondHeader'];
+                    $type = 'in stock';
+                    $this->process_csv_data($firstHeader,$secondHeader, $csvData, $type);
+                    $this->session->set_flashdata('message', $this->lang->line('Added as out of stock'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'deactivated') {
                     $response = $this->getCSVData();
                     $csvData = $response['csvData'];
-                    $header = $response['header'];
-                    $type = 'discontinued';
-                    $this->process_csv_data($header, $csvData, $type);
-                    $this->session->set_flashdata('message', $this->lang->line('Added in catalog'));
+                    $firstHeader = $response['firstHeader'];
+                    $secondHeader = $response['secondHeader'];
+                    $type = 'in stock';
+                    $this->process_csv_data($firstHeader,$secondHeader, $csvData, $type);
+                    $this->session->set_flashdata('message', $this->lang->line('Added as deactivated'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'labels') {
                     foreach ($_POST['val'] as $id) {

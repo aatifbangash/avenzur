@@ -594,6 +594,18 @@ $(document).ready(function () {
         $('#action-form').submit();
     });
 
+    $(document).on('click', '#out_of_stock', function (e) {
+        e.preventDefault();
+        $('#form_action').val($(this).attr('data-action'));
+        $('#action-form').submit();
+    });
+
+    $(document).on('click', '#deactivated', function (e) {
+        e.preventDefault();
+        $('#form_action').val($(this).attr('data-action'));
+        $('#action-form').submit();
+    });
+
     $(document).on('click', '#delete', function (e) {
         e.preventDefault();
         $('#form_action').val($(this).attr('data-action'));

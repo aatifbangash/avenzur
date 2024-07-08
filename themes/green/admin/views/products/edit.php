@@ -178,7 +178,7 @@ if (!empty($variants)) {
             <input type="button" id="google_product" name="google_product" value="Google Push" class="btn btn-primary" />
             <input type="button" id="meta_product" name="meta_product" value="Meta Push" class="btn btn-primary" />
             <input type="button" id="live_product" name="live_product" value="Make Live" class="btn btn-primary" />
-            <input type="button" id="snapchat_catalog" name="snapchat_catalog" value="Add to Snapchat Catalog" class="btn btn-primary" />
+            <input type="button" id="snapchat_catalog" name="snapchat_catalog" value="Add to Snapchat" class="btn btn-primary" />
             <input type="button" id="save_product" name="save_product" value="Save" class="btn btn-primary" />
             <input type="button" id="back_product" name="back_product" value="Back" class="btn btn-primary" />
         </span>
