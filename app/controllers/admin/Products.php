@@ -485,6 +485,27 @@ class Products extends MY_Controller
             header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
         }
     }
+    public function snapchat_catalog(){
+        $product_id = $_REQUEST['val'];
+         // Debugging: Ensure the product ID is being received correctly
+         if (empty($product_id)) {
+            $product_id = $this->session->userdata('val');
+            $this->session->unset_userdata('val');
+        }else{
+            $this->session->set_userdata('merch_id', $product_id[0]);
+        }
+        try {
+            $response = $this->getCSVData();
+            $csvData = $response['csvData'];
+            $header = $response['header'];
+            $type = 'in stock';
+            $this->process_csv_data($header, $csvData, $type);
+            $this->session->set_flashdata('message', $this->lang->line('Added in catalog'));
+            admin_redirect('products/edit/' . $product_id[0]);
+        } catch (Exception $e) {
+            echo "Error inserting/updating product: " . $e->getMessage();
+        }
+    }
 
     public function update_intl_barcode(){
 
@@ -3469,6 +3490,114 @@ class Products extends MY_Controller
         }
     }
 
+    private function process_csv_data($header, $csvData, $type) {
+        // Print the header
+        // echo '<h3>CSV Header:</h3>';
+        // echo '<pre>';
+        // print_r($header);
+        // echo '</pre>';
+
+        // // Print each data row
+        // echo '<h3>CSV Data:</h3>';
+        // foreach ($csvData as $row) {
+        //     echo '<pre>';
+        //     print_r($row);
+        //     echo '</pre>';
+        // }
+
+        // Assume the first column of CSV contains the product ID
+        $csvProductIds = array_column($csvData, 0);
+
+        // Check product IDs from $_POST['val'] against CSV data
+        foreach ($_POST['val'] as $id) {
+            $product = $this->products_model->getProductByID($id);
+
+            $productId = $product->id;
+            $brand = $this->products_model->getBrandByID($product->brand);
+            $newData = [
+                $productId,
+                $product->name,
+                $product->product_details,
+                base_url() . "product/" . $product->slug,
+                base_url() . 'assets/upload/' . $product->image,
+                $type,
+                // 'in stock',
+                $product->price,
+                $brand->name,
+            ];
+
+            // Check if product ID exists in CSV data
+            $found = false;
+            foreach ($csvData as $key => $row) {
+                if ($row[0] == $productId) {
+                    // Replace the row if the product ID exists
+                    $csvData[$key] = $newData;
+                    $found = true;
+                    break;
+                }
+            }
+
+            // Add a new row if the product ID does not exist
+            if (!$found) {
+                $csvData[] = $newData;
+            }
+        }
+
+        // Write the updated CSV data back to the file
+        array_unshift($csvData, $header); // Add the header back to the data
+        // echo "<pre>"; var_dump($header, $csvData); exit;
+
+        $file = fopen(FCPATH . 'snapchat-product-feed.csv', 'w');
+        foreach ($csvData as $row) {
+            fputcsv($file, $row);
+        }
+        fclose($file);
+    }
+
+    public function getCSVData()
+    {
+        // Path to the CSV file
+        $filePath = FCPATH . 'snapchat-product-feed.csv';
+
+        // Check if the file exists
+        if (!file_exists($filePath)) {
+            echo "File not found.";
+            return;
+        }
+
+        // Open the CSV file
+        $file = fopen($filePath, 'r');
+        if (!$file) {
+            echo "Unable to open the file.";
+            return;
+        }
+
+        // Read the header
+        $header = fgetcsv($file);
+        if ($header === FALSE) {
+            echo "Unable to read the header.";
+            fclose($file);
+            return;
+        }
+
+        // Read and process the CSV data
+        $csvData = [];
+        while (($row = fgetcsv($file)) !== FALSE) {
+            $csvData[] = $row;
+        }
+        fclose($file);
+        // Separate the header from the data
+        $header = $csvData[0];
+        unset($csvData[0]);
+
+        // Re-index the array to start from 0 again
+        $csvData = array_values($csvData);
+        return [
+            'csvData' => $csvData,
+            'header' => $header,
+        ];
+    }
+
     public function product_actions($wh = null)
     {
         if (!$this->Owner && !$this->GP['bulk_actions']) {
@@ -3500,24 +3629,27 @@ class Products extends MY_Controller
                     $this->session->set_flashdata('message', $this->lang->line('products_deleted'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'add_to_catalog') {
-                    foreach ($_POST['val'] as $id) {
-                        $product = $this->products_model->getProductByID($id);
-                        var_dump($product); exit;
-                    }
+                    $response = $this->getCSVData();
+                    $csvData = $response['csvData'];
+                    $header = $response['header'];
+                    $type = 'in stock';
+                    $this->process_csv_data($header, $csvData, $type);
                     $this->session->set_flashdata('message', $this->lang->line('Added in catalog'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'out_of_stock') {
-                    foreach ($_POST['val'] as $id) {
-                        $product = $this->products_model->getProductByID($id);
-                        var_dump($product); exit;
-                    }
+                    $response = $this->getCSVData();
+                    $csvData = $response['csvData'];
+                    $header = $response['header'];
+                    $type = 'out of stock';
+                    $this->process_csv_data($header, $csvData, $type);
                     $this->session->set_flashdata('message', $this->lang->line('Added in catalog'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'deactivated') {
-                    foreach ($_POST['val'] as $id) {
-                        $product = $this->products_model->getProductByID($id);
-                        var_dump($product); exit;
-                    }
+                    $response = $this->getCSVData();
+                    $csvData = $response['csvData'];
+                    $header = $response['header'];
+                    $type = 'discontinued';
+                    $this->process_csv_data($header, $csvData, $type);
                     $this->session->set_flashdata('message', $this->lang->line('Added in catalog'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'labels') {

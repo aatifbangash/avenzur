@@ -95,6 +95,34 @@ if (!empty($variants)) {
             $form.submit();
         });
 
+        $('#snapchat_catalog').on("click", function(t) {
+            var productId = '<?= $product->id; ?>';
+            var $form = $('<form>', {
+                'action': site.base_url + 'products/snapchat_catalog',
+                'method': 'POST'
+            });
+
+            var $inputId = $('<input>', {
+                'type': 'hidden',
+                'name': 'val[]',
+                'value': productId
+            });
+
+            var $inputCsrf = $('<input>', {
+                'type': 'hidden',
+                'name': '<?= $this->security->get_csrf_token_name() ?>',
+                'value': '<?= $this->security->get_csrf_hash() ?>'
+            });
+
+            $form.append($inputCsrf);
+            $form.append($inputId);
+
+            $('body').append($form);
+            $form.submit();
+        });
+
+        
+
         $('#meta_product').on("click", function(t) {
             var productId = '<?= $product->id; ?>';
             var $form = $('<form>', {
@@ -150,6 +178,7 @@ if (!empty($variants)) {
             <input type="button" id="google_product" name="google_product" value="Google Push" class="btn btn-primary" />
             <input type="button" id="meta_product" name="meta_product" value="Meta Push" class="btn btn-primary" />
             <input type="button" id="live_product" name="live_product" value="Make Live" class="btn btn-primary" />
+            <input type="button" id="snapchat_catalog" name="snapchat_catalog" value="Add to Snapchat Catalog" class="btn btn-primary" />
             <input type="button" id="save_product" name="save_product" value="Save" class="btn btn-primary" />
             <input type="button" id="back_product" name="back_product" value="Back" class="btn btn-primary" />
         </span>
