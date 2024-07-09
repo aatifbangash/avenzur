@@ -367,6 +367,50 @@
                             </a>
                         </li>
 
+                        
+                        <li class="mm_products">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-barcode"></i>
+                                    <span class="text"> <?= lang('Supplier Reports'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                
+                                    <li id="reports_general_ledger_trial_balance_report">
+                                        <a href="<?= admin_url('reports/general_ledger_trial_balance') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_trial_balance_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_supplier_statement_report">
+                                        <a href="<?= admin_url('reports/supplier_statement') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('supplier_statement_report'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li id="reports_supplier_trial_balance_report">
+                                        <a href="<?= admin_url('reports/suppliers_trial_balance') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('suppliers_trial_balance_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <!-- <li id="reports_customer_statement_report">
+                                        <a href="<?= admin_url('reports/customer_statement') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('customer_statement_report'); ?></span>
+                                        </a>
+                                    </li> -->
+                                    <li id="reports_general_ledger_statement_report">
+                                        <a href="<?= admin_url('reports/general_ledger_statement') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_statement_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_supplier_aging_report">
+                                        <a href="<?= admin_url('reports/supplier_aging') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('supplier_aging_report'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                         </li>
+
+
                         <?php
                         if ($Owner || $Admin) {
                             ?>
