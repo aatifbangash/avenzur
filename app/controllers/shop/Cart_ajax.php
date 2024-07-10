@@ -254,12 +254,17 @@ class Cart_ajax extends MY_Shop_Controller
                         $data['discount'] = ($item['qty'] * 37.5);
                     }
 
+                    $data['discount'] = 0;
                     $data['disc_qty'] = $item['qty'];
                     $data['qty'] = $item['qty'] * 2;
                 }else{
-                    $data = [
+                    /*$data = [
                         'rowid'  => $item['rowid'],
                         'discount'  => ($item['price'] * 10) / 100
+                    ];*/
+                    $data = [
+                        'rowid'  => $item['rowid'],
+                        'discount'  => 0
                     ];
                 }
                 
