@@ -430,7 +430,7 @@ class Reports_model extends CI_Model
         $response['trs'] = $data;
 
         $this->db
-            ->select('accounts_ledgers.id, accounts_ledgers.name, accounts_ledgers.notes, accounts_ledgers.code, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+            ->select('accounts_ledgers.id, accounts_ledgers.name, sma_accounts_entries.supplier_id, accounts_ledgers.notes, accounts_ledgers.code, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
             ->from('accounts_ledgers')
             ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=accounts_ledgers.id')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
@@ -439,9 +439,20 @@ class Reports_model extends CI_Model
             ->order_by('accounts_ledgers.name asc');
 
         $q = $this->db->get();
+        //echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
-                $data2[] = $row;
+                //print_r($row);exit;
+                if($row->id == 102) 
+                {
+                    if($row->supplier_id > 0){
+                        $data2[] = $row;
+                    }
+                   
+                }else{
+                    $data2[] = $row;
+                }
+               
             }
         } else {
             $data2 = array();
@@ -568,6 +579,90 @@ class Reports_model extends CI_Model
         $response['ob'] = $data2;
         //dd($response);
         return $response;
+    }
+
+    public function get_suppliers_trial_balance($start_date, $end_date) {
+        // Calculate OB
+        // $this->db->select('supplier_id, SUM(dr_total) as total_debit, SUM(cr_total) as total_credit');
+        // $this->db->where('date <', $start_date);
+        // $this->db->where('supplier_id IS NOT NULL', null, false);
+        // $this->db->group_by('supplier_id');
+
+        $this->db->select('sma_companies.id as supplier_id, sma_companies.name, sma_companies.sequence_code,
+        SUM(CASE WHEN sma_accounts_entryitems.dc = "D" THEN sma_accounts_entryitems.amount ELSE 0 END) as total_debit, 
+        SUM(CASE WHEN sma_accounts_entryitems.dc = "C" THEN sma_accounts_entryitems.amount ELSE 0 END) as total_credit');
+        $this->db->from('sma_accounts_entries');
+        $this->db->join('sma_accounts_entryitems', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id');
+        $this->db->join('sma_companies', 'sma_accounts_entries.supplier_id = sma_companies.id');
+        $this->db->where('sma_accounts_entries.date <', $start_date);
+        $this->db->where('sma_companies.ledger_account=102');
+        $this->db->where('sma_accounts_entryitems.ledger_id = sma_companies.ledger_account');
+        $this->db->where('sma_accounts_entries.supplier_id IS NOT NULL', null, false);
+        $this->db->group_by('sma_accounts_entries.supplier_id, sma_companies.name');
+
+        $query_ob = $this->db->get();
+        //echo $this->db->last_query();
+        $ob_results = $query_ob->result_array();
+       //print_r($ob_results);
+
+        // Calculate transactions within period
+        $this->db->select('sma_companies.id as supplier_id, sma_companies.name, sma_companies.sequence_code, 
+        SUM(CASE WHEN sma_accounts_entryitems.dc = "D" THEN sma_accounts_entryitems.amount ELSE 0 END) as total_debit, 
+        SUM(CASE WHEN sma_accounts_entryitems.dc = "C" THEN sma_accounts_entryitems.amount ELSE 0 END) as total_credit');
+        $this->db->from('sma_accounts_entries');
+        $this->db->join('sma_accounts_entryitems', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id');
+        $this->db->join('sma_companies', 'sma_accounts_entries.supplier_id = sma_companies.id');
+        $this->db->where('sma_accounts_entries.date >=', $start_date);
+        $this->db->where('sma_accounts_entries.date <=', $end_date);
+        $this->db->where('sma_accounts_entries.supplier_id IS NOT NULL', null, false);
+        $this->db->where('sma_accounts_entryitems.ledger_id = sma_companies.ledger_account');
+        $this->db->group_by('sma_accounts_entries.supplier_id, sma_companies.name');
+
+        $query_period = $this->db->get();
+        //echo $this->db->last_query();
+        $period_results = $query_period->result_array();
+        
+        // Combine OB and period transactions to get EB
+        $balances = [];
+        foreach ($ob_results as $ob) {
+            $supplier_id = $ob['supplier_id'];
+            $balances[$supplier_id] = [
+                'supplier_id' => $supplier_id,
+                'name' => $ob['name'],
+                'sequence_code' => $ob['sequence_code'],
+                'obDebit' => $ob['total_debit'],
+                'obCredit' => $ob['total_credit'],
+                'trsDebit' => 0,
+                'trsCredit' => 0,
+                'ebDebit' => $ob['total_debit'],
+                'ebCredit' => $ob['total_credit'],
+            ];
+        }
+       // print_r($balances);
+       
+        foreach ($period_results as $period) {
+            $supplier_id = $period['supplier_id'];
+            if (!isset($balances[$supplier_id])) {
+                $balances[$supplier_id] = [
+                    'supplier_id' => $supplier_id,
+                    'name' => $period['name'],
+                    'sequence_code' => $period['sequence_code'],
+                    'obDebit' => 0,
+                    'obCredit' => 0,
+                    'trsDebit' => $period['total_debit'],
+                    'trsCredit' => $period['total_credit'],
+                    'ebDebit' => $period['total_debit'],
+                    'ebCredit' => $period['total_credit'],
+                ];
+            } else {
+                $balances[$supplier_id]['trsDebit'] = $period['total_debit'];
+                $balances[$supplier_id]['trsCredit'] = $period['total_credit'];
+                $balances[$supplier_id]['ebDebit'] += $period['total_debit'];
+                $balances[$supplier_id]['ebCredit'] += $period['total_credit'];
+            }
+        }
+
+        return $balances;
     }
 
     public function getCustomersTrialBalance($start_date, $end_date)
@@ -2891,7 +2986,8 @@ class Reports_model extends CI_Model
     {
 
         $this->db
-            ->select('sma_purchases.id as purchase_id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as purchase_sequence_code,sma_accounts_entries.id as transaction_id, sma_purchases.supplier, sma_accounts_entries.date, sma_purchases.invoice_number, sma_accounts_entries.number, sma_purchases.grand_total as total_with_vat, SUM(sma_accounts_entryitems.amount) as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
+            ->select('sma_purchases.id as purchase_id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as purchase_sequence_code,sma_accounts_entries.id as transaction_id, 
+            sma_purchases.supplier, sma_accounts_entries.date, sma_purchases.invoice_number, sma_accounts_entries.number, sma_purchases.grand_total as total_with_vat, SUM(sma_accounts_entryitems.amount) as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
             ->from('sma_accounts_ledgers')
             ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')

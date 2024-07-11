@@ -3918,24 +3918,25 @@ class Reports extends MY_Controller
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $trial_balance_array = $this->reports_model->getSuppliersTrialBalance($start_date, $end_date);
+            //$trial_balance_array = $this->reports_model->getSuppliersTrialBalance($start_date, $end_date);
+            $response_arr = $this->reports_model->get_suppliers_trial_balance($start_date, $end_date);
 
-            $response_arr = array();
-            foreach ($trial_balance_array['trs'] as $trans) {
-                $response_arr[$trans->id]["id"] = $trans->id;
-                $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
-                $response_arr[$trans->id]["name"] = $trans->name;
-                $response_arr[$trans->id]["trsDebit"] = $trans->totalPayment + $trans->totalReturn + $trans->totalMemo;
-                $response_arr[$trans->id]["trsCredit"] = $trans->totalPurchases + $trans->totalTaxes;
-            }
-            foreach ($trial_balance_array['ob'] as $trans) {
-                $response_arr[$trans->id]["obDebit"] = $trans->totalPayment + $trans->totalReturn + $trans->totalMemo;
-                $response_arr[$trans->id]["obCredit"] = $trans->totalPurchases + $trans->totalTaxes;
-            }
+            // $response_arr = array();
+            // foreach ($trial_balance_array['trs'] as $trans) {
+            //     $response_arr[$trans->id]["id"] = $trans->id;
+            //     $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
+            //     $response_arr[$trans->id]["name"] = $trans->name;
+            //     $response_arr[$trans->id]["trsDebit"] = $trans->totalPayment + $trans->totalReturn + $trans->totalMemo;
+            //     $response_arr[$trans->id]["trsCredit"] = $trans->totalPurchases + $trans->totalTaxes;
+            // }
+            // foreach ($trial_balance_array['ob'] as $obtrans) {
+            //     $response_arr[$obtrans->id]["obDebit"] = $obtrans->totalPayment + $obtrans->totalReturn + $obtrans->totalMemo;
+            //     $response_arr[$obtrans->id]["obCredit"] = $obtrans->totalPurchases + $obtrans->totalTaxes;
+            // }
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
-            $this->data['customer_data'] = $trial_balance_array;
+            $this->data['customer_data'] = $response_arr;
             $this->data['trial_balance'] = $response_arr;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
             $meta = ['page_title' => lang('suppliers_report'), 'bc' => $bc];

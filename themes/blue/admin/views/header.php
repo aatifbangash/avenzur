@@ -376,11 +376,7 @@
                                 </a>
                                 <ul>
                                 
-                                    <li id="reports_general_ledger_trial_balance_report">
-                                        <a href="<?= admin_url('reports/general_ledger_trial_balance') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_trial_balance_report'); ?></span>
-                                        </a>
-                                    </li>
+                                   
                                     <li id="reports_supplier_statement_report">
                                         <a href="<?= admin_url('reports/supplier_statement') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('supplier_statement_report'); ?></span>
@@ -392,16 +388,19 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('suppliers_trial_balance_report'); ?></span>
                                         </a>
                                     </li>
-                                    <!-- <li id="reports_customer_statement_report">
-                                        <a href="<?= admin_url('reports/customer_statement') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('customer_statement_report'); ?></span>
-                                        </a>
-                                    </li> -->
-                                    <li id="reports_general_ledger_statement_report">
-                                        <a href="<?= admin_url('reports/general_ledger_statement') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_statement_report'); ?></span>
+
+                                    <li id="reports_vat_purchase_report">
+                                        <a href="<?= admin_url('reports/vat_purchase') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('vat_purchase_report').' (Invoice)'; ?></span>
                                         </a>
                                     </li>
+
+                                    <li id="reports_vat_purchase_report">
+                                        <a href="<?= admin_url('reports/vat_purchase_ledger') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('vat_purchase_report').' (Ledger)'; ?></span>
+                                        </a>
+                                    </li>
+                                  
                                     <li id="reports_supplier_aging_report">
                                         <a href="<?= admin_url('reports/supplier_aging') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('supplier_aging_report'); ?></span>
@@ -410,6 +409,100 @@
                                 </ul>
                          </li>
 
+                         <li class="mm_products">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-barcode"></i>
+                                    <span class="text"> <?= lang('Customers Reports'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                               
+                                <li id="reports_vat_sale_report">
+                                        <a href="<?= admin_url('reports/vat_sale') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('Vat Sale Report').' (Invoice)'; ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li id="reports_customer_trial_balance_report">
+                                        <a href="<?= admin_url('reports/customers_trial_balance') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('customers_trial_balance_report'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li id="reports_customer_statement_report">
+                                        <a href="<?= admin_url('reports/customer_statement') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('customer_statement_report'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li id="reports_customer_aging_report">
+                                        <a href="<?= admin_url('reports/customer_aging') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('customer_aging_report'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                         </li>
+
+                         <li class="mm_products">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-barcode"></i>
+                                    <span class="text"> <?= lang('Inventory Reports'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                <li id="reports_inventory_movement_report">
+                                        <a href="<?= admin_url('reports/inventory_movement') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('inventory_movement_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_item_movement_report">
+                                        <a href="<?= admin_url('reports/item_movement_report') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('item_movement_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_inventory_trial_balance_report">
+                                        <a href="<?= admin_url('reports/inventory_trial_balance') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('inventory_trial_balance'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_stocks">
+                                        <a href="<?= admin_url('reports/stock') ?>">
+                                            <i class="fa fa-money"></i><span class="text"> <?= lang('Stock_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_stocks">
+                                        <a href="<?= admin_url('reports/stock') ?>">
+                                            <i class="fa fa-money"></i><span class="text"> <?= lang('Inventory Ageing Report'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                         </li>
+
+                         <li class="mm_products">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-barcode"></i>
+                                    <span class="text"> <?= lang('General Reports'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                <li id="reports_general_ledger_trial_balance_report">
+                                        <a href="<?= admin_url('reports/general_ledger_trial_balance') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_trial_balance_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_general_ledger_statement_report">
+                                        <a href="<?= admin_url('reports/general_ledger_statement') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_statement_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_balance_sheet">
+                                        <a href="<?= admin_url('reports/balance_sheet') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('balance_sheet'); ?></span>
+                                        </a>
+                                    </li>
+                                   
+                                </ul>
+                         </li>
 
                         <?php
                         if ($Owner || $Admin) {
@@ -1094,11 +1187,7 @@
                                             <i class="fa fa-money"></i><span class="text"> <?= lang('pharmacy_stock_report'); ?></span>
                                         </a>
                                     </li>
-                                    <li id="reports_stocks">
-                                        <a href="<?= admin_url('reports/stock') ?>">
-                                            <i class="fa fa-money"></i><span class="text"> <?= lang('Stock_report'); ?></span>
-                                        </a>
-                                    </li>
+                                    
                                     <li id="reports_tax">
                                         <a href="<?= admin_url('reports/tax') ?>">
                                             <i class="fa fa-area-chart"></i><span class="text"> <?= lang('tax_report'); ?></span>
@@ -1144,48 +1233,14 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('staff_report'); ?></span>
                                         </a>
                                     </li>
-                                    <li id="reports_vat_purchase_report">
-                                        <a href="<?= admin_url('reports/vat_purchase') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('vat_purchase_report').' (Invoice)'; ?></span>
-                                        </a>
-                                    </li>
-
-                                    <li id="reports_vat_sale_report">
-                                        <a href="<?= admin_url('reports/vat_sale') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('Vat Sale Report').' (Invoice)'; ?></span>
-                                        </a>
-                                    </li>
-
-                                    <li id="reports_vat_purchase_report">
-                                        <a href="<?= admin_url('reports/vat_purchase_ledger') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('vat_purchase_report').' (Ledger)'; ?></span>
-                                        </a>
-                                    </li>
-                                    <li id="reports_inventory_movement_report">
-                                        <a href="<?= admin_url('reports/inventory_movement') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('inventory_movement_report'); ?></span>
-                                        </a>
-                                    </li>
-                                    <li id="reports_item_movement_report">
-                                        <a href="<?= admin_url('reports/item_movement_report') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('item_movement_report'); ?></span>
-                                        </a>
-                                    </li>
-                                    <li id="reports_inventory_trial_balance_report">
-                                        <a href="<?= admin_url('reports/inventory_trial_balance') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('inventory_trial_balance'); ?></span>
-                                        </a>
-                                    </li>
+                               
+                                   
                                     <li id="reports_supplier_trial_balance_report">
                                         <a href="<?= admin_url('reports/suppliers_trial_balance') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('suppliers_trial_balance_report'); ?></span>
                                         </a>
                                     </li>
-                                    <li id="reports_customer_trial_balance_report">
-                                        <a href="<?= admin_url('reports/customers_trial_balance') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('customers_trial_balance_report'); ?></span>
-                                        </a>
-                                    </li>
+                                   
                                     <li id="reports_general_ledger_trial_balance_report">
                                         <a href="<?= admin_url('reports/general_ledger_trial_balance') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_trial_balance_report'); ?></span>
@@ -1196,11 +1251,7 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('supplier_statement_report'); ?></span>
                                         </a>
                                     </li>
-                                    <li id="reports_customer_statement_report">
-                                        <a href="<?= admin_url('reports/customer_statement') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('customer_statement_report'); ?></span>
-                                        </a>
-                                    </li>
+                                   
                                     <li id="reports_general_ledger_statement_report">
                                         <a href="<?= admin_url('reports/general_ledger_statement') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_statement_report'); ?></span>
@@ -1211,16 +1262,8 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('supplier_aging_report'); ?></span>
                                         </a>
                                     </li>
-                                    <li id="reports_customer_aging_report">
-                                        <a href="<?= admin_url('reports/customer_aging') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('customer_aging_report'); ?></span>
-                                        </a>
-                                    </li>
-                                    <li id="reports_balance_sheet">
-                                        <a href="<?= admin_url('reports/balance_sheet') ?>">
-                                            <i class="fa fa-users"></i><span class="text"> <?= lang('balance_sheet'); ?></span>
-                                        </a>
-                                    </li>
+                                  
+                                    
                                     <li id="reports_financial_position">
                                         <a href="<?= admin_url('reports/financial_position') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('financial_position'); ?></span>
