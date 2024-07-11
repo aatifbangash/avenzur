@@ -4045,7 +4045,6 @@ class Products extends MY_Controller
 
         // Assume the first column of CSV contains the product ID
         $csvProductIds = array_column($csvData, 0);
-
         // Check product IDs from $_POST['val'] against CSV data
         foreach ($_POST['val'] as $id) {
             $product = $this->products_model->getProductByID($id);
@@ -4055,7 +4054,7 @@ class Products extends MY_Controller
             $newData = [
                 $productId,
                 $product->name,
-                $product->product_details,
+                strip_tags($product->product_details),
                 base_url() . "product/" . $product->slug,
                 base_url() . 'assets/upload/' . $product->image,
                 $type,
@@ -4084,7 +4083,6 @@ class Products extends MY_Controller
         // Write the updated CSV data back to the file
         array_unshift($csvData, $secondHeader); // Add the header back to the data
         array_unshift($csvData, $firstHeader); // Add the header back to the data
-
         $file = fopen(FCPATH . 'snapchat-product-feed.csv', 'w');
         foreach ($csvData as $row) {
             fputcsv($file, $row);
