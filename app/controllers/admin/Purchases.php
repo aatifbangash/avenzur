@@ -1419,7 +1419,8 @@ class Purchases extends MY_Controller
                     'dr_total'     => $inv->grand_total,
                     'cr_total'     => $inv->grand_total,
                     'notes'        => 'Purchase Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
-                    'pid'          =>  $inv->id
+                    'pid'          =>  $inv->id,
+                    'supplier_id'  => $inv->supplier_id
                     );
                 $add  = $this->db->insert('sma_accounts_entries', $entry);
                 $insert_id = $this->db->insert_id();

@@ -626,6 +626,15 @@ class Reports_model extends CI_Model
         $balances = [];
         foreach ($ob_results as $ob) {
             $supplier_id = $ob['supplier_id'];
+
+            if($ob['total_debit'] >= $ob['total_credit']){
+                $ob['total_debit'] = $ob['total_debit'] - $ob['total_credit'];
+                $ob['total_credit'] = 0;
+            }else if($ob['total_credit'] > $ob['total_debit']){
+                $ob['total_credit'] = $ob['total_credit'] - $ob['total_debit'];
+                $ob['total_debit'] = 0;
+            }
+
             $balances[$supplier_id] = [
                 'supplier_id' => $supplier_id,
                 'name' => $ob['name'],
@@ -643,6 +652,15 @@ class Reports_model extends CI_Model
         foreach ($period_results as $period) {
             $supplier_id = $period['supplier_id'];
             if (!isset($balances[$supplier_id])) {
+
+                if($period['total_debit'] >= $period['total_credit']){
+                    $period['total_debit'] = $period['total_debit'] - $period['total_credit'];
+                    $period['total_credit'] = 0;
+                }else if($period['total_credit'] > $period['total_debit']){
+                    $period['total_credit'] = $period['total_credit'] - $period['total_debit'];
+                    $period['total_debit'] = 0;
+                }
+
                 $balances[$supplier_id] = [
                     'supplier_id' => $supplier_id,
                     'name' => $period['name'],
@@ -655,6 +673,14 @@ class Reports_model extends CI_Model
                     'ebCredit' => $period['total_credit'],
                 ];
             } else {
+                if($period['total_debit'] >= $period['total_credit']){
+                    $period['total_debit'] = $period['total_debit'] - $period['total_credit'];
+                    $period['total_credit'] = 0;
+                }else if($period['total_credit'] > $period['total_debit']){
+                    $period['total_credit'] = $period['total_credit'] - $period['total_debit'];
+                    $period['total_debit'] = 0;
+                }
+
                 $balances[$supplier_id]['trsDebit'] = $period['total_debit'];
                 $balances[$supplier_id]['trsCredit'] = $period['total_credit'];
                 $balances[$supplier_id]['ebDebit'] += $period['total_debit'];
