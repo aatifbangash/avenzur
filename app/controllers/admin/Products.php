@@ -198,7 +198,7 @@ class Products extends MY_Controller
     public function facebook_catalogue_push(){
         $product_id = $_POST['id'];
         // Set the access token, product catalog ID, and API version
-        $access_token = "EAAGF5LPatEwBO90n2xGJ2pZBOnMisRHxodMGMZABWb0e2RarluGu54VZAhdZCaYkQwfic9bfG7lj290r28zaryl5VTUkscrMplxXCeHpkhKJ8YJcZB3bWeoloB5ZC1X3SV6WUyW0zrKZAcufGKxEs66irz9XIDBY6yk3ntSKZArqvQ1Q3ZCxE1SFUrsjNFnOUnaG4";
+        $access_token = "EAAGF5LPatEwBOZCVaah25RxvwPQxUjHYrgLN7a1clUAn8FHxalGnSBKVMVM1oEbbZAaVw2keCGKBtHBAzIemXLv1xxK5LlQa4mLhCzHAkhUjkQiViZAthQJklWSd0wFkplf27wZB8J8rHgKDPes2ZBcOZApxoOhgtZBjkaesZBdXEXj2Tgfn7QsF4YZAl8NUBscsK";
         $product_catalog_id = "374060218547895";
         $api_version = "v19.0";
 
