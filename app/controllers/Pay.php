@@ -1058,6 +1058,19 @@ class Pay extends MY_Shop_Controller
             return ['sent' => $sent, 'error' => $error];
         }
     }
+
+    public function RedirectPaymentResponsePageMobile()
+    {
+        $invoice_no = substr($_POST['Response_TransactionID'],13);
+        $response_status = $_POST['Response_StatusCode'];
+        
+        if($response_status == '00000')
+        {
+            echo 'Payment Success. Loaded from Web';
+        }else{
+            echo 'Payment Failed. Loaded from Web';
+        }
+    }
     
     public function RedirectPaymentResponsePage()
     {
