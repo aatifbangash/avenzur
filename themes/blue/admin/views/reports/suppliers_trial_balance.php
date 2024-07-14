@@ -78,14 +78,17 @@
                             $totalFinalEndDebit = 0;
                             $totalFinalEndCredit = 0;
                             foreach ($trial_balance as $data) {
+                                if ($data['trsDebit'] == 0 && $data['trsCredit'] == 0 && $data['obDebit'] == 0 && $data['obCredit'] == 0) continue;
+                                $eb_credit = $data['obCredit'] + $data['trsCredit'];
+                                $eb_debit = $data['obDebit'] + $data['trsDebit'];
 
-                                // $finalEndDebit = "-";
-                                // $finalEndCredit = "-";
-                                // if ($eb_credit >= $eb_debit) {
-                                //     $finalEndCredit = $eb_credit - $eb_debit;
-                                // } else {
-                                //     $finalEndDebit = $eb_debit - $eb_credit;
-                                // }
+                                $finalEndDebit = "-";
+                                $finalEndCredit = "-";
+                                if ($eb_credit >= $eb_debit) {
+                                    $finalEndCredit = $eb_credit - $eb_debit;
+                                } else {
+                                    $finalEndDebit = $eb_debit - $eb_credit;
+                                }
 
 
                                 $totalObDebit += $data['obDebit'];
@@ -93,14 +96,11 @@
                                 $totalTrsDebit += $data['trsDebit'];
                                 $totalTrsCredit += $data['trsCredit'];
 
-                                $totalFinalEndCredit += $data['ebCredit'];
-                                $totalFinalEndDebit += $data['ebDebit'];
+                                if (gettype($finalEndDebit) != 'string')
+                                    $totalFinalEndDebit += $finalEndDebit;
 
-                                // if (gettype($finalEndDebit) != 'string')
-                                //     $totalFinalEndDebit += $finalEndDebit;
-
-                                // if (gettype($finalEndCredit) != 'string')
-                                //     $totalFinalEndCredit += $finalEndCredit;
+                                if (gettype($finalEndCredit) != 'string')
+                                    $totalFinalEndCredit += $finalEndCredit;
 
 
                                 $count++;
@@ -113,8 +113,8 @@
                                     <td><?= $data['obCredit'] > 0 ? number_format($data['obCredit'], 2, '.', ',') : '-'; ?></td>
                                     <td><?= $data['trsDebit'] > 0 ? number_format($data['trsDebit'], 2, '.', ',') : '-'; ?></td>
                                     <td><?= $data['trsCredit'] > 0 ? number_format($data['trsCredit'], 2, '.', ',') : '-'; ?></td>
-                                    <td><?= $data['ebDebit'] > 0 ? number_format($data['ebDebit'], 2, '.', ',') : '-'; ?></td>
-                                    <td><?= $data['ebCredit'] > 0 ? number_format($data['ebCredit'], 2, '.', ',') : '-'; ?></td>
+                                    <td><?= $finalEndDebit > 0 ? number_format($finalEndDebit, 2, '.', ',') : '-'; ?></td>
+                                    <td><?= $finalEndCredit > 0 ? number_format($finalEndCredit, 2, '.', ',') : '-'; ?></td>
                                 </tr>
                                 <?php
                             }

@@ -3687,6 +3687,36 @@ class Reports extends MY_Controller
                 }
             }
 
+            // Final Response array
+            foreach ($response_arr as $resp_arr) {
+                if($resp_arr->ob_debit >= $resp_arr->ob_credit){
+                    $resp_arr->ob_debit = $resp_arr->ob_debit - $resp_arr->ob_credit;
+                    $resp_arr->ob_credit = 0;
+                }else if($resp_arr->ob_credit > $resp_arr->ob_debit){
+                    $resp_arr->ob_credit = $resp_arr->ob_credit - $resp_arr->ob_debit;
+                    $resp_arr->ob_debit = 0;
+                }
+
+                if($resp_arr->trs_debit >= $resp_arr->trs_credit){
+                    $resp_arr->trs_debit = $resp_arr->trs_debit - $resp_arr->trs_credit;
+                    $resp_arr->trs_credit = 0;
+                }else if($resp_arr->trs_credit > $resp_arr->trs_debit){
+                    $resp_arr->trs_credit = $resp_arr->trs_credit - $resp_arr->trs_debit;
+                    $resp_arr->trs_debit = 0;
+                }
+
+                $resp_arr->eb_debit = $resp_arr->ob_debit + $resp_arr->trs_debit;
+                $resp_arr->eb_credit = $resp_arr->ob_credit + $resp_arr->trs_credit;
+
+                if($resp_arr->eb_debit >= $resp_arr->eb_credit){
+                    $resp_arr->eb_debit = $resp_arr->eb_debit - $resp_arr->eb_credit;
+                    $resp_arr->eb_credit = 0;
+                }else if($resp_arr->eb_credit > $resp_arr->eb_debit){
+                    $resp_arr->eb_credit = $resp_arr->eb_credit - $resp_arr->eb_debit;
+                    $resp_arr->eb_debit = 0;
+                }
+            }
+
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
             $this->data['trial_balance'] = $response_arr;

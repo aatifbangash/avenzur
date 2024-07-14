@@ -75,11 +75,11 @@
                                     $total_eb_debit = 0;
                                     $total_eb_credit = 0;
                                     foreach ($trial_balance as $data){
-                                        $ob_debit = $data->ob_debit > $data->ob_credit ? $data->ob_debit - $data->ob_credit : 0;
-                                        $ob_credit = $data->ob_credit > $data->ob_debit ? $data->ob_credit - $data->ob_debit : 0;
+                                        $ob_debit = $data->ob_debit;
+                                        $ob_credit = $data->ob_credit;
 
-                                        $eb_debit = $ob_debit - $data->trs_credit + $data->trs_debit;
-                                        $eb_credit = $ob_credit - $data->trs_debit + $data->trs_credit;
+                                        $eb_debit = $data->eb_debit;
+                                        $eb_credit = $data->eb_credit;
                                         $count++;
 
                                         $total_ob_debit += $ob_debit;

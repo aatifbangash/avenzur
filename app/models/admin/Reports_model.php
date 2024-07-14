@@ -642,9 +642,7 @@ class Reports_model extends CI_Model
                 'obDebit' => $ob['total_debit'],
                 'obCredit' => $ob['total_credit'],
                 'trsDebit' => 0,
-                'trsCredit' => 0,
-                'ebDebit' => $ob['total_debit'],
-                'ebCredit' => $ob['total_credit'],
+                'trsCredit' => 0
             ];
         }
        // print_r($balances);
@@ -669,8 +667,6 @@ class Reports_model extends CI_Model
                     'obCredit' => 0,
                     'trsDebit' => $period['total_debit'],
                     'trsCredit' => $period['total_credit'],
-                    'ebDebit' => $period['total_debit'],
-                    'ebCredit' => $period['total_credit'],
                 ];
             } else {
                 if($period['total_debit'] >= $period['total_credit']){
@@ -683,11 +679,10 @@ class Reports_model extends CI_Model
 
                 $balances[$supplier_id]['trsDebit'] = $period['total_debit'];
                 $balances[$supplier_id]['trsCredit'] = $period['total_credit'];
-                $balances[$supplier_id]['ebDebit'] += $period['total_debit'];
-                $balances[$supplier_id]['ebCredit'] += $period['total_credit'];
+                
             }
         }
-
+        
         return $balances;
     }
 
