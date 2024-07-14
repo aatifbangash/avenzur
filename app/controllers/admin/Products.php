@@ -198,7 +198,7 @@ class Products extends MY_Controller
     public function facebook_catalogue_push(){
         $product_id = $_POST['id'];
         // Set the access token, product catalog ID, and API version
-        $access_token = "EAAGF5LPatEwBO90n2xGJ2pZBOnMisRHxodMGMZABWb0e2RarluGu54VZAhdZCaYkQwfic9bfG7lj290r28zaryl5VTUkscrMplxXCeHpkhKJ8YJcZB3bWeoloB5ZC1X3SV6WUyW0zrKZAcufGKxEs66irz9XIDBY6yk3ntSKZArqvQ1Q3ZCxE1SFUrsjNFnOUnaG4";
+        $access_token = "EAAGF5LPatEwBOZCVaah25RxvwPQxUjHYrgLN7a1clUAn8FHxalGnSBKVMVM1oEbbZAaVw2keCGKBtHBAzIemXLv1xxK5LlQa4mLhCzHAkhUjkQiViZAthQJklWSd0wFkplf27wZB8J8rHgKDPes2ZBcOZApxoOhgtZBjkaesZBdXEXj2Tgfn7QsF4YZAl8NUBscsK";
         $product_catalog_id = "374060218547895";
         $api_version = "v19.0";
 
@@ -4045,7 +4045,6 @@ class Products extends MY_Controller
 
         // Assume the first column of CSV contains the product ID
         $csvProductIds = array_column($csvData, 0);
-
         // Check product IDs from $_POST['val'] against CSV data
         foreach ($_POST['val'] as $id) {
             $product = $this->products_model->getProductByID($id);
@@ -4055,7 +4054,7 @@ class Products extends MY_Controller
             $newData = [
                 $productId,
                 $product->name,
-                $product->product_details,
+                strip_tags($product->product_details),
                 base_url() . "product/" . $product->slug,
                 base_url() . 'assets/upload/' . $product->image,
                 $type,
@@ -4084,7 +4083,6 @@ class Products extends MY_Controller
         // Write the updated CSV data back to the file
         array_unshift($csvData, $secondHeader); // Add the header back to the data
         array_unshift($csvData, $firstHeader); // Add the header back to the data
-
         $file = fopen(FCPATH . 'snapchat-product-feed.csv', 'w');
         foreach ($csvData as $row) {
             fputcsv($file, $row);
