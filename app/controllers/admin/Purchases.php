@@ -214,7 +214,10 @@ class Purchases extends MY_Controller
             $total_tax      = $this->sma->formatDecimal(($order_tax), 4);
             //$total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
             // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
-            $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+           
+            // below line commented by mm
+           // $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+           $grand_total = $this->sma->formatDecimal(($total + $product_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
             $data        = ['reference_no' => $reference,
                 'date'                     => $date,
                 'supplier_id'              => $supplier_id,
@@ -247,7 +250,7 @@ class Purchases extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            //$this->sma->print_arrays($data, $products);exit;
+            // $this->sma->print_arrays($data, $products);exit;
         }
 
         if ($this->form_validation->run() == true && $this->purchases_model->addPurchase($data, $products, $attachments)) {
@@ -898,8 +901,10 @@ class Purchases extends MY_Controller
 
             //$this->sma->formatDecimal(($product_tax + $order_tax), 4);
             // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
-            $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
-            $data        = ['reference_no' => $reference,
+           // below line commented by mm
+           // $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+           $grand_total = $this->sma->formatDecimal(($total + $product_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+           $data        = ['reference_no' => $reference,
                 'supplier_id'              => $supplier_id,
                 'supplier'                 => $supplier,
                 'warehouse_id'             => $warehouse_id,

@@ -456,7 +456,7 @@ table#poTable td input.form-control {
                             <div class="row" id="extras-con" style="display: none;">
                                 <?php if ($Settings->tax2) {
                                                 ?>
-                                    <div class="col-md-4">
+                                    <!-- <div class="col-md-4">
                                         <div class="form-group">
                                             <?= lang('order_tax', 'potax2') ?>
                                             <?php
@@ -466,7 +466,7 @@ table#poTable td input.form-control {
                                                 }
                                                 echo form_dropdown('order_tax', $tr, '', 'id="potax2" class="form-control input-tip select" style="width:100%;"'); ?>
                                         </div>
-                                    </div>
+                                    </div> -->
                                 <?php
                                             } ?>
 
@@ -520,8 +520,9 @@ table#poTable td input.form-control {
                             <td><?= lang('order_discount') ?> <span class="totals_val pull-right" id="tds">0.00</span></td>
                             <?php if ($Settings->tax2) {
                                                 ?>
-                                <td><?= lang('order_tax') ?> <span class="totals_val pull-right" id="ttax2">0.00</span></td>
-                            <?php
+                                <!-- <td><?= lang('order_tax') ?> <span class="totals_val pull-right" id="ttax2">0.00</span></td> -->
+                                <td><?= lang('VAT') ?> <span class="totals_val pull-right" id="grand_vat">0.00</span></td>
+                           <?php
                                             } ?>
                             <td><?= lang('shipping') ?> <span class="totals_val pull-right" id="tship">0.00</span></td>
                             <td><?= lang('grand_total') ?> <span class="totals_val pull-right" id="gtotal">0.00</span></td>
