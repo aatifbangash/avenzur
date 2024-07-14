@@ -573,7 +573,8 @@ class Sales extends MY_Controller
             'dr_total'     => $amount,
             'cr_total'     => $amount,
             'notes'        => 'Sale Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
-            'sid'          =>  $inv->id
+            'sid'          =>  $inv->id,
+            'customer_id'  => $inv->customer_id
             );
     
         $add  = $this->db->insert('sma_accounts_entries', $entry);
@@ -1722,7 +1723,8 @@ class Sales extends MY_Controller
                     'dr_total'     => $inv->grand_total,
                     'cr_total'     => $inv->grand_total,
                     'notes'        => 'Sale Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
-                    'sid'          =>  $inv->id
+                    'sid'          =>  $inv->id,
+                    'customer_id'  => $inv->customer_id
                     );
             
             $add  = $this->db->insert('sma_accounts_entries', $entry);

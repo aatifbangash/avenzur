@@ -1103,7 +1103,8 @@ class Pos extends MY_Controller
                         'cr_total'     => $inv->grand_total,
                         'notes'        => 'POS Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
                         'sid'          =>  $inv->id,
-                        'transaction_type'   =>  'pos'
+                        'transaction_type'   =>  'pos',
+                        'customer_id'  => $customer->id
                         );
                         
                         $add  = $this->db->insert('sma_accounts_entries', $entry);
