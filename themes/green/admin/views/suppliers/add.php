@@ -66,6 +66,10 @@
                         }
                         ?>
                     </div>
+                    <div class="form-group">
+                        <?= lang('payment_term', 'popayment_term'); ?>
+                        <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
+                    </div>
 
                 </div>
                 <div class="col-md-6">
@@ -111,6 +115,8 @@
                         <?= lang('scf6', 'cf6'); ?>
                         <?php echo form_input('cf6', '', 'class="form-control" id="cf6"'); ?>
                     </div>
+
+                    
                 </div>
             </div>
 

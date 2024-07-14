@@ -642,6 +642,7 @@ class Suppliers extends MY_Controller
                 'cf6'         => $this->input->post('cf6'),
                 'gst_no'      => $this->input->post('gst_no'),
                 'ledger_account' => $this->input->post('ledger_account'),
+                'payment_term' => $this->input->post('payment_term'),
                 'sequence_code'  => $this->sequenceCode->generate('SUP', 5)
             ];
         } elseif ($this->input->post('add_supplier')) {
@@ -758,12 +759,12 @@ class Suppliers extends MY_Controller
                 'cf6'         => $this->input->post('cf6'),
                 'gst_no'      => $this->input->post('gst_no'),
                 'ledger_account'      => $this->input->post('ledger_account'),
+                'payment_term' => $this->input->post('payment_term'),
             ];
         } elseif ($this->input->post('edit_supplier')) {
             $this->session->set_flashdata('error', validation_errors());
             redirect($_SERVER['HTTP_REFERER']);
         }
-
         if ($this->form_validation->run() == true && $this->companies_model->updateCompany($id, $data)) {
             $this->session->set_flashdata('message', $this->lang->line('supplier_updated'));
             redirect($_SERVER['HTTP_REFERER']);
