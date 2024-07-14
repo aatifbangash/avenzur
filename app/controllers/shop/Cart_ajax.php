@@ -254,12 +254,17 @@ class Cart_ajax extends MY_Shop_Controller
                         $data['discount'] = ($item['qty'] * 37.5);
                     }
 
+                    $data['discount'] = 0;
                     $data['disc_qty'] = $item['qty'];
                     $data['qty'] = $item['qty'] * 2;
                 }else{
-                    $data = [
+                    /*$data = [
                         'rowid'  => $item['rowid'],
                         'discount'  => ($item['price'] * 10) / 100
+                    ];*/
+                    $data = [
+                        'rowid'  => $item['rowid'],
+                        'discount'  => 0
                     ];
                 }
                 
@@ -394,6 +399,8 @@ class Cart_ajax extends MY_Shop_Controller
                     if($total_sulfad > 1){
                         $discount_amt = 75 * (floor($total_sulfad/ 2) );
                     }  
+
+                    $discount_amt = 0;
                 }
 
                 if($coupon_details && isset($coupon_details['code']) && $coupon_details['code'] == 'fitness'){
@@ -705,7 +712,10 @@ class Cart_ajax extends MY_Shop_Controller
                     //$discounted_quantity = floor($sulfad_new_quantity / 3);
                     $discounted_quantity = 0;
                     if($sulfad_new_quantity > 1){
-                        $discount_amt = 75 * (floor($sulfad_new_quantity/ 2) );
+                        //$discount_amt = 75 * (floor($sulfad_new_quantity/ 2) );
+                        $discount_amt = 0;
+                    }else{
+                        $discount_amt = 0;
                     }
 
                     $data = [
