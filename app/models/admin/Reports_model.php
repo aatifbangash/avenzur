@@ -380,11 +380,17 @@ class Reports_model extends CI_Model
         }
 
         $this->db
-            ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code,(select sum(amount) from sma_accounts_entryitems ei inner join sma_accounts_entries e on e.id =ei.entry_id where e.date < `sma_accounts_entries`.`date` and e.sid = ' . $supplier_id . ') as openingAmount, companies.company')
+            ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, 
+            sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, 
+            sma_accounts_ledgers.code,
+            (select sum(amount) from sma_accounts_entryitems ei 
+                inner join sma_accounts_entries e on e.id =ei.entry_id 
+                where e.date < `sma_accounts_entries`.`date` and e.supplier_id = ' . $supplier_id . ') as openingAmount, 
+                companies.company')
             ->from('sma_accounts_entryitems')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
             ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
-            ->join('companies', 'companies.ledger_account=sma_accounts_entryitems.ledger_id')
+            ->join('companies', 'companies.id=sma_accounts_entries.supplier_id')
             ->where('sma_accounts_entries.supplier_id', $supplier_id)
             ->where('sma_accounts_entries.date >=', $start_date)
             ->where('sma_accounts_entries.date <=', $end_date)
