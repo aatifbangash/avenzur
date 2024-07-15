@@ -1066,10 +1066,36 @@ class Pay extends MY_Shop_Controller
         
         if($response_status == '00000')
         {
-            echo 'Payment Success. Loaded from Web';
-        }else{
-            echo 'Payment Failed. Loaded from Web';
+            $amount = $_POST['Response_Amount'] / 100;
+            
+            $reference  = $_POST['Response_ApprovalCode'];
+            if ($inv = $this->pay_model->getSaleByID($invoice_no)) {
+                $payment = [
+                    'date'           => date('Y-m-d H:i:s'),
+                    'sale_id'        => $invoice_no,
+                    'reference_no'   => $this->site->getReference('pay'),
+                    'amount'         => $amount,
+                    'paid_by'        => 'DirectPay',
+                    'transaction_id' => $_POST['Response_TransactionID'],
+                    'type'           => 'received',
+                    'note'           => $_POST['Response_CurrencyISOCode'] . ' ' . $_POST['Response_Amount'] . ' had been paid for the Sale Reference No ' . $inv->reference_no,
+                ];
+                if ($this->pay_model->addPayment($payment)) {
+                    $address_id = $inv->address_id;
+                    $customer = $this->pay_model->getCompanyByID($inv->customer_id);
+
+                    $address = $this->pay_model->getAddressByID($address_id);
+                    $this->pay_model->updateStatus($inv->id, 'completed');
+                }
+            }
+
         }
+
+        if ($inv->shop) {
+            shop_redirect('orders/' . $inv->id . '/' . ($this->loggedIn ? '' : $inv->hash));
+        }
+        
+        $this->page_construct('pages/payment_error', $this->data);
     }
     
     public function RedirectPaymentResponsePage()
