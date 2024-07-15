@@ -79,3 +79,4 @@ $route['admin/returns/(:num)']   = 'admin/returns/index/$1';
 $route['admin/returns_supplier/(:num)']   = 'admin/returns_supplier/index/$1';
 $route['admin/sales/qty_onhold_requests']     = 'admin/sales/qty_onhold_requests'; 
 $route['admin/product_image/remove_image/(:num)'] = 'admin/product_image/remove_image/$1';
+$route['admin/entries/(:num)']   = 'admin/entries/index/$1';
