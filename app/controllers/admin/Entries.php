@@ -1348,8 +1348,10 @@ class Entries extends MY_Controller
 		}
 
 		if($entry['transaction_type']=='purchaseorder' and $entry['pid'] > 0){ 
-			$this->data['supplier'] = $this->db->where('id',$entry['supplier_id'])->get('sma_companies')->row_array();
-			$this->data['purchase'] = $this->db->where('id',$entry['pid'])->get('sma_purchases')->row_array();
+			$purchase = $this->db->where('id',$entry['pid'])->get('sma_purchases')->row_array();
+			$this->data['purchase'] = $purchase; 
+			// $this->data['supplier'] = $this->db->where('id',$entry['supplier_id'])->get('sma_companies')->row_array(); 
+			$this->data['supplier'] = $this->db->where('id',$purchase['supplier_id'])->get('sma_companies')->row_array(); 
 						  
 		}
 		if($entry['sid']> 0){ 
