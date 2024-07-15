@@ -1317,6 +1317,23 @@ class Entries extends MY_Controller
 			$this->data['transferAttachments']     = $this->site->getAttachments($entry['tid'], 'transfer');
 		}
 
+		if($entry['transaction_type']=='purchaseorder' and $entry['pid'] > 0){ 
+			$this->data['supplier'] = $this->db->where('id',$entry['supplier_id'])->get('sma_companies')->row_array();
+			$this->data['purchase'] = $this->db->where('id',$entry['pid'])->get('sma_purchases')->row_array();
+						  
+		}
+		if($entry['sid']> 0){ 
+			$sales = $this->db->where('id',$entry['sid'])->get('sma_sales')->row_array();
+			$this->data['sales']= $sales ; 
+			$this->data['customer'] = $this->db->where('id',$sales['customer_id'])->get('sma_companies')->row_array();
+		}
+
+		if($entry['tid']> 0){ 
+			$transfer = $this->db->where('id',$entry['tid'])->get('sma_transfers')->row_array();
+			$this->data['transfer']= $transfer ; 
+			 
+		} 
+
 		$this->data['curEntryitems'] = $curEntryitems; // pass current entry items to view
 		$this->data['allTags'] = $this->db->get('sma_accounts_tags')->result_array(); // fetch all tags and pass to view
 		$this->data['entry'] = $entry; // pass entry to view
