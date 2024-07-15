@@ -619,7 +619,6 @@ class Suppliers extends MY_Controller
         $this->sma->checkPermissions(false, true);
 
         $this->form_validation->set_rules('email', $this->lang->line('email_address'), 'is_unique[companies.email]');
-
         if ($this->form_validation->run('companies/add') == true) {
             $data = [
                 'name'        => $this->input->post('name'),
@@ -860,6 +859,7 @@ class Suppliers extends MY_Controller
                         'cf6'         => isset($value[16]) ? trim($value[16]) : '',
                         'group_id'    => 4,
                         'group_name'  => 'supplier',
+                        'sequence_code'  => $this->sequenceCode->generate('SUP', 5)
                     ];
                     if (empty($supplier['company']) || empty($supplier['name']) || empty($supplier['email'])) {
                         $this->session->set_flashdata('error', lang('company') . ', ' . lang('name') . ', ' . lang('email') . ' ' . lang('are_required') . ' (' . lang('line_no') . ' ' . $rw . ')');
