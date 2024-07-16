@@ -111,7 +111,7 @@ class Purchases_model extends CI_Model
                 
                 //handle inventory movement
                 if($item['status']=='received'){
-                $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
+                $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $purchase_id);
                 }
                 // Code for serials here
                 $serials_reference = $data['reference_no'];
@@ -780,7 +780,7 @@ class Purchases_model extends CI_Model
                 }
                 
                 if($item['status']=='received'){
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id);
                 }
                 // $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
                 // Code for serials here

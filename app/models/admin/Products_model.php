@@ -1153,7 +1153,8 @@ class Products_model extends CI_Model
                 $this->site->syncVariantQty($data['option_id'], $data['warehouse_id'], $data['product_id']);
             }
             $movement_type = $data['type'] == 'subtraction' ? 'adjustment_decrease': 'adjustment_increase';
-            $this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id']);
+            $adjustment_id = isset($data['adjustment_id']) ? $data['adjustment_id'] : null;
+            $this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id'], $adjustment_id);
                
         }
     }
