@@ -370,6 +370,7 @@ class Reports_model extends CI_Model
             ->where('sma_accounts_entries.date <', $start_date)
             ->group_by('sma_accounts_entryitems.dc');
         $q = $this->db->get();
+        //lq($this);
 
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -391,7 +392,7 @@ class Reports_model extends CI_Model
             ->order_by('sma_accounts_entries.date asc');
 
         $q = $this->db->get();
-        //        lq($this);
+        lq($this);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -402,6 +403,74 @@ class Reports_model extends CI_Model
 
         $response_array = array('ob' => $data_res, 'report' => $data);
         //        dd($response_array);
+        return $response_array;
+    }
+
+    public function getCustomerStatement($start_date, $end_date, $customer_id, $ledger_account)
+    {
+        // $response = array();
+        // [entry_id] => 11
+        // [amount] => 102.5000
+        // [dc] => C
+        // [narration] => 
+        // [transaction_type] => creditmemo
+        // [date] => 2024-07-15
+        // [code] => 01-01-02-00-0001
+        // [openingAmount] => 
+        // [company] => 
+
+        $this->db
+            ->select('sma_accounts_entryitems.id as entry_id, COALESCE(sum(sma_accounts_entryitems.amount), 0) as amount, 
+                    sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.date, 
+                    sma_accounts_ledgers.code, sma_companies.company, sma_accounts_entries.transaction_type')
+            ->from('sma_accounts_entryitems')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->join('sma_accounts_ledgers', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
+            ->join('sma_companies', 'sma_companies.id=sma_accounts_entries.customer_id')
+            ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->where('sma_accounts_entries.customer_id', $customer_id)
+            ->where('sma_accounts_entries.date >=', $start_date)
+            ->where('sma_accounts_entries.date <=', $end_date)
+            ->group_by('sma_accounts_entryitems.dc')
+            ->group_by('sma_accounts_entries.date')
+            ->group_by('sma_accounts_entries.transaction_type');
+        $q = $this->db->get();
+        //lq($this);
+
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        // $this->db
+        //     ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, 
+        //     sma_accounts_entries.date, sma_accounts_ledgers.code,
+        //     (select sum(amount) from sma_accounts_entryitems ei inner join sma_accounts_entries e on e.id =ei.entry_id where e.date < `sma_accounts_entries`.`date` 
+        //     and e.customer_id = ' . $customer_id . ') as openingAmount, companies.company')
+        //     ->from('sma_accounts_entryitems')
+        //     ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+        //     ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
+        //     ->join('companies', 'companies.ledger_account=sma_accounts_entryitems.ledger_id')
+        //     ->where('sma_accounts_entries.customer_id', $customer_id)
+        //     ->where('sma_accounts_entries.date >=', $start_date)
+        //     ->where('sma_accounts_entries.date <=', $end_date)
+        //     ->order_by('sma_accounts_entries.date asc');
+
+        // $q = $this->db->get();
+        // //lq($this);
+        // if ($q->num_rows() > 0) {
+        //     foreach (($q->result()) as $row) {
+        //         $data[] = $row;
+        //     }
+        // } else {
+        //     $data = array();
+        // }
+
+        $response_array = array('ob' => array(), 'report' => $data_res);
+              // dd($response_array);
         return $response_array;
     }
 
@@ -443,16 +512,15 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 //print_r($row);exit;
-                if($row->id == 102) 
-                {
-                    if($row->supplier_id > 0){
+                if ($row->id == 102) {
+                    if ($row->supplier_id > 0) {
                         $data2[] = $row;
                     }
-                   
-                }else{
+
+                } else {
                     $data2[] = $row;
                 }
-               
+
             }
         } else {
             $data2 = array();
@@ -581,7 +649,8 @@ class Reports_model extends CI_Model
         return $response;
     }
 
-    public function get_suppliers_trial_balance($start_date, $end_date) {
+    public function get_suppliers_trial_balance($start_date, $end_date)
+    {
         // Calculate OB
         // $this->db->select('supplier_id, SUM(dr_total) as total_debit, SUM(cr_total) as total_credit');
         // $this->db->where('date <', $start_date);
@@ -601,9 +670,9 @@ class Reports_model extends CI_Model
         $this->db->group_by('sma_accounts_entries.supplier_id, sma_companies.name');
 
         $query_ob = $this->db->get();
-        //echo $this->db->last_query();
+        echo $this->db->last_query();
         $ob_results = $query_ob->result_array();
-       //print_r($ob_results);
+        //print_r($ob_results);
 
         // Calculate transactions within period
         $this->db->select('sma_companies.id as supplier_id, sma_companies.name, sma_companies.sequence_code, 
@@ -619,18 +688,18 @@ class Reports_model extends CI_Model
         $this->db->group_by('sma_accounts_entries.supplier_id, sma_companies.name');
 
         $query_period = $this->db->get();
-        //echo $this->db->last_query();
+        echo $this->db->last_query();
         $period_results = $query_period->result_array();
-        
+
         // Combine OB and period transactions to get EB
         $balances = [];
         foreach ($ob_results as $ob) {
             $supplier_id = $ob['supplier_id'];
 
-            if($ob['total_debit'] >= $ob['total_credit']){
+            if ($ob['total_debit'] >= $ob['total_credit']) {
                 $ob['total_debit'] = $ob['total_debit'] - $ob['total_credit'];
                 $ob['total_credit'] = 0;
-            }else if($ob['total_credit'] > $ob['total_debit']){
+            } else if ($ob['total_credit'] > $ob['total_debit']) {
                 $ob['total_credit'] = $ob['total_credit'] - $ob['total_debit'];
                 $ob['total_debit'] = 0;
             }
@@ -645,16 +714,16 @@ class Reports_model extends CI_Model
                 'trsCredit' => 0
             ];
         }
-       // print_r($balances);
-       
+        // print_r($balances);
+
         foreach ($period_results as $period) {
             $supplier_id = $period['supplier_id'];
             if (!isset($balances[$supplier_id])) {
 
-                if($period['total_debit'] >= $period['total_credit']){
+                if ($period['total_debit'] >= $period['total_credit']) {
                     $period['total_debit'] = $period['total_debit'] - $period['total_credit'];
                     $period['total_credit'] = 0;
-                }else if($period['total_credit'] > $period['total_debit']){
+                } else if ($period['total_credit'] > $period['total_debit']) {
                     $period['total_credit'] = $period['total_credit'] - $period['total_debit'];
                     $period['total_debit'] = 0;
                 }
@@ -669,20 +738,20 @@ class Reports_model extends CI_Model
                     'trsCredit' => $period['total_credit'],
                 ];
             } else {
-                if($period['total_debit'] >= $period['total_credit']){
+                if ($period['total_debit'] >= $period['total_credit']) {
                     $period['total_debit'] = $period['total_debit'] - $period['total_credit'];
                     $period['total_credit'] = 0;
-                }else if($period['total_credit'] > $period['total_debit']){
+                } else if ($period['total_credit'] > $period['total_debit']) {
                     $period['total_credit'] = $period['total_credit'] - $period['total_debit'];
                     $period['total_debit'] = 0;
                 }
 
                 $balances[$supplier_id]['trsDebit'] = $period['total_debit'];
                 $balances[$supplier_id]['trsCredit'] = $period['total_credit'];
-                
+
             }
         }
-        
+
         return $balances;
     }
 
@@ -717,6 +786,7 @@ class Reports_model extends CI_Model
                                 c.id
                             ORDER BY
                                 c.name ASC");
+        echo $this->db->last_query();
 
         $data = array();
         if ($q->num_rows() > 0) {
@@ -754,7 +824,7 @@ class Reports_model extends CI_Model
                             ORDER BY
                                 c.name ASC");
 
-
+        echo $this->db->last_query();
         $data2 = array();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -765,6 +835,75 @@ class Reports_model extends CI_Model
 
         return $response;
     }
+
+    public function get_customer_trial_balance($start_date, $end_date)
+    {
+        $response = array();
+        $q = $this->db->query("SELECT 
+                sma_companies.id, 
+                sma_companies.name,
+                sma_companies.company, 
+                sma_companies.sequence_code, 
+                SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
+                SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
+            FROM 
+                sma_accounts_entries 
+            JOIN 
+                sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id 
+            JOIN 
+                sma_companies ON sma_accounts_entries.customer_id = sma_companies.id 
+            WHERE 
+                date(sma_accounts_entries.date) >= '{$start_date}' 
+                AND date(sma_accounts_entries.date) <= '{$end_date}' 
+                AND sma_accounts_entries.customer_id IS NOT NULL 
+                AND sma_accounts_entryitems.ledger_id = sma_companies.ledger_account 
+            GROUP BY 
+                sma_accounts_entries.customer_id, 
+                sma_companies.name");
+
+        $data = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+
+        $response['trs'] = $data;
+
+        $q = $this->db->query("SELECT 
+                    sma_companies.id, 
+                    sma_companies.name, 
+                    sma_companies.company, 
+                    sma_companies.sequence_code, 
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
+                    FROM 
+                    sma_accounts_entries 
+                    JOIN 
+                    sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id 
+                    JOIN 
+                    sma_companies ON sma_accounts_entries.customer_id = sma_companies.id 
+                    WHERE 
+                    date(sma_accounts_entries.date) < '{$start_date}' 
+                    AND sma_accounts_entryitems.ledger_id = sma_companies.ledger_account 
+                    AND sma_accounts_entries.customer_id IS NOT NULL 
+                    GROUP BY 
+                    sma_accounts_entries.customer_id, 
+                    sma_companies.name
+                ");
+        //echo $this->db->last_query();
+        $data2 = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data2[] = $row;
+            }
+        }
+        $response['ob'] = $data2;
+
+        return $response;
+
+    }
+
 
     public function getBestSeller($start_date, $end_date, $warehouse_id = null)
     {
@@ -1532,12 +1671,12 @@ class Reports_model extends CI_Model
 
     public function getInventoryItemMovementRecords($productId, $filterOnType)
     {
-        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : null; 
-        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null; 
-        $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;  
+        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : null;
+        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null;
+        $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;
         if ($start_date) {
-            $start_date = $this->sma->fld($start_date);   
-        } 
+            $start_date = $this->sma->fld($start_date);
+        }
         if ($end_date) {
             $end_date = $this->sma->fld($end_date);
         }
@@ -1548,13 +1687,13 @@ class Reports_model extends CI_Model
                 $where .= " AND (a.type = 'adjustment_increase' OR a.type ='adjustment_decrease') ";
             } else {
                 $where .= " AND a.type = '" . $filterOnType . "'";
-            } 
-        }     
-        if(!empty($warehouse)){
+            }
+        }
+        if (!empty($warehouse)) {
             $where .= " AND a.location_id = '" . $warehouse . "'";
-        } 
+        }
         if (!empty($start_date) and !empty($end_date)) {
-            $where .=' AND DATE(a.movement_date) BETWEEN "' . $start_date . '" and "' . $end_date . '"';
+            $where .= ' AND DATE(a.movement_date) BETWEEN "' . $start_date . '" and "' . $end_date . '"';
         }
         $response = array();
         if ($productId > 0) {

@@ -3748,8 +3748,9 @@ class Reports extends MY_Controller
             $supplier_id = $this->input->post('customer');
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
+           // print_r($supplier_details);exit;
             $ledger_account = $supplier_details->ledger_account;
-            $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
+            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_account);
 
             $total_ob = 0;
             $total_ob_credit = 0;
@@ -4091,22 +4092,45 @@ class Reports extends MY_Controller
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $trial_balance_array = $this->reports_model->getCustomersTrialBalance($start_date, $end_date);
-
+            //$trial_balance_array = $this->reports_model->getCustomersTrialBalance($start_date, $end_date);
+            $trial_balance_array = $this->reports_model->get_customer_trial_balance($start_date, $end_date);
+            // echo "<pre>";
+            // print_r($trial_balance_array);
+            // exit;
             $response_arr = array();
+            /**OLD LOGIC */
+            // foreach ($trial_balance_array['trs'] as $trans) {
+            //     $response_arr[$trans->id]["name"] = $trans->name;
+            //     $response_arr[$trans->id]["company"] = $trans->company;
+            //     $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
+            //     $response_arr[$trans->id]["trsDebit"] = $trans->payment_total + $trans->sale_total;
+            //     $response_arr[$trans->id]["trsCredit"] =  $trans->return_total + $trans->memo_total;
+            // }
+
+
+            // foreach ($trial_balance_array['ob'] as $trans) {
+            //     $response_arr[$trans->id]["obDebit"] = $trans->payment_total + $trans->sale_total;
+            //     $response_arr[$trans->id]["obCredit"] =  $trans->return_total + $trans->memo_total;
+            // }
+           /**END OLD LOGIC */
+
             foreach ($trial_balance_array['trs'] as $trans) {
                 $response_arr[$trans->id]["name"] = $trans->name;
                 $response_arr[$trans->id]["company"] = $trans->company;
                 $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
-                $response_arr[$trans->id]["trsDebit"] = $trans->payment_total + $trans->sale_total;
-                $response_arr[$trans->id]["trsCredit"] =  $trans->return_total + $trans->memo_total;
+                $response_arr[$trans->id]["trsDebit"] = $trans->total_debit;
+                $response_arr[$trans->id]["trsCredit"] =  $trans->total_credit;
             }
 
 
             foreach ($trial_balance_array['ob'] as $trans) {
-                $response_arr[$trans->id]["obDebit"] = $trans->payment_total + $trans->sale_total;
-                $response_arr[$trans->id]["obCredit"] =  $trans->return_total + $trans->memo_total;
+                $response_arr[$trans->id]["name"] = $trans->name;
+                $response_arr[$trans->id]["company"] = $trans->company;
+                $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
+                $response_arr[$trans->id]["obDebit"] = $trans->total_debit;
+                $response_arr[$trans->id]["obCredit"] =  $trans->total_credit;
             }
+
             //dd($response_arr);
 
 
