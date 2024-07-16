@@ -365,7 +365,7 @@ class Reports_model extends CI_Model
             //->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
             //                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
-            ->where('sma_accounts_entries.sid', $supplier_id)
+            ->where('sma_accounts_entries.supplier_id', $supplier_id)
             // need to join with purchase and suppliers( company)
             ->where('sma_accounts_entries.date <', $start_date)
             ->group_by('sma_accounts_entryitems.dc');
@@ -386,7 +386,7 @@ class Reports_model extends CI_Model
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
             ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
             ->join('companies', 'companies.ledger_account=sma_accounts_entryitems.ledger_id')
-            ->where('sma_accounts_entries.sid', $supplier_id)
+            ->where('sma_accounts_entries.supplier_id', $supplier_id)
             ->where('sma_accounts_entries.date >=', $start_date)
             ->where('sma_accounts_entries.date <=', $end_date)
             ->order_by('sma_accounts_entries.date asc');

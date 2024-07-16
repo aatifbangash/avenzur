@@ -66,11 +66,34 @@ $(document).ready(function() {
           <div class="box">
             
             <!-- /.box-header -->
-            <div class="box-body">
+            <div class="box-body" style="padding:5px">
               <div>
                 <?php
-                    echo (lang('Id')) . ' : ' . ($entry['id']);
-                    echo '<br /><br />';
+                    echo (lang('Entry_Id')) . ' : ' . ($entry['id']).'<br>'; 
+                    if($entry['pid']> 0){ 
+                        echo (lang('Supplier_name')) . ' : ' . ($supplier['name']) .'<br>';
+                        echo (lang('Supplier_Sequence_code')) . ' : ' . ($supplier['sequence_code']) .'<br>';  
+
+                        echo (lang('Purchase_id')) . ' : ' . ($purchase['id']) .'<br>';
+                        echo (lang('invoice_number')) . ' : ' . ($purchase['invoice_number']) .'<br>';
+                        echo (lang('sequence_code')) . ' : ' . ($purchase['sequence_code']) .'<br>';
+                    }
+                    if($entry['sid']> 0){ 
+
+                        echo (lang('Sale_id')) . ' : ' . ($sales['id']) .'<br>';
+                        echo (lang('invoice_number')) . ' : ' . ($sales['invoice_number']) .'<br>';
+                        echo (lang('sequence_code')) . ' : ' . ($sales['sequence_code']) .'<br>';
+                       //   echo (lang('Customer')) . ' : ' . ($customer['name']) .'<br>';
+                        echo (lang('Customer')) . ' : ' . ($sales['customer']) .'<br>';
+                    }
+
+                    if($entry['tid']> 0){ 
+                        echo (lang('Transfer_ID')) . ' : ' . ($entry['tid']) .'<br>';
+                        echo (lang('invoice_number')) . ' : ' . ($transfer['invoice_number']) .'<br>';
+                        echo (lang('sequence_code')) . ' : ' . ($transfer['sequence_code']) .'<br>';  
+                        echo (lang('transfer_no')) . ' : ' . ($transfer['transfer_no']) .'<br>';
+                    }
+                    
                     //echo (lang('entries_views_views_label_number')) . ' : ' . ($this->functionscore->toEntryNumber($entry['number'], $entry['entrytype_id']));
                     //echo '<br /><br />';
                     echo (lang('entries_views_views_label_date')) . ' : ' . ($this->functionscore->dateFromSql($entry['date']));
