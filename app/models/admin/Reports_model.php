@@ -304,7 +304,7 @@ GROUP BY
     {
         $response = array();
 
-        $results = $this->db
+        /*$results = $this->db
             ->select('sma_accounts_entryitems.id, companies.name as company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date, sma_accounts_entries.supplier_id')
             ->from('sma_accounts_entryitems')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
@@ -321,17 +321,58 @@ GROUP BY
                 ')
             ->order_by('companies.company asc')
             ->get()
-            ->result();
-        echo '<pre>';
-        print_r($results);
-        exit;
-        $organizedResults = array();
-        foreach ($results as $result) {
-            $timeRange = $this->getTimeRange($result->date); // Define this function based on your needs
-            $organizedResults[$result->company][$timeRange][] = $result;
+            ->result();*/
+
+        $q = $this->db->query("SELECT 
+            c.id AS supplier_id,
+            c.name AS supplier_name,
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) <= 30 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS 'Current',
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 31 AND 60 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS '31-60',
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 61 AND 90 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS '61-90',
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 91 AND 120 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS '91-120',
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) > 120 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS '>120'
+        FROM 
+            sma_companies c
+        JOIN 
+            sma_accounts_entries ae ON c.id = ae.supplier_id
+        JOIN 
+            sma_accounts_entryitems ei ON ae.id = ei.entry_id
+        JOIN 
+            sma_accounts_ledgers al ON c.ledger_account = al.id
+         WHERE 
+            ei.ledger_id = c.ledger_account
+        
+        GROUP BY 
+            c.id, c.name");
+
+        $data = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
         }
 
-        return $organizedResults;
+        return $data;
     }
 
     public function getTimeRange($date)
@@ -446,7 +487,7 @@ GROUP BY
             ->order_by('sma_accounts_entries.date asc');
 
         $q = $this->db->get();
-        lq($this);
+        
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
