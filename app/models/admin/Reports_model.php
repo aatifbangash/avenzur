@@ -2361,7 +2361,7 @@ class Reports_model extends CI_Model
         ) AS movement_in ON movement_in.product_id = prd.id
         
         WHERE movement_in.product_id IS NOT NULL AND movement_out.product_id IS NOT NULL");
-
+       //echo $this->db->last_query(); exit;
         $resultSet = array();
         if ($qry->num_rows() > 0) {
             foreach (($qry->result()) as $row) {
@@ -2607,8 +2607,8 @@ class Reports_model extends CI_Model
             ->select('DISTINCT (sma_sale_items.product_id)')
             ->from('sma_sale_items')
             ->join('sma_sales', 'sma_sales.id = sma_sale_items.sale_id')
-            ->where('sma_sales.date >=', $start_date)
-            ->where('sma_sales.date <=', $end_date);
+            ->where('date(sma_sales.date) >=', $start_date)
+            ->where('date(sma_sales.date) <=', $end_date);
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach ($q->result() as $row) {
@@ -2621,8 +2621,8 @@ class Reports_model extends CI_Model
             ->select('DISTINCT (sma_return_items.product_id)')
             ->from('sma_return_items')
             ->join('sma_returns', 'sma_returns.id = sma_return_items.return_id')
-            ->where('sma_returns.date >=', $start_date)
-            ->where('sma_returns.date <=', $end_date);
+            ->where('date(sma_returns.date) >=', $start_date)
+            ->where('date(sma_returns.date) <=', $end_date);
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach ($q->result() as $row) {
@@ -2669,8 +2669,8 @@ class Reports_model extends CI_Model
             ->from('sma_return_items')
             ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
             ->where('sma_return_items.product_id', $itemId)
-            ->where('sma_returns.date >=', $start_date)
-            ->where('sma_returns.date <=', $end_date)
+            ->where('date(sma_returns.date) >=', $start_date)
+            ->where('date(sma_returns.date) <=', $end_date)
             ->group_by('sma_return_items.product_id');
 
         $q = $this->db->get();
@@ -2716,8 +2716,8 @@ class Reports_model extends CI_Model
             ->from('sma_sale_items')
             ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
             ->where('sma_sale_items.product_id', $itemId)
-            ->where('sma_sales.date >=', $start_date)
-            ->where('sma_sales.date <=', $end_date)
+            ->where('date(sma_sales.date) >=', $start_date)
+            ->where('date(sma_sales.date) <=', $end_date)
             //->where('sma_purchases.return_id IS NULL')
             ->group_by('sma_sale_items.product_id');
 
@@ -2764,7 +2764,7 @@ class Reports_model extends CI_Model
             ->from('sma_sale_items')
             ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
             ->where('sma_sale_items.product_id', $itemId)
-            ->where('sma_sales.date <', $start_date)
+            ->where('date(sma_sales.date) <', $start_date)
             //->where('sma_sales.date <=', $end_date)
             //->where('sma_purchases.return_id IS NULL')
             ->group_by('sma_sale_items.product_id');
@@ -2788,7 +2788,7 @@ class Reports_model extends CI_Model
             ->from('sma_return_items')
             ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
             ->where('sma_return_items.product_id', $itemId)
-            ->where('sma_returns.date <', $start_date)
+            ->where('date(sma_returns.date) <', $start_date)
             ->group_by('sma_return_items.product_id');
 
         $q = $this->db->get();
