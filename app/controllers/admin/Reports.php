@@ -3895,19 +3895,20 @@ class Reports extends MY_Controller
 
         $response_arr = array();
         $supplier_aging_array = $this->reports_model->getCustomerAging($duration = 30);
-        foreach ($supplier_aging_array as $key => $supplier_aging) {
-            $response_arr[$key] = array('Current' => 0, '1-30' => 0, '31-60' => 0, '61-90' => 0, '91-120' => 0, '>120' => 0);
-            foreach ($supplier_aging as $key2 => $record) {
-                foreach ($record as $rec) {
-                    if ($rec->dc == 'D') {
-                        $response_arr[$key][$key2] -= $rec->total_amount;
-                    } else if ($rec->dc == 'C') {
-                        $response_arr[$key][$key2] += $rec->total_amount;
-                    }
-                }
-            }
-        }
-        $this->data['supplier_aging'] = $response_arr;
+       
+        // foreach ($supplier_aging_array as $key => $supplier_aging) {
+        //     $response_arr[$key] = array('Current' => 0, '1-30' => 0, '31-60' => 0, '61-90' => 0, '91-120' => 0, '>120' => 0);
+        //     foreach ($supplier_aging as $key2 => $record) {
+        //         foreach ($record as $rec) {
+        //             if ($rec->dc == 'D') {
+        //                 $response_arr[$key][$key2] -= $rec->total_amount;
+        //             } else if ($rec->dc == 'C') {
+        //                 $response_arr[$key][$key2] += $rec->total_amount;
+        //             }
+        //         }
+        //     }
+        // }
+        $this->data['supplier_aging'] = $supplier_aging_array;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_aging')]];
         $meta = ['page_title' => lang('customers_aging'), 'bc' => $bc];
         $this->page_construct('reports/customers_aging', $meta, $this->data);

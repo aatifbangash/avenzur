@@ -225,34 +225,79 @@ class Reports_model extends CI_Model
 
     public function getCustomerAging($duration)
     {
+    
         $response = array();
 
-        $results = $this->db
-            ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date')
-            ->from('companies')
-            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
-            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            ->where('companies.group_name', 'customer')
-            ->group_by('companies.id, sma_accounts_entryitems.dc')
-            ->order_by('
-                    CASE
-                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1
-                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 60 DAY) THEN 2
-                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 90 DAY) THEN 3
-                        ELSE 4
-                    END
-                ')
-            ->order_by('companies.company asc')
-            ->get()
-            ->result();
+        //     $results = $this->db
+        //         ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date')
+        //         ->from('companies')
+        //         ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+        //         ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+        //         ->where('companies.group_name', 'customer')
+        //         ->group_by('companies.id, sma_accounts_entryitems.dc')
+        //         ->order_by('
+        //                 CASE
+        //                     WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1
+        //                     WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 60 DAY) THEN 2
+        //                     WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 90 DAY) THEN 3
+        //                     ELSE 4
+        //                 END
+        //             ')
+        //         ->order_by('companies.company asc')
+        //         ->get()
+        //         ->result();
+        //    echo $this->db->last_query();exit;     
 
-        $organizedResults = array();
-        foreach ($results as $result) {
-            $timeRange = $this->getTimeRange($result->date); // Define this function based on your needs
-            $organizedResults[$result->company][$timeRange][] = $result;
+        $q = $this->db->query("SELECT 
+    c.id AS customer_id,
+    c.name AS customer_name,
+    SUM(CASE 
+            WHEN DATEDIFF(CURDATE(), ae.date) <= 30 THEN 
+                CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END
+            ELSE 0 
+        END) AS 'Current',
+    SUM(CASE 
+            WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 31 AND 60 THEN 
+                CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END
+            ELSE 0 
+        END) AS '31-60',
+    SUM(CASE 
+            WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 61 AND 90 THEN 
+                CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END
+            ELSE 0 
+        END) AS '61-90',
+    SUM(CASE 
+            WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 91 AND 120 THEN 
+                CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END
+            ELSE 0 
+        END) AS '91-120',
+    SUM(CASE 
+            WHEN DATEDIFF(CURDATE(), ae.date) > 120 THEN 
+                CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END
+            ELSE 0 
+        END) AS '>120'
+FROM 
+    sma_companies c
+JOIN 
+    sma_accounts_entries ae ON c.id = ae.customer_id
+JOIN 
+    sma_accounts_entryitems ei ON ae.id = ei.entry_id
+JOIN 
+    sma_accounts_ledgers al ON c.ledger_account = al.id
+ WHERE 
+    ei.ledger_id = c.ledger_account
+
+GROUP BY 
+    c.id, c.name");
+
+        $data = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
         }
 
-        return $organizedResults;
+       return $data;
     }
 
     public function getSupplierAging($duration)
@@ -470,7 +515,7 @@ class Reports_model extends CI_Model
         // }
 
         $response_array = array('ob' => array(), 'report' => $data_res);
-              // dd($response_array);
+        // dd($response_array);
         return $response_array;
     }
 
