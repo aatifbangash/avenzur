@@ -57,10 +57,10 @@ class Customers extends MY_Controller
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
-                'dc' => 'D',
+                'dc' => 'C',
                 'ledger_id' => $customer->ledger_account,
                 'amount' => $payment_amount,
-                'narration' => ''
+                'narration' => 'Account Receivable'
             )
         );
 
@@ -79,7 +79,7 @@ class Customers extends MY_Controller
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
-                'dc' => 'C',
+                'dc' => 'D',
                 'ledger_id' => $ledger_account,
                 'amount' => $payment_amount,
                 'narration' => ''
