@@ -260,12 +260,12 @@ class Reports_model extends CI_Model
         $response = array();
 
         $results = $this->db
-            ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date')
-            ->from('companies')
-            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+            ->select('sma_accounts_entryitems.id, companies.name as company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date, sma_accounts_entries.supplier_id')
+            ->from('sma_accounts_entryitems')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->join('companies', 'sma_accounts_entries.supplier_id=companies.id')
             ->where('companies.group_name', 'supplier')
-            ->group_by('companies.id, sma_accounts_entryitems.dc')
+            ->group_by('sma_accounts_entries.supplier_id')
             ->order_by('
                     CASE
                         WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1
@@ -277,7 +277,9 @@ class Reports_model extends CI_Model
             ->order_by('companies.company asc')
             ->get()
             ->result();
-
+        echo '<pre>';
+        print_r($results);
+        exit;
         $organizedResults = array();
         foreach ($results as $result) {
             $timeRange = $this->getTimeRange($result->date); // Define this function based on your needs
@@ -360,15 +362,18 @@ class Reports_model extends CI_Model
         $response = array();
 
         $this->db
-            ->select('COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+            ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, 
+            sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, 
+            sma_accounts_ledgers.code, 
+            companies.company')
             ->from('sma_accounts_entryitems')
-            //->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            //                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->join('companies', 'companies.id=sma_accounts_entries.supplier_id')
+            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=companies.ledger_account')
             ->where('sma_accounts_entries.supplier_id', $supplier_id)
-            // need to join with purchase and suppliers( company)
             ->where('sma_accounts_entries.date <', $start_date)
-            ->group_by('sma_accounts_entryitems.dc');
+            ->where('sma_accounts_entryitems.ledger_id', 102)
+            ->order_by('sma_accounts_entries.date asc');
         $q = $this->db->get();
 
         if ($q->num_rows() > 0) {
@@ -382,18 +387,16 @@ class Reports_model extends CI_Model
         $this->db
             ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, 
             sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, 
-            sma_accounts_ledgers.code,
-            (select sum(amount) from sma_accounts_entryitems ei 
-                inner join sma_accounts_entries e on e.id =ei.entry_id 
-                where e.date < `sma_accounts_entries`.`date` and e.supplier_id = ' . $supplier_id . ') as openingAmount, 
-                companies.company')
+            sma_accounts_ledgers.code, 
+            companies.company')
             ->from('sma_accounts_entryitems')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
             ->join('companies', 'companies.id=sma_accounts_entries.supplier_id')
+            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=companies.ledger_account')
             ->where('sma_accounts_entries.supplier_id', $supplier_id)
             ->where('sma_accounts_entries.date >=', $start_date)
             ->where('sma_accounts_entries.date <=', $end_date)
+            ->where('sma_accounts_entryitems.ledger_id', 102)
             ->order_by('sma_accounts_entries.date asc');
 
         $q = $this->db->get();

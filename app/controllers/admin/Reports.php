@@ -3855,16 +3855,17 @@ class Reports extends MY_Controller
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
             $ledger_account = $supplier_details->ledger_account;
             $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
-//dd($supplier_statement);
+
             $total_ob = 0;
             $total_ob_credit = 0;
             $total_ob_debit = 0;
             $ob_type = '';
+            
             foreach ($supplier_statement['ob'] as $ob) {
                 if ($ob->dc == 'D') {
-                    $total_ob_debit = $ob->total_amount;
+                    $total_ob_debit += $ob->amount;
                 } else if ($ob->dc == 'C') {
-                    $total_ob_credit = $ob->total_amount;
+                    $total_ob_credit += $ob->amount;
                 }
             }
 
@@ -3874,6 +3875,8 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['supplier_id'] = $supplier_id;
             $this->data['ob_type'] = $ob_type;
+            $this->data['total_ob_credit'] = $total_ob_credit;
+            $this->data['total_ob_debit'] = $total_ob_debit;
             $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];
 
@@ -3931,7 +3934,8 @@ class Reports extends MY_Controller
                 }
             }
         }
-        $this->data['supplier_aging'] = $this->sma->formatDecimal($response_arr);
+        
+        $this->data['supplier_aging'] = $response_arr;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_aging')]];
         $meta = ['page_title' => lang('suppliers_aging'), 'bc' => $bc];
         $this->page_construct('reports/suppliers_aging', $meta, $this->data);
