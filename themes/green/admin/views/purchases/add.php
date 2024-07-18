@@ -487,7 +487,7 @@ table#poTable td input.form-control {
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <?= lang('payment_term', 'popayment_term'); ?>
-                                        <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
+                                        <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" data-placement="top" readonly title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
                                     </div>
                                 </div>
                             </div>
