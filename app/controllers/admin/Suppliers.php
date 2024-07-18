@@ -643,6 +643,7 @@ class Suppliers extends MY_Controller
                 'cf6'         => $this->input->post('cf6'),
                 'gst_no'      => $this->input->post('gst_no'),
                 'ledger_account' => $this->input->post('ledger_account'),
+                'payment_term' => $this->input->post('payment_term'),
                 'sequence_code'  => $this->sequenceCode->generate('SUP', 5)
             ];
         } elseif ($this->input->post('add_supplier')) {
@@ -759,6 +760,7 @@ class Suppliers extends MY_Controller
                 'cf6'         => $this->input->post('cf6'),
                 'gst_no'      => $this->input->post('gst_no'),
                 'ledger_account'      => $this->input->post('ledger_account'),
+                'payment_term' => $this->input->post('payment_term'),
             ];
         } elseif ($this->input->post('edit_supplier')) {
             $this->session->set_flashdata('error', validation_errors());
@@ -861,6 +863,7 @@ class Suppliers extends MY_Controller
                         'cf6'         => isset($value[16]) ? trim($value[16]) : '',
                         'group_id'    => 4,
                         'group_name'  => 'supplier',
+                        'sequence_code'  => $this->sequenceCode->generate('SUP', 5)
                     ];
                     if (empty($supplier['company']) || empty($supplier['name']) || empty($supplier['email'])) {
                         $this->session->set_flashdata('error', lang('company') . ', ' . lang('name') . ', ' . lang('email') . ' ' . lang('are_required') . ' (' . lang('line_no') . ' ' . $rw . ')');
