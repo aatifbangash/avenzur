@@ -304,13 +304,13 @@ GROUP BY
     {
         $response = array();
 
-        $results = $this->db
-            ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date')
-            ->from('companies')
-            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
+        /*$results = $this->db
+            ->select('sma_accounts_entryitems.id, companies.name as company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date, sma_accounts_entries.supplier_id')
+            ->from('sma_accounts_entryitems')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->join('companies', 'sma_accounts_entries.supplier_id=companies.id')
             ->where('companies.group_name', 'supplier')
-            ->group_by('companies.id, sma_accounts_entryitems.dc')
+            ->group_by('sma_accounts_entries.supplier_id')
             ->order_by('
                     CASE
                         WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1
@@ -321,15 +321,58 @@ GROUP BY
                 ')
             ->order_by('companies.company asc')
             ->get()
-            ->result();
+            ->result();*/
 
-        $organizedResults = array();
-        foreach ($results as $result) {
-            $timeRange = $this->getTimeRange($result->date); // Define this function based on your needs
-            $organizedResults[$result->company][$timeRange][] = $result;
+        $q = $this->db->query("SELECT 
+            c.id AS supplier_id,
+            c.name AS supplier_name,
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) <= 30 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS 'Current',
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 31 AND 60 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS '31-60',
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 61 AND 90 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS '61-90',
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 91 AND 120 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS '91-120',
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) > 120 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS '>120'
+        FROM 
+            sma_companies c
+        JOIN 
+            sma_accounts_entries ae ON c.id = ae.supplier_id
+        JOIN 
+            sma_accounts_entryitems ei ON ae.id = ei.entry_id
+        JOIN 
+            sma_accounts_ledgers al ON c.ledger_account = al.id
+         WHERE 
+            ei.ledger_id = c.ledger_account
+        
+        GROUP BY 
+            c.id, c.name");
+
+        $data = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
         }
 
-        return $organizedResults;
+        return $data;
     }
 
     public function getTimeRange($date)
@@ -405,15 +448,18 @@ GROUP BY
         $response = array();
 
         $this->db
-            ->select('COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+            ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, 
+            sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, 
+            sma_accounts_ledgers.code, 
+            companies.company')
             ->from('sma_accounts_entryitems')
-            //->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            //                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->join('companies', 'companies.id=sma_accounts_entries.supplier_id')
+            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=companies.ledger_account')
             ->where('sma_accounts_entries.supplier_id', $supplier_id)
-            // need to join with purchase and suppliers( company)
             ->where('sma_accounts_entries.date <', $start_date)
-            ->group_by('sma_accounts_entryitems.dc');
+            ->where('sma_accounts_entryitems.ledger_id', 102)
+            ->order_by('sma_accounts_entries.date asc');
         $q = $this->db->get();
         //lq($this);
 
@@ -426,18 +472,22 @@ GROUP BY
         }
 
         $this->db
-            ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code,(select sum(amount) from sma_accounts_entryitems ei inner join sma_accounts_entries e on e.id =ei.entry_id where e.date < `sma_accounts_entries`.`date` and e.sid = ' . $supplier_id . ') as openingAmount, companies.company')
+            ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, 
+            sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, 
+            sma_accounts_ledgers.code, 
+            companies.company')
             ->from('sma_accounts_entryitems')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
-            ->join('companies', 'companies.ledger_account=sma_accounts_entryitems.ledger_id')
+            ->join('companies', 'companies.id=sma_accounts_entries.supplier_id')
+            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=companies.ledger_account')
             ->where('sma_accounts_entries.supplier_id', $supplier_id)
             ->where('sma_accounts_entries.date >=', $start_date)
             ->where('sma_accounts_entries.date <=', $end_date)
+            ->where('sma_accounts_entryitems.ledger_id', 102)
             ->order_by('sma_accounts_entries.date asc');
 
         $q = $this->db->get();
-        lq($this);
+        
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -2546,7 +2596,7 @@ GROUP BY
         ) AS movement_in ON movement_in.product_id = prd.id
         
         WHERE movement_in.product_id IS NOT NULL AND movement_out.product_id IS NOT NULL");
-
+       //echo $this->db->last_query(); exit;
         $resultSet = array();
         if ($qry->num_rows() > 0) {
             foreach (($qry->result()) as $row) {
@@ -2792,8 +2842,8 @@ GROUP BY
             ->select('DISTINCT (sma_sale_items.product_id)')
             ->from('sma_sale_items')
             ->join('sma_sales', 'sma_sales.id = sma_sale_items.sale_id')
-            ->where('sma_sales.date >=', $start_date)
-            ->where('sma_sales.date <=', $end_date);
+            ->where('date(sma_sales.date) >=', $start_date)
+            ->where('date(sma_sales.date) <=', $end_date);
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach ($q->result() as $row) {
@@ -2806,8 +2856,8 @@ GROUP BY
             ->select('DISTINCT (sma_return_items.product_id)')
             ->from('sma_return_items')
             ->join('sma_returns', 'sma_returns.id = sma_return_items.return_id')
-            ->where('sma_returns.date >=', $start_date)
-            ->where('sma_returns.date <=', $end_date);
+            ->where('date(sma_returns.date) >=', $start_date)
+            ->where('date(sma_returns.date) <=', $end_date);
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach ($q->result() as $row) {
@@ -2854,8 +2904,8 @@ GROUP BY
             ->from('sma_return_items')
             ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
             ->where('sma_return_items.product_id', $itemId)
-            ->where('sma_returns.date >=', $start_date)
-            ->where('sma_returns.date <=', $end_date)
+            ->where('date(sma_returns.date) >=', $start_date)
+            ->where('date(sma_returns.date) <=', $end_date)
             ->group_by('sma_return_items.product_id');
 
         $q = $this->db->get();
@@ -2901,8 +2951,8 @@ GROUP BY
             ->from('sma_sale_items')
             ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
             ->where('sma_sale_items.product_id', $itemId)
-            ->where('sma_sales.date >=', $start_date)
-            ->where('sma_sales.date <=', $end_date)
+            ->where('date(sma_sales.date) >=', $start_date)
+            ->where('date(sma_sales.date) <=', $end_date)
             //->where('sma_purchases.return_id IS NULL')
             ->group_by('sma_sale_items.product_id');
 
@@ -2949,7 +2999,7 @@ GROUP BY
             ->from('sma_sale_items')
             ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
             ->where('sma_sale_items.product_id', $itemId)
-            ->where('sma_sales.date <', $start_date)
+            ->where('date(sma_sales.date) <', $start_date)
             //->where('sma_sales.date <=', $end_date)
             //->where('sma_purchases.return_id IS NULL')
             ->group_by('sma_sale_items.product_id');
@@ -2973,7 +3023,7 @@ GROUP BY
             ->from('sma_return_items')
             ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
             ->where('sma_return_items.product_id', $itemId)
-            ->where('sma_returns.date <', $start_date)
+            ->where('date(sma_returns.date) <', $start_date)
             ->group_by('sma_return_items.product_id');
 
         $q = $this->db->get();

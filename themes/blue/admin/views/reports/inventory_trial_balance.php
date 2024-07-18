@@ -1,5 +1,12 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+<style>
+.tableFixHead          { overflow: auto; height: 100px; }
+.tableFixHead thead  { position: sticky; top: 0; z-index: 1; }
+/* Just common table stuff. Really. */ 
+.tableFixHead thead th, td {background:#eee;  padding: 8px 16px; }
+</style>
+
 <script>
     function exportTableToExcel(tableId, filename = 'table.xlsx') {
         const table = document.getElementById(tableId);
@@ -74,7 +81,7 @@
                 <hr />
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
-                        <table id="poTable" class="table items table-striped table-bordered table-condensed table-hover">
+                        <table id="poTable" class="table items table-striped table-bordered table-condensed table-hover tableFixHead">
                             <thead>
 
                                 <tr>

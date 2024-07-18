@@ -31,7 +31,6 @@
                                 <th>#</th>
                                 <th><?= lang('Supplier'); ?></th>
                                 <th><?= lang('Current'); ?></th>
-                                <th><?= lang('1-30'); ?></th>
                                 <th><?= lang('31-60'); ?></th>
                                 <th><?= lang('61-90'); ?></th>
                                 <th><?= lang('91-120'); ?></th>
@@ -42,13 +41,13 @@
                                 <?php
                                     $count = 0;
                                     foreach ($supplier_aging as $key => $data){
+                                        $data = (array)$data;
                                         $count++;
                                         ?>
                                             <tr>
                                                 <td><?= $count; ?></td>
-                                                <td><?= $key; ?></td>
+                                                <td><?= $data['supplier_name']; ?></td>
                                                 <td><?= $data['Current']; ?></td>
-                                                <td><?= $data['1-30']; ?></td>
                                                 <td><?= $data['31-60']; ?></td>
                                                 <td><?= $data['61-90']; ?></td>
                                                 <td><?= $data['91-120']; ?></td>
