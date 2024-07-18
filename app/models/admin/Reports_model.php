@@ -478,7 +478,8 @@ GROUP BY
             ->where('sma_accounts_entries.date <=', $end_date)
             ->group_by('sma_accounts_entryitems.dc')
             ->group_by('sma_accounts_entries.date')
-            ->group_by('sma_accounts_entries.transaction_type');
+            ->group_by('sma_accounts_entries.transaction_type')
+            ->order_by('sma_accounts_entries.date asc');
         $q = $this->db->get();
         //lq($this);
 
