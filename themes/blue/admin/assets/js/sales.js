@@ -1332,6 +1332,45 @@ function nsCustomer() {
     });
 }
 //localStorage.clear();
+
+
+
+function validate_confirm() { 
+    var isValid =window.confirm('Are you sure to proceed?');
+    if(isValid===false){
+       return  isValid; 
+    }  
+    var batchnos = document.getElementsByName('batchno[]');
+    for (var i = 0; i < batchnos.length; i++) {
+        if (batchnos[i].value === '') {
+           // alert('Please select a batch number for each item.');
+            isValid = false; 
+        }
+    }  
+    var quantities = document.getElementsByName('quantity[]');
+    for (var i = 0; i < quantities.length; i++) {
+        var quantity = parseInt(quantities[i].value, 10);
+        if (isNaN(quantity) || quantity <= 0) {
+           // alert('Quantity must be a number greater than 0.');
+            isValid = false; 
+        } 
+        var rowId = quantities[i].getAttribute('data-item');  
+        var row = document.getElementById('row_' + rowId); 
+        
+        if (quantity <= 0 || batchnos[i].value === '') {
+            $('#row_' + rowId).addClass('danger'); 
+            $('html, body').animate({scrollTop: $("#slTable").offset().top}, 50);
+              //  row.classList.add('danger');  
+           } else {
+            $('#row_' + rowId).removeClass('danger'); 
+           } 
+
+    } 
+
+    return isValid;  
+}
+
+
 function loadItems() {
     if (localStorage.getItem('slitems')) {
         total = 0;
@@ -1643,7 +1682,7 @@ function loadItems() {
                 });
             }
 
-            tr_html += '<td><select class="form-control rbatchno" name="batchno[]" id="batchno_' + row_no +'">'+batchesOptions+'</select></td>';
+            tr_html += '<td><select class="form-control rbatchno" name="batchno[]" id="batchno_' + row_no +'" required>'+batchesOptions+'</select></td>';
 
             tr_html +=
                     '<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="' +
@@ -1864,12 +1903,15 @@ function loadItems() {
             }*/
 
             // Thi will override all the above checks
-            if(parseFloat(base_quantity) > parseFloat(item_batchQuantity)){
+            if((parseFloat(base_quantity) > parseFloat(item_batchQuantity)) || (item_batchQuantity==null) ){
                 $('#row_' + row_no).addClass('danger');
                 if (site.settings.overselling != 1) {
                     $('#add_sale, #edit_sale').attr('disabled', true);
                 }
             }
+              
+
+
 
         });
 
