@@ -156,7 +156,7 @@ $(document).ready(function () {
     }
     $supplier.change(function (e) {
         localStorage.setItem('posupplier', $(this).val());
-        $('#supplier_id').val($(this).val());
+        $('#supplier_id').val($(this).val()); 
     });
     if ((posupplier = localStorage.getItem('posupplier'))) {
         $supplier.val(posupplier).select2({

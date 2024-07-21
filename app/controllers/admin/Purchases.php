@@ -47,6 +47,21 @@ class Purchases extends MY_Controller
         $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
         $this->form_validation->set_rules('warehouse', $this->lang->line('warehouse'), 'required|is_natural_no_zero');
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
+        $this->form_validation->set_rules('batchno[]', lang('Batch'), 'required');
+        $product_id_arr= $this->input->post('product_id');  
+        foreach ($product_id_arr as $index => $prid) {
+            // Set validation rules for each quantity field
+            $this->form_validation->set_rules(
+                'quantity['.$index.']',
+                'Quantity for Product '.$_POST['product_name'][$index],  // Replace with actual product identifier
+                'required|greater_than[0]',
+                array(
+                    'required' => 'Quantity for Product '.$_POST['product_name'][$index].' is required.',
+                    'greater_than' => 'Quantity for Product '.$_POST['product_name'][$index].' must be greater than zero.'
+                )
+            );
+        }
+
 
         $this->session->unset_userdata('csrf_token');
         if ($this->form_validation->run() == true) {

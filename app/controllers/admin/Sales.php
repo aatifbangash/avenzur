@@ -46,11 +46,28 @@ class Sales extends MY_Controller
         $this->form_validation->set_rules('biller', lang('biller'), 'required');
         $this->form_validation->set_rules('sale_status', lang('sale_status'), 'required');
         $this->form_validation->set_rules('payment_status', lang('payment_status'), 'required');
+        $this->form_validation->set_rules('quantity[]', lang('quantity'), 'required'); 
+        $this->form_validation->set_rules('batchno[]', lang('batchno'), 'required'); 
+        
+        $product_id_arr= $this->input->post('product_id');  
+        foreach ($product_id_arr as $index => $prid) {
+            // Set validation rules for each quantity field
+            $this->form_validation->set_rules(
+                'quantity['.$index.']',
+                'Quantity for Product '.$_POST['product_name'][$index],  // Replace with actual product identifier
+                'required|greater_than[0]',
+                array(
+                    'required' => 'Quantity for Product '.$_POST['product_name'][$index].' is required.',
+                    'greater_than' => 'Quantity for Product '.$_POST['product_name'][$index].' must be greater than zero.'
+                )
+            );
+        }
+ 
 
         if ($this->form_validation->run() == true) {
 
             $customerId = $this->input->post('customer');
-
+           //  echo 'valid'; exit;  
             $customer = $this->companies_model->getCompanyByID($customerId);
             $customerCreditLimit = $customer->credit_limit;
 
@@ -321,7 +338,7 @@ class Sales extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            // $this->sma->print_arrays($data, $products, $payment, $attachments);
+            //$this->sma->print_arrays($data, $products, $payment, $attachments); exit;
         }
         
         if ($this->form_validation->run() == true && $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
@@ -940,7 +957,20 @@ class Sales extends MY_Controller
         $this->form_validation->set_rules('biller', lang('biller'), 'required');
         $this->form_validation->set_rules('sale_status', lang('sale_status'), 'required');
         $this->form_validation->set_rules('payment_status', lang('payment_status'), 'required');
-
+        $this->form_validation->set_rules('batchno[]', lang('Batch Number'), 'required');
+        $product_id_arr= $this->input->post('product_id');  
+        foreach ($product_id_arr as $index => $prid) {
+            // Set validation rules for each quantity field
+            $this->form_validation->set_rules(
+                'quantity['.$index.']',
+                'Quantity for Product '.$_POST['product_name'][$index],  // Replace with actual product identifier
+                'required|greater_than[0]',
+                array(
+                    'required' => 'Quantity for Product '.$_POST['product_name'][$index].' is required.',
+                    'greater_than' => 'Quantity for Product '.$_POST['product_name'][$index].' must be greater than zero.'
+                )
+            );
+        }
         if ($this->form_validation->run() == true) {
             $reference = $this->input->post('reference_no');
             if ($this->Owner || $this->Admin) {

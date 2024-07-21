@@ -691,7 +691,7 @@ table#slTable td input.form-control {
                             <?php
                             $data = array(
                                 'name' => 'add_sale',
-                                'onclick'=>"return confirm('Are you sure to proceed?')"
+                                'onclick'=>"  return validate_confirm()"
                             );
                             ?>
                             <div

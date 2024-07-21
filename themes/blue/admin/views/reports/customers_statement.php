@@ -43,11 +43,12 @@
                             <div class="form-group">
                             <?= lang('customer', 'posupplier'); ?>
                             <?php
+                            $selected_customer_id[] = isset($customer_id) ? $customer_id : '';
                             $sp[''] = '';
                             foreach ($suppliers as $supplier) {
                                 $sp[$supplier->id] = $supplier->company. ' ('. $supplier->name.')';
                             }
-                            echo form_dropdown('customer', $sp, ($customer_id ?? $customer_id), 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" required="required" style="width:100%;" '); ?>
+                            echo form_dropdown('customer', $sp, $selected_customer_id, 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" required="required" style="width:100%;" ', null); ?>
                             </div>
                         </div>
 
@@ -80,11 +81,11 @@
                             <tbody style="text-align:center;">
                                 <?php
                                     $count = 0;
-                                    $balance = $total_ob;
+                                    $balance = 0;
                                     foreach($supplier_statement as $statement){
                                         
-                                        if($statement->dc == 'D'){
-                                            $balance = $balance - $statement->amount;
+                                        if($statement->dc == 'C'){
+                                            $balance =  $balance - $statement->amount;
                                         }else{
                                             $balance = $balance + $statement->amount;
                                         }

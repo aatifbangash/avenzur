@@ -658,16 +658,17 @@ function loadItems() {
                 $('#add_transfer, #edit_transfer').attr('disabled', true);
             }*/
 
-            console.log('Current status: '+currentstatus);
+            console.log('Current status: '+currentstatus); 
             // Thi will override all the above checks
-            if(parseFloat(base_quantity) > parseFloat(item_batchQuantity) && (currentstatus != 'sent')){
+            if((parseFloat(base_quantity) > parseFloat(item_batchQuantity) && (currentstatus != 'sent')) || (item_batchQuantity==null)){
+                 
                 $('#row_' + row_no).addClass('danger');
                 $('#add_transfer, #edit_transfer').attr('disabled', true);
             }
 
         });
 
-        var col = 2;
+        var col = 4;
         if (site.settings.product_expiry == 1) {
             col++;
         }
@@ -677,6 +678,7 @@ function loadItems() {
             '">Total</th><th class="text-center">' +
             formatQty(parseFloat(count) - 1) +
             '</th>';
+            tfoot += '<th class="text-right"> </th>';
         if (site.settings.tax1 == 1) {
             tfoot += '<th class="text-right">' + formatMoney(product_tax) + '</th>';
         }
