@@ -1,7 +1,15 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
-    $(document).ready(function () {
-        
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, {
+            sheet: 'Sheet 1'
+        });
+        XLSX.writeFile(wb, filename);
+    }
+    $(document).ready(function() {
+
     });
 </script>
 <div class="box">
@@ -10,8 +18,10 @@
 
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i class="icon fa fa-file-picture-o"></i></a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'GL_Trial_Balance_Report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a>
+                </li>
+                
             </ul>
         </div>
     </div>
@@ -100,24 +110,24 @@
                                                 <td><?= $count; ?></td>
                                                 <td><?= $data->code; ?></td>
                                                 <td><?= $data->name; ?></td>
-                                                <td><?= $ob_debit > 0 ? $this->sma->formatDecimal($ob_debit) : '-'; ?></td>
-                                                <td><?= $ob_credit > 0 ? $this->sma->formatDecimal($ob_credit) : '-'; ?></td>
-                                                <td><?= $data->trs_debit > 0 ? $this->sma->formatDecimal($data->trs_debit) : '-'; ?></td>
-                                                <td><?= $data->trs_credit >0 ? $this->sma->formatDecimal($data->trs_credit) : '-'; ?></td>
-                                                <td><?= $eb_debit > 0 ? $this->sma->formatDecimal($eb_debit) : '-'; ?></td>
-                                                <td><?= $eb_credit > 0 ? $this->sma->formatDecimal($eb_credit) : '-'; ?></td>
+                                                <td><?= $ob_debit > 0 ? $this->sma->formatNumber($ob_debit) : '-'; ?></td>
+                                                <td><?= $ob_credit > 0 ? $this->sma->formatNumber($ob_credit) : '-'; ?></td>
+                                                <td><?= $data->trs_debit > 0 ? $this->sma->formatNumber($data->trs_debit) : '-'; ?></td>
+                                                <td><?= $data->trs_credit >0 ? $this->sma->formatNumber($data->trs_credit) : '-'; ?></td>
+                                                <td><?= $eb_debit > 0 ? $this->sma->formatNumber($eb_debit) : '-'; ?></td>
+                                                <td><?= $eb_credit > 0 ? $this->sma->formatNumber($eb_credit) : '-'; ?></td>
                                             </tr>
                                         <?php
                                     }
                                 ?>
                                 <tr>
-                                    <td colspan="3">Totals: </td>
-                                    <td colspan="1"><?= number_format($total_ob_debit, 2, '.', ''); ?></td>
-                                    <td colspan="1"><?= number_format($total_ob_credit, 2, '.', ''); ?></td>
-                                    <td colspan="1"><?= number_format($total_trs_debit, 2, '.', ''); ?></td>
-                                    <td colspan="1"><?= number_format($total_trs_credit, 2, '.', ''); ?></td>
-                                    <td colspan="1"><?= number_format($total_eb_debit, 2, '.', ''); ?></td>
-                                    <td colspan="1"><?= number_format($total_eb_credit, 2, '.', ''); ?></td>
+                                    <td colspan="3"><strong>Totals: </strong></td>
+                                    <td colspan="1"><strong><?= $this->sma->formatNumber($total_ob_debit); ?></strong></td>
+                                    <td colspan="1"><strong><?= $this->sma->formatNumber($total_ob_credit); ?></strong></td>
+                                    <td colspan="1"><strong><?= $this->sma->formatNumber($total_trs_debit); ?></strong></td>
+                                    <td colspan="1"><strong><?= $this->sma->formatNumber($total_trs_credit); ?></strong></td>
+                                    <td colspan="1"><strong><?= $this->sma->formatNumber($total_eb_debit); ?></strong></td>
+                                    <td colspan="1"><strong><?= $this->sma->formatNumber($total_eb_credit); ?></strong></td>
                                 </tr>
                             </tbody>
                             <tfoot></tfoot>

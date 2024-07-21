@@ -1,6 +1,14 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
-    $(document).ready(function () {
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, {
+            sheet: 'Sheet 1'
+        });
+        XLSX.writeFile(wb, filename);
+    }
+    $(document).ready(function() {
 
     });
 </script>
@@ -10,10 +18,8 @@
 
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
+                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'GL_Statement_Report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
                                 class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i
-                                class="icon fa fa-file-picture-o"></i></a></li>
             </ul>
         </div>
     </div>
@@ -108,18 +114,18 @@
                                     <td><?= $statement->code; ?></td>
                                     <td><?= $statement->name; ?></td>
                                     <td><?= $statement->narration; ?></td>
-                                    <td><?= $statement->dc == 'D' ? $statement->openingAmount : '-'; ?></td>
-                                    <td><?= $statement->dc == 'C' ? $statement->openingAmount : '-'; ?></td>
-                                    <td><?= $statement->dc == 'D' ? $statement->amount : '-';
+                                    <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->openingAmount) : '-'; ?></td>
+                                    <td><?= $statement->dc == 'C' ? $this->sma->formatNumber($statement->openingAmount) : '-'; ?></td>
+                                    <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '-';
                                         $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
 
                                     </td>
-                                    <td><?php echo $statement->dc == 'C' ? $statement->amount : '-';
+                                    <td><?php echo $statement->dc == 'C' ? $this->sma->formatNumber($statement->amount) : '-';
                                     $statement->dc == 'C' ?
                                         $totalCredit = $totalCredit + $statement->amount : null ?>
 
                                     </td>
-                                    <td><?php echo $balance;
+                                    <td><?php echo $this->sma->formatNumber($balance);
                                         $totalBalance = $totalBalance + $balance;
                                         ?></td>
                                 </tr>
@@ -136,9 +142,9 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
-                                <th><?= $totalDebit; ?></th>
-                                <th><?= $totalCredit; ?></th>
-                                <th><?= $totalBalance; ?></th>
+                                <th><?= $this->sma->formatNumber($totalDebit); ?></th>
+                                <th><?= $this->sma->formatNumber($totalCredit); ?></th>
+                                <th><?= $this->sma->formatNumber($balance); ?></th>
                             </tr>
 
                             </tbody>

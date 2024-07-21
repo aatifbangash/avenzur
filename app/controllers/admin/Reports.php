@@ -3666,6 +3666,8 @@ class Reports extends MY_Controller
                     $obj->trs_credit = 0;
                     $obj->ob_debit = 0;
                     $obj->ob_credit = 0;
+                    $obj->total_trs_credit = 0;
+                    $obj->total_trs_debit = 0;
                     if ($supplier_data->dc == 'D') {
                         $obj->trs_debit = $this->sma->formatDecimal($supplier_data->total_amount);
                     } else if ($supplier_data->dc == 'C') {
@@ -3698,15 +3700,15 @@ class Reports extends MY_Controller
                 }
 
                 if($resp_arr->trs_debit >= $resp_arr->trs_credit){
-                    $resp_arr->trs_debit = $resp_arr->trs_debit - $resp_arr->trs_credit;
-                    $resp_arr->trs_credit = 0;
+                    $resp_arr->total_trs_debit = $resp_arr->trs_debit - $resp_arr->trs_credit;
+                    //$resp_arr->trs_credit = 0;
                 }else if($resp_arr->trs_credit > $resp_arr->trs_debit){
-                    $resp_arr->trs_credit = $resp_arr->trs_credit - $resp_arr->trs_debit;
-                    $resp_arr->trs_debit = 0;
+                    $resp_arr->total_trs_credit = $resp_arr->trs_credit - $resp_arr->trs_debit;
+                    //$resp_arr->trs_debit = 0;
                 }
 
-                $resp_arr->eb_debit = $resp_arr->ob_debit + $resp_arr->trs_debit;
-                $resp_arr->eb_credit = $resp_arr->ob_credit + $resp_arr->trs_credit;
+                $resp_arr->eb_debit = $resp_arr->ob_debit + $resp_arr->total_trs_debit;
+                $resp_arr->eb_credit = $resp_arr->ob_credit + $resp_arr->total_trs_credit;
 
                 if($resp_arr->eb_debit >= $resp_arr->eb_credit){
                     $resp_arr->eb_debit = $resp_arr->eb_debit - $resp_arr->eb_credit;
@@ -3896,21 +3898,15 @@ class Reports extends MY_Controller
         $this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
+        $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
         $response_arr = array();
-        $supplier_aging_array = $this->reports_model->getCustomerAging($duration = 30);
+
+        if($duration){
+            $supplier_aging_array = $this->reports_model->getCustomerAging($duration);
+        }else{
+            $supplier_aging_array = $this->reports_model->getCustomerAging($duration = 120);
+        }
        
-        // foreach ($supplier_aging_array as $key => $supplier_aging) {
-        //     $response_arr[$key] = array('Current' => 0, '1-30' => 0, '31-60' => 0, '61-90' => 0, '91-120' => 0, '>120' => 0);
-        //     foreach ($supplier_aging as $key2 => $record) {
-        //         foreach ($record as $rec) {
-        //             if ($rec->dc == 'D') {
-        //                 $response_arr[$key][$key2] -= $rec->total_amount;
-        //             } else if ($rec->dc == 'C') {
-        //                 $response_arr[$key][$key2] += $rec->total_amount;
-        //             }
-        //         }
-        //     }
-        // }
         $this->data['supplier_aging'] = $supplier_aging_array;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_aging')]];
         $meta = ['page_title' => lang('customers_aging'), 'bc' => $bc];
@@ -3922,20 +3918,14 @@ class Reports extends MY_Controller
         $this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
+        $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
         $response_arr = array();
-        $supplier_aging_array = $this->reports_model->getSupplierAging($duration = 30);
-        /*foreach ($supplier_aging_array as $key => $supplier_aging) {
-            $response_arr[$key] = array('Current' => 0, '1-30' => 0, '31-60' => 0, '61-90' => 0, '91-120' => 0, '>120' => 0);
-            foreach ($supplier_aging as $key2 => $record) {
-                foreach ($record as $rec) {
-                    if ($rec->dc == 'D') {
-                        $response_arr[$key][$key2] -= $rec->total_amount;
-                    } else if ($rec->dc == 'C') {
-                        $response_arr[$key][$key2] += $rec->total_amount;
-                    }
-                }
-            }
-        }*/
+
+        if($duration){
+            $supplier_aging_array = $this->reports_model->getSupplierAging($duration);
+        }else{
+            $supplier_aging_array = $this->reports_model->getSupplierAging($duration = 120);
+        }
         
         $this->data['supplier_aging'] = $supplier_aging_array;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_aging')]];
@@ -4598,7 +4588,7 @@ class Reports extends MY_Controller
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
             $vat_purchase_array = $this->reports_model->getVatPurchaseReport($start_date, $end_date, $warehouse_id, $filterOnType);
-
+    
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
             $this->data['vat_purchase'] = $vat_purchase_array;

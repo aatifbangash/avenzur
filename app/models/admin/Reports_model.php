@@ -227,68 +227,59 @@ class Reports_model extends CI_Model
     {
     
         $response = array();
+        $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
+        $cases = [];
+        $previous_limit = 0;
 
-        //     $results = $this->db
-        //         ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date')
-        //         ->from('companies')
-        //         ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
-        //         ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-        //         ->where('companies.group_name', 'customer')
-        //         ->group_by('companies.id, sma_accounts_entryitems.dc')
-        //         ->order_by('
-        //                 CASE
-        //                     WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1
-        //                     WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 60 DAY) THEN 2
-        //                     WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 90 DAY) THEN 3
-        //                     ELSE 4
-        //                 END
-        //             ')
-        //         ->order_by('companies.company asc')
-        //         ->get()
-        //         ->result();
-        //    echo $this->db->last_query();exit;     
+        // Always include the "Current" case
+        $cases[] = "SUM(CASE 
+            WHEN DATEDIFF(CURDATE(), ae.date) <= c.payment_term THEN 
+                CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+            ELSE 0 
+        END) AS 'Current'";
+
+        foreach ($intervals as $index => $interval) {
+            if ($interval > $duration) {
+                break;
+            }
+
+            $start = $previous_limit + 1;
+            $end = $interval;
+            $previous_limit = $end;
+
+            $cases[] = "SUM(CASE 
+                WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN (c.payment_term + $start) AND (c.payment_term + $end) THEN 
+                    CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                ELSE 0 
+            END) AS '$start-$end'";
+        }
+
+        // Add the "greater than" case for the selected duration
+        $cases[] = "SUM(CASE 
+            WHEN DATEDIFF(CURDATE(), ae.date) > (c.payment_term + $duration) THEN 
+                CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+            ELSE 0 
+        END) AS '>$duration'";
+
+        $cases_str = implode(",\n", $cases);
 
         $q = $this->db->query("SELECT 
-    c.id AS customer_id,
-    c.name AS customer_name,
-    SUM(CASE 
-            WHEN DATEDIFF(CURDATE(), ae.date) <= 30 THEN 
-                CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END
-            ELSE 0 
-        END) AS 'Current',
-    SUM(CASE 
-            WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 31 AND 60 THEN 
-                CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END
-            ELSE 0 
-        END) AS '31-60',
-    SUM(CASE 
-            WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 61 AND 90 THEN 
-                CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END
-            ELSE 0 
-        END) AS '61-90',
-    SUM(CASE 
-            WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 91 AND 120 THEN 
-                CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END
-            ELSE 0 
-        END) AS '91-120',
-    SUM(CASE 
-            WHEN DATEDIFF(CURDATE(), ae.date) > 120 THEN 
-                CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END
-            ELSE 0 
-        END) AS '>120'
-FROM 
-    sma_companies c
-JOIN 
-    sma_accounts_entries ae ON c.id = ae.customer_id
-JOIN 
-    sma_accounts_entryitems ei ON ae.id = ei.entry_id
-JOIN 
-    sma_accounts_ledgers al ON c.ledger_account = al.id
- WHERE 
-    ei.ledger_id = c.ledger_account
+            c.id AS customer_id,
+            c.name AS customer_name,
+            $cases_str
+        FROM 
+            sma_companies c
+        JOIN 
+            sma_accounts_entries ae ON c.id = ae.customer_id
+        JOIN 
+            sma_accounts_entryitems ei ON ae.id = ei.entry_id
+        JOIN 
+            sma_accounts_ledgers al ON c.ledger_account = al.id
+        WHERE 
+            ei.ledger_id = c.ledger_account
 
-GROUP BY 
-    c.id, c.name");
+        GROUP BY 
+            c.id, c.name");
 
         $data = array();
         if ($q->num_rows() > 0) {
@@ -303,25 +294,72 @@ GROUP BY
     public function getSupplierAging($duration)
     {
         $response = array();
+        $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
+        $cases = [];
+        $previous_limit = 0;
 
-        /*$results = $this->db
-            ->select('sma_accounts_entryitems.id, companies.name as company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date, sma_accounts_entries.supplier_id')
-            ->from('sma_accounts_entryitems')
-            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            ->join('companies', 'sma_accounts_entries.supplier_id=companies.id')
-            ->where('companies.group_name', 'supplier')
-            ->group_by('sma_accounts_entries.supplier_id')
-            ->order_by('
-                    CASE
-                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1
-                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 60 DAY) THEN 2
-                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 90 DAY) THEN 3
-                        ELSE 4
-                    END
-                ')
-            ->order_by('companies.company asc')
-            ->get()
-            ->result();*/
+        // Always include the "Current" case
+        $cases[] = "SUM(CASE 
+            WHEN DATEDIFF(CURDATE(), ae.date) <= c.payment_term THEN 
+                CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+            ELSE 0 
+        END) AS 'Current'";
+
+        foreach ($intervals as $index => $interval) {
+            if ($interval > $duration) {
+                break;
+            }
+
+            $start = $previous_limit + 1;
+            $end = $interval;
+            $previous_limit = $end;
+
+            $cases[] = "SUM(CASE 
+                WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN (c.payment_term + $start) AND (c.payment_term + $end) THEN 
+                    CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                ELSE 0 
+            END) AS '$start-$end'";
+        }
+
+        // Add the "greater than" case for the selected duration
+        $cases[] = "SUM(CASE 
+            WHEN DATEDIFF(CURDATE(), ae.date) > (c.payment_term + $duration) THEN 
+                CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+            ELSE 0 
+        END) AS '>$duration'";
+
+        $cases_str = implode(",\n", $cases);
+
+        $q = $this->db->query("SELECT 
+            c.id AS supplier_id,
+            c.name AS supplier_name,
+            $cases_str
+        FROM 
+            sma_companies c
+        JOIN 
+            sma_accounts_entries ae ON c.id = ae.supplier_id
+        JOIN 
+            sma_accounts_entryitems ei ON ae.id = ei.entry_id
+        JOIN 
+            sma_accounts_ledgers al ON c.ledger_account = al.id
+        WHERE 
+            ei.ledger_id = c.ledger_account
+        GROUP BY 
+            c.id, c.name");
+
+        $data = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+        
+        return $data;
+    }
+
+    /*public function getSupplierAging($duration)
+    {
+        $response = array();
 
         $q = $this->db->query("SELECT 
             c.id AS supplier_id,
@@ -373,7 +411,7 @@ GROUP BY
         }
 
         return $data;
-    }
+    }*/
 
     public function getTimeRange($date)
     {
@@ -765,7 +803,7 @@ GROUP BY
         $this->db->group_by('sma_accounts_entries.supplier_id, sma_companies.name');
 
         $query_ob = $this->db->get();
-        echo $this->db->last_query();
+        //echo $this->db->last_query();
         $ob_results = $query_ob->result_array();
         //print_r($ob_results);
 
@@ -783,7 +821,7 @@ GROUP BY
         $this->db->group_by('sma_accounts_entries.supplier_id, sma_companies.name');
 
         $query_period = $this->db->get();
-        echo $this->db->last_query();
+        //echo $this->db->last_query();
         $period_results = $query_period->result_array();
 
         // Combine OB and period transactions to get EB
