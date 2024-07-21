@@ -1003,8 +1003,18 @@ class Sales_model extends CI_Model
         return false;
     }
 
-    public function updateSaleWithCourier($id, $courier_id, $tracking_id){
-        $this->db->update('sales', ['courier_id' => $courier_id, 'courier_order_tracking_id' => $tracking_id], ['id' => $id]);
+    public function updateSaleWithCourier($id, $courier_id, $tracking_id, $pickup_location=null){
+        $this->db->update('sales', ['courier_id' => $courier_id, 'courier_order_tracking_id' => $tracking_id, 'pickup_location_id' => $pickup_location], ['id' => $id]);
+    }
+
+    public function updateSaleCourierStatus($courier_id, $tracking_id, $tracking_status){
+       if( $this->db->update('sales', ['courier_order_status' => $tracking_status], 
+        ['courier_id' => $courier_id, 'courier_order_tracking_id' =>$tracking_id ]) ){
+            return true;
+        }else{
+            return false;
+        }
+
     }
 
     public function updateSale($id, $data, $items = [], $attachments = [])
