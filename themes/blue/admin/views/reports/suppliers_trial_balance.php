@@ -1,6 +1,14 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
-    $(document).ready(function () {
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, {
+            sheet: 'Sheet 1'
+        });
+        XLSX.writeFile(wb, filename);
+    }
+    $(document).ready(function() {
 
     });
 </script>
@@ -10,10 +18,9 @@
 
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
+                <li class="dropdown">
+                    <a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'Supplier_TB_Report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
                                 class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i
-                                class="icon fa fa-file-picture-o"></i></a></li>
             </ul>
         </div>
     </div>

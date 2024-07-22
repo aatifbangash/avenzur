@@ -855,11 +855,11 @@ class Reports_model extends CI_Model
             if (!isset($balances[$supplier_id])) {
 
                 if ($period['total_debit'] >= $period['total_credit']) {
-                    $period['total_debit'] = $period['total_debit'] - $period['total_credit'];
-                    $period['total_credit'] = 0;
+                    //$period['total_debit'] = $period['total_debit'] - $period['total_credit'];
+                    //$period['total_credit'] = 0;
                 } else if ($period['total_credit'] > $period['total_debit']) {
-                    $period['total_credit'] = $period['total_credit'] - $period['total_debit'];
-                    $period['total_debit'] = 0;
+                    //$period['total_credit'] = $period['total_credit'] - $period['total_debit'];
+                    //$period['total_debit'] = 0;
                 }
 
                 $balances[$supplier_id] = [
@@ -873,11 +873,11 @@ class Reports_model extends CI_Model
                 ];
             } else {
                 if ($period['total_debit'] >= $period['total_credit']) {
-                    $period['total_debit'] = $period['total_debit'] - $period['total_credit'];
-                    $period['total_credit'] = 0;
+                    //$period['total_debit'] = $period['total_debit'] - $period['total_credit'];
+                    //$period['total_credit'] = 0;
                 } else if ($period['total_credit'] > $period['total_debit']) {
-                    $period['total_credit'] = $period['total_credit'] - $period['total_debit'];
-                    $period['total_debit'] = 0;
+                    //$period['total_credit'] = $period['total_credit'] - $period['total_debit'];
+                    //$period['total_debit'] = 0;
                 }
 
                 $balances[$supplier_id]['trsDebit'] = $period['total_debit'];

@@ -3825,6 +3825,7 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['supplier_id'] = $supplier_id;
             $this->data['ob_type'] = $ob_type;
+            $this->data['ledger_id'] = $ledger_id;
             $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];
 
