@@ -396,6 +396,12 @@ class Products extends MY_Controller
                 $product_details->price = $productPrice + $productTaxAmount;
             }
 
+            if ($product_details->promotion == 1) {
+                $salePriceFinal = $product_details->promo_price;
+            }else{
+                $salePriceFinal = $product_details->price;
+            }
+
             $productData = [
                 'channel' => 'online',
                 'contentLanguage' => 'en',
@@ -411,7 +417,7 @@ class Products extends MY_Controller
                     'currency' => 'SAR',
                 ],
                 'salePrice' => [
-                    'value' => $product_details->promo_price,
+                    'value' => $salePriceFinal,
                     'currency' => 'SAR',
                 ],
                 'additionalImageLinks' => $photos_arr,
