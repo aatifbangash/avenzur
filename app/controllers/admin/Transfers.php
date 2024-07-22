@@ -940,7 +940,7 @@ class Transfers extends MY_Controller
             foreach ($rows as $row) {
                 $c                     = uniqid(mt_rand(), true);
                 $option                = false;
-                $row->quantity         = 0;
+               // $row->quantity         = 0;
                 $row->item_tax_method  = $row->tax_method;
                 $row->base_quantity    = 0;
                 $row->base_unit        = $row->unit;
@@ -963,26 +963,26 @@ class Transfers extends MY_Controller
                     $option_id = false;
                 }
                 $row->option = $option_id;
-                $pis         = $this->site->getPurchasedItems($row->id, $warehouse_id, $row->option);
-                if ($pis) {
-                    foreach ($pis as $pi) {
-                        $row->quantity += $pi->quantity_balance;
-                    }
-                }
-                if ($options) {
-                    $option_quantity = 0;
-                    foreach ($options as $option) {
-                        $pis = $this->site->getPurchasedItems($row->id, $warehouse_id, $row->option);
-                        if ($pis) {
-                            foreach ($pis as $pi) {
-                                $option_quantity += $pi->quantity_balance;
-                            }
-                        }
-                        if ($option->quantity > $option_quantity) {
-                            $option->quantity = $option_quantity;
-                        }
-                    }
-                }
+                // $pis         = $this->site->getPurchasedItems($row->id, $warehouse_id, $row->option);
+                // if ($pis) {
+                //     foreach ($pis as $pi) {
+                //         $row->quantity += $pi->quantity_balance;
+                //     }
+                // } 
+                // if ($options) {
+                //     $option_quantity = 0;
+                //     foreach ($options as $option) {
+                //         $pis = $this->site->getPurchasedItems($row->id, $warehouse_id, $row->option);
+                //         if ($pis) {
+                //             foreach ($pis as $pi) {
+                //                 $option_quantity += $pi->quantity_balance;
+                //             }
+                //         }
+                //         if ($option->quantity > $option_quantity) {
+                //             $option->quantity = $option_quantity;
+                //         }
+                //     }
+                // }
                 if ($opt->cost != 0) {
                     $row->cost = $opt->cost;
                 }
