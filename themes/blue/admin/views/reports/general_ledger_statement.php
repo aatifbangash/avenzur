@@ -51,11 +51,12 @@
                             <div class="form-group">
                                 <?= lang('Ledger', 'posupplier'); ?>
                                 <?php
+                                $selected_ledger_id[] = isset($ledger_id) ? $ledger_id : '';
                                 $sp[''] = '';
                                 foreach ($ledgers as $ledger) {
                                     $sp[$ledger->id] = $ledger->name;
                                 }
-                                echo form_dropdown('ledger', $sp, ($ledger_id ?? $ledger_id), 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('ledger') . '" required="required" style="width:100%;" '); ?>
+                                echo form_dropdown('ledger', $sp, $selected_ledger_id, 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('ledger') . '" required="required" style="width:100%;" ', null); ?>
                             </div>
                         </div>
 
@@ -96,12 +97,16 @@
                             $totalCredit = 0;
                             $totalDebit = 0;
                             $totalBalance = 0;
+                            $totalOpeningCredit = 0;
+                            $totalOpeningDebit = 0;
                             foreach ($supplier_statement as $statement) {
 
                                 if ($statement->dc == 'D') {
                                     $balance = $balance - $statement->amount;
+                                    $totalOpeningDebit = $totalOpeningDebit + $statement->openingAmount;
                                 } else {
                                     $balance = $balance + $statement->amount;
+                                    $totalOpeningCredit = $totalOpeningCredit + $statement->openingAmount;
                                 }
                                 $count++;
                                 ?>

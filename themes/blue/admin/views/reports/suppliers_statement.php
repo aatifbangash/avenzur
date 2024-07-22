@@ -1,6 +1,14 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
-    $(document).ready(function () {
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, {
+            sheet: 'Sheet 1'
+        });
+        XLSX.writeFile(wb, filename);
+    }
+    $(document).ready(function() {
 
     });
 </script>
@@ -10,10 +18,9 @@
 
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
+                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'Supplier_Statement_Report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
                                 class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i
-                                class="icon fa fa-file-picture-o"></i></a></li>
+                
             </ul>
         </div>
     </div>
@@ -49,7 +56,7 @@
                                 foreach ($suppliers as $supplier) {
                                     $sp[$supplier->id] = $supplier->company . ' (' . $supplier->name . ')';
                                 }
-                                echo form_dropdown('supplier', $sp, ($supplier_id ?? $supplier_id), 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" required="required" style="width:100%;" '); ?>
+                                echo form_dropdown('supplier', $sp, $supplier_id, 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" required="required" style="width:100%;" ', null); ?>
                             </div>
                         </div>
 
@@ -91,6 +98,12 @@
                             $total_debit = 0;
                             $total_credit = 0;
 
+                            $total_trs_credit = 0;
+                            $total_trs_debit = 0;
+
+                            $total_opening_credit = 0;
+                            $total_opening_debit = 0;
+
                             foreach ($supplier_statement as $statement) {
 
                                 // OB Calculation
@@ -118,11 +131,17 @@
                                 if($statement->dc == 'D'){
                                     $total_debit = $opening_debit + $statement->amount;
                                     $total_credit = $opening_credit;
+
+                                    $total_trs_debit = $total_trs_debit + $statement->amount;
+                                    $total_opening_debit = $total_opening_debit + $opening_debit;
                                 }
                                 
                                 if($statement->dc == 'C'){
                                     $total_credit = $opening_credit + $statement->amount;
                                     $total_debit = $opening_debit;
+
+                                    $total_trs_credit = $total_trs_credit + $statement->amount;
+                                    $total_opening_credit = $total_opening_credit + $opening_credit;
                                 }
                                 
                                 if($total_debit > $total_credit){
@@ -143,10 +162,10 @@
                                     <td><?= $statement->code; ?></td>
                                     <td><?= $statement->company; ?></td>
                                     <td><?= $statement->narration; ?></td>
-                                    <td><?= $opening_debit; ?></td>
-                                    <td><?= $opening_credit; ?></td>
-                                    <td><?= $statement->dc == 'D' ? $statement->amount : '-'; ?></td>
-                                    <td><?= $statement->dc == 'C' ? $statement->amount : '-'; ?></td>
+                                    <td><?= $this->sma->formatNumber($opening_debit); ?></td>
+                                    <td><?= $this->sma->formatNumber($opening_credit); ?></td>
+                                    <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '-'; ?></td>
+                                    <td><?= $statement->dc == 'C' ? $this->sma->formatNumber($statement->amount) : '-'; ?></td>
                                     <td><?= $totalBalance; ?></td>
                                 </tr>
                                 <?php
@@ -161,9 +180,9 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
-                                <th><?= $totalDebit; ?></th>
-                                <th><?= $totalCredit; ?></th>
-                                <th><?= $totalBalance; ?></th>
+                                <th><?= $this->sma->formatNumber($total_trs_debit); ?></th>
+                                <th><?= $this->sma->formatNumber($total_trs_credit); ?></th>
+                                <th><?= $this->sma->formatNumber($totalBalance); ?></th>
                             </tr>
                             </tbody>
                             <tfoot></tfoot>
