@@ -1731,23 +1731,14 @@ public function getallCountry()
 
      public function getProductBatchesData($product_id, $warehouse)
     {  
-        // [id] => 48030
-        // [product_id] => 10111
-        // [warehouse_id] => 39
-        // [quantity] => 
-        // [rack] => 
-        // [avg_cost] => 25.5200
-        // [batchno] => 5202
-        // [expiry] => 0000-00-00
-        // [purchase_cost] => 0
-        // [batch_sale_price] => 0  
+         
         $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, wp.rack, wp.avg_cost, wp.expiry, wp.purchase_cost');
         $this->db->from('sma_inventory_movements inv');
         $this->db->join('warehouses_products wp', 'wp.batchno=inv.batch_number AND  wp.product_id= inv.product_id and wp.warehouse_id=inv.location_id', 'LEFT');   
         $this->db->where('inv.location_id',$warehouse);
         $this->db->where('inv.product_id',$product_id); 
         $this->db->group_by('inv.batch_number'); 
-        $this->db->having('SUM(inv.quantity)>0'); 
+        $this->db->having('SUM(inv.quantity)>=0'); 
 	    $query = $this->db->get();
         if($query->num_rows() > 0){
             foreach (($query->result()) as $row) {
