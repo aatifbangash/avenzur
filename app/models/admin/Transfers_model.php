@@ -346,8 +346,40 @@ class Transfers_model extends CI_Model
         }
         return false;
     }
-
+    
     public function getProductNamesWithBatches($term, $warehouse_id, $limit = 10)
+    {
+       
+        // removed from select ->  purchase_items.serial_number
+        $this->db->select('products.id, products.price, code, name, SUM(sma_inventory_movements.quantity) as quantity, cost, tax_rate, sma_products.type, unit, purchase_unit, tax_method')
+        ->join('inventory_movements', 'inventory_movements.product_id=products.id', 'left')
+        //   ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
+         //    ->join('purchase_items', 'purchase_items.product_id=products.id', 'left')
+            ->group_by('products.id');
+        if ($this->Settings->overselling) {
+            $this->db->where("products.type = 'standard' AND (name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
+        } else {
+            $this->db->where("products.type = 'standard' AND inventory_movements.location_id = '" . $warehouse_id . "' AND "
+                . "(name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
+        }
+        $this->db->having("SUM(sma_inventory_movements.quantity)>0"); 
+        $this->db->limit($limit);
+        $q = $this->db->get('products');
+        //echo  $this->db->last_query(); exit; 
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+
+
+     
+
+
+    }
+
+    public function getProductNamesWithBatches__BK($term, $warehouse_id, $limit = 10)
     {
         $this->db->select('products.id, products.price, code, name, warehouses_products.quantity, cost, tax_rate, type, unit, purchase_unit, tax_method, purchase_items.serial_number')
             ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
