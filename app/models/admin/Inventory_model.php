@@ -8,7 +8,7 @@ class Inventory_model extends CI_Model {
     }
 
     // Function to add an inventory movement for any operation, explicitly including location
-    public function add_movement($product_id, $batch_no, $type, $quantity, $location_id)
+    public function add_movement($product_id, $batch_no, $type, $quantity, $location_id, $reference_id=null)
     {
 
         $data = array(
@@ -17,6 +17,7 @@ class Inventory_model extends CI_Model {
             'type' => $type,
             'quantity' => ($type === 'sale' || $type === 'pos' || $type === 'return_to_supplier' || $type === 'transfer_out' || $type === 'adjustment_decrease') ? -$quantity : $quantity,
             'location_id' => $location_id,
+            'reference_id' => $reference_id 
         );
         //print_r($data);exit;
         //$this->db->insert('inventory_movements', $data);

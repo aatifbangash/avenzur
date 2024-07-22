@@ -2054,9 +2054,11 @@ class Sales extends MY_Controller
     public function add_to_courier(){
         $courier_id = $_POST['Courier'];
         $sale_id = $_POST['sale_id'];
+        $warehouse_id = $_POST['pickupLocation'];
 
         $courier = $this->site->getCourierById($courier_id);
         $sale = $this->site->getSaleByID($sale_id);
+        $warehouse = $this->site->getWarehouseByID($warehouse_id);
 
         if($sale->courier_id == 0){
             if($courier->name == 'Run X'){
@@ -2072,7 +2074,7 @@ class Sales extends MY_Controller
                             admin_redirect('sales/ecommerce');
                         }else{
                             $tracking_id = isset($order_resp->data->id) ? $order_resp->data->id : '';
-                            $this->sales_model->updateSaleWithCourier($sale_id, $courier->id, $tracking_id);
+                            $this->sales_model->updateSaleWithCourier($sale_id, $courier->id, $tracking_id, $warehouse_id);
                             $this->session->set_flashdata('message', 'Courier Assigned Successfully');
                             admin_redirect('sales/ecommerce');
                         }
@@ -2085,7 +2087,7 @@ class Sales extends MY_Controller
                 if((isset($order_resp->msg) && $order_resp->msg == 'success')){
 
                     $billCode = isset($order_resp->data->billCode) ? $order_resp->data->billCode : '';
-                    $this->sales_model->updateSaleWithCourier($sale_id, $courier->id, $billCode);
+                    $this->sales_model->updateSaleWithCourier($sale_id, $courier->id, $billCode, $warehouse_id);
                     $this->session->set_flashdata('message', 'Courier Assigned Successfully');
                     admin_redirect('sales/ecommerce');
                 }else{
@@ -2096,11 +2098,152 @@ class Sales extends MY_Controller
                     admin_redirect('sales/ecommerce');
                 }
             }
+            else if($courier->name == 'STC'){
+                $response = $this->assignSTC($sale, $courier, $warehouse);
+                $order_resp = json_decode($response, true);
+               
+                if(isset($order_resp['shipmentNumber'])){
+
+                    $this->sales_model->updateSaleWithCourier($sale_id, $courier->id, $order_resp['shipmentNumber'], $warehouse_id);
+                    $this->session->set_flashdata('message', 'Courier Assigned Successfully');
+                    admin_redirect('sales/ecommerce');
+                }else{
+                    $this->session->set_flashdata('error', $order_resp['errorMessage']);
+                    admin_redirect('sales/ecommerce');
+                }
+            }
         }else{
             $this->session->set_flashdata('error', lang('Courier Already Assigned'));
             admin_redirect('sales/ecommerce');
         }
         
+    }
+
+    public function assignSTC($sale, $courier, $warehouse){
+       
+        $address_id = $sale->address_id;
+        $customer = $this->site->getCompanyByID($sale->customer_id);
+
+        if($address_id == 0){
+            $address = new stdClass();
+            $address->line1 = $customer->address;
+            $address->line2 = '';
+            $address->phone = $customer->phone;
+            $address->email = $customer->email;
+            $address->longitude = $customer->longitude;
+            $address->latitude = $customer->latitude;
+            $address->city = $customer->city;
+            $address->state = $customer->state;
+            $address->postal_code = $customer->postal_code;
+            $address->country = $customer->country;
+            $address->first_name = $customer->first_name;
+            $address->last_name = $customer->last_name;
+        }else{
+            $address = $this->site->getAddressByID($address_id);
+        }
+
+        if (strpos($address->phone, "+966") !== false) {
+            //echo "The string contains +966.";
+        } else {
+           // $address->phone = '+966'.$address->phone;
+        }
+
+        $sale_items = $this->site->getAllSaleItems($sale->id);
+
+        $address->phone = $this->arabicToEnglishNumber($address->phone);
+        //print_r($address);exit;
+
+        $packages = [];
+        foreach ($sale_items as $sale_item){
+
+            $product = $this->site->getProductByID($sale_item->product_id);
+            $strippedDescription = str_replace('<p><strong>Product Description:</strong></p>', '', $product->product_details);
+            $strippedDescription = strip_tags($strippedDescription, '<ul><li><strong>');
+
+            $packages[] = [
+                "serialNo" => $sale_item->product_id,
+                "sku" => $sale_item->product_code,
+                "productName" => $sale_item->product_name,
+                "itemCode" => $sale_item->product_code,
+                "price" => $sale_item->subtotal,
+                "htsCode" => ""
+              
+            ];
+
+        }
+
+        $packages_list = json_encode($packages, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        $url = $courier->url.'/create';
+        $apiKey = $courier->api_account;
+        $jsonDataArr = array(
+            "partnerCode" => "avenzur",
+            "serviceType" => "delivery",
+            "orderReferences" => array(
+                "partnerReference" => "avenzur-".$sale->id
+            ),
+            "pickUp"=> array(
+                "contactName" => $warehouse->name,
+                "contactMobile" => $warehouse->phone,
+                "contactEmail" => $warehouse->email,
+                "address" => $warehouse->address,
+                "city" => $warehouse->city,
+                "countryCode" => "SA",
+                "hubCode" => $warehouse->hubcode,
+                "longitude" => $warehouse->longitude,
+                "latitude" => $warehouse->latitude,
+                "nationalAddress" => $warehouse->national_address
+            ),
+            "dropOff" => array(
+                "contactName" => $address->first_name.' '.$address->last_name,
+                "contactMobile" => $address->phone,
+                "contactEmail" => $address->email,
+                "address" => $address->line1,
+                "city" => $address->city,
+                "countryCode" => "SA",
+                "longitude" => $address->longitude,
+                "latitude" => $address->latitude,
+                "nationalAddress" => ""
+            ),
+            "payment" => array(
+                "totalAmount" => $sale->total,
+                "collectAmount" => 0.00,
+                "currency" => "SAR"
+            ),
+            "packages" => json_decode($packages_list, true) 
+        );
+        
+       
+        $jsonData = json_encode($jsonDataArr, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        //echo $jsonData;exit;
+        // Initialize cURL session
+        $ch = curl_init($url);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Return response as a string
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Api-Key: ' . $apiKey
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true); // HTTP POST method
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData); // Set request body
+
+        // Execute the request
+        $response = curl_exec($ch);
+
+        // // Check for errors
+        // if (curl_errno($ch)) {
+        //     echo 'Error:' . curl_error($ch);
+        // } else {
+        //     // Decode and print the response
+        //    $responseData = json_decode($response, true);
+        // }
+
+        // Close cURL session
+        curl_close($ch);
+        return  $response;
+
     }
 
     public function create_order($customerCode,$pwd,$key,$account,$waybillinfo,$url) {

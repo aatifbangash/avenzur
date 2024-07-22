@@ -148,7 +148,7 @@ class Sales_model extends CI_Model
                 if ($data['sale_status'] == 'completed' && empty($si_return)) {
 
                       //handle inventory movement
-                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
+                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id); 
 
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
@@ -1003,8 +1003,18 @@ class Sales_model extends CI_Model
         return false;
     }
 
-    public function updateSaleWithCourier($id, $courier_id, $tracking_id){
-        $this->db->update('sales', ['courier_id' => $courier_id, 'courier_order_tracking_id' => $tracking_id], ['id' => $id]);
+    public function updateSaleWithCourier($id, $courier_id, $tracking_id, $pickup_location=null){
+        $this->db->update('sales', ['courier_id' => $courier_id, 'courier_order_tracking_id' => $tracking_id, 'pickup_location_id' => $pickup_location], ['id' => $id]);
+    }
+
+    public function updateSaleCourierStatus($courier_id, $tracking_id, $tracking_status){
+       if( $this->db->update('sales', ['courier_order_status' => $tracking_status], 
+        ['courier_id' => $courier_id, 'courier_order_tracking_id' =>$tracking_id ]) ){
+            return true;
+        }else{
+            return false;
+        }
+
     }
 
     public function updateSale($id, $data, $items = [], $attachments = [])
@@ -1052,6 +1062,8 @@ class Sales_model extends CI_Model
                 // Code for serials end here
 
                 if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
+                       //handle inventory movement
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $id); 
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
@@ -1084,8 +1096,7 @@ class Sales_model extends CI_Model
             }
 
             if ($data['sale_status'] == 'completed') {
-                  //handle inventory movement
-                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
+               
                 $this->site->syncPurchaseItems($cost);
             }
 
