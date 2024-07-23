@@ -3891,7 +3891,7 @@ class Sales extends MY_Controller
                 $c = uniqid(mt_rand(), true);
                 unset($row->details, $row->product_details, $row->image, $row->barcode_symbology, $row->cf1, $row->cf2, $row->cf3, $row->cf5, $row->cf6, $row->supplier1price, $row->supplier2price, $row->cfsupplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1, $row->supplier2, $row->supplier3, $row->supplier4, $row->supplier5, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
                 $option               = false;
-                $row->quantity        = 0;
+               // $row->quantity        = 0;
                 $row->item_tax_method = $row->tax_method;
                 $row->qty             = 1;
                 $row->discount        = '0';
@@ -3917,9 +3917,9 @@ class Sales extends MY_Controller
                 
                 if ($pis) {
                     $row->expiry = "";
-                    $row->quantity = 0;
+                    //$row->quantity = 0;
                     foreach ($pis as $pi) {
-                        $row->quantity += $pi->quantity_balance;
+                      //  $row->quantity += $pi->quantity_balance;
                         $row->expiry    = $pi->expiry;
                     }
                 }
