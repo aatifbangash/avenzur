@@ -547,6 +547,48 @@ class Sales_model extends CI_Model
 
     public function getProductNamesWithBatches($term, $warehouse_id, $pos = false, $limit = 5)
     {
+        // $this->db->select('products.id, products.price, code, name, SUM(sma_inventory_movements.quantity) as quantity, cost, tax_rate, sma_products.type, unit, purchase_unit, tax_method')
+        // ->join('inventory_movements', 'inventory_movements.product_id=products.id', 'left')
+         
+        //     ->group_by('products.id');
+        // if ($this->Settings->overselling) {
+        //     $this->db->where("products.type = 'standard' AND (name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
+        // } else {
+        //     $this->db->where("products.type = 'standard' AND inventory_movements.location_id = '" . $warehouse_id . "' AND "
+        //         . "(name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
+        // }
+       
+        // removed from select ->  purchase_items.serial_number
+       // $this->db->select('products.id, products.price, code, name, SUM(sma_inventory_movements.quantity) as quantity, cost, tax_rate, sma_products.type, unit, purchase_unit, tax_method')
+       $this->db->select('products.*,   SUM(sma_inventory_movements.quantity) as quantity, categories.id as category_id, categories.name as category_name', false)
+       ->join('inventory_movements', 'inventory_movements.product_id=products.id', 'left') 
+       // ->join('purchase_items', 'purchase_items.product_id=products.id and purchase_items.warehouse_id='.$warehouse_id, 'left')
+        ->join('categories', 'categories.id=products.category_id', 'left')
+            ->group_by('products.id');
+            if ($this->Settings->overselling) {
+                $this->db->where("({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
+            } else {
+                $this->db->where("(({$this->db->dbprefix('inventory_movements')}.location_id  = '" . $warehouse_id . "') OR {$this->db->dbprefix('products')}.type != 'standard') AND "
+                    . "({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
+            }
+        $this->db->having("SUM(sma_inventory_movements.quantity)>0"); 
+        $this->db->limit($limit);
+        if ($pos) {
+            $this->db->where('hide_pos !=', 1);
+        }
+        $q = $this->db->get('products');
+        // echo  $this->db->last_query(); exit; 
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $row->serial_number=''; 
+                $data[] = $row;
+            }
+            return $data;
+        }  
+    }
+
+    public function getProductNamesWithBatches__BK($term, $warehouse_id, $pos = false, $limit = 5)
+    {
         $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
 
         $this->db->select('products.*, purchase_items.serial_number, FWP.quantity as quantity, categories.id as category_id, categories.name as category_name', false)
@@ -566,11 +608,11 @@ class Sales_model extends CI_Model
             $this->db->where('hide_pos !=', 1);
         }
         $this->db->limit($limit);
-        $q = $this->db->get('products');
+        $q = $this->db->get('products'); 
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
-            }
+            } 
             return $data;
         }
     }
@@ -1026,7 +1068,7 @@ class Sales_model extends CI_Model
             $this->Settings->overselling = true;
             $cost                        = $this->site->costing($items, true);
         }
-        // $this->sma->print_arrays($cost);
+         // $this->sma->print_arrays($cost); exit; 
 
         if ($this->db->update('sales', $data, ['id' => $id]) && $this->db->delete('sale_items', ['sale_id' => $id]) && $this->db->delete('costing', ['sale_id' => $id])) {
             $this->db->update('sma_invoice_serials', ['sid' => 0], ['sid' => $id]);
@@ -1094,7 +1136,6 @@ class Sales_model extends CI_Model
                     $this->db->insert('attachments', $attachment);
                 }
             }
-
             if ($data['sale_status'] == 'completed') {
                
                 $this->site->syncPurchaseItems($cost);
@@ -1157,7 +1198,6 @@ class Sales_model extends CI_Model
                 $totalPurchases[] = $row;
             }
         }
-
         return $totalPurchases;
     }
 

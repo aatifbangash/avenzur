@@ -121,10 +121,10 @@ class Sales extends MY_Controller
 
                 $net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
                 $net_cost = $net_cost_obj[0]->cost_price;
-                if(empty($net_cost) || $net_cost == NULL){
+               
+                if(empty($net_cost) || $net_cost == NULL || is_nan($net_cost)){
                     $net_cost = 0;
-                }
-
+                } 
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details = $item_type != 'manual' ? $this->sales_model->getProductByCode($item_code) : null;
                     // $unit_price = $real_unit_price;
@@ -321,7 +321,7 @@ class Sales extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            // $this->sma->print_arrays($data, $products, $payment, $attachments);
+            // $this->sma->print_arrays($data, $products, $payment, $attachments); exit; 
         }
         
         if ($this->form_validation->run() == true && $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
@@ -1022,10 +1022,9 @@ class Sales extends MY_Controller
 
                 $net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
                 $net_cost = $net_cost_obj[0]->cost_price;
-                if(empty($net_cost) || $net_cost == NULL){
+                if(empty($net_cost) || $net_cost == NULL || is_nan($net_cost)){
                     $net_cost = 0;
-                }
-
+                } 
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details = $item_type != 'manual' ? $this->sales_model->getProductByCode($item_code) : null;
 
@@ -3784,19 +3783,16 @@ class Sales extends MY_Controller
                     $option_id  = false;
                 }
                 $row->option = $option_id;
-                $pis         = $this->site->getPurchasedItems($row->id, $warehouse_id, $row->option);
-
-                
+                $pis         = $this->site->getPurchasedItems($row->id, $warehouse_id, $row->option); 
                 if ($pis) {
                     $row->expiry = "";
                     $row->quantity = 0;
                     foreach ($pis as $pi) {
                         $row->quantity += $pi->quantity_balance;
                         $row->expiry    = $pi->expiry;
+                        $row->serial_number    = $pi->serial_number;
                     }
-                }
-
-
+                } 
                 if ($options) {
                     $option_quantity = 0;
                     foreach ($options as $option) {

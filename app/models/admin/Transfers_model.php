@@ -372,12 +372,7 @@ class Transfers_model extends CI_Model
                 $data[] = $row;
             }
             return $data;
-        }
-
-
-     
-
-
+        }  
     }
 
     public function getProductNamesWithBatches__BK($term, $warehouse_id, $limit = 10)
@@ -522,10 +517,20 @@ class Transfers_model extends CI_Model
 
     public function getWarehouseProductQuantity($warehouse_id, $product_id, $item_batchno)
     {
-        $q = $this->db->get_where('warehouses_products', ['warehouse_id' => $warehouse_id, 'product_id' => $product_id, 'batchno' => $item_batchno], 1);
-        if ($q->num_rows() > 0) {
-            return $q->row();
-        }
+        // $q = $this->db->get_where('warehouses_products', ['warehouse_id' => $warehouse_id, 'product_id' => $product_id, 'batchno' => $item_batchno], 1);
+        // if ($q->num_rows() > 0) {
+        //     return $q->row();
+        // }  
+        $this->db->select('SUM(inv.quantity) as quantity ');
+		$this->db->from('inventory_movements inv');
+        // $this->db->join('warehouses_products wp', 'wp.warehouse_id=inv.location_id AND inv.product_id=wp.product_id AND wp.batchno=inv.batch_number', 'LEFT'); 
+        $this->db->where('inv.location_id',$warehouse_id);
+        $this->db->where('inv.product_id',$product_id);
+        $this->db->where('inv.batch_number',$item_batchno); 
+	    $query = $this->db->get();
+        if ($query->num_rows() > 0) {
+                return $query->row();
+        } 
         return false;
     }
 

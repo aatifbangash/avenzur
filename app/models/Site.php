@@ -283,9 +283,9 @@ class Site extends CI_Model
         }
         // $this->sma->print_arrays($combo_items, $citems);
         $cost = [];
-        foreach ($citems as $item) {
+        foreach ($citems as $item) {  
             $item['aquantity'] = $citems['p' . $item['product_id'] . 'o' . $item['option_id']]['aquantity'];
-            $cost[]            = $this->item_costing($item, true);
+            $cost[] = $this->item_costing($item, true); 
         }
         
         return $cost;
@@ -783,7 +783,7 @@ public function getallCountry()
     public function getPurchasedItems($product_id, $warehouse_id, $option_id = null, $nonPurchased = false)
     {
         $orderby = empty($this->Settings->accounting_method) ? 'asc' : 'desc';
-        $this->db->select('id, purchase_id, transfer_id, quantity, quantity_balance, batchno, net_unit_cost, unit_cost, item_tax, base_unit_cost,expiry');
+        $this->db->select('id, purchase_id, transfer_id, quantity, quantity_balance, serial_number, batchno, net_unit_cost, unit_cost, item_tax, base_unit_cost,expiry');
         $this->db->where('product_id', $product_id)
         //->where('warehouse_id', $warehouse_id)
         ->where('quantity_balance !=', 0)
