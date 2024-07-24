@@ -1839,7 +1839,7 @@ class Purchases extends MY_Controller
         $from_warehouse         = $purchase_detail->warehouse_id;
         $note                   = $this->sma->clear_tags($purchase_detail->note);
         $shipping               = $purchase_detail->shipping;
-        $status                 = 'sent';
+        $status                 = 'completed';
         $from_warehouse_details = $this->site->getWarehouseByID($from_warehouse);
         $from_warehouse_code    = $from_warehouse_details->code;
         $from_warehouse_name    = $from_warehouse_details->name;
