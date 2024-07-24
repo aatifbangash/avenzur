@@ -283,9 +283,9 @@ class Site extends CI_Model
         }
         // $this->sma->print_arrays($combo_items, $citems);
         $cost = [];
-        foreach ($citems as $item) {
+        foreach ($citems as $item) {  
             $item['aquantity'] = $citems['p' . $item['product_id'] . 'o' . $item['option_id']]['aquantity'];
-            $cost[]            = $this->item_costing($item, true);
+            $cost[] = $this->item_costing($item, true); 
         }
         
         return $cost;
@@ -783,7 +783,7 @@ public function getallCountry()
     public function getPurchasedItems($product_id, $warehouse_id, $option_id = null, $nonPurchased = false)
     {
         $orderby = empty($this->Settings->accounting_method) ? 'asc' : 'desc';
-        $this->db->select('id, purchase_id, transfer_id, quantity, quantity_balance, batchno, net_unit_cost, unit_cost, item_tax, base_unit_cost,expiry');
+        $this->db->select('id, purchase_id, transfer_id, quantity, quantity_balance, serial_number, batchno, net_unit_cost, unit_cost, item_tax, base_unit_cost,expiry');
         $this->db->where('product_id', $product_id)
         //->where('warehouse_id', $warehouse_id)
         ->where('quantity_balance !=', 0)
@@ -1728,9 +1728,38 @@ public function getallCountry()
         return 0;
     }
 
-     
 
-    public function getProductBatchesData($product_id, $warehouse)
+     public function getProductBatchesData($product_id, $warehouse)
+    {  
+         
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, wp.rack, wp.avg_cost, wp.expiry, wp.purchase_cost');
+        $this->db->from('sma_inventory_movements inv');
+        $this->db->join('warehouses_products wp', 'wp.batchno=inv.batch_number AND  wp.product_id= inv.product_id and wp.warehouse_id=inv.location_id', 'LEFT');   
+        $this->db->where('inv.location_id',$warehouse);
+        $this->db->where('inv.product_id',$product_id); 
+        $this->db->group_by('inv.batch_number'); 
+        $this->db->having('SUM(inv.quantity)>=0'); 
+	    $query = $this->db->get();
+        if($query->num_rows() > 0){
+            foreach (($query->result()) as $row) {
+
+                $query = $this->db->get_where('sma_purchase_items', ['product_id' => $product_id, 'warehouse_id' => $warehouse, 'batchno' => $row->batchno, 'sale_price >' => 0], 1);
+                if ($query->num_rows() > 0) {
+                    $rowp = $query->row();
+                    $batch_sale_price = $rowp->sale_price;
+                }else{
+                    $batch_sale_price = 0;
+                }
+                $row->batch_sale_price = $batch_sale_price;
+                $data[] = $row; 
+            }
+          //  echo '<pre>'; print_r($data); exit;  
+          return $data; 
+         }  
+        return false;
+    } 
+
+    public function getProductBatchesData__BK($product_id, $warehouse)
     {
         //$q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);
         $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);  
@@ -1745,10 +1774,10 @@ public function getallCountry()
                     $batch_sale_price = 0;
                 }
 
-                if($this->db->platform == 'pharma'){
-                    $total_batch_quantity = $this->Inventory_model->get_current_stock( $product_id, $warehouse, $row->batchno);
-                    $row->quantity = $total_batch_quantity;
-                }
+                //if($this->db->platform == 'pharma'){
+                   $total_batch_quantity = $this->Inventory_model->get_current_stock( $product_id, $warehouse, $row->batchno);
+                   $row->quantity = $total_batch_quantity;
+                // }
 
                 $row->batch_sale_price = $batch_sale_price;
                 $data[] = $row;

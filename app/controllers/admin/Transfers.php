@@ -69,10 +69,23 @@ class Transfers extends MY_Controller
         }
     }
 
+    public function greater_than_zero($value)
+    { 
+      $quantity=  $this->input->post('quantity');
+        foreach ($quantity as $val) {
+            if ($val <= 0) { 
+                $this->form_validation->set_message('greater_than_zero', 'The {field} field must contain values greater than 0.');
+                return false;
+            }
+        }
+        return true; // All values are greater than 0
+    }
     public function add()
     {
         $this->sma->checkPermissions();
 
+         
+        $this->form_validation->set_rules('quantity[]', lang('quantity'), 'callback_greater_than_zero');
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
         $this->form_validation->set_rules('to_warehouse', lang('warehouse') . ' (' . lang('to') . ')', 'required|is_natural_no_zero');
         $this->form_validation->set_rules('from_warehouse', lang('warehouse') . ' (' . lang('from') . ')', 'required|is_natural_no_zero');
@@ -83,8 +96,7 @@ class Transfers extends MY_Controller
                 $date = $this->sma->fld(trim($this->input->post('date')));
             } else {
                 $date = date('Y-m-d H:i:s');
-            }
-
+            } 
             $to_warehouse           = $this->input->post('to_warehouse');
             $from_warehouse         = $this->input->post('from_warehouse');
             $note                   = $this->sma->clear_tags($this->input->post('note'));
@@ -126,7 +138,6 @@ class Transfers extends MY_Controller
                     $product_details = $this->transfers_model->getProductByCode($item_code);
                     // if (!$this->Settings->overselling) {
                     $warehouse_quantity = $this->transfers_model->getWarehouseProduct($from_warehouse_details->id, $product_details->id, $item_option, $item_batchno);
-
                     if ($warehouse_quantity->quantity < $item_quantity) {
                         $this->session->set_flashdata('error', lang('no_match_found') . ' (' . lang('product_name') . ' <strong>' . $product_details->name . '</strong> ' . lang('product_code') . ' <strong>' . $product_details->code . '</strong>)');
                         admin_redirect('transfers/add');
@@ -928,7 +939,7 @@ class Transfers extends MY_Controller
             foreach ($rows as $row) {
                 $c                     = uniqid(mt_rand(), true);
                 $option                = false;
-                $row->quantity         = 0;
+               // $row->quantity         = 0;
                 $row->item_tax_method  = $row->tax_method;
                 $row->base_quantity    = 0;
                 $row->base_unit        = $row->unit;
@@ -951,26 +962,26 @@ class Transfers extends MY_Controller
                     $option_id = false;
                 }
                 $row->option = $option_id;
-                $pis         = $this->site->getPurchasedItems($row->id, $warehouse_id, $row->option);
-                if ($pis) {
-                    foreach ($pis as $pi) {
-                        $row->quantity += $pi->quantity_balance;
-                    }
-                }
-                if ($options) {
-                    $option_quantity = 0;
-                    foreach ($options as $option) {
-                        $pis = $this->site->getPurchasedItems($row->id, $warehouse_id, $row->option);
-                        if ($pis) {
-                            foreach ($pis as $pi) {
-                                $option_quantity += $pi->quantity_balance;
-                            }
-                        }
-                        if ($option->quantity > $option_quantity) {
-                            $option->quantity = $option_quantity;
-                        }
-                    }
-                }
+                // $pis         = $this->site->getPurchasedItems($row->id, $warehouse_id, $row->option);
+                // if ($pis) {
+                //     foreach ($pis as $pi) {
+                //         $row->quantity += $pi->quantity_balance;
+                //     }
+                // } 
+                // if ($options) {
+                //     $option_quantity = 0;
+                //     foreach ($options as $option) {
+                //         $pis = $this->site->getPurchasedItems($row->id, $warehouse_id, $row->option);
+                //         if ($pis) {
+                //             foreach ($pis as $pi) {
+                //                 $option_quantity += $pi->quantity_balance;
+                //             }
+                //         }
+                //         if ($option->quantity > $option_quantity) {
+                //             $option->quantity = $option_quantity;
+                //         }
+                //     }
+                // }
                 if ($opt->cost != 0) {
                     $row->cost = $opt->cost;
                 }

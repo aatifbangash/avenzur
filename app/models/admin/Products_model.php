@@ -526,6 +526,27 @@ class Products_model extends CI_Model
     }
 
     public function getAllWarehousesWithPQ($product_id)
+    {   
+        // , wp.rack, wp.avg_cost //  ->join('(SELECT warehouse_id, product_id,  rack, avg_cost FROM sma_warehouses_products where product_id='.$product_id.' order by avg_cost limit 1) as wp', 'wp.warehouse_id = warehouses.id', 'left') 
+        // ' . $this->db->dbprefix('warehouses_products') . '.rack, ' . $this->db->dbprefix('warehouses_products') . '.avg_cost'
+        //$this->db->select('' . $this->db->dbprefix('warehouses') . '.*, SUM(' . $this->db->dbprefix('inventory_movements') . '.quantity) As quantity,' . $this->db->dbprefix('warehouses_products') . '.rack, ' . $this->db->dbprefix('warehouses_products') . '.avg_cost')
+        $this->db->select('' . $this->db->dbprefix('warehouses') . '.*, SUM(' . $this->db->dbprefix('inventory_movements') . '.quantity) As quantity') 
+        // ->join('warehouses_products', 'warehouses_products.warehouse_id=warehouses.id', 'left')
+           ->join('inventory_movements', 'inventory_movements.location_id=warehouses.id', 'left')
+            ->where('inventory_movements.product_id', $product_id)
+            ->group_by('warehouses.id');
+        $q = $this->db->get('warehouses');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+        return false;
+    }
+
+    public function getAllWarehousesWithPQ__BK($product_id)
     {
         $this->db->select('' . $this->db->dbprefix('warehouses') . '.*, SUM(' . $this->db->dbprefix('warehouses_products') . '.quantity) As quantity,' . $this->db->dbprefix('warehouses_products') . '.rack, ' . $this->db->dbprefix('warehouses_products') . '.avg_cost')
             ->join('warehouses_products', 'warehouses_products.warehouse_id=warehouses.id', 'left')
