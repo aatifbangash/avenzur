@@ -11,6 +11,12 @@
 
     });
 </script>
+<style> 
+.tableFixHead          { overflow: auto; height: 100px; }
+.tableFixHead thead  { position: sticky; top: 0; z-index: 1; }
+/* Just common table stuff. Really. */ 
+.tableFixHead thead th, td {background:#eee;  padding: 8px 16px; }
+</style> 
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('stock_report'); ?></h2>
@@ -116,7 +122,7 @@
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
                         <table id="poTable"
-                               class="table items table-striped table-bordered table-condensed table-hover sortable_table">
+                               class="table items table-striped table-bordered table-condensed table-hover sortable_table tableFixHead">
                             <thead>
                             <tr>
                                 <th>#</th>

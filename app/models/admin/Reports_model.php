@@ -1399,6 +1399,64 @@ class Reports_model extends CI_Model
 
     public function getStockData($at_date, $warehouse, $supplier, $item_group, $item)
     {
+            $stockArray = [];    
+            if ($at_date){
+                $at_date = $this->sma->fld($at_date); 
+            } 
+            $tbl_purchase_items= "(SELECT  product_id, sale_price, net_unit_cost, quantity, unit_cost,batchno , expiry , warehouse_id 
+            ,purchase_item_id, purchase_id  FROM sma_purchase_items  GROUP BY product_id, batchno ) ";  
+
+            $stockQuery = " SELECT p.id,
+            p.code item_code, 
+            p.name as name, 
+            inv.batch_number as batch_no,
+            pi.expiry,
+            SUM(inv.quantity) as quantity,
+            round(avg(pi.sale_price), 2) sale_price,
+            round(avg(pi.net_unit_cost), 2) cost_price,
+            round(sum(pi.net_unit_cost * pi.quantity), 2) total_cost_price,
+            round(avg(pi.unit_cost), 2) purchase_price  
+            FROM `sma_inventory_movements` inv 
+            INNER JOIN sma_products p on p.id=inv.product_id 
+            LEFT JOIN $tbl_purchase_items as pi ON pi.product_id = inv.product_id and pi.batchno=inv.batch_number 
+            LEFT JOIN sma_purchases pc ON pc.id = pi.purchase_id 
+            WHERE   p.id>0   ";  
+           //    pi.purchase_item_id IS NULL AND pc.status = 'received' 
+          // -- AND inv.type='purchase' 
+            if ($at_date) {
+                // $stockQuery .= "AND pi.date <= '{$at_date}' "; 
+                $stockQuery .= " AND date(inv.movement_date)<= '{$at_date}' "; 
+            } 
+            if ($warehouse) {
+              //  $stockQuery .= " AND pi.warehouse_id = {$warehouse} ";
+                 $stockQuery .= " AND inv.location_id = {$warehouse} ";
+            } 
+            if ($supplier) { //TODO: will be checked
+                $stockQuery .= " AND pc.supplier_id = {$supplier} ";
+            } 
+            if ($item_group) {
+                $stockQuery .= " AND p.category_id = '$item_group' ";
+            } 
+            if ($item) { 
+                // $stockQuery .= " AND (p.id = '{$item}') ";
+                $stockQuery .= " AND inv.product_id = '{$item}' "; 
+            } 
+            // $stockQuery .= "GROUP BY p.code, p.name, pi.batchno  ORDER BY p.id DESC";
+            $stockQuery .= "GROUP BY inv.product_id, inv.batch_number  ORDER BY p.id DESC";  
+            $stockResults = $this->db->query($stockQuery);
+            // echo $this->db->last_query(); exit; 
+            if ($stockResults->num_rows() > 0) {
+                foreach ($stockResults->result() as $row) {
+                   //  $row->cost_price = ($row->total_cost_price / $row->quantity);
+                    $stockArray[] = $row;
+                } 
+            }
+            return $stockArray;
+    }
+
+
+    public function getStockData_BK($at_date, $warehouse, $supplier, $item_group, $item)
+    {
         $totalPurchases = [];
         $finalResponse = [];
 
@@ -1448,6 +1506,7 @@ class Reports_model extends CI_Model
                                 ORDER BY p.id DESC";
 
         $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
+        //echo  $this->db->last_query(); exit; 
 
         if ($totalPurchseResultSet->num_rows() > 0) {
             foreach ($totalPurchseResultSet->result() as $row) {
