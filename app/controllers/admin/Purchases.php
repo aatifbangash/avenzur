@@ -47,6 +47,21 @@ class Purchases extends MY_Controller
         $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
         $this->form_validation->set_rules('warehouse', $this->lang->line('warehouse'), 'required|is_natural_no_zero');
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
+        $this->form_validation->set_rules('batchno[]', lang('Batch'), 'required');
+        $product_id_arr= $this->input->post('product_id');  
+        foreach ($product_id_arr as $index => $prid) {
+            // Set validation rules for each quantity field
+            $this->form_validation->set_rules(
+                'quantity['.$index.']',
+                'Quantity for Product '.$_POST['product_name'][$index],  // Replace with actual product identifier
+                'required|greater_than[0]',
+                array(
+                    'required' => 'Quantity for Product '.$_POST['product_name'][$index].' is required.',
+                    'greater_than' => 'Quantity for Product '.$_POST['product_name'][$index].' must be greater than zero.'
+                )
+            );
+        }
+
 
         $this->session->unset_userdata('csrf_token');
         if ($this->form_validation->run() == true) {
@@ -214,7 +229,10 @@ class Purchases extends MY_Controller
             $total_tax      = $this->sma->formatDecimal(($order_tax), 4);
             //$total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
             // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
-            $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+           
+            // below line commented by mm
+           // $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+           $grand_total = $this->sma->formatDecimal(($total + $product_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
             $data        = ['reference_no' => $reference,
                 'date'                     => $date,
                 'supplier_id'              => $supplier_id,
@@ -247,7 +265,7 @@ class Purchases extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            //$this->sma->print_arrays($data, $products);exit;
+            // $this->sma->print_arrays($data, $products);exit;
         }
 
         if ($this->form_validation->run() == true && $this->purchases_model->addPurchase($data, $products, $attachments)) {
@@ -898,8 +916,10 @@ class Purchases extends MY_Controller
 
             //$this->sma->formatDecimal(($product_tax + $order_tax), 4);
             // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
-            $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
-            $data        = ['reference_no' => $reference,
+           // below line commented by mm
+           // $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+           $grand_total = $this->sma->formatDecimal(($total + $product_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+           $data        = ['reference_no' => $reference,
                 'supplier_id'              => $supplier_id,
                 'supplier'                 => $supplier,
                 'warehouse_id'             => $warehouse_id,
@@ -1419,7 +1439,8 @@ class Purchases extends MY_Controller
                     'dr_total'     => $inv->grand_total,
                     'cr_total'     => $inv->grand_total,
                     'notes'        => 'Purchase Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
-                    'pid'          =>  $inv->id
+                    'pid'          =>  $inv->id,
+                    'supplier_id'  => $inv->supplier_id
                     );
                 $add  = $this->db->insert('sma_accounts_entries', $entry);
                 $insert_id = $this->db->insert_id();

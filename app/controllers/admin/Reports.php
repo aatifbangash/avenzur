@@ -3666,6 +3666,8 @@ class Reports extends MY_Controller
                     $obj->trs_credit = 0;
                     $obj->ob_debit = 0;
                     $obj->ob_credit = 0;
+                    $obj->total_trs_credit = 0;
+                    $obj->total_trs_debit = 0;
                     if ($supplier_data->dc == 'D') {
                         $obj->trs_debit = $this->sma->formatDecimal($supplier_data->total_amount);
                     } else if ($supplier_data->dc == 'C') {
@@ -3684,6 +3686,36 @@ class Reports extends MY_Controller
                             $response_item->ob_credit = $this->sma->formatDecimal($supplier_data->total_amount);
                         }
                     }
+                }
+            }
+
+            // Final Response array
+            foreach ($response_arr as $resp_arr) {
+                if($resp_arr->ob_debit >= $resp_arr->ob_credit){
+                    $resp_arr->ob_debit = $resp_arr->ob_debit - $resp_arr->ob_credit;
+                    $resp_arr->ob_credit = 0;
+                }else if($resp_arr->ob_credit > $resp_arr->ob_debit){
+                    $resp_arr->ob_credit = $resp_arr->ob_credit - $resp_arr->ob_debit;
+                    $resp_arr->ob_debit = 0;
+                }
+
+                if($resp_arr->trs_debit >= $resp_arr->trs_credit){
+                    $resp_arr->total_trs_debit = $resp_arr->trs_debit - $resp_arr->trs_credit;
+                    //$resp_arr->trs_credit = 0;
+                }else if($resp_arr->trs_credit > $resp_arr->trs_debit){
+                    $resp_arr->total_trs_credit = $resp_arr->trs_credit - $resp_arr->trs_debit;
+                    //$resp_arr->trs_debit = 0;
+                }
+
+                $resp_arr->eb_debit = $resp_arr->ob_debit + $resp_arr->total_trs_debit;
+                $resp_arr->eb_credit = $resp_arr->ob_credit + $resp_arr->total_trs_credit;
+
+                if($resp_arr->eb_debit >= $resp_arr->eb_credit){
+                    $resp_arr->eb_debit = $resp_arr->eb_debit - $resp_arr->eb_credit;
+                    $resp_arr->eb_credit = 0;
+                }else if($resp_arr->eb_credit > $resp_arr->eb_debit){
+                    $resp_arr->eb_credit = $resp_arr->eb_credit - $resp_arr->eb_debit;
+                    $resp_arr->eb_debit = 0;
                 }
             }
 
@@ -3718,8 +3750,9 @@ class Reports extends MY_Controller
             $supplier_id = $this->input->post('customer');
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
+           // print_r($supplier_details);exit;
             $ledger_account = $supplier_details->ledger_account;
-            $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
+            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_account);
 
             $total_ob = 0;
             $total_ob_credit = 0;
@@ -3792,6 +3825,7 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['supplier_id'] = $supplier_id;
             $this->data['ob_type'] = $ob_type;
+            $this->data['ledger_id'] = $ledger_id;
             $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];
 
@@ -3825,16 +3859,17 @@ class Reports extends MY_Controller
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
             $ledger_account = $supplier_details->ledger_account;
             $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
-//dd($supplier_statement);
+
             $total_ob = 0;
             $total_ob_credit = 0;
             $total_ob_debit = 0;
             $ob_type = '';
+            
             foreach ($supplier_statement['ob'] as $ob) {
                 if ($ob->dc == 'D') {
-                    $total_ob_debit = $ob->total_amount;
+                    $total_ob_debit += $ob->amount;
                 } else if ($ob->dc == 'C') {
-                    $total_ob_credit = $ob->total_amount;
+                    $total_ob_credit += $ob->amount;
                 }
             }
 
@@ -3844,6 +3879,8 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['supplier_id'] = $supplier_id;
             $this->data['ob_type'] = $ob_type;
+            $this->data['total_ob_credit'] = $total_ob_credit;
+            $this->data['total_ob_debit'] = $total_ob_debit;
             $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];
 
@@ -3862,21 +3899,16 @@ class Reports extends MY_Controller
         $this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
+        $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
         $response_arr = array();
-        $supplier_aging_array = $this->reports_model->getCustomerAging($duration = 30);
-        foreach ($supplier_aging_array as $key => $supplier_aging) {
-            $response_arr[$key] = array('Current' => 0, '1-30' => 0, '31-60' => 0, '61-90' => 0, '91-120' => 0, '>120' => 0);
-            foreach ($supplier_aging as $key2 => $record) {
-                foreach ($record as $rec) {
-                    if ($rec->dc == 'D') {
-                        $response_arr[$key][$key2] -= $rec->total_amount;
-                    } else if ($rec->dc == 'C') {
-                        $response_arr[$key][$key2] += $rec->total_amount;
-                    }
-                }
-            }
+
+        if($duration){
+            $supplier_aging_array = $this->reports_model->getCustomerAging($duration);
+        }else{
+            $supplier_aging_array = $this->reports_model->getCustomerAging($duration = 120);
         }
-        $this->data['supplier_aging'] = $response_arr;
+       
+        $this->data['supplier_aging'] = $supplier_aging_array;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_aging')]];
         $meta = ['page_title' => lang('customers_aging'), 'bc' => $bc];
         $this->page_construct('reports/customers_aging', $meta, $this->data);
@@ -3887,21 +3919,16 @@ class Reports extends MY_Controller
         $this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
+        $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
         $response_arr = array();
-        $supplier_aging_array = $this->reports_model->getSupplierAging($start_date, $end_date);
-        foreach ($supplier_aging_array as $key => $supplier_aging) {
-            $response_arr[$key] = array('Current' => 0, '1-30' => 0, '31-60' => 0, '61-90' => 0, '91-120' => 0, '>120' => 0);
-            foreach ($supplier_aging as $key2 => $record) {
-                foreach ($record as $rec) {
-                    if ($rec->dc == 'D') {
-                        $response_arr[$key][$key2] -= $rec->total_amount;
-                    } else if ($rec->dc == 'C') {
-                        $response_arr[$key][$key2] += $rec->total_amount;
-                    }
-                }
-            }
+
+        if($duration){
+            $supplier_aging_array = $this->reports_model->getSupplierAging($duration);
+        }else{
+            $supplier_aging_array = $this->reports_model->getSupplierAging($duration = 120);
         }
-        $this->data['supplier_aging'] = $this->sma->formatDecimal($response_arr);
+        
+        $this->data['supplier_aging'] = $supplier_aging_array;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_aging')]];
         $meta = ['page_title' => lang('suppliers_aging'), 'bc' => $bc];
         $this->page_construct('reports/suppliers_aging', $meta, $this->data);
@@ -3918,24 +3945,25 @@ class Reports extends MY_Controller
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $trial_balance_array = $this->reports_model->getSuppliersTrialBalance($start_date, $end_date);
+            //$trial_balance_array = $this->reports_model->getSuppliersTrialBalance($start_date, $end_date);
+            $response_arr = $this->reports_model->get_suppliers_trial_balance($start_date, $end_date);
 
-            $response_arr = array();
-            foreach ($trial_balance_array['trs'] as $trans) {
-                $response_arr[$trans->id]["id"] = $trans->id;
-                $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
-                $response_arr[$trans->id]["name"] = $trans->name;
-                $response_arr[$trans->id]["trsDebit"] = $trans->totalPayment + $trans->totalReturn + $trans->totalMemo;
-                $response_arr[$trans->id]["trsCredit"] = $trans->totalPurchases + $trans->totalTaxes;
-            }
-            foreach ($trial_balance_array['ob'] as $trans) {
-                $response_arr[$trans->id]["obDebit"] = $trans->totalPayment + $trans->totalReturn + $trans->totalMemo;
-                $response_arr[$trans->id]["obCredit"] = $trans->totalPurchases + $trans->totalTaxes;
-            }
+            // $response_arr = array();
+            // foreach ($trial_balance_array['trs'] as $trans) {
+            //     $response_arr[$trans->id]["id"] = $trans->id;
+            //     $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
+            //     $response_arr[$trans->id]["name"] = $trans->name;
+            //     $response_arr[$trans->id]["trsDebit"] = $trans->totalPayment + $trans->totalReturn + $trans->totalMemo;
+            //     $response_arr[$trans->id]["trsCredit"] = $trans->totalPurchases + $trans->totalTaxes;
+            // }
+            // foreach ($trial_balance_array['ob'] as $obtrans) {
+            //     $response_arr[$obtrans->id]["obDebit"] = $obtrans->totalPayment + $obtrans->totalReturn + $obtrans->totalMemo;
+            //     $response_arr[$obtrans->id]["obCredit"] = $obtrans->totalPurchases + $obtrans->totalTaxes;
+            // }
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
-            $this->data['customer_data'] = $trial_balance_array;
+            $this->data['customer_data'] = $response_arr;
             $this->data['trial_balance'] = $response_arr;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
             $meta = ['page_title' => lang('suppliers_report'), 'bc' => $bc];
@@ -4060,22 +4088,45 @@ class Reports extends MY_Controller
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $trial_balance_array = $this->reports_model->getCustomersTrialBalance($start_date, $end_date);
-
+            //$trial_balance_array = $this->reports_model->getCustomersTrialBalance($start_date, $end_date);
+            $trial_balance_array = $this->reports_model->get_customer_trial_balance($start_date, $end_date);
+            // echo "<pre>";
+            // print_r($trial_balance_array);
+            // exit;
             $response_arr = array();
+            /**OLD LOGIC */
+            // foreach ($trial_balance_array['trs'] as $trans) {
+            //     $response_arr[$trans->id]["name"] = $trans->name;
+            //     $response_arr[$trans->id]["company"] = $trans->company;
+            //     $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
+            //     $response_arr[$trans->id]["trsDebit"] = $trans->payment_total + $trans->sale_total;
+            //     $response_arr[$trans->id]["trsCredit"] =  $trans->return_total + $trans->memo_total;
+            // }
+
+
+            // foreach ($trial_balance_array['ob'] as $trans) {
+            //     $response_arr[$trans->id]["obDebit"] = $trans->payment_total + $trans->sale_total;
+            //     $response_arr[$trans->id]["obCredit"] =  $trans->return_total + $trans->memo_total;
+            // }
+           /**END OLD LOGIC */
+
             foreach ($trial_balance_array['trs'] as $trans) {
                 $response_arr[$trans->id]["name"] = $trans->name;
                 $response_arr[$trans->id]["company"] = $trans->company;
                 $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
-                $response_arr[$trans->id]["trsDebit"] = $trans->payment_total + $trans->sale_total;
-                $response_arr[$trans->id]["trsCredit"] =  $trans->return_total + $trans->memo_total;
+                $response_arr[$trans->id]["trsDebit"] = $trans->total_debit;
+                $response_arr[$trans->id]["trsCredit"] =  $trans->total_credit;
             }
 
 
             foreach ($trial_balance_array['ob'] as $trans) {
-                $response_arr[$trans->id]["obDebit"] = $trans->payment_total + $trans->sale_total;
-                $response_arr[$trans->id]["obCredit"] =  $trans->return_total + $trans->memo_total;
+                $response_arr[$trans->id]["name"] = $trans->name;
+                $response_arr[$trans->id]["company"] = $trans->company;
+                $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
+                $response_arr[$trans->id]["obDebit"] = $trans->total_debit;
+                $response_arr[$trans->id]["obCredit"] =  $trans->total_credit;
             }
+
             //dd($response_arr);
 
 
@@ -4538,7 +4589,7 @@ class Reports extends MY_Controller
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
             $vat_purchase_array = $this->reports_model->getVatPurchaseReport($start_date, $end_date, $warehouse_id, $filterOnType);
-
+    
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
             $this->data['vat_purchase'] = $vat_purchase_array;

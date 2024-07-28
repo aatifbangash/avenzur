@@ -130,6 +130,8 @@
                                     $totalItemWithZeroVAT = 0;
 
                                     $totalWithTax = 0;
+                                    // echo "<pre>";
+                                    // print_r($vat_purchase);
                                     foreach ($vat_purchase as $data){
                                         
                                         $rowClass = '';
@@ -137,7 +139,7 @@
                                         
                                         if($data->trans_type == "returnCustomer"){
                                             $rowClass = 'oreturn_link';
-                                            $sign = "-";
+                                            $sign = "";
                                         }else if($data->trans_type == "sale"){
                                             $rowClass = 'invoice_link';
                                         }
@@ -152,8 +154,8 @@
                                         $totalTotalAfterDiscount += $sign.$data->grand_total;
 
 
-                                        $totalItemWithVAT += $sign.$data->total_item_with_vat;
-                                        $totalItemWithOutVAT += $sign.$data->total_item_without_tax;
+                                        $totalItemWithVAT += $data->total_item_with_vat;
+                                        $totalItemWithOutVAT += $data->total_item_without_tax;
 
                                         
 

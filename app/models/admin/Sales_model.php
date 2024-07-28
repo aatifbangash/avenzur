@@ -145,23 +145,15 @@ class Sales_model extends CI_Model
                 // Code for serials end here
 
                 $sale_item_id = $this->db->insert_id();
-                if ($data['sale_status'] == 'completed' && empty($si_return)) {
-                //    $movmentObj =    InventoryMovement::builder()
-                //                     ->setProductId( $item['product_id'] )
-                //                     ->setBatchNumber( $item['batch_no'] )
-                //                     ->setType( 'sale' )
-                //                     ->setQuantity(  $item['quantity'] )
-                //                     ->setExpiryDate( $item['expiry'] )
-                //                     ->setReferenceId( $sale_id )
-                //                     ->setLocationId( $item['warehouse_id'] )
-                //                     ->setNetUnitCost( $item['net_cost'] )
-                //                     ->setNetUnitSale( $item['unit_price'] )
-                //                     ->build();
-
-            
-              //  $this->Inventory_model->add_movement($movmentObj);     
+   
                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['unit_price'] ); 
 
+
+                if ($data['sale_status'] == 'completed'){ //handle inventory movement 
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
+                } 
+                if ($data['sale_status'] == 'completed' && empty($si_return)) { 
+                      
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
@@ -1063,7 +1055,7 @@ class Sales_model extends CI_Model
 
     public function updateSale($id, $data, $items = [], $attachments = [])
     {
-        
+        // echo 'Items: <pre>'; print_r( $items);   echo 'Data: <pre>'; print_r( $data); exit;  
         $this->db->trans_start();
         $this->resetSaleActions($id, false, true);
         if ($data['sale_status'] == 'completed') {
@@ -1105,6 +1097,10 @@ class Sales_model extends CI_Model
                 }
                 // Code for serials end here
 
+                if ($data['sale_status'] == 'completed') {
+                    //handle inventory movement
+                  $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
+                }
                 if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
                        //handle inventory movement
                     $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $id,  $item['net_cost'], $item['expiry'], $item['unit_price'] ); 
@@ -1138,6 +1134,7 @@ class Sales_model extends CI_Model
                     $this->db->insert('attachments', $attachment);
                 }
             }
+
             if ($data['sale_status'] == 'completed') {
                
                 $this->site->syncPurchaseItems($cost);

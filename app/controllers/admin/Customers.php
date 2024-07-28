@@ -57,10 +57,10 @@ class Customers extends MY_Controller
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
-                'dc' => 'D',
+                'dc' => 'C',
                 'ledger_id' => $customer->ledger_account,
                 'amount' => $payment_amount,
-                'narration' => ''
+                'narration' => 'Account Receivable'
             )
         );
 
@@ -79,7 +79,7 @@ class Customers extends MY_Controller
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
-                'dc' => 'C',
+                'dc' => 'D',
                 'ledger_id' => $ledger_account,
                 'amount' => $payment_amount,
                 'narration' => ''
@@ -1261,6 +1261,7 @@ class Customers extends MY_Controller
                         'customer_group_name' => (!empty($customer_group)) ? $customer_group->name : null,
                         'price_group_id'      => (!empty($price_group)) ? $price_group->id : null,
                         'price_group_name'    => (!empty($price_group)) ? $price_group->name : null,
+                        'sequence_code'       => $this->sequenceCode->generate('CUS', 5)
                     ];
                     if (empty($customer['company']) || empty($customer['name']) || empty($customer['email'])) {
                         $this->session->set_flashdata('error', lang('company') . ', ' . lang('name') . ', ' . lang('email') . ' ' . lang('are_required') . ' (' . lang('line_no') . ' ' . $rw . ')');

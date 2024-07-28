@@ -46,11 +46,28 @@ class Sales extends MY_Controller
         $this->form_validation->set_rules('biller', lang('biller'), 'required');
         $this->form_validation->set_rules('sale_status', lang('sale_status'), 'required');
         $this->form_validation->set_rules('payment_status', lang('payment_status'), 'required');
+        $this->form_validation->set_rules('quantity[]', lang('quantity'), 'required'); 
+        $this->form_validation->set_rules('batchno[]', lang('batchno'), 'required'); 
+        
+        $product_id_arr= $this->input->post('product_id');  
+        foreach ($product_id_arr as $index => $prid) {
+            // Set validation rules for each quantity field
+            $this->form_validation->set_rules(
+                'quantity['.$index.']',
+                'Quantity for Product '.$_POST['product_name'][$index],  // Replace with actual product identifier
+                'required|greater_than[0]',
+                array(
+                    'required' => 'Quantity for Product '.$_POST['product_name'][$index].' is required.',
+                    'greater_than' => 'Quantity for Product '.$_POST['product_name'][$index].' must be greater than zero.'
+                )
+            );
+        }
+ 
 
         if ($this->form_validation->run() == true) {
 
             $customerId = $this->input->post('customer');
-
+           //  echo 'valid'; exit;  
             $customer = $this->companies_model->getCompanyByID($customerId);
             $customerCreditLimit = $customer->credit_limit;
 
@@ -573,7 +590,8 @@ class Sales extends MY_Controller
             'dr_total'     => $amount,
             'cr_total'     => $amount,
             'notes'        => 'Sale Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
-            'sid'          =>  $inv->id
+            'sid'          =>  $inv->id,
+            'customer_id'  => $inv->customer_id
             );
     
         $add  = $this->db->insert('sma_accounts_entries', $entry);
@@ -939,7 +957,20 @@ class Sales extends MY_Controller
         $this->form_validation->set_rules('biller', lang('biller'), 'required');
         $this->form_validation->set_rules('sale_status', lang('sale_status'), 'required');
         $this->form_validation->set_rules('payment_status', lang('payment_status'), 'required');
-
+        $this->form_validation->set_rules('batchno[]', lang('Batch Number'), 'required');
+        $product_id_arr= $this->input->post('product_id');  
+        foreach ($product_id_arr as $index => $prid) {
+            // Set validation rules for each quantity field
+            $this->form_validation->set_rules(
+                'quantity['.$index.']',
+                'Quantity for Product '.$_POST['product_name'][$index],  // Replace with actual product identifier
+                'required|greater_than[0]',
+                array(
+                    'required' => 'Quantity for Product '.$_POST['product_name'][$index].' is required.',
+                    'greater_than' => 'Quantity for Product '.$_POST['product_name'][$index].' must be greater than zero.'
+                )
+            );
+        }
         if ($this->form_validation->run() == true) {
             $reference = $this->input->post('reference_no');
             if ($this->Owner || $this->Admin) {
@@ -1721,7 +1752,8 @@ class Sales extends MY_Controller
                     'dr_total'     => $inv->grand_total,
                     'cr_total'     => $inv->grand_total,
                     'notes'        => 'Sale Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
-                    'sid'          =>  $inv->id
+                    'sid'          =>  $inv->id,
+                    'customer_id'  => $inv->customer_id
                     );
             
             $add  = $this->db->insert('sma_accounts_entries', $entry);
@@ -2607,6 +2639,7 @@ class Sales extends MY_Controller
         {
             $convert_sale_invoice = anchor('admin/sales/convert_sale_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
         }
+        $convert_sale_invoice = anchor('admin/sales/convert_sale_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
         
         $add_payment_link  = anchor('admin/sales/add_payment/$1', '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"');
         $packagink_link    = anchor('admin/sales/packaging/$1', '<i class="fa fa-archive"></i> ' . lang('packaging'), 'data-toggle="modal" data-target="#myModal"');
@@ -2650,6 +2683,7 @@ class Sales extends MY_Controller
         . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
         . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
+        <li>' . $convert_sale_invoice . '</li>
             <li>' . $detail_link . '</li>
             <li>' . $duplicate_link . '</li>
             <li>' . $payments_link . '</li>
@@ -2767,6 +2801,7 @@ class Sales extends MY_Controller
             $convert_sale_invoice = anchor('admin/sales/convert_sale_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
         }
         
+        $convert_sale_invoice = anchor('admin/sales/convert_sale_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
         $add_payment_link  = anchor('admin/sales/add_payment/$1', '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"');
         $packagink_link    = anchor('admin/sales/packaging/$1', '<i class="fa fa-archive"></i> ' . lang('packaging'), 'data-toggle="modal" data-target="#myModal"');
         $add_delivery_link = anchor('admin/sales/add_delivery/$1', '<i class="fa fa-truck"></i> ' . lang('add_delivery'), 'data-toggle="modal" data-target="#myModal"');
@@ -2808,6 +2843,7 @@ class Sales extends MY_Controller
         . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
         . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
+         <li>' . $convert_sale_invoice . '</li>
             <li>' . $detail_link . '</li>
             <li>' . $duplicate_link . '</li>
             <li>' . $payments_link . '</li>

@@ -366,11 +366,13 @@ class Transfers_model extends CI_Model
         //echo  $this->db->last_query(); exit; 
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
+
                 $row->serial_number=''; 
                 $data[] = $row;
             }
             return $data;
         }  
+
     }
 
     public function getProductNamesWithBatches__BK($term, $warehouse_id, $limit = 10)

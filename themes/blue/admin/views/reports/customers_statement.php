@@ -1,7 +1,15 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
-    $(document).ready(function () {
-        
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, {
+            sheet: 'Sheet 1'
+        });
+        XLSX.writeFile(wb, filename);
+    }
+    $(document).ready(function() {
+
     });
 </script>
 <div class="box">
@@ -10,8 +18,10 @@
 
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i class="icon fa fa-file-picture-o"></i></a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'Customer_Statement_Report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a>
+                </li>
+                
             </ul>
         </div>
     </div>
@@ -43,11 +53,12 @@
                             <div class="form-group">
                             <?= lang('customer', 'posupplier'); ?>
                             <?php
+                            $selected_customer_id[] = isset($customer_id) ? $customer_id : '';
                             $sp[''] = '';
                             foreach ($suppliers as $supplier) {
                                 $sp[$supplier->id] = $supplier->company. ' ('. $supplier->name.')';
                             }
-                            echo form_dropdown('customer', $sp, ($customer_id ?? $customer_id), 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" required="required" style="width:100%;" '); ?>
+                            echo form_dropdown('customer', $sp, $selected_customer_id, 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" required="required" style="width:100%;" ', null); ?>
                             </div>
                         </div>
 
@@ -80,11 +91,11 @@
                             <tbody style="text-align:center;">
                                 <?php
                                     $count = 0;
-                                    $balance = $total_ob;
+                                    $balance = 0;
                                     foreach($supplier_statement as $statement){
                                         
-                                        if($statement->dc == 'D'){
-                                            $balance = $balance - $statement->amount;
+                                        if($statement->dc == 'C'){
+                                            $balance =  $balance - $statement->amount;
                                         }else{
                                             $balance = $balance + $statement->amount;
                                         }

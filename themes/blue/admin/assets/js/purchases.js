@@ -156,7 +156,7 @@ $(document).ready(function () {
     }
     $supplier.change(function (e) {
         localStorage.setItem('posupplier', $(this).val());
-        $('#supplier_id').val($(this).val());
+        $('#supplier_id').val($(this).val()); 
     });
     if ((posupplier = localStorage.getItem('posupplier'))) {
         $supplier.val(posupplier).select2({
@@ -1062,7 +1062,7 @@ function loadItems() {
                 formatDecimal(item.row.cost, 2) +
                 '"></td>';
 
-{/* <span class="text-right scost" id="scost_' +
+            {/* <span class="text-right scost" id="scost_' +
                 row_no +
                 '">' +
                 formatMoney(item_cost) +
@@ -1243,9 +1243,7 @@ function loadItems() {
             an++;
             if (!belong) $('#row_' + row_no).addClass('warning');
         });
-
-       
-
+ 
         var trRowClas = localStorage.getItem('trRowClas');
         if(trRowClas != undefined && trRowClas !=""){
             $(".row_"+trRowClas).css("color", "green"); 
@@ -1273,7 +1271,12 @@ function loadItems() {
         tfoot +=
             '<th class="text-right">' +
             formatMoney(total) +
-            '</th></tr>';
+            '</th>';
+            tfoot += '<th></th>';
+            tfoot += '<th></th>';
+            tfoot += '</tr>';
+
+           
         $('#poTable tfoot').html(tfoot);
 
         // Order level discount calculations
@@ -1291,16 +1294,17 @@ function loadItems() {
             }
         }
 
-        // Order level tax calculations
+        // Order level tax calculations        
         if (site.settings.tax2 != 0) {
             if ((potax2 = localStorage.getItem('potax2'))) {
                 $.each(tax_rates, function () {
-                    if (this.id == potax2) {
+                    console.log( this);
+                   if (this.id == potax2) {
                         if (this.type == 2) {
                             invoice_tax = formatDecimal(this.rate);
                         }
                         if (this.type == 1) {
-                            invoice_tax = formatDecimal(((total - order_discount) * this.rate) / 100, 4);
+                            invoice_tax = formatDecimal(((total - order_discount) * this.rate) / 100, 4); 
                         }
                     }
                 });
@@ -1308,15 +1312,18 @@ function loadItems() {
         }
         total_discount = parseFloat(order_discount + product_discount);
         // Totals calculations after item addition
-        var gtotal = total + invoice_tax - order_discount + shipping;
+        // var gtotal = total + invoice_tax - order_discount + shipping;    // commented bu mushtaq
+          var gtotal = total + grand_total_vat - order_discount + shipping;    // new line add by mushtaq 
+        $('#grand_vat').text(formatMoney(grand_total_vat));
         $('#total').text(formatMoney(total));
         $('#titems').text(an - 1 + ' (' + formatQty(parseFloat(count) - 1) + ')');
         $('#tds').text(formatMoney(order_discount));
         if (site.settings.tax1) {
             $('#ttax1').text(formatMoney(product_tax));
+           // alert("product_tax: "+product_tax); 
         }
         if (site.settings.tax2 != 0) {
-            $('#ttax2').text(formatMoney(invoice_tax));
+            $('#ttax2').text(formatMoney(invoice_tax)); 
         }
         $('#gtotal').text(formatMoney(gtotal));
         if (an > parseInt(site.settings.bc_fix) && parseInt(site.settings.bc_fix) > 0) {
