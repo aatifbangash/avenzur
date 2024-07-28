@@ -111,9 +111,9 @@
                                     <tr>
                                         <td colspan="2">Opening Balance</td>
                                         <td colspan="8">&nbsp;</td>
-                                        <td><?php echo $this->sma->formatMoney(($itemOpenings->openingBalance > 0 ? $itemOpenings->unitPrice : 0.0), 'none'); ?></td>
-                                        <td><?php echo $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00)); ?></td>
-                                        <td><?php echo $this->sma->formatMoney(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00), 'none'); ?></td>
+                                        <td><?php echo $this->sma->formatMoney(($itemOpenings->total_opening_qty > 0 && $itemOpenings->cost_price > 0 ? $itemOpenings->cost_price / $itemOpenings->total_opening_qty : 0.0), 'none'); ?></td>
+                                        <td><?php echo $this->sma->formatQuantity(($itemOpenings->total_opening_qty > 0 ? $itemOpenings->total_opening_qty : 0.00)); ?></td>
+                                        <td><?php echo $this->sma->formatMoney(($itemOpenings->total_opening_qty > 0 && $itemOpenings->cost_price > 0 ? $itemOpenings->cost_price : 0.00), 'none'); ?></td>
 
                                     </tr>
 
@@ -121,13 +121,16 @@
                                     $count = 1;
                                     $balanceQantity = 0;
                                     $totalValueOfItem  = 0;
-                                    $openingTotal = ($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice  : 0.00);
+                                    $openingTotal = $itemOpenings->cost_price;
 
                                     foreach ($reportData as $rp) {
 
                                         $showQty = 0.00;
+                                        $balanceQantity = 0;
+                                        $totalValueOfItem = 0;
+
                                         // || $rp->type == "Transfer-In"
-                                        if ($rp->type == 'Purchase' || $rp->type == 'Return-Customer' ) {
+                                        /*if ($rp->trs_type == 'adjustment_increase' || $rp->trs_type == 'purchase' ) {
 
                                             if($balanceQantity == 0 && $itemOpenings->openingBalance > 0){
                                                 $balanceQantity = $itemOpenings->openingBalance + $rp->quantity;
@@ -175,21 +178,21 @@
                                             $type = 'Transfer';
                                         } else {
                                             $type = $rp->type;
-                                        }
+                                        }*/
 
                                     ?>
                                         <tr>
                                             <td><?= $count; ?></td>
-                                            <td><?= $rp->entry_date; ?></td>
-                                            <td><?= $rp->document_no; ?></td>
-                                            <td><?= $type; ?></td>
-                                            <td><?= $rp->name_of; ?></td>
-                                            <td><?= $rp->expiry_date; ?></td>
+                                            <td><?= $rp->movement_date; ?></td>
+                                            <td><?= 'Reference Number' ?></td>
+                                            <td><?= $rp->trs_type; ?></td>
+                                            <td><?= 'Supplier Name' ?></td>
+                                            <td><?= 'Expiry Date' ?></td>
                                             <td><?= $rp->batch_no; ?></td>
-                                            <td><?= $this->sma->formatMoney(($rp->sale_price ? $rp->sale_price : 0.0), 'none'); ?></td>
-                                            <td><?= $this->sma->formatMoney(($rp->purchase_price ? $rp->purchase_price : 0.0), 'none'); ?></td>
-                                            <td><?= $this->sma->formatQuantity($showQty); ?></td>
-                                            <td><?= $this->sma->formatMoney(($rp->unit_cost ? $rp->unit_cost : 0.0), 'none'); ?></td>
+                                            <td><?= 'Sale Price' ?></td>
+                                            <td><?= 'Purchase Price' ?></td>
+                                            <td><?= $this->sma->formatQuantity($rp->quantity); ?></td>
+                                            <td><?= 'Unit Cost' ?></td>
                                             <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
                                             <td><?= $this->sma->formatMoney(($totalValueOfItem), 'none'); ?></td>
                                         </tr>

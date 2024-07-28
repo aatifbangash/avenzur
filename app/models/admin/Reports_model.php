@@ -1814,13 +1814,65 @@ class Reports_model extends CI_Model
         return $totalPurchases;
     }
 
-    public function getItemOpeningBalance($productId, $start_date, $warehouseId = 0)
-    {
+    public function getItemOpeningBalance($productId, $start_date, $warehouseId = 0){
+        $q = $this->db->query("SELECT 
+                    iv.total_opening_qty,
+                    pi.cost_price
+                FROM 
+                    (SELECT 
+                        product_id,
+                        type as trs_type,
+                        SUM(IF(movement_date < '".$start_date."', quantity, 0)) AS total_opening_qty
+                    FROM sma_inventory_movements
+                    WHERE product_id = ".$productId.") iv
+                LEFT JOIN 
+                    (SELECT 
+                        product_id, 
+                        SUM(net_unit_cost) AS cost_price
+                    FROM sma_purchase_items
+                    WHERE product_id = ".$productId.") pi
+                ON iv.product_id = pi.product_id");
+        
+        $response = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $response = $row;
+            }
+        }
+        return $response;
+    }
 
-        /*
-         * SELECT AVG(purItem.net_unit_cost) AS purchaseUnitPrice FROM `sma_purchases` AS `purchase` 
-         *  INNER JOIN `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id`=`purchase`.`id` WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0
-         */
+    public function getItemMovementRecords($productId, $start_date, $end_date, $warehouseId, $filterOnType)
+    {
+        $q = $this->db->query("SELECT 
+                    iv.trs_type,
+                    iv.movement_date,
+                    iv.quantity,
+                    iv.location_id,
+                    iv.batch_number as batch_no
+                FROM 
+                    (SELECT 
+                        product_id,
+                        type as trs_type,
+                        movement_date,
+                        quantity,
+                        location_id,
+                        batch_number
+                    FROM sma_inventory_movements
+                    WHERE product_id = ".$productId." AND
+                    movement_date BETWEEN '".$start_date."' AND '".$end_date."') iv");
+        
+        $response = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $response[] = $row;
+            }
+        }
+        return $response; 
+    }
+
+    /*public function getItemOpeningBalance($productId, $start_date, $warehouseId = 0)
+    {
 
         $q = $this->db->query("SELECT
         COALESCE(purchaseQuantity, 0) - COALESCE(saleQuantity, 0) - COALESCE(returnSupplierQuantity, 0) + COALESCE(returnQuantity, 0) + COALESCE(transferInQuantity, 0) - COALESCE(transferOutQuantity, 0) AS openingBalance,
@@ -1860,7 +1912,7 @@ class Reports_model extends CI_Model
             }
         }
         return $response;
-    }
+    }*/
 
     public function getInventoryItemMovementRecords($productId, $filterOnType)
     {
@@ -1934,382 +1986,6 @@ class Reports_model extends CI_Model
             }
         }
         return $response;
-    }
-
-    public function getItemMovementRecords($productId, $start_date, $end_date, $warehouseId, $filterOnType)
-    {
-
-
-        /* "purchases" => "Purchases",
-            "sales" => "Sales",
-            "returnCustomer"=>"Return-Customer",
-            "returnSupplier"=>"Return-Supplier",
-            "transfer" => "Transfer"
-         */
-
-        switch ($filterOnType) {
-
-            case 'purchases':
-
-                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
-                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
-                FROM sma_products as prd        
-                LEFT JOIN ( 
-                
-                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Purchase' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
-                    pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
-                    pitem.serial_number as system_serial, pitem.sale_price as sale_price, pitem.unit_cost as purchase_price, pitem.product_id as product_id
-
-                    FROM sma_purchases as purchase
-
-                    LEFT JOIN sma_purchase_items as pitem ON pitem.purchase_id = purchase.id
-
-                    WHERE pitem.product_id = $productId AND DATE(purchase.date) >= '{$start_date}' AND DATE(purchase.date) <= '{$end_date}'  AND purchase.grand_total > 0 AND purchase.status = 'received'
-                    
-                )
-                 as data ON data.product_id = prd.id 
-                 WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date ");
-
-                break;
-
-            case 'sales':
-
-                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
-                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
-                FROM sma_products as prd        
-                LEFT JOIN ( 
-                    
-                    SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.reference_no as document_no, 
-                    
-                    CASE WHEN sale.pos = 1 THEN 
-                    CONCAT('POS',' - ',wrs.name)
-                    ELSE
-                    sale.customer
-                    END AS name_of, 
-
-                    saleItem.batch_no as batch_no,
-                    saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_cost as unit_cost,
-                    saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id as product_id
-                
-                    FROM sma_sales as sale
-                
-                    LEFT JOIN sma_sale_items as saleItem ON saleItem.sale_id = sale.id
-                    LEFT JOIN sma_warehouses as wrs ON wrs.id = sale.warehouse_id
-                
-                    WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '{$start_date}' AND DATE(sale.date) <= '{$end_date}' AND sale.sale_status = 'completed' AND saleItem.batch_no <> ''
-                )
-                 AS data ON data.product_id = prd.id 
-                 WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
-
-                break;
-
-            case 'returnCustomer':
-
-                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
-                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
-                FROM sma_products as prd      
-                LEFT JOIN ( 
-                 
-                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.reference_no as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
-                    ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_cost as unit_cost,
-                    ritem.serial_no as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id as product_id
-
-                    FROM sma_returns as rtn
-
-                    LEFT JOIN sma_return_items as ritem ON ritem.return_id = rtn.id
-
-                    WHERE ritem.product_id = $productId AND DATE(rtn.date) >= '$start_date' AND DATE(rtn.date) <= '$end_date' 
-
-                )
-                 AS data ON data.product_id = prd.id 
-                 WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
-
-                break;
-
-            case 'returnSupplier':
-
-                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
-                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
-                FROM sma_products as prd       
-                LEFT JOIN ( 
-
-                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Supplier' as type, rtn.reference_no as document_no, rtn.supplier as name_of, ritem.batch_no, 
-                    ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_cost as unit_cost,
-                    ritem.serial_number as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id as product_id
-
-                    FROM sma_returns_supplier as rtn
-
-                    LEFT JOIN sma_return_supplier_items as ritem ON ritem.return_id = rtn.id
-
-                    WHERE ritem.product_id = $productId AND DATE(rtn.date) >= '$start_date' AND DATE(rtn.date) <= '$end_date'
-
-                )
-                AS data ON data.product_id = prd.id 
-                WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
-
-
-                break;
-
-            case 'transfer':
-
-                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
-                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
-                FROM sma_products as prd
-                LEFT JOIN ( 
-                
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-In' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
-                    titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
-                    titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
-
-                    FROM sma_transfers as trnf
-                    
-                    LEFT JOIN (
-
-                        SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, serial_number
-                        
-                        FROM (
-
-                            SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, serial_number
-                        FROM sma_transfer_items 
-                        WHERE  `product_id` = '$productId' 
-                        AND warehouse_id = $warehouseId
-                        AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                        GROUP BY transfer_id
-
-                        UNION ALL
-
-
-                        SELECT transfer_id, 
-                                    batchno, expiry, quantity, net_unit_cost, product_id, serial_number
-                            FROM sma_purchase_items 
-                            WHERE  `product_id` = '$productId' 
-                            AND warehouse_id = $warehouseId
-                            AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                            AND transfer_id IS NOT NULL
-                            GROUP BY transfer_id
-
-
-                                ) AS combined_transfer_in
-
-                        ) AS titm 
-                        ON titm.transfer_id = trnf.id 
-
-                        WHERE  DATE(trnf.date) >= '$start_date' AND DATE(trnf.date) <= '$end_date' AND titm.product_id = $productId
-
-
-                    UNION ALL
-
-                    
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-Out' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
-                    titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
-                    titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
-
-                    FROM sma_transfers as trnf
-
-                    LEFT JOIN (
-
-                        SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, warehouse_id, serial_number
-                        
-                        FROM (
-
-                            SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, warehouse_id, serial_number
-                        FROM sma_transfer_items 
-                        WHERE  `product_id` = '$productId' 
-                        AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                        GROUP BY transfer_id
-
-                        UNION ALL
-
-                        SELECT transfer_id, 
-                                        batchno, expiry, quantity, net_unit_cost, product_id, warehouse_id, serial_number
-                                FROM sma_purchase_items 
-                                WHERE  `product_id` = '$productId' 
-                                AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                                AND transfer_id IS NOT NULL
-                                GROUP BY transfer_id
-
-
-                            ) AS combained
-
-                    ) AS titm 
-                    ON titm.transfer_id = trnf.id
-                    WHERE  DATE(trnf.date) >= '$start_date' AND DATE(trnf.date) <= '$end_date'  AND trnf.from_warehouse_id = $warehouseId AND titm.product_id = $productId
-
-
-                )
-                AS data ON data.product_id = prd.id 
-                WHERE prd.id = $productId  AND data.product_id IS NOT NULL ORDER BY entry_date");
-
-
-                break;
-
-            default;
-
-                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
-                CASE
-                    WHEN data.sale_price IS NULL OR data.sale_price = 0 THEN prd.price
-                    ELSE data.sale_price
-                END AS sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
-                FROM sma_products as prd        
-                LEFT JOIN ( 
-            
-                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Purchase' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
-                    pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
-                    pitem.serial_number as system_serial, pitem.sale_price as sale_price, pitem.unit_cost as purchase_price, pitem.product_id
-
-                    FROM sma_purchases as purchase
-
-                    LEFT JOIN sma_purchase_items as pitem ON pitem.purchase_id = purchase.id
-
-                    WHERE pitem.product_id = $productId AND DATE(purchase.date) >= '$start_date' AND DATE(purchase.date) <= '$end_date'  AND purchase.grand_total > 0 AND purchase.status = 'received'
-
-                    UNION ALL 
-
-                    SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.reference_no as document_no, 
-                    
-                    CASE WHEN sale.pos = 1 THEN 
-                    CONCAT('POS',' - ',wrs.name)
-                    ELSE
-                    sale.customer
-                    END AS name_of, 
-                    
-                     saleItem.batch_no as batch_no,
-                    saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_cost as unit_cost,
-                    saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id
-                
-                    FROM sma_sales as sale
-                
-                    LEFT JOIN sma_sale_items as saleItem ON saleItem.sale_id = sale.id
-                    LEFT JOIN sma_warehouses as wrs ON wrs.id = sale.warehouse_id
-                
-                    WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '$start_date' AND DATE(sale.date) <= '$end_date' AND sale.sale_status = 'completed' AND saleItem.batch_no <> ''
-
-                    UNION ALL 
-
-                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.reference_no as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
-                    ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_cost as unit_cost,
-                    ritem.serial_no as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id
-
-                    FROM sma_returns as rtn
-
-                    LEFT JOIN sma_return_items as ritem ON ritem.return_id = rtn.id
-
-                    WHERE ritem.product_id = $productId AND DATE(rtn.date) >= '$start_date' AND DATE(rtn.date) <= '$end_date' 
-
-                    UNION ALL 
-
-                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Supplier' as type, rtn.reference_no as document_no, rtn.supplier as name_of, ritem.batch_no as batch_no, 
-                    ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_cost as unit_cost,
-                    ritem.serial_number as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id
-
-                    FROM sma_returns_supplier as rtn
-
-                    LEFT JOIN sma_return_supplier_items as ritem ON ritem.return_id = rtn.id
-
-                    WHERE ritem.product_id = $productId AND DATE(rtn.date) >= '$start_date' AND DATE(rtn.date) <= '$end_date'
-
-                    UNION ALL 
-
-
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-In' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
-                    titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
-                    titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
-
-                    FROM sma_transfers as trnf
-                    
-                    LEFT JOIN (
-
-                        SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, serial_number
-                        
-                        FROM (
-
-                            SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, serial_number
-                        FROM sma_transfer_items 
-                        WHERE  `product_id` = '$productId' 
-                        AND warehouse_id = $warehouseId
-                        AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                        GROUP BY transfer_id
-
-                        UNION ALL
-
-
-                        SELECT transfer_id, 
-                                    batchno, expiry, quantity, net_unit_cost, product_id, serial_number
-                            FROM sma_purchase_items 
-                            WHERE  `product_id` = '$productId' 
-                            AND warehouse_id = $warehouseId
-                            AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                            AND transfer_id IS NOT NULL
-                            GROUP BY transfer_id
-
-
-                                ) AS combined_transfer_in
-
-                        ) AS titm 
-                        ON titm.transfer_id = trnf.id 
-
-                        WHERE  DATE(trnf.date) >= '$start_date' AND DATE(trnf.date) <= '$end_date' AND titm.product_id = $productId
-
-
-                    UNION ALL
-
-                    
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-Out' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
-                    titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
-                    titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
-
-                    FROM sma_transfers as trnf
-
-                    LEFT JOIN (
-
-                        SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, warehouse_id, serial_number
-                        
-                        FROM (
-
-                            SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, warehouse_id, serial_number
-                        FROM sma_transfer_items 
-                        WHERE  `product_id` = '$productId' 
-                        AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                        GROUP BY transfer_id
-
-                        UNION ALL
-
-                        SELECT transfer_id, 
-                                        batchno, expiry, quantity, net_unit_cost, product_id, warehouse_id, serial_number
-                                FROM sma_purchase_items 
-                                WHERE  `product_id` = '$productId' 
-                                AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                                AND transfer_id IS NOT NULL
-                                GROUP BY transfer_id
-
-
-                            ) AS combained
-
-                    ) AS titm 
-                    ON titm.transfer_id = trnf.id
-                    WHERE  DATE(trnf.date) >= '$start_date' AND DATE(trnf.date) <= '$end_date'  AND trnf.from_warehouse_id = $warehouseId AND titm.product_id = $productId
-                
-                )
-                AS data ON data.product_id = prd.id 
-                WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
-
-        }
-        $response = array();
-        if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $response[] = $row;
-            }
-        }
-        return $response;
-
     }
 
     public function getProductsQuantityUnitCost($start_date, $from_warehouse_id)
