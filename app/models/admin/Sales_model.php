@@ -145,6 +145,9 @@ class Sales_model extends CI_Model
                 // Code for serials end here
 
                 $sale_item_id = $this->db->insert_id();
+   
+               $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['unit_price'] ); 
+
 
                 if ($data['sale_status'] == 'completed'){ //handle inventory movement 
                     $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
@@ -548,6 +551,38 @@ class Sales_model extends CI_Model
 
     public function getProductNamesWithBatches($term, $warehouse_id, $pos = false, $limit = 5)
     {
+         
+        // removed from select ->  purchase_items.serial_number
+       // $this->db->select('products.id, products.price, code, name, SUM(sma_inventory_movements.quantity) as quantity, cost, tax_rate, sma_products.type, unit, purchase_unit, tax_method')
+       $this->db->select('products.*,   SUM(sma_inventory_movements.quantity) as quantity, categories.id as category_id, categories.name as category_name', false)
+       ->join('inventory_movements', 'inventory_movements.product_id=products.id', 'left') 
+       // ->join('purchase_items', 'purchase_items.product_id=products.id and purchase_items.warehouse_id='.$warehouse_id, 'left')
+        ->join('categories', 'categories.id=products.category_id', 'left')
+            ->group_by('products.id');
+            if ($this->Settings->overselling) {
+                $this->db->where("({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
+            } else {
+                $this->db->where("(({$this->db->dbprefix('inventory_movements')}.location_id  = '" . $warehouse_id . "') OR {$this->db->dbprefix('products')}.type != 'standard') AND "
+                    . "({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
+            }
+        $this->db->having("SUM(sma_inventory_movements.quantity)>0"); 
+        $this->db->limit($limit);
+        if ($pos) {
+            $this->db->where('hide_pos !=', 1);
+        }
+        $q = $this->db->get('products');
+        // echo  $this->db->last_query(); exit; 
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $row->serial_number=''; 
+                $data[] = $row;
+            }
+            return $data;
+        }  
+    }
+
+    public function getProductNamesWithBatches__BK($term, $warehouse_id, $pos = false, $limit = 5)
+    {
         $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
 
         $this->db->select('products.*, purchase_items.serial_number, FWP.quantity as quantity, categories.id as category_id, categories.name as category_name', false)
@@ -567,11 +602,11 @@ class Sales_model extends CI_Model
             $this->db->where('hide_pos !=', 1);
         }
         $this->db->limit($limit);
-        $q = $this->db->get('products');
+        $q = $this->db->get('products'); 
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
-            }
+            } 
             return $data;
         }
     }
@@ -1004,8 +1039,18 @@ class Sales_model extends CI_Model
         return false;
     }
 
-    public function updateSaleWithCourier($id, $courier_id, $tracking_id){
-        $this->db->update('sales', ['courier_id' => $courier_id, 'courier_order_tracking_id' => $tracking_id], ['id' => $id]);
+    public function updateSaleWithCourier($id, $courier_id, $tracking_id, $pickup_location=null){
+        $this->db->update('sales', ['courier_id' => $courier_id, 'courier_order_tracking_id' => $tracking_id, 'pickup_location_id' => $pickup_location], ['id' => $id]);
+    }
+
+    public function updateSaleCourierStatus($courier_id, $tracking_id, $tracking_status){
+       if( $this->db->update('sales', ['courier_order_status' => $tracking_status], 
+        ['courier_id' => $courier_id, 'courier_order_tracking_id' =>$tracking_id ]) ){
+            return true;
+        }else{
+            return false;
+        }
+
     }
 
     public function updateSale($id, $data, $items = [], $attachments = [])
@@ -1017,7 +1062,7 @@ class Sales_model extends CI_Model
             $this->Settings->overselling = true;
             $cost                        = $this->site->costing($items, true);
         }
-        // $this->sma->print_arrays($cost);
+         // $this->sma->print_arrays($cost); exit; 
 
         if ($this->db->update('sales', $data, ['id' => $id]) && $this->db->delete('sale_items', ['sale_id' => $id]) && $this->db->delete('costing', ['sale_id' => $id])) {
             $this->db->update('sma_invoice_serials', ['sid' => 0], ['sid' => $id]);
@@ -1057,6 +1102,8 @@ class Sales_model extends CI_Model
                   $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
                 }
                 if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
+                       //handle inventory movement
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $id,  $item['net_cost'], $item['expiry'], $item['unit_price'] ); 
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
@@ -1088,7 +1135,8 @@ class Sales_model extends CI_Model
                 }
             }
 
-            if ($data['sale_status'] == 'completed') { 
+            if ($data['sale_status'] == 'completed') {
+               
                 $this->site->syncPurchaseItems($cost);
             }
 
@@ -1149,7 +1197,6 @@ class Sales_model extends CI_Model
                 $totalPurchases[] = $row;
             }
         }
-
         return $totalPurchases;
     }
 

@@ -9,7 +9,50 @@ if (!empty($variants)) {
 }
 ?>
 <script type="text/javascript">
-    $(document).ready(function () {
+
+    $(document).ready(function () { 
+
+            $(document).on('click',".translate", function(e){ 
+                var trans_field=   $(this).attr('data-field'); 
+                var terms= $('#'+trans_field).val();  
+                var csrfName = '<?php echo $this->security->get_csrf_token_name();?>'; 
+                var csrfHash = '<?php echo $this->security->get_csrf_hash();?>'; 
+                var tempObj                  =   {};
+				  tempObj[csrfName]            =   csrfHash;
+				  tempObj["term"]             =   terms;
+                  if(terms){
+				  $.ajax({
+							url: '<?= admin_url("products/getEnglishToArabic");?>',
+							data: tempObj,
+							type:"POST",
+							success: function(data)
+							{
+								csrfName = data.csrfName;
+								csrfHash = data.csrfHash;                  
+								$('input[name="'+csrfName+'"]').val(csrfHash); 
+                                if(data.status=="Success"){
+                                    if(trans_field=='name'){
+                                         $('#'+trans_field+"_ar").attr('value',data.to_words );
+                                    }else{
+                                      //  $('#'+trans_field+"_ar").redactor('insertHtml', data.to_words); 
+                                      $('#'+trans_field+"_ar").redactor('set', '<p> '+data.to_words+'</p>'); 
+                                        
+                                    }
+                                    
+                                }else{
+                                    alert(data.message ); 
+                                } 
+							 },
+							 error : function($xhr,textStatus,errorThrown){
+									csrfName = $xhr.responseJSON.csrfName;
+									csrfHash = $xhr.responseJSON.csrfHash;
+									$('input[name="'+csrfName+'"]').val(csrfHash);  
+									//alert($xhr.responseJSON.data_check);
+							}
+				    });
+                }
+			 }); 
+
         /*$('.gen_slug').change(function(e) {
             getSlug($(this).val(), 'products');
         });*/
@@ -95,6 +138,34 @@ if (!empty($variants)) {
             $form.submit();
         });
 
+        $('#snapchat_catalog').on("click", function(t) {
+            var productId = '<?= $product->id; ?>';
+            var $form = $('<form>', {
+                'action': site.base_url + 'products/snapchat_catalog',
+                'method': 'POST'
+            });
+
+            var $inputId = $('<input>', {
+                'type': 'hidden',
+                'name': 'val[]',
+                'value': productId
+            });
+
+            var $inputCsrf = $('<input>', {
+                'type': 'hidden',
+                'name': '<?= $this->security->get_csrf_token_name() ?>',
+                'value': '<?= $this->security->get_csrf_hash() ?>'
+            });
+
+            $form.append($inputCsrf);
+            $form.append($inputId);
+
+            $('body').append($form);
+            $form.submit();
+        });
+
+        
+
         $('#meta_product').on("click", function(t) {
             var productId = '<?= $product->id; ?>';
             var $form = $('<form>', {
@@ -150,6 +221,7 @@ if (!empty($variants)) {
             <input type="button" id="google_product" name="google_product" value="Google Push" class="btn btn-primary" />
             <input type="button" id="meta_product" name="meta_product" value="Meta Push" class="btn btn-primary" />
             <input type="button" id="live_product" name="live_product" value="Make Live" class="btn btn-primary" />
+            <input type="button" id="snapchat_catalog" name="snapchat_catalog" value="Add to Snapchat" class="btn btn-primary" />
             <input type="button" id="save_product" name="save_product" value="Save" class="btn btn-primary" />
             <input type="button" id="back_product" name="back_product" value="Back" class="btn btn-primary" />
         </span>
@@ -174,6 +246,16 @@ if (!empty($variants)) {
                     <div class="form-group all">
                         <?= lang('product_name', 'name') ?>
                         <?= form_input('name', (isset($_POST['name']) ? $_POST['name'] : ($product ? $product->name : '')), 'class="form-control gen_slug" id="name" required="required"'); ?>
+                    </div>
+                    <div class="form-group all">
+                        <?= lang('product_name_arabic', 'name_ar') ?>
+                        <div class="input-group">
+                        <?= form_input('name_ar', (isset($_POST['name_ar']) ? $_POST['name_ar'] : ($product ? $product->name_ar : '')), 'class="form-control "  dir="rtl" id="name_ar" required="required"'); ?>
+                   
+                        <div class="input-group-addon no-print translate" data-field="name" style="padding: 2px 8px;"> 
+                          <span style="cursor:pointer"> Translate   </span>   
+                       </div>
+                       </div> 
                     </div>
                     <div class="form-group all">
                         <?= lang('product_code', 'code') ?>
@@ -754,9 +836,16 @@ if (!empty($variants)) {
 
                     <div class="form-group all">
                         <?= lang('product_details', 'product_details') ?>
-                        <?= form_textarea('product_details', (isset($_POST['product_details']) ? $_POST['product_details'] : ($product && !empty($product->product_details) ? $product->product_details : '<b>Product Description:</b>')), 'class="form-control" id="details"'); ?>
-                    </div>
-
+                        <?= form_textarea('product_details', (isset($_POST['product_details']) ? $_POST['product_details'] : ($product && !empty($product->product_details) ? $product->product_details : '<b>Product Description:</b>')), 'class="form-control" id="product_details"'); ?>
+                    </div> 
+                    <div class="form-group all">
+                        <label for="product_details_ar"> <?= lang('product_details_arabic')?>
+                            <button type="button" class="btn btn-default translate"  data-field="product_details" style="padding: 2px 8px;"> 
+                            Translate   
+                             </button>
+                        </label> 
+                        <?= form_textarea('product_details_ar', (isset($_POST['product_details_ar']) ? $_POST['product_details_ar'] : ($product && !empty($product->product_details) ? $product->product_details_ar : '<b>Product Description:</b>')),  'class="form-control editor_arabic" dir="rtl" id="product_details_ar"'); ?>
+                    </div>  
                     <div class="form-group">
                         <?php echo form_submit('edit_product', $this->lang->line('edit_product'), 'class="btn btn-primary"'); ?>
                     </div>

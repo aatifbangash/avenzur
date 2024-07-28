@@ -436,7 +436,7 @@ $(document).ready(function () {
         increaseArea: '20%',
     });
     $('textarea')
-        .not('.skip')
+        .not('.skip').not('.editor_arabic')
         .redactor({
             buttons: [
                 'formatting',
@@ -477,6 +477,53 @@ $(document).ready(function () {
                 ['token']: $("input[name='token']").val() 
             }
         });
+
+      // for arrabic direction right to lef
+        $('.editor_arabic')
+        .not('.skip')
+        .redactor({
+            direction: 'rtl', // Set the direction to right-to-left for arrabic
+            buttons: [
+                'formatting',
+                '|',
+                'alignleft',
+                'aligncenter',
+                'alignright',
+                'justify',
+                '|',
+                'bold',
+                'italic',
+                'underline',
+                '|',
+                'unorderedlist',
+                'orderedlist',
+                '|',
+                'image',
+                /*'image', 'video',*/ 'link',
+                '|',
+                'html',
+            ],
+            //plugins: ['fontsize', 'fontcolor', 'fontfamily', 'imagemanager', 'filemanager', 'fullscreen'], // Plugins for additional features
+            formattingTags: ['p', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+            minHeight: 100,
+            imageUpload: site.base_url +'Editor/image_upload/',
+            fileUpload:'assets/uploads/editor_upload',
+            imageUploadErrorCallback: function (json) {
+                console.log('Image upload error: ', json);
+            },
+            changeCallback: function (e) { 
+                //alert(path);
+                var editor = this.$editor.next('textarea');
+                if ($(editor).attr('required')) {
+                    $('form[data-toggle="validator"]').bootstrapValidator('revalidateField', $(editor).attr('name'));
+                }
+            },
+            uploadFields: {
+                ['token']: $("input[name='token']").val() 
+            }
+        });
+
+
     $(document).on('click', '.file-caption', function () {
         $(this).next('.input-group-btn').children('.btn-file').children('input.file').trigger('click');
     });
@@ -588,11 +635,30 @@ $(document).ready(function () {
         $.ajax({ url: site.base_url + 'welcome/hideNotification/' + $(this).attr('id') });
     });
     $('.tip').tooltip();
+    $(document).on('click', '#add_to_catalog', function (e) {
+        e.preventDefault();
+        $('#form_action').val($(this).attr('data-action'));
+        $('#action-form').submit();
+    });
+
+    $(document).on('click', '#out_of_stock', function (e) {
+        e.preventDefault();
+        $('#form_action').val($(this).attr('data-action'));
+        $('#action-form').submit();
+    });
+
+    $(document).on('click', '#deactivated', function (e) {
+        e.preventDefault();
+        $('#form_action').val($(this).attr('data-action'));
+        $('#action-form').submit();
+    });
+
     $(document).on('click', '#delete', function (e) {
         e.preventDefault();
         $('#form_action').val($(this).attr('data-action'));
         $('#action-form').submit();
     });
+
     $(document).on('click', '#sync_quantity', function (e) {
         e.preventDefault();
         $('#form_action').val($(this).attr('data-action'));

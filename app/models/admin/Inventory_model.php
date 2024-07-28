@@ -8,7 +8,7 @@ class Inventory_model extends CI_Model {
     }
 
     // Function to add an inventory movement for any operation, explicitly including location
-    public function add_movement($product_id, $batch_no, $type, $quantity, $location_id)
+    public function add_movement($product_id, $batch_no, $type, $quantity, $location_id, $reference_id=null, $net_unit_cost=null, $expiry_date=null, $net_unit_sale=null)
     {
 
         $data = array(
@@ -17,22 +17,19 @@ class Inventory_model extends CI_Model {
             'type' => $type,
             'quantity' => ($type === 'sale' || $type === 'pos' || $type === 'return_to_supplier' || $type === 'transfer_out' || $type === 'adjustment_decrease') ? -$quantity : $quantity,
             'location_id' => $location_id,
+            'reference_id' => $reference_id,
+            'net_unit_cost' => $net_unit_cost,
+            'expiry_date' => $expiry_date,
+            'net_unit_sale' => $net_unit_sale
         );
-        //print_r($data);exit;
-        //$this->db->insert('inventory_movements', $data);
         if ($this->db->insert('sma_inventory_movements', $data)) {
            // echo "insrted";
         }else{
            // echo "not inseted";
         }
-       // echo $this->db->last_query();
-        
-     
-        //echo "tes";
-        //return $this->db->insert_id();
     }
     
-    public function update_movement($product_id, $batch_no, $type, $quantity, $location_id)
+    public function update_movement($product_id, $batch_no, $type, $quantity, $location_id, $reference_id=null, $net_unit_cost=null, $expiry_date=null, $net_unit_sale=null)
     {
         $data = array(
             'product_id' => $product_id,
@@ -40,6 +37,10 @@ class Inventory_model extends CI_Model {
             'type' => $type,
             'quantity' => ($type === 'sale' || $type === 'return_to_supplier' || $type === 'transfer_out' || $type === 'adjustment_decrease') ? -$quantity : $quantity,
             'location_id' => $location_id,
+            'reference_id' => $reference_id,
+            'net_unit_cost' => $net_unit_cost,
+            'expiry_date' => $expiry_date,
+            'net_unit_sale' => $net_unit_sale
         );
         $this->db->update('inventory_movements',$data, ['product_id' => $product_id, 'batch_number' => $batch_no, 'type' => $type, 'location_id' => $location_id]);
     }

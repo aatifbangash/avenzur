@@ -9,7 +9,49 @@ if (!empty($variants)) {
 }
 ?>
 <script type="text/javascript">
-    $(document).ready(function () {
+    $(document).ready(function () { 
+
+        $(document).on('click',".translate", function(e){ 
+                var trans_field=   $(this).attr('data-field'); 
+                var terms= $('#'+trans_field).val();  
+                var csrfName = '<?php echo $this->security->get_csrf_token_name();?>'; 
+                var csrfHash = '<?php echo $this->security->get_csrf_hash();?>'; 
+                var tempObj                  =   {};
+				  tempObj[csrfName]            =   csrfHash;
+				  tempObj["term"]             =   terms;
+                  if(terms){
+				  $.ajax({
+							url: '<?= admin_url("products/getEnglishToArabic");?>',
+							data: tempObj,
+							type:"POST",
+							success: function(data)
+							{
+								csrfName = data.csrfName;
+								csrfHash = data.csrfHash;                  
+								$('input[name="'+csrfName+'"]').val(csrfHash); 
+                                if(data.status=="Success"){
+                                    if(trans_field=='name'){
+                                         $('#'+trans_field+"_ar").attr('value',data.to_words );
+                                    }else{
+                                      //  $('#'+trans_field+"_ar").redactor('insertHtml', data.to_words); 
+                                      $('#'+trans_field+"_ar").redactor('set', '<p> '+data.to_words+'</p>'); 
+                                        
+                                    }
+                                    
+                                }else{
+                                    alert(data.message ); 
+                                } 
+							 },
+							 error : function($xhr,textStatus,errorThrown){
+									csrfName = $xhr.responseJSON.csrfName;
+									csrfHash = $xhr.responseJSON.csrfHash;
+									$('input[name="'+csrfName+'"]').val(csrfHash);  
+									//alert($xhr.responseJSON.data_check);
+							}
+				    });
+                }
+			 });
+
         $('.gen_slug').change(function(e) {
             console.log($(this).val());
             getSlug($(this).val(), 'products');
@@ -107,6 +149,16 @@ if (!empty($variants)) {
                     <div class="form-group all">
                         <?= lang('product_name', 'name') ?>
                         <?= form_input('name', ($_POST['name'] ?? ($product ? $product->name : '')), 'class="form-control' . ($Settings->use_code_for_slug ? '' : ' gen_slug') . '" id="name" required="required"'); ?>
+                    </div>
+                    <div class="form-group all">
+                        <?= lang('product_name_arabic', 'name_ar') ?>
+                        <div class="input-group">
+                        <?= form_input('name_ar',($_POST['name_ar'] ?? ($product ? $product->name_ar : '')),  'class="form-control"  dir="rtl" id="name_ar" required="required"'); ?>
+                   
+                        <div class="input-group-addon no-print translate" data-field="name" style="padding: 2px 8px;"> 
+                          <span style="cursor:pointer"> Translate   </span>   
+                       </div>
+                       </div> 
                     </div>
                     <div class="form-group all">
                         <?= lang('product_code', 'code') ?>
@@ -649,6 +701,14 @@ if (!empty($variants)) {
                     <div class="form-group all">
                         <?= lang('product_details', 'product_details') ?>
                         <?= form_textarea('product_details', ($_POST['product_details'] ?? ($product ? $product->product_details : '<b>Product Description:</b>')), 'class="form-control" id="product_details"'); ?>
+                    </div>
+                    <div class="form-group all">
+                        <label for="product_details_ar"> <?= lang('product_details_arabic')?>
+                            <button type="button" class="btn btn-default translate"  data-field="product_details" style="padding: 2px 8px;"> 
+                            Translate   
+                             </button>
+                        </label> 
+                        <?= form_textarea('product_details_ar',  ($_POST['product_details_ar'] ?? ($product ? $product->product_details_ar : '<b>Product Description:</b>')),  'class="form-control editor_arabic" dir="rtl" id="product_details_ar"'); ?>
                     </div>
 
                     <div class="form-group">

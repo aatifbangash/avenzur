@@ -209,14 +209,7 @@
             </div> -->
             </div>
             <!-- product info end -->
-            <?php 
-                if($product->code == '06285193000301'){
-            ?>
-            <div class="banner-pr-detail" style="margin-top: 10px;">
-                <img style="width: 80%;" class="sulfad-banner-image" src="<?= base_url('assets/images/banners/sulfad-small-banner-En.jpg'); ?>" class="sulfad-banner-pr-detail-img" />
-            </div>
-
-            <?php } ?>
+            
 
             <div class="banner-pr-detail">
                 <img src="<?= base_url('assets/images/banners/Mobily-En.jpg'); ?>" id="banner-pr-detail-img" class="banner-pr-detail-img" />

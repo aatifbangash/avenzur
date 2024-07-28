@@ -198,7 +198,7 @@ class Products extends MY_Controller
     public function facebook_catalogue_push(){
         $product_id = $_POST['id'];
         // Set the access token, product catalog ID, and API version
-        $access_token = "EAAGF5LPatEwBO90n2xGJ2pZBOnMisRHxodMGMZABWb0e2RarluGu54VZAhdZCaYkQwfic9bfG7lj290r28zaryl5VTUkscrMplxXCeHpkhKJ8YJcZB3bWeoloB5ZC1X3SV6WUyW0zrKZAcufGKxEs66irz9XIDBY6yk3ntSKZArqvQ1Q3ZCxE1SFUrsjNFnOUnaG4";
+        $access_token = "EAAGF5LPatEwBOZCVaah25RxvwPQxUjHYrgLN7a1clUAn8FHxalGnSBKVMVM1oEbbZAaVw2keCGKBtHBAzIemXLv1xxK5LlQa4mLhCzHAkhUjkQiViZAthQJklWSd0wFkplf27wZB8J8rHgKDPes2ZBcOZApxoOhgtZBjkaesZBdXEXj2Tgfn7QsF4YZAl8NUBscsK";
         $product_catalog_id = "374060218547895";
         $api_version = "v19.0";
 
@@ -234,7 +234,7 @@ class Products extends MY_Controller
 
         $productData = [
             'name' => $product_details->name,
-            'description' => $product_details->details,
+            'description' => strip_tags($product_details->details),
             'availability' => $availibility,
             'condition' => 'new',
             'currency' => 'SAR',
@@ -396,6 +396,12 @@ class Products extends MY_Controller
                 $product_details->price = $productPrice + $productTaxAmount;
             }
 
+            if ($product_details->promotion == 1) {
+                $salePriceFinal = $product_details->promo_price;
+            }else{
+                $salePriceFinal = $product_details->price;
+            }
+
             $productData = [
                 'channel' => 'online',
                 'contentLanguage' => 'en',
@@ -411,7 +417,7 @@ class Products extends MY_Controller
                     'currency' => 'SAR',
                 ],
                 'salePrice' => [
-                    'value' => $product_details->promo_price,
+                    'value' => $salePriceFinal,
                     'currency' => 'SAR',
                 ],
                 'additionalImageLinks' => $photos_arr,
@@ -483,6 +489,28 @@ class Products extends MY_Controller
         } else {
             $redirect_uri = admin_url().'products/oauth2callback';
             header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
+        }
+    }
+    public function snapchat_catalog(){
+        $product_id = $_REQUEST['val'];
+         // Debugging: Ensure the product ID is being received correctly
+         if (empty($product_id)) {
+            $product_id = $this->session->userdata('val');
+            $this->session->unset_userdata('val');
+        }else{
+            $this->session->set_userdata('merch_id', $product_id[0]);
+        }
+        try {
+            $response = $this->getCSVData();
+            $csvData = $response['csvData'];
+            $firstHeader = $response['firstHeader'];
+            $secondHeader = $response['secondHeader'];
+            $type = 'in stock';
+            $this->process_csv_data($firstHeader,$secondHeader, $csvData, $type);
+            $this->session->set_flashdata('message', $this->lang->line('Added in catalog'));
+            admin_redirect('products/edit/' . $product_id[0]);
+        } catch (Exception $e) {
+            echo "Error inserting/updating product: " . $e->getMessage();
         }
     }
 
@@ -816,6 +844,13 @@ class Products extends MY_Controller
                 // 'sale_account'       => $this->input->post('sale_account'),
                 // 'inventory_account'  => $this->input->post('inventory_account'),
             ];
+
+            if( $this->input->post('name_ar')!=''){
+                $data['name_ar']= $this->input->post('name_ar'); 
+            }
+            if($this->input->post('product_details_ar')!=''){
+                $data['product_details_ar']= $this->input->post('product_details_ar'); 
+            } 
             $warehouse_qty      = null;
             $product_attributes = null;
             $this->load->library('upload');
@@ -2223,6 +2258,91 @@ class Products extends MY_Controller
 
     /* -------------------------------------------------------- */
 
+    public function getEnglishToArabic() {
+        $term= $this->input->post('term'); 
+        $term= strip_tags($term); 
+        // Set API endpoint and your API key
+        $apiKey = 'wg_42c9daf242af8316a7b7d92e5a2aa0e55';
+        $apiEndpoint = 'https://api.weglot.com/translate?api_key=' . $apiKey;
+    
+        // Prepare the JSON payload
+        $data = [
+            "l_to" => "ar",
+            "l_from" => "en",
+            "request_url" => "https://www.avenzur.com/",
+            "words" => [
+                ["w" => "$term", "t" => 1]
+            ]
+        ];
+    
+        // Convert the payload to JSON format
+        $jsonData = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    
+        // Initialize cURL session
+        $ch = curl_init();
+    
+        // Set cURL options
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $apiEndpoint,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $jsonData,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($jsonData)
+            ],
+            CURLOPT_SSL_VERIFYPEER=>0,
+            CURLOPT_SSL_VERIFYPEER=>0
+        ]);  
+        // Execute the POST request
+        $response = curl_exec($ch);  
+        // Check for errors
+        if (curl_errno($ch)) {
+            $status	= 'Error'; 
+            $message	= 'Error:' . curl_error($ch);
+            $to_words=null; 
+            curl_close($ch); 
+        } else {
+            // Decode the response
+            $responseData = json_decode($response, true);
+            curl_close($ch); 
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $status	= 'Error'; 
+                $message	='JSON decode error: ' . json_last_error_msg(); 
+                $to_words=null; 
+            } 
+            if (isset($responseData['to_words']) && is_array($responseData['to_words'])) {
+                $status	= 'Success'; 
+                $to_words= $responseData['to_words'];
+            } else {
+                // Handle the case where the response doesn't have the expected data
+                $status	= 'Error'; 
+                $message	= "Translation error or unexpected response format.";
+                $to_words=null; 
+            }
+        }
+
+          $reponse = array(
+			'csrfName' => $this->security->get_csrf_token_name(),
+			'csrfHash' => $this->security->get_csrf_hash(), 
+			'to_words' => $to_words,
+			'status' => $status,
+            'message' => $message,
+
+			);
+			
+			 return $this->output
+			->set_content_type('application/json')
+			->set_output(json_encode($reponse));
+			exit; 
+    }
+
+
     public function edit($id = null)
     {
         $this->sma->checkPermissions();
@@ -2336,6 +2456,14 @@ class Products extends MY_Controller
                 // 'sale_account'       => $this->input->post('sale_account'),
                 // 'inventory_account'       => $this->input->post('inventory_account'),
             ];
+         
+            if( $this->input->post('name_ar')!=''){
+                $data['name_ar']= $this->input->post('name_ar'); 
+            }
+            if($this->input->post('product_details_ar')!=''){
+                $data['product_details_ar']= $this->input->post('product_details_ar'); 
+            } 
+
             $warehouse_qty      = null;
             $product_attributes = null;
             $update_variants    = [];
@@ -3330,31 +3458,36 @@ class Products extends MY_Controller
         </div></div>';
         $this->load->library('datatables');
         if ($warehouse_id) {
+             // wp.rack as rack replaced with 1 as rack
             $this->datatables
-            ->select($this->db->dbprefix('products') . ".id as productid, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.code as code,{$this->db->dbprefix('products')}.sequence_code as sequence_code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname, cost as cost, price as price, SUM(wp.quantity) as quantity, {$this->db->dbprefix('units')}.code as unit, wp.rack as rack, alert_quantity", false)
+            ->select($this->db->dbprefix('products') . ".id as productid, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.code as code,{$this->db->dbprefix('products')}.sequence_code as sequence_code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname, cost as cost, price as price, SUM(wp.quantity) as quantity, {$this->db->dbprefix('units')}.code as unit, 1 as rack, alert_quantity", false)
             ->from('products');
             if ($this->Settings->display_all_products) {
-                $this->datatables->join('warehouses_products wp', "wp.product_id=products.id AND wp.warehouse_id={$warehouse_id}", 'left');
+                $this->datatables->join('inventory_movements wp', "wp.product_id=products.id AND wp.location_id={$warehouse_id}", 'left');
+                //$this->datatables->join('warehouses_products wp', "wp.product_id=products.id AND wp.warehouse_id={$warehouse_id}", 'left');
             // $this->datatables->join("( SELECT product_id, quantity, rack from {$this->db->dbprefix('warehouses_products')} WHERE warehouse_id = {$warehouse_id}) wp", 'products.id=wp.product_id', 'left');
             } else {
-                $this->datatables->join('warehouses_products wp', 'products.id=wp.product_id', 'left')
-                ->where('wp.warehouse_id', $warehouse_id)
-                ->where('wp.quantity !=', 0);
+                $this->datatables->join('inventory_movements wp', "wp.product_id=products.id", 'left')
+                ->where('wp.location_id', $warehouse_id)
+                ;
+                // $this->datatables->join('warehouses_products wp', 'products.id=wp.product_id', 'left')
+                // ->where('wp.warehouse_id', $warehouse_id)
+                // ->where('wp.quantity !=', 0);
             }
             $this->datatables->join('categories', 'products.category_id=categories.id', 'left')
             ->join('units', 'products.unit=units.id', 'left')
             ->join('brands', 'products.brand=brands.id', 'left')
             ->group_by("products.id");
         } else {
-
+            // wp.rack as rack replaced with 1 as rack
             $this->datatables
-                ->select($this->db->dbprefix('products') . ".id as productid, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.code as code,{$this->db->dbprefix('products')}.sequence_code as sequence_code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname, cost as cost, price as price, SUM(wp.quantity) as quantity, {$this->db->dbprefix('units')}.code as unit, wp.rack as rack, alert_quantity", false)
-                ->from('products');
+                ->select($this->db->dbprefix('products') . ".id as productid, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.code as code,{$this->db->dbprefix('products')}.sequence_code as sequence_code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname, cost as cost, price as price, SUM(wp.quantity) as quantity, {$this->db->dbprefix('units')}.code as unit, 1 as rack, alert_quantity", false)
+                ->from('products'); 
+                $this->datatables->join('inventory_movements wp', "wp.product_id=products.id", 'left');
                 if ($this->Settings->display_all_products) {
-                    $this->datatables->join('warehouses_products wp', "wp.product_id=products.id", 'left');
+                   //  $this->datatables->join('warehouses_products wp', "wp.product_id=products.id", 'left'); 
                 } else {
-                    $this->datatables->join('warehouses_products wp', 'products.id=wp.product_id', 'left')
-                    ->where('wp.quantity !=', 0);
+                   //  $this->datatables->join('warehouses_products wp', 'products.id=wp.product_id', 'left')->where('wp.quantity !=', 0);     
                 }
                 $this->datatables->join('categories', 'products.category_id=categories.id', 'left')
                 ->join('units', 'products.unit=units.id', 'left')
@@ -3919,6 +4052,104 @@ class Products extends MY_Controller
         }
     }
 
+    private function process_csv_data($firstHeader,$secondHeader, $csvData, $type) {
+
+        // Assume the first column of CSV contains the product ID
+        $csvProductIds = array_column($csvData, 0);
+        // Check product IDs from $_POST['val'] against CSV data
+        foreach ($_POST['val'] as $id) {
+            $product = $this->products_model->getProductByID($id);
+
+            $productId = $product->id;
+            $brand = $this->products_model->getBrandByID($product->brand);
+            $newData = [
+                $productId,
+                $product->name,
+                strip_tags($product->product_details),
+                base_url() . "product/" . $product->slug,
+                base_url() . 'assets/upload/' . $product->image,
+                $type,
+                // 'in stock',
+                $product->price,
+                $brand->name,
+            ];
+
+            // Check if product ID exists in CSV data
+            $found = false;
+            foreach ($csvData as $key => $row) {
+                if ($row[0] == $productId) {
+                    // Replace the row if the product ID exists
+                    $csvData[$key] = $newData;
+                    $found = true;
+                    break;
+                }
+            }
+
+            // Add a new row if the product ID does not exist
+            if (!$found) {
+                $csvData[] = $newData;
+            }
+        }
+
+        // Write the updated CSV data back to the file
+        array_unshift($csvData, $secondHeader); // Add the header back to the data
+        array_unshift($csvData, $firstHeader); // Add the header back to the data
+        $file = fopen(FCPATH . 'snapchat-product-feed.csv', 'w');
+        foreach ($csvData as $row) {
+            fputcsv($file, $row);
+        }
+        fclose($file);
+    }
+
+    public function getCSVData()
+    {
+        // Path to the CSV file
+        $filePath = FCPATH . 'snapchat-product-feed.csv';
+
+        // Check if the file exists
+        if (!file_exists($filePath)) {
+            echo "File not found.";
+            return;
+        }
+
+        // Open the CSV file
+        $file = fopen($filePath, 'r');
+        if (!$file) {
+            echo "Unable to open the file.";
+            return;
+        }
+
+        // Read the first header row
+        $firstHeader = fgetcsv($file);
+        if ($firstHeader === FALSE) {
+            echo "Unable to read the first header.";
+            fclose($file);
+            return;
+        }
+
+        // Read the second header row
+        $secondHeader = fgetcsv($file);
+        if ($secondHeader === FALSE) {
+            echo "Unable to read the second header.";
+            fclose($file);
+            return;
+        }
+
+        // Read and process the CSV data
+        $csvData = [];
+        while (($row = fgetcsv($file)) !== FALSE) {
+            $csvData[] = $row;
+        }
+        fclose($file);
+
+        // Return the headers and the data
+        return [
+            'firstHeader' => $firstHeader,
+            'secondHeader' => $secondHeader,
+            'csvData' => $csvData,
+        ];
+    }
+
     public function product_actions($wh = null)
     {
         if (!$this->Owner && !$this->GP['bulk_actions']) {
@@ -3948,6 +4179,33 @@ class Products extends MY_Controller
                         $this->products_model->deleteProduct($id);
                     }
                     $this->session->set_flashdata('message', $this->lang->line('products_deleted'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                } elseif ($this->input->post('form_action') == 'add_to_catalog') {
+                    $response = $this->getCSVData();
+                    $csvData = $response['csvData'];
+                    $firstHeader = $response['firstHeader'];
+                    $secondHeader = $response['secondHeader'];
+                    $type = 'in stock';
+                    $this->process_csv_data($firstHeader,$secondHeader, $csvData, $type);
+                    $this->session->set_flashdata('message', $this->lang->line('Added in catalog'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                } elseif ($this->input->post('form_action') == 'out_of_stock') {
+                    $response = $this->getCSVData();
+                    $csvData = $response['csvData'];
+                    $firstHeader = $response['firstHeader'];
+                    $secondHeader = $response['secondHeader'];
+                    $type = 'in stock';
+                    $this->process_csv_data($firstHeader,$secondHeader, $csvData, $type);
+                    $this->session->set_flashdata('message', $this->lang->line('Added as out of stock'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                } elseif ($this->input->post('form_action') == 'deactivated') {
+                    $response = $this->getCSVData();
+                    $csvData = $response['csvData'];
+                    $firstHeader = $response['firstHeader'];
+                    $secondHeader = $response['secondHeader'];
+                    $type = 'in stock';
+                    $this->process_csv_data($firstHeader,$secondHeader, $csvData, $type);
+                    $this->session->set_flashdata('message', $this->lang->line('Added as deactivated'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'labels') {
                     foreach ($_POST['val'] as $id) {

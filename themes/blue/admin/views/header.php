@@ -595,12 +595,12 @@
                                             <span class="text"> <?= lang('add_sale'); ?></span>
                                         </a>
                                     </li>
-                                    <li id="sales_sale_by_csv">
+                                    <!-- <li id="sales_sale_by_csv">
                                         <a class="submenu" href="<?= admin_url('sales/sale_by_csv'); ?>">
                                             <i class="fa fa-plus-circle"></i>
                                             <span class="text"> <?= lang('add_sale_by_csv'); ?></span>
                                         </a>
-                                    </li>
+                                    </li> -->
                                     <li id="sales_deliveries">
                                         <a class="submenu" href="<?= admin_url('sales/deliveries'); ?>">
                                             <i class="fa fa-truck"></i>
@@ -729,12 +729,12 @@
                                             <span class="text"> <?= lang('add_purchase'); ?></span>
                                         </a>
                                     </li>
-                                    <li id="purchases_purchase_by_csv">
+                                    <!-- <li id="purchases_purchase_by_csv">
                                         <a class="submenu" href="<?= admin_url('purchases/purchase_by_csv'); ?>">
                                             <i class="fa fa-plus-circle"></i>
                                             <span class="text"> <?= lang('add_purchase_by_csv'); ?></span>
                                         </a>
-                                    </li>
+                                    </li> -->
                                      <li id="purchase_check_status">
                                         <a class="submenu" href="<?= admin_url('purchases/check_status'); ?>">
                                             <i class="fa fa-plus-circle"></i>
@@ -812,11 +812,11 @@
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_transfer'); ?></span>
                                         </a>
                                     </li>
-                                    <li id="transfers_purchase_by_csv">
+                                    <!-- <li id="transfers_purchase_by_csv">
                                         <a class="submenu" href="<?= admin_url('transfers/transfer_by_csv'); ?>">
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_transfer_by_csv'); ?></span>
                                         </a>
-                                    </li>
+                                    </li> -->
                                     
                                 </ul>
                             </li>

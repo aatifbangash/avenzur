@@ -183,14 +183,12 @@ class Transfers_model extends CI_Model
                 }
 
                 if ($status == 'sent' || $status == 'completed') {
-                //if ($status == 'completed') {
-                   
-                      //Inventory Movement - Transfer IN
-                      $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id']);
-                    
-                      ////Inventory Movement - Transfer Out
-                      $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id']);
-
+                    if($status == 'completed') { 
+                        //Inventory Movement - Transfer IN
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $transfer_id, $item['unit_cost'], $item['expiry'] , $item['sale_price']);
+                        ////Inventory Movement - Transfer Out
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['unit_cost'], $item['expiry'] , $item['sale_price']);
+                    }
                     $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'add');
                 }
             }
@@ -368,14 +366,12 @@ class Transfers_model extends CI_Model
         //echo  $this->db->last_query(); exit; 
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
+
+                $row->serial_number=''; 
                 $data[] = $row;
             }
             return $data;
-        }
-
-
-     
-
+        }  
 
     }
 
@@ -521,10 +517,20 @@ class Transfers_model extends CI_Model
 
     public function getWarehouseProductQuantity($warehouse_id, $product_id, $item_batchno)
     {
-        $q = $this->db->get_where('warehouses_products', ['warehouse_id' => $warehouse_id, 'product_id' => $product_id, 'batchno' => $item_batchno], 1);
-        if ($q->num_rows() > 0) {
-            return $q->row();
-        }
+        // $q = $this->db->get_where('warehouses_products', ['warehouse_id' => $warehouse_id, 'product_id' => $product_id, 'batchno' => $item_batchno], 1);
+        // if ($q->num_rows() > 0) {
+        //     return $q->row();
+        // }  
+        $this->db->select('SUM(inv.quantity) as quantity ');
+		$this->db->from('inventory_movements inv');
+        // $this->db->join('warehouses_products wp', 'wp.warehouse_id=inv.location_id AND inv.product_id=wp.product_id AND wp.batchno=inv.batch_number', 'LEFT'); 
+        $this->db->where('inv.location_id',$warehouse_id);
+        $this->db->where('inv.product_id',$product_id);
+        $this->db->where('inv.batch_number',$item_batchno); 
+	    $query = $this->db->get();
+        if ($query->num_rows() > 0) {
+                return $query->row();
+        } 
         return false;
     }
 
@@ -809,11 +815,12 @@ class Transfers_model extends CI_Model
                     $this->syncTransderdSavedItems($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'edit');
                 }else if($data['status'] == 'sent' || $data['status'] == 'completed'){
                     $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'edit');
-                    
-                     //Inventory Movement - Transfer IN
-                     $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id']);
-                     //Inventory Movement - Transfer Out
-                     $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id']);
+                    if($data['status'] == 'completed'){
+                        //Inventory Movement - Transfer IN
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $id,  $item['unit_cost'], $item['expiry'] , $item['sale_price']);
+                        //Inventory Movement - Transfer Out
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['unit_cost'], $item['expiry'] , $item['sale_price']);
+                        }
                 }
             }
 
