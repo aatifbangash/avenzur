@@ -948,7 +948,7 @@ class Returns extends MY_Controller
         }
        
         $edit_link         = anchor('admin/returns/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_return'), 'class="tip"');
-        $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_sale') . "</b>' data-content=\"<p>"
+        $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_return') . "</b>' data-content=\"<p>"
         . lang('r_u_sure') . "</p><a class='btn btn-danger po po-delete' href='" . admin_url('returns/delete/$1') . "'>"
         . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
         . lang('delete_return') . '</a>';
