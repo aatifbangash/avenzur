@@ -1266,18 +1266,37 @@ class Entries extends MY_Controller
 		// pass entrytype to view
 		$this->data['entrytype'] = $entrytype;
 
-		/* Check if valid id */
-		if (empty($id))
-		{
-			// set error alert
-			$this->session->set_flashdata('error', lang('entries_cntrler_edit_entry_not_found_error'));
-			// redirect to index page
-			admin_redirect('accounts/entries_index');
+		$pid = $this->input->get('pid') ? $this->input->get('pid') : null;
+		$sid = $this->input->get('sid') ? $this->input->get('sid') : null;
+		$rid = $this->input->get('rid') ? $this->input->get('rid') : null;
+		$rsid = $this->input->get('rsid') ? $this->input->get('rsid') : null;
+		$tid = $this->input->get('tid') ? $this->input->get('tid') : null; 
+		if ($id=== null && $pid === null && $sid === null && $rid === null && $rsid === null && $tid === null) {
+			// Redirect if all variables are null // set error alert 
+			$this->session->set_flashdata('error', lang('entries_cntrler_edit_entry_not_found_error')); 
+			admin_redirect('accounts/entries_index');// redirect to index page
+		} 
+		if(!empty($id)){
+			$this->db->where('id',$id); 
 		}
-
-		// select entry where id equals $id and store to array
-		$entry = $this->db->where('id',$id)->get('sma_accounts_entries')->row_array();
-
+		if(!empty($pid)){
+			$this->db->where('pid',$pid); 
+		}
+		if(!empty($sid)){
+			$this->db->where('sid',$sid); 
+		}
+		if(!empty($rid)){
+			$this->db->where('rid',$rid); 
+		}
+		if(!empty($rsid)){
+			$this->db->where('rsid',$rsid); 
+		}
+		if(!empty($tid)){
+			$this->db->where('tid',$tid); 
+		} 
+		//$entry = $this->db->where('id',$id)->get('sma_accounts_entries')->row_array();
+		 $entry = $this->db->get('sma_accounts_entries')->row_array(); 
+        
 		/* if entry [NOT] found */
 		if (!$entry)
 		{
@@ -1290,7 +1309,7 @@ class Entries extends MY_Controller
 		
 		/* Initial data */
 		$curEntryitems = array(); // initilize current entry items array
-		$this->db->where('entry_id', $id); // select where entry_id equals $id
+		$this->db->where('entry_id', $entry['id']); // select where entry_id equals $id
 
 		// store selected data to $curEntryitemsData
 		$curEntryitemsData = $this->db->get('sma_accounts_entryitems')->result_array();

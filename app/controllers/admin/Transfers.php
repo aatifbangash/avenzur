@@ -838,7 +838,8 @@ class Transfers extends MY_Controller
         $delete_link   = "<a href='#' class='tip po' title='<b>" . lang('delete_transfer') . "</b>' data-content=\"<p>"
             . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' id='a__$1' href='" . admin_url('transfers/delete/$1') . "'>"
             . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
-            . lang('delete_transfer') . '</a>';
+            . lang('delete_transfer') . '</a>'; 
+        $journal_entry_link      = anchor('admin/entries/view/journal/?tid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
         $action = '<div class="text-center"><div class="btn-group text-left">'
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
@@ -848,6 +849,7 @@ class Transfers extends MY_Controller
             <li>' . $pdf_link . '</li>
             <li>' . $email_link . '</li>
             <li>' . $print_barcode . '</li>
+            <li>' . $journal_entry_link . '</li>
             <li>' . $delete_link . '</li>
         </ul>
        </div></div>';

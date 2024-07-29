@@ -2814,7 +2814,7 @@ class Sales extends MY_Controller
         . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('sales/delete/$1') . "'>"
         . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
         . lang('delete_sale') . '</a>';
-        
+        $journal_entry_link      = anchor('admin/entries/view/journal/?sid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
         
        if(isset($this->GP) && $this->GP['accountant'])
         {
@@ -2835,6 +2835,7 @@ class Sales extends MY_Controller
             <li>' . $email_link . '</li>
             <li>' . $return_link . '</li>
             <li>' . $delete_link . '</li>
+            <li>' . $journal_entry_link . '</li>
         </ul>
     </div></div>';
     }else{
@@ -2855,6 +2856,7 @@ class Sales extends MY_Controller
             <li>' . $email_link . '</li>
             <li>' . $return_link . '</li>
             <li>' . $delete_link . '</li>
+            <li>' . $journal_entry_link . '</li>
         </ul>
     </div></div>';
     }
