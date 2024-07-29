@@ -1973,6 +1973,25 @@ class Shop extends MY_Shop_Controller
                 }
                 $units = $this->site->getUnitsByBUID($row->base_unit);
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
+
+                // New tax block
+
+                if ($row->tax_method == '1' && $tax_rate->rate > 0) { // tax_method = 0 means inclusiveTax
+                    $productTaxPercent = $tax_rate->rate;
+        
+                    if ($row->promotion == 1) {
+                        $productPromoPrice = $row->promo_price;
+                        $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                        $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
+                    }
+        
+                    $productPrice = $row->price;
+                    $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+                    $row->price = $productPrice + $productTaxAmount;
+                }
+
+                // New tax block end 
+
                 $brand = $this->site->getBrandByID($row->brand);
                 $row->brand_name = $brand->name;
                 $label_name = ($arabic_lang) ? $row->name_ar : $row->name;
