@@ -627,7 +627,7 @@
               <div style='flex-grow: 1;'>
                   <a style='text-decoration: none; color: #000;'>${item.label}</a>
                   <div style='color: green;'>
-                      ${item.row.promo_price !== null ?
+                      ${item.row.promo_price !== null && item.row.promotion !== null ?
             `<span style="text-decoration: line-through; font-size: 12px; color: #888">SAR ${parseFloat(item.original_price).toFixed(2)}</span> <span style="font-weight: bold;"> SAR ${parseFloat(item.row.promo_price).toFixed(2)}</span>` :
             `<span style="font-weight: bold;"> SAR ${parseFloat(item.row.price).toFixed(2)} </span>`
           }

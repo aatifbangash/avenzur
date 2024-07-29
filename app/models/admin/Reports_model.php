@@ -1814,42 +1814,55 @@ class Reports_model extends CI_Model
         return $totalPurchases;
     }
 
-    public function getItemOpeningBalance($productId, $start_date, $warehouseId = 0){
-        $q = $this->db->query("SELECT 
-                    iv.total_opening_qty,
-                    pi.cost_price
-                FROM 
-                    (SELECT 
-                        product_id,
-                        type as trs_type,
-                        SUM(IF(movement_date < '".$start_date."', quantity, 0)) AS total_opening_qty
-                    FROM sma_inventory_movements
-                    WHERE product_id = ".$productId.") iv
-                LEFT JOIN 
-                    (SELECT 
-                        product_id, 
-                        SUM(net_unit_cost) AS cost_price
-                    FROM sma_purchase_items
-                    WHERE product_id = ".$productId.") pi
-                ON iv.product_id = pi.product_id");
+    public function getItemOpeningBalance($productId, $start_date, $warehouseId = 0) {
+        $reports_start_date = '2024-07-07';
+        
+        // Use the query builder to safely escape and build the query
+        $this->db->select('
+            SUM(IF(movement_date < "' . $start_date . '", quantity, 0)) AS total_opening_qty,
+            SUM(IF(type IN ("purchase","adjustment_increase") AND movement_date < "' . $start_date . '", net_unit_cost, 0)) AS cost_price', FALSE);
+        $this->db->from('sma_inventory_movements');
+        $this->db->where('product_id', $productId);
+        $this->db->where('movement_date > ', $reports_start_date);
+    
+        $query = $this->db->get();
         
         $response = array();
-        if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $response = $row;
-            }
+        if ($query->num_rows() > 0) {
+            $response = $query->row_array();
         }
+        
         return $response;
     }
 
     public function getItemMovementRecords($productId, $start_date, $end_date, $warehouseId, $filterOnType)
     {
-        $q = $this->db->query("SELECT 
+        $reports_start_date = '2024-07-07';
+        
+        $query = "SELECT 
                     iv.trs_type,
                     iv.movement_date,
                     iv.quantity,
                     iv.location_id,
-                    iv.batch_number as batch_no
+                    iv.batch_number as batch_no,
+                    iv.expiry_date as expiry,
+                    iv.reference_id,
+                    iv.net_unit_cost,
+                    iv.net_unit_sale,
+                    CASE 
+                        WHEN iv.trs_type = 'purchase' THEN sp.reference_no
+                        WHEN iv.trs_type = 'sale' THEN ss.reference_no
+                        WHEN iv.trs_type = 'transfer_out' THEN sto.transfer_no
+                        WHEN iv.trs_type = 'transfer_in' THEN sti.transfer_no
+                        ELSE NULL
+                    END AS reference_number,
+                    CASE 
+                        WHEN iv.trs_type = 'purchase' THEN sp.supplier
+                        WHEN iv.trs_type = 'sale' THEN ss.customer
+                        WHEN iv.trs_type = 'transfer_out' THEN sto.from_warehouse_name
+                        WHEN iv.trs_type = 'transfer_in' THEN sti.to_warehouse_name
+                        ELSE NULL
+                    END AS counterparty
                 FROM 
                     (SELECT 
                         product_id,
@@ -1857,10 +1870,26 @@ class Reports_model extends CI_Model
                         movement_date,
                         quantity,
                         location_id,
-                        batch_number
+                        batch_number,
+                        expiry_date,
+                        reference_id,
+                        net_unit_cost,
+                        net_unit_sale
                     FROM sma_inventory_movements
-                    WHERE product_id = ".$productId." AND
-                    movement_date BETWEEN '".$start_date."' AND '".$end_date."') iv");
+                    WHERE product_id = ".$productId." AND ";
+
+        if($filterOnType){
+            $query .= "type = '".$filterOnType."' AND ";
+        }
+
+        $query .= "movement_date > '".$reports_start_date."' AND 
+                    movement_date BETWEEN '".$start_date."' AND '".$end_date."') iv
+                    LEFT JOIN sma_purchases sp ON iv.reference_id = sp.id AND iv.trs_type = 'purchase'
+                    LEFT JOIN sma_sales ss ON iv.reference_id = ss.id AND iv.trs_type = 'sale'
+                    LEFT JOIN sma_transfers sto ON iv.reference_id = sto.id AND iv.trs_type = 'transfer_out'
+                    LEFT JOIN sma_transfers sti ON iv.reference_id = sti.id AND iv.trs_type = 'transfer_in'";
+
+        $q = $this->db->query($query);
         
         $response = array();
         if ($q->num_rows() > 0) {

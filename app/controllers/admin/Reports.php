@@ -4329,11 +4329,12 @@ class Reports extends MY_Controller
 
         $filterOnTypeArr = [
             "" => "-- ALL --",
-            "purchases" => "Purchases",
-            "sales" => "Sales",
-            "returnCustomer" => "Return Customer",
-            "returnSupplier" => "Return Supplier",
-            "transfer" => "Transfer"
+            "purchase" => "Purchases",
+            "sale" => "Sales",
+            "customer_return" => "Return Customer",
+            "return_to_supplier" => "Return Supplier",
+            "transfer_in" => "Transfer In",
+            "transfer_out" => "Transfer Out"
         ];
         $this->data['filterOnTypeArr'] = $filterOnTypeArr;
         $user = $this->site->getUser();
