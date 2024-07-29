@@ -111,9 +111,9 @@
                                     <tr>
                                         <td colspan="2">Opening Balance</td>
                                         <td colspan="8">&nbsp;</td>
-                                        <td><?php echo $this->sma->formatMoney(($itemOpenings->total_opening_qty > 0 && $itemOpenings->cost_price > 0 ? $itemOpenings->cost_price / $itemOpenings->total_opening_qty : 0.0), 'none'); ?></td>
-                                        <td><?php echo $this->sma->formatQuantity(($itemOpenings->total_opening_qty > 0 ? $itemOpenings->total_opening_qty : 0.00)); ?></td>
-                                        <td><?php echo $this->sma->formatMoney(($itemOpenings->total_opening_qty > 0 && $itemOpenings->cost_price > 0 ? $itemOpenings->cost_price : 0.00), 'none'); ?></td>
+                                        <td><?php echo $this->sma->formatMoney(($itemOpenings['total_opening_qty'] > 0 && $itemOpenings['cost_price'] > 0 ? $itemOpenings['cost_price'] / $itemOpenings['total_opening_qty'] : 0.0), 'none'); ?></td>
+                                        <td><?php echo $this->sma->formatQuantity(($itemOpenings['total_opening_qty'] > 0 ? $itemOpenings['total_opening_qty'] : 0.00)); ?></td>
+                                        <td><?php echo $this->sma->formatMoney(($itemOpenings['total_opening_qty'] > 0 && $itemOpenings['cost_price'] > 0 ? $itemOpenings['cost_price'] : 0.00), 'none'); ?></td>
 
                                     </tr>
 
@@ -121,78 +121,52 @@
                                     $count = 1;
                                     $balanceQantity = 0;
                                     $totalValueOfItem  = 0;
-                                    $openingTotal = $itemOpenings->cost_price;
+                                    $openingTotal = $itemOpenings['cost_price'];
 
                                     foreach ($reportData as $rp) {
 
-                                        $showQty = 0.00;
-                                        $balanceQantity = 0;
-                                        $totalValueOfItem = 0;
-
-                                        // || $rp->type == "Transfer-In"
-                                        /*if ($rp->trs_type == 'adjustment_increase' || $rp->trs_type == 'purchase' ) {
-
-                                            if($balanceQantity == 0 && $itemOpenings->openingBalance > 0){
-                                                $balanceQantity = $itemOpenings->openingBalance + $rp->quantity;
+                                        if ($rp->trs_type == 'adjustment_increase' || $rp->trs_type == 'purchase' || $rp->trs_type == 'customer_return' ) {
+                                            if($count == 1){
+                                                $balanceQantity = $itemOpenings['total_opening_qty'] + $rp->quantity;
                                             }else{
                                                 $balanceQantity += $rp->quantity;
                                             }
 
-                                            if($openingTotal > 0 && $totalValueOfItem ==0){
-                                                $totalValueOfItem = $openingTotal + ($rp->quantity * $rp->unit_cost);
+                                            if($count == 1){
+                                                $totalValueOfItem = $openingTotal + ($rp->quantity * $rp->net_unit_cost);
                                             }else{
-                                                $totalValueOfItem+= ($rp->quantity * $rp->unit_cost);
+                                                $totalValueOfItem+= ($rp->quantity * $rp->net_unit_cost);
                                             }
-
-                                            $showQty = $rp->quantity;
-                                           
                                         }
-                                        //  || $rp->type == "Transfer-Out"
-                                        if (($rp->type == 'Sale' || $rp->type == 'Return-Supplier' )) {
-                                           
-                                            if($balanceQantity == 0 && $itemOpenings->openingBalance > 0){
-                                                $balanceQantity = $itemOpenings->openingBalance;
-                                            }
-                                                
-                                            $balanceQantity -= $rp->quantity;
 
-                                            if($openingTotal > 0 && $totalValueOfItem ==0){
-                                                $totalValueOfItem = $openingTotal - ($rp->quantity * $rp->unit_cost);
+                                        if ($rp->trs_type == 'adjustment_decrease' || $rp->trs_type == 'sale' || $rp->trs_type == 'pos' || $rp->trs_type == 'return_to_supplier') {
+                                            if($count == 1){
+                                                $balanceQantity = $itemOpenings['total_opening_qty'] - $rp->quantity;
                                             }else{
-                                                $totalValueOfItem-= ($rp->quantity * $rp->unit_cost);
+                                                $balanceQantity -= $rp->quantity;
                                             }
-                                            $showQty = -$rp->quantity;
-                                            
-                                        }
-                                        if($rp->type == "Transfer-Out" || $rp->type == "Transfer-In"){
-                                            $showQty = $rp->quantity;
-                                            if($balanceQantity == 0 && $itemOpenings->openingBalance > 0){
-                                                $balanceQantity = $itemOpenings->openingBalance;
-                                            }
-                                            if($openingTotal > 0 && $totalValueOfItem ==0){
-                                                $totalValueOfItem = $openingTotal;
-                                            }
-                                        }
 
-                                        if ($rp->type ==  'Transfer-Out' || $rp->type == "Transfer-In") {
-                                            $type = 'Transfer';
-                                        } else {
-                                            $type = $rp->type;
-                                        }*/
+                                            if($count == 1){
+                                                $totalValueOfItem = $openingTotal + ($rp->quantity * $rp->net_unit_cost);
+                                            }else{
+                                                $totalValueOfItem+= ($rp->quantity * $rp->net_unit_cost);
+                                            }
+                                        }
+                                        
 
                                     ?>
                                         <tr>
                                             <td><?= $count; ?></td>
                                             <td><?= $rp->movement_date; ?></td>
-                                            <td><?= 'Reference Number' ?></td>
+                                            <td><?= $rp->reference_number != '' ? $rp->reference_number : '-'; ?></td>
                                             <td><?= $rp->trs_type; ?></td>
-                                            <td><?= 'Supplier Name' ?></td>
-                                            <td><?= 'Expiry Date' ?></td>
+                                            <td><?= $rp->counterparty; ?></td>
+                                            <td><?= $rp->expiry; ?></td>
                                             <td><?= $rp->batch_no; ?></td>
-                                            <td><?= 'Sale Price' ?></td>
-                                            <td><?= 'Purchase Price' ?></td>
+                                            <td><?= $rp->net_unit_sale; ?></td>
+                                            <td><?= $rp->net_unit_cost; ?></td>
                                             <td><?= $this->sma->formatQuantity($rp->quantity); ?></td>
-                                            <td><?= 'Unit Cost' ?></td>
+                                            <td><?= $rp->net_unit_cost; ?></td>
                                             <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
                                             <td><?= $this->sma->formatMoney(($totalValueOfItem), 'none'); ?></td>
                                         </tr>
