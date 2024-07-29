@@ -141,9 +141,9 @@
 
                                         if ($rp->trs_type == 'adjustment_decrease' || $rp->trs_type == 'sale' || $rp->trs_type == 'pos' || $rp->trs_type == 'return_to_supplier') {
                                             if($count == 1){
-                                                $balanceQantity = $itemOpenings['total_opening_qty'] - $rp->quantity;
+                                                $balanceQantity = $itemOpenings['total_opening_qty'] + $rp->quantity;
                                             }else{
-                                                $balanceQantity -= $rp->quantity;
+                                                $balanceQantity += $rp->quantity;
                                             }
 
                                             if($count == 1){
