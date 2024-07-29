@@ -898,8 +898,7 @@ class Pos extends MY_Controller
                         'product_name'      => $item_name,
                         'product_type'      => $item_type,
                         'option_id'         => $item_option,
-                        'net_cost'          => $productCost,
-                        'net_unit_cost'     => $item_unit_cost,
+                        'net_cost'          => $item_unit_cost, // before it was prodcost
                         'net_unit_price'    => $item_net_price,
                         'unit_price'        => $this->sma->formatDecimal($item_net_price + $item_tax),
                         'quantity'          => $item_quantity,
