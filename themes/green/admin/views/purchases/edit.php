@@ -296,7 +296,7 @@
                                 <?php
                                 $wh[''] = '';
                                 foreach ($warehouses as $warehouse) {
-                                    $wh[$warehouse->id] = $warehouse->name;
+                                    $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                                 }
                                 echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $purchase->warehouse_id), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('warehouse') . '" required="required" style="width:100%;" ');
                                 ?>

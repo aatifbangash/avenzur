@@ -1004,7 +1004,26 @@ class Returns_supplier extends MY_Controller
         if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
         }
-        $this->datatables->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('returns_supplier/edit/$1') . "' class='tip' title='" . lang('edit_return') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_return') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('returns_supplier/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
+
+        $edit_link         = anchor('admin/returns_supplier/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_return'), 'class="tip"');
+        $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_sale') . "</b>' data-content=\"<p>"
+        . lang('r_u_sure') . "</p><a class='btn btn-danger po po-delete' href='" . admin_url('returns_supplier/delete/$1') . "'>"
+        . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
+        . lang('delete_return') . '</a>';
+        $journal_entry_link      = anchor('admin/entries/view/journal/?rsid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
+        
+        $action = '<div class="text-center"><div class="btn-group text-left">'
+        . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+        . lang('actions') . ' <span class="caret"></span></button>
+        <ul class="dropdown-menu pull-right" role="menu">
+                <li>' . $edit_link . '</li> 
+                <li>' . $journal_entry_link . '</li>
+                <li>' . $delete_link . '</li> 
+        </ul>
+    </div></div>';
+         
+    $this->datatables->add_column('Actions', $action, 'id');
+       // $this->datatables->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('returns_supplier/edit/$1') . "' class='tip' title='" . lang('edit_return') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_return') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('returns_supplier/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
         echo $this->datatables->generate();
     }
 

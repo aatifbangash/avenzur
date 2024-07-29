@@ -1510,7 +1510,7 @@ class Purchases extends MY_Controller
         $detail_link      = anchor('admin/purchases/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('purchase_details'));
         $payments_link    = anchor('admin/purchases/payments/$1', '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
         $transfer_link    = anchor('admin/purchases/transfer/$1', '<i class="fa fa-money"></i> ' . lang('Transfer to Pharmacy'), 'data-toggle="modal" data-target="#myModal"');
-
+        $journal_entry_link      = anchor('admin/entries/view/journal/?pid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
 
         if(isset($this->GP) && $this->GP['accountant'])
         {
@@ -1546,7 +1546,8 @@ class Purchases extends MY_Controller
                 <li>' . $email_link . '</li>
                 <li>' . $print_barcode . '</li>
                 <li>' . $return_link . '</li>
-                <li>' . $delete_link . '</li>
+                <li>' . $journal_entry_link . '</li>
+                <li>' . $delete_link . '</li> 
             </ul>
             </div></div>';
 
@@ -1566,6 +1567,7 @@ class Purchases extends MY_Controller
                 <li>' . $return_link . '</li>
                 <li>' . $delete_link . '</li>
                 <li>' . $transfer_link . '</li>
+               <li>' . $journal_entry_link . '</li>
             </ul>
             </div></div>';
 
