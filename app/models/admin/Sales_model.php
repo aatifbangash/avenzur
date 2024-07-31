@@ -148,7 +148,7 @@ class Sales_model extends CI_Model
 
                 if ($data['sale_status'] == 'completed'){ //handle inventory movement 
                     //$this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['unit_price'] );
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'] );
                 } 
                 if ($data['sale_status'] == 'completed' && empty($si_return)) { 
                       
@@ -1095,10 +1095,6 @@ class Sales_model extends CI_Model
                 }
                 // Code for serials end here
 
-                if ($data['sale_status'] == 'completed') {
-                    //handle inventory movement
-                  $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
-                }
                 if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
                        //handle inventory movement
                     $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $id,  $item['net_cost'], $item['expiry'], $item['unit_price'] ); 
@@ -1196,6 +1192,26 @@ class Sales_model extends CI_Model
             }
         }
         return $totalPurchases;
+    }
+
+    public function getAvgCost($item_batchno, $item_id){
+        $avgCostQuery = "SELECT 
+                    SUM(iv.quantity * iv.net_unit_cost) / SUM(iv.quantity) AS average_cost
+                 FROM 
+                    sma_inventory_movements iv
+                 WHERE 
+                    iv.product_id = '{$item_id}' 
+                    AND iv.batch_number = '{$item_batchno}' 
+                    AND iv.type IN ('purchase', 'adjustment_increase')";
+        $avgCost = $this->db->query($avgCostQuery);
+        $avgObj = $avgCost->row();
+        if($avgObj){
+            $average_cost = $avgObj->average_cost;
+        }else{
+            $average_cost = 0;
+        }
+        
+        return $average_cost;
     }
 
 

@@ -98,7 +98,7 @@
                                     <th><?= lang('Expire Date'); ?></th>
                                     <th><?= lang('Batch No.'); ?></th>
                                     <th><?= lang('Sale Price'); ?></th>
-                                    <th><?= lang('Purchase Price'); ?></th>
+                                    
                                     <th><?= lang('Quantity'); ?></th>
                                     <th><?= lang('Unit Cost'); ?></th>
                                     <th><?= lang('Item balance quantity'); ?></th>
@@ -110,7 +110,7 @@
                                 <tbody style="text-align:center;">
                                     <tr>
                                         <td colspan="2">Opening Balance</td>
-                                        <td colspan="8">&nbsp;</td>
+                                        <td colspan="7">&nbsp;</td>
                                         <td><?php echo $this->sma->formatMoney(($itemOpenings['total_opening_qty'] > 0 && $itemOpenings['cost_price'] > 0 ? $itemOpenings['cost_price'] / $itemOpenings['total_opening_qty'] : 0.0), 'none'); ?></td>
                                         <td><?php echo $this->sma->formatQuantity(($itemOpenings['total_opening_qty'] > 0 ? $itemOpenings['total_opening_qty'] : 0.00)); ?></td>
                                         <td><?php echo $this->sma->formatMoney(($itemOpenings['total_opening_qty'] > 0 && $itemOpenings['cost_price'] > 0 ? ($itemOpenings['cost_price'] * $itemOpenings['total_opening_qty']) : 0.00), 'none'); ?></td>
@@ -164,7 +164,7 @@
                                             <td><?= $rp->expiry; ?></td>
                                             <td><?= $rp->batch_no; ?></td>
                                             <td><?= $rp->net_unit_sale; ?></td>
-                                            <td><?= $rp->net_unit_cost; ?></td>
+                                            
                                             <td><?= $this->sma->formatQuantity($rp->quantity); ?></td>
                                             <td><?= $rp->net_unit_cost; ?></td>
                                             <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
@@ -179,7 +179,7 @@
 
                                     <tr>
                                         <td colspan="2">Closing</td>
-                                        <td colspan="9">&nbsp;</td>
+                                        <td colspan="8">&nbsp;</td>
                                         <td><?php echo $this->sma->formatQuantity($balanceQantity); ?></td>
                                         <td><?php echo $this->sma->formatMoney($totalValueOfItem, 'none'); ?></td>
 
