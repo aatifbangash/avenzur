@@ -773,9 +773,6 @@ class Pos extends MY_Controller
 
     public function index($sid = null)
     {
-        ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
         $this->sma->checkPermissions();
 
         if (!$this->pos_settings->default_biller || !$this->pos_settings->default_customer || !$this->pos_settings->default_category) {
