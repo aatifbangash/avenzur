@@ -1053,8 +1053,11 @@ class Sales extends MY_Controller
 
                 }
 
-                $net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
-                $net_cost = $net_cost_obj[0]->cost_price;
+                //$net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
+                //$net_cost = $net_cost_obj[0]->cost_price;
+
+                $net_cost = $this->sales_model->getAvgCost($item_batchno, $item_id);
+
                 if(empty($net_cost) || $net_cost == NULL || is_nan($net_cost)){
                     $net_cost = 0;
                 } 
