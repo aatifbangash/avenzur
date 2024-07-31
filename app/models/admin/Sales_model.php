@@ -1131,7 +1131,7 @@ class Sales_model extends CI_Model
 
             if ($data['sale_status'] == 'completed') {
                
-                $this->site->syncPurchaseItems($cost);
+                //$this->site->syncPurchaseItems($cost);
             }
 
             $this->site->syncSalePayments($id);
