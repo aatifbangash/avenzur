@@ -145,12 +145,10 @@ class Sales_model extends CI_Model
                 // Code for serials end here
 
                 $sale_item_id = $this->db->insert_id();
-   
-               $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['unit_price'] ); 
-
 
                 if ($data['sale_status'] == 'completed'){ //handle inventory movement 
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
+                    //$this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['unit_price'] );
                 } 
                 if ($data['sale_status'] == 'completed' && empty($si_return)) { 
                       
