@@ -7,6 +7,8 @@ class Reports_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+
+        $this->load->admin_model('companies_model');
     }
 
     public function getCompanyLedgers()
@@ -484,6 +486,13 @@ class Reports_model extends CI_Model
     public function getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account)
     {
         $response = array();
+        $supplier_info = $this->companies_model->getCompanyByID($supplier_id);
+
+        if(!$supplier_info){
+            return array();
+        }
+        
+        $supplier_ledger = $supplier_info->ledger_account;
 
         $this->db
             ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, 
@@ -496,7 +505,7 @@ class Reports_model extends CI_Model
             ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=companies.ledger_account')
             ->where('sma_accounts_entries.supplier_id', $supplier_id)
             ->where('sma_accounts_entries.date <', $start_date)
-            ->where('sma_accounts_entryitems.ledger_id', 102)
+            ->where('sma_accounts_entryitems.ledger_id', $supplier_ledger)
             ->order_by('sma_accounts_entries.date asc');
         $q = $this->db->get();
         //lq($this);
@@ -521,7 +530,7 @@ class Reports_model extends CI_Model
             ->where('sma_accounts_entries.supplier_id', $supplier_id)
             ->where('sma_accounts_entries.date >=', $start_date)
             ->where('sma_accounts_entries.date <=', $end_date)
-            ->where('sma_accounts_entryitems.ledger_id', 102)
+            ->where('sma_accounts_entryitems.ledger_id', $supplier_ledger)
             ->order_by('sma_accounts_entries.date asc');
 
         $q = $this->db->get();
