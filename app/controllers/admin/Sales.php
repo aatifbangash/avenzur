@@ -2130,18 +2130,24 @@ class Sales extends MY_Controller
                 }
             }
             else if($courier->name == 'STC'){
+                // echo "<pre>";
+                // print_r($courier);
+                // print_r($warehouse);
+                // print_r($sale);
+                // exit;
                 $response = $this->assignSTC($sale, $courier, $warehouse);
                 $order_resp = json_decode($response, true);
-               
+                // echo "<pre>";
+                // print_r($order_resp);
                 if(isset($order_resp['shipmentNumber'])){
-
                     $this->sales_model->updateSaleWithCourier($sale_id, $courier->id, $order_resp['shipmentNumber'], $warehouse_id);
                     $this->session->set_flashdata('message', 'Courier Assigned Successfully');
                     admin_redirect('sales/ecommerce');
                 }else{
-                    $this->session->set_flashdata('error', $order_resp['errorMessage']);
+                    $this->session->set_flashdata('error', $order_resp['error_msg']);
                     admin_redirect('sales/ecommerce');
                 }
+               
             }
         }else{
             $this->session->set_flashdata('error', lang('Courier Already Assigned'));
@@ -2205,7 +2211,7 @@ class Sales extends MY_Controller
 
         $packages_list = json_encode($packages, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        $url = $courier->url.'/create';
+        $url = $courier->url.'/shipment/create';
         $apiKey = $courier->api_account;
         $jsonDataArr = array(
             "partnerCode" => "avenzur",
@@ -2247,7 +2253,9 @@ class Sales extends MY_Controller
        
         $jsonData = json_encode($jsonDataArr, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        //echo $jsonData;exit;
+        // echo $url;
+        // echo $apiKey; 
+        // echo $jsonData;
         // Initialize cURL session
         $ch = curl_init($url);
 
@@ -2260,19 +2268,31 @@ class Sales extends MY_Controller
         curl_setopt($ch, CURLOPT_POST, true); // HTTP POST method
         curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData); // Set request body
 
-        // Execute the request
-        $response = curl_exec($ch);
-
-        // // Check for errors
-        // if (curl_errno($ch)) {
-        //     echo 'Error:' . curl_error($ch);
-        // } else {
-        //     // Decode and print the response
-        //    $responseData = json_decode($response, true);
-        // }
+                // Execute the request
+       $response = curl_exec($ch);
+      
+    //    if (curl_errno($ch)) {
+    //         $error_msg = curl_error($ch);
+    //         echo "cURL Error: $error_msg";
+    //     } else {
+    //         // Get HTTP status code
+    //         $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+    //         if ($http_status == 200) {
+    //             // Success response
+    //             echo "Request was successful.\n";
+    //             echo "Response: " . $response;
+    //         } else {
+    //             // Error response
+    //             echo "Request failed with status code: $http_status.\n";
+    //             echo "Response: " . $response;
+    //         }
+    //     }
+        
 
         // Close cURL session
         curl_close($ch);
+//print_r($response);exit;
         return  $response;
 
     }
