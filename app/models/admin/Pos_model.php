@@ -711,7 +711,7 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function getProductQuantityWithNearestExpiry($product_id, $item_code, $warehouse)
+    public function getProductQuantityWithNearestExpiry_old($product_id, $item_code, $warehouse)
     {
         $now = date('Y-m-d');  // Current date in the format 'YYYY-MM-DD'
 
@@ -756,6 +756,58 @@ class Pos_model extends CI_Model
 
         if ($q->num_rows() > 0) {
             return $q->row_array(); //$q->row();
+        }
+        
+        return false;
+    }
+    public function getProductQuantityWithNearestExpiry($product_id, $item_code, $warehouse)
+    {
+        $now = date('Y-m-d');  // Current date in the format 'YYYY-MM-DD'
+
+        $this->db->select('batch_no');
+        $this->db->from('invoice_serials');
+        $this->db->where('gtin', $item_code);
+        $this->db->where('tid >', 0);
+        $this->db->where('sid =', 0);
+        $q = $this->db->get();
+        
+        $batch_details = $q->result_array();
+        
+        if(!empty($batch_details)){
+            $batch_nos = array_column($batch_details, 'batch_no'); 
+            $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, inv.expiry_date as expiry');
+            $this->db->from('inventory_movements inv'); 
+            $this->db->where('inv.location_id',$warehouse);
+            $this->db->where('inv.product_id',$product_id); 
+            $this->db->where('inv.expiry_date >=', $now);  // Select products with expiry greater than or equal to the current date
+            $this->db->where_in('inv.batch_number', $batch_nos); 
+            $this->db->group_by('inv.batch_number'); 
+            $this->db->having('SUM(inv.quantity)>=0'); 
+            $this->db->order_by('inv.expiry_date', 'ASC');  
+            $this->db->limit(1); 
+            $q = $this->db->get(); 
+            //echo $this->db->last_query(); 
+            if ($q->num_rows() > 0) {
+                $rs= $q->row_array();
+                //echo 'aa <pre>';print_r($rs); exit;
+                return $rs; 
+            }
+        }  
+ 
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, inv.expiry_date as expiry');
+        $this->db->from('inventory_movements inv'); 
+        $this->db->where('inv.location_id',$warehouse);
+        $this->db->where('inv.product_id',$product_id); 
+        $this->db->where('inv.expiry_date >=', $now);  // Select products with expiry greater than or equal to the current date             
+        $this->db->having('SUM(inv.quantity)>=0'); 
+        $this->db->order_by('inv.expiry_date', 'ASC'); 
+        $this->db->limit(1);
+        $q = $this->db->get(); 
+        //echo $this->db->last_query(); 
+        if ($q->num_rows() > 0) {
+            $rs= $q->row_array(); //$q->row();
+            //echo 'bb <pre>';print_r($rs); exit; 
+            return $rs; 
         }
         
         return false;
