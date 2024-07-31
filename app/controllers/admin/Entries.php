@@ -1299,11 +1299,16 @@ class Entries extends MY_Controller
         
 		/* if entry [NOT] found */
 		if (!$entry)
-		{
-			// set error alert
-			$this->session->set_flashdata('error', lang('entries_cntrler_edit_entry_not_found_error'));
-			// redirect to index page
-			admin_redirect('accounts/entries_index');
+		{  
+			
+			$this->session->set_flashdata('error', lang('Error! Journal entry not found'));
+			$referrer = $this->input->server('HTTP_REFERER', TRUE);
+			if (!empty($referrer)) {
+				redirect($referrer);
+			} else { 
+				  redirect('admin/entries');
+				//admin_redirect('accounts/entries_index'); 
+			}
 		}
 
 		
