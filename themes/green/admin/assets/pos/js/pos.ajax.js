@@ -1470,6 +1470,14 @@ function loadItems() {
             count += parseFloat(item_qty);
             an++;
 
+
+            var today = new Date();
+            var expiryDate = new Date(item_expiry);
+            if (expiryDate < today) {
+                //  alert(item_code + " - "+item_name + " Expired Please Remove from the list"); 
+                 $('#row_' + row_no).addClass('danger');
+            }
+            
             if (item_type == 'standard' && item.options !== false) {
                 $.each(item.options, function () {
                     if (this.id == item_option && base_quantity > this.quantity) {
