@@ -860,7 +860,7 @@ class Pos extends MY_Controller
                // $item_unit_cost = $product_details['avg_cost']; 
                 $item_unit_cost = $this->site->getAvgCost($batch_no, $item_id); 
                 if(empty($item_unit_cost)){
-                    $this->session->set_flashdata('error', lang('Product Avg Cost not found for product: '.$item_code. '-'. $item_name ));
+                    $this->session->set_flashdata('error', lang('Avg Cost not found for product: '.$item_code. '-'. $item_name ));
                     admin_redirect('pos');
                 } 
                     // $this->db->select('cost')->from('products')->where('id', $item_id);
