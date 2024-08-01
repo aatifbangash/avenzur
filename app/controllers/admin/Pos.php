@@ -851,9 +851,11 @@ class Pos extends MY_Controller
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
                 $product_details = $this->pos_model->getProductQuantityWithNearestExpiry($item_id, $item_code, $warehouse_id);
+                //echo 'ttt <pre>';print_r($product_details); exit;
                 $batch_no = $product_details['batchno'];
                 $expiry = $product_details['expiry'];
-                $item_unit_cost = $product_details['avg_cost'];
+               // $item_unit_cost = $product_details['avg_cost']; 
+                $item_unit_cost = $this->site->getAvgCost($batch_no, $item_id);  
                     // $this->db->select('cost')->from('products')->where('id', $item_id);
                     // $productCost =$this->db->get()->result();
                 
