@@ -1481,7 +1481,8 @@ class Purchases extends MY_Controller
                             'entry_id' => $insert_id,
                             'dc' => 'C',
                             'ledger_id' => $supplier->ledger_account,
-                            'amount' => $inv->grand_total + $inv->product_tax,
+                            //'amount' => $inv->grand_total + $inv->product_tax,
+                            'amount' => $inv->grand_total,
                             'narration' => 'Accounts payable'
                         )
                     );
