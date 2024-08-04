@@ -1751,7 +1751,7 @@ public function getallCountry()
      public function getProductBatchesData($product_id, $warehouse)
     {  
          
-        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, wp.rack, wp.avg_cost, wp.expiry, wp.purchase_cost');
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, wp.rack, wp.avg_cost, inv.expiry_date as expiry, wp.purchase_cost');
         $this->db->from('sma_inventory_movements inv');
         $this->db->join('warehouses_products wp', 'wp.batchno=inv.batch_number AND  wp.product_id= inv.product_id and wp.warehouse_id=inv.location_id', 'LEFT');   
         $this->db->where('inv.location_id',$warehouse);
