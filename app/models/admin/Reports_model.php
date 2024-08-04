@@ -2424,7 +2424,7 @@ class Reports_model extends CI_Model
 
     }
 
-    public function getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id = 0, $to_warehouse_id = 0)
+    public function getInventoryTrialBalanceOLD($start_date, $end_date, $from_warehouse_id = 0, $to_warehouse_id = 0)
     {
         // Opening subquery
         $openingSubquery = $this->db->select('PI.product_id AS product_id, SUM(PI.quantity) AS opening_quantity, AVG(PI.net_unit_cost) AS opening_cost')
@@ -2560,6 +2560,46 @@ class Reports_model extends CI_Model
             return $query->result();
         }
     }
+
+    public function getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id = 0, $to_warehouse_id = 0)
+    {
+        $start_date = $start_date." 00:00:00";
+        $end_date   = $end_date." 23:59:59";
+
+        $qry = $this->db->query( "SELECT b.id as product_id, b.code as product_code, b.name as product_name, SUM( IF ( movement_date < '".$start_date."',a.quantity,0)) as openning_qty,
+            
+        AVG(IF(movement_date < '".$start_date."',a.net_unit_cost,null)) as openning_cost,
+            
+        SUM(IF(a.type IN ('purchase', 'customer_return', 'adjustment_increase') AND movement_date BETWEEN '".$start_date."' and '".$end_date."', a.quantity,0)) as movement_in_qty,
+            
+        AVG(IF(a.type IN ('purchase', 'customer_return', 'adjustment_increase') AND movement_date BETWEEN '".$start_date."' and '".$end_date."', a.net_unit_cost,null)) as movement_in_cost,
+        
+        SUM(IF(a.type IN ('sale', 'pos', 'return_to_supplier','adjustment_decrease') AND movement_date BETWEEN '".$start_date."' and '".$end_date."', a.quantity,0)) as movement_out_qty,
+        
+        AVG(IF(a.type IN ('sale', 'pos', 'return_to_supplier','adjustment_decrease') AND movement_date BETWEEN '".$start_date."' and '".$end_date."', a.net_unit_cost,null)) as movement_out_cost,
+            
+        
+        (SUM(IF(movement_date < '".$start_date."', a.quantity, 0)) + 
+        
+        SUM(IF(a.type IN ('purchase', 'customer_return', 'adjustment_increase') AND movement_date BETWEEN '".$start_date."' AND '".$end_date."', a.quantity, 0)) - 
+        
+        SUM( ABS( IF(a.type IN ('sale', 'pos', 'return_to_supplier', 'adjustment_decrease') AND movement_date BETWEEN '".$start_date."' AND '".$end_date."', a.quantity, 0)) )
+        
+        ) as closing_qty
+              
+       FROM `sma_inventory_movements` a
+       INNER JOIN sma_products b on a.product_id = b.id
+         WHERE a.location_id = '".$from_warehouse_id."' and a.net_unit_cost is not null
+         AND movement_date BETWEEN '".$start_date."' and '".$end_date."'
+        GROUP BY a.product_id");
+
+
+         echo $this->db->last_query();
+        // echo "<br>";
+            return $qry->result();
+        
+    }
+
 
     //=== New Item Movement Report Ends ===//
 

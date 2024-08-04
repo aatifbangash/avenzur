@@ -4410,53 +4410,53 @@ class Reports extends MY_Controller
             }
 
             $inventryReportData = [];
-            $productOpeningsData = $this->reports_model->getProductsQuantityUnitCost($start_date,$from_warehouse_id);
+            //$productOpeningsData = $this->reports_model->getProductsQuantityUnitCost($start_date,$from_warehouse_id);
 
-            $productInOutData = $this->reports_model->getInventoryTrialBalanceData($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
+            $productInOutData = $this->reports_model->getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
             
-            foreach($productInOutData as $prdId => $row){
+            // foreach($productInOutData as $prdId => $row){
 
-                $productCost = 1;
-                if(count($productOpeningsData) > 0&& array_key_exists($prdId, $productOpeningsData)){
+            //     $productCost = 1;
+            //     if(count($productOpeningsData) > 0&& array_key_exists($prdId, $productOpeningsData)){
 
-                    $productOpenQty      = $productOpeningsData[$prdId]['total_opening_qty'];
-                    $productOpenUnitCost = $productOpeningsData[$prdId]['avg_unit_cost'];
-                    $productOpenValue    = $productOpenQty * $productOpenUnitCost;
-                }else{
+            //         $productOpenQty      = $productOpeningsData[$prdId]['total_opening_qty'];
+            //         $productOpenUnitCost = $productOpeningsData[$prdId]['avg_unit_cost'];
+            //         $productOpenValue    = $productOpenQty * $productOpenUnitCost;
+            //     }else{
 
-                    $productOpenQty      = 0.00;
-                    $productOpenUnitCost = 0.00;
-                    $productOpenValue    = 0.00;
-                }
+            //         $productOpenQty      = 0.00;
+            //         $productOpenUnitCost = 0.00;
+            //         $productOpenValue    = 0.00;
+            //     }
 
-                if($productOpenUnitCost){
-                    //$productCost = $productOpenUnitCost;
-                    $productCost = $row->movement_out_cost;
-                }else{
-                    //$productCost = $row->movement_in_cost;
-                    $productCost = $row->movement_out_cost;
-                }
+            //     if($productOpenUnitCost){
+            //         //$productCost = $productOpenUnitCost;
+            //         $productCost = $row->movement_out_cost;
+            //     }else{
+            //         //$productCost = $row->movement_in_cost;
+            //         $productCost = $row->movement_out_cost;
+            //     }
 
-                $inventryReportData[] = [
-                    'product_id'          =>  $row->product_id,
-                    'product_name'        =>  $row->product_name,
-                    'product_code'        =>  $row->product_code,
-                    'openning_qty'        =>  $productOpenQty,
-                    'openning_cost'       =>  $productOpenUnitCost,
-                    'openning_ttl'        =>  $productOpenValue,
-                    'movement_in_qty'     =>  $row->movement_in_quantity,
-                    'movement_in_cost'    =>  $row->movement_in_cost,
-                    'movement_in_ttl'     =>  $row->movement_in_quantity * $row->movement_in_cost,
-                    'movement_out_qty'    =>  $row->movement_out_quantity,
-                    'movement_out_cost'   =>  $row->movement_out_cost,
-                    'movement_out_ttl'    =>  $row->movement_out_quantity * $row->movement_out_cost,
+            //     $inventryReportData[] = [
+            //         'product_id'          =>  $row->product_id,
+            //         'product_name'        =>  $row->product_name,
+            //         'product_code'        =>  $row->product_code,
+            //         'openning_qty'        =>  $productOpenQty,
+            //         'openning_cost'       =>  $productOpenUnitCost,
+            //         'openning_ttl'        =>  $productOpenValue,
+            //         'movement_in_qty'     =>  $row->movement_in_quantity,
+            //         'movement_in_cost'    =>  $row->movement_in_cost,
+            //         'movement_in_ttl'     =>  $row->movement_in_quantity * $row->movement_in_cost,
+            //         'movement_out_qty'    =>  $row->movement_out_quantity,
+            //         'movement_out_cost'   =>  $row->movement_out_cost,
+            //         'movement_out_ttl'    =>  $row->movement_out_quantity * $row->movement_out_cost,
 
-                    'closing_qty'        =>  ($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity,
-                    'closing_cost'       =>  $productCost,
-                    'closing_ttl'        =>  (($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity) * $productCost
+            //         'closing_qty'        =>  ($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity,
+            //         'closing_cost'       =>  $productCost,
+            //         'closing_ttl'        =>  (($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity) * $productCost
                     
-                ];
-            }
+            //     ];
+            // }
             
             // echo '<pre>', print_r($inventryReportData), '</pre>';
             // $reportData = $this->reports_model->getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
@@ -4465,7 +4465,7 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['from_warehouse_id'] = $from_warehouse_id;
             $this->data['to_warehouse_id'] = $to_warehouse_id;
-            $this->data['inventryReportData'] = $inventryReportData;
+            $this->data['inventryReportData'] = $productInOutData;
 
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_trial_balance')]];

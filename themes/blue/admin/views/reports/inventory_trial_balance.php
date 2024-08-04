@@ -38,15 +38,15 @@
             <div class="col-lg-12">
                 <div class="row">
 
-                    <!-- <div class="col-lg-12">
-                        <div class="col-md-6">
+                   <!-- <div class="col-lg-12">
+                        <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('From Warehouse', 'from_warehouse_id'); ?>
+                                <?= lang('Warehouse', 'from_warehouse_id'); ?>
                                 <?php echo form_dropdown('from_warehouse_id', $warehouses, set_value('from_warehouse_id', $_POST['from_warehouse_id']), array('class' => 'form-control', 'id' => 'from_warehouse_id'), array('none')); ?>
 
                             </div>
                         </div>
-                        <div class="col-md-6">
+                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('To Warehouse', 'to_warehouse_id'); ?>
                                 <?php echo form_dropdown('to_warehouse_id', $warehouses, set_value('to_warehouse_id', $_POST['to_warehouse_id']), array('class' => 'form-control', 'id' => 'to_warehouse_id'), array('none')); ?>
@@ -56,27 +56,34 @@
                     </div> -->
 
                     <div class="col-lg-12">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <?= lang('From Date', 'podate'); ?>
                                 <?php echo form_input('from_date', ($start_date ?? ''), 'class="form-control input-tip date" id="fromdate"'); ?>
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <?= lang('To Date', 'podate'); ?>
                                 <?php echo form_input('to_date', ($end_date ?? ''), 'class="form-control input-tip date" id="todate"'); ?>
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <?= lang('Warehouse', 'from_warehouse_id'); ?>
+                                <?php echo form_dropdown('from_warehouse_id', $warehouses, set_value('from_warehouse_id', $_POST['from_warehouse_id']), array('class' => 'form-control', 'id' => 'from_warehouse_id'), array('none')); ?>
+
+                            </div>
+                         </div>   
+
+                        <div class="col-md-2">
                             <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
                             </div>
                         </div>
 
-                    </div>
                 </div>
                 <hr />
                 <div class="row">
@@ -132,20 +139,28 @@
                                 $cbTotalTotals = 0;
 
 
-                                foreach ($inventryReportData as $item) {
-
+                                foreach ($inventryReportData as  $item ) {
+                                    $item = (array) $item;
                                     $openQtyTotal += $item['openning_qty'];
+
+                                    $item['openning_ttl'] = $item['openning_qty'] * $item['openning_cost'];
                                     $openTotalTotals += $item['openning_ttl'];
 
                                     $mvInQtyTotal += $item['movement_in_qty'];
+                                    $item['movement_in_ttl'] = $item['movement_in_qty'] * $item['movement_in_cost'];
                                     $mvInTotalTotals += $item['movement_in_ttl'];
 
                                     $mvOutQtyTotal += $item['movement_out_qty'];
+                                    $item['movement_out_ttl'] = $item['movement_out_qty'] * $item['movement_out_cost'];
                                     $mvOutTotalTotals += $item['movement_out_ttl'];
 
-                                    $cbQtyTotal += $item['closing_qty'];;
-                                    $cbTotalTotals += $item['closing_ttl'];
-
+                                     $cbQtyTotal += $item['closing_qty'];
+                                     $item['closing_cost'] = ($item['openning_ttl'] +  $item['movement_in_ttl'] + abs($item['movement_out_ttl']) ) / ($item['openning_qty'] + $item['movement_in_qty'] + abs($item['movement_out_qty']));
+                                     $item['closing_ttl'] = $item['closing_qty'] * $item['closing_cost'];
+                                     $cbTotalTotals += $item['closing_ttl'];
+                                    // $item['closing_ttl'] = $item['closing_qty'] * $item['closing_cost'];
+                                    // $cbTotalTotals += $item['closing_ttl'];
+                                   // $closing_cost =  ($item['openning_ttl'] +  $item['openning_ttl'] + $item['openning_ttl']) / $item['openning_qty'] + $item['movement_in_qty'] + $item['movement_out_qty'];
 
                                 ?>
                                     <tr>
@@ -162,13 +177,13 @@
                                         <td><?= $this->sma->formatMoney($item['movement_in_cost'], 'none'); ?></td>
                                         <td><?= $this->sma->formatMoney($item['movement_in_ttl'], 'none'); ?></td>
 
-                                        <td><?= $this->sma->formatQuantity($item['movement_out_qty']); ?></td>
-                                        <td><?= $this->sma->formatMoney($item['movement_out_cost'], 'none'); ?></td>
-                                        <td><?= $this->sma->formatMoney($item['movement_out_ttl'], 'none'); ?></td>
+                                        <td><?= $this->sma->formatQuantity(abs( $item['movement_out_qty']) ); ?></td>
+                                        <td><?= $this->sma->formatMoney(abs( $item['movement_out_cost']), 'none'); ?></td>
+                                        <td><?= $this->sma->formatMoney( abs($item['movement_out_ttl']), 'none'); ?></td>
 
                                         <td><?= $this->sma->formatQuantity($item['closing_qty']); ?> </td>
                                         <td><?= $this->sma->formatMoney($item['closing_cost'], 'none'); ?> </td>
-                                        <td><?= $this->sma->formatMoney($item['closing_ttl'], 'none'); ?> </td>
+                                        <td><?= $this->sma->formatMoney( $item['closing_ttl'], 'none'); ?> </td>
 
                                     </tr>
                                 <?php
