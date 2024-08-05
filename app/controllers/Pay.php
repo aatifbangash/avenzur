@@ -1073,10 +1073,6 @@ class Pay extends MY_Shop_Controller
         $gateway_response = '';
         $payment_status = 'pending';
 
-        echo '<pre>';
-        print_r($_POST);
-        exit;
-
         if($response_status == '00000')
         {
             $gateway_response = 'completed';
