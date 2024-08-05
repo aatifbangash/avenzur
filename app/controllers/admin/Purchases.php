@@ -1947,6 +1947,7 @@ class Purchases extends MY_Controller
                     'subtotal'          => $this->sma->formatDecimal($subtotal),
                     'expiry'            => $item_expiry,
                     'real_unit_cost'    => $real_unit_cost,
+                    'sale_price'        => $this->sma->formatDecimal($purchase_inovice[$i]->sale_price, 4),
                     'date'              => date('Y-m-d', strtotime($date)),
                     'batchno'           => $item_batchno,
                     'serial_number'     => $item_serial_no
