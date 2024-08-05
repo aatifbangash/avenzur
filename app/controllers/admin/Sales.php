@@ -151,9 +151,8 @@ class Sales extends MY_Controller
                         $digital = true;
                     }
                     $pr_discount      = $this->site->calculateDiscount($item_discount, $unit_price);
-                    $unit_price       = $this->sma->formatDecimal($unit_price - $pr_discount);
-                    $item_net_price   = $unit_price;
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
+                    $unit_price       = $this->sma->formatDecimal($unit_price);
                     $product_discount += $pr_item_discount;
 
 
@@ -170,10 +169,9 @@ class Sales extends MY_Controller
                     $product_discount += $prroduct_item_discount;
                     //Discount calculation----------------------------------
 
-
-
-
-
+                    // NEW: Net unit price calculation
+                    $item_net_price   = $this->sma->formatDecimal((($real_unit_price * $item_quantity) - $pr_item_discount - $pr_item_discount2) / $item_quantity);
+                    
                     $pr_item_tax = $item_tax = 0;
                     $tax         = '';
 
@@ -198,7 +196,7 @@ class Sales extends MY_Controller
 
                     $product_tax += $pr_item_tax;
                     $subtotal = $main_net;//(($item_net_price * $item_unit_quantity) + $pr_item_tax);
-                    $subtotal2 = (($item_net_price * $item_unit_quantity));// + $pr_item_tax);
+                    $subtotal2 = (($item_net_price * $item_unit_quantity) + $product_tax);// + $pr_item_tax);
                     $unit     = $this->site->getUnitByID($item_unit);
 
                     $product = [
@@ -236,9 +234,11 @@ class Sales extends MY_Controller
                         'totalbeforevat'    => $totalbeforevat,
                         'main_net'          => $main_net,
                     ];
-
+                    
                     $products[] = ($product + $gst_data);
-                    $total += $this->sma->formatDecimal($main_net, 4);//$this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                    //$total += $this->sma->formatDecimal($main_net, 4);//$this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                    // NEW: Grand total calculation
+                    $total += $this->sma->formatDecimal($subtotal2, 4);
                 }
             }
             if (empty($products)) {
@@ -253,7 +253,10 @@ class Sales extends MY_Controller
             $total_tax      = $this->sma->formatDecimal($order_tax, 4);//$this->sma->formatDecimal(($product_tax + $order_tax), 4);
             //print_r($product_tax);exit;
             // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
-            $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            //$grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            
+            // NEW: Grand total calculation
+            $grand_total = $this->sma->formatDecimal(($total), 4);
             $data        = ['date'  => $date,
                 'reference_no'      => $reference,
                 'customer_id'       => $customer_id,
@@ -1065,9 +1068,9 @@ class Sales extends MY_Controller
                     $product_details = $item_type != 'manual' ? $this->sales_model->getProductByCode($item_code) : null;
 
                     $pr_discount      = $this->site->calculateDiscount($item_discount, $unit_price);
-                    $unit_price       = $this->sma->formatDecimal($unit_price - $pr_discount);
-                    $item_net_price   = $unit_price;
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
+                    $unit_price       = $this->sma->formatDecimal($unit_price);
+                    $item_net_price   = $this->sma->formatDecimal($unit_price - $pr_discount);
                     $product_discount += $pr_item_discount;
 
                     //Discount calculation---------------------------------- 
@@ -1082,8 +1085,22 @@ class Sales extends MY_Controller
                     
                     $product_item_discount = ($product_item_discount1 + $product_item_discount2);
                     $total_product_discount += $product_item_discount;
+
+                    //Discount calculation---------------------------------- 
+                    //The above will be deleted later becasue order discount is not in use                  
+                    $pr_discount      = $this->site->calculateDiscount($item_dis1.'%', $real_unit_price);
+                    $amount_after_dis1 = $real_unit_price - $pr_discount;
+                    $pr_discount2      = $this->site->calculateDiscount($item_dis2.'%', $amount_after_dis1);
+
+                    $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
+                    $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $item_unit_quantity);
+                    $prroduct_item_discount = ($pr_item_discount + $pr_item_discount2);
+                    $product_discount += $prroduct_item_discount;
                     //Discount calculation----------------------------------
 
+                    // NEW: Net unit price calculation
+                    $item_net_price   = $this->sma->formatDecimal((($real_unit_price * $item_quantity) - $pr_item_discount - $pr_item_discount2) / $item_quantity);
+                    
                     $pr_item_tax = $item_tax = 0;
                     $tax         = '';
 
@@ -1106,7 +1123,10 @@ class Sales extends MY_Controller
 
                     $product_tax += $pr_item_tax;
                     $subtotal = $main_net;//(($item_net_price * $item_unit_quantity) + $pr_item_tax);
-                    $subtotal2 = (($item_net_price * $item_unit_quantity));
+                    //$subtotal2 = (($item_net_price * $item_unit_quantity));
+
+                    $subtotal2 = (($item_net_price * $item_unit_quantity) + $product_tax);
+
                     $unit     = $this->site->getUnitByID($item_unit);
 
                     $product = [
@@ -1145,7 +1165,8 @@ class Sales extends MY_Controller
                     ];
 
                     $products[] = ($product + $gst_data);
-                    $total += $this->sma->formatDecimal($main_net, 4);//$this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                    //$total += $this->sma->formatDecimal($main_net, 4);//$this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                    $total += $this->sma->formatDecimal($subtotal2, 4);
                 }
             }
             if (empty($products)) {
@@ -1159,7 +1180,11 @@ class Sales extends MY_Controller
             $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
             $total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
             // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
-            $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            //$grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            
+            // NEW: Grand total calculation
+            $grand_total = $this->sma->formatDecimal(($total), 4);
+            
             $data        = ['date'  => $date,
                 'reference_no'      => $reference,
                 'customer_id'       => $customer_id,
@@ -1254,7 +1279,7 @@ class Sales extends MY_Controller
                 // this row is deleted becasue of discount must not be added in sale price 
                 //$row->price           = $this->sma->formatDecimal($item->net_unit_price + $this->sma->formatDecimal($row->item_discount));
                 
-                $row->price           = $this->sma->formatDecimal($item->net_unit_price);
+                $row->price           = $this->sma->formatDecimal($item->real_unit_price);
                 //Discount calculation----------------------------------
 
                 $row->unit_price      = $row->tax_method ? $item->unit_price + $this->sma->formatDecimal($row->item_discount) + $this->sma->formatDecimal($row->item_tax) : $item->unit_price + ($row->item_discount);
