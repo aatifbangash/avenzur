@@ -1097,8 +1097,10 @@ class Pos extends MY_Controller
 
                     $sid = $sale['sale_id'];
                     
-                    $payemntsType = $this->pos_model->getPaymentType($sid);
-                    $paidBillType = $payemntsType->paid_by;
+                    //$payemntsType = $this->pos_model->getPaymentType($sid);
+                    //$paidBillType = $payemntsType->paid_by;
+
+                    $payemntsTypes = $this->pos_model->getPaymentTypes($sid);
                     
                     $inv = $this->sales_model->getSaleByID($sid);
                     if($inv->sale_invoice == 0){
@@ -1139,33 +1141,40 @@ class Pos extends MY_Controller
                             $totalPurchasePrice = $totalPurchasePrice + ($item->net_cost * $item->quantity);
                         }
 
-                        $amount_paid_pos = $_POST['amount'][0];
+                        //$amount_paid_pos = $_POST['amount'][0];
+                        $amount_paid_pos = 0;
+                        foreach ($payemntsTypes as $payemntsType){
+                            $paidBillType = $payemntsType->paid_by;
+                            $amount_paid_pos += $payemntsType->amount;
 
-                        if($paidBillType =="cash"){
-                            // //cash
-                            $entryitemdata[] = array(
-                            'Entryitem' => array(
-                            'entry_id' => $insert_id,
-                            'dc' => 'D',
-                            'ledger_id' => $customer->fund_books_ledger,
-                            //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
-                            'amount' => $amount_paid_pos,
-                            'narration' => 'cash'
-                            )
-                            );
-                        }else{
-                               // //credit card
-                            $entryitemdata[] = array(
+                            if($paidBillType =="cash"){
+                                // //cash
+                                $entryitemdata[] = array(
                                 'Entryitem' => array(
                                 'entry_id' => $insert_id,
                                 'dc' => 'D',
-                                'ledger_id' => $customer->credit_card_ledger,
+                                'ledger_id' => $customer->fund_books_ledger,
                                 //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
-                                'amount' => $amount_paid_pos,
-                                'narration' => 'Credit Card'
+                                'amount' => $payemntsType->amount,
+                                'narration' => 'cash'
                                 )
-                            );  
+                                );
+                            }else{
+                                   // //credit card
+                                $entryitemdata[] = array(
+                                    'Entryitem' => array(
+                                    'entry_id' => $insert_id,
+                                    'dc' => 'D',
+                                    'ledger_id' => $customer->credit_card_ledger,
+                                    //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
+                                    'amount' => $payemntsType->amount,
+                                    'narration' => 'Credit Card'
+                                    )
+                                );  
+                            }
                         }
+
+                        
 
                         $price_difference = $amount_paid_pos - ($totalSalePrice + $inv->total_tax - $inv->total_discount);
                         if($price_difference > 0){
