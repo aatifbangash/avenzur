@@ -178,7 +178,7 @@ class Purchases_model extends CI_Model
         if ($this->db->trans_status() === false) {
             log_message('error', 'An errors has been occurred while adding the sale (Add:Purchases_model.php)');
         } else {
-            return true;
+            return $purchase_id;
         }
         return false;
     }

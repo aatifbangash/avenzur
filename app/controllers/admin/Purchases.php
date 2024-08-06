@@ -268,7 +268,11 @@ class Purchases extends MY_Controller
             // $this->sma->print_arrays($data, $products);exit;
         }
 
-        if ($this->form_validation->run() == true && $this->purchases_model->addPurchase($data, $products, $attachments)) {
+        if ($this->form_validation->run() == true && $purchase_id = $this->purchases_model->addPurchase($data, $products, $attachments)) {
+            if($status == 'received'){
+                $this->convert_purchse_invoice($purchase_id);
+            }
+
             $this->session->set_userdata('remove_pols', 1);
             $this->session->set_flashdata('message', $this->lang->line('purchase_added'));
             admin_redirect('purchases');
@@ -962,7 +966,9 @@ class Purchases extends MY_Controller
         }
 
         if ($this->form_validation->run() == true && $this->purchases_model->updatePurchase($id, $data, $products, $attachments)) {
-
+            if($status == 'received'){
+                $this->convert_purchse_invoice($id);
+            }
 
             $this->session->set_userdata('remove_pols', 1);
             $this->session->set_flashdata('message', $this->lang->line('purchase_added'));
@@ -1417,12 +1423,6 @@ class Purchases extends MY_Controller
     {
         if ($this->purchases_model->puchaseToInvoice($pid)) {
 
-            # Update Purchase to Completed
-            if(isset($this->GP) && $this->GP['accountant']){
-                $this->db->update('purchases', ['status' => 'received'], ['id' => $pid]);
-                $this->site->syncQuantity(null, $pid);
-            }
-
             $inv = $this->purchases_model->getPurchaseByID($pid);
             $this->load->admin_model('companies_model');
             $supplier = $this->companies_model->getCompanyByID($inv->supplier_id);
@@ -1491,12 +1491,6 @@ class Purchases extends MY_Controller
             {
                     $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
             }
-
-           
-               
-
-            $this->session->set_flashdata('message', lang('Purchase is Converted to invoice Successfully!'));
-            admin_redirect($_SERVER['HTTP_REFERER'] ?? 'purchases');
         }
     }
 
