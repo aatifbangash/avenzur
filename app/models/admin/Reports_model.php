@@ -1861,6 +1861,7 @@ class Reports_model extends CI_Model
                     CASE 
                         WHEN iv.trs_type = 'purchase' THEN sp.reference_no
                         WHEN iv.trs_type = 'sale' THEN ss.reference_no
+                        WHEN iv.trs_type = 'pos' THEN ps.reference_no
                         WHEN iv.trs_type = 'transfer_out' THEN sto.transfer_no
                         WHEN iv.trs_type = 'transfer_in' THEN sti.transfer_no
                         ELSE NULL
@@ -1868,6 +1869,7 @@ class Reports_model extends CI_Model
                     CASE 
                         WHEN iv.trs_type = 'purchase' THEN sp.supplier
                         WHEN iv.trs_type = 'sale' THEN ss.customer
+                        WHEN iv.trs_type = 'pos' THEN ps.customer
                         WHEN iv.trs_type = 'transfer_out' THEN sto.from_warehouse_name
                         WHEN iv.trs_type = 'transfer_in' THEN sti.to_warehouse_name
                         ELSE NULL
@@ -1895,6 +1897,7 @@ class Reports_model extends CI_Model
                     movement_date BETWEEN '".date('Y-m-d', strtotime($start_date . ' -1 day'))."' AND '".date('Y-m-d', strtotime($end_date . ' +1 day'))."') iv
                     LEFT JOIN sma_purchases sp ON iv.reference_id = sp.id AND iv.trs_type = 'purchase'
                     LEFT JOIN sma_sales ss ON iv.reference_id = ss.id AND iv.trs_type = 'sale'
+                    LEFT JOIN sma_sales ps ON iv.reference_id = ps.id AND iv.trs_type = 'pos'
                     LEFT JOIN sma_transfers sto ON iv.reference_id = sto.id AND iv.trs_type = 'transfer_out'
                     LEFT JOIN sma_transfers sti ON iv.reference_id = sti.id AND iv.trs_type = 'transfer_in'";
 

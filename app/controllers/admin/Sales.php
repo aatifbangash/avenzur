@@ -1225,6 +1225,10 @@ class Sales extends MY_Controller
         }
 
         if ($this->form_validation->run() == true && $this->sales_model->updateSale($id, $data, $products, $attachments)) {
+            if($sale_status == 'completed'){
+                $this->convert_sale_invoice($id);
+            }
+
             $this->session->set_userdata('remove_slls', 1);
             $this->session->set_flashdata('message', lang('sale_updated'));
             admin_redirect($inv->pos ? 'pos/sales' : 'sales');
@@ -1872,16 +1876,7 @@ class Sales extends MY_Controller
                   $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
             }
 
-
-            $this->session->set_flashdata('message', lang('Sale is Converted to invoice Successfully!'));
-            admin_redirect($_SERVER['HTTP_REFERER'] ?? 'sales');
-       
-
         }
-         }else{
-
-            $this->session->set_flashdata('error', lang('Sale Already Converted to invoice!'));
-            admin_redirect($_SERVER['HTTP_REFERER'] ?? 'sales');
         }
     }
 
