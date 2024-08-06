@@ -80,6 +80,10 @@
                         <?= lang('payment_term', 'popayment_term'); ?>
                         <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
                     </div>
+                    <div class="form-group">
+                        <?= lang('Credit_limit', 'credit_limit'); ?>
+                        <?php echo form_input('credit_limit', '', 'class="form-control" id="credit_limit"'); ?>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
