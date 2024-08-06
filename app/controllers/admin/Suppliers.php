@@ -646,6 +646,7 @@ class Suppliers extends MY_Controller
                 'gst_no'      => $this->input->post('gst_no'),
                 'ledger_account' => $this->input->post('ledger_account'),
                 'payment_term' => $this->input->post('payment_term'),
+                'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
                 'sequence_code'  => $this->sequenceCode->generate('SUP', 5)
             ];
         } elseif ($this->input->post('add_supplier')) {
@@ -766,6 +767,7 @@ class Suppliers extends MY_Controller
                 'gst_no'      => $this->input->post('gst_no'),
                 'ledger_account'      => $this->input->post('ledger_account'),
                 'payment_term' => $this->input->post('payment_term'),
+                'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
             ];
             if(empty($company_details->sequence_code)){
                 $data['sequence_code'] =$this->sequenceCode->generate('SUP', 5); 
