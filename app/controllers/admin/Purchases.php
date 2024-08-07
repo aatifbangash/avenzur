@@ -47,7 +47,7 @@ class Purchases extends MY_Controller
         $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
         $this->form_validation->set_rules('warehouse', $this->lang->line('warehouse'), 'required|is_natural_no_zero');
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
-        $this->form_validation->set_rules('batchno[]', lang('Batch'), 'required');
+       // $this->form_validation->set_rules('batchno[]', lang('Batch'), 'required');
         $product_id_arr= $this->input->post('product_id');  
         foreach ($product_id_arr as $index => $prid) {
             // Set validation rules for each quantity field
@@ -89,6 +89,7 @@ class Purchases extends MY_Controller
             $gst_data         = [];
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             for ($r = 0; $r < $i; $r++) {
+                $product_id          = $_POST['product_id'][$r];
                 $item_code          = $_POST['product'][$r];
                 $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $unit_cost          = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
@@ -105,7 +106,10 @@ class Purchases extends MY_Controller
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
                 
-                $item_batchno = $_POST['batchno'][$r];
+                $item_batchno = trim($_POST['batchno'][$r]);
+                if(empty($item_batchno)){
+                    $item_batchno = 'Default-'.$product_id;
+                }
                 $item_serial_no = $_POST['serial_no'][$r];
                 //$item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
@@ -754,6 +758,7 @@ class Purchases extends MY_Controller
             $gst_data         = [];
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             for ($r = 0; $r < $i; $r++) {
+                $product_id          = $_POST['product_id'][$r];
                 $item_code          = $_POST['product'][$r];
                 $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $unit_cost          = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
@@ -776,7 +781,10 @@ class Purchases extends MY_Controller
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
-                $item_batchno = $_POST['batchno'][$r];
+                $item_batchno = trim($_POST['batchno'][$r]);
+                if(empty($item_batchno)){
+                    $item_batchno = 'Default-'.$product_id;
+                }
                 $item_serial_no = $_POST['serial_no'][$r];
                 //$item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
