@@ -1180,14 +1180,17 @@
                 <h4 class="modal-title" id="dsModalLabel"><?=lang('edit_order_discount');?></h4>
             </div>
             <div class="modal-body">
-
-                 <input type="hidden" id="allow_discount_value" value="<?php echo $this->session->userdata('allow_discount_value') ?>">
-                  <center><h3> Max Discount Allowed <?php echo $this->session->userdata('allow_discount_value') ?>%</h3>
+                 <?php 
+                    $allow_discount_value= $this->session->userdata('allow_discount_value');
+                   // $allow_discount_value= 5;   
+                 ?>
+                 <input type="hidden" id="allow_discount_value" value="<?php echo $allow_discount_value;?>">
+                  <center><h3> Max Discount Allowed <?php echo  $allow_discount_value ?>%</h3>
                    <div id="notAllowError"></div>
                  </center>
                 <div class="form-group">
                     <?=lang('order_discount', 'order_discount_input');?>
-                    <?php echo form_input('order_discount_input', '', 'class="form-control kb-pad" onkeyup="allowDiscountValue()" id="order_discount_input"'); ?>
+                    <?php echo form_input('order_discount_input', '%', 'class="form-control kb-pad" onkeyup="allowDiscountValue()" type="number" id="order_discount_input"'); ?>
                 </div>
 
             </div>
