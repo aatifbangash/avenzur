@@ -163,9 +163,9 @@
                                                 <td><?= $data->reference_no; ?></td>
                                                 <td><?= $data->trans_date; ?></td>
                                                 
-                                                <td><?= $this->sma->formatMoney($data->grand_total+$data->total_discount,'none'); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->grand_total + $data->total_discount - $data->total_tax,'none'); ?></td>
                                                 <td><?= $this->sma->formatMoney($data->total_discount,'none'); ?></td>
-                                                <td><?= $this->sma->formatMoney($data->grand_total,'none'); ?></td>
+                                                <td><?= $this->sma->formatMoney($data->grand_total - $data->total_tax,'none'); ?></td>
 
                                                 <td><?= $this->sma->formatMoney($data->total_item_with_vat,'none'); ?></td>
                                                 <td><?= $this->sma->formatMoney($data->total_item_without_tax,'none'); ?></td>
@@ -176,7 +176,7 @@
                                                 <td>
                                                     <?php
                                                     if($data->trans_type == "purchases"){
-                                                        echo $this->sma->formatMoney($data->grand_total+$data->total_tax,'none'); 
+                                                        echo $this->sma->formatMoney($data->grand_total,'none'); 
                                                     }else{
                                                         echo $this->sma->formatMoney($data->grand_total,'none'); 
                                                     }

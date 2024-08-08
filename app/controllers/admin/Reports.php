@@ -4338,7 +4338,7 @@ class Reports extends MY_Controller
         ];
         $this->data['filterOnTypeArr'] = $filterOnTypeArr;
         $user = $this->site->getUser();
-        $defaultWareHouseId = ($user->warehouse_id ? $user->warehouse_id : $this->site->Settings->default_warehouse);
+        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : null;
 
         $response_arr = array();
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
@@ -4350,10 +4350,11 @@ class Reports extends MY_Controller
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
 
-            $itemOpenings = $this->reports_model->getItemOpeningBalance($productId, $start_date, $defaultWareHouseId);
+            $itemOpenings = $this->reports_model->getItemOpeningBalance($productId, $start_date, $warehouse);
             
-            $reportData = $this->reports_model->getItemMovementRecords($productId, $start_date, $end_date, $defaultWareHouseId, $filterOnType);
+            $reportData = $this->reports_model->getItemMovementRecords($productId, $start_date, $end_date, $warehouse, $filterOnType);
 
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
             $this->data['product'] = $productId;
