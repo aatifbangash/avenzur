@@ -1860,6 +1860,7 @@ class Reports_model extends CI_Model
                     iv.reference_id,
                     iv.net_unit_cost,
                     iv.net_unit_sale,
+                    iv.real_unit_cost,
                     CASE 
                         WHEN iv.trs_type = 'purchase' THEN sp.reference_no
                         WHEN iv.trs_type = 'sale' THEN ss.reference_no
@@ -1887,12 +1888,17 @@ class Reports_model extends CI_Model
                         expiry_date,
                         reference_id,
                         net_unit_cost,
-                        net_unit_sale
+                        net_unit_sale,
+                        real_unit_cost
                     FROM sma_inventory_movements
                     WHERE product_id = ".$productId." AND ";
 
         if($filterOnType){
             $query .= "type = '".$filterOnType."' AND ";
+        }
+
+        if($warehouseId){
+            $query .= "location_id = '".$warehouseId."' AND ";
         }
 
         $query .= "movement_date >= '".$reports_start_date."' AND 

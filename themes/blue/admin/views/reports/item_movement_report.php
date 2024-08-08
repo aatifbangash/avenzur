@@ -61,6 +61,22 @@
                     </div>
 
                     <div class="col-lg-12">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Store', 'warehouse'); ?>
+                                <?php
+                                $optionsWarehouse[0] = 'Select';
+                                if (!empty($warehouses)) {
+                                    foreach ($warehouses as $warehouse) {
+                                        $optionsWarehouse[$warehouse->id] = $warehouse->name;
+                                    }
+                                }
+
+                                ?>
+                                <?php echo form_dropdown('warehouse', $optionsWarehouse, set_value('warehouse'), array('class' => 'form-control disable-select'), array('none')); ?>
+
+                            </div>
+                        </div>
 
                         <div class="col-md-4">
                             <div class="form-group">
@@ -76,12 +92,16 @@
                             </div>
                         </div>
 
+                        
+
+                    </div>
+
+                    <div class="col-lg-12">
                         <div class="col-md-4">
                             <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
                             </div>
                         </div>
-
                     </div>
                 </div>
                 <hr />
@@ -164,7 +184,7 @@
                                             <td><?= $rp->expiry; ?></td>
                                             <td><?= $rp->batch_no; ?></td>
                                             <td><?= $rp->net_unit_sale; ?></td>
-                                            <td><?= $rp->net_unit_cost; ?></td>
+                                            <td><?= $rp->real_unit_cost; ?></td>
                                             <td><?= $this->sma->formatQuantity($rp->quantity); ?></td>
                                             <td><?= $rp->net_unit_cost; ?></td>
                                             <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
