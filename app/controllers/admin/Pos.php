@@ -859,6 +859,8 @@ class Pos extends MY_Controller
                 $expiry = $product_details['expiry'];
                // $item_unit_cost = $product_details['avg_cost']; 
                 $item_unit_cost = $this->site->getAvgCost($batch_no, $item_id); 
+                $real_cost = $this->site->getRealAvgCost($batch_no, $item_id);
+
                 if(empty($item_unit_cost)){
                     $this->session->set_flashdata('error', lang('Avg Cost not found for product: '.$item_code. '-'. $item_name ));
                     admin_redirect('pos');
@@ -929,9 +931,8 @@ class Pos extends MY_Controller
                         'batch_no'          => $batch_no,
                         'real_unit_price'   => $real_unit_price,
                         'comment'           => $item_comment,
+                        'real_cost'         => $real_cost
                     ];
-
-                 
 
                     $products[] = ($product + $gst_data);
                     $total += $this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);

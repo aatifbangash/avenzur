@@ -23,6 +23,8 @@ class Returns_model extends CI_Model
             
             foreach ($items as $item) {
                 $item['return_id'] = $return_id;
+                $real_cost = $item['real_cost'];
+                unset($item['real_cost']);
                 $this->db->insert('return_items', $item);
                 
                 if ($item['product_type'] == 'standard') {
@@ -30,7 +32,7 @@ class Returns_model extends CI_Model
                     $this->site->setPurchaseItem($clause, $item['quantity']);
                     $this->site->syncQuantityReturn($return_id, $item['product_id']);
 
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'customer_return', $item['quantity'], $item['warehouse_id'], $return_id, $item['net_cost'], $item['expiry'], $item['unit_price']); 
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'customer_return', $item['quantity'], $item['warehouse_id'], $return_id, $item['net_cost'], $item['expiry'], $item['unit_price'], $real_cost); 
                     
                 } elseif ($item['product_type'] == 'combo') {
                     $combo_items = $this->site->getProductComboItems($item['product_id']);
@@ -242,12 +244,14 @@ class Returns_model extends CI_Model
             // $return_id = $id;
             foreach ($items as $item) {
                 // $item['return_id'] = $return_id;
+                $real_cost = $item['real_cost'];
+                unset($item['real_cost']);
                 $this->db->insert('return_items', $item);
                 if ($item['product_type'] == 'standard') {
                     $clause = ['product_id' => $item['product_id'], 'purchase_id' => null, 'transfer_id' => null, 'option_id' => $item['option_id']];
                     $this->site->setPurchaseItem($clause, $item['quantity']);
                     $this->site->syncQuantity(null, null, null, $item['product_id']);
-                    $this->Inventory_model->update_movement($item['product_id'], $item['batch_no'], 'customer_return', $item['quantity'], $item['warehouse_id'],  $item['net_cost'], $item['expiry'], $item['unit_price']);
+                    $this->Inventory_model->update_movement($item['product_id'], $item['batch_no'], 'customer_return', $item['quantity'], $item['warehouse_id'],  $item['net_cost'], $item['expiry'], $item['unit_price'], $real_cost);
                 } elseif ($item['product_type'] == 'combo') {
                     $combo_items = $this->site->getProductComboItems($item['product_id']);
                     foreach ($combo_items as $combo_item) {
