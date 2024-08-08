@@ -98,9 +98,9 @@
                                     <th><?= lang('Expire Date'); ?></th>
                                     <th><?= lang('Batch No.'); ?></th>
                                     <th><?= lang('Sale Price'); ?></th>
-                                    
+                                    <th><?= lang('Cost Price'); ?></th>
                                     <th><?= lang('Quantity'); ?></th>
-                                    <th><?= lang('Unit Cost'); ?></th>
+                                    <th><?= lang('Purchase Price'); ?></th>
                                     <th><?= lang('Item balance quantity'); ?></th>
                                     <th><?= lang('Value of item current balance'); ?></th>
                                 </tr>
@@ -164,7 +164,7 @@
                                             <td><?= $rp->expiry; ?></td>
                                             <td><?= $rp->batch_no; ?></td>
                                             <td><?= $rp->net_unit_sale; ?></td>
-                                            
+                                            <td><?= $rp->net_unit_cost; ?></td>
                                             <td><?= $this->sma->formatQuantity($rp->quantity); ?></td>
                                             <td><?= $rp->net_unit_cost; ?></td>
                                             <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
@@ -179,7 +179,7 @@
 
                                     <tr>
                                         <td colspan="2">Closing</td>
-                                        <td colspan="8">&nbsp;</td>
+                                        <td colspan="9">&nbsp;</td>
                                         <td><?php echo $this->sma->formatQuantity($balanceQantity); ?></td>
                                         <td><?php echo $this->sma->formatMoney($totalValueOfItem, 'none'); ?></td>
 
