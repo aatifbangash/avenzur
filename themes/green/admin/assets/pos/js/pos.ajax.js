@@ -1596,7 +1596,8 @@ function loadItems() {
                     order_discount = parseFloat(ds);
                 }
             } else {
-                order_discount = parseFloat(ds);
+                //order_discount = parseFloat(ds);
+                order_discount = formatDecimal(parseFloat((total * parseFloat(ds)) / 100), 4);
             }
             //total_discount += parseFloat(order_discount);
         }
