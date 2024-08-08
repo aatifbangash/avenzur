@@ -121,3 +121,6 @@ footer {
 .pagenum:before {
     content: counter(page);
 }
+.text-center{
+    text-align: center;
+}
