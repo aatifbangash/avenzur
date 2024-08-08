@@ -68,7 +68,7 @@
                             <tr>
                                 <th>#</th>
                                 <th><?= lang('Supplier'); ?></th>
-                                <th><?= lang('Current'); ?></th>
+                                <th><?= lang('Credit Term'); ?></th>
                                 <?php
                                     $duration = $this->input->post('duration') ? $this->input->post('duration') : 120;
                                     $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
@@ -93,7 +93,7 @@
                                 <?php
                                     $count = 0;
                                     $totals = [
-                                        'Current' => 0,
+                                        //'Current' => 0,
                                         '1-30' => 0,
                                         '31-60' => 0,
                                         '61-90' => 0,
@@ -130,7 +130,7 @@
                                             <tr>
                                                 <td><?= $count; ?></td>
                                                 <td><?= $data['supplier_name']; ?></td>
-                                                <td><?= $this->sma->formatNumber($data['Current']); ?></td>
+                                                <td><?= $data['payment_term']; ?></td>
                                                 <?php
                                                     foreach ($intervals as $interval) {
                                                         if ($interval > $duration) {
@@ -153,7 +153,7 @@
                             <tfoot style="text-align:center;">
                                 <tr>
                                     <td colspan="2"><strong></strong></td>
-                                    <td><strong><?= $this->sma->formatNumber($totals['Current']); ?></strong></td>
+                                    <td><strong></strong></td>
                                     <?php
                                         $previous_limit = 0;
                                         foreach ($intervals as $interval) {

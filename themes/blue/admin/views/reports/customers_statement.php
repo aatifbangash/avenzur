@@ -83,6 +83,7 @@
                                 <th><?= lang('Num'); ?></th>
                                 <th><?= lang('name'); ?></th>
                                 <th><?= lang('Memo'); ?></th>
+                                <th><?= lang('Opening Balance'); ?></th>
                                 <th><?= lang('Debit'); ?></th>
                                 <th><?= lang('Credit'); ?></th>
                                 <th><?= lang('balance'); ?></th>
@@ -91,7 +92,13 @@
                             <tbody style="text-align:center;">
                                 <?php
                                     $count = 0;
-                                    $balance = 0;
+                                    $balance = $total_ob;
+
+                                    $totalCredit = 0;
+                                    $totalDebit = 0;
+                                    $totalBalance = 0;
+                                    $openingBalance = $total_ob;
+
                                     foreach($supplier_statement as $statement){
                                         
                                         if($statement->dc == 'C'){
@@ -108,14 +115,42 @@
                                                 <td><?= $statement->code; ?></td>
                                                 <td><?= $statement->company; ?></td>
                                                 <td><?= $statement->narration; ?></td>
-                                                <td><?= $statement->dc == 'D' ? $statement->amount : '-'; ?></td>
-                                                <td><?= $statement->dc == 'C' ? $statement->amount : '-'; ?></td>
-                                                <td><?= $balance; ?></td>
+                                                <td><?= $this->sma->formatNumber($openingBalance); ?></td>
+                                                <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '-';
+                                                    $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
+
+                                                </td>
+                                                <td><?php echo $statement->dc == 'C' ? $this->sma->formatNumber($statement->amount) : '-';
+                                                $statement->dc == 'C' ?
+                                                    $totalCredit = $totalCredit + $statement->amount : null ?>
+
+                                                </td>
+                                                <td><?php echo $this->sma->formatNumber($balance);
+                                                $totalBalance = $totalBalance + $balance;
+                                                ?></td>
                                             </tr>
                                         <?php
+
+                                        if ($statement->dc == 'D') {
+                                            $openingBalance += $statement->amount;
+                                        } else {
+                                            $openingBalance -= $statement->amount;
+                                        }
+
                                     }
                                 ?>
-                                
+                                <tr>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th><?= $this->sma->formatNumber($totalDebit); ?></th>
+                                <th><?= $this->sma->formatNumber($totalCredit); ?></th>
+                                <th><?= $this->sma->formatNumber($balance); ?></th>
+                            </tr>
                             </tbody>
                             <tfoot></tfoot>
                         </table>

@@ -82,8 +82,7 @@
                                 <th><?= lang('Num'); ?></th>
                                 <th><?= lang('name'); ?></th>
                                 <th><?= lang('Memo'); ?></th>
-                                <th><?= lang('Opening Debit'); ?></th>
-                                <th><?= lang('Opening Credit'); ?></th>
+                                <th><?= lang('Opening Balance'); ?></th>
                                 <th><?= lang('Debit'); ?></th>
                                 <th><?= lang('Credit'); ?></th>
                                 <th><?= lang('balance'); ?></th>
@@ -92,68 +91,21 @@
                             <tbody style="text-align:center;">
                             <?php
                             $count = 0;
+                            $balance = $total_ob;
+
+                            $totalCredit = 0;
+                            $totalDebit = 0;
                             $totalBalance = 0;
-                            $opening_debit = 0;
-                            $opening_credit = 0;
-                            $total_debit = 0;
-                            $total_credit = 0;
-
-                            $total_trs_credit = 0;
-                            $total_trs_debit = 0;
-
-                            $total_opening_credit = 0;
-                            $total_opening_debit = 0;
-
+                            $openingBalance = $total_ob;
                             foreach ($supplier_statement as $statement) {
 
-                                // OB Calculation
-                                if($count == 0){
-                                    if($total_ob_debit > $total_ob_credit){
-                                        $opening_debit = $total_ob_debit - $total_ob_credit;
-                                        $opening_credit = 0;
-                                    }else{
-                                        $opening_debit = 0;
-                                        $opening_credit = $total_ob_credit - $total_ob_debit;
-                                    } 
-                                }else{
-                                    if($totalBalance > 0){
-                                        $opening_credit = $totalBalance;
-                                        $opening_debit = 0;
-                                    }else if($totalBalance < 0){
-                                        $opening_credit = 0;
-                                        $opening_debit = $totalBalance;
-                                    }else{
-                                        $opening_credit = 0;
-                                        $opening_debit = 0;
-                                    }
-                                }
-
-                                if($statement->dc == 'D'){
-                                    $total_debit = $opening_debit + $statement->amount;
-                                    $total_credit = $opening_credit;
-
-                                    $total_trs_debit = $total_trs_debit + $statement->amount;
-                                    $total_opening_debit = $total_opening_debit + $opening_debit;
-                                }
-                                
-                                if($statement->dc == 'C'){
-                                    $total_credit = $opening_credit + $statement->amount;
-                                    $total_debit = $opening_debit;
-
-                                    $total_trs_credit = $total_trs_credit + $statement->amount;
-                                    $total_opening_credit = $total_opening_credit + $opening_credit;
-                                }
-                                
-                                if($total_debit > $total_credit){
-                                    $totalBalance = $total_debit - $total_credit;
-                                }else{
-                                    $totalBalance = $total_credit - $total_debit; 
+                                if ($statement->dc == 'D') {
+                                    $balance = $balance - $statement->amount;
+                                } else {
+                                    $balance = $balance + $statement->amount;
                                 }
 
                                 $count++;
-
-                                
-
                                 ?>
                                 <tr>
                                     <td><?= $count; ?></td>
@@ -162,13 +114,27 @@
                                     <td><?= $statement->code; ?></td>
                                     <td><?= $statement->company; ?></td>
                                     <td><?= $statement->narration; ?></td>
-                                    <td><?= $this->sma->formatNumber($opening_debit); ?></td>
-                                    <td><?= $this->sma->formatNumber($opening_credit); ?></td>
-                                    <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '-'; ?></td>
-                                    <td><?= $statement->dc == 'C' ? $this->sma->formatNumber($statement->amount) : '-'; ?></td>
-                                    <td><?= $totalBalance; ?></td>
+                                    <td><?= $this->sma->formatNumber($openingBalance); ?></td>
+                                    <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '-';
+                                        $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
+
+                                    </td>
+                                    <td><?php echo $statement->dc == 'C' ? $this->sma->formatNumber($statement->amount) : '-';
+                                    $statement->dc == 'C' ?
+                                        $totalCredit = $totalCredit + $statement->amount : null ?>
+
+                                    </td>
+                                    <td><?php echo $this->sma->formatNumber($balance);
+                                        $totalBalance = $totalBalance + $balance;
+                                        ?></td>
                                 </tr>
                                 <?php
+                                if ($statement->dc == 'D') {
+                                    $openingBalance -= $statement->amount;
+                                } else {
+                                    $openingBalance += $statement->amount;
+                                }
+
                             }
                             ?>
                             <tr>
@@ -179,10 +145,9 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th><?= $this->sma->formatNumber($total_trs_debit); ?></th>
-                                <th><?= $this->sma->formatNumber($total_trs_credit); ?></th>
-                                <th><?= $this->sma->formatNumber($totalBalance); ?></th>
+                                <th><?= $this->sma->formatNumber($totalDebit); ?></th>
+                                <th><?= $this->sma->formatNumber($totalCredit); ?></th>
+                                <th><?= $this->sma->formatNumber($balance); ?></th>
                             </tr>
                             </tbody>
                             <tfoot></tfoot>

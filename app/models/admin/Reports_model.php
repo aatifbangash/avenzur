@@ -234,11 +234,11 @@ class Reports_model extends CI_Model
         $previous_limit = 0;
 
         // Always include the "Current" case
-        $cases[] = "SUM(CASE 
+        /*$cases[] = "SUM(CASE 
             WHEN DATEDIFF(CURDATE(), ae.date) <= c.payment_term THEN 
                 CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
             ELSE 0 
-        END) AS 'Current'";
+        END) AS 'Current'";*/
 
         foreach ($intervals as $index => $interval) {
             if ($interval > $duration) {
@@ -250,7 +250,7 @@ class Reports_model extends CI_Model
             $previous_limit = $end;
 
             $cases[] = "SUM(CASE 
-                WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN (c.payment_term + $start) AND (c.payment_term + $end) THEN 
+                WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN ($start) AND ($end) THEN 
                     CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
                 ELSE 0 
             END) AS '$start-$end'";
@@ -258,7 +258,7 @@ class Reports_model extends CI_Model
 
         // Add the "greater than" case for the selected duration
         $cases[] = "SUM(CASE 
-            WHEN DATEDIFF(CURDATE(), ae.date) > (c.payment_term + $duration) THEN 
+            WHEN DATEDIFF(CURDATE(), ae.date) > ($duration) THEN 
                 CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
             ELSE 0 
         END) AS '>$duration'";
@@ -268,6 +268,7 @@ class Reports_model extends CI_Model
         $q = $this->db->query("SELECT 
             c.id AS customer_id,
             c.name AS customer_name,
+            c.payment_term,
             $cases_str
         FROM 
             sma_companies c
@@ -301,11 +302,11 @@ class Reports_model extends CI_Model
         $previous_limit = 0;
 
         // Always include the "Current" case
-        $cases[] = "SUM(CASE 
+        /*$cases[] = "SUM(CASE 
             WHEN DATEDIFF(CURDATE(), ae.date) <= c.payment_term THEN 
                 CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
             ELSE 0 
-        END) AS 'Current'";
+        END) AS 'Current'";*/
 
         foreach ($intervals as $index => $interval) {
             if ($interval > $duration) {
@@ -317,7 +318,7 @@ class Reports_model extends CI_Model
             $previous_limit = $end;
 
             $cases[] = "SUM(CASE 
-                WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN (c.payment_term + $start) AND (c.payment_term + $end) THEN 
+                WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN ($start) AND ($end) THEN 
                     CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
                 ELSE 0 
             END) AS '$start-$end'";
@@ -325,7 +326,7 @@ class Reports_model extends CI_Model
 
         // Add the "greater than" case for the selected duration
         $cases[] = "SUM(CASE 
-            WHEN DATEDIFF(CURDATE(), ae.date) > (c.payment_term + $duration) THEN 
+            WHEN DATEDIFF(CURDATE(), ae.date) > ($duration) THEN 
                 CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
             ELSE 0 
         END) AS '>$duration'";
@@ -335,6 +336,7 @@ class Reports_model extends CI_Model
         $q = $this->db->query("SELECT 
             c.id AS supplier_id,
             c.name AS supplier_name,
+            c.payment_term,
             $cases_str
         FROM 
             sma_companies c
@@ -355,7 +357,7 @@ class Reports_model extends CI_Model
                 $data[] = $row;
             }
         }
-        
+
         return $data;
     }
 
