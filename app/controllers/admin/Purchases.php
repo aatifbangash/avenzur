@@ -1897,8 +1897,13 @@ class Purchases extends MY_Controller
             
             $unit_cost = $item_net_cost;
 
+            $product_details = $this->transfers_model->getProductByCode($item_code);
+
+            $net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
+            $real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
+
             if (isset($item_code) && isset($item_quantity)) {
-                $product_details = $this->transfers_model->getProductByCode($item_code);
+                
                 $warehouse_quantity = $this->transfers_model->getWarehouseProduct($from_warehouse_details->id, $product_details->id, $item_option, $item_batchno);
 
                 if ($warehouse_quantity->quantity < $item_quantity) {
@@ -1937,7 +1942,7 @@ class Purchases extends MY_Controller
                     'product_code'      => $item_code,
                     'product_name'      => $product_details->name,
                     'option_id'         => $item_option,
-                    'net_unit_cost'     => $item_net_cost,
+                    'net_unit_cost'     => $net_cost,
                     'unit_cost'         => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),
                     'quantity'          => $item_quantity,
                     'product_unit_id'   => $item_unit,
@@ -1954,7 +1959,8 @@ class Purchases extends MY_Controller
                     'sale_price'        => $this->sma->formatDecimal($purchase_inovice[$i]->sale_price, 4),
                     'date'              => date('Y-m-d', strtotime($date)),
                     'batchno'           => $item_batchno,
-                    'serial_number'     => $item_serial_no
+                    'serial_number'     => $item_serial_no,
+                    'real_cost'         => $real_cost
                 ];
     
                 $products[] = ($product + $gst_data);

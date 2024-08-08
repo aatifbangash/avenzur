@@ -116,6 +116,8 @@ class Sales_model extends CI_Model
             }
             foreach ($items as $item) {
                 $item['sale_id'] = $sale_id;
+                $real_cost = $item['real_cost'];
+                unset($item['real_cost']);
                 $this->db->insert('sale_items', $item);
 
                 // Code for serials here
@@ -148,7 +150,7 @@ class Sales_model extends CI_Model
 
                 if ($data['sale_status'] == 'completed'){ //handle inventory movement 
                     //$this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'] );
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost );
                 } 
                 if ($data['sale_status'] == 'completed' && empty($si_return)) { 
                       
@@ -1066,6 +1068,8 @@ class Sales_model extends CI_Model
             $this->db->update('sma_invoice_serials', ['sid' => 0], ['sid' => $id]);
             foreach ($items as $item) {
                 $item['sale_id'] = $id;
+                $real_cost = $item['real_cost'];
+                unset($item['real_cost']);
                 $this->db->insert('sale_items', $item);
                 $sale_item_id = $this->db->insert_id();
 
@@ -1097,7 +1101,7 @@ class Sales_model extends CI_Model
 
                 if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
                        //handle inventory movement
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $id,  $item['net_cost'], $item['expiry'], $item['net_unit_price'] ); 
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $id,  $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost ); 
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
@@ -1192,6 +1196,26 @@ class Sales_model extends CI_Model
             }
         }
         return $totalPurchases;
+    }
+
+    public function getRealAvgCost($item_batchno, $item_id){
+        $avgCostQuery = "SELECT 
+                    SUM(iv.quantity * iv.real_unit_cost) / SUM(iv.quantity) AS real_average_cost
+                 FROM 
+                    sma_inventory_movements iv
+                 WHERE 
+                    iv.product_id = '{$item_id}' 
+                    AND iv.batch_number = '{$item_batchno}' 
+                    AND iv.type IN ('purchase', 'adjustment_increase')";
+        $avgCost = $this->db->query($avgCostQuery);
+        $avgObj = $avgCost->row();
+        if($avgObj){
+            $average_cost = $avgObj->real_average_cost;
+        }else{
+            $average_cost = 0;
+        }
+        
+        return $average_cost;
     }
 
     public function getAvgCost($item_batchno, $item_id){

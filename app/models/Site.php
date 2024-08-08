@@ -504,6 +504,27 @@ class Site extends CI_Model
         
         return $average_cost;
     }
+
+    public function getRealAvgCost($item_batchno, $item_id){
+        $avgCostQuery = "SELECT 
+                    SUM(iv.quantity * iv.real_unit_cost) / SUM(iv.quantity) AS real_average_cost
+                 FROM 
+                    sma_inventory_movements iv
+                 WHERE 
+                    iv.product_id = '{$item_id}' 
+                    AND iv.batch_number = '{$item_batchno}' 
+                    AND iv.type IN ('purchase', 'adjustment_increase')";
+        $avgCost = $this->db->query($avgCostQuery);
+        $avgObj = $avgCost->row();
+        if($avgObj){
+            $average_cost = $avgObj->real_average_cost;
+        }else{
+            $average_cost = 0;
+        }
+        
+        return $average_cost;
+    }
+
     public function getAllCouriers()
     {
         $q = $this->db->get('sma_courier');

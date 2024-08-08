@@ -111,7 +111,7 @@ class Purchases_model extends CI_Model
                 
                 //handle inventory movement
                 if($item['status']=='received'){
-                $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price']);
+                $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost']);
                 }
                 // Code for serials here
                 $serials_reference = $data['reference_no'];
@@ -780,7 +780,7 @@ class Purchases_model extends CI_Model
                 }
                 
                 if($item['status']=='received'){
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price']);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost']);
                 }
                 // $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
                 // Code for serials here

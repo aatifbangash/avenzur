@@ -8,7 +8,7 @@ class Inventory_model extends CI_Model {
     }
 
     // Function to add an inventory movement for any operation, explicitly including location
-    public function add_movement($product_id, $batch_no, $type, $quantity, $location_id, $reference_id=null, $net_unit_cost=null, $expiry_date=null, $net_unit_sale=null)
+    public function add_movement($product_id, $batch_no, $type, $quantity, $location_id, $reference_id=null, $net_unit_cost=null, $expiry_date=null, $net_unit_sale=null, $real_unit_cost=null)
     {
 
         $data = array(
@@ -20,7 +20,8 @@ class Inventory_model extends CI_Model {
             'reference_id' => $reference_id,
             'net_unit_cost' => $net_unit_cost,
             'expiry_date' => $expiry_date,
-            'net_unit_sale' => $net_unit_sale
+            'net_unit_sale' => $net_unit_sale,
+            'real_unit_cost' => $real_unit_cost
         );
         if ($this->db->insert('sma_inventory_movements', $data)) {
            // echo "insrted";
@@ -29,7 +30,7 @@ class Inventory_model extends CI_Model {
         }
     }
     
-    public function update_movement($product_id, $batch_no, $type, $quantity, $location_id, $reference_id=null, $net_unit_cost=null, $expiry_date=null, $net_unit_sale=null)
+    public function update_movement($product_id, $batch_no, $type, $quantity, $location_id, $reference_id=null, $net_unit_cost=null, $expiry_date=null, $net_unit_sale=null, $real_unit_cost=null)
     {
         $data = array(
             'product_id' => $product_id,
@@ -40,7 +41,8 @@ class Inventory_model extends CI_Model {
             'reference_id' => $reference_id,
             'net_unit_cost' => $net_unit_cost,
             'expiry_date' => $expiry_date,
-            'net_unit_sale' => $net_unit_sale
+            'net_unit_sale' => $net_unit_sale,
+            'real_unit_cost' => $real_unit_cost
         );
         $this->db->update('inventory_movements',$data, ['product_id' => $product_id, 'batch_number' => $batch_no, 'type' => $type, 'location_id' => $location_id]);
     }

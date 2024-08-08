@@ -142,6 +142,7 @@ class Sales extends MY_Controller
                 //$net_cost = $net_cost_obj[0]->cost_price;
 
                 $net_cost = $this->sales_model->getAvgCost($item_batchno, $item_id);
+                $real_cost = $this->sales_model->getRealAvgCost($item_batchno, $item_id);
                
                 if(empty($net_cost) || $net_cost == NULL || is_nan($net_cost)){
                     $net_cost = 0;
@@ -235,6 +236,7 @@ class Sales extends MY_Controller
                         'discount2'         => $item_dis2,
                         'totalbeforevat'    => $totalbeforevat,
                         'main_net'          => $main_net,
+                        'real_cost'         => $real_cost
                     ];
                     
                     $products[] = ($product + $gst_data);
@@ -1062,6 +1064,7 @@ class Sales extends MY_Controller
                 //$net_cost = $net_cost_obj[0]->cost_price;
 
                 $net_cost = $this->sales_model->getAvgCost($item_batchno, $item_id);
+                $real_cost = $this->sales_model->getRealAvgCost($item_batchno, $item_id);
 
                 if(empty($net_cost) || $net_cost == NULL || is_nan($net_cost)){
                     $net_cost = 0;
@@ -1164,6 +1167,7 @@ class Sales extends MY_Controller
                         'discount2'         => $item_dis2,
                         'totalbeforevat'    => $totalbeforevat,
                         'main_net'          => $main_net,
+                        'real_cost'         => $real_cost
                     ];
 
                     $products[] = ($product + $gst_data);
