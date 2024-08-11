@@ -590,31 +590,35 @@ class Reports_model extends CI_Model
             $data_res = array();
         }
 
-        // $this->db
-        //     ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, 
-        //     sma_accounts_entries.date, sma_accounts_ledgers.code,
-        //     (select sum(amount) from sma_accounts_entryitems ei inner join sma_accounts_entries e on e.id =ei.entry_id where e.date < `sma_accounts_entries`.`date` 
-        //     and e.customer_id = ' . $customer_id . ') as openingAmount, companies.company')
-        //     ->from('sma_accounts_entryitems')
-        //     ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-        //     ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
-        //     ->join('companies', 'companies.ledger_account=sma_accounts_entryitems.ledger_id')
-        //     ->where('sma_accounts_entries.customer_id', $customer_id)
-        //     ->where('sma_accounts_entries.date >=', $start_date)
-        //     ->where('sma_accounts_entries.date <=', $end_date)
-        //     ->order_by('sma_accounts_entries.date asc');
 
-        // $q = $this->db->get();
-        // //lq($this);
-        // if ($q->num_rows() > 0) {
-        //     foreach (($q->result()) as $row) {
-        //         $data[] = $row;
-        //     }
-        // } else {
-        //     $data = array();
-        // }
+        $this->db
+            ->select('sma_accounts_entryitems.id as entry_id, COALESCE(sum(sma_accounts_entryitems.amount), 0) as amount, 
+                    sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.date, 
+                    sma_accounts_ledgers.code, sma_companies.company, sma_accounts_entries.transaction_type')
+            ->from('sma_accounts_entryitems')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->join('sma_accounts_ledgers', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
+            ->join('sma_companies', 'sma_companies.id=sma_accounts_entries.customer_id')
+            ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->where('sma_accounts_entries.customer_id', $customer_id)
+            ->where('sma_accounts_entries.date <', $start_date)
+            ->group_by('sma_accounts_entryitems.dc')
+            ->group_by('sma_accounts_entries.date')
+            ->group_by('sma_accounts_entries.transaction_type')
+            ->order_by('sma_accounts_entries.date asc');
+        $q = $this->db->get();
+        //lq($this);
 
-        $response_array = array('ob' => array(), 'report' => $data_res);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+        
+
+        $response_array = array('ob' => $data, 'report' => $data_res);
         // dd($response_array);
         return $response_array;
     }
