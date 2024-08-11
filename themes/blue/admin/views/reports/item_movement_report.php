@@ -130,7 +130,7 @@
                                 <tbody style="text-align:center;">
                                     <tr>
                                         <td colspan="2">Opening Balance</td>
-                                        <td colspan="7">&nbsp;</td>
+                                        <td colspan="8">&nbsp;</td>
                                         <td><?php echo $this->sma->formatMoney(($itemOpenings['total_opening_qty'] > 0 && $itemOpenings['cost_price'] > 0 ? $itemOpenings['cost_price'] / $itemOpenings['total_opening_qty'] : 0.0), 'none'); ?></td>
                                         <td><?php echo $this->sma->formatQuantity(($itemOpenings['total_opening_qty'] > 0 ? $itemOpenings['total_opening_qty'] : 0.00)); ?></td>
                                         <td><?php echo $this->sma->formatMoney(($itemOpenings['total_opening_qty'] > 0 && $itemOpenings['cost_price'] > 0 ? ($itemOpenings['cost_price'] * $itemOpenings['total_opening_qty']) : 0.00), 'none'); ?></td>

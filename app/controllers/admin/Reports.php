@@ -3760,13 +3760,13 @@ class Reports extends MY_Controller
             $ob_type = '';
             foreach ($supplier_statement['ob'] as $ob) {
                 if ($ob->dc == 'D') {
-                    $total_ob_debit = $ob->total_amount;
+                    $total_ob_debit = $ob->amount;
                 } else if ($ob->dc == 'C') {
-                    $total_ob_credit = $ob->total_amount;
+                    $total_ob_credit = $ob->amount;
                 }
             }
 
-            $total_ob = $total_ob_credit - $total_ob_debit;
+            $total_ob = $total_ob_debit - $total_ob_credit;
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;

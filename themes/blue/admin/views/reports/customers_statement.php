@@ -83,13 +83,18 @@
                                 <th><?= lang('Num'); ?></th>
                                 <th><?= lang('name'); ?></th>
                                 <th><?= lang('Memo'); ?></th>
-                                <th><?= lang('Opening Balance'); ?></th>
+                               
                                 <th><?= lang('Debit'); ?></th>
                                 <th><?= lang('Credit'); ?></th>
                                 <th><?= lang('balance'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
+                                <tr>
+                                    <td colspan="2">Opening Balance<td>
+                                    <td colspan="5">&nbsp;</td>
+                                    <td><?= $this->sma->formatNumber($total_ob); ?></td>
+                                </tr>
                                 <?php
                                     $count = 0;
                                     $balance = $total_ob;
@@ -115,7 +120,7 @@
                                                 <td><?= $statement->code; ?></td>
                                                 <td><?= $statement->company; ?></td>
                                                 <td><?= $statement->narration; ?></td>
-                                                <td><?= $this->sma->formatNumber($openingBalance); ?></td>
+                                                
                                                 <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '-';
                                                     $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
 
@@ -140,7 +145,6 @@
                                     }
                                 ?>
                                 <tr>
-                                <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
