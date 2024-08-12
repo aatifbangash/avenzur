@@ -145,6 +145,8 @@ class Pos_model extends CI_Model
             foreach ($items as $item) {
 
                 $item['sale_id'] = $sale_id;
+                $real_cost = $item['real_cost'];
+                unset($item['real_cost']);
                 $this->db->insert('sale_items', $item);
                 // Code for serials here
                 $serials_quantity = $item['quantity'];
@@ -189,7 +191,7 @@ class Pos_model extends CI_Model
                 if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
 
                      //handle inventory movement
-                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'pos', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['unit_price']);
+                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'pos', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['unit_price'], $real_cost);
 
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
@@ -799,6 +801,7 @@ class Pos_model extends CI_Model
         $this->db->where('inv.location_id',$warehouse);
         $this->db->where('inv.product_id',$product_id); 
         $this->db->where('inv.expiry_date >=', $now);  // Select products with expiry greater than or equal to the current date             
+        $this->db->group_by('inv.batch_number'); 
         $this->db->having('SUM(inv.quantity)>=0'); 
         $this->db->order_by('inv.expiry_date', 'ASC'); 
         $this->db->limit(1);
@@ -1578,6 +1581,18 @@ class Pos_model extends CI_Model
         $q = $this->db->get_where('payments', ['sale_id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
+        }
+        return false;
+    }
+
+    public function getPaymentTypes($id)
+    {
+        $q = $this->db->get_where('payments', ['sale_id' => $id]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
         }
         return false;
     }

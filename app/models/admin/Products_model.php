@@ -1175,7 +1175,7 @@ class Products_model extends CI_Model
             }
             $movement_type = $data['type'] == 'subtraction' ? 'adjustment_decrease': 'adjustment_increase';
             $adjustment_id = isset($data['adjustment_id']) ? $data['adjustment_id'] : null;
-            $this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id'], $adjustment_id, $data['unit_cost'], $data['expiry'], $data['sale_price']);
+            $this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id'], $adjustment_id, $data['unit_cost'], $data['expiry'], $data['sale_price'], $data['unit_cost']);
                
         }
     }

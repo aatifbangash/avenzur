@@ -177,6 +177,7 @@ $(document).ready(function () {
     $(document).on('click', '#updateOrderDiscount', function () {
         var ds = $('#order_discount_input').val() ? $('#order_discount_input').val()+'%' : '0';
         if (is_valid_discount(ds)) {
+
             $('#posdiscount').val(ds);
             localStorage.removeItem('posdiscount');
             localStorage.setItem('posdiscount', ds);
@@ -1164,7 +1165,6 @@ function loadItems() {
         order_data = {};
         bill_data = {};
         total_vat = 0;
-
         $('#posTable tbody').empty();
         var time = new Date().getTime() / 1000;
         if (pos_settings.remote_printing != 1) {
@@ -1469,7 +1469,13 @@ function loadItems() {
             total += formatDecimal((parseFloat(item_price) + parseFloat(pr_tax_val)) * parseFloat(item_qty), 4);
             count += parseFloat(item_qty);
             an++;
-
+            
+            var today = new Date();
+            var expiryDate = new Date(item_expiry);
+            if (expiryDate < today) {
+                //  alert(item_code + " - "+item_name + " Expired Please Remove from the list"); 
+                 $('#row_' + row_no).addClass('danger');
+            }
             if (item_type == 'standard' && item.options !== false) {
                 $.each(item.options, function () {
                     if (this.id == item_option && base_quantity > this.quantity) {
@@ -1581,14 +1587,15 @@ function loadItems() {
         if ((posdiscount = localStorage.getItem('posdiscount'))) {
             var ds = posdiscount;
             if (ds.indexOf('%') !== -1) {
-                var pds = ds.split('%');
+                var pds = ds.split('%'); 
                 if (!isNaN(pds[0])) {
                     order_discount = formatDecimal(parseFloat((total * parseFloat(pds[0])) / 100), 4);
                 } else {
                     order_discount = parseFloat(ds);
                 }
             } else {
-                order_discount = parseFloat(ds);
+               // order_discount = parseFloat(ds);
+               order_discount = formatDecimal(parseFloat((total * parseFloat(ds)) / 100), 4);
             }
             //total_discount += parseFloat(order_discount);
         }

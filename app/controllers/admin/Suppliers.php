@@ -624,6 +624,8 @@ class Suppliers extends MY_Controller
         if ($this->form_validation->run('companies/add') == true) {
             $data = [
                 'name'        => $this->input->post('name'),
+                'name_ar'        => $this->input->post('name_ar'), 
+                'category'        => $this->input->post('category'),
                 'email'       => $this->input->post('email'),
                 'group_id'    => '4',
                 'group_name'  => 'supplier',
@@ -644,6 +646,7 @@ class Suppliers extends MY_Controller
                 'gst_no'      => $this->input->post('gst_no'),
                 'ledger_account' => $this->input->post('ledger_account'),
                 'payment_term' => $this->input->post('payment_term'),
+                'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
                 'sequence_code'  => $this->sequenceCode->generate('SUP', 5)
             ];
         } elseif ($this->input->post('add_supplier')) {
@@ -734,6 +737,7 @@ class Suppliers extends MY_Controller
         }
 
         $company_details = $this->companies_model->getCompanyByID($id);
+        //echo '<pre>';  print_r($company_details); exit;
         if ($this->input->post('email') != $company_details->email) {
             $this->form_validation->set_rules('code', lang('email_address'), 'is_unique[companies.email]');
         }
@@ -741,6 +745,8 @@ class Suppliers extends MY_Controller
         if ($this->form_validation->run('companies/add') == true) {
             $data = [
                 'name'        => $this->input->post('name'),
+                'name_ar'        => $this->input->post('name_ar'), 
+                'category'        => $this->input->post('category'),
                 'email'       => $this->input->post('email'),
                 'group_id'    => '4',
                 'group_name'  => 'supplier',
@@ -761,7 +767,12 @@ class Suppliers extends MY_Controller
                 'gst_no'      => $this->input->post('gst_no'),
                 'ledger_account'      => $this->input->post('ledger_account'),
                 'payment_term' => $this->input->post('payment_term'),
+                'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
             ];
+            if(empty($company_details->sequence_code)){
+                $data['sequence_code'] =$this->sequenceCode->generate('SUP', 5); 
+            } 
+
         } elseif ($this->input->post('edit_supplier')) {
             $this->session->set_flashdata('error', validation_errors());
             redirect($_SERVER['HTTP_REFERER']);
@@ -846,21 +857,23 @@ class Suppliers extends MY_Controller
                     $supplier = [
                         'company'     => isset($value[0]) ? trim($value[0]) : '',
                         'name'        => isset($value[1]) ? trim($value[1]) : '',
-                        'email'       => isset($value[2]) ? trim($value[2]) : '',
-                        'phone'       => isset($value[3]) ? trim($value[3]) : '',
-                        'address'     => isset($value[4]) ? trim($value[4]) : '',
-                        'city'        => isset($value[5]) ? trim($value[5]) : '',
-                        'state'       => isset($value[6]) ? trim($value[6]) : '',
-                        'postal_code' => isset($value[7]) ? trim($value[7]) : '',
-                        'country'     => isset($value[8]) ? trim($value[8]) : '',
-                        'vat_no'      => isset($value[9]) ? trim($value[9]) : '',
-                        'gst_no'      => isset($value[10]) ? trim($value[10]) : '',
-                        'cf1'         => isset($value[11]) ? trim($value[11]) : '',
-                        'cf2'         => isset($value[12]) ? trim($value[12]) : '',
-                        'cf3'         => isset($value[13]) ? trim($value[13]) : '',
-                        'cf4'         => isset($value[14]) ? trim($value[14]) : '',
-                        'cf5'         => isset($value[15]) ? trim($value[15]) : '',
-                        'cf6'         => isset($value[16]) ? trim($value[16]) : '',
+                        'name_ar'     => isset($value[1]) ? trim($value[2]) : '',
+                        'category'    => isset($value[1]) ? trim($value[3]) : '',
+                        'email'       => isset($value[2]) ? trim($value[4]) : '',
+                        'phone'       => isset($value[3]) ? trim($value[5]) : '',
+                        'address'     => isset($value[4]) ? trim($value[6]) : '',
+                        'city'        => isset($value[5]) ? trim($value[7]) : '',
+                        'state'       => isset($value[6]) ? trim($value[8]) : '',
+                        'postal_code' => isset($value[7]) ? trim($value[9]) : '',
+                        'country'     => isset($value[8]) ? trim($value[10]) : '',
+                        'vat_no'      => isset($value[9]) ? trim($value[11]) : '',
+                        'gst_no'      => isset($value[10]) ? trim($value[12]) : '',
+                        'cf1'         => isset($value[11]) ? trim($value[13]) : '',
+                        'cf2'         => isset($value[12]) ? trim($value[14]) : '',
+                        'cf3'         => isset($value[13]) ? trim($value[15]) : '',
+                        'cf4'         => isset($value[14]) ? trim($value[16]) : '',
+                        'cf5'         => isset($value[15]) ? trim($value[17]) : '',
+                        'cf6'         => isset($value[16]) ? trim($value[18]) : '',
                         'group_id'    => 4,
                         'group_name'  => 'supplier',
                         'sequence_code'  => $this->sequenceCode->generate('SUP', 5)
@@ -876,6 +889,9 @@ class Suppliers extends MY_Controller
                         if ($supplier_details = $this->companies_model->getCompanyByEmail($supplier['email'])) {
                             if ($supplier_details->group_id == 4) {
                                 $updated .= '<p>' . lang('supplier_updated') . ' (' . $supplier['email'] . ')</p>';
+                                if(!empty($supplier_details->sequence_code)){
+                                    $supplier['sequence_code']=$supplier_details->sequence_code; 
+                                }
                                 $this->companies_model->updateCompany($supplier_details->id, $supplier);
                             }
                         } else {
@@ -970,21 +986,23 @@ class Suppliers extends MY_Controller
                     $this->excel->getActiveSheet()->SetCellValue('A1', lang('company'));
                     $this->excel->getActiveSheet()->SetCellValue('B1', lang('sequence_code'));
                     $this->excel->getActiveSheet()->SetCellValue('C1', lang('name'));
-                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('email'));
-                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('phone'));
-                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('address'));
-                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('city'));
-                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('state'));
-                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('postal_code'));
-                    $this->excel->getActiveSheet()->SetCellValue('J1', lang('country'));
-                    $this->excel->getActiveSheet()->SetCellValue('K1', lang('vat_no'));
-                    $this->excel->getActiveSheet()->SetCellValue('L1', lang('gst_no'));
-                    $this->excel->getActiveSheet()->SetCellValue('M1', lang('scf1'));
-                    $this->excel->getActiveSheet()->SetCellValue('N1', lang('scf2'));
-                    $this->excel->getActiveSheet()->SetCellValue('O1', lang('scf3'));
-                    $this->excel->getActiveSheet()->SetCellValue('P1', lang('scf4'));
-                    $this->excel->getActiveSheet()->SetCellValue('Q1', lang('scf5'));
-                    $this->excel->getActiveSheet()->SetCellValue('R1', lang('scf6'));
+                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('name_arabic'));
+                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('category'));
+                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('email'));
+                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('phone'));
+                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('address'));
+                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('city'));
+                    $this->excel->getActiveSheet()->SetCellValue('J1', lang('state'));
+                    $this->excel->getActiveSheet()->SetCellValue('K1', lang('postal_code'));
+                    $this->excel->getActiveSheet()->SetCellValue('L1', lang('country'));
+                    $this->excel->getActiveSheet()->SetCellValue('M1', lang('vat_no'));
+                    $this->excel->getActiveSheet()->SetCellValue('N1', lang('gst_no'));
+                    $this->excel->getActiveSheet()->SetCellValue('O1', lang('scf1'));
+                    $this->excel->getActiveSheet()->SetCellValue('P1', lang('scf2'));
+                    $this->excel->getActiveSheet()->SetCellValue('Q1', lang('scf3'));
+                    $this->excel->getActiveSheet()->SetCellValue('R1', lang('scf4'));
+                    $this->excel->getActiveSheet()->SetCellValue('S1', lang('scf5'));
+                    $this->excel->getActiveSheet()->SetCellValue('T1', lang('scf6'));
 
                     $row = 2;
                     foreach ($_POST['val'] as $id) {
@@ -992,21 +1010,24 @@ class Suppliers extends MY_Controller
                         $this->excel->getActiveSheet()->SetCellValue('A' . $row, $customer->company);
                         $this->excel->getActiveSheet()->SetCellValue('B' . $row, $customer->sequence_code);
                         $this->excel->getActiveSheet()->SetCellValue('C' . $row, $customer->name);
-                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $customer->email);
-                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $customer->phone);
-                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $customer->address);
-                        $this->excel->getActiveSheet()->SetCellValue('G' . $row, $customer->city);
-                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $customer->state);
-                        $this->excel->getActiveSheet()->SetCellValue('I' . $row, $customer->postal_code);
-                        $this->excel->getActiveSheet()->SetCellValue('J' . $row, $customer->country);
-                        $this->excel->getActiveSheet()->SetCellValue('K' . $row, $customer->vat_no);
-                        $this->excel->getActiveSheet()->SetCellValue('L' . $row, $customer->gst_no);
-                        $this->excel->getActiveSheet()->SetCellValue('M' . $row, $customer->cf1);
-                        $this->excel->getActiveSheet()->SetCellValue('N' . $row, $customer->cf2);
-                        $this->excel->getActiveSheet()->SetCellValue('O' . $row, $customer->cf3);
-                        $this->excel->getActiveSheet()->SetCellValue('P' . $row, $customer->cf4);
-                        $this->excel->getActiveSheet()->SetCellValue('Q' . $row, $customer->cf5);
-                        $this->excel->getActiveSheet()->SetCellValue('QR' . $row, $customer->cf6);
+                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $customer->name_ar);
+                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $customer->category);
+                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $customer->email);
+                        $this->excel->getActiveSheet()->SetCellValue('G' . $row, $customer->phone);
+                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $customer->address);
+                        $this->excel->getActiveSheet()->SetCellValue('I' . $row, $customer->city);
+                        $this->excel->getActiveSheet()->SetCellValue('J' . $row, $customer->state);
+                        $this->excel->getActiveSheet()->SetCellValue('K' . $row, $customer->postal_code);
+                        $this->excel->getActiveSheet()->SetCellValue('L' . $row, $customer->country);
+                        $this->excel->getActiveSheet()->SetCellValue('M' . $row, $customer->vat_no);
+                        $this->excel->getActiveSheet()->SetCellValue('N' . $row, $customer->gst_no);
+                        $this->excel->getActiveSheet()->SetCellValue('O' . $row, $customer->cf1);
+                        $this->excel->getActiveSheet()->SetCellValue('P' . $row, $customer->cf2);
+                        $this->excel->getActiveSheet()->SetCellValue('Q' . $row, $customer->cf3);
+                        $this->excel->getActiveSheet()->SetCellValue('R' . $row, $customer->cf4);
+                        $this->excel->getActiveSheet()->SetCellValue('S' . $row, $customer->cf5);
+                        $this->excel->getActiveSheet()->SetCellValue('T' . $row, $customer->cf6);
+                        //$this->excel->getActiveSheet()->SetCellValue('QR' . $row, $customer->cf6);
                         $row++;
                     }
 

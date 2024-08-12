@@ -504,6 +504,27 @@ class Site extends CI_Model
         
         return $average_cost;
     }
+
+    public function getRealAvgCost($item_batchno, $item_id){
+        $avgCostQuery = "SELECT 
+                    SUM(iv.quantity * iv.real_unit_cost) / SUM(iv.quantity) AS real_average_cost
+                 FROM 
+                    sma_inventory_movements iv
+                 WHERE 
+                    iv.product_id = '{$item_id}' 
+                    AND iv.batch_number = '{$item_batchno}' 
+                    AND iv.type IN ('purchase', 'adjustment_increase')";
+        $avgCost = $this->db->query($avgCostQuery);
+        $avgObj = $avgCost->row();
+        if($avgObj){
+            $average_cost = $avgObj->real_average_cost;
+        }else{
+            $average_cost = 0;
+        }
+        
+        return $average_cost;
+    }
+
     public function getAllCouriers()
     {
         $q = $this->db->get('sma_courier');
@@ -1751,7 +1772,7 @@ public function getallCountry()
      public function getProductBatchesData($product_id, $warehouse)
     {  
          
-        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, wp.rack, wp.avg_cost, wp.expiry, wp.purchase_cost');
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, wp.rack, wp.avg_cost, inv.expiry_date as expiry, wp.purchase_cost');
         $this->db->from('sma_inventory_movements inv');
         $this->db->join('warehouses_products wp', 'wp.batchno=inv.batch_number AND  wp.product_id= inv.product_id and wp.warehouse_id=inv.location_id', 'LEFT');   
         $this->db->where('inv.location_id',$warehouse);

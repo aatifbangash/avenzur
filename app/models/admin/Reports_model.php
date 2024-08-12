@@ -234,11 +234,11 @@ class Reports_model extends CI_Model
         $previous_limit = 0;
 
         // Always include the "Current" case
-        $cases[] = "SUM(CASE 
+        /*$cases[] = "SUM(CASE 
             WHEN DATEDIFF(CURDATE(), ae.date) <= c.payment_term THEN 
                 CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
             ELSE 0 
-        END) AS 'Current'";
+        END) AS 'Current'";*/
 
         foreach ($intervals as $index => $interval) {
             if ($interval > $duration) {
@@ -250,7 +250,7 @@ class Reports_model extends CI_Model
             $previous_limit = $end;
 
             $cases[] = "SUM(CASE 
-                WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN (c.payment_term + $start) AND (c.payment_term + $end) THEN 
+                WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN ($start) AND ($end) THEN 
                     CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
                 ELSE 0 
             END) AS '$start-$end'";
@@ -258,7 +258,7 @@ class Reports_model extends CI_Model
 
         // Add the "greater than" case for the selected duration
         $cases[] = "SUM(CASE 
-            WHEN DATEDIFF(CURDATE(), ae.date) > (c.payment_term + $duration) THEN 
+            WHEN DATEDIFF(CURDATE(), ae.date) > ($duration) THEN 
                 CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
             ELSE 0 
         END) AS '>$duration'";
@@ -268,6 +268,7 @@ class Reports_model extends CI_Model
         $q = $this->db->query("SELECT 
             c.id AS customer_id,
             c.name AS customer_name,
+            c.payment_term,
             $cases_str
         FROM 
             sma_companies c
@@ -301,11 +302,11 @@ class Reports_model extends CI_Model
         $previous_limit = 0;
 
         // Always include the "Current" case
-        $cases[] = "SUM(CASE 
+        /*$cases[] = "SUM(CASE 
             WHEN DATEDIFF(CURDATE(), ae.date) <= c.payment_term THEN 
                 CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
             ELSE 0 
-        END) AS 'Current'";
+        END) AS 'Current'";*/
 
         foreach ($intervals as $index => $interval) {
             if ($interval > $duration) {
@@ -317,7 +318,7 @@ class Reports_model extends CI_Model
             $previous_limit = $end;
 
             $cases[] = "SUM(CASE 
-                WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN (c.payment_term + $start) AND (c.payment_term + $end) THEN 
+                WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN ($start) AND ($end) THEN 
                     CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
                 ELSE 0 
             END) AS '$start-$end'";
@@ -325,7 +326,7 @@ class Reports_model extends CI_Model
 
         // Add the "greater than" case for the selected duration
         $cases[] = "SUM(CASE 
-            WHEN DATEDIFF(CURDATE(), ae.date) > (c.payment_term + $duration) THEN 
+            WHEN DATEDIFF(CURDATE(), ae.date) > ($duration) THEN 
                 CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
             ELSE 0 
         END) AS '>$duration'";
@@ -335,6 +336,7 @@ class Reports_model extends CI_Model
         $q = $this->db->query("SELECT 
             c.id AS supplier_id,
             c.name AS supplier_name,
+            c.payment_term,
             $cases_str
         FROM 
             sma_companies c
@@ -355,7 +357,7 @@ class Reports_model extends CI_Model
                 $data[] = $row;
             }
         }
-        
+
         return $data;
     }
 
@@ -588,31 +590,35 @@ class Reports_model extends CI_Model
             $data_res = array();
         }
 
-        // $this->db
-        //     ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, 
-        //     sma_accounts_entries.date, sma_accounts_ledgers.code,
-        //     (select sum(amount) from sma_accounts_entryitems ei inner join sma_accounts_entries e on e.id =ei.entry_id where e.date < `sma_accounts_entries`.`date` 
-        //     and e.customer_id = ' . $customer_id . ') as openingAmount, companies.company')
-        //     ->from('sma_accounts_entryitems')
-        //     ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-        //     ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
-        //     ->join('companies', 'companies.ledger_account=sma_accounts_entryitems.ledger_id')
-        //     ->where('sma_accounts_entries.customer_id', $customer_id)
-        //     ->where('sma_accounts_entries.date >=', $start_date)
-        //     ->where('sma_accounts_entries.date <=', $end_date)
-        //     ->order_by('sma_accounts_entries.date asc');
 
-        // $q = $this->db->get();
-        // //lq($this);
-        // if ($q->num_rows() > 0) {
-        //     foreach (($q->result()) as $row) {
-        //         $data[] = $row;
-        //     }
-        // } else {
-        //     $data = array();
-        // }
+        $this->db
+            ->select('sma_accounts_entryitems.id as entry_id, COALESCE(sum(sma_accounts_entryitems.amount), 0) as amount, 
+                    sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.date, 
+                    sma_accounts_ledgers.code, sma_companies.company, sma_accounts_entries.transaction_type')
+            ->from('sma_accounts_entryitems')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->join('sma_accounts_ledgers', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
+            ->join('sma_companies', 'sma_companies.id=sma_accounts_entries.customer_id')
+            ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->where('sma_accounts_entries.customer_id', $customer_id)
+            ->where('sma_accounts_entries.date <', $start_date)
+            ->group_by('sma_accounts_entryitems.dc')
+            ->group_by('sma_accounts_entries.date')
+            ->group_by('sma_accounts_entries.transaction_type')
+            ->order_by('sma_accounts_entries.date asc');
+        $q = $this->db->get();
+        //lq($this);
 
-        $response_array = array('ob' => array(), 'report' => $data_res);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+        
+
+        $response_array = array('ob' => $data, 'report' => $data_res);
         // dd($response_array);
         return $response_array;
     }
@@ -1858,9 +1864,11 @@ class Reports_model extends CI_Model
                     iv.reference_id,
                     iv.net_unit_cost,
                     iv.net_unit_sale,
+                    iv.real_unit_cost,
                     CASE 
                         WHEN iv.trs_type = 'purchase' THEN sp.reference_no
                         WHEN iv.trs_type = 'sale' THEN ss.reference_no
+                        WHEN iv.trs_type = 'pos' THEN ps.reference_no
                         WHEN iv.trs_type = 'transfer_out' THEN sto.transfer_no
                         WHEN iv.trs_type = 'transfer_in' THEN sti.transfer_no
                         ELSE NULL
@@ -1868,6 +1876,7 @@ class Reports_model extends CI_Model
                     CASE 
                         WHEN iv.trs_type = 'purchase' THEN sp.supplier
                         WHEN iv.trs_type = 'sale' THEN ss.customer
+                        WHEN iv.trs_type = 'pos' THEN ps.customer
                         WHEN iv.trs_type = 'transfer_out' THEN sto.from_warehouse_name
                         WHEN iv.trs_type = 'transfer_in' THEN sti.to_warehouse_name
                         ELSE NULL
@@ -1883,7 +1892,8 @@ class Reports_model extends CI_Model
                         expiry_date,
                         reference_id,
                         net_unit_cost,
-                        net_unit_sale
+                        net_unit_sale,
+                        real_unit_cost
                     FROM sma_inventory_movements
                     WHERE product_id = ".$productId." AND ";
 
@@ -1891,10 +1901,15 @@ class Reports_model extends CI_Model
             $query .= "type = '".$filterOnType."' AND ";
         }
 
+        if($warehouseId){
+            $query .= "location_id = '".$warehouseId."' AND ";
+        }
+
         $query .= "movement_date >= '".$reports_start_date."' AND 
                     movement_date BETWEEN '".date('Y-m-d', strtotime($start_date . ' -1 day'))."' AND '".date('Y-m-d', strtotime($end_date . ' +1 day'))."') iv
                     LEFT JOIN sma_purchases sp ON iv.reference_id = sp.id AND iv.trs_type = 'purchase'
                     LEFT JOIN sma_sales ss ON iv.reference_id = ss.id AND iv.trs_type = 'sale'
+                    LEFT JOIN sma_sales ps ON iv.reference_id = ps.id AND iv.trs_type = 'pos'
                     LEFT JOIN sma_transfers sto ON iv.reference_id = sto.id AND iv.trs_type = 'transfer_out'
                     LEFT JOIN sma_transfers sti ON iv.reference_id = sti.id AND iv.trs_type = 'transfer_in'";
 

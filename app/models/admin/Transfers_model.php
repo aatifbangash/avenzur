@@ -139,6 +139,8 @@ class Transfers_model extends CI_Model
             }
             foreach ($items as $item) {
                 $item['transfer_id'] = $transfer_id;
+                $real_cost = $item['real_cost'];
+                unset($item['real_cost']);
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 if ($status == 'completed') {
                     $item['date']         = date('Y-m-d');
@@ -185,9 +187,9 @@ class Transfers_model extends CI_Model
                 if ($status == 'sent' || $status == 'completed') {
                     if($status == 'completed') { 
                         //Inventory Movement - Transfer IN
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $transfer_id, $item['unit_cost'], $item['expiry'] , $item['sale_price']);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost);
                         ////Inventory Movement - Transfer Out
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['unit_cost'], $item['expiry'] , $item['sale_price']);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost);
                     }
                     $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'add');
                 }
@@ -776,6 +778,8 @@ class Transfers_model extends CI_Model
 
             foreach ($items as $item) {
                 $item['transfer_id'] = $id;
+                $real_cost = $item['real_cost'];
+                unset($item['real_cost']);
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 if ($status == 'completed') {
                     $item['date']         = date('Y-m-d');
@@ -817,9 +821,9 @@ class Transfers_model extends CI_Model
                     $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'edit');
                     if($data['status'] == 'completed'){
                         //Inventory Movement - Transfer IN
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $id,  $item['unit_cost'], $item['expiry'] , $item['sale_price']);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost);
                         //Inventory Movement - Transfer Out
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['unit_cost'], $item['expiry'] , $item['sale_price']);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost);
                         }
                 }
             }

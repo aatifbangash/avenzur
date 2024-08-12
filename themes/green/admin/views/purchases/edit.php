@@ -286,7 +286,7 @@
                         } ?>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('reference_no', 'poref'); ?>
+                                <?= lang('Supplier Reference Number', 'poref'); ?>
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $purchase->reference_no), 'class="form-control input-tip" id="poref" required="required"'); ?>
                             </div>
                         </div>

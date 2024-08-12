@@ -82,14 +82,17 @@
                                 <th><?= lang('Num'); ?></th>
                                 <th><?= lang('name'); ?></th>
                                 <th><?= lang('Memo'); ?></th>
-                                <th><?= lang('Opening Debit'); ?></th>
-                                <th><?= lang('Opening Credit'); ?></th>
                                 <th><?= lang('Debit'); ?></th>
                                 <th><?= lang('Credit'); ?></th>
                                 <th><?= lang('balance'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
+                            <tr>
+                                <td colspan="2">Opening Balance<td>
+                                <td colspan="5">&nbsp;</td>
+                                <td><?= $this->sma->formatNumber($total_ob); ?></td>
+                            </tr>
                             <?php
                             $count = 0;
                             $balance = $total_ob;
@@ -97,17 +100,18 @@
                             $totalCredit = 0;
                             $totalDebit = 0;
                             $totalBalance = 0;
-                            $totalOpeningCredit = 0;
-                            $totalOpeningDebit = 0;
+                            $openingBalance = $total_ob;
                             foreach ($supplier_statement as $statement) {
-
+                                
                                 if ($statement->dc == 'D') {
                                     $balance = $balance - $statement->amount;
-                                    $totalOpeningDebit = $totalOpeningDebit + $statement->openingAmount;
+                                    
+
                                 } else {
                                     $balance = $balance + $statement->amount;
-                                    $totalOpeningCredit = $totalOpeningCredit + $statement->openingAmount;
+
                                 }
+                                
                                 $count++;
                                 ?>
                                 <tr>
@@ -119,8 +123,7 @@
                                     <td><?= $statement->code; ?></td>
                                     <td><?= $statement->name; ?></td>
                                     <td><?= $statement->narration; ?></td>
-                                    <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->openingAmount) : '-'; ?></td>
-                                    <td><?= $statement->dc == 'C' ? $this->sma->formatNumber($statement->openingAmount) : '-'; ?></td>
+                                    
                                     <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '-';
                                         $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
 
@@ -135,12 +138,17 @@
                                         ?></td>
                                 </tr>
                                 <?php
+
+                                if ($statement->dc == 'D') {
+                                    $openingBalance -= $statement->amount;
+                                } else {
+                                    $openingBalance += $statement->amount;
+                                }
+
                             }
                             ?>
 
                             <tr>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
