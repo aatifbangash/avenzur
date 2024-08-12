@@ -8,29 +8,43 @@
         });
         XLSX.writeFile(wb, filename);
     }
+    function generatePDF(){
+       $('.viewtype').val('pdf');  
+       document.getElementById("searchForm").submit();
+       $('.viewtype').val(''); 
+    } 
     $(document).ready(function() {
 
     });
 </script>
+<?php if($viewtype=='pdf'){ ?>
+    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
+  <?php  } ?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('suppliers_trial_balance'); ?></h2>
-
+        <?php  if($viewtype!='pdf'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown">
-                    <a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'Supplier_TB_Report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
-                                class="icon fa fa-file-excel-o"></i></a></li>
+                <a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'Supplier_TB_Report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
+                class="icon fa fa-file-excel-o"></i></a></li>
+                <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i
+                class="icon fa fa-file-pdf-o"></i></a></li>
             </ul>
         </div>
+        <?php } ?>
     </div>
     <div class="box-content">
         <div class="row">
+        <div class="col-lg-12">
             <?php
-            $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
+            if($viewtype!='pdf')
+            {
+            $attrib = ['data-toggle' => 'validator', 'role' => 'form' ,'id' => 'searchForm'];
             echo admin_form_open_multipart('reports/suppliers_trial_balance', $attrib)
             ?>
-            <div class="col-lg-12">
+             <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" > 
                 <div class="row">
                     <div class="col-lg-12">
 
@@ -58,6 +72,8 @@
                     </div>
                 </div>
                 <hr/>
+                <?php echo form_close(); 
+                } ?>
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
                         <table id="poTable"
@@ -153,5 +169,5 @@
 
             </div>
         </div>
-        <?php echo form_close(); ?>
+         
     </div>
