@@ -129,12 +129,13 @@
                                         'total' => 0
                                     ];
                                     $previous_limit = 0;
+                                    
                                     foreach ($supplier_aging as $key => $data){
                                         $data = (array)$data;
                                         
                                         $total_sum = 0;
                                         foreach ($data as $k1 => $value) {
-                                            if ($k1 !== 'supplier_id' && $k1 !== 'supplier_name') {
+                                            if ($k1 !== 'supplier_id' && $k1 !== 'supplier_name' && $k1 !== 'payment_term') {
                                                 $total_sum += (float) $value;
                                                 $totals[$k1] += (float) $value;
                                             }

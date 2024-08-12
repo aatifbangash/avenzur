@@ -131,7 +131,7 @@
 
                                         $total_sum = 0;
                                         foreach ($data as $k1 => $value) {
-                                            if ($k1 !== 'customer_id' && $k1 !== 'customer_name') {
+                                            if ($k1 !== 'customer_id' && $k1 !== 'customer_name' && $k1 !== 'payment_term') {
                                                 $total_sum += (float) $value;
                                                 $totals[$k1] += (float) $value;
                                             }
