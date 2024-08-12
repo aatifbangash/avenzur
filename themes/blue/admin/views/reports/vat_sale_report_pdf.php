@@ -1,101 +1,124 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
-<script>
-    function exportTableToExcel(tableId, filename = 'table.xlsx') {
-        const table = document.getElementById(tableId);
-        const wb = XLSX.utils.table_to_book(table, { sheet: 'Sheet 1' });
-        XLSX.writeFile(wb, filename);
-    }
-    function generatePDF(){
-       $('.viewtype').val('pdf');  
-       document.getElementById("searchForm").submit();
-       $('.viewtype').val(''); 
-    }
- 
-    $(document).ready(function () {
+<!DOCTYPE html>
+<html lang="en">
 
-    });
-</script>
- <style> 
-    .cls_hide{
-        display:none; 
-    }; 
- </style>
-<?php if($viewtype=='pdf'){ ?>
-    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
-  <?php  } ?>
-<div class="box">
-    <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('Vat Sale Report').' (Invoice)'; ?></h2>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $this->lang->line('vat_sale_report') . ' ' ; ?></title>
+    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-        <div class="box-icon">
-            <ul class="btn-tasks">
-            <li class="dropdown">
-                <a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'vat_sale.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
-                                class="icon fa fa-file-excel-o"></i></a></li>
+        tbody {
+            border: 1px solid black;
+        }
 
-              <li class="dropdown">     <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i
-                    class="icon fa fa-file-pdf-o"></i></a></li>
-            </ul>
-        </div>
-    </div> 
-    <div class="box-content">
-        <div class="row"> 
-        <div class="col-lg-12"> 
-                    <?php
-                    if($viewtype!='pdf'){
-                    $attrib = ['data-toggle' => 'validator', 'role' => 'form','id' => 'searchForm'];
-                    echo admin_form_open_multipart('reports/vat_sale', $attrib)
-                    ?>
-                    <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" > 
-                     <div class="row ">
-                        <div class="col-lg-12"> 
-                            <div class="col-md-6">
-                                <div class="form-group"> 
-                                    <?= lang('Warehouse', 'warehouse_id'); ?>
-                                    <?php echo form_dropdown('warehouse_id', $warehouses, set_value('warehouse_id', $_POST['warehouse_id']), array('class' => 'form-control', 'id' => 'warehouse_id'),array('none')); ?>
+        td {
+            font-size: 13px;
+            border: 1px solid;
+            padding: 5px !important;
+        }
 
-                                </div>
-                            </div> 
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <?= lang('Type', 'Type'); ?>
-                                    <?php echo form_dropdown('filterOnType', $filterOnTypeArr, set_value('filterOnType', $_POST['filterOnType']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'filterOnType'),array('none')); ?>
+        th {
+            font-size: 13px;
+            border: 1px solid;
+            padding: 5px !important;
 
-                                </div>
-                            </div> 
-                        </div>
-                        <div class="col-lg-12">
-                        
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <?= lang('From Date', 'podate'); ?>
-                                    <?php echo form_input('from_date', ($start_date ?? ''), 'class="form-control input-tip date" id="fromdate"'); ?>
-                                </div>
-                            </div>
+        }
 
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <?= lang('To Date', 'podate'); ?>
-                                    <?php echo form_input('to_date', ($end_date ?? ''), 'class="form-control input-tip date" id="todate"'); ?>
-                                </div>
-                            </div>
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
-                            <div class="col-md-4">
-                                <div class="from-group">
-                                    <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
-                                </div>
-                            </div>
-                                
-                        </div>
-                </div>
-              <?php echo form_close(); 
-              } ?>
-                <hr />
+        .content {
+            margin: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .container {
+            width: 100%;
+        }
+
+        .row {
+            display: flex;
+            width: 100%;
+            font-size: 13px;
+        }
+
+        .col-half {
+            width: 40%;
+            padding: 3px;
+            float: left;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-left {
+            text-align: left;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        /* .well { border: 1px solid #ddd; padding: 10px; border-radius: 5px; background-color: #f7f7f7; } */
+        .well {
+            border: 1px solid #ddd;
+            background-color: #f6f6f6;
+            box-shadow: none;
+            border-radius: 0px;
+            font-size: 13px;
+            height: auto;
+        }
+
+        .clearfix {
+            clear: both;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .table th {
+            background-color: #f2f2f2;
+        }
+
+        .table thead {
+            background-color: #007bff;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>  <div class="container"> 
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
                         <table id="poTable"
-                                class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf">
+                                class="table items table-striped table-bordered table-condensed table-hover sortable_table">
                             <thead>
                             <tr>
                                 <th>SR</th>
@@ -242,10 +265,9 @@
                                 </tr>
                             </tfoot>
                         </table>
-                    </div>
-                
+                    </div> 
             </div>
 
-        </div>
-    </div> 
-</div>
+       
+</body>
+</html>
