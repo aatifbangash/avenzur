@@ -175,7 +175,7 @@ $(document).ready(function () {
         });
     });
     $(document).on('click', '#updateOrderDiscount', function () {
-        var ds = $('#order_discount_input').val() ? $('#order_discount_input').val() : '0';
+        var ds = $('#order_discount_input').val() ? $('#order_discount_input').val()+'%' : '0';
         if (is_valid_discount(ds)) {
             $('#posdiscount').val(ds);
             localStorage.removeItem('posdiscount');
