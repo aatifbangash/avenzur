@@ -1061,11 +1061,21 @@ class Pay extends MY_Shop_Controller
 
     public function RedirectPaymentResponsePageMobile()
     {
+        $req = 'cmd=_notify-validate';
+        foreach ($_POST as $key => $value) {
+            // foreach ($_REQUEST as $key => $value) {
+            $value = urlencode(stripslashes($value));
+            $req .= "&$key=$value";
+        }
+        $this->sma->log_payment('INFO', 'DirectPay Payment Request', $req);
         $invoice_no = substr($_POST['Response_TransactionID'],13);
         $response_status = $_POST['Response_StatusCode'];
-        
+        $gateway_response = '';
+        $payment_status = 'pending';
+
         if($response_status == '00000')
         {
+            $gateway_response = 'completed';
             $amount = $_POST['Response_Amount'] / 100;
             
             $reference  = $_POST['Response_ApprovalCode'];
@@ -1086,13 +1096,18 @@ class Pay extends MY_Shop_Controller
 
                     $address = $this->pay_model->getAddressByID($address_id);
                     $this->pay_model->updateStatus($inv->id, 'completed');
+                    $payment_status = 'completed';
                 }
             }
 
+        }else{
+            $gateway_response = 'failed';
+            $reference  = $_POST['Response_ApprovalCode'];
+            $this->sma->log_payment('ERROR', 'Payment failed for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));
         }
 
         if ($inv->shop) {
-            shop_redirect('orders/' . $inv->id . '/' . ($this->loggedIn ? '' : $inv->hash));
+            shop_redirect('orders/' . $inv->id . '?gateway_response=' . $gateway_response.'&payment_status=' . $payment_status);
         }
         
         $this->page_construct('pages/payment_error', $this->data);

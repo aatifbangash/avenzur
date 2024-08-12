@@ -8,30 +8,44 @@
         });
         XLSX.writeFile(wb, filename);
     }
+    function generatePDF(){
+       $('.viewtype').val('pdf');  
+       document.getElementById("searchForm").submit();
+       $('.viewtype').val(''); 
+    } 
     $(document).ready(function() {
 
     });
 </script>
+<?php if($viewtype=='pdf'){ ?>
+    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
+  <?php  } ?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('customer_statement'); ?></h2>
-
+        <?php  if($viewtype!='pdf'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown">
                     <a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'Customer_Statement_Report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a>
-                </li>
-                
+                </li> 
+                <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i
+                class="icon fa fa-file-pdf-o"></i></a></li>
             </ul>
         </div>
+        <?php } ?>
     </div>
     <div class="box-content">
-        <div class="row">
-        <?php
-            $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            echo admin_form_open_multipart('reports/customer_statement', $attrib)
-        ?>
-        <div class="col-lg-12">
+        <div class="row"> 
+            <div class="col-lg-12">
+                <?php
+                if($viewtype!='pdf')
+                {
+                    $attrib = ['data-toggle' => 'validator', 'role' => 'form','id' => 'searchForm'];
+                    echo admin_form_open_multipart('reports/customer_statement', $attrib)
+                    ?>
+                <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" > 
+       
                 <div class="row">
                     <div class="col-lg-12">
                        
@@ -70,11 +84,13 @@
                             
                     </div>
                 </div>
+                <?php echo form_close(); 
+                } ?>
                 <hr />
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
                         <table id="poTable"
-                                class="table items table-striped table-bordered table-condensed table-hover sortable_table">
+                                class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf">
                             <thead>
                             <tr>
                                 <th>#</th>
@@ -83,15 +99,27 @@
                                 <th><?= lang('Num'); ?></th>
                                 <th><?= lang('name'); ?></th>
                                 <th><?= lang('Memo'); ?></th>
+                               
                                 <th><?= lang('Debit'); ?></th>
                                 <th><?= lang('Credit'); ?></th>
                                 <th><?= lang('balance'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
+                                <tr>
+                                    <td colspan="2">Opening Balance<td>
+                                    <td colspan="5">&nbsp;</td>
+                                    <td><?= $this->sma->formatNumber($total_ob); ?></td>
+                                </tr>
                                 <?php
                                     $count = 0;
-                                    $balance = 0;
+                                    $balance = $total_ob;
+
+                                    $totalCredit = 0;
+                                    $totalDebit = 0;
+                                    $totalBalance = 0;
+                                    $openingBalance = $total_ob;
+
                                     foreach($supplier_statement as $statement){
                                         
                                         if($statement->dc == 'C'){
@@ -108,14 +136,41 @@
                                                 <td><?= $statement->code; ?></td>
                                                 <td><?= $statement->company; ?></td>
                                                 <td><?= $statement->narration; ?></td>
-                                                <td><?= $statement->dc == 'D' ? $statement->amount : '-'; ?></td>
-                                                <td><?= $statement->dc == 'C' ? $statement->amount : '-'; ?></td>
-                                                <td><?= $balance; ?></td>
+                                                
+                                                <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '-';
+                                                    $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
+
+                                                </td>
+                                                <td><?php echo $statement->dc == 'C' ? $this->sma->formatNumber($statement->amount) : '-';
+                                                $statement->dc == 'C' ?
+                                                    $totalCredit = $totalCredit + $statement->amount : null ?>
+
+                                                </td>
+                                                <td><?php echo $this->sma->formatNumber($balance);
+                                                $totalBalance = $totalBalance + $balance;
+                                                ?></td>
                                             </tr>
                                         <?php
+
+                                        if ($statement->dc == 'D') {
+                                            $openingBalance += $statement->amount;
+                                        } else {
+                                            $openingBalance -= $statement->amount;
+                                        }
+
                                     }
                                 ?>
-                                
+                                <tr>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th><?= $this->sma->formatNumber($totalDebit); ?></th>
+                                <th><?= $this->sma->formatNumber($totalCredit); ?></th>
+                                <th><?= $this->sma->formatNumber($balance); ?></th>
+                            </tr>
                             </tbody>
                             <tfoot></tfoot>
                         </table>
@@ -125,5 +180,5 @@
 
         </div>
     </div>
-    <?php echo form_close(); ?>
+
 </div>

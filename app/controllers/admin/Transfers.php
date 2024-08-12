@@ -131,11 +131,16 @@ class Transfers extends MY_Controller
 
                 $unit_cost = $item_net_cost;
 
-                $net_cost_obj = $this->transfers_model->getAverageCost($item_batchno, $item_code);
-                $net_cost = $net_cost_obj[0]->cost_price;
+                //$net_cost_obj = $this->transfers_model->getAverageCost($item_batchno, $item_code);
+                //$net_cost = $net_cost_obj[0]->cost_price;
+
+                $product_details = $this->transfers_model->getProductByCode($item_code);
+
+                $net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
+                $real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
 
                 if (isset($item_code) && isset($item_quantity)) {
-                    $product_details = $this->transfers_model->getProductByCode($item_code);
+                    
                     // if (!$this->Settings->overselling) {
                     $warehouse_quantity = $this->transfers_model->getWarehouseProduct($from_warehouse_details->id, $product_details->id, $item_option, $item_batchno);
 
@@ -190,10 +195,11 @@ class Transfers extends MY_Controller
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'expiry'            => $item_expiry,
                         'real_unit_cost'    => $real_unit_cost,
-                        'sale_price'        => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),
+                        'sale_price'        => $this->sma->formatDecimal($item_net_cost, 4),
                         'date'              => date('Y-m-d', strtotime($date)),
                         'batchno'           => $item_batchno,
-                        'serial_number'   => $item_serial_no
+                        'serial_number'     => $item_serial_no,
+                        'real_cost'         => $real_cost
                     ];
 
                     $products[] = ($product + $gst_data);
@@ -549,11 +555,15 @@ class Transfers extends MY_Controller
 
                 $unit_cost = $item_net_cost;
 
-                $net_cost_obj = $this->transfers_model->getAverageCost($item_batchno, $item_code);
-                $net_cost = $net_cost_obj[0]->cost_price;
+                //$net_cost_obj = $this->transfers_model->getAverageCost($item_batchno, $item_code);
+                //$net_cost = $net_cost_obj[0]->cost_price;
 
-                if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity)) {
-                    $product_details = $this->transfers_model->getProductByCode($item_code);
+                $product_details = $this->transfers_model->getProductByCode($item_code);
+
+                $net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
+                $real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
+
+                if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity)) {  
                     $pr_item_tax     = $item_tax     = 0;
                     $tax             = '';
                     $item_net_cost   = $unit_cost;
@@ -598,10 +608,11 @@ class Transfers extends MY_Controller
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'expiry'            => $item_expiry,
                         'real_unit_cost'    => $real_unit_cost,
-                        'sale_price'        => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),
+                        'sale_price'        => $this->sma->formatDecimal($item_net_cost, 4),
                         'date'              => date('Y-m-d', strtotime($date)),
                         'batchno'           => $item_batchno,
-                        'serial_number'     => $item_serial_no
+                        'serial_number'     => $item_serial_no,
+                        'real_cost'         => $real_cost
                     ];
 
                     $products[] = ($product + $gst_data);

@@ -47,7 +47,7 @@ class Purchases extends MY_Controller
         $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
         $this->form_validation->set_rules('warehouse', $this->lang->line('warehouse'), 'required|is_natural_no_zero');
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
-        $this->form_validation->set_rules('batchno[]', lang('Batch'), 'required');
+       // $this->form_validation->set_rules('batchno[]', lang('Batch'), 'required');
         $product_id_arr= $this->input->post('product_id');  
         foreach ($product_id_arr as $index => $prid) {
             // Set validation rules for each quantity field
@@ -89,6 +89,7 @@ class Purchases extends MY_Controller
             $gst_data         = [];
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             for ($r = 0; $r < $i; $r++) {
+                $product_id          = $_POST['product_id'][$r];
                 $item_code          = $_POST['product'][$r];
                 $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $unit_cost          = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
@@ -105,7 +106,10 @@ class Purchases extends MY_Controller
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
                 
-                $item_batchno = $_POST['batchno'][$r];
+                $item_batchno = trim($_POST['batchno'][$r]);
+                if(empty($item_batchno)){
+                    $item_batchno = 'Default-'.$product_id;
+                }
                 $item_serial_no = $_POST['serial_no'][$r];
                 //$item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
@@ -268,7 +272,11 @@ class Purchases extends MY_Controller
             // $this->sma->print_arrays($data, $products);exit;
         }
 
-        if ($this->form_validation->run() == true && $this->purchases_model->addPurchase($data, $products, $attachments)) {
+        if ($this->form_validation->run() == true && $purchase_id = $this->purchases_model->addPurchase($data, $products, $attachments)) {
+            if($status == 'received'){
+                $this->convert_purchse_invoice($purchase_id);
+            }
+
             $this->session->set_userdata('remove_pols', 1);
             $this->session->set_flashdata('message', $this->lang->line('purchase_added'));
             admin_redirect('purchases');
@@ -750,6 +758,7 @@ class Purchases extends MY_Controller
             $gst_data         = [];
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             for ($r = 0; $r < $i; $r++) {
+                $product_id          = $_POST['product_id'][$r];
                 $item_code          = $_POST['product'][$r];
                 $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $unit_cost          = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
@@ -772,7 +781,10 @@ class Purchases extends MY_Controller
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
-                $item_batchno = $_POST['batchno'][$r];
+                $item_batchno = trim($_POST['batchno'][$r]);
+                if(empty($item_batchno)){
+                    $item_batchno = 'Default-'.$product_id;
+                }
                 $item_serial_no = $_POST['serial_no'][$r];
                 //$item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
@@ -962,7 +974,9 @@ class Purchases extends MY_Controller
         }
 
         if ($this->form_validation->run() == true && $this->purchases_model->updatePurchase($id, $data, $products, $attachments)) {
-
+            if($status == 'received'){
+                $this->convert_purchse_invoice($id);
+            }
 
             $this->session->set_userdata('remove_pols', 1);
             $this->session->set_flashdata('message', $this->lang->line('purchase_added'));
@@ -1417,12 +1431,6 @@ class Purchases extends MY_Controller
     {
         if ($this->purchases_model->puchaseToInvoice($pid)) {
 
-            # Update Purchase to Completed
-            if(isset($this->GP) && $this->GP['accountant']){
-                $this->db->update('purchases', ['status' => 'received'], ['id' => $pid]);
-                $this->site->syncQuantity(null, $pid);
-            }
-
             $inv = $this->purchases_model->getPurchaseByID($pid);
             $this->load->admin_model('companies_model');
             $supplier = $this->companies_model->getCompanyByID($inv->supplier_id);
@@ -1491,12 +1499,6 @@ class Purchases extends MY_Controller
             {
                     $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
             }
-
-           
-               
-
-            $this->session->set_flashdata('message', lang('Purchase is Converted to invoice Successfully!'));
-            admin_redirect($_SERVER['HTTP_REFERER'] ?? 'purchases');
         }
     }
 
@@ -1895,8 +1897,13 @@ class Purchases extends MY_Controller
             
             $unit_cost = $item_net_cost;
 
+            $product_details = $this->transfers_model->getProductByCode($item_code);
+
+            $net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
+            $real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
+
             if (isset($item_code) && isset($item_quantity)) {
-                $product_details = $this->transfers_model->getProductByCode($item_code);
+                
                 $warehouse_quantity = $this->transfers_model->getWarehouseProduct($from_warehouse_details->id, $product_details->id, $item_option, $item_batchno);
 
                 if ($warehouse_quantity->quantity < $item_quantity) {
@@ -1935,7 +1942,7 @@ class Purchases extends MY_Controller
                     'product_code'      => $item_code,
                     'product_name'      => $product_details->name,
                     'option_id'         => $item_option,
-                    'net_unit_cost'     => $item_net_cost,
+                    'net_unit_cost'     => $net_cost,
                     'unit_cost'         => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),
                     'quantity'          => $item_quantity,
                     'product_unit_id'   => $item_unit,
@@ -1949,9 +1956,11 @@ class Purchases extends MY_Controller
                     'subtotal'          => $this->sma->formatDecimal($subtotal),
                     'expiry'            => $item_expiry,
                     'real_unit_cost'    => $real_unit_cost,
+                    'sale_price'        => $this->sma->formatDecimal($purchase_inovice[$i]->sale_price, 4),
                     'date'              => date('Y-m-d', strtotime($date)),
                     'batchno'           => $item_batchno,
-                    'serial_number'     => $item_serial_no
+                    'serial_number'     => $item_serial_no,
+                    'real_cost'         => $real_cost
                 ];
     
                 $products[] = ($product + $gst_data);
