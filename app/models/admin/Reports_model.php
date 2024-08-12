@@ -2609,7 +2609,7 @@ class Reports_model extends CI_Model
         GROUP BY a.product_id");
 
 
-         echo $this->db->last_query();
+        // echo $this->db->last_query();
         // echo "<br>";
             return $qry->result();
         

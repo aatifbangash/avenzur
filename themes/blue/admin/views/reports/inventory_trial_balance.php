@@ -1,11 +1,13 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+<?php if($viewtype!='pdf'){ ?>
 <style>
 .tableFixHead          { overflow: auto; height: 100px; }
 .tableFixHead thead  { position: sticky; top: 0; z-index: 1; }
 /* Just common table stuff. Really. */ 
 .tableFixHead thead th, td {background:#eee;  padding: 8px 16px; }
 </style>
+<?php } ?>
 
 <script>
     function exportTableToExcel(tableId, filename = 'table.xlsx') {
@@ -15,26 +17,39 @@
         });
         XLSX.writeFile(wb, filename);
     }
+    function generatePDF(){
+       $('.viewtype').val('pdf');  
+       document.getElementById("searchForm").submit();
+       $('.viewtype').val(''); 
+    }
     $(document).ready(function() {
 
     });
 </script>
+<?php if($viewtype=='pdf'){ ?>
+    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
+  <?php  } ?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('inventory_movement_report'); ?></h2>
-
+        <?php  if($viewtype!='pdf'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'inventry_trail_balance_report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
+                <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i class="icon fa fa-file-pdf-o"></i></a></li>
             </ul>
         </div>
+        <?php } ?>
     </div>
     <div class="box-content">
         <div class="row">
             <?php
-            $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            echo admin_form_open_multipart('reports/inventory_trial_balance', $attrib)
-            ?>
+            if($viewtype!='pdf')
+            {
+                $attrib = ['data-toggle' => 'validator', 'role' => 'form','id' => 'searchForm'];
+                echo admin_form_open_multipart('reports/inventory_trial_balance', $attrib)
+                ?>
+                <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" >
             <div class="col-lg-12">
                 <div class="row">
 
@@ -86,9 +101,11 @@
 
                 </div>
                 <hr />
+                <?php echo form_close(); 
+                } ?>
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
-                        <table id="poTable" class="table items table-striped table-bordered table-condensed table-hover tableFixHead">
+                        <table id="poTable" class="table items table-striped table-bordered table-condensed table-hover tableFixHead tbl_order tbl_tb">
                             <thead>
 
                                 <tr>
@@ -220,5 +237,5 @@
 
             </div>
         </div>
-        <?php echo form_close(); ?>
+        
     </div>
