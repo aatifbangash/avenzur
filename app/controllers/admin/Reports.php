@@ -208,6 +208,7 @@ class Reports extends MY_Controller
         $supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
         $item_group = $this->input->post('item_group') ? $this->input->post('item_group') : null;
         $item = $this->input->post('item') ? $this->input->post('item') : null;
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
 
         if(isset($_POST['submit'])){
             $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $supplier, $item_group, $item);
@@ -229,8 +230,16 @@ class Reports extends MY_Controller
         $meta = [
             'page_title' => lang('stock_report'),
             'bc' => $bc
-        ];
-        $this->page_construct('reports/stock', $meta, $this->data);
+        ]; 
+        if($viewtype=='pdf'){
+            $this->data['viewtype']=$viewtype;
+            $name = lang('stock'). '.pdf';
+            $html = $this->load->view($this->theme . 'reports/stock', $this->data, true); 
+            $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        }else{
+            $this->page_construct('reports/stock', $meta, $this->data);
+        } 
+        
     }
 
     public function getStock()
@@ -3634,6 +3643,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         if ($from_date) {
@@ -3724,7 +3734,19 @@ class Reports extends MY_Controller
             $this->data['trial_balance'] = $response_arr;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
             $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
-            $this->page_construct('reports/general_ledger_trial_balance', $meta, $this->data);
+            
+            if($viewtype=='pdf'){
+                $this->data['viewtype']=$viewtype;
+                $name = lang('general_ledger_trial_balance'). '.pdf';
+                $html = $this->load->view($this->theme . 'reports/general_ledger_trial_balance', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            }else{
+                $this->page_construct('reports/general_ledger_trial_balance', $meta, $this->data);
+            } 
+            
+
+
+
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
@@ -3739,6 +3761,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
@@ -3777,7 +3800,18 @@ class Reports extends MY_Controller
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
             $meta = ['page_title' => lang('customer_statement'), 'bc' => $bc];
-            $this->page_construct('reports/customers_statement', $meta, $this->data);
+           
+            if($viewtype=='pdf'){
+                $this->data['viewtype']=$viewtype;
+                $name = lang('customers_statement_report'). '.pdf';
+                $html = $this->load->view($this->theme . 'reports/customers_statement', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            }else{
+                $this->page_construct('reports/customers_statement', $meta, $this->data);
+            } 
+
+
+
         } else {
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
             $meta = ['page_title' => lang('customer_statement'), 'bc' => $bc];
@@ -3790,6 +3824,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
@@ -3830,8 +3865,17 @@ class Reports extends MY_Controller
             $this->data['supplier_statement'] = $supplier_statement['report'];
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_statement')]];
-            $meta = ['page_title' => lang('general_ledger_statement'), 'bc' => $bc];
-            $this->page_construct('reports/general_ledger_statement', $meta, $this->data);
+            $meta = ['page_title' => lang('general_ledger_statement'), 'bc' => $bc]; 
+           
+            if($viewtype=='pdf'){
+                $this->data['viewtype']=$viewtype;
+                $name = lang('general_ledger_statement'). '.pdf';
+                $html = $this->load->view($this->theme . 'reports/general_ledger_statement', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            }else{
+                $this->page_construct('reports/general_ledger_statement', $meta, $this->data);
+            } 
+
         } else {
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_statement')]];
             $meta = ['page_title' => lang('general_ledger_statement'), 'bc' => $bc];
@@ -3845,6 +3889,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
@@ -3886,7 +3931,17 @@ class Reports extends MY_Controller
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
             $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
-            $this->page_construct('reports/suppliers_statement', $meta, $this->data);
+           
+            if($viewtype=='pdf'){
+                $this->data['viewtype']=$viewtype;
+                $name = lang('suppliers_statement_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/suppliers_statement', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            }else{
+                $this->page_construct('reports/suppliers_statement', $meta, $this->data);
+            } 
+
+
         } else {
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
             $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
@@ -3898,7 +3953,7 @@ class Reports extends MY_Controller
     {
         $this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
         $response_arr = array();
 
@@ -3911,14 +3966,22 @@ class Reports extends MY_Controller
         $this->data['supplier_aging'] = $supplier_aging_array;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_aging')]];
         $meta = ['page_title' => lang('customers_aging'), 'bc' => $bc];
-        $this->page_construct('reports/customers_aging', $meta, $this->data);
+        if($viewtype=='pdf'){
+            $this->data['viewtype']=$viewtype;
+            $name = lang('customers_aging_report'). '.pdf';
+            $html = $this->load->view($this->theme . 'reports/customers_aging', $this->data, true); 
+            $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        }else{
+            $this->page_construct('reports/customers_aging', $meta, $this->data);
+        } 
+        
     }
 
     public function supplier_aging()
     {
         $this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
         $response_arr = array();
 
@@ -3930,8 +3993,15 @@ class Reports extends MY_Controller
         
         $this->data['supplier_aging'] = $supplier_aging_array;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_aging')]];
-        $meta = ['page_title' => lang('suppliers_aging'), 'bc' => $bc];
-        $this->page_construct('reports/suppliers_aging', $meta, $this->data);
+        $meta = ['page_title' => lang('suppliers_aging'), 'bc' => $bc]; 
+        if($viewtype=='pdf'){
+            $this->data['viewtype']=$viewtype;
+            $name = lang('suppliers_aging'). '.pdf';
+            $html = $this->load->view($this->theme . 'reports/suppliers_aging', $this->data, true); 
+            $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        }else{
+            $this->page_construct('reports/suppliers_aging', $meta, $this->data);
+        } 
     }
 
     public function suppliers_trial_balance()
@@ -3940,6 +4010,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         if ($from_date) {
@@ -3967,7 +4038,16 @@ class Reports extends MY_Controller
             $this->data['trial_balance'] = $response_arr;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
             $meta = ['page_title' => lang('suppliers_report'), 'bc' => $bc];
-            $this->page_construct('reports/suppliers_trial_balance', $meta, $this->data);
+
+            if($viewtype=='pdf'){
+                $this->data['viewtype']=$viewtype;
+                $name = lang('suppliers_trial_balance_report'). '.pdf';
+                $html = $this->load->view($this->theme . 'reports/suppliers_trial_balance', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            }else{
+                $this->page_construct('reports/suppliers_trial_balance', $meta, $this->data);
+            } 
+           
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
@@ -4027,6 +4107,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
         $date = $this->input->post('date') ? $this->input->post('date') : null;
         if ($date) {
             $ledger_groups = $this->reports_model->getLedgerGroups();
@@ -4068,12 +4149,28 @@ class Reports extends MY_Controller
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('balance_sheet')]];
             $meta = ['page_title' => lang('balance_sheet'), 'bc' => $bc];
-            $this->page_construct('reports/balance_sheet', $meta, $this->data);
+           
+            if($viewtype=='pdf'){  // pdf generation 
+                $this->data['viewtype']=$viewtype;
+                $name = lang('balance_sheet'). '.pdf';
+                $html = $this->load->view($this->theme . 'reports/balance_sheet', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            }else{
+                $this->page_construct('reports/balance_sheet', $meta, $this->data);
+            } 
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('balance_sheet')]];
-            $meta = ['page_title' => lang('balance_sheet'), 'bc' => $bc];
-            $this->page_construct('reports/balance_sheet', $meta, $this->data);
+            $meta = ['page_title' => lang('balance_sheet'), 'bc' => $bc]; 
+            if($viewtype=='pdf'){  // pdf generation 
+                $this->data['viewtype']=$viewtype;
+                $name = lang('balance_sheet'). '.pdf';
+                $html = $this->load->view($this->theme . 'reports/balance_sheet', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            }else{
+                $this->page_construct('reports/balance_sheet', $meta, $this->data);
+            } 
+            
         }
     }
 
@@ -4083,6 +4180,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         if ($from_date) {
@@ -4182,7 +4280,16 @@ class Reports extends MY_Controller
             $this->data['trial_balance'] = $response_arr;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_report')]];
             $meta = ['page_title' => lang('customers_report'), 'bc' => $bc];
-            $this->page_construct('reports/customers_trial_balance', $meta, $this->data);
+            
+            if($viewtype=='pdf'){  // for download pdf 
+                $this->data['viewtype']=$viewtype;
+                $name = lang('customers_trial_balance'). '.pdf';
+                $html = $this->load->view($this->theme . 'reports/customers_trial_balance', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+
+            }else{
+                $this->page_construct('reports/customers_trial_balance', $meta, $this->data);
+            }
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_report')]];
@@ -4341,6 +4448,7 @@ class Reports extends MY_Controller
         $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : null;
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $productId = $this->input->post('product') ? $this->input->post('product') : 0;
@@ -4364,8 +4472,15 @@ class Reports extends MY_Controller
             $this->data['reportData'] = $reportData;
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
-            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
-            $this->page_construct('reports/item_movement_report', $meta, $this->data);
+            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];  
+            if($viewtype=='pdf'){
+                $this->data['viewtype']=$viewtype;
+                $name = lang('item_movement_report'). '.pdf';
+                $html = $this->load->view($this->theme . 'reports/item_movement_report', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            }else{
+                $this->page_construct('reports/item_movement_report', $meta, $this->data);
+            } 
 
         } else {
 
@@ -4385,6 +4500,7 @@ class Reports extends MY_Controller
         $defaultWareHouseId = ($user->warehouse_id ? $user->warehouse_id : $this->site->Settings->default_warehouse);
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $from_warehouse_id = $this->input->post('from_warehouse_id') ? $this->input->post('from_warehouse_id') : 0;
@@ -4470,8 +4586,15 @@ class Reports extends MY_Controller
 
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_trial_balance')]];
-            $meta = ['page_title' => lang('inventory_trial_balance'), 'bc' => $bc];
-            $this->page_construct('reports/inventory_trial_balance', $meta, $this->data);
+            $meta = ['page_title' => lang('inventory_trial_balance'), 'bc' => $bc]; 
+            if($viewtype=='pdf'){ // for generating PDF
+                $this->data['viewtype']=$viewtype;
+                $name = lang('inventory_trial_balance'). '.pdf';
+                $html = $this->load->view($this->theme . 'reports/inventory_trial_balance', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            }else{
+                $this->page_construct('reports/inventory_trial_balance', $meta, $this->data);
+            } 
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_trial_balance')]];
@@ -4487,6 +4610,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
@@ -4503,7 +4627,16 @@ class Reports extends MY_Controller
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_movement_report')]];
             $meta = ['page_title' => lang('inventory_movement_report'), 'bc' => $bc];
-            $this->page_construct('reports/inventory_movement_report', $meta, $this->data);
+            
+            if($viewtype=='pdf'){
+                $this->data['viewtype']=$viewtype;
+                $name = lang('inventory_movement_report'). '.pdf';
+                $html = $this->load->view($this->theme . 'reports/inventory_movement_report', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'L');
+            }else{
+                $this->page_construct('reports/inventory_movement_report', $meta, $this->data); 
+            } 
+
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_movement_report')]];
@@ -4582,6 +4715,7 @@ class Reports extends MY_Controller
         $this->data['warehouses'] = $filteredWareHouses;
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $warehouse_id = $this->input->post('warehouse_id') ? $this->input->post('warehouse_id') : null;
@@ -4597,12 +4731,28 @@ class Reports extends MY_Controller
             $this->data['vat_purchase'] = $vat_purchase_array;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
             $meta = ['page_title' => lang('vat_purchase_report'), 'bc' => $bc];
-            $this->page_construct('reports/vat_purchase_report', $meta, $this->data);
+            
+            if($viewtype=='pdf'){
+                $this->data['viewtype']=$viewtype;
+                $name = lang('vat_purchase_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/vat_purchase_report', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            }else{
+                $this->page_construct('reports/vat_purchase_report', $meta, $this->data);
+            } 
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
             $meta = ['page_title' => lang('vat_purchase_report'), 'bc' => $bc];
-            $this->page_construct('reports/vat_purchase_report', $meta, $this->data);
+            if($viewtype=='pdf'){
+                $this->data['viewtype']=$viewtype;
+                $name = lang('vat_purchase_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/vat_purchase_report', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            }else{
+                $this->page_construct('reports/vat_purchase_report', $meta, $this->data);
+            } 
+            
         }
     }
 
@@ -4631,11 +4781,14 @@ class Reports extends MY_Controller
         $this->data['warehouses'] = $filteredWareHouses;
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $warehouse_id = $this->input->post('warehouse_id') ? $this->input->post('warehouse_id') : null;
         $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
-
+        if($viewtype=='pdf'){
+            $this->data['viewtype']=$viewtype;
+        }  
         if ($from_date && $to_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
@@ -4646,13 +4799,84 @@ class Reports extends MY_Controller
             $this->data['vat_purchase'] = $vat_purchase_array;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
             $meta = ['page_title' => lang('Vat Sale Report'), 'bc' => $bc];
-            $this->page_construct('reports/vat_sale_report', $meta, $this->data);
+           
+            if($viewtype=='pdf'){
+            $name = lang('vat') . '_' . 'sale_report' . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/vat_sale_report', $this->data, true); 
+            $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+           }else{
+             $this->page_construct('reports/vat_sale_report', $meta, $this->data);
+           } 
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
             $meta = ['page_title' => lang('Vat Sale Report'), 'bc' => $bc];
             $this->page_construct('reports/vat_sale_report', $meta, $this->data);
         }
+
+
+    }
+    public function vat_sale_pdf()
+    {
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+
+        $filterOnTypeArr = [
+            "" => "-- Select Type --",
+            "sale" => "Sale",         
+            "returnCustomer" => "Return From Customer",
+            "serviceInvoice" => "Service Invoice"
+        ];
+        $this->data['filterOnTypeArr'] = $filterOnTypeArr;
+
+        $allWareHouses = $this->site->getAllWarehouses();
+        $filteredWareHouses = [];
+        $filteredWareHouses[] = '-- All --';
+        foreach ($allWareHouses as $warehouse) {
+            
+            $filteredWareHouses[$warehouse->id] = $warehouse->name . ' (' . $warehouse->code . ')';
+        
+        }
+        $this->data['warehouses'] = $filteredWareHouses;
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse_id = $this->input->post('warehouse_id') ? $this->input->post('warehouse_id') : null;
+        $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
+
+        if($viewtype=='pdf'){
+            $this->data['viewtype']=$viewtype;
+        } 
+        if ($from_date && $to_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $vat_purchase_array = $this->reports_model->getVatSaleReport($start_date, $end_date, $warehouse_id, $filterOnType);
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['vat_purchase'] = $vat_purchase_array;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
+            $meta = ['page_title' => lang('Vat Sale Report'), 'bc' => $bc];
+           // $this->page_construct('reports/vat_sale_report', $meta, $this->data);
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
+            $meta = ['page_title' => lang('Vat Sale Report'), 'bc' => $bc];
+            // $this->page_construct('reports/vat_sale_report', $meta, $this->data);
+        }
+
+        $name = lang('vat') . '_' . 'sale_report' . '.pdf';
+        $html = $this->load->view($this->theme . 'reports/vat_sale_report', $this->data, true);
+        //echo $html;exit;
+        if (!$this->Settings->barcode_img) {
+            $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
+        }
+        $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+       // generate_pdf($content, $name = 'download.pdf', $output_type = null, $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'P')
+
     }
 
 
@@ -4662,6 +4886,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         if ($from_date) {
@@ -4674,7 +4899,15 @@ class Reports extends MY_Controller
             $this->data['vat_purchase'] = $vat_purchase_array;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
             $meta = ['page_title' => lang('vat_purchase_report'), 'bc' => $bc];
-            $this->page_construct('reports/vat_purchase_ledger_report', $meta, $this->data);
+            
+            if($viewtype=='pdf'){
+                $this->data['viewtype']=$viewtype;
+                $name = lang('vat_purchase_ledger_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/vat_purchase_ledger_report', $this->data, true); 
+                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            }else{
+                $this->page_construct('reports/vat_purchase_ledger_report', $meta, $this->data);
+            } 
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];

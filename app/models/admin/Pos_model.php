@@ -801,6 +801,7 @@ class Pos_model extends CI_Model
         $this->db->where('inv.location_id',$warehouse);
         $this->db->where('inv.product_id',$product_id); 
         $this->db->where('inv.expiry_date >=', $now);  // Select products with expiry greater than or equal to the current date             
+        $this->db->group_by('inv.batch_number'); 
         $this->db->having('SUM(inv.quantity)>=0'); 
         $this->db->order_by('inv.expiry_date', 'ASC'); 
         $this->db->limit(1);
