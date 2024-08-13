@@ -47,6 +47,10 @@
                         <?= lang('name', 'name'); ?>
                         <?php echo form_input('name', $customer->name, 'class="form-control tip" id="name" required="required"'); ?>
                     </div>
+                    <div class="form-group  ">
+                        <?= lang('name_arabic', 'name_arabic'); ?>
+                        <?php echo form_input('name_ar',  $customer->name_ar, 'class="form-control tip" id="name" data-bv-notempty="true"'); ?>
+                    </div> 
                     <div class="form-group">
                         <?= lang('vat_no', 'vat_no'); ?>
                         <?php echo form_input('vat_no', $customer->vat_no, 'class="form-control" id="vat_no"'); ?>
