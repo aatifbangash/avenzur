@@ -449,7 +449,7 @@ class Returns_supplier extends MY_Controller
 
             $this->session->set_userdata('remove_rels', 1);
             $this->session->set_flashdata('message', lang('return_added'));
-            admin_redirect('returns_supplier');
+            admin_redirect('returns_supplier?lastInsertedId='.$return_insert_id);
         } else {
 
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
@@ -1050,6 +1050,7 @@ class Returns_supplier extends MY_Controller
             $this->data['warehouse'] = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
         }
 
+        $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('returns_supplier')]];
         $meta = ['page_title' => lang('returns_supplier'), 'bc' => $bc];
         $this->page_construct('returns_supplier/index', $meta, $this->data);
