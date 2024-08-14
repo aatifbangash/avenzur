@@ -127,8 +127,13 @@
                                         $totalCredit = $totalCredit + $statement->amount : null ?>
 
                                     </td>
-                                    <td><?php echo $this->sma->formatNumber($balance);
-                                        $totalBalance = $totalBalance + $balance;
+                                    <td><?php 
+                                        echo $this->sma->formatNumber($balance); 
+                                        if($balance >= 0){
+                                            echo ' Cr';
+                                        }else if($balance < 0){
+                                            echo ' Dr';
+                                        }
                                         ?></td>
                                 </tr>
                                 <?php
@@ -147,9 +152,18 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
-                                <th><?= $this->sma->formatNumber($totalDebit); ?></th>
-                                <th><?= $this->sma->formatNumber($totalCredit); ?></th>
-                                <th><?= $this->sma->formatNumber($balance); ?></th>
+                                <th><?= $this->sma->formatNumber($totalDebit).' Dr'; ?></th>
+                                <th><?= $this->sma->formatNumber($totalCredit).' Cr'; ?></th>
+                                <th>
+                                    <?php 
+                                        echo $this->sma->formatNumber($balance); 
+                                        if($balance >= 0){
+                                            echo ' Cr';
+                                        }else if($balance < 0){
+                                            echo ' Dr';
+                                        }
+                                    ?>
+                                </th>
                             </tr>
                             </tbody>
                             <tfoot></tfoot>
