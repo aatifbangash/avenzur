@@ -119,11 +119,11 @@
                             foreach ($supplier_statement as $statement) {
                                 
                                 if ($statement->dc == 'D') {
-                                    $balance = $balance - $statement->amount;
+                                    $balance = $balance + $statement->amount;
                                     
 
                                 } else {
-                                    $balance = $balance + $statement->amount;
+                                    $balance = $balance - $statement->amount;
 
                                 }
                                 
@@ -148,16 +148,25 @@
                                         $totalCredit = $totalCredit + $statement->amount : null ?>
 
                                     </td>
-                                    <td><?php echo $this->sma->formatNumber($balance);
-                                        $totalBalance = $totalBalance + $balance;
-                                        ?></td>
+                                    <td>
+                                        <?php 
+                                            
+                                            if($balance >= 0){
+                                                echo $this->sma->formatNumber($balance);
+                                                echo ' Dr';
+                                            }else if($balance < 0){
+                                                echo $this->sma->formatNumber(-1 * $balance);
+                                                echo ' Cr';
+                                            }
+                                        ?>
+                                    </td>
                                 </tr>
                                 <?php
 
                                 if ($statement->dc == 'D') {
-                                    $openingBalance -= $statement->amount;
-                                } else {
                                     $openingBalance += $statement->amount;
+                                } else {
+                                    $openingBalance -= $statement->amount;
                                 }
 
                             }
@@ -170,9 +179,20 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
-                                <th><?= $this->sma->formatNumber($totalDebit); ?></th>
-                                <th><?= $this->sma->formatNumber($totalCredit); ?></th>
-                                <th><?= $this->sma->formatNumber($balance); ?></th>
+                                <th><?= $this->sma->formatNumber($totalDebit).' Dr'; ?></th>
+                                <th><?= $this->sma->formatNumber($totalCredit).' Cr'; ?></th>
+                                <th>
+                                    <?php 
+                                        
+                                        if($balance >= 0){
+                                            echo $this->sma->formatNumber($balance); 
+                                            echo ' Dr';
+                                        }else if($balance < 0){
+                                            echo $this->sma->formatNumber(-1 * $balance); 
+                                            echo ' Cr';
+                                        }
+                                    ?>
+                                </th>
                             </tr>
 
                             </tbody>
