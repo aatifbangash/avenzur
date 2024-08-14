@@ -446,7 +446,7 @@ class Returns extends MY_Controller
 
             $this->session->set_userdata('remove_rels', 1);
             $this->session->set_flashdata('message', lang('return_added'));
-            admin_redirect('returns');
+            admin_redirect('returns?lastInsertedId='.$return_insert_id);
         } else {
             
             $this->data['error']      = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
@@ -991,7 +991,7 @@ class Returns extends MY_Controller
             $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
             $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
         }
-
+        $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('returns')]];
         $meta = ['page_title' => lang('returns'), 'bc' => $bc];
         $this->page_construct('returns/index', $meta, $this->data);

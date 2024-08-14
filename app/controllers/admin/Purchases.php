@@ -279,7 +279,7 @@ class Purchases extends MY_Controller
 
             $this->session->set_userdata('remove_pols', 1);
             $this->session->set_flashdata('message', $this->lang->line('purchase_added'));
-            admin_redirect('purchases');
+            admin_redirect('purchases?lastInsertedId='.$purchase_id);
         } else {
             if ($quote_id) {
                 $this->data['quote'] = $this->purchases_model->getQuoteByID($quote_id);
@@ -1752,6 +1752,8 @@ class Purchases extends MY_Controller
             $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
         }
 
+        $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
+            
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('purchases')]];
         $meta = ['page_title' => lang('purchases'), 'bc' => $bc];
         $this->page_construct('purchases/index', $meta, $this->data);

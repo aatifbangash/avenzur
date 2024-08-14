@@ -350,13 +350,13 @@ class Sales extends MY_Controller
             // $this->sma->print_arrays($data, $products, $payment, $attachments); exit; 
         }
         
-        if ($this->form_validation->run() == true && $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
+        if ($this->form_validation->run() == true && $sale_id = $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
             $this->session->set_userdata('remove_slls', 1);
             if ($quote_id) {
                 $this->db->update('quotes', ['status' => 'completed'], ['id' => $quote_id]);
             }
             $this->session->set_flashdata('message', lang('sale_added'));
-            admin_redirect('sales');
+            admin_redirect('sales?lastInsertedId='.$sale_id);
         } else {
             if ($quote_id || $sale_id) {
                 if ($quote_id) {
@@ -3033,6 +3033,7 @@ class Sales extends MY_Controller
             $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
         }
 
+        $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('sales')]];
         $meta = ['page_title' => lang('sales'), 'bc' => $bc];
         $this->page_construct('sales/index', $meta, $this->data);
