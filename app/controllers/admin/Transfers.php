@@ -243,10 +243,10 @@ class Transfers extends MY_Controller
             // $this->sma->print_arrays($data, $products);
         }
 
-        if ($this->form_validation->run() == true && $this->transfers_model->addTransfer($data, $products, $attachments)) {
+        if ($this->form_validation->run() == true && $transfer_id = $this->transfers_model->addTransfer($data, $products, $attachments)) {
             $this->session->set_userdata('remove_tols', 1);
             $this->session->set_flashdata('message', lang('transfer_added'));
-            admin_redirect('transfers');
+            admin_redirect('transfers?lastInsertedId='.$transfer_id);
         } else {
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
 
@@ -892,6 +892,8 @@ class Transfers extends MY_Controller
         $this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('transfers')]];
         $meta = ['page_title' => lang('transfers'), 'bc' => $bc];

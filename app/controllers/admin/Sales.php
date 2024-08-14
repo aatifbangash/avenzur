@@ -1,9 +1,10 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-// ALTER TABLE `sma_sales` ADD `sequence_code` VARCHAR(255) NULL AFTER `sale_invoice`;
+//require_once(APPPATH . 'factories/PdfServiceFactory.php');
 class Sales extends MY_Controller
 {
+    //private $pdfService;
     public function __construct()
     {
         parent::__construct();
@@ -32,6 +33,7 @@ class Sales extends MY_Controller
             'types'    => $this->digital_file_types,
             'max_size' => $this->allowed_file_size,
         ]);
+        //$this->pdfService = PdfServiceFactory::create('html2pdf'); 
     }
 
     /* ------------------------------------------------------------------ */
@@ -348,13 +350,13 @@ class Sales extends MY_Controller
             // $this->sma->print_arrays($data, $products, $payment, $attachments); exit; 
         }
         
-        if ($this->form_validation->run() == true && $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
+        if ($this->form_validation->run() == true && $sale_id = $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
             $this->session->set_userdata('remove_slls', 1);
             if ($quote_id) {
                 $this->db->update('quotes', ['status' => 'completed'], ['id' => $quote_id]);
             }
             $this->session->set_flashdata('message', lang('sale_added'));
-            admin_redirect('sales');
+            admin_redirect('sales?lastInsertedId='.$sale_id);
         } else {
             if ($quote_id || $sale_id) {
                 if ($quote_id) {
@@ -3031,6 +3033,7 @@ class Sales extends MY_Controller
             $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
         }
 
+        $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('sales')]];
         $meta = ['page_title' => lang('sales'), 'bc' => $bc];
         $this->page_construct('sales/index', $meta, $this->data);
@@ -3159,19 +3162,25 @@ class Sales extends MY_Controller
         $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
         //$this->data['paypal'] = $this->sales_model->getPaypalSettings();
         //$this->data['skrill'] = $this->sales_model->getSkrillSettings();
-
+        // echo "<pre>";
+        // print_r($this->data);exit;
         $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
-        $html = $this->load->view($this->theme . 'sales/pdf', $this->data, true);
+        $html = $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data, true);
+        //echo $html;exit;
         if (!$this->Settings->barcode_img) {
             $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
-
+       
+       // $outputPath = FCPATH . 'reports/sample_report.pdf';
+        //$this->pdfService->generatePDF( $html, 'sale_invoice.pdf');
+       // echo "PDF generated at: " . base_url('reports/sample_report.pdf');
+        $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
         if ($view) {
-            $this->load->view($this->theme . 'sales/pdf', $this->data);
+            $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
         } elseif ($save_bufffer) {
-            return $this->sma->generate_pdf($html, $name, $save_bufffer, $this->data['biller']->invoice_footer);
+           // return $this->sma->generate_pdf($html, $name, $save_bufffer, $this->data['biller']->invoice_footer);
         } else {
-            $this->sma->generate_pdf($html, $name, false, $this->data['biller']->invoice_footer);
+            $this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
         }
     }
 

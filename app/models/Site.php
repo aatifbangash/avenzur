@@ -101,6 +101,7 @@ class Site extends CI_Model
     public function calculateDiscount($discount = null, $amount = 0, $order = null)
     {
         if ($discount && ($order || $this->Settings->product_discount)) {
+            $discount = $discount.'%';
             $dpos = strpos($discount, '%');
             if ($dpos !== false) {
                 $pds = explode('%', $discount);

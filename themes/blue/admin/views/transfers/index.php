@@ -49,6 +49,24 @@
             {column_number: 9, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
         ], "footer");
     });
+
+    $(document).ready(function () {
+        var lastInsertedId = '<?= $last_inserted_id; ?>';
+
+        function openModalForLastInsertedId(id) {
+
+            $('#myModal').modal({
+                remote: site.base_url + 'transfers/view/' + lastInsertedId,
+            });
+            $('#myModal').modal('show');
+        }
+        lastInsertedId = '<?php echo $lastInsertedId; ?>';
+        if (lastInsertedId) {
+            openModalForLastInsertedId(lastInsertedId);
+        }
+    });
+
+
 </script>
 <?php if ($Owner || ($GP && $GP['bulk_actions'])) {
     echo admin_form_open('transfers/transfer_actions', 'id="action-form"');
