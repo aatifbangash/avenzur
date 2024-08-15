@@ -69,6 +69,7 @@
                                 $sp[''] = '';
                                 foreach ($suppliers as $supplier) {
                                     $sp[$supplier->id] = $supplier->company . ' (' . $supplier->name . ') - '. $supplier->sequence_code;
+
                                 }
                                 echo form_dropdown('supplier', $sp, $supplier_id, 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" required="required" style="width:100%;" ', null); ?>
                             </div>
@@ -143,8 +144,13 @@
                                         $totalCredit = $totalCredit + $statement->amount : null ?>
 
                                     </td>
-                                    <td><?php echo $this->sma->formatNumber($balance);
-                                        $totalBalance = $totalBalance + $balance;
+                                    <td><?php 
+                                        echo $this->sma->formatNumber($balance); 
+                                        if($balance >= 0){
+                                            echo ' Cr';
+                                        }else if($balance < 0){
+                                            echo ' Dr';
+                                        }
                                         ?></td>
                                 </tr>
                                 <?php
@@ -163,9 +169,18 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
-                                <th><?= $this->sma->formatNumber($totalDebit); ?></th>
-                                <th><?= $this->sma->formatNumber($totalCredit); ?></th>
-                                <th><?= $this->sma->formatNumber($balance); ?></th>
+                                <th><?= $this->sma->formatNumber($totalDebit).' Dr'; ?></th>
+                                <th><?= $this->sma->formatNumber($totalCredit).' Cr'; ?></th>
+                                <th>
+                                    <?php 
+                                        echo $this->sma->formatNumber($balance); 
+                                        if($balance >= 0){
+                                            echo ' Cr';
+                                        }else if($balance < 0){
+                                            echo ' Dr';
+                                        }
+                                    ?>
+                                </th>
                             </tr>
                             </tbody>
                             <tfoot></tfoot>

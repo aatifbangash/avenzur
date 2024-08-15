@@ -224,6 +224,23 @@
 
     });
 
+
+    $(document).ready(function () {
+        var lastInsertedId = '<?= $last_inserted_id; ?>';
+
+        function openModalForLastInsertedId(id) {
+
+            $('#myModal').modal({
+                remote: site.base_url + 'sales/modal_view/' + lastInsertedId,
+            });
+            $('#myModal').modal('show');
+        }
+        lastInsertedId = '<?php echo $lastInsertedId; ?>';
+        if (lastInsertedId) {
+            openModalForLastInsertedId('sales/modal_view/', lastInsertedId);
+        }
+    });
+
 </script>
 
 <?php if ($Owner || ($GP && $GP['bulk_actions'])) {

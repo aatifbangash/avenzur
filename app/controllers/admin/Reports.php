@@ -3854,7 +3854,7 @@ class Reports extends MY_Controller
                 }
             }
 
-            $total_ob = $total_ob_credit - $total_ob_debit;
+            $total_ob = $total_ob_debit - $total_ob_credit;
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
