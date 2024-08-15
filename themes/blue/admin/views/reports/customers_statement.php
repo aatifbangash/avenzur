@@ -69,8 +69,8 @@
                             <?php
                             $selected_customer_id[] = isset($customer_id) ? $customer_id : '';
                             $sp[''] = '';
-                            foreach ($suppliers as $supplier) {
-                                $sp[$supplier->id] = $supplier->company. ' ('. $supplier->name.')';
+                            foreach ($customers as $customer) {
+                                $sp[$customer->id] = $customer->company. ' ('. $customer->name.')'.' - '.$customer->sequence_code;
                             }
                             echo form_dropdown('customer', $sp, $selected_customer_id, 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" required="required" style="width:100%;" ', null); ?>
                             </div>
