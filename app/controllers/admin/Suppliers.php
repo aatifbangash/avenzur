@@ -26,6 +26,47 @@ class Suppliers extends MY_Controller
         $this->sequenceCode = new SequenceCode();
     }
 
+    public function edit_suppliers_script(){
+        $csvFile = 'files/Retaj_customers_csv.csv';
+
+        // Open the file in read mode
+        if (($handle = fopen($csvFile, 'r')) !== false) {
+            // Read the header row (if needed)
+            $header = fgetcsv($handle);
+
+            // Loop through each row of the file
+            while (($data = fgetcsv($handle, 1000, ',')) !== false) {
+                $ascon_code = $data[0];
+                $arabic_name = $data[1];
+                $english_name = $data[2];
+                $credit_limit = $data[18];
+                $payment_term = $data[25];
+                $parent_code = '';
+                $supplier_level = 1;
+                $phone = $data[7];
+
+                $company_detail = $this->companies_model->getCompanyByName($arabic_name);
+                
+                if($company_detail){
+                    // Update existing Company
+                    //echo 'Customer Found: '. $company_detail->name.'<br />';
+                    $this->companies_model->updateCompanyNames($company_detail->id, ['name_ar' => $english_name, 'sequence_code' => $ascon_code, 'phone' => $phone, 'parent_code' => $parent_code, 'level' => $supplier_level, 'payment_term' => $payment_term, 'credit_limit' => $credit_limit]);
+                }else{
+                    // Insert New Company
+                    echo 'Customer Not Found: '.$arabic_name.'<br />';
+                    $this->companies_model->addCompany(['group_id' => 3, 'group_name' => 'customer', 'name' => $arabic_name, 'name_ar' => $english_name, 'logo' => 'logo.png', 'ledger_account' => 21, 'cogs_ledger' => 174, 'sales_ledger' => 157, 'discount_ledger' => 173, 'return_ledger' => 165, 'sequence_code' => $ascon_code, 'phone' => $phone, 'parent_code' => $parent_code, 'level' => $supplier_level, 'payment_term' => $payment_term, 'credit_limit' => $credit_limit]);
+                }
+                
+            }
+
+            echo 'Customer script executed successfully...';
+            // Close the file handle
+            fclose($handle);
+        } else {
+            echo "Error opening the file.";
+        }
+    }
+
     public function deleteFromAccounting($memo_id){
         $accouting_entries = $this->purchases_model->getMemoAccountingEntries($memo_id);
         foreach ($accouting_entries as $accouting_entry){

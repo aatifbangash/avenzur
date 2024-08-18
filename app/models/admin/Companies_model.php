@@ -209,6 +209,19 @@ class Companies_model extends CI_Model
         return false;
     }
 
+    public function getCompanyByName($name)
+    {
+        $this->db->order_by('id', 'ASC');
+        $this->db->like('name', $name);
+        $this->db->where(['group_name' => 'customer', 'level' => NULL]);
+        $this->db->limit(1);
+        $q = $this->db->get('companies');
+        if ($q->num_rows() > 0) {
+            return $q->row(); 
+        }
+        return false;
+    }
+
     public function getCompanyByID($id)
     {
         $q = $this->db->get_where('companies', ['id' => $id], 1);
@@ -328,6 +341,14 @@ class Companies_model extends CI_Model
     public function updateDeposit($id, $data, $cdata)
     {
         if ($this->db->update('deposits', $data, ['id' => $id]) && $this->db->update('companies', $cdata, ['id' => $data['company_id']])) {
+            return true;
+        }
+        return false;
+    }
+
+    public function updateCompanyNames($id, $data){
+        $this->db->where('id', $id);
+        if ($this->db->update('companies', $data)) {
             return true;
         }
         return false;

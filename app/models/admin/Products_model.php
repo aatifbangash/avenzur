@@ -752,14 +752,26 @@ class Products_model extends CI_Model
         }
     }
 
-    public function getProductQuantity($product_id, $warehouse)
+    public function getProductQuantity($product_id, $warehouse_id)
+    {
+        $this->db->select_sum('quantity');
+        $this->db->where(['product_id' => $product_id, 'location_id' => $warehouse_id]);
+        $q = $this->db->get('sma_inventory_movements');
+
+        if ($q->num_rows() > 0) {
+            return $q->row_array();
+        }
+        return false;
+    }
+
+    /*public function getProductQuantity($product_id, $warehouse)
     {
         $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse], 1);
         if ($q->num_rows() > 0) {
             return $q->row_array();
         }
         return false;
-    }
+    }*/
 
     public function getProductsForPrinting($term, $limit = 5)
     {
