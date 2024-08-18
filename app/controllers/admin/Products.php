@@ -1662,6 +1662,7 @@ class Products extends MY_Controller
                         }
                     }
                     if ($wh_qty = $this->products_model->getProductQuantity($product_id, $warehouse_id)) {
+                        
                         if ($wh_qty['quantity'] < $quantity) {
                             $this->session->set_flashdata('error', lang('warehouse_qty_is_less_than_damage'));
                             redirect($_SERVER['HTTP_REFERER']);
