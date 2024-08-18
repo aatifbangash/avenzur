@@ -657,7 +657,7 @@ class Shop extends MY_Shop_Controller
             $p_companyname = $dp->company_name; //"Pharma drug store";
             $p_phonenumber = $dp->landline_number; //"966568241418";
             $p_cellnumber = $dp->cell_number; //"966568241418";
-            $p_shipper_email = $dp->Email; //"ama@pharma.com.sa";
+            $p_shipper_email = $dp->Email; //"aeid@avenzur.com";
 
             $p_AccountEntity = $dp->account_entity; //'RUH';
             $p_AccountNumber = $dp->account_number; //'71449672';
@@ -678,7 +678,7 @@ class Shop extends MY_Shop_Controller
             $p_companyname = "Pharma drug store";
             $p_phonenumber = "966568241418";
             $p_cellnumber = "966568241418";
-            $p_shipper_email = "ama@pharma.com.sa";
+            $p_shipper_email = "aeid@avenzur.com";
 
             $p_AccountEntity = 'RUH';
             $p_AccountNumber = '71449672';
