@@ -50,12 +50,12 @@
             $('#add_item').focus();
         });
         $("#add_item").autocomplete({
-            source: function (request, response) {
+            source: function (request, response) {                 
                 $.ajax({
                     type: 'get',
                     url: '<?= admin_url('returns_supplier/bch_suggestions'); ?>',
                     dataType: "json",
-                    data: { term: request.term, warehouse_id: $("#rsewarehouse").val(), },
+                    data: { term: request.term, warehouse_id: $("#rsewarehouse").val(), supplier_id: $("#supplier_id").val(), },
                     success: function (data) {
                         $(this).removeClass('ui-autocomplete-loading');
                         response(data);
@@ -190,7 +190,7 @@
                             <div class="form-group">
                                 <?= lang('Supplier', 'rsesupplier'); ?>
                                 <?php
-                                    echo form_input('supplier', (isset($_POST['supplier']) ? $_POST['supplier'] : ''), 'id="" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" required="required" class="form-control rsupplier input-tip" style="width:100%;"');
+                                    echo form_input('supplier', (isset($_POST['supplier']) ? $_POST['supplier'] : ''), 'id="supplier_id" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" required="required" class="form-control rsupplier input-tip" style="width:100%;"');
                                 ?>
                             </div>
                         </div>
@@ -278,17 +278,16 @@
                                             <th class="col-md-1"><?= lang('Serial No.'); ?></th>
                                             <th class="col-md-1"><?= lang('batch'); ?></th>
                                             <th class="col-md-1"><?= lang('expiry_date'); ?></th>
-                                            <th class="col-md-1"><?= lang('qty'); ?></th>
+                                            <th class="col-md-1"><?= lang('qty'); ?></th>  
                                             <!--<th class="col-md-1"><?php //echo lang('Bonus'); ?></th>-->
+                                            <th class="col-md-1"><?= lang('Cost Price'); ?></th> 
                                             <?php
-                                            if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
+                                            /* if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
                                                 echo '<th class="col-md-1">' . lang('dis 1') . '</th>';
-                                            }
-                                            ?>
-                                              <?php
+                                            } 
                                             if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
                                                 echo '<th class="col-md-1">' . lang('dis 2') . '</th>';
-                                            }
+                                            } */ 
                                             ?>
                                             <?php
                                             if ($Settings->tax1) {
@@ -298,11 +297,11 @@
 
                                            <!-- <th class="col-md-1"><?= lang('Total Purchase'); ?></th> -->
                                            <th>
-                                                <?= lang('Total Sale'); ?>
+                                                <?= lang('Total Purchase'); ?>
                                                 (<span class="currency"><?= $default_currency->code ?></span>)
                                             </th>
-                                           <th class="col-md-1"><?= lang('Net Sales'); ?></th>
-                                           <th class="col-md-1"><?= lang('Unit Sale'); ?></th>
+                                           <th class="col-md-1"><?= lang('Net Purchase'); ?></th>
+                                           <th class="col-md-1"><?= lang('Unit Price'); ?></th>
                                            
                                             <th style="width: 30px !important; text-align: center;">
                                                 <i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i>

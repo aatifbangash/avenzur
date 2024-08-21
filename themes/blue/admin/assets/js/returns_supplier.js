@@ -30,7 +30,7 @@ $(document).ready(function (e) {
                 item_id = row.attr('data-item-id');
 
            var batchExpiry =  $(this).find(':selected').data('batchexpiry');
-           rseitems[item_id].row.expiry = batchExpiry;
+           rseitems[item_id].row.expiry = batchExpiry; 
 
            var batchQty =  $(this).find(':selected').data('batchqty');
            rseitems[item_id].row.batchQuantity = batchQty;
@@ -38,8 +38,19 @@ $(document).ready(function (e) {
            var batchPurchaseCost =  $(this).find(':selected').data('batchpurchasecost');
            rseitems[item_id].row.batchPurchaseCost = batchPurchaseCost;
 
-
-           rseitems[item_id].row.batch_no = new_batchno;
+           var batchcostprice =  $(this).find(':selected').data('batchcostprice');
+            rseitems[item_id].row.cost_price = batchcostprice;  
+           rseitems[item_id].row.batch_no = new_batchno; 
+           
+           rseitems[item_id].row.unit_cost = $(this).find(':selected').data('unit_cost');
+           rseitems[item_id].row.real_unit_cost = $(this).find(':selected').data('real_unit_cost');
+           rseitems[item_id].row.sale_price = $(this).find(':selected').data('sale_price');
+           rseitems[item_id].row.discount1 = $(this).find(':selected').data('discount1');
+           rseitems[item_id].row.discount2 = $(this).find(':selected').data('discount2');
+           rseitems[item_id].row.tax_rate_id = $(this).find(':selected').data('tax_rate_id');
+           rseitems[item_id].row.tax = $(this).find(':selected').data('tax');
+           
+         
             localStorage.setItem('rseitems', JSON.stringify(rseitems));
             loadItems();
         });
@@ -378,7 +389,7 @@ $(document).ready(function (e) {
                             pr_tax_rate = this.rate;
                         }
                     }
-                });
+                }); 
             }
         }
         if (site.settings.product_serial !== 0) {
@@ -954,7 +965,7 @@ function loadItems() {
         product_discount = 0;
         order_discount = 0;
         total_discount = 0;
-
+        
         $('#reTable tbody').empty();
         rseitems = JSON.parse(localStorage.getItem('rseitems'));
         sortedItems =
@@ -980,13 +991,14 @@ function loadItems() {
                     item_expiry_date = new Date(item.row.expiry).toLocaleDateString('en-GB');
                 }
             }
-
+             
             var product_id = item.row.id,
                 item_type = item.row.type,
                 combo_items = item.combo_items,
                 item_price = item.row.price,
                 item_cost = item.row.cost_price,
-                item_sale_price = item.row.price,
+                net_unit_cost = item.row.cost_price, 
+                item_sale_price = item.row.price, 
                 item_qty = item.row.qty,
                 item_aqty = item.row.quantity,
                 item_tax_method = item.row.tax_method,
@@ -999,22 +1011,26 @@ function loadItems() {
                 item_batchno = item.row.batch_no,
                 item_serialno = item.row.serial_number,
                 item_bonus = 0;//item.row.bonus,
-                item_dis1 = item.row.discount1,
-                item_dis2 = item.row.discount2,
+                item_dis1 = 0, // item.row.discount1,
+                item_dis2 = 0, //item.row.discount2,
                 item_batchQuantity = item.row.batchQuantity,
                 item_name = item.row.name.replace(/"/g, '&#034;').replace(/'/g, '&#039;');
             var product_unit = item.row.unit,
                 base_quantity = item.row.base_quantity;
-
+            // var cost_price= item.row.cost_price,
              var cost_price  = item.row.net_cost;
              var batch_no    = item.row.batch_no;
              var bonus       = item.row.bonus;
              var expiry       = item_expiry_date;//item.row.expiry;
              var discount1       = item.row.discount1;
-             var discount2       = item.row.discount2;
-
-
+             var discount2       = item.row.discount2; 
             var unit_price = item.row.real_unit_price;
+            // new var and two flds below  
+            var unit_cost = item.row.unit_cost;
+            var real_unit_cost = item.row.real_unit_cost;
+ 
+
+
             if (item.units && item.row.fup != 1 && product_unit != item.row.base_unit) {
                 $.each(item.units, function () {
                     if (this.id == product_unit) {
@@ -1092,9 +1108,9 @@ function loadItems() {
             var dis2_b = 0.0;
 
             var main_net = 0.0;
-
-            var total_before_dis_vat = (parseFloat(item_sale_price)) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty);
-
+            // alert(item_cost);
+           // var total_before_dis_vat = (parseFloat(item_sale_price)) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty);
+           var total_before_dis_vat = (parseFloat(item_cost)) * parseFloat(item_qty);
             dis1_a = total_before_dis_vat * parseFloat((item_dis1 / 100));
             total_after_dis1 =  total_before_dis_vat - dis1_a;
             dis2_a = total_after_dis1 *  parseFloat((item_dis2/100));
@@ -1103,13 +1119,17 @@ function loadItems() {
             net_price_a = vat_15_a + total_after_dis2;
 
             var total_purchases = (parseFloat(item_cost)) * parseFloat(item_qty);
-            var total_sales = (parseFloat(item_sale_price)) * (parseFloat(item_qty) + parseFloat(item_bonus));
-            //console.log(item_qty+' -- '+item_bonus+' -- '+item_sale_price+' -- '+total_sales);
-            total_after_dis1 = total_sales * parseFloat((item_dis1 / 100));
-            total_after_dis2 = (total_sales - total_after_dis1) * parseFloat((item_dis2 / 100));
-            //main_net = net_price_a;// + net_price_b;
-            main_net = total_sales - (total_after_dis1 + total_after_dis2);
-            var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus);
+
+            // var total_sales = (parseFloat(item_sale_price)) * (parseFloat(item_qty) + parseFloat(item_bonus)); 
+            // total_after_dis1 = total_sales * parseFloat((item_dis1 / 100));
+            // total_after_dis2 = (total_sales - total_after_dis1) * parseFloat((item_dis2 / 100)); 
+            // main_net = total_sales - (total_after_dis1 + total_after_dis2); 
+
+            total_after_dis1 = total_purchases * parseFloat((item_dis1 / 100));
+            total_after_dis2 = (total_purchases - total_after_dis1) * parseFloat((item_dis2 / 100)); 
+            main_net = total_purchases - (total_after_dis1 + total_after_dis2); 
+            main_net = main_net+vat_15_a; 
+            var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus); 
 
             var row_no = item.id;
             var newTr = $('<tr id="row_' + row_no + '" class="row_' + item_id + '" data-item-id="' + item_id + '"></tr>');
@@ -1151,8 +1171,11 @@ function loadItems() {
                 cost_price +
                 '"></td>';*/
 
+                var hidden_flds = '<input class="cls_unit_cost" name="unit_cost[]" type="hidden" value="'+unit_cost+'">';
+                  hidden_flds += '<input class="cls_real_unit_cost" name="real_unit_cost[]" type="hidden" value="'+real_unit_cost+'">'; 
+ 
                 tr_html +=
-                    '<td class="text-right"><input class="rucost" name="unit_price[]" type="hidden" value="' +
+                    '<td class="text-right">'+hidden_flds+'<input class="rucost" name="unit_price[]" type="hidden" value="' +
                     unit_price +
                     '"><input class="form-control realucost" name="real_unit_price[]" type="hidden" value="' +
                     item.row.real_unit_price +
@@ -1200,7 +1223,9 @@ function loadItems() {
                         if (this.batchno == item_batchno) {
                             batchSelected = "selected";
                         }
-                        batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'"  data-batchpurchasecost="'+this.purchase_cost+'" value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
+                        batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'"  data-batchcostprice="'+this.net_unit_cost+'"  data-batchpurchasecost="'+this.net_unit_cost+'" data-unit_cost="'+this.unit_cost+'" data-real_unit_cost="'+this.real_unit_cost+'" data-sale_price="'+this.sale_price+'" data-discount="'+this.discount+'" data-discount1="'+this.discount1+'" data-discount2="'+this.discount2+'"  data-tax_rate_id="'+this.tax_rate_id+'"  data-tax="'+this.tax+'"   value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
+                       
+                    
                     });
                 }
 
@@ -1286,27 +1311,38 @@ function loadItems() {
                 //     '"></td>';
 
 
-                    tr_html +=
-                    '<td><input class="form-control text-center rdiscount1" name="dis1[]" type="text" data-id="' +
-                    row_no +
-                    '" data-item="' +
-                    item_id +
-                    '" id="discount_' +
-                    row_no +
-                    '" value="'+formatDecimal(discount1)+'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
-                    formatMoney(total_after_dis1)
-                    '</span></td>';
+                    // tr_html +=
+                    // '<td><input class="form-control text-center rdiscount1" name="dis1[]" type="text" data-id="' +
+                    // row_no +
+                    // '" data-item="' +
+                    // item_id +
+                    // '" id="discount_' +
+                    // row_no +
+                    // '" value="'+formatDecimal(discount1)+'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
+                    // formatMoney(total_after_dis1)
+                    // '</span></td>';
+
+                // tr_html +=
+                //     '<td><input class="form-control text-center rdiscount2" name="dis2[]" type="text" data-id="' +
+                //     row_no +
+                //     '" data-item="' +
+                //     item_id +
+                //     '" id="discount2_' +
+                //     row_no +
+                //     '" value="'+formatDecimal(item_dis2)+'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
+                //     formatMoney(total_after_dis2)
+                //     '</span></td>';
 
                 tr_html +=
-                    '<td><input class="form-control text-center rdiscount2" name="dis2[]" type="text" data-id="' +
+                    '<td><input class="form-control rs_cost_price" name="cost_price[]" type="text" value="' +
+                    item_cost +
+                    '" data-id="' +
                     row_no +
                     '" data-item="' +
                     item_id +
-                    '" id="discount2_' +
+                    '" id="serialno_' +
                     row_no +
-                    '" value="'+formatDecimal(item_dis2)+'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
-                    formatMoney(total_after_dis2)
-                    '</span></td>';
+                    '"></td>';
 
             // <span class="text-right sdiscount text-danger" id="sdiscount_' +
             // row_no +
@@ -1315,7 +1351,7 @@ function loadItems() {
             // '</span>
 
             tr_html +=
-                '<td class="text-right"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' +
+                '<td class="text-right"><input type="hidden" name="product_vat[]" value="'+vat_15_a+'"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' +
                     row_no +
                     '" value="' +
                     pr_tax.id +
@@ -1398,7 +1434,7 @@ function loadItems() {
                 '<td class="text-right"><span class="text-right ssubtotal" id="total_sale_' +
                 row_no +
                 '">' +
-                formatMoney(total_sales) +
+                formatMoney(total_purchases) +
                 '</span></td>';
 
             tr_html +=
@@ -1424,8 +1460,10 @@ function loadItems() {
 
             total += formatDecimal(main_net, 4);
             grand_total_vat += formatDecimal(vat_15_a, 4);
+            
             grand_total_purchases += formatDecimal(total_purchases, 4);
-            grand_total_sales += formatDecimal(total_sales, 4);
+           //  grand_total_purchases +=  formatDecimal(vat_15_a,4) ;  // add vat to total purchase
+            // grand_total_sales += formatDecimal(total_sales, 4);
 
             count += parseFloat(item_qty);
             an++;
@@ -1453,7 +1491,7 @@ function loadItems() {
         //     '</th><th class="text-center"><i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i></th></tr>';
         // $('#reTable tfoot').html(tfoot);
 
-        var col = 7;
+        var col = 6;
         if (site.settings.product_serial == 1) {
             col++;
         }
@@ -1464,9 +1502,9 @@ function loadItems() {
             formatMoney(grand_total_vat) +
             '</th>';
 
-        //tfoot += '<th class="text-right">' + formatMoney(grand_total_purchases) + '</th>';
+        tfoot += '<th class="text-right">' + formatMoney(grand_total_purchases) + '</th>';
 
-        tfoot += '<th class="text-right">' + formatMoney(grand_total_sales) + '</th>';
+       //  tfoot += '<th class="text-right">' + formatMoney(grand_total_sales) + '</th>';
 
         tfoot +=
             '<th class="text-right">' +

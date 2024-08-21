@@ -1769,6 +1769,74 @@ public function getallCountry()
         return 0;
     }
 
+    public function getProductSupplierBatchesData($product_id, $warehouse, $supplier_id)
+    {  
+         
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, 
+        inv.location_id as warehouse_id, inv.net_unit_cost, inv.real_unit_cost, inv.expiry_date as expiry,item.expiry,
+        item.unit_cost,item.real_unit_cost,item.sale_price,item.discount, item.discount1, item.discount2, item.main_net,
+         item.tax_rate_id, item.tax
+
+        ');
+        $this->db->from('sma_inventory_movements inv'); 
+        $this->db->join('sma_purchase_items item', 'item.batchno=inv.batch_number AND item.product_id=inv.product_id');  
+        $this->db->join('purchases po', 'po.id=item.purchase_id  AND po.supplier_id='.$supplier_id);   
+        $this->db->where('inv.location_id',$warehouse);
+        $this->db->where('inv.product_id',$product_id); 
+        $this->db->group_by('inv.batch_number'); 
+        $this->db->having('SUM(inv.quantity)>=0'); 
+	    $query = $this->db->get();
+        // echo $this->db->last_query(); exit; 
+        if($query->num_rows() > 0){
+            foreach (($query->result()) as $row) {
+
+                $query = $this->db->get_where('sma_purchase_items', ['product_id' => $product_id, 'warehouse_id' => $warehouse, 'batchno' => $row->batchno, 'sale_price >' => 0], 1);
+                if ($query->num_rows() > 0) {
+                    $rowp = $query->row();
+                    $batch_sale_price = $rowp->sale_price;
+                }else{
+                    $batch_sale_price = 0;
+                }
+                $row->batch_sale_price = $batch_sale_price;
+                $data[] = $row; 
+            }
+          //  echo '<pre>'; print_r($data); exit;  
+          return $data; 
+         }  
+        return false;
+    } 
+
+    public function getProductSupplierBatchesData_BK($product_id, $warehouse, $supplier_id)
+    {  
+         
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, inv.net_unit_cost, inv.real_unit_cost, wp.rack, wp.avg_cost, inv.expiry_date as expiry, wp.purchase_cost');
+        $this->db->from('sma_inventory_movements inv');
+        $this->db->join('warehouses_products wp', 'wp.batchno=inv.batch_number AND  wp.product_id= inv.product_id and wp.warehouse_id=inv.location_id', 'LEFT'); 
+        $this->db->join('purchases po', 'po.id=inv.reference_id AND inv.type="purchase" AND  po.supplier_id='.$supplier_id);   
+        $this->db->where('inv.location_id',$warehouse);
+        $this->db->where('inv.product_id',$product_id); 
+        $this->db->group_by('inv.batch_number'); 
+        $this->db->having('SUM(inv.quantity)>=0'); 
+	    $query = $this->db->get();
+        //echo $this->db->last_query(); exit; 
+        if($query->num_rows() > 0){
+            foreach (($query->result()) as $row) {
+
+                $query = $this->db->get_where('sma_purchase_items', ['product_id' => $product_id, 'warehouse_id' => $warehouse, 'batchno' => $row->batchno, 'sale_price >' => 0], 1);
+                if ($query->num_rows() > 0) {
+                    $rowp = $query->row();
+                    $batch_sale_price = $rowp->sale_price;
+                }else{
+                    $batch_sale_price = 0;
+                }
+                $row->batch_sale_price = $batch_sale_price;
+                $data[] = $row; 
+            }
+          //  echo '<pre>'; print_r($data); exit;  
+          return $data; 
+         }  
+        return false;
+    } 
 
      public function getProductBatchesData($product_id, $warehouse)
     {  

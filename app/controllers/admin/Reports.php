@@ -3765,7 +3765,7 @@ class Reports extends MY_Controller
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
-        $this->data['suppliers'] = $this->site->getAllCompanies('customer');
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);

@@ -2490,7 +2490,7 @@ class Purchases extends MY_Controller
 
                     $item_type        = $product_details->type;
                     $item_name        = $product_details->name;
-                    //$pr_discount      = $this->site->calculateDiscount($item_discount, $unit_cost);
+                    //$pr_discount    = $this->site->calculateDiscount($item_discount, $unit_cost);
                     $pr_discount      = $this->site->calculateDiscount($item_discount.'%', $unit_cost);
                     $amount_after_dis1 = $unit_cost - $pr_discount;
                     $pr_discount2      = $this->site->calculateDiscount($item_discount2.'%', $amount_after_dis1);
