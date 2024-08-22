@@ -117,8 +117,9 @@ class Sales extends MY_Controller
                 $item_code          = $_POST['product_code'][$r];
                 $item_name          = $_POST['product_name'][$r];
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
-                $real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
+                //$real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
                 $unit_price         = $this->sma->formatDecimal($_POST['unit_price'][$r]);
+                $real_unit_price = $unit_price;
                 //$net_cost           = $this->sma->formatDecimal($_POST['net_cost'][$r]);
 
                 $item_unit_quantity = $_POST['quantity'][$r];
@@ -3866,7 +3867,7 @@ class Sales extends MY_Controller
                 // $row->expiry          = '';
                 $row->batch_no        = '';
                 $row->lot_no          = '';
-
+                $row->actual_prod_price = $row->price;
                 $options              = $this->sales_model->getProductOptions($row->id, $warehouse_id);
                 if ($options) {
                     $opt = $option_id && $r == 0 ? $this->sales_model->getProductOptionByID($option_id) : $options[0];
