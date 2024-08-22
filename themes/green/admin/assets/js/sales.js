@@ -1270,7 +1270,7 @@ $(document).ready(function (e) {
             }
             var new_price = parseFloat($(this).val()),
                 item_id = row.attr('data-item-id');
-            slitems[item_id].row.price = new_price;
+            slitems[item_id].row.actual_prod_price = new_price;
             localStorage.setItem('slitems', JSON.stringify(slitems));
             loadItems();
         });
@@ -1375,7 +1375,8 @@ function loadItems() {
                 item_price = item.row.price,
                 item_cost  = item.row.cost,
                 //item_sale_price = item.row.base_unit_price,
-                item_sale_price = item.row.price,
+                //item_sale_price = item.row.price,
+                item_sale_price = item.row.actual_prod_price,
                 item_qty = item.row.qty,
                 item_aqty = item.row.quantity,
                 item_tax_method = item.row.tax_method,
@@ -1509,6 +1510,12 @@ function loadItems() {
                total_after_dis2 = (total_sales - total_after_dis1) * parseFloat((item_dis2 / 100));
                //main_net = net_price_a;// + net_price_b;
                main_net = total_sales - (total_after_dis1 + total_after_dis2);
+            //    console.log('main', main_net);
+            //    console.log('total_sales', total_sales);
+            //    console.log('total_after_dis1', total_after_dis1);
+            //    console.log('total_after_dis2', total_after_dis2);
+            //    console.log('item_qty', item_qty);
+            //    console.log('item_bonus', item_bonus);
                var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus);
 
 
