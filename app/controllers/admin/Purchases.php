@@ -2619,7 +2619,7 @@ class Purchases extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-              $this->sma->print_arrays($data, $products); exit; 
+             // $this->sma->print_arrays($data, $products); exit; 
         }
 
         if ($this->form_validation->run() == true && $this->purchases_model->addPurchase($data, $products, $attachments)) {
