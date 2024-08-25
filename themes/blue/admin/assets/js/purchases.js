@@ -994,7 +994,6 @@ function loadItems() {
                //var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus);
                var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty);
 
-               
                //var item_qty = item_qty + item_bonus;
 
             var row_no = item.id;
