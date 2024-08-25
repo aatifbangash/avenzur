@@ -263,24 +263,22 @@
                         $col = $col-1;
                     }
                     if ($Settings->product_discount && $inv->product_discount != 0 && $Settings->tax1 && $inv->product_tax > 0) {
-                        $tcol = $total_col-4;  // $col - 2; 
+                        $tcol = $col - 2;
                     } elseif ($Settings->product_discount && $inv->product_discount != 0) {
-                        $tcol = $total_col-1; // $col - 1; 
+                        $tcol = $col - 1;
                     } elseif ($Settings->tax1 && $inv->product_tax > 0) {
-                        $tcol = $total_col-2;// $col - 2; 
+                        $tcol = $col - 2;
                     } elseif ($Settings->tax1 && $inv->product_tax == 0  && $inv->product_discount == 0) {
-                        $tcol =  $total_col-2;//$col-1; 
+                        $tcol = $col-1;
                     }else {
-                        $tcol =  $total_col; // $col;
+                        $tcol = $col;  
                     }
-
                     $colspan= $total_col-1; 
                     ?>
                     <?php if ($inv->grand_total != $inv->total) {
-                        $other_colspan= $total_col-2;
                         ?>
                         <tr>
-                            <td colspan="<?= $tcol; ?>" class="text-right"><?= lang('total'); ?> <?= $tcol.''.$vals; ?>  
+                            <td colspan="<?= $tcol; ?>" class="text-right"><?= lang('total'); ?>
                                 (<?= $default_currency->code; ?>)
                             </td>
                             <?php
@@ -288,7 +286,7 @@
                                 echo '<td class="text-right">' . $this->sma->formatMoney($return_purchase ? ($inv->product_tax + $return_purchase->product_tax) : $inv->product_tax) . '</td>';
                             }
                         if ($Settings->product_discount && $inv->product_discount != 0) {
-                            echo '<td class="text-center"  colspan="2">' . $this->sma->formatMoney($return_purchase ? ($inv->product_discount + $return_purchase->product_discount) : $inv->product_discount) . '</td>';
+                            echo '<td class="text-right">' . $this->sma->formatMoney($return_purchase ? ($inv->product_discount + $return_purchase->product_discount) : $inv->product_discount) . '</td>';
                         } ?>
                             <td class="text-right"><?= $this->sma->formatMoney($return_purchase ? (($inv->total + $inv->product_tax) + ($return_purchase->total + $return_purchase->product_tax)) : ($inv->total + $inv->product_tax)); ?></td>
                         </tr>

@@ -49,7 +49,6 @@ class Purchases extends MY_Controller
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
        // $this->form_validation->set_rules('batchno[]', lang('Batch'), 'required');
         $product_id_arr= $this->input->post('product_id');  
-       
         foreach ($product_id_arr as $index => $prid) {
             // Set validation rules for each quantity field
             $this->form_validation->set_rules(
@@ -57,24 +56,12 @@ class Purchases extends MY_Controller
                 'Quantity for Product '.$_POST['product_name'][$index],  // Replace with actual product identifier
                 'required|greater_than[0]',
                 array(
-                    'required' => 'Quantity for Product <b>'.$_POST['product_name'][$index].'</b> is required.',
-                    'greater_than' => 'Quantity for Product <b>'.$_POST['product_name'][$index].'</b> must be greater than zero.'
+                    'required' => 'Quantity for Product '.$_POST['product_name'][$index].' is required.',
+                    'greater_than' => 'Quantity for Product '.$_POST['product_name'][$index].' must be greater than zero.'
                 )
             );
         }
 
-        foreach ($product_id_arr as $index => $prid) {
-            // Set validation rules for prduct expiry field
-            $this->form_validation->set_rules(
-                'expiry['.$index.']',
-                'Expiry Date for Product '.$_POST['product_name'][$index],  // Replace with actual product identifier
-                'required',
-                array(
-                    'required' => 'Expiry Date for Product <b>'.$_POST['product_name'][$index].'</b> is required.',                    
-                )
-            );
-        }
-        
 
         $this->session->unset_userdata('csrf_token');
         if ($this->form_validation->run() == true) {
@@ -2619,7 +2606,7 @@ class Purchases extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-             // $this->sma->print_arrays($data, $products); exit; 
+            // $this->sma->print_arrays($data, $products);
         }
 
         if ($this->form_validation->run() == true && $this->purchases_model->addPurchase($data, $products, $attachments)) {
@@ -2645,7 +2632,6 @@ class Purchases extends MY_Controller
                 }
             }
             $inv_items = $this->purchases_model->getAllPurchaseItems($id);
-            //echo '<pre>';print_r( $inv_items);exit; 
             // krsort($inv_items);
             $c = rand(100000, 9999999);
             foreach ($inv_items as $item) {
@@ -2655,7 +2641,7 @@ class Purchases extends MY_Controller
                 $row->discount1          = $item->discount1;
                 $row->discount2          = $item->discount2;
                 // $row->discount2          = $item->discount2;
-                $row->net_unit_cost          = $item->net_unit_cost;
+
                 $row->expiry           = (($item->expiry && $item->expiry != '0000-00-00') ? $this->sma->hrsd($item->expiry) : '');
                 $row->base_quantity    = $item->quantity;
                 $row->base_unit        = $row->unit ? $row->unit : $item->product_unit_id;
