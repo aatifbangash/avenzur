@@ -146,7 +146,8 @@
                 var bonus     = item.row.bonus;
                 var discount1 = item.row.discount1;
                 var discount2 = item.row.discount2;
-             
+                var net_unit_cost = item.row.net_unit_cost; // new addition mm
+                var cost_price =net_unit_cost; // new addition mm
 
                 var total_after_dis1 = 0.0;
                 var total_after_dis2 = 0.0;
@@ -160,13 +161,21 @@
 
                item_cost = item_tax_method == 0 ? formatDecimal(unit_cost - pr_tax_val, 4) : formatDecimal(unit_cost);
 
+               var total_before_dis_vat = (parseFloat(item_cost)) * parseFloat(item_qty);
+               dis1_a = total_before_dis_vat * parseFloat((discount1 / 100)); 
+               total_after_dis1 =  total_before_dis_vat - dis1_a;
+               dis2_a = total_after_dis1 *  parseFloat((discount2/100));
+               total_after_dis2 =  total_after_dis1 - dis2_a;
+                vat_15_a = total_after_dis2 * parseFloat(item.tax_rate.rate/100);//total_after_dis2 * parseFloat(15/100);
+               net_price_a = vat_15_a + total_after_dis2; 
+
                var total_purchases = (parseFloat(item_cost)) * parseFloat(item_qty);
                total_after_dis1 = total_purchases * parseFloat((discount1 / 100));
                total_after_dis2 = (total_purchases - total_after_dis1) * parseFloat((discount2 / 100));
                //main_net = net_price_a;// + net_price_b;
                main_net = total_purchases - (total_after_dis1 + total_after_dis2);
-
-
+               total_product_discount= formatDecimal((total_after_dis1 + total_after_dis2),4);
+                 product_discount += formatDecimal((total_after_dis1 + total_after_dis2),4);  
                var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + bonus);
 
                 var product_unit = item.row.unit, base_quantity = item.row.base_quantity;
@@ -189,8 +198,7 @@
                 } else {
                      item_discount = parseFloat(ds);
                 }
-                product_discount += formatDecimal((item_discount * item_qty), 4);
-
+               // product_discount += formatDecimal((item_discount * item_qty), 4);  // commented by mm
                 unit_cost = formatDecimal(unit_cost);
                 var pr_tax = item.tax_rate;
                 var pr_tax_val = 0, pr_tax_rate = 0;
@@ -212,11 +220,23 @@
                             pr_tax_rate = pr_tax.rate;
 
                         }
-                        product_tax += pr_tax_val * item_qty;
+                        //product_tax += pr_tax_val * item_qty;  // not used 
                     }
                 }
-                item_cost = item_tax_method == 0 ? formatDecimal((unit_cost-pr_tax_val), 4) : formatDecimal(unit_cost);
-                //unit_cost = formatDecimal((unit_cost+item_discount), 4);
+                item_cost = item_tax_method == 0 ? formatDecimal((unit_cost-pr_tax_val), 4) : formatDecimal(unit_cost); 
+                //unit_cost = formatDecimal((unit_cost+item_discount), 4); 
+                //--------------------- new---mm--------------------------------
+              // var total_purchases =((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty)); 
+              //var product_vat_tax= pr_tax_val * item_qty; 
+              if (pr_tax !== false) {
+              var product_vat_tax= vat_15_a; 
+              product_tax +=product_vat_tax;
+              }
+              
+             //  alert(total_purchases);
+             //  var total_purchases =(parseFloat(total_purchases) + parseFloat(product_vat_tax) );
+             var per_product_total_purchase =((parseFloat(total_purchases)-parseFloat(total_product_discount)) + parseFloat(product_vat_tax) );
+                 
                 var sel_opt = '';
                 $.each(item.options, function () {
                     if(this.id == item_option) {
@@ -247,9 +267,9 @@
 
                 //tr_html += '<td><input class="form-control bonus" name="bonus[]" type="text" value="' + bonus + '" data-id="' + row_no + '" data-item="' + item_id + '" id="bonus' + row_no + '"></td>';
 
-                tr_html += '<td><input class="form-control discount1" name="discount1[]" type="text" value="' + discount1 + '" data-id="' + row_no + '" data-item="' + item_id + '" id="discount1' + row_no + '"></td>';
+                tr_html += '<td><input class="form-control discount1" readonly name="discount1[]" type="text" value="' + discount1 + '" data-id="' + row_no + '" data-item="' + item_id + '" id="discount1' + row_no + '"></td>';
 
-                tr_html += '<td><input class="form-control discount2" name="discount2[]" type="text" value="' + discount2 + '" data-id="' + row_no + '" data-item="' + item_id + '" id="batch_no' + row_no + '"></td>';
+                tr_html += '<td><input class="form-control discount2" readonly name="discount2[]" type="text" value="' + discount2 + '" data-id="' + row_no + '" data-item="' + item_id + '" id="batch_no' + row_no + '"></td>';
 
         
 
@@ -262,17 +282,17 @@
                 // }
 
                 if (site.settings.tax1 == 1) {
-                    tr_html += '<td class="text-right"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' + row_no + '" value="' + pr_tax.id + '"><span class="text-right sproduct_tax" id="sproduct_tax_' + row_no + '"> ' + formatMoney(pr_tax_val * item_qty) + '</span></td>';
+                    tr_html += '<td class="text-right"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' + row_no + '" value="' + pr_tax.id + '"><input type="hidden" name="product_vat_tax[]" value="'+product_vat_tax+'" ><span class="text-right sproduct_tax" id="sproduct_tax_' + row_no + '"> ' + formatMoney(product_vat_tax) + '</span></td>';
                 }
 
-                tr_html += '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' + row_no + '">' + formatMoney(((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty))) + '</span></td>';
+                tr_html += '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' + row_no + '">' + formatMoney(per_product_total_purchase) + '</span></td>'; // old was total_purchases
 
                 tr_html +=
                 '<td class="text-right"><span class="text-right rnet" id="net_' +
                 row_no +
                 '">'+formatMoney(main_net)+'</span></td>';
 
-            tr_html +=
+                tr_html +=
                 '<td class="text-right"><span class="text-right ssubtotal" id="tes2_' +
                 row_no +
                 '">' +
@@ -288,12 +308,13 @@
                 newTr.html(tr_html);
                 newTr.prependTo("#reTable");
                 //total += parseFloat(item_cost * item_qty);
-                total += formatDecimal(((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty)));
+                //total += formatDecimal(total_purchases);
+                total += formatDecimal(main_net, 4);
                 count += parseFloat(item_qty);
                 an++;
 
             });
-
+ 
             // Order level discount calculations
             if (rediscount = localStorage.getItem('rediscount')) {
                 var ds = rediscount;
@@ -324,10 +345,12 @@
                     });
                 }
             }
-            total_discount = parseFloat(order_discount + product_discount);
+            
+           var total_discount = parseFloat(order_discount + product_discount);    
             // Totals calculations after item addition
-            var gtotal = parseFloat(((total + invoice_tax) - order_discount));
-
+           //  var gtotal = parseFloat(((total + invoice_tax) - order_discount));
+            //if(product_tax=='NAN') 
+             var gtotal = parseFloat(((total +product_tax + invoice_tax) - order_discount));
             if (return_surcharge = localStorage.getItem('return_surcharge')) {
                 var rs = return_surcharge.replace(/"/g, '');
                 if (rs.indexOf("%") !== -1) {
@@ -355,7 +378,8 @@
             if (site.settings.tax2 != 0) {
                 $('#ttax2').text(formatMoney(invoice_tax));
             }
-            $('#gtotal').text(formatMoney(gtotal));
+            
+            $('#gtotal').text(formatMoney(gtotal)); 
 
         }
     }
