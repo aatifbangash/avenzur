@@ -1144,9 +1144,11 @@ class Pos extends MY_Controller
 
                         //$amount_paid_pos = $_POST['amount'][0];
                         $amount_paid_pos = 0;
+                        $amount_due_pos = 0;
                         foreach ($payemntsTypes as $payemntsType){
                             $paidBillType = $payemntsType->paid_by;
-                            $amount_paid_pos += $payemntsType->amount;
+                            $amount_due_pos += $payemntsType->amount;
+                            $amount_paid_pos += $payemntsType->pos_paid;
 
                             if($paidBillType =="cash"){
                                 // //cash
@@ -1156,7 +1158,7 @@ class Pos extends MY_Controller
                                 'dc' => 'D',
                                 'ledger_id' => $customer->fund_books_ledger,
                                 //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
-                                'amount' => $payemntsType->amount,
+                                'amount' => $payemntsType->pos_paid,
                                 'narration' => 'cash'
                                 )
                                 );
@@ -1168,22 +1170,22 @@ class Pos extends MY_Controller
                                     'dc' => 'D',
                                     'ledger_id' => $customer->credit_card_ledger,
                                     //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
-                                    'amount' => $payemntsType->amount,
+                                    'amount' => $payemntsType->pos_paid,
                                     'narration' => 'Credit Card'
                                     )
                                 );  
                             }
                         }
 
+                        //$price_difference = $amount_paid_pos - ($totalSalePrice + $inv->total_tax - $inv->total_discount);
                         
-
-                        $price_difference = $amount_paid_pos - ($totalSalePrice + $inv->total_tax - $inv->total_discount);
+                        $price_difference = $amount_due_pos - $amount_paid_pos;
+                        
                         if($price_difference > 0){
-                            $difference_type = 'C';
-                        }else if($price_difference < 0){
                             $difference_type = 'D';
+                        }else if($price_difference < 0){
+                            $difference_type = 'C';
                         }
-
 
                         // cost of goods sold
                         $entryitemdata[] = array(
@@ -1241,23 +1243,23 @@ class Pos extends MY_Controller
                                     )
                                 );
 
-                        /*if($price_difference != 0){
+                        if($price_difference != 0){
                             // //price difference
                             $entryitemdata[] = array(
                                 'Entryitem' => array(
                                     'entry_id' => $insert_id,
-                                    'dc' => 'C',
+                                    'dc' => $difference_type,
                                     'ledger_id' => $customer->price_difference_ledger,
                                     'amount' => abs($price_difference),
-                                    'narration' => 'price difference'
+                                    'narration' => 'Halala Difference'
                                 )
                             );
-                        }  */    
+                        }    
                         
                         $total_invoice_entry = $inv->total_tax + $totalSalePrice + $totalPurchasePrice;
-                        /*if($price_difference > 0){
-                            $total_invoice_entry += $price_difference;
-                        }*/
+                        if($price_difference != 0){
+                            $total_invoice_entry += abs($price_difference);
+                        }
 
                         $this->db->update('sma_accounts_entries', ['dr_total' => $total_invoice_entry, 'cr_total' => $total_invoice_entry], ['id' => $insert_id]);
                                 
