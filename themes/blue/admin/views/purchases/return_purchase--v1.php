@@ -120,7 +120,7 @@
             total = 0;
             count = 1;
             an = 1;
-            product_tax = 0;
+            tota_product_tax = 0;
             invoice_tax = 0;
             product_discount = 0;
             order_discount = 0;
@@ -146,8 +146,8 @@
                 var bonus     = item.row.bonus;
                 var discount1 = item.row.discount1;
                 var discount2 = item.row.discount2;
-                var net_unit_cost = item.row.net_unit_cost; // new addition mm
-                var cost_price =net_unit_cost; // new addition mm
+                var net_unit_cost = item.row.net_unit_cost;
+                var cost_price =net_unit_cost;  
 
                 var total_after_dis1 = 0.0;
                 var total_after_dis2 = 0.0;
@@ -159,25 +159,15 @@
                 }
                 pr_tax_val = formatDecimal(pr_tax_val);
 
-               item_cost = item_tax_method == 0 ? formatDecimal(unit_cost - pr_tax_val, 4) : formatDecimal(unit_cost);
-
-               var total_before_dis_vat = (parseFloat(item_cost)) * parseFloat(item_qty);
-               dis1_a = total_before_dis_vat * parseFloat((discount1 / 100)); 
-               total_after_dis1 =  total_before_dis_vat - dis1_a;
-               dis2_a = total_after_dis1 *  parseFloat((discount2/100));
-               total_after_dis2 =  total_after_dis1 - dis2_a;
-                vat_15_a = total_after_dis2 * parseFloat(item.tax_rate.rate/100);//total_after_dis2 * parseFloat(15/100);
-               net_price_a = vat_15_a + total_after_dis2; 
-
+                item_cost = item_tax_method == 0 ? formatDecimal(unit_cost - pr_tax_val, 4) : formatDecimal(unit_cost); 
                var total_purchases = (parseFloat(item_cost)) * parseFloat(item_qty);
                total_after_dis1 = total_purchases * parseFloat((discount1 / 100));
                total_after_dis2 = (total_purchases - total_after_dis1) * parseFloat((discount2 / 100));
                //main_net = net_price_a;// + net_price_b;
-               main_net = total_purchases - (total_after_dis1 + total_after_dis2);
-               total_product_discount= formatDecimal((total_after_dis1 + total_after_dis2),4);
-                 product_discount += formatDecimal((total_after_dis1 + total_after_dis2),4);  
+               main_net = total_purchases - (total_after_dis1 + total_after_dis2);  
+              
                var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + bonus);
-
+              
                 var product_unit = item.row.unit, base_quantity = item.row.base_quantity;
                 if(product_unit != item.row.base_unit) {
                     $.each(item.units, function(){
@@ -198,19 +188,22 @@
                 } else {
                      item_discount = parseFloat(ds);
                 }
-               // product_discount += formatDecimal((item_discount * item_qty), 4);  // commented by mm
+                product_discount += formatDecimal((item_discount * item_qty), 4);
+
                 unit_cost = formatDecimal(unit_cost);
                 var pr_tax = item.tax_rate;
-                var pr_tax_val = 0, pr_tax_rate = 0;
+                var pr_tax_val = 0, pr_tax_rate = 0 ,product_tax=0;
                 if (site.settings.tax1 == 1) {
                     if (pr_tax !== false) {
                         if (pr_tax.type == 1) {
 
                             if (item_tax_method == '0') {
-                                pr_tax_val = formatDecimal(((unit_cost) * parseFloat(pr_tax.rate)) / (100 + parseFloat(pr_tax.rate)), 4);
+                                // pr_tax_val = formatDecimal(((unit_cost) * parseFloat(pr_tax.rate)) / (100 + parseFloat(pr_tax.rate)), 4); // comment by mm
+                                pr_tax_val = formatDecimal(((cost_price) * parseFloat(pr_tax.rate)) / (100 + parseFloat(pr_tax.rate)), 4); // add by mm
                                 pr_tax_rate = formatDecimal(pr_tax.rate) + '%';
                             } else {
-                                pr_tax_val = formatDecimal(((unit_cost) * parseFloat(pr_tax.rate)) / 100, 4);
+                               // pr_tax_val = formatDecimal(((unit_cost) * parseFloat(pr_tax.rate)) / 100, 4); // comment by mm
+                                pr_tax_val = formatDecimal(((cost_price) * parseFloat(pr_tax.rate)) / 100, 4); // added by mm
                                 pr_tax_rate = formatDecimal(pr_tax.rate) + '%';
                             }
 
@@ -220,23 +213,18 @@
                             pr_tax_rate = pr_tax.rate;
 
                         }
-                        //product_tax += pr_tax_val * item_qty;  // not used 
+                        product_tax = pr_tax_val * item_qty;
+                        tota_product_tax+=product_tax; 
                     }
                 }
-                item_cost = item_tax_method == 0 ? formatDecimal((unit_cost-pr_tax_val), 4) : formatDecimal(unit_cost); 
-                //unit_cost = formatDecimal((unit_cost+item_discount), 4); 
-                //--------------------- new---mm--------------------------------
-              // var total_purchases =((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty)); 
-              //var product_vat_tax= pr_tax_val * item_qty; 
-              if (pr_tax !== false) {
-              var product_vat_tax= vat_15_a; 
-              product_tax +=product_vat_tax;
-              }
-              
-             //  alert(total_purchases);
-             //  var total_purchases =(parseFloat(total_purchases) + parseFloat(product_vat_tax) );
-             var per_product_total_purchase =((parseFloat(total_purchases)-parseFloat(total_product_discount)) + parseFloat(product_vat_tax) );
-                 
+                item_cost = item_tax_method == 0 ? formatDecimal((unit_cost-pr_tax_val), 4) : formatDecimal(unit_cost); // old was
+                var subTotal= formatMoney(((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty)));  // old was 
+ 
+               // item_cost=  formatDecimal(parseFloat(cost_price) * parseFloat(item_qty),4);  // new 
+              //  var subTotal= formatMoney(((parseFloat(item_cost) + parseFloat(product_tax)))); // new 
+             
+              //unit_cost = formatDecimal((unit_cost+item_discount), 4);
+
                 var sel_opt = '';
                 $.each(item.options, function () {
                     if(this.id == item_option) {
@@ -247,56 +235,39 @@
                 var row_no = item.id;
                 var newTr = $('<tr id="row_' + row_no + '" class="row_' + item_id + '" data-item-id="' + item_id + '"></tr>');
                 tr_html = '<td><input name="purchase_item_id[]" type="hidden" class="rpiid" value="' + purchase_item_id + '"><input name="product_id[]" type="hidden" class="rid" value="' + product_id + '"><input name="product[]" type="hidden" class="rcode" value="' + item_code + '"><input name="product_name[]" type="hidden" class="rname" value="' + item_name + '"><input name="product_option[]" type="hidden" class="roption" value="' + item_option + '"><input name="part_no[]" type="hidden" class="rpart_no" value="' + item_supplier_part_no + '"><span class="sname" id="name_' + row_no + '">' + item_name + ' (' + item_code + ')'+(sel_opt != '' ? ' ('+sel_opt+')' : '')+' <span class="label label-default">'+item_supplier_part_no+'</span></span></td>';
-
                 tr_html += '<td class="text-right"><input class="form-control input-sm text-right rcost" name="net_cost[]" type="hidden" id="cost_' + row_no + '" value="' + item_cost + '"><input class="rucost" name="unit_cost[]" type="hidden" value="' + unit_cost + '"><input class="realucost" name="real_unit_cost[]" type="hidden" value="' + item.row.real_unit_cost + '"><span class="text-right scost" id="scost_' + row_no + '">' + formatMoney(item_cost) + '</span></td>';
-                
-
                 tr_html += '<td><input class="form-control batch_no" name="batch_no[]" type="text" value="' + batch_no + '" data-id="' + row_no + '" data-item="' + item_id + '" id="batch_no' + row_no + '"></td>';
-                
                 if (site.settings.product_expiry == 1) {
                     tr_html += '<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="' + item_expiry + '" data-id="' + row_no + '" data-item="' + item_id + '" id="expiry_' + row_no + '"></td>';
                 }
-              
-                
                 tr_html += '<td class="text-center"><span>'+formatDecimal(item_oqty)+'</span></td>';
                 if (po_edit) {
                     tr_html += '<td class="text-center"><span>'+formatDecimal(qty_received)+'</span></td>';
-                }
-                
+                }                
                 tr_html += '<td><input class="form-control text-center rquantity" name="quantity[]" type="text" value="' + formatDecimal(item_qty) + '" data-id="' + row_no + '" data-item="' + item_id + '" id="quantity_' + row_no + '" onClick="this.select();"><input name="product_unit[]" type="hidden" class="runit" value="' + product_unit + '"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' + base_quantity + '"></td>';
-
                 //tr_html += '<td><input class="form-control bonus" name="bonus[]" type="text" value="' + bonus + '" data-id="' + row_no + '" data-item="' + item_id + '" id="bonus' + row_no + '"></td>';
-
-                tr_html += '<td><input class="form-control discount1" readonly name="discount1[]" type="text" value="' + discount1 + '" data-id="' + row_no + '" data-item="' + item_id + '" id="discount1' + row_no + '"></td>';
-
-                tr_html += '<td><input class="form-control discount2" readonly name="discount2[]" type="text" value="' + discount2 + '" data-id="' + row_no + '" data-item="' + item_id + '" id="batch_no' + row_no + '"></td>';
-
-        
-
+                tr_html += '<td><input class="form-control discount1" name="discount1[]" type="text" value="' + discount1 + '" data-id="' + row_no + '" data-item="' + item_id + '" id="discount1' + row_no + '"></td>';
+                tr_html += '<td><input class="form-control discount2" name="discount2[]" type="text" value="' + discount2 + '" data-id="' + row_no + '" data-item="' + item_id + '" id="batch_no' + row_no + '"></td>';
                 // if (site.settings.product_discount == 1) {
                 //     tr_html += '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="hidden" id="discount_' + row_no + '" value="' + item_ds + '"><span class="text-right sdiscount text-danger" id="sdiscount_' + row_no + '">' + formatMoney(0 - (item_discount * item_qty)) + '</span></td>';
                 // }
-
                 // if (site.settings.tax1 == 1) {
                 //     tr_html += '<td class="text-right"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' + row_no + '" value="' + pr_tax.id + '"><span class="text-right sproduct_tax" id="sproduct_tax_' + row_no + '">' + (pr_tax_rate ? '(' + pr_tax_rate + ')' : '') + ' ' + formatMoney(pr_tax_val * item_qty) + '</span></td>';
                 // }
-
                 if (site.settings.tax1 == 1) {
-                    tr_html += '<td class="text-right"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' + row_no + '" value="' + pr_tax.id + '"><input type="hidden" name="product_vat_tax[]" value="'+product_vat_tax+'" ><span class="text-right sproduct_tax" id="sproduct_tax_' + row_no + '"> ' + formatMoney(product_vat_tax) + '</span></td>';
+                    tr_html += '<td class="text-right"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' + row_no + '" value="' + pr_tax.id + '"><span class="text-right sproduct_tax" id="sproduct_tax_' + row_no + '"> ' + formatMoney(product_tax) + '</span></td>';
                 }
-
-                tr_html += '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' + row_no + '">' + formatMoney(per_product_total_purchase) + '</span></td>'; // old was total_purchases
-
+                tr_html += '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' + row_no + '">' + formatMoney(subTotal) + '</span></td>';
                 tr_html +=
                 '<td class="text-right"><span class="text-right rnet" id="net_' +
                 row_no +
                 '">'+formatMoney(main_net)+'</span></td>';
 
-                tr_html +=
+            tr_html +=
                 '<td class="text-right"><span class="text-right ssubtotal" id="tes2_' +
                 row_no +
                 '">' +
-                formatMoney(new_unit_cost) +
+                formatMoney(cost_price) +
                 '</span></td>'; 
                 
 
@@ -308,13 +279,13 @@
                 newTr.html(tr_html);
                 newTr.prependTo("#reTable");
                 //total += parseFloat(item_cost * item_qty);
-                //total += formatDecimal(total_purchases);
-                total += formatDecimal(main_net, 4);
+                total += formatDecimal(((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty))); // old was 
+                // total += formatDecimal(parseFloat(item_cost) + parseFloat(product_tax)); // new
                 count += parseFloat(item_qty);
                 an++;
 
             });
- 
+
             // Order level discount calculations
             if (rediscount = localStorage.getItem('rediscount')) {
                 var ds = rediscount;
@@ -345,12 +316,10 @@
                     });
                 }
             }
-            
-           var total_discount = parseFloat(order_discount + product_discount);    
-            // Totals calculations after item addition
-           //  var gtotal = parseFloat(((total + invoice_tax) - order_discount));
-            //if(product_tax=='NAN') 
-             var gtotal = parseFloat(((total +product_tax + invoice_tax) - order_discount));
+            total_discount = parseFloat(order_discount + product_discount);
+            // Totals calculations after item addition 
+          
+            var gtotal = parseFloat(((total + invoice_tax) - order_discount)); 
             if (return_surcharge = localStorage.getItem('return_surcharge')) {
                 var rs = return_surcharge.replace(/"/g, '');
                 if (rs.indexOf("%") !== -1) {
@@ -373,13 +342,12 @@
             $('#total_items').val((parseFloat(count) - 1));
             $('#trs').text(formatMoney(surcharge));
             if (site.settings.tax1) {
-                $('#ttax1').text(formatMoney(product_tax));
+                $('#ttax1').text(formatMoney(tota_product_tax)); 
             }
             if (site.settings.tax2 != 0) {
                 $('#ttax2').text(formatMoney(invoice_tax));
             }
-            
-            $('#gtotal').text(formatMoney(gtotal)); 
+            $('#gtotal').text(formatMoney(gtotal));
 
         }
     }

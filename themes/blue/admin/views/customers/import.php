@@ -12,7 +12,7 @@
             <p><?= lang('enter_info'); ?></p>
 
             <div class="well well-small">
-                <a href="<?php echo base_url(); ?>assets/csv/sample.csv" class="btn btn-primary pull-right"><i
+                <a href="<?php echo base_url(); ?>assets/csv/sample.csv?v=1" class="btn btn-primary pull-right"><i
                         class="fa fa-download"></i> Download Sample File</a>
                 <span class="text-warning"><?= lang('csv1'); ?></span><br/><?= lang('csv2'); ?> <span class="text-info">(<?= lang('company') . ', ' . lang('name') . ', ' . lang('email') . ', ' . lang('phone') . ', ' . lang('address') . ', ' . lang('city'); ?>
                     ,  <?= lang('state') . ', ' . lang('postal_code') . ', ' . lang('country') . ', ' . lang('vat_no') . ', ' . lang('gst_no') . ', ' . lang('ccf1') . ', ' . lang('ccf2') . ', ' . lang('ccf3') . ', ' . lang('ccf4') . ', ' . lang('ccf5') . ', ' . lang('ccf6'); ?>
