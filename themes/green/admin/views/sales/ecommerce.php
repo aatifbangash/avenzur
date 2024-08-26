@@ -56,7 +56,6 @@
             {column_number: 10, filter_default_label: "[<?=lang('payment_status');?>]", filter_type: "text", data: []},
             {column_number: 12, filter_default_label: "[<?=lang('courier_name');?>]", filter_type: "text", data: []},
             {column_number: 13, filter_default_label: "[<?=lang('city');?>]", filter_type: "text", data: []},
-            {column_number: 13, filter_default_label: "[<?=lang('pickup');?>]", filter_type: "text", data: []},
         ], "footer");
 
 
