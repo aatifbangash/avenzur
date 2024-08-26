@@ -33,7 +33,7 @@
                 //if(aData[7] > aData[9]){ nRow.className = "product_link warning"; } else { nRow.className = "product_link"; }
                 return nRow;
             },
-            "aoColumns": [{"bSortable": false,"mRender": checkbox}, null, {"mRender": fld},null, null, null, null, {"mRender": row_status},null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": true}, {"bSortable": true}, {"bSortable": true}, {"bSortable": true}, {"bSortable": true},{"bSortable": true}],
+            "aoColumns": [{"bSortable": false,"mRender": checkbox}, null, {"mRender": fld},null, null, null, null, {"mRender": row_status},null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": true}, {"bSortable": true}, {"bSortable": true}, {"bSortable": true}, {"bSortable": true},{"bSortable": true},{"bSortable": true}],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0, paid = 0, balance = 0;
                 for (var i = 0; i < aaData.length; i++) {
@@ -56,6 +56,7 @@
             {column_number: 10, filter_default_label: "[<?=lang('payment_status');?>]", filter_type: "text", data: []},
             {column_number: 12, filter_default_label: "[<?=lang('courier_name');?>]", filter_type: "text", data: []},
             {column_number: 13, filter_default_label: "[<?=lang('city');?>]", filter_type: "text", data: []},
+            {column_number: 13, filter_default_label: "[<?=lang('pickup');?>]", filter_type: "text", data: []},
         ], "footer");
 
 
@@ -384,12 +385,13 @@
                             <th><?= lang('express'); ?></th> 
                             <th><?= lang('courier_status'); ?></th>
                             <th><?= lang('global'); ?></th>
+                            <th><?= lang('pickup'); ?></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="13" class="dataTables_empty"><?= lang('loading_data'); ?></td>
+                            <td colspan="14" class="dataTables_empty"><?= lang('loading_data'); ?></td>
                         </tr>
                         </tbody>
                         <tfoot class="dtFilter">
@@ -414,6 +416,7 @@
                             <th></th>
                             <th></th>
                             <th></th> 
+                            <th></th>
                             <th></th>
                             <th></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>

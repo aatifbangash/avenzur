@@ -2756,7 +2756,7 @@ class Sales extends MY_Controller
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as sale_id  , 
+                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as sale_id, warehouses.name as warehouse_name,
                 DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, 
                 {$this->db->dbprefix('sales')}.sequence_code as code, biller,  
                 CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN CONCAT({$this->db->dbprefix('companies')}.first_name, ' ',{$this->db->dbprefix('companies')}.last_name )  ELSE CONCAT({$this->db->dbprefix('addresses')}.first_name,' ', {$this->db->dbprefix('addresses')}.last_name) END AS customer,
@@ -2767,12 +2767,13 @@ class Sales extends MY_Controller
 
                 {$this->db->dbprefix('sales')}.delivery_type,{$this->db->dbprefix('sales')}.courier_order_status")
                 ->from('sales')
+                ->join('warehouses', 'warehouses.id = sales.pickup_location_id', 'left')
                 ->where('warehouse_id', $warehouse_id)
                 ->where('shop', 1);
                 //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
         } else {
             $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as sale_id , DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, 
+                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as sale_id , warehouses.name as warehouse_name, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, 
                 reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, 
                 CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN CONCAT({$this->db->dbprefix('companies')}.first_name, ' ',{$this->db->dbprefix('companies')}.last_name )   ELSE CONCAT({$this->db->dbprefix('addresses')}.first_name,' ', {$this->db->dbprefix('addresses')}.last_name) END AS customer,
                 CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.phone  ELSE ({$this->db->dbprefix('addresses')}.phone) END AS phone,  
@@ -2781,6 +2782,7 @@ class Sales extends MY_Controller
                 CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.city  ELSE ({$this->db->dbprefix('addresses')}.city) END AS city,
                 {$this->db->dbprefix('sales')}.delivery_type,{$this->db->dbprefix('sales')}.courier_order_status")
                 ->from('sales')
+                ->join('warehouses', 'warehouses.id = sales.pickup_location_id', 'left')
                 ->where('shop', 1);  
         }
  
@@ -2917,17 +2919,15 @@ class Sales extends MY_Controller
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id, warehouses.name as warehouse_name")
+                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id")
                 ->from('sales')
-                ->join('warehouses', 'warehouses.id = sales.pickup_location_id', 'left')
                 ->where('warehouse_id', $warehouse_id)
                 ->where('shop', 0);
                 //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
         } else {
             $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id, warehouses.name as warehouse_name")
+                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id")
                 ->from('sales')
-                ->join('warehouses', 'warehouses.id = sales.pickup_location_id', 'left')
                 ->where('shop', 0); 
         } 
         // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
