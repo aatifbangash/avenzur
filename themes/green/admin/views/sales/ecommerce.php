@@ -383,8 +383,8 @@
                             <th><?= lang('city'); ?></th>
                             <th><?= lang('express'); ?></th> 
                             <th><?= lang('courier_status'); ?></th>
-                            <th><?= lang('global'); ?></th>
                             <th><?= lang('pickup'); ?></th>
+                            <th><?= lang('global'); ?></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
                         </thead>
