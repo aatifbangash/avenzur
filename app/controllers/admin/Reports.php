@@ -3983,14 +3983,25 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $supplier_id_array =array(); 
+        if(!empty($this->input->post('supplier'))){
+            $supplier_id_array = $this->input->post('supplier'); 
+        } 
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier'); 
         $response_arr = array();
+        if($from_date){
+            $start_date = $this->sma->fld($from_date); 
+        }
 
         if($duration){
-            $supplier_aging_array = $this->reports_model->getSupplierAging($duration);
+           
+            $supplier_aging_array = $this->reports_model->getSupplierAging($duration,$start_date,  $supplier_id_array);
         }else{
-            $supplier_aging_array = $this->reports_model->getSupplierAging($duration = 120);
+            $supplier_aging_array = $this->reports_model->getSupplierAging($duration = 120,$start_date,  $supplier_id_array);
         }
-        
+        $this->data['supplier_id_array'] =$supplier_id_array;
+        $this->data['start_date'] =$this->input->post('from_date');
         $this->data['supplier_aging'] = $supplier_aging_array;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_aging')]];
         $meta = ['page_title' => lang('suppliers_aging'), 'bc' => $bc]; 
