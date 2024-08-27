@@ -298,10 +298,11 @@
                                         <thead>
                                         <tr>
                                             <th width="40%"><?=lang('product');?></th>
-                                            <th width="15%"><?=lang('price');?></th>
+                                            <th width="10%"><?=lang('price');?></th> 
+                                            <th width="10%"><?=lang('VAT');?></th>
                                             <th width="15%"><?=lang('qty');?></th>
-                                            <th width="15%"><?=lang('Nearest Expiry');?></th>
-                                            <th width="20%"><?=lang('subtotal');?></th>
+                                            <th width="18%"><?=lang('Nearest Expiry');?></th>
+                                            <th width="13%"><?=lang('subtotal');?></th>
                                             <th style="width: 5%; text-align: center;">
                                                 <i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i>
                                             </th>
