@@ -1298,9 +1298,9 @@ function loadItems() {
                     }
                     product_tax += pr_tax_val * item_qty;
                 }
-            }
-            pr_tax_val = formatDecimal(pr_tax_val);
-            total_vat += pr_tax_val;
+            } 
+            pr_tax_val = formatDecimal(pr_tax_val); 
+            total_vat += pr_tax_val* item_qty; // befor was  total_vat += pr_tax_val; 
             //item_price = item_tax_method == 0 ? formatDecimal(unit_price - pr_tax_val, 4) : formatDecimal(unit_price);
             item_price = formatDecimal(unit_price);
             unit_price = formatDecimal(unit_price + item_discount, 4);
@@ -1418,6 +1418,14 @@ function loadItems() {
                 '">' +
                 formatMoney(parseFloat(item_price)) +
                 '</span></td>';
+
+                tr_html +=
+                '<td class="text-right"><span class="text-right vattax" id="vattax_' +
+                row_no +
+                '">' +
+                formatMoney(pr_tax_val) +
+                '</span></td>';
+
             tr_html +=
                 '<td>' +
                 (item.free
