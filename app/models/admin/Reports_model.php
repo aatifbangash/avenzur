@@ -225,7 +225,7 @@ class Reports_model extends CI_Model
     }
 
 
-    public function getCustomerAging($duration)
+    public function getCustomerAging($duration, $start_date, $supplier_id_array)
     {
     
         $response = array();
@@ -240,25 +240,38 @@ class Reports_model extends CI_Model
             ELSE 0 
         END) AS 'Current'";*/
 
+        if(empty($start_date)){
+            $start_date = date('Y-m-d');  
+        }
+        $queryCondition='';
+        if(count($supplier_id_array)>0){
+              $supplier_ids= implode(',',$supplier_id_array);  
+            $queryCondition =" AND c.id IN($supplier_ids)";
+        }
+        $count = 1;
         foreach ($intervals as $index => $interval) {
             if ($interval > $duration) {
                 break;
             }
-
-            $start = $previous_limit + 1;
+            if($count == 1) {
+                $start = $previous_limit;
+            }else{
+                $start = $previous_limit + 1;
+            }
             $end = $interval;
             $previous_limit = $end;
 
             $cases[] = "SUM(CASE 
-                WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN ($start) AND ($end) THEN 
+                WHEN DATEDIFF('$start_date', ae.date) BETWEEN ($start) AND ($end) THEN 
                     CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
                 ELSE 0 
             END) AS '$start-$end'";
+          $count = $count+1;  
         }
 
         // Add the "greater than" case for the selected duration
         $cases[] = "SUM(CASE 
-            WHEN DATEDIFF(CURDATE(), ae.date) > ($duration) THEN 
+            WHEN DATEDIFF($start_date, ae.date) > ($duration) THEN 
                 CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
             ELSE 0 
         END) AS '>$duration'";
@@ -279,10 +292,12 @@ class Reports_model extends CI_Model
         JOIN 
             sma_accounts_ledgers al ON c.ledger_account = al.id
         WHERE 
-            ei.ledger_id = c.ledger_account
+            ei.ledger_id = c.ledger_account $queryCondition
 
         GROUP BY 
             c.id, c.name");
+       
+     //echo $this->db->last_query();exit;
 
         $data = array();
         if ($q->num_rows() > 0) {
@@ -294,13 +309,20 @@ class Reports_model extends CI_Model
        return $data;
     }
 
-    public function getSupplierAging($duration)
+    public function getSupplierAging($duration, $start_date,$supplier_id_array)
     {
         $response = array();
         $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
         $cases = [];
         $previous_limit = 0;
-
+        if(empty($start_date)){
+              $start_date = date('Y-m-d');  
+        }
+        $queryCondition='';
+        if(count($supplier_id_array)>0){
+              $supplier_ids= implode(',',$supplier_id_array);  
+            $queryCondition =" AND c.id IN($supplier_ids)";
+        }
         // Always include the "Current" case
         /*$cases[] = "SUM(CASE 
             WHEN DATEDIFF(CURDATE(), ae.date) <= c.payment_term THEN 
@@ -316,9 +338,9 @@ class Reports_model extends CI_Model
             $start = $previous_limit + 1;
             $end = $interval;
             $previous_limit = $end;
-
+            // replaced CURDATE() with   $start_date 
             $cases[] = "SUM(CASE 
-                WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN ($start) AND ($end) THEN 
+                WHEN DATEDIFF($start_date, ae.date) BETWEEN ($start) AND ($end) THEN 
                     CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
                 ELSE 0 
             END) AS '$start-$end'";
@@ -326,7 +348,7 @@ class Reports_model extends CI_Model
 
         // Add the "greater than" case for the selected duration
         $cases[] = "SUM(CASE 
-            WHEN DATEDIFF(CURDATE(), ae.date) > ($duration) THEN 
+            WHEN DATEDIFF($start_date, ae.date) > ($duration) THEN 
                 CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
             ELSE 0 
         END) AS '>$duration'";
@@ -347,7 +369,7 @@ class Reports_model extends CI_Model
         JOIN 
             sma_accounts_ledgers al ON c.ledger_account = al.id
         WHERE 
-            ei.ledger_id = c.ledger_account
+            ei.ledger_id = c.ledger_account $queryCondition 
         GROUP BY 
             c.id, c.name");
 
@@ -1850,7 +1872,7 @@ class Reports_model extends CI_Model
         return $response;
     }
 
-    public function getItemMovementRecords($productId, $start_date, $end_date, $warehouseId, $filterOnType)
+    public function getItemMovementRecords($productId, $start_date, $end_date, $warehouseId, $filterOnType, $document_number)
     {
         $reports_start_date = '2024-07-07';
         
@@ -1913,8 +1935,16 @@ class Reports_model extends CI_Model
                     LEFT JOIN sma_transfers sto ON iv.reference_id = sto.id AND iv.trs_type = 'transfer_out'
                     LEFT JOIN sma_transfers sti ON iv.reference_id = sti.id AND iv.trs_type = 'transfer_in'";
 
+        if($document_number) {
+            $query .=" WHERE sp.reference_no like '%".$document_number."%' 
+                        OR ss.reference_no like '%".$document_number."%' 
+                        OR ps.reference_no like '%".$document_number."%'
+                        OR sto.transfer_no like '%".$document_number."%' 
+                        OR sti.transfer_no like '%".$document_number."%' " ;
+        }
+
+
         $q = $this->db->query($query);
-        
         $response = array();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {

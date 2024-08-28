@@ -299,6 +299,7 @@
                                         <tr>
                                             <th width="40%"><?=lang('product');?></th>
                                             <th width="15%"><?=lang('price');?></th>
+                                            <th width="15%"><?=lang('VAT');?></th>
                                             <th width="15%"><?=lang('qty');?></th>
                                             <th width="15%"><?=lang('Nearest Expiry');?></th>
                                             <th width="20%"><?=lang('subtotal');?></th>

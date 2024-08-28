@@ -63,7 +63,32 @@
                                 </select>
                             </div>
                         </div>
-
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('From Date', 'fromdate'); ?>
+                                <?php echo form_input('from_date', ($start_date ?? ''), 'class="form-control input-tip date" id="fromdate"'); ?>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('suppliers', 'posupplier'); ?>
+                                <?php
+                                if(empty($supplier_id_array)){
+                                    $supplier_id_array=array();  
+                                }
+                                $sp = ['' => ''];
+                                foreach ($suppliers as $supplier) {
+                                    $sp[$supplier->id] = $supplier->company . ' (' . $supplier->name . ') - ' . $supplier->sequence_code;
+                                } 
+                                echo form_dropdown(
+                                    'supplier[]', 
+                                    $sp, 
+                                    $supplier_id_array, 
+                                    'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" multiple required="required" style="width:100%;"'
+                                );?>
+                            </div>
+                        </div>
                         <div class="col-md-4">
                             <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary"
