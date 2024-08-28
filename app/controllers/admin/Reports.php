@@ -4486,6 +4486,7 @@ class Reports extends MY_Controller
         $this->data['product'] = $productId;
         $this->data['filterOnType'] = $filterOnType;
         $this->data['document_number'] = $document_number;
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
         if ($productId && $from_date && $to_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
@@ -4494,7 +4495,7 @@ class Reports extends MY_Controller
 
             $reportData = $this->reports_model->getItemMovementRecords($productId, $start_date, $end_date, $warehouse, $filterOnType, $document_number);
 
-            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            
             $this->data['itemOpenings'] = $itemOpenings;
             $this->data['reportData'] = $reportData;
 
