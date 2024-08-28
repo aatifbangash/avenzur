@@ -53,6 +53,13 @@ $(document).ready(function (e) {
          
             localStorage.setItem('rseitems', JSON.stringify(rseitems));
             loadItems();
+        }).on('change', '.rs_cost_price', function () {
+            var row = $(this).closest('tr');
+            var cost_price = $(this).val(),
+            item_id = row.attr('data-item-id');
+            rseitems[item_id].row.cost_price = cost_price;
+            localStorage.setItem('rseitems', JSON.stringify(rseitems));
+            loadItems();
         });
 
     $('#reset').click(function (e) {
