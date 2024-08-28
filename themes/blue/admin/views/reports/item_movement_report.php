@@ -168,7 +168,7 @@
 
                                     foreach ($reportData as $rp) {
 
-                                        if ($rp->trs_type == 'adjustment_increase' || $rp->trs_type == 'purchase' || $rp->trs_type == 'customer_return' ) {
+                                        if ($rp->trs_type == 'adjustment_increase' || $rp->trs_type == 'purchase' || $rp->trs_type == 'customer_return' || ($rp->trs_type == 'transfer_in' && $warehouse->id) ) {
                                             if($count == 1){
                                                 $balanceQantity = $itemOpenings['total_opening_qty'] + $rp->quantity;
                                             }else{
@@ -182,7 +182,7 @@
                                             }
                                         }
 
-                                        if ($rp->trs_type == 'adjustment_decrease' || $rp->trs_type == 'sale' || $rp->trs_type == 'pos' || $rp->trs_type == 'return_to_supplier') {
+                                        if ($rp->trs_type == 'adjustment_decrease' || $rp->trs_type == 'sale' || $rp->trs_type == 'pos' || $rp->trs_type == 'return_to_supplier' || ($rp->trs_type == 'transfer_out' && $warehouse->id)) {
                                             if($count == 1){
                                                 $balanceQantity = $itemOpenings['total_opening_qty'] + $rp->quantity;
                                             }else{
