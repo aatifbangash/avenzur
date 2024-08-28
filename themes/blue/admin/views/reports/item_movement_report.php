@@ -54,7 +54,7 @@
 
                     <div class="col-lg-12">
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('Product', 'product'); ?>
                                 <?php // echo form_dropdown('product', $allProducts, set_value('product',$product),array('class' => 'form-control', 'id'=>'product'));
@@ -64,11 +64,18 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('Type', 'Type'); ?>
                                 <?php echo form_dropdown('filterOnType', $filterOnTypeArr, set_value('filterOnType', $_POST['filterOnType']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'filterOnType'),  array('none')); ?>
 
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Document Number', 'document_number'); ?>
+                                <?php echo form_input('document_number', ($document_number ?? ''), 'class="form-control input-tip" '); ?>
                             </div>
                         </div>
 
