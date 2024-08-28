@@ -390,6 +390,30 @@ class Site extends CI_Model
         return false;
     }
 
+    public function getAllParentCompanies($group_name)
+    {
+        $q = $this->db->get_where('companies', ['group_name' => $group_name, 'level' => 1]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+    public function getAllChildCompanies($group_name)
+    {
+        $q = $this->db->get_where('companies', ['group_name' => $group_name, 'level' => 2]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getAllCurrencies()
     {
         $q = $this->db->get('currencies');

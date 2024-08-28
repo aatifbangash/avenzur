@@ -84,6 +84,9 @@ $(document).ready(function () {
                 if (localStorage.getItem('posupplier')) {
                     localStorage.removeItem('posupplier');
                 }
+                if(localStorage.getItem('childsupplier')){
+                    localStorage.removeItem('childsupplier');
+                }
                 if (localStorage.getItem('pocurrency')) {
                     localStorage.removeItem('pocurrency');
                 }
@@ -109,6 +112,8 @@ $(document).ready(function () {
     // save and load the fields in and/or from localStorage
     var $supplier = $('#posupplier'),
         $currency = $('#pocurrency');
+
+    var $childsupplierselectbox = $('#childsupplier');
 
     $('#poref').change(function (e) {
         localStorage.setItem('poref', $(this).val());
@@ -156,9 +161,40 @@ $(document).ready(function () {
     }
     $supplier.change(function (e) {
         localStorage.setItem('posupplier', $(this).val());
+        localStorage.setItem('childsupplier', null);
         $('#supplier_id').val($(this).val()); 
+        
+        //localStorage.removeItem('childsupplier');
+        //$childsupplierselectbox.empty();
+        //$childsupplierselectbox.val();
+        populateChildSuppliers($(this).val());
     });
+
+    $childsupplierselectbox.change(function (e) {
+        localStorage.setItem('childsupplier', $(this).val());
+        $('#child_supplier_id').val($(this).val()); 
+    });
+
+    function populateChildSuppliers(pid) {
+        $.ajax({
+            url: site.base_url + 'suppliers/getChildById',
+            data: { term: '', limit: 10, pid: pid },
+            dataType: 'json',
+            success: function (data) {
+                $childsupplierselectbox.empty();
+                $.each(data.results, function (index, value) {
+                    $childsupplierselectbox.append(new Option(value.text, value.id));
+                });
+
+                if (localStorage.getItem('childsupplier')) {
+                    $childsupplierselectbox.val(localStorage.getItem('childsupplier')).trigger('change');
+                }
+            }
+        });
+    }
+
     if ((posupplier = localStorage.getItem('posupplier'))) {
+
         $supplier.val(posupplier).select2({
             minimumInputLength: 1,
             data: [],
@@ -192,9 +228,51 @@ $(document).ready(function () {
                 },
             },
         });
+
+        populateChildSuppliers(posupplier);
+
     } else {
         nsSupplier();
+        //nsChildSupplierByParentId($(this).val());
     }
+
+    /*if((childsupplier = localStorage.getItem('childsupplier'))){
+        $childsupplierselectbox.val(childsupplier).select2({
+            minimumInputLength: 1,
+            data: [],
+            initSelection: function (element, callback) {
+                $.ajax({
+                    type: 'get',
+                    async: false,
+                    url: site.base_url + 'suppliers/getSupplier/' + $(element).val(),
+                    dataType: 'json',
+                    success: function (data) {
+                        callback(data[0]);
+                    },
+                });
+            },
+            ajax: {
+                url: site.base_url + 'suppliers/childsuggestions',
+                dataType: 'json',
+                quietMillis: 15,
+                data: function (term, page) {
+                    return {
+                        term: term,
+                        limit: 10,
+                    };
+                },
+                results: function (data, page) {
+                    if (data.results != null) {
+                        return { results: data.results };
+                    } else {
+                        return { results: [{ id: '', text: 'No Match Found' }] };
+                    }
+                },
+            },
+        });
+    }else{
+        nsChildSupplier();
+    }*/
 
     /*$('.rexpiry').change(function (e) {
         var item_id = $(this).closest('tr').attr('data-item-id');
@@ -794,11 +872,13 @@ $(document).ready(function () {
 
     $(document).on('click', '#removeReadonly', function () {
         $('#posupplier').select2('readonly', false);
+        $('#childsupplier').select2('readonly', false);
         return false;
     });
 
     if (po_edit) {
         $('#posupplier').select2('readonly', true);
+        $('#childsupplier').select2('readonly', true);
     }
 });
 /* -----------------------
@@ -806,6 +886,53 @@ $(document).ready(function () {
  ----------------------- */
 
 // hellper function for supplier if no localStorage value
+function nsChildSupplierByParentId(pid){
+    $('#childsupplier').select2({
+        ajax: {
+            url: site.base_url + 'suppliers/getChildById',
+            dataType: 'json',
+            quietMillis: 15,
+            data: function (term, page) {
+                return {
+                    pid: pid,
+                    search: term
+                };
+            },
+            results: function (data, page) {
+                if (data.results != null) {
+                    return { results: data.results };
+                } else {
+                    return { results: [{ id: '', text: 'No Match Found' }] };
+                }
+            },
+        },
+    });
+}
+
+function nsChildSupplier() {
+    $('#childsupplier').select2({
+        minimumInputLength: 1,
+        ajax: {
+            url: site.base_url + 'suppliers/childsuggestions',
+            dataType: 'json',
+            quietMillis: 15,
+            data: function (term, page) {
+                return {
+                    term: term,
+                    limit: 10,
+                };
+            },
+            results: function (data, page) {
+                if (data.results != null) {
+                    return { results: data.results };
+                } else {
+                    return { results: [{ id: '', text: 'No Match Found' }] };
+                }
+            },
+        },
+    });
+}
+
 function nsSupplier() {
     $('#posupplier').select2({
         minimumInputLength: 1,
