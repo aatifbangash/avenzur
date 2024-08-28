@@ -29,7 +29,7 @@ class Reports extends MY_Controller
         ];
 
         $this->load->admin_model('deals_model');
-    } 
+    }
     public function adjustments($warehouse_id = null)
     {
         $this->sma->checkPermissions('products');
@@ -133,18 +133,19 @@ class Reports extends MY_Controller
         $this->page_construct('reports/customer_report', $meta, $this->data);
     }
 
-    public function pharmacy_stock(){
+    public function pharmacy_stock()
+    {
         $item = $this->input->post('item') ? $this->input->post('item') : null;
 
-        if(isset($_POST['submit'])){
+        if (isset($_POST['submit'])) {
             $rows = $this->reports_model->getPharmacyStockData($item);
 
-        }else{
+        } else {
             $rows = $this->reports_model->getPharmacyStockData();
         }
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        
+
         foreach ($rows as $row) {
             $productId = $row->id;
             $productCode = $row->item_code;
@@ -153,19 +154,19 @@ class Reports extends MY_Controller
             $batchNo = $row->batch_no;
             $quantity = $row->quantity;
             $expiry = $row->expiry;
-        
+
             // Check if the product is already in the organized array
-            if (!isset($organizedResults[$productId.$batchNo])) {
+            if (!isset($organizedResults[$productId . $batchNo])) {
                 // If not, initialize the product information
-                $organizedResults[$productId.$batchNo] = [
+                $organizedResults[$productId . $batchNo] = [
                     'id' => $productId,
                     'product_name' => $productName,
                     'product_code' => $productCode,
                     'warehouses' => [],
                 ];
 
-                foreach($this->data['warehouses'] as $ware_house){
-                    $organizedResults[$productId.$batchNo]['warehouses'][] = [
+                foreach ($this->data['warehouses'] as $ware_house) {
+                    $organizedResults[$productId . $batchNo]['warehouses'][] = [
                         'warehouse_name' => $ware_house->name,
                         'batch_no' => '-',
                         'quantity' => '-',
@@ -174,14 +175,14 @@ class Reports extends MY_Controller
                 }
             }
 
-            foreach ($organizedResults[$productId.$batchNo]['warehouses'] as $key => $ware_house) {
+            foreach ($organizedResults[$productId . $batchNo]['warehouses'] as $key => $ware_house) {
                 if ($ware_house['warehouse_name'] == $warehouseName) {
-                    $organizedResults[$productId.$batchNo]['warehouses'][$key]['batch_no'] = $batchNo;
-                    $organizedResults[$productId.$batchNo]['warehouses'][$key]['quantity'] = $quantity;
-                    $organizedResults[$productId.$batchNo]['warehouses'][$key]['expiry'] = $expiry;
+                    $organizedResults[$productId . $batchNo]['warehouses'][$key]['batch_no'] = $batchNo;
+                    $organizedResults[$productId . $batchNo]['warehouses'][$key]['quantity'] = $quantity;
+                    $organizedResults[$productId . $batchNo]['warehouses'][$key]['expiry'] = $expiry;
                 }
             }
-        
+
         }
 
         $this->data['stock_data'] = $organizedResults;
@@ -208,14 +209,14 @@ class Reports extends MY_Controller
         $supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
         $item_group = $this->input->post('item_group') ? $this->input->post('item_group') : null;
         $item = $this->input->post('item') ? $this->input->post('item') : null;
-        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
 
-        if(isset($_POST['submit'])){
+        if (isset($_POST['submit'])) {
             $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $supplier, $item_group, $item);
-        }else{
+        } else {
             $this->data['stock_data'] = [];
         }
-        
+
         $this->data['at_date'] = $at_date;
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -230,21 +231,21 @@ class Reports extends MY_Controller
         $meta = [
             'page_title' => lang('stock_report'),
             'bc' => $bc
-        ]; 
-        if($viewtype=='pdf'){
-            $this->data['viewtype']=$viewtype;
-            $name = lang('stock'). '.pdf';
-            $html = $this->load->view($this->theme . 'reports/stock', $this->data, true); 
-            $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-        }else{
+        ];
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('stock') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/stock', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        } else {
             $this->page_construct('reports/stock', $meta, $this->data);
-        } 
-        
+        }
+
     }
 
     public function getStock()
     {
-//        $this->sma->checkPermissions('customers', true);
+        //        $this->sma->checkPermissions('customers', true);
 
         $this->load->library('datatables');
         $this->datatables
@@ -261,7 +262,7 @@ class Reports extends MY_Controller
             ->join('sma_warehouses_products wp', ' wp.`product_id` = p.`id`', 'left')
             ->where('wp.warehouse_id', 32)
             ->where('p.`type`', 'standard');
-//            ->group_by('companies.id')
+        //            ->group_by('companies.id')
 //            ->add_column('Actions', "<div class='text-center'><a class=\"tip\" title='" . lang('view_report') . "' href='" . admin_url('reports/customer_report/$1') . "'><span class='label label-primary'>" . lang('view_report') . '</span></a></div>', 'id')
 //            ->unset_column('id');
         echo $this->datatables->generate();
@@ -3070,47 +3071,47 @@ class Reports extends MY_Controller
     {
         $this->sma->checkPermissions(); //'sales'
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-       // $this->data['users'] = $this->reports_model->getStaff(); 
+        // $this->data['users'] = $this->reports_model->getStaff(); 
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('out_of_stock_dashboard')]];
         $meta = ['page_title' => lang('out_of_stock_dashboard'), 'bc' => $bc];
         $this->page_construct('reports/out_of_stock_dashboard', $meta, $this->data);
-    } 
+    }
     public function get_out_of_stock_products($pdf = null, $xls = null)
     {
-          
+
         $this->sma->checkPermissions('sales', true);
         // $product = $this->input->get('product') ? $this->input->get('product') : null;  
         if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $user = $this->session->userdata('user_id');
         }
-        $status = $this->input->post('status') ? $this->input->post('status') : null;   
+        $status = $this->input->post('status') ? $this->input->post('status') : null;
 
-        if ($pdf || $xls) {  
+        if ($pdf || $xls) {
             $keyword = $this->input->get('keyword') ? $this->input->get('keyword') : null;
-            $status = $this->input->get('status') ? $this->input->get('status') : null; 
+            $status = $this->input->get('status') ? $this->input->get('status') : null;
             $this->db
-            ->select(" {$this->db->dbprefix('products')}.code, 
+                ->select(" {$this->db->dbprefix('products')}.code, 
             {$this->db->dbprefix('products')}.name,  
             {$this->db->dbprefix('products')}.alert_quantity, 
             SUM({$this->db->dbprefix('inventory_movements')}.quantity) as total_quantity
             ", false)
-            ->from('inventory_movements'); 
-            $this->db->join('products', 'products.id=inventory_movements.product_id') 
-            ->group_by("inventory_movements.product_id"); 
-            if($status=='out_of_stock'){
-                $this->db->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<=0"); 
-            }else{
-                $this->db->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<={$this->db->dbprefix('products')}.alert_quantity"); 
-            } 
-            $keyword=  trim($this->input->post('keyword'));  
-            if(!empty( $keyword)){  
-                $this->db->group_start();  
-                $this->db->where("{$this->db->dbprefix('products')}.code",$keyword);  
-                $this->db->or_like("{$this->db->dbprefix('products')}.name",$keyword,'both');   
-                $this->db->group_end();   
-            }  
+                ->from('inventory_movements');
+            $this->db->join('products', 'products.id=inventory_movements.product_id')
+                ->group_by("inventory_movements.product_id");
+            if ($status == 'out_of_stock') {
+                $this->db->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<=0");
+            } else {
+                $this->db->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<={$this->db->dbprefix('products')}.alert_quantity");
+            }
+            $keyword = trim($this->input->post('keyword'));
+            if (!empty($keyword)) {
+                $this->db->group_start();
+                $this->db->where("{$this->db->dbprefix('products')}.code", $keyword);
+                $this->db->or_like("{$this->db->dbprefix('products')}.name", $keyword, 'both');
+                $this->db->group_end();
+            }
             $q = $this->db->get();
-		    //echo $this->db->last_query(); exit; 
+            //echo $this->db->last_query(); exit; 
             if ($q->num_rows() > 0) {
                 foreach (($q->result()) as $row) {
                     $data[] = $row;
@@ -3126,80 +3127,80 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
                 $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
                 $this->excel->getActiveSheet()->SetCellValue('C1', lang('alert_quantity'));
-                $this->excel->getActiveSheet()->SetCellValue('D1', lang('quantity'));  
-                $row = 2; 
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('quantity'));
+                $row = 2;
                 foreach ($data as $data_row) {         //  $row, $this->sma->hrld($data_row->code) // 
                     $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
                     $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
                     $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->alert_quantity);
-                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->total_quantity); 
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->total_quantity);
                     $row++;
                 }
                 $this->excel->getActiveSheet()->getStyle('G' . $row . ':H' . $row)->getBorders()
                     ->getTop()->setBorderStyle('medium');
-               
+
                 // $this->excel->getActiveSheet()->SetCellValue('H' . $row, $balance); 
                 $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
-                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20); 
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
                 $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
                 $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
                 $filename = 'Stock_dashboard';
                 $this->load->helper('excel');
                 create_excel($this->excel, $filename);
-                  
+
             }
             $this->session->set_flashdata('error', lang('nothing_found'));
             redirect($_SERVER['HTTP_REFERER']);
-        } else { 
-          
-            $this->load->library('datatables');  
+        } else {
+
+            $this->load->library('datatables');
             $this->datatables
                 ->select("{$this->db->dbprefix('products')}.image, {$this->db->dbprefix('products')}.code, 
                 {$this->db->dbprefix('products')}.name,  
                 {$this->db->dbprefix('products')}.alert_quantity, 
                 SUM({$this->db->dbprefix('inventory_movements')}.quantity) as total_quantity
                 ", false)
-                ->from('inventory_movements'); 
-                $this->datatables->join('products', 'products.id=inventory_movements.product_id') 
-                ->group_by("inventory_movements.product_id"); 
-               if($status=='out_of_stock'){
-                $this->datatables->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<=0"); 
-               }else{
-                $this->datatables->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<={$this->db->dbprefix('products')}.alert_quantity"); 
-               }
-               
-                
-                $keyword=  trim($this->input->post('keyword'));  
-                if(!empty( $keyword)){  
-                     $this->db->group_start();  
-                    $this->datatables->where("{$this->db->dbprefix('products')}.code",$keyword);  
-                    $this->db->or_like("{$this->db->dbprefix('products')}.name",$keyword,'both');  
-                   // $this->db->or_like("{$this->db->dbprefix('brands')}.name",$keyword,'both');   
-                   // $this->db->or_like("{$this->db->dbprefix('categories')}.name",$keyword,'both'); 
-                     $this->db->group_end();   
-                } 
-                 
-           // $this->db->order_by("total_pieces",'DESC');  
-           echo $this->datatables->generate();
+                ->from('inventory_movements');
+            $this->datatables->join('products', 'products.id=inventory_movements.product_id')
+                ->group_by("inventory_movements.product_id");
+            if ($status == 'out_of_stock') {
+                $this->datatables->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<=0");
+            } else {
+                $this->datatables->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<={$this->db->dbprefix('products')}.alert_quantity");
+            }
+
+
+            $keyword = trim($this->input->post('keyword'));
+            if (!empty($keyword)) {
+                $this->db->group_start();
+                $this->datatables->where("{$this->db->dbprefix('products')}.code", $keyword);
+                $this->db->or_like("{$this->db->dbprefix('products')}.name", $keyword, 'both');
+                // $this->db->or_like("{$this->db->dbprefix('brands')}.name",$keyword,'both');   
+                // $this->db->or_like("{$this->db->dbprefix('categories')}.name",$keyword,'both'); 
+                $this->db->group_end();
+            }
+
+            // $this->db->order_by("total_pieces",'DESC');  
+            echo $this->datatables->generate();
         }
-    } 
+    }
     public function promotion_items_report()
     {
         $this->sma->checkPermissions(); //'sales'
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        $this->data['users'] = $this->reports_model->getStaff(); 
+        $this->data['users'] = $this->reports_model->getStaff();
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('promotion_items_report')]];
         $meta = ['page_title' => lang('promotion_items_report'), 'bc' => $bc];
         $this->page_construct('reports/promotion_items_report', $meta, $this->data);
     }
     public function get_promotion_items($pdf = null, $xls = null)
     {
-          
+
         $this->sma->checkPermissions('sales', true);
         // $product = $this->input->get('product') ? $this->input->get('product') : null; 
-        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null; 
+        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null;
         $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;
 
         if ($start_date) {
@@ -3211,15 +3212,15 @@ class Reports extends MY_Controller
         }
 
         if ($pdf || $xls) {
-           
-            $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null; 
+
+            $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
             $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
             $keyword = $this->input->get('keyword') ? $this->input->get('keyword') : null;
-            
+
             if ($start_date) {
                 $start_date = $this->sma->fld($start_date);
                 $end_date = $this->sma->fld($end_date);
-            } 
+            }
             $this->db
                 ->select("{$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name,  
                 {$this->db->dbprefix('products')}.start_date,  {$this->db->dbprefix('products')}.end_date,  
@@ -3228,25 +3229,25 @@ class Reports extends MY_Controller
                 {$this->db->dbprefix('products')}.price,
                 ", false)
                 ->from('products');
-                $this->db->join('categories', 'products.category_id=categories.id', 'left') 
+            $this->db->join('categories', 'products.category_id=categories.id', 'left')
                 ->join('brands', 'products.brand=brands.id', 'left')
-                ->group_by("products.id"); 
-            $this->db->where("{$this->db->dbprefix('products')}.promotion",1); 
-            $keyword=  trim($this->input->post('keyword'));  
-            if(!empty( $keyword)){  
-                $this->db->group_start();  
-                $this->db->where("{$this->db->dbprefix('products')}.code",$keyword);  
-                $this->db->or_like("{$this->db->dbprefix('products')}.name",$keyword,'both');  
-                $this->db->or_like("{$this->db->dbprefix('brands')}.name",$keyword,'both');   
-                $this->db->or_like("{$this->db->dbprefix('categories')}.name",$keyword,'both'); 
-                $this->db->group_end();   
-               } 
+                ->group_by("products.id");
+            $this->db->where("{$this->db->dbprefix('products')}.promotion", 1);
+            $keyword = trim($this->input->post('keyword'));
+            if (!empty($keyword)) {
+                $this->db->group_start();
+                $this->db->where("{$this->db->dbprefix('products')}.code", $keyword);
+                $this->db->or_like("{$this->db->dbprefix('products')}.name", $keyword, 'both');
+                $this->db->or_like("{$this->db->dbprefix('brands')}.name", $keyword, 'both');
+                $this->db->or_like("{$this->db->dbprefix('categories')}.name", $keyword, 'both');
+                $this->db->group_end();
+            }
             if ($start_date) {
                 $this->db->where($this->db->dbprefix('products') . '.start_date BETWEEN "' . $start_date . '" and "' . $end_date . '"');
-            } 
+            }
 
             $q = $this->db->get();
-		    //echo $this->db->last_query(); exit; 
+            //echo $this->db->last_query(); exit; 
             if ($q->num_rows() > 0) {
                 foreach (($q->result()) as $row) {
                     $data[] = $row;
@@ -3262,27 +3263,27 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
                 $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
                 $this->excel->getActiveSheet()->SetCellValue('C1', lang('start_date'));
-                $this->excel->getActiveSheet()->SetCellValue('D1', lang('end_date')); 
-                $this->excel->getActiveSheet()->SetCellValue('E1', lang('brand')); 
-                $this->excel->getActiveSheet()->SetCellValue('F1', lang('category')); 
-                $this->excel->getActiveSheet()->SetCellValue('G1', lang('promo_price')); 
-                $this->excel->getActiveSheet()->SetCellValue('H1', lang('Price'));  
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('end_date'));
+                $this->excel->getActiveSheet()->SetCellValue('E1', lang('brand'));
+                $this->excel->getActiveSheet()->SetCellValue('F1', lang('category'));
+                $this->excel->getActiveSheet()->SetCellValue('G1', lang('promo_price'));
+                $this->excel->getActiveSheet()->SetCellValue('H1', lang('Price'));
                 $row = 2;
                 $gtotal_promo_price = 0;
                 $gtotal_Price = 0;
-                
+
                 foreach ($data as $data_row) {         //  $row, $this->sma->hrld($data_row->code) // 
                     $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
                     $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
                     $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->start_date);
                     $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->end_date);
-                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->brand); 
-                    $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->cname); 
-                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->promo_price); 
-                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $data_row->price);  
+                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->brand);
+                    $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->cname);
+                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->promo_price);
+                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $data_row->price);
 
                     $gtotal_promo_price += $data_row->promo_price;
-                    $gtotal_Price += $data_row->price; 
+                    $gtotal_Price += $data_row->price;
                     $row++;
                 }
                 $this->excel->getActiveSheet()->getStyle('G' . $row . ':H' . $row)->getBorders()
@@ -3293,19 +3294,19 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
-                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20); 
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
                 $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
                 $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
                 $filename = 'promotion_items_report';
                 $this->load->helper('excel');
                 create_excel($this->excel, $filename);
-                  
+
             }
             $this->session->set_flashdata('error', lang('nothing_found'));
             redirect($_SERVER['HTTP_REFERER']);
-        } else { 
-          
-            $this->load->library('datatables'); 
+        } else {
+
+            $this->load->library('datatables');
             $this->datatables
                 ->select("{$this->db->dbprefix('products')}.image, {$this->db->dbprefix('products')}.code, 
                 {$this->db->dbprefix('products')}.name,  
@@ -3315,24 +3316,24 @@ class Reports extends MY_Controller
                 {$this->db->dbprefix('products')}.price,
                 ", false)
                 ->from('products');
-                $this->datatables->join('categories', 'products.category_id=categories.id', 'left') 
+            $this->datatables->join('categories', 'products.category_id=categories.id', 'left')
                 ->join('brands', 'products.brand=brands.id', 'left')
-                ->group_by("products.id"); 
-            $this->datatables->where("{$this->db->dbprefix('products')}.promotion",1); 
-            $keyword=  trim($this->input->post('keyword'));  
-            if(!empty( $keyword)){  
-                $this->db->group_start();  
-                $this->datatables->where("{$this->db->dbprefix('products')}.code",$keyword);  
-                $this->db->or_like("{$this->db->dbprefix('products')}.name",$keyword,'both');  
-                $this->db->or_like("{$this->db->dbprefix('brands')}.name",$keyword,'both');   
-                $this->db->or_like("{$this->db->dbprefix('categories')}.name",$keyword,'both'); 
-                $this->db->group_end();   
-               } 
+                ->group_by("products.id");
+            $this->datatables->where("{$this->db->dbprefix('products')}.promotion", 1);
+            $keyword = trim($this->input->post('keyword'));
+            if (!empty($keyword)) {
+                $this->db->group_start();
+                $this->datatables->where("{$this->db->dbprefix('products')}.code", $keyword);
+                $this->db->or_like("{$this->db->dbprefix('products')}.name", $keyword, 'both');
+                $this->db->or_like("{$this->db->dbprefix('brands')}.name", $keyword, 'both');
+                $this->db->or_like("{$this->db->dbprefix('categories')}.name", $keyword, 'both');
+                $this->db->group_end();
+            }
             if (!empty($start_date) and !empty($end_date)) {
                 $this->datatables->where($this->db->dbprefix('products') . '.start_date BETWEEN "' . $start_date . '" and "' . $end_date . '"');
-            } 
-           // $this->db->order_by("total_pieces",'DESC');  
-           echo $this->datatables->generate();
+            }
+            // $this->db->order_by("total_pieces",'DESC');  
+            echo $this->datatables->generate();
         }
     }
     public function fast_moving_items()
@@ -3340,8 +3341,8 @@ class Reports extends MY_Controller
         $this->sma->checkPermissions('sales');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
-       // $this->data['warehouses'] = $this->site->getAllWarehouses();
-       // $this->data['billers'] = $this->site->getAllCompanies('biller');
+        // $this->data['warehouses'] = $this->site->getAllWarehouses();
+        // $this->data['billers'] = $this->site->getAllCompanies('biller');
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('fast_moving_items')]];
         $meta = ['page_title' => lang('fast_moving_items'), 'bc' => $bc];
         $this->page_construct('reports/fast_moving_items', $meta, $this->data);
@@ -3351,7 +3352,7 @@ class Reports extends MY_Controller
     {
         $this->sma->checkPermissions('sales', true);
         // $product = $this->input->get('product') ? $this->input->get('product') : null; 
-        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null; 
+        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null;
         $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;
 
         if ($start_date) {
@@ -3363,43 +3364,43 @@ class Reports extends MY_Controller
         }
 
         if ($pdf || $xls) {
-           
-            $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null; 
+
+            $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
             $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
             $keyword = $this->input->get('keyword') ? $this->input->get('keyword') : null;
-            
+
             if ($start_date) {
                 $start_date = $this->sma->fld($start_date);
                 $end_date = $this->sma->fld($end_date);
-            } 
+            }
             $this->db
-            ->select(" {$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name,  
+                ->select(" {$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name,  
             SUM({$this->db->dbprefix('sale_items')}.quantity) as total_pieces, SUM({$this->db->dbprefix('sale_items')}.subtotal) as total_amount 
             ", false)
-            ->from('sale_items')
-            ->join('sales', 'sales.id=sale_items.sale_id', 'left')
-            ->join('products', 'products.id=sale_items.product_id', 'left')
-            ->group_by('sale_items.product_id') 
-            ->order_by("total_pieces",'DESC')
-            ;  
-            $this->db->where("{$this->db->dbprefix('sales')}.shop",1);   
-            $this->db->where("{$this->db->dbprefix('sales')}.sale_status","Completed");  
-            
-            if(!empty( $keyword)){  
-                $this->db->group_start();  
-                $this->db->where("{$this->db->dbprefix('products')}.code",$keyword);  
-                $this->db->or_like("{$this->db->dbprefix('products')}.name",$keyword,'both');  
-                $this->db->group_end();   
-             } 
+                ->from('sale_items')
+                ->join('sales', 'sales.id=sale_items.sale_id', 'left')
+                ->join('products', 'products.id=sale_items.product_id', 'left')
+                ->group_by('sale_items.product_id')
+                ->order_by("total_pieces", 'DESC')
+            ;
+            $this->db->where("{$this->db->dbprefix('sales')}.shop", 1);
+            $this->db->where("{$this->db->dbprefix('sales')}.sale_status", "Completed");
+
+            if (!empty($keyword)) {
+                $this->db->group_start();
+                $this->db->where("{$this->db->dbprefix('products')}.code", $keyword);
+                $this->db->or_like("{$this->db->dbprefix('products')}.name", $keyword, 'both');
+                $this->db->group_end();
+            }
             // if ($product) {
             //     $this->db->where('sale_items.product_id', $product);
             // }  
             if ($start_date) {
-                $this->db->where('DATE('.$this->db->dbprefix('sales') . '.date) BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+                $this->db->where('DATE(' . $this->db->dbprefix('sales') . '.date) BETWEEN "' . $start_date . '" and "' . $end_date . '"');
             }
 
             $q = $this->db->get();
-		    //echo $this->db->last_query(); exit; 
+            //echo $this->db->last_query(); exit; 
             if ($q->num_rows() > 0) {
                 foreach (($q->result()) as $row) {
                     $data[] = $row;
@@ -3415,18 +3416,18 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
                 $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
                 $this->excel->getActiveSheet()->SetCellValue('C1', lang('quantities_sold'));
-                $this->excel->getActiveSheet()->SetCellValue('D1', lang('total_amount')); 
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('total_amount'));
                 $row = 2;
                 $gtotal_pieces = 0;
                 $gtotal_amount = 0;
-                
+
                 foreach ($data as $data_row) {         //  $row, $this->sma->hrld($data_row->code) // 
                     $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
                     $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
                     $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->total_pieces);
-                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->total_amount); 
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->total_amount);
                     $gtotal_pieces += $data_row->total_pieces;
-                    $gtotal_amount += $data_row->total_amount; 
+                    $gtotal_amount += $data_row->total_amount;
                     $row++;
                 }
                 $this->excel->getActiveSheet()->getStyle('C' . $row . ':D' . $row)->getBorders()
@@ -3437,7 +3438,7 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
                 $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
-                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20); 
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
                 $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
                 $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
                 $filename = 'ecomerce_fast_moving_report';
@@ -3447,7 +3448,7 @@ class Reports extends MY_Controller
             $this->session->set_flashdata('error', lang('nothing_found'));
             redirect($_SERVER['HTTP_REFERER']);
         } else {
- 
+
             $si = "( SELECT sale_id, product_id, serial_no, GROUP_CONCAT(CONCAT({$this->db->dbprefix('sale_items')}.product_name, '__', {$this->db->dbprefix('sale_items')}.quantity) SEPARATOR '___') as item_nane from {$this->db->dbprefix('sale_items')} ";
             if ($product || $serial) {
                 $si .= ' WHERE ';
@@ -3462,7 +3463,7 @@ class Reports extends MY_Controller
                 $si .= " {$this->db->dbprefix('sale_items')}.serial_no LIKe '%{$serial}%' ";
             }
             $si .= " GROUP BY {$this->db->dbprefix('sale_items')}.sale_id ) FSI";
-            $this->load->library('datatables'); 
+            $this->load->library('datatables');
             $this->datatables
                 ->select("{$this->db->dbprefix('products')}.image, {$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name,  
                 SUM({$this->db->dbprefix('sale_items')}.quantity) as total_pieces, SUM({$this->db->dbprefix('sale_items')}.subtotal) as total_amount 
@@ -3470,29 +3471,29 @@ class Reports extends MY_Controller
                 ->from('sale_items')
                 ->join('sales', 'sales.id=sale_items.sale_id', 'left')
                 ->join('products', 'products.id=sale_items.product_id', 'left')
-                ->group_by('sale_items.product_id') 
-               // ->order_by("{$this->db->dbprefix('sale_items')}.product_code",'DESC')
-                ; 
-                //->join($si, 'FSI.sale_id=sales.id', 'left')
-                //->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')   
-            $this->datatables->where("{$this->db->dbprefix('sales')}.shop",1);
-            $this->db->where("{$this->db->dbprefix('sales')}.sale_status","Completed");
-            $keyword=  trim($this->input->post('keyword'));  
-            if(!empty( $keyword)){  
-                $this->db->group_start();  
-                $this->datatables->where("{$this->db->dbprefix('products')}.code",$keyword);  
-                $this->db->or_like("{$this->db->dbprefix('products')}.name",$keyword,'both');  
-                $this->db->group_end();   
-               }
+                ->group_by('sale_items.product_id')
+                // ->order_by("{$this->db->dbprefix('sale_items')}.product_code",'DESC')
+            ;
+            //->join($si, 'FSI.sale_id=sales.id', 'left')
+            //->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')   
+            $this->datatables->where("{$this->db->dbprefix('sales')}.shop", 1);
+            $this->db->where("{$this->db->dbprefix('sales')}.sale_status", "Completed");
+            $keyword = trim($this->input->post('keyword'));
+            if (!empty($keyword)) {
+                $this->db->group_start();
+                $this->datatables->where("{$this->db->dbprefix('products')}.code", $keyword);
+                $this->db->or_like("{$this->db->dbprefix('products')}.name", $keyword, 'both');
+                $this->db->group_end();
+            }
 
             if ($start_date) {
-                $this->datatables->where('DATE('.$this->db->dbprefix('sales') . '.date) BETWEEN "' . $start_date . '" and "' . $end_date . '"');
-            } 
-           // $this->db->order_by("total_pieces",'DESC');  
-          $action =''; 
-          $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
-          . lang('view_image') . '</a></li>';  
-           echo $this->datatables->generate();
+                $this->datatables->where('DATE(' . $this->db->dbprefix('sales') . '.date) BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+            }
+            // $this->db->order_by("total_pieces",'DESC');  
+            $action = '';
+            $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
+                . lang('view_image') . '</a></li>';
+            echo $this->datatables->generate();
         }
     }
 
@@ -3643,7 +3644,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
-        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         if ($from_date) {
@@ -3701,18 +3702,18 @@ class Reports extends MY_Controller
 
             // Final Response array
             foreach ($response_arr as $resp_arr) {
-                if($resp_arr->ob_debit >= $resp_arr->ob_credit){
+                if ($resp_arr->ob_debit >= $resp_arr->ob_credit) {
                     $resp_arr->ob_debit = $resp_arr->ob_debit - $resp_arr->ob_credit;
                     $resp_arr->ob_credit = 0;
-                }else if($resp_arr->ob_credit > $resp_arr->ob_debit){
+                } else if ($resp_arr->ob_credit > $resp_arr->ob_debit) {
                     $resp_arr->ob_credit = $resp_arr->ob_credit - $resp_arr->ob_debit;
                     $resp_arr->ob_debit = 0;
                 }
 
-                if($resp_arr->trs_debit >= $resp_arr->trs_credit){
+                if ($resp_arr->trs_debit >= $resp_arr->trs_credit) {
                     $resp_arr->total_trs_debit = $resp_arr->trs_debit - $resp_arr->trs_credit;
                     //$resp_arr->trs_credit = 0;
-                }else if($resp_arr->trs_credit > $resp_arr->trs_debit){
+                } else if ($resp_arr->trs_credit > $resp_arr->trs_debit) {
                     $resp_arr->total_trs_credit = $resp_arr->trs_credit - $resp_arr->trs_debit;
                     //$resp_arr->trs_debit = 0;
                 }
@@ -3720,10 +3721,10 @@ class Reports extends MY_Controller
                 $resp_arr->eb_debit = $resp_arr->ob_debit + $resp_arr->total_trs_debit;
                 $resp_arr->eb_credit = $resp_arr->ob_credit + $resp_arr->total_trs_credit;
 
-                if($resp_arr->eb_debit >= $resp_arr->eb_credit){
+                if ($resp_arr->eb_debit >= $resp_arr->eb_credit) {
                     $resp_arr->eb_debit = $resp_arr->eb_debit - $resp_arr->eb_credit;
                     $resp_arr->eb_credit = 0;
-                }else if($resp_arr->eb_credit > $resp_arr->eb_debit){
+                } else if ($resp_arr->eb_credit > $resp_arr->eb_debit) {
                     $resp_arr->eb_credit = $resp_arr->eb_credit - $resp_arr->eb_debit;
                     $resp_arr->eb_debit = 0;
                 }
@@ -3734,16 +3735,16 @@ class Reports extends MY_Controller
             $this->data['trial_balance'] = $response_arr;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
             $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
-            
-            if($viewtype=='pdf'){
-                $this->data['viewtype']=$viewtype;
-                $name = lang('general_ledger_trial_balance'). '.pdf';
-                $html = $this->load->view($this->theme . 'reports/general_ledger_trial_balance', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-            }else{
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('general_ledger_trial_balance') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/general_ledger_trial_balance', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
                 $this->page_construct('reports/general_ledger_trial_balance', $meta, $this->data);
-            } 
-            
+            }
+
 
 
 
@@ -3773,7 +3774,7 @@ class Reports extends MY_Controller
             $supplier_id = $this->input->post('customer');
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
-           // print_r($supplier_details);exit;
+            // print_r($supplier_details);exit;
             $ledger_account = $supplier_details->ledger_account;
             $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_account);
 
@@ -3800,15 +3801,15 @@ class Reports extends MY_Controller
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
             $meta = ['page_title' => lang('customer_statement'), 'bc' => $bc];
-           
-            if($viewtype=='pdf'){
-                $this->data['viewtype']=$viewtype;
-                $name = lang('customers_statement_report'). '.pdf';
-                $html = $this->load->view($this->theme . 'reports/customers_statement', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-            }else{
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('customers_statement_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/customers_statement', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
                 $this->page_construct('reports/customers_statement', $meta, $this->data);
-            } 
+            }
 
 
 
@@ -3824,7 +3825,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
-        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
@@ -3865,16 +3866,16 @@ class Reports extends MY_Controller
             $this->data['supplier_statement'] = $supplier_statement['report'];
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_statement')]];
-            $meta = ['page_title' => lang('general_ledger_statement'), 'bc' => $bc]; 
-           
-            if($viewtype=='pdf'){
-                $this->data['viewtype']=$viewtype;
-                $name = lang('general_ledger_statement'). '.pdf';
-                $html = $this->load->view($this->theme . 'reports/general_ledger_statement', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-            }else{
+            $meta = ['page_title' => lang('general_ledger_statement'), 'bc' => $bc];
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('general_ledger_statement') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/general_ledger_statement', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
                 $this->page_construct('reports/general_ledger_statement', $meta, $this->data);
-            } 
+            }
 
         } else {
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_statement')]];
@@ -3909,7 +3910,7 @@ class Reports extends MY_Controller
             $total_ob_credit = 0;
             $total_ob_debit = 0;
             $ob_type = '';
-            
+
             foreach ($supplier_statement['ob'] as $ob) {
                 if ($ob->dc == 'D') {
                     $total_ob_debit += $ob->amount;
@@ -3931,15 +3932,15 @@ class Reports extends MY_Controller
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
             $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
-           
-            if($viewtype=='pdf'){
-                $this->data['viewtype']=$viewtype;
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
                 $name = lang('suppliers_statement_report') . '.pdf';
-                $html = $this->load->view($this->theme . 'reports/suppliers_statement', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-            }else{
+                $html = $this->load->view($this->theme . 'reports/suppliers_statement', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
                 $this->page_construct('reports/suppliers_statement', $meta, $this->data);
-            } 
+            }
 
 
         } else {
@@ -3955,26 +3956,41 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $response_arr = array();
 
-        if($duration){
-            $supplier_aging_array = $this->reports_model->getCustomerAging($duration);
-        }else{
-            $supplier_aging_array = $this->reports_model->getCustomerAging($duration = 120);
+        $customer_id_array = array();
+        if (!empty($this->input->post('customer'))) {
+            $customer_id_array = $this->input->post('customer');
         }
-       
+
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $response_arr = array();
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+        }
+
+        if ($duration) {
+            $supplier_aging_array = $this->reports_model->getCustomerAging($duration, $start_date, $customer_id_array);
+        } else {
+            $supplier_aging_array = $this->reports_model->getCustomerAging($duration = 120, $start_date, $customer_id_array);
+        }
+
+        $this->data['customer_id_array'] = $customer_id_array;
+        $this->data['start_date'] = $this->input->post('from_date');
+
         $this->data['supplier_aging'] = $supplier_aging_array;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_aging')]];
         $meta = ['page_title' => lang('customers_aging'), 'bc' => $bc];
-        if($viewtype=='pdf'){
-            $this->data['viewtype']=$viewtype;
-            $name = lang('customers_aging_report'). '.pdf';
-            $html = $this->load->view($this->theme . 'reports/customers_aging', $this->data, true); 
-            $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-        }else{
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('customers_aging_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/customers_aging', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        } else {
             $this->page_construct('reports/customers_aging', $meta, $this->data);
-        } 
-        
+        }
+
     }
 
     public function supplier_aging()
@@ -3984,35 +4000,35 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
-        $supplier_id_array =array(); 
-        if(!empty($this->input->post('supplier'))){
-            $supplier_id_array = $this->input->post('supplier'); 
-        } 
-        $this->data['suppliers'] = $this->site->getAllCompanies('supplier'); 
+        $supplier_id_array = array();
+        if (!empty($this->input->post('supplier'))) {
+            $supplier_id_array = $this->input->post('supplier');
+        }
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
         $response_arr = array();
-        if($from_date){
-            $start_date = $this->sma->fld($from_date); 
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
         }
 
-        if($duration){
-           
-            $supplier_aging_array = $this->reports_model->getSupplierAging($duration,$start_date,  $supplier_id_array);
-        }else{
-            $supplier_aging_array = $this->reports_model->getSupplierAging($duration = 120,$start_date,  $supplier_id_array);
+        if ($duration) {
+
+            $supplier_aging_array = $this->reports_model->getSupplierAging($duration, $start_date, $supplier_id_array);
+        } else {
+            $supplier_aging_array = $this->reports_model->getSupplierAging($duration = 120, $start_date, $supplier_id_array);
         }
-        $this->data['supplier_id_array'] =$supplier_id_array;
-        $this->data['start_date'] =$this->input->post('from_date');
+        $this->data['supplier_id_array'] = $supplier_id_array;
+        $this->data['start_date'] = $this->input->post('from_date');
         $this->data['supplier_aging'] = $supplier_aging_array;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_aging')]];
-        $meta = ['page_title' => lang('suppliers_aging'), 'bc' => $bc]; 
-        if($viewtype=='pdf'){
-            $this->data['viewtype']=$viewtype;
-            $name = lang('suppliers_aging'). '.pdf';
-            $html = $this->load->view($this->theme . 'reports/suppliers_aging', $this->data, true); 
-            $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-        }else{
+        $meta = ['page_title' => lang('suppliers_aging'), 'bc' => $bc];
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('suppliers_aging') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/suppliers_aging', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        } else {
             $this->page_construct('reports/suppliers_aging', $meta, $this->data);
-        } 
+        }
     }
 
     public function suppliers_trial_balance()
@@ -4050,15 +4066,15 @@ class Reports extends MY_Controller
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
             $meta = ['page_title' => lang('suppliers_report'), 'bc' => $bc];
 
-            if($viewtype=='pdf'){
-                $this->data['viewtype']=$viewtype;
-                $name = lang('suppliers_trial_balance_report'). '.pdf';
-                $html = $this->load->view($this->theme . 'reports/suppliers_trial_balance', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-            }else{
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('suppliers_trial_balance_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/suppliers_trial_balance', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
                 $this->page_construct('reports/suppliers_trial_balance', $meta, $this->data);
-            } 
-           
+            }
+
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
@@ -4118,7 +4134,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
-        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $date = $this->input->post('date') ? $this->input->post('date') : null;
         if ($date) {
             $ledger_groups = $this->reports_model->getLedgerGroups();
@@ -4160,28 +4176,28 @@ class Reports extends MY_Controller
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('balance_sheet')]];
             $meta = ['page_title' => lang('balance_sheet'), 'bc' => $bc];
-           
-            if($viewtype=='pdf'){  // pdf generation 
-                $this->data['viewtype']=$viewtype;
-                $name = lang('balance_sheet'). '.pdf';
-                $html = $this->load->view($this->theme . 'reports/balance_sheet', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-            }else{
+
+            if ($viewtype == 'pdf') {  // pdf generation 
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('balance_sheet') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/balance_sheet', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
                 $this->page_construct('reports/balance_sheet', $meta, $this->data);
-            } 
+            }
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('balance_sheet')]];
-            $meta = ['page_title' => lang('balance_sheet'), 'bc' => $bc]; 
-            if($viewtype=='pdf'){  // pdf generation 
-                $this->data['viewtype']=$viewtype;
-                $name = lang('balance_sheet'). '.pdf';
-                $html = $this->load->view($this->theme . 'reports/balance_sheet', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-            }else{
+            $meta = ['page_title' => lang('balance_sheet'), 'bc' => $bc];
+            if ($viewtype == 'pdf') {  // pdf generation 
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('balance_sheet') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/balance_sheet', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
                 $this->page_construct('reports/balance_sheet', $meta, $this->data);
-            } 
-            
+            }
+
         }
     }
 
@@ -4217,14 +4233,14 @@ class Reports extends MY_Controller
             //     $response_arr[$trans->id]["obDebit"] = $trans->payment_total + $trans->sale_total;
             //     $response_arr[$trans->id]["obCredit"] =  $trans->return_total + $trans->memo_total;
             // }
-           /**END OLD LOGIC */
+            /**END OLD LOGIC */
 
             foreach ($trial_balance_array['trs'] as $trans) {
                 $response_arr[$trans->id]["name"] = $trans->name;
                 $response_arr[$trans->id]["company"] = $trans->company;
                 $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
                 $response_arr[$trans->id]["trsDebit"] = $trans->total_debit;
-                $response_arr[$trans->id]["trsCredit"] =  $trans->total_credit;
+                $response_arr[$trans->id]["trsCredit"] = $trans->total_credit;
             }
 
 
@@ -4233,7 +4249,7 @@ class Reports extends MY_Controller
                 $response_arr[$trans->id]["company"] = $trans->company;
                 $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
                 $response_arr[$trans->id]["obDebit"] = $trans->total_debit;
-                $response_arr[$trans->id]["obCredit"] =  $trans->total_credit;
+                $response_arr[$trans->id]["obCredit"] = $trans->total_credit;
             }
 
             //dd($response_arr);
@@ -4291,14 +4307,14 @@ class Reports extends MY_Controller
             $this->data['trial_balance'] = $response_arr;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_report')]];
             $meta = ['page_title' => lang('customers_report'), 'bc' => $bc];
-            
-            if($viewtype=='pdf'){  // for download pdf 
-                $this->data['viewtype']=$viewtype;
-                $name = lang('customers_trial_balance'). '.pdf';
-                $html = $this->load->view($this->theme . 'reports/customers_trial_balance', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
 
-            }else{
+            if ($viewtype == 'pdf') {  // for download pdf 
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('customers_trial_balance') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/customers_trial_balance', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+
+            } else {
                 $this->page_construct('reports/customers_trial_balance', $meta, $this->data);
             }
         } else {
@@ -4355,9 +4371,9 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('G' . $row, '');
                 $this->excel->getActiveSheet()->SetCellValue('H' . $row, '');
                 $this->excel->getActiveSheet()->SetCellValue('I' . $row, '');
-                $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney($itemOpenings->unitPrice,'none'));
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney($itemOpenings->unitPrice, 'none'));
                 $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00)));
-                $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice : 0.00),'none'));
+                $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice : 0.00), 'none'));
 
 
                 $balanceQantity = $itemOpenings->openingBalance;
@@ -4386,12 +4402,12 @@ class Reports extends MY_Controller
                     $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->name_of);
                     $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->expiry_date);
                     $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->batch_no);
-                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatMoney(($data_row->sale_price ? $data_row->sale_price : 0.0),'none'));
-                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->sma->formatMoney(($data_row->purchase_price ? $data_row->purchase_price : 0.0),'none'));
+                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatMoney(($data_row->sale_price ? $data_row->sale_price : 0.0), 'none'));
+                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->sma->formatMoney(($data_row->purchase_price ? $data_row->purchase_price : 0.0), 'none'));
                     $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->sma->formatQuantity($data_row->quantity ? $data_row->quantity : 0.0));
-                    $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney(($data_row->unit_cost ? $data_row->unit_cost : 0.0),'none'));
+                    $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney(($data_row->unit_cost ? $data_row->unit_cost : 0.0), 'none'));
                     $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatQuantity($balanceQantity ? $balanceQantity : 0.0));
-                    $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney(($balanceQantity * $data_row->unit_cost),'none'));
+                    $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney(($balanceQantity * $data_row->unit_cost), 'none'));
 
                     $row++;
                 }
@@ -4407,7 +4423,7 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('I' . $row, '');
                 $this->excel->getActiveSheet()->SetCellValue('J' . $row, '');
                 $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatQuantity($balanceQantity));
-                $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney($balanceQantity * $itemOpenings->unitPrice,'none'));
+                $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney($balanceQantity * $itemOpenings->unitPrice, 'none'));
 
 
 
@@ -4459,39 +4475,39 @@ class Reports extends MY_Controller
         $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : null;
 
         $response_arr = array();
-        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $productId = $this->input->post('product') ? $this->input->post('product') : 0;
         $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
-
+        $document_number = $this->input->post('document_number') ? $this->input->post('document_number') : null;
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['product'] = $productId;
+        $this->data['filterOnType'] = $filterOnType;
+        $this->data['document_number'] = $document_number;
         if ($productId && $from_date && $to_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
 
             $itemOpenings = $this->reports_model->getItemOpeningBalance($productId, $start_date, $warehouse);
-            
-            $reportData = $this->reports_model->getItemMovementRecords($productId, $start_date, $end_date, $warehouse, $filterOnType);
+
+            $reportData = $this->reports_model->getItemMovementRecords($productId, $start_date, $end_date, $warehouse, $filterOnType, $document_number);
 
             $this->data['warehouses'] = $this->site->getAllWarehouses();
-            $this->data['start_date'] = $from_date;
-            $this->data['end_date'] = $to_date;
-            $this->data['product'] = $productId;
-            $this->data['filterOnType'] = $filterOnType;
-
             $this->data['itemOpenings'] = $itemOpenings;
             $this->data['reportData'] = $reportData;
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
-            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];  
-            if($viewtype=='pdf'){
-                $this->data['viewtype']=$viewtype;
-                $name = lang('item_movement_report'). '.pdf';
-                $html = $this->load->view($this->theme . 'reports/item_movement_report', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-            }else{
+            $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('item_movement_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/item_movement_report', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
                 $this->page_construct('reports/item_movement_report', $meta, $this->data);
-            } 
+            }
 
         } else {
 
@@ -4511,7 +4527,7 @@ class Reports extends MY_Controller
         $defaultWareHouseId = ($user->warehouse_id ? $user->warehouse_id : $this->site->Settings->default_warehouse);
 
         $response_arr = array();
-        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $from_warehouse_id = $this->input->post('from_warehouse_id') ? $this->input->post('from_warehouse_id') : 0;
@@ -4533,15 +4549,15 @@ class Reports extends MY_Controller
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
 
-            if($from_warehouse_id == 0){
-                $from_warehouse_id =  $defaultWareHouseId; 
+            if ($from_warehouse_id == 0) {
+                $from_warehouse_id = $defaultWareHouseId;
             }
 
             $inventryReportData = [];
             //$productOpeningsData = $this->reports_model->getProductsQuantityUnitCost($start_date,$from_warehouse_id);
 
             $productInOutData = $this->reports_model->getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
-            
+
             // foreach($productInOutData as $prdId => $row){
 
             //     $productCost = 1;
@@ -4582,10 +4598,10 @@ class Reports extends MY_Controller
             //         'closing_qty'        =>  ($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity,
             //         'closing_cost'       =>  $productCost,
             //         'closing_ttl'        =>  (($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity) * $productCost
-                    
+
             //     ];
             // }
-            
+
             // echo '<pre>', print_r($inventryReportData), '</pre>';
             // $reportData = $this->reports_model->getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
 
@@ -4597,15 +4613,15 @@ class Reports extends MY_Controller
 
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_trial_balance')]];
-            $meta = ['page_title' => lang('inventory_trial_balance'), 'bc' => $bc]; 
-            if($viewtype=='pdf'){ // for generating PDF
-                $this->data['viewtype']=$viewtype;
-                $name = lang('inventory_trial_balance'). '.pdf';
-                $html = $this->load->view($this->theme . 'reports/inventory_trial_balance', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-            }else{
+            $meta = ['page_title' => lang('inventory_trial_balance'), 'bc' => $bc];
+            if ($viewtype == 'pdf') { // for generating PDF
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('inventory_trial_balance') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/inventory_trial_balance', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
                 $this->page_construct('reports/inventory_trial_balance', $meta, $this->data);
-            } 
+            }
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_trial_balance')]];
@@ -4621,7 +4637,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
-        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null; 
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
@@ -4638,15 +4654,15 @@ class Reports extends MY_Controller
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_movement_report')]];
             $meta = ['page_title' => lang('inventory_movement_report'), 'bc' => $bc];
-            
-            if($viewtype=='pdf'){
-                $this->data['viewtype']=$viewtype;
-                $name = lang('inventory_movement_report'). '.pdf';
-                $html = $this->load->view($this->theme . 'reports/inventory_movement_report', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'L');
-            }else{
-                $this->page_construct('reports/inventory_movement_report', $meta, $this->data); 
-            } 
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('inventory_movement_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/inventory_movement_report', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'L');
+            } else {
+                $this->page_construct('reports/inventory_movement_report', $meta, $this->data);
+            }
 
         } else {
 
@@ -4709,7 +4725,7 @@ class Reports extends MY_Controller
 
         $filterOnTypeArr = [
             "" => "-- Select Type --",
-            "purchases" => "Purchases",         
+            "purchases" => "Purchases",
             "returnSupplier" => "Return to Supplier",
             "serviceInvoice" => "Service Invoice"
         ];
@@ -4719,9 +4735,9 @@ class Reports extends MY_Controller
         $filteredWareHouses = [];
         $filteredWareHouses[] = '-- All --';
         foreach ($allWareHouses as $warehouse) {
-            
+
             $filteredWareHouses[$warehouse->id] = $warehouse->name . ' (' . $warehouse->code . ')';
-        
+
         }
         $this->data['warehouses'] = $filteredWareHouses;
 
@@ -4736,34 +4752,34 @@ class Reports extends MY_Controller
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
             $vat_purchase_array = $this->reports_model->getVatPurchaseReport($start_date, $end_date, $warehouse_id, $filterOnType);
-    
+
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
             $this->data['vat_purchase'] = $vat_purchase_array;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
             $meta = ['page_title' => lang('vat_purchase_report'), 'bc' => $bc];
-            
-            if($viewtype=='pdf'){
-                $this->data['viewtype']=$viewtype;
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
                 $name = lang('vat_purchase_report') . '.pdf';
-                $html = $this->load->view($this->theme . 'reports/vat_purchase_report', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-            }else{
+                $html = $this->load->view($this->theme . 'reports/vat_purchase_report', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
                 $this->page_construct('reports/vat_purchase_report', $meta, $this->data);
-            } 
+            }
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
             $meta = ['page_title' => lang('vat_purchase_report'), 'bc' => $bc];
-            if($viewtype=='pdf'){
-                $this->data['viewtype']=$viewtype;
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
                 $name = lang('vat_purchase_report') . '.pdf';
-                $html = $this->load->view($this->theme . 'reports/vat_purchase_report', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-            }else{
+                $html = $this->load->view($this->theme . 'reports/vat_purchase_report', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
                 $this->page_construct('reports/vat_purchase_report', $meta, $this->data);
-            } 
-            
+            }
+
         }
     }
 
@@ -4775,7 +4791,7 @@ class Reports extends MY_Controller
 
         $filterOnTypeArr = [
             "" => "-- Select Type --",
-            "sale" => "Sale",         
+            "sale" => "Sale",
             "returnCustomer" => "Return From Customer",
             "serviceInvoice" => "Service Invoice"
         ];
@@ -4785,9 +4801,9 @@ class Reports extends MY_Controller
         $filteredWareHouses = [];
         $filteredWareHouses[] = '-- All --';
         foreach ($allWareHouses as $warehouse) {
-            
+
             $filteredWareHouses[$warehouse->id] = $warehouse->name . ' (' . $warehouse->code . ')';
-        
+
         }
         $this->data['warehouses'] = $filteredWareHouses;
 
@@ -4797,9 +4813,9 @@ class Reports extends MY_Controller
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $warehouse_id = $this->input->post('warehouse_id') ? $this->input->post('warehouse_id') : null;
         $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
-        if($viewtype=='pdf'){
-            $this->data['viewtype']=$viewtype;
-        }  
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+        }
         if ($from_date && $to_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
@@ -4810,14 +4826,14 @@ class Reports extends MY_Controller
             $this->data['vat_purchase'] = $vat_purchase_array;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
             $meta = ['page_title' => lang('Vat Sale Report'), 'bc' => $bc];
-           
-            if($viewtype=='pdf'){
-            $name = lang('vat') . '_' . 'sale_report' . '.pdf';
-            $html = $this->load->view($this->theme . 'reports/vat_sale_report', $this->data, true); 
-            $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-           }else{
-             $this->page_construct('reports/vat_sale_report', $meta, $this->data);
-           } 
+
+            if ($viewtype == 'pdf') {
+                $name = lang('vat') . '_' . 'sale_report' . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/vat_sale_report', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/vat_sale_report', $meta, $this->data);
+            }
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
@@ -4835,7 +4851,7 @@ class Reports extends MY_Controller
 
         $filterOnTypeArr = [
             "" => "-- Select Type --",
-            "sale" => "Sale",         
+            "sale" => "Sale",
             "returnCustomer" => "Return From Customer",
             "serviceInvoice" => "Service Invoice"
         ];
@@ -4845,9 +4861,9 @@ class Reports extends MY_Controller
         $filteredWareHouses = [];
         $filteredWareHouses[] = '-- All --';
         foreach ($allWareHouses as $warehouse) {
-            
+
             $filteredWareHouses[$warehouse->id] = $warehouse->name . ' (' . $warehouse->code . ')';
-        
+
         }
         $this->data['warehouses'] = $filteredWareHouses;
 
@@ -4858,9 +4874,9 @@ class Reports extends MY_Controller
         $warehouse_id = $this->input->post('warehouse_id') ? $this->input->post('warehouse_id') : null;
         $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
 
-        if($viewtype=='pdf'){
-            $this->data['viewtype']=$viewtype;
-        } 
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+        }
         if ($from_date && $to_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
@@ -4871,7 +4887,7 @@ class Reports extends MY_Controller
             $this->data['vat_purchase'] = $vat_purchase_array;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
             $meta = ['page_title' => lang('Vat Sale Report'), 'bc' => $bc];
-           // $this->page_construct('reports/vat_sale_report', $meta, $this->data);
+            // $this->page_construct('reports/vat_sale_report', $meta, $this->data);
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
@@ -4885,8 +4901,8 @@ class Reports extends MY_Controller
         if (!$this->Settings->barcode_img) {
             $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
-        $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-       // generate_pdf($content, $name = 'download.pdf', $output_type = null, $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'P')
+        $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        // generate_pdf($content, $name = 'download.pdf', $output_type = null, $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'P')
 
     }
 
@@ -4910,15 +4926,15 @@ class Reports extends MY_Controller
             $this->data['vat_purchase'] = $vat_purchase_array;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
             $meta = ['page_title' => lang('vat_purchase_report'), 'bc' => $bc];
-            
-            if($viewtype=='pdf'){
-                $this->data['viewtype']=$viewtype;
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
                 $name = lang('vat_purchase_ledger_report') . '.pdf';
-                $html = $this->load->view($this->theme . 'reports/vat_purchase_ledger_report', $this->data, true); 
-                $this->sma->generate_pdf($html, $name, 'I', '',$footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-            }else{
+                $html = $this->load->view($this->theme . 'reports/vat_purchase_ledger_report', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
                 $this->page_construct('reports/vat_purchase_ledger_report', $meta, $this->data);
-            } 
+            }
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
