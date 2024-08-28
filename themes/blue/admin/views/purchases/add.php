@@ -332,36 +332,48 @@ table#poTable td input.form-control {
                                 <div class="panel-body" style="padding: 5px;">
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <?= lang('supplier', 'posupplier'); ?>
+                                            <?= lang('Parent Supplier', 'posupplier'); ?>
                                             <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
-                                    ?><div class="input-group"><?php
-                                } ?>
+                                                ?><div class="input-group"><?php
+                                            } ?>
                                                 <input type="hidden" name="supplier" value="" id="posupplier"
                                                        class="form-control" style="width:100%;"
                                                        placeholder="<?= lang('select') . ' ' . lang('supplier') ?>">
                                                 <input type="hidden" name="supplier_id" value="" id="supplier_id"
                                                        class="form-control">
                                                 <?php if ($Owner || $Admin || $GP['suppliers-index']) {
-                                    ?>
+                                                ?>
                                                     <div class="input-group-addon no-print" style="padding: 2px 5px; border-left: 0;">
                                                         <a href="#" id="view-supplier" class="external" data-toggle="modal" data-target="#myModal">
                                                             <i class="fa fa-2x fa-user" id="addIcon"></i>
                                                         </a>
                                                     </div>
                                                 <?php
-                                } ?>
+                                                } ?>
                                                 <?php if ($Owner || $Admin || $GP['suppliers-add']) {
-                                    ?>
+                                                ?>
                                                 <div class="input-group-addon no-print" style="padding: 2px 5px;">
                                                     <a href="<?= admin_url('suppliers/add'); ?>" id="add-supplier" class="external" data-toggle="modal" data-target="#myModal">
                                                         <i class="fa fa-2x fa-plus-circle" id="addIcon"></i>
                                                     </a>
                                                 </div>
+                                                <?php
+                                                } ?>
+                                                <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
+                                                ?></div><?php
+                                                } ?>
+                                        </div>
+                                    </div>
+
+                                    <!-- Child Suppliers -->
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <?= lang('Child Supplier', 'posupplier'); ?>
                                             <?php
-                                } ?>
-                                            <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
-                                    ?></div><?php
-                                } ?>
+                                            $childSupArr[''] = '';
+                                            
+                                            echo form_dropdown('childsupplier', $childSupArr, $_POST['childsupplier'], 'id="childsupplier" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('child supplier') . '" required="required" style="width:100%;" '); ?>
                                         </div>
                                     </div>
 

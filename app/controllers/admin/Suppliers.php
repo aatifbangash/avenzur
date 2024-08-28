@@ -834,7 +834,7 @@ class Suppliers extends MY_Controller
     {
         // $this->sma->checkPermissions('index');
         $row = $this->companies_model->getCompanyByID($id);
-        $this->sma->send_json([['id' => $row->id, 'text' => $row->company]]);
+        $this->sma->send_json([['id' => $row->id, 'text' => $row->name]]);
     }
 
     public function getSuppliers()
@@ -992,6 +992,42 @@ class Suppliers extends MY_Controller
         $term            = addslashes($term);
         $limit           = $this->input->get('limit', true);
         $rows['results'] = $this->companies_model->getSupplierSuggestions($term, $limit);
+        $this->sma->send_json($rows);
+    }
+
+    public function parentsuggestions($term = null, $limit = null)
+    {
+        // $this->sma->checkPermissions('index');
+        if ($this->input->get('term')) {
+            $term = $this->input->get('term', true);
+        }
+        $term            = addslashes($term);
+        $limit           = $this->input->get('limit', true);
+        $rows['results'] = $this->companies_model->getParentSupplierSuggestions($term, $limit);
+        $this->sma->send_json($rows);
+    }
+
+    public function getChildById($term = null, $limit = null, $pid = null){
+        if ($this->input->get('pid')) {
+            $pid = $this->input->get('pid', true);
+            $term = $this->input->get('term', true);
+        }
+        //echo 'Pid: '.$pid.' and term '.$term;exit;
+        $term            = addslashes($term);
+        //$limit           = $this->input->get('limit', true);
+        $rows['results'] = $this->companies_model->getCompaniesByParentId($pid);
+        $this->sma->send_json($rows);  
+    }
+
+    public function childsuggestions($term = null, $limit = null)
+    {
+        // $this->sma->checkPermissions('index');
+        if ($this->input->get('term')) {
+            $term = $this->input->get('term', true);
+        }
+        $term            = addslashes($term);
+        $limit           = $this->input->get('limit', true);
+        $rows['results'] = $this->companies_model->getChildSupplierSuggestions($term, $limit);
         $this->sma->send_json($rows);
     }
 

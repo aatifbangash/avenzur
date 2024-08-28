@@ -306,6 +306,62 @@ class Companies_model extends CI_Model
         return $this->db->count_all_results();
     }
 
+    public function getCompaniesByParentId($pid){
+        $this->db->select('parent_code, sequence_code');
+        //$this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+        $this->db->from('companies');
+        $this->db->where('id', $pid);
+        $parent_query = $this->db->get();
+        
+        if ($parent_query->num_rows() > 0) {
+            $parent_code = $parent_query->row()->sequence_code;
+            
+            $this->db->select('id, name as text', false);
+            $this->db->from('companies');
+            $this->db->where('parent_code', $parent_code);
+            $company_query = $this->db->get();
+            
+            if ($company_query->num_rows() > 0) {
+                foreach (($company_query->result()) as $row) {
+                    $data[] = $row;
+                }
+                return $data;
+            }
+        }
+
+        return false;
+    }
+
+    public function getParentSupplierSuggestions($term, $limit = 10)
+    {
+        //$this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name,' - ', sequence_code, ')') END) as text", false);
+        $this->db->select("id, name as text", false);
+        $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+        $q = $this->db->get_where('companies', ['group_name' => 'supplier', 'level' => 1], $limit);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+    }
+
+    public function getChildSupplierSuggestions($term, $limit = 10)
+    {
+        //$this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name,' - ', sequence_code, ')') END) as text", false);
+        $this->db->select("id, name as text", false);
+        $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+        $q = $this->db->get_where('companies', ['group_name' => 'supplier', 'level' => 2], $limit);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+    }
+
     public function getSupplierSuggestions($term, $limit = 10)
     {
         //$this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name,' - ', sequence_code, ')') END) as text", false);
