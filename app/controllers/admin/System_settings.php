@@ -575,7 +575,713 @@ class system_settings extends MY_Controller
         $meta                = ['page_title' => lang('brands'), 'bc' => $bc];
         $this->page_construct('settings/brands', $meta, $this->data);
     }
+ 
+    public function specialities()
+    {
+        $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
+        $bc                  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('system_settings'), 'page' => lang('system_settings')], ['link' => '#', 'page' => lang('specialities')]];
+        $meta                = ['page_title' => lang('specialities'), 'bc' => $bc];
+        $this->page_construct('settings/specialities', $meta, $this->data);
+    }
+    public function speciality_actions()
+    {
+        $this->form_validation->set_rules('form_action', lang('form_action'), 'required');
 
+        if ($this->form_validation->run() == true) {
+            if (!empty($_POST['val'])) {
+                if ($this->input->post('form_action') == 'delete') {
+                    foreach ($_POST['val'] as $id) {
+                        $this->settings_model->deleteSpeciality($id);
+                    }
+                    $this->session->set_flashdata('message', lang('Speciality_deleted'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+
+                if ($this->input->post('form_action') == 'export_excel') {
+                    $this->load->library('excel');
+                    $this->excel->setActiveSheetIndex(0);
+                    $this->excel->getActiveSheet()->setTitle(lang('Specialities'));
+                    $this->excel->getActiveSheet()->SetCellValue('A1', lang('code'));
+                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('name'));
+                    $this->excel->getActiveSheet()->SetCellValue('C1', lang('slug'));
+                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('image'));
+                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('parent'));
+
+                    $row = 2;
+                    foreach ($_POST['val'] as $id) {
+                        $sc              = $this->settings_model->getSpecialityByID($id);
+                        $parent_category = '';
+                        if ($sc->parent_id) {
+                            $pc              = $this->settings_model->getSpecialityByID($sc->parent_id);
+                            $parent_category = $pc->code;
+                        }
+                        $this->excel->getActiveSheet()->SetCellValue('A' . $row, $sc->code);
+                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $sc->name);
+                        $this->excel->getActiveSheet()->SetCellValue('C' . $row, $sc->slug);
+                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $sc->image);
+                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $parent_category);
+                        $row++;
+                    }
+
+                    $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
+                    $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+                    $filename = 'Specialities_' . date('Y_m_d_H_i_s');
+                    $this->load->helper('excel');
+                    create_excel($this->excel, $filename);
+                }
+            } else {
+                $this->session->set_flashdata('error', lang('no_record_selected'));
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+        } else {
+            $this->session->set_flashdata('error', validation_errors());
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+    }
+
+    public function getSpecialities()
+    {
+        $print_barcode =''; 
+        //$print_barcode = anchor('admin/products/print_barcodes/?category=$1', '<i class="fa fa-print"></i>', 'title="' . lang('print_barcodes') . '" class="tip"');
+
+        $this->load->library('datatables');
+        $this->datatables
+            ->select("{$this->db->dbprefix('specialities')}.id as id, {$this->db->dbprefix('specialities')}.image, {$this->db->dbprefix('specialities')}.code, {$this->db->dbprefix('specialities')}.name, {$this->db->dbprefix('specialities')}.slug, s.name as parent", false)
+            ->from('specialities')
+            ->join('specialities s', 's.id=specialities.parent_id', 'left')
+            ->group_by('specialities.id')
+            ->add_column('Actions', '<div class="text-center">' . $print_barcode . " <a href='" . admin_url('system_settings/edit_speciality/$1') . "' data-toggle='modal' data-target='#myModal' class='tip' title='" . lang('edit_speciality') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_category') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_speciality/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
+
+        echo $this->datatables->generate();
+    }
+    public function add_speciality()
+    {
+        $this->load->helper('security');
+        $this->form_validation->set_rules('code', lang('speciality_code'), 'trim|is_unique[specialities.code]|required');
+        $this->form_validation->set_rules('name', lang('name'), 'required|min_length[3]');
+        $this->form_validation->set_rules('slug', lang('slug'), 'required|is_unique[specialities.slug]|alpha_dash');
+        $this->form_validation->set_rules('userfile', lang('speciality_image'), 'xss_clean');
+        $this->form_validation->set_rules('description', lang('description'), 'trim|required');
+
+        if ($this->form_validation->run() == true) {
+            $data = [
+                'name'        => $this->input->post('name'),
+                'code'        => $this->input->post('code'),
+                'slug'        => $this->input->post('slug'),
+                'description' => $this->input->post('description'),
+                'parent_id'   => $this->input->post('parent'),
+            ];
+
+            if ($_FILES['userfile']['size'] > 0) {
+                $this->load->library('upload');
+                $config['upload_path']   = $this->upload_path;
+                $config['allowed_types'] = $this->image_types;
+                $config['max_size']      = $this->allowed_file_size;
+                // $config['max_width']     = $this->Settings->iwidth;
+                // $config['max_height']    = $this->Settings->iheight;
+                $config['overwrite']     = false;
+                $config['encrypt_name']  = true;
+                $config['max_filename']  = 25;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload()) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                $photo         = $this->upload->file_name;
+                $data['image'] = $photo;
+                $this->load->library('image_lib');
+                $config['image_library']  = 'gd2';
+                $config['source_image']   = $this->upload_path . $photo;
+                $config['new_image']      = $this->thumbs_path . $photo;
+                $config['maintain_ratio'] = true;
+                // $config['width']          = $this->Settings->twidth;
+                // $config['height']         = $this->Settings->theight;
+                $this->image_lib->clear();
+                $this->image_lib->initialize($config);
+                if (!$this->image_lib->resize()) {
+                    echo $this->image_lib->display_errors();
+                }
+                if ($this->Settings->watermark) {
+                    $this->image_lib->clear();
+                    $wm['source_image']     = $this->upload_path . $photo;
+                    $wm['wm_text']          = 'Copyright ' . date('Y') . ' - ' . $this->Settings->site_name;
+                    $wm['wm_type']          = 'text';
+                    $wm['wm_font_path']     = 'system/fonts/texb.ttf';
+                    $wm['quality']          = '100';
+                    $wm['wm_font_size']     = '16';
+                    $wm['wm_font_color']    = '999999';
+                    $wm['wm_shadow_color']  = 'CCCCCC';
+                    $wm['wm_vrt_alignment'] = 'top';
+                    $wm['wm_hor_alignment'] = 'left';
+                    $wm['wm_padding']       = '10';
+                    $this->image_lib->initialize($wm);
+                    $this->image_lib->watermark();
+                }
+                $this->image_lib->clear();
+                $config = null;
+            }
+        } elseif ($this->input->post('add_speciality')) {
+            $this->session->set_flashdata('error', validation_errors());
+            admin_redirect('system_settings/specialities');
+        }
+
+        if ($this->form_validation->run() == true && $this->settings_model->addSpeciality($data)) {
+            $this->session->set_flashdata('message', lang('speciality_added'));
+            admin_redirect('system_settings/specialities');
+        } else {
+            $this->data['error']      = validation_errors() ? validation_errors() : $this->session->flashdata('error');
+            $this->data['categories'] = $this->settings_model->getParentSpecialities();
+            $this->data['modal_js']   = $this->site->modal_js();
+            $this->load->view($this->theme . 'settings/add_speciality', $this->data);
+        }
+    }
+
+    public function edit_speciality($id = null)
+    {
+        $this->load->helper('security');
+        $this->form_validation->set_rules('code', lang('speciality_code'), 'trim|required');
+        $pr_details = $this->settings_model->getSpecialityByID($id);
+        if ($this->input->post('code') != $pr_details->code) {
+            $this->form_validation->set_rules('code', lang('speciality_code'), 'required|is_unique[specialities.code]');
+        }
+        $this->form_validation->set_rules('slug', lang('slug'), 'required|alpha_dash');
+        if ($this->input->post('slug') != $pr_details->slug) {
+            $this->form_validation->set_rules('slug', lang('slug'), 'required|alpha_dash|is_unique[specialities.slug]');
+        }
+        $this->form_validation->set_rules('name', lang('speciality_name'), 'required|min_length[3]');
+        $this->form_validation->set_rules('userfile', lang('speciality_image'), 'xss_clean');
+        $this->form_validation->set_rules('description', lang('description'), 'trim|required');
+
+        if ($this->form_validation->run() == true) {
+            $data = [
+                'name'        => $this->input->post('name'),
+                'code'        => $this->input->post('code'),
+                'slug'        => $this->input->post('slug'),
+                'description' => $this->input->post('description'),
+                'parent_id'   => $this->input->post('parent'),
+            ];
+
+            if ($_FILES['userfile']['size'] > 0) {
+                $this->load->library('upload');
+                $config['upload_path']   = $this->upload_path;
+                $config['allowed_types'] = $this->image_types;
+                $config['max_size']      = $this->allowed_file_size;
+                // $config['max_width']     = $this->Settings->iwidth;
+                // $config['max_height']    = $this->Settings->iheight;
+                $config['overwrite']     = false;
+                $config['encrypt_name']  = true;
+                $config['max_filename']  = 25;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload()) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                $photo         = $this->upload->file_name;
+                $data['image'] = $photo;
+                $this->load->library('image_lib');
+                $config['image_library']  = 'gd2';
+                $config['source_image']   = $this->upload_path . $photo;
+                $config['new_image']      = $this->thumbs_path . $photo;
+                $config['maintain_ratio'] = true;
+                // $config['width']          = $this->Settings->twidth;
+                // $config['height']         = $this->Settings->theight;
+                $this->image_lib->clear();
+                $this->image_lib->initialize($config);
+                if (!$this->image_lib->resize()) {
+                    echo $this->image_lib->display_errors();
+                }
+                if ($this->Settings->watermark) {
+                    $this->image_lib->clear();
+                    $wm['source_image']     = $this->upload_path . $photo;
+                    $wm['wm_text']          = 'Copyright ' . date('Y') . ' - ' . $this->Settings->site_name;
+                    $wm['wm_type']          = 'text';
+                    $wm['wm_font_path']     = 'system/fonts/texb.ttf';
+                    $wm['quality']          = '100';
+                    $wm['wm_font_size']     = '16';
+                    $wm['wm_font_color']    = '999999';
+                    $wm['wm_shadow_color']  = 'CCCCCC';
+                    $wm['wm_vrt_alignment'] = 'top';
+                    $wm['wm_hor_alignment'] = 'left';
+                    $wm['wm_padding']       = '10';
+                    $this->image_lib->initialize($wm);
+                    $this->image_lib->watermark();
+                }
+                $this->image_lib->clear();
+                $config = null;
+            }
+        } elseif ($this->input->post('edit_speciality')) {
+            $this->session->set_flashdata('error', validation_errors());
+            admin_redirect('system_settings/specialities');
+        }
+
+        if ($this->form_validation->run() == true && $this->settings_model->updateSpeciality($id, $data)) {
+            $this->session->set_flashdata('message', lang('speciality_updated'));
+            admin_redirect('system_settings/specialities');
+        } else {
+            $this->data['error']      = validation_errors() ? validation_errors() : $this->session->flashdata('error');
+            $this->data['speciality']   = $this->settings_model->getSpecialityByID($id);
+            $this->data['specialities'] = $this->settings_model->getParentSpecialities();
+            $this->data['modal_js']   = $this->site->modal_js();
+            $this->load->view($this->theme . 'settings/edit_speciality', $this->data);
+        }
+    }
+    public function delete_speciality($id = null)
+    {
+        if (!$id) {
+            $this->sma->send_json(['error' => 1, 'msg' => lang('id_not_found')]);
+        }
+        if ($this->site->getSubSpecialities($id)) {
+            $this->sma->send_json(['error' => 1, 'msg' => lang('speciality_has_subcategory')]);
+        }
+
+        if ($this->settings_model->deleteSpeciality($id)) {
+            $this->sma->send_json(['error' => 0, 'msg' => lang('speciality_deleted')]);
+        }
+    }
+
+    public function import_specialities()
+    {
+        $this->load->helper('security');
+        $this->form_validation->set_rules('userfile', lang('upload_file'), 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+            if (isset($_FILES['userfile'])) {
+                $this->load->library('upload');
+                $config['upload_path']   = 'files/';
+                $config['allowed_types'] = 'csv';
+                $config['max_size']      = $this->allowed_file_size;
+                $config['overwrite']     = true;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload()) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('system_settings/specialities');
+                }
+                $csv       = $this->upload->file_name;
+                $arrResult = [];
+                $handle    = fopen('files/' . $csv, 'r');
+                if ($handle) {
+                    while (($row = fgetcsv($handle, 5000, ',')) !== false) {
+                        $arrResult[] = $row;
+                    }
+                    fclose($handle);
+                }
+                $titles     = array_shift($arrResult);
+                $updated    = '';
+                $specialities = $subspecialities= [];
+                foreach ($arrResult as $key => $value) {
+                    $code  = trim($value[0]);
+                    $name  = trim($value[1]);
+                    $pcode = isset($value[4]) ? trim($value[4]) : null;
+                    if ($code && $name) {
+                        $speciality = [
+                            'code'        => $code,
+                            'name'        => $name,
+                            'slug'        => isset($value[2]) ? trim($value[2]) : $code,
+                            'image'       => isset($value[3]) ? trim($value[3]) : 'no_image.png',
+                            'parent_id'   => $pcode,
+                            'description' => isset($value[5]) ? trim($value[5]) : null,
+                        ];
+                        if (!empty($pcode) && ($pspeciality = $this->settings_model->getSpecialityByCode($pcode))) {
+                            $speciality['parent_id'] = $pspeciality->id;
+                        }
+                        if ($c = $this->settings_model->getSpecialityByCode($code)) {
+                            $updated .= '<p>' . lang('speciality_updated') . ' (' . $code . ')</p>';
+                            $this->settings_model->updateSpeciality($c->id, $speciality);
+                        } else {
+                            if ($speciality['parent_id']) {
+                                $subspecialities[] = $speciality;
+                            } else {
+                                $specialities[] = $speciality;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // $this->sma->print_arrays($specialities, $subspecialities);
+        }
+
+        if ($this->form_validation->run() == true && $this->settings_model->addCategories($specialities, $subspecialities)) {
+            $this->session->set_flashdata('message', lang('specialities_added') . $updated);
+            admin_redirect('system_settings/specialities');
+        } else {
+            if ((isset($specialities) && empty($specialities)) || (isset($subspecialities) && empty($subspecialities))) {
+                if ($updated) {
+                    $this->session->set_flashdata('message', $updated);
+                } else {
+                    $this->session->set_flashdata('warning', lang('data_x_specialities'));
+                }
+                admin_redirect('system_settings/specialities');
+            }
+
+            $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['userfile'] = ['name' => 'userfile',
+                'id'                          => 'userfile',
+                'type'                        => 'text',
+                'value'                       => $this->form_validation->set_value('userfile'),
+            ];
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->load->view($this->theme . 'settings/import_specialities', $this->data);
+        }
+    }
+
+    public function topics()
+    {
+        $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
+        $bc                  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('system_settings'), 'page' => lang('system_settings')], ['link' => '#', 'page' => lang('topics')]];
+        $meta                = ['page_title' => lang('topics'), 'bc' => $bc];
+        $this->page_construct('settings/topics', $meta, $this->data);
+    }
+    public function topic_actions()
+    {
+        $this->form_validation->set_rules('form_action', lang('form_action'), 'required');
+
+        if ($this->form_validation->run() == true) {
+            if (!empty($_POST['val'])) {
+                if ($this->input->post('form_action') == 'delete') {
+                    foreach ($_POST['val'] as $id) {
+                        $this->settings_model->deleteTopic($id);
+                    }
+                    $this->session->set_flashdata('message', lang('Topic_deleted'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+
+                if ($this->input->post('form_action') == 'export_excel') {
+                    $this->load->library('excel');
+                    $this->excel->setActiveSheetIndex(0);
+                    $this->excel->getActiveSheet()->setTitle(lang('Topics'));
+                    $this->excel->getActiveSheet()->SetCellValue('A1', lang('code'));
+                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('name'));
+                    $this->excel->getActiveSheet()->SetCellValue('C1', lang('slug'));
+                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('image'));
+                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('parent'));
+
+                    $row = 2;
+                    foreach ($_POST['val'] as $id) {
+                        $sc              = $this->settings_model->getTopicByID($id);
+                        $parent_category = '';
+                        if ($sc->parent_id) {
+                            $pc              = $this->settings_model->getTopicByID($sc->parent_id);
+                            $parent_category = $pc->code;
+                        }
+                        $this->excel->getActiveSheet()->SetCellValue('A' . $row, $sc->code);
+                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $sc->name);
+                        $this->excel->getActiveSheet()->SetCellValue('C' . $row, $sc->slug);
+                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $sc->image);
+                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $parent_category);
+                        $row++;
+                    }
+
+                    $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                    $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
+                    $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+                    $filename = 'Topics_' . date('Y_m_d_H_i_s');
+                    $this->load->helper('excel');
+                    create_excel($this->excel, $filename);
+                }
+            } else {
+                $this->session->set_flashdata('error', lang('no_record_selected'));
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+        } else {
+            $this->session->set_flashdata('error', validation_errors());
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+    }
+
+    public function getTopics()
+    {
+        $print_barcode =''; 
+        //$print_barcode = anchor('admin/products/print_barcodes/?category=$1', '<i class="fa fa-print"></i>', 'title="' . lang('print_barcodes') . '" class="tip"');
+
+        $this->load->library('datatables');
+        $this->datatables
+            ->select("{$this->db->dbprefix('topics')}.id as id, {$this->db->dbprefix('topics')}.image, {$this->db->dbprefix('topics')}.code, {$this->db->dbprefix('topics')}.name, {$this->db->dbprefix('topics')}.slug, s.name as parent", false)
+            ->from('topics')
+            ->join('topics s', 's.id=topics.parent_id', 'left')
+            ->group_by('topics.id')
+            ->add_column('Actions', '<div class="text-center">' . $print_barcode . " <a href='" . admin_url('system_settings/edit_topic/$1') . "' data-toggle='modal' data-target='#myModal' class='tip' title='" . lang('edit_topic') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_category') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('system_settings/delete_topic/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
+
+        echo $this->datatables->generate();
+    }
+    public function add_topic()
+    {
+        $this->load->helper('security');
+        $this->form_validation->set_rules('code', lang('topic_code'), 'trim|is_unique[topics.code]|required');
+        $this->form_validation->set_rules('name', lang('name'), 'required|min_length[3]');
+        $this->form_validation->set_rules('slug', lang('slug'), 'required|is_unique[topics.slug]|alpha_dash');
+        $this->form_validation->set_rules('userfile', lang('topic_image'), 'xss_clean');
+        $this->form_validation->set_rules('description', lang('description'), 'trim|required');
+
+        if ($this->form_validation->run() == true) {
+            $data = [
+                'name'        => $this->input->post('name'),
+                'code'        => $this->input->post('code'),
+                'slug'        => $this->input->post('slug'),
+                'description' => $this->input->post('description'),
+                'parent_id'   => $this->input->post('parent'),
+            ];
+
+            if ($_FILES['userfile']['size'] > 0) {
+                $this->load->library('upload');
+                $config['upload_path']   = $this->upload_path;
+                $config['allowed_types'] = $this->image_types;
+                $config['max_size']      = $this->allowed_file_size;
+                // $config['max_width']     = $this->Settings->iwidth;
+                // $config['max_height']    = $this->Settings->iheight;
+                $config['overwrite']     = false;
+                $config['encrypt_name']  = true;
+                $config['max_filename']  = 25;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload()) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                $photo         = $this->upload->file_name;
+                $data['image'] = $photo;
+                $this->load->library('image_lib');
+                $config['image_library']  = 'gd2';
+                $config['source_image']   = $this->upload_path . $photo;
+                $config['new_image']      = $this->thumbs_path . $photo;
+                $config['maintain_ratio'] = true;
+                // $config['width']          = $this->Settings->twidth;
+                // $config['height']         = $this->Settings->theight;
+                $this->image_lib->clear();
+                $this->image_lib->initialize($config);
+                if (!$this->image_lib->resize()) {
+                    echo $this->image_lib->display_errors();
+                }
+                if ($this->Settings->watermark) {
+                    $this->image_lib->clear();
+                    $wm['source_image']     = $this->upload_path . $photo;
+                    $wm['wm_text']          = 'Copyright ' . date('Y') . ' - ' . $this->Settings->site_name;
+                    $wm['wm_type']          = 'text';
+                    $wm['wm_font_path']     = 'system/fonts/texb.ttf';
+                    $wm['quality']          = '100';
+                    $wm['wm_font_size']     = '16';
+                    $wm['wm_font_color']    = '999999';
+                    $wm['wm_shadow_color']  = 'CCCCCC';
+                    $wm['wm_vrt_alignment'] = 'top';
+                    $wm['wm_hor_alignment'] = 'left';
+                    $wm['wm_padding']       = '10';
+                    $this->image_lib->initialize($wm);
+                    $this->image_lib->watermark();
+                }
+                $this->image_lib->clear();
+                $config = null;
+            }
+        } elseif ($this->input->post('add_topic')) {
+            $this->session->set_flashdata('error', validation_errors());
+            admin_redirect('system_settings/topics');
+        }
+
+        if ($this->form_validation->run() == true && $this->settings_model->addTopic($data)) {
+            $this->session->set_flashdata('message', lang('topic_added'));
+            admin_redirect('system_settings/topics');
+        } else {
+            $this->data['error']      = validation_errors() ? validation_errors() : $this->session->flashdata('error');
+            $this->data['categories'] = $this->settings_model->getParentTopics();
+            $this->data['modal_js']   = $this->site->modal_js();
+            $this->load->view($this->theme . 'settings/add_topic', $this->data);
+        }
+    }
+
+    public function edit_topic($id = null)
+    {
+        $this->load->helper('security');
+        $this->form_validation->set_rules('code', lang('topic_code'), 'trim|required');
+        $pr_details = $this->settings_model->getTopicByID($id);
+        if ($this->input->post('code') != $pr_details->code) {
+            $this->form_validation->set_rules('code', lang('topic_code'), 'required|is_unique[topics.code]');
+        }
+        $this->form_validation->set_rules('slug', lang('slug'), 'required|alpha_dash');
+        if ($this->input->post('slug') != $pr_details->slug) {
+            $this->form_validation->set_rules('slug', lang('slug'), 'required|alpha_dash|is_unique[topics.slug]');
+        }
+        $this->form_validation->set_rules('name', lang('topic_name'), 'required|min_length[3]');
+        $this->form_validation->set_rules('userfile', lang('topic_image'), 'xss_clean');
+        $this->form_validation->set_rules('description', lang('description'), 'trim|required');
+
+        if ($this->form_validation->run() == true) {
+            $data = [
+                'name'        => $this->input->post('name'),
+                'code'        => $this->input->post('code'),
+                'slug'        => $this->input->post('slug'),
+                'description' => $this->input->post('description'),
+                'parent_id'   => $this->input->post('parent'),
+            ];
+
+            if ($_FILES['userfile']['size'] > 0) {
+                $this->load->library('upload');
+                $config['upload_path']   = $this->upload_path;
+                $config['allowed_types'] = $this->image_types;
+                $config['max_size']      = $this->allowed_file_size;
+                // $config['max_width']     = $this->Settings->iwidth;
+                // $config['max_height']    = $this->Settings->iheight;
+                $config['overwrite']     = false;
+                $config['encrypt_name']  = true;
+                $config['max_filename']  = 25;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload()) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                $photo         = $this->upload->file_name;
+                $data['image'] = $photo;
+                $this->load->library('image_lib');
+                $config['image_library']  = 'gd2';
+                $config['source_image']   = $this->upload_path . $photo;
+                $config['new_image']      = $this->thumbs_path . $photo;
+                $config['maintain_ratio'] = true;
+                // $config['width']          = $this->Settings->twidth;
+                // $config['height']         = $this->Settings->theight;
+                $this->image_lib->clear();
+                $this->image_lib->initialize($config);
+                if (!$this->image_lib->resize()) {
+                    echo $this->image_lib->display_errors();
+                }
+                if ($this->Settings->watermark) {
+                    $this->image_lib->clear();
+                    $wm['source_image']     = $this->upload_path . $photo;
+                    $wm['wm_text']          = 'Copyright ' . date('Y') . ' - ' . $this->Settings->site_name;
+                    $wm['wm_type']          = 'text';
+                    $wm['wm_font_path']     = 'system/fonts/texb.ttf';
+                    $wm['quality']          = '100';
+                    $wm['wm_font_size']     = '16';
+                    $wm['wm_font_color']    = '999999';
+                    $wm['wm_shadow_color']  = 'CCCCCC';
+                    $wm['wm_vrt_alignment'] = 'top';
+                    $wm['wm_hor_alignment'] = 'left';
+                    $wm['wm_padding']       = '10';
+                    $this->image_lib->initialize($wm);
+                    $this->image_lib->watermark();
+                }
+                $this->image_lib->clear();
+                $config = null;
+            }
+        } elseif ($this->input->post('edit_topic')) {
+            $this->session->set_flashdata('error', validation_errors());
+            admin_redirect('system_settings/topics');
+        }
+
+        if ($this->form_validation->run() == true && $this->settings_model->updateTopic($id, $data)) {
+            $this->session->set_flashdata('message', lang('topic_updated'));
+            admin_redirect('system_settings/topics');
+        } else {
+            $this->data['error']      = validation_errors() ? validation_errors() : $this->session->flashdata('error');
+            $this->data['topic']   = $this->settings_model->getTopicByID($id);
+            $this->data['topics'] = $this->settings_model->getParentTopics();
+            $this->data['modal_js']   = $this->site->modal_js();
+            $this->load->view($this->theme . 'settings/edit_topic', $this->data);
+        }
+    }
+    public function delete_topic($id = null)
+    {
+        if (!$id) {
+            $this->sma->send_json(['error' => 1, 'msg' => lang('id_not_found')]);
+        }
+        if ($this->site->getSubTopics($id)) {
+            $this->sma->send_json(['error' => 1, 'msg' => lang('topic_has_subcategory')]);
+        }
+
+        if ($this->settings_model->deleteTopic($id)) {
+            $this->sma->send_json(['error' => 0, 'msg' => lang('topic_deleted')]);
+        }
+    }
+
+    public function import_topics()
+    {
+        $this->load->helper('security');
+        $this->form_validation->set_rules('userfile', lang('upload_file'), 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+            if (isset($_FILES['userfile'])) {
+                $this->load->library('upload');
+                $config['upload_path']   = 'files/';
+                $config['allowed_types'] = 'csv';
+                $config['max_size']      = $this->allowed_file_size;
+                $config['overwrite']     = true;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload()) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('system_settings/topics');
+                }
+                $csv       = $this->upload->file_name;
+                $arrResult = [];
+                $handle    = fopen('files/' . $csv, 'r');
+                if ($handle) {
+                    while (($row = fgetcsv($handle, 5000, ',')) !== false) {
+                        $arrResult[] = $row;
+                    }
+                    fclose($handle);
+                }
+                $titles     = array_shift($arrResult);
+                $updated    = '';
+                $topics = $subtopics= [];
+                foreach ($arrResult as $key => $value) {
+                    $code  = trim($value[0]);
+                    $name  = trim($value[1]);
+                    $pcode = isset($value[4]) ? trim($value[4]) : null;
+                    if ($code && $name) {
+                        $topic = [
+                            'code'        => $code,
+                            'name'        => $name,
+                            'slug'        => isset($value[2]) ? trim($value[2]) : $code,
+                            'image'       => isset($value[3]) ? trim($value[3]) : 'no_image.png',
+                            'parent_id'   => $pcode,
+                            'description' => isset($value[5]) ? trim($value[5]) : null,
+                        ];
+                        if (!empty($pcode) && ($ptopic = $this->settings_model->getTopicByCode($pcode))) {
+                            $topic['parent_id'] = $ptopic->id;
+                        }
+                        if ($c = $this->settings_model->getTopicByCode($code)) {
+                            $updated .= '<p>' . lang('topic_updated') . ' (' . $code . ')</p>';
+                            $this->settings_model->updateTopic($c->id, $topic);
+                        } else {
+                            if ($topic['parent_id']) {
+                                $subtopics[] = $topic;
+                            } else {
+                                $topics[] = $topic;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // $this->sma->print_arrays($topics, $subtopics);
+        }
+
+        if ($this->form_validation->run() == true && $this->settings_model->addCategories($topics, $subtopics)) {
+            $this->session->set_flashdata('message', lang('topics_added') . $updated);
+            admin_redirect('system_settings/topics');
+        } else {
+            if ((isset($topics) && empty($topics)) || (isset($subtopics) && empty($subtopics))) {
+                if ($updated) {
+                    $this->session->set_flashdata('message', $updated);
+                } else {
+                    $this->session->set_flashdata('warning', lang('data_x_topics'));
+                }
+                admin_redirect('system_settings/topics');
+            }
+
+            $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['userfile'] = ['name' => 'userfile',
+                'id'                          => 'userfile',
+                'type'                        => 'text',
+                'value'                       => $this->form_validation->set_value('userfile'),
+            ];
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->load->view($this->theme . 'settings/import_topics', $this->data);
+        }
+    }
+    
     public function categories()
     {
         $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
