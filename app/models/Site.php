@@ -1020,6 +1020,30 @@ public function getallCountry()
         }
         return false;
     }
+    public function getSubSpecialities($parent_id)
+    {
+        $this->db->where('parent_id', $parent_id)->order_by('name');
+        $q = $this->db->get('specialities');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+    public function getSubTopics($parent_id)
+    {
+        $this->db->where('parent_id', $parent_id)->order_by('name');
+        $q = $this->db->get('topics');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
 
     public function getTaxRateByID($id)
     {

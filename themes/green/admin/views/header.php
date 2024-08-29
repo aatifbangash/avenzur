@@ -944,6 +944,16 @@
                                                 <i class="fa fa-folder-open"></i><span class="text"> <?= lang('categories'); ?></span>
                                             </a>
                                         </li>
+                                        <li id="system_settings_specialities">
+                                            <a href="<?= admin_url('system_settings/specialities') ?>">
+                                                <i class="fa fa-folder-open"></i><span class="text"> <?= lang('specialities'); ?></span>
+                                            </a>
+                                        </li>
+                                        <li id="system_settings_topics">
+                                            <a href="<?= admin_url('system_settings/topics') ?>">
+                                                <i class="fa fa-folder-open"></i><span class="text"> <?= lang('topics'); ?></span>
+                                            </a>
+                                        </li>
                                         <li id="system_settings_expense_categories">
                                             <a href="<?= admin_url('system_settings/expense_categories') ?>">
                                                 <i class="fa fa-folder-open"></i><span class="text"> <?= lang('expense_categories'); ?></span>
