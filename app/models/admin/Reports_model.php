@@ -329,13 +329,17 @@ class Reports_model extends CI_Model
                 CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
             ELSE 0 
         END) AS 'Current'";*/
-
+        $count = 1;
         foreach ($intervals as $index => $interval) {
             if ($interval > $duration) {
                 break;
             }
 
-            $start = $previous_limit + 1;
+            if($count == 1) {
+                $start = $previous_limit;
+            }else{
+                $start = $previous_limit + 1;
+            }
             $end = $interval;
             $previous_limit = $end;
             // replaced CURDATE() with   $start_date 
@@ -344,6 +348,8 @@ class Reports_model extends CI_Model
                     CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
                 ELSE 0 
             END) AS '$start-$end'";
+
+            $count = $count +1;  
         }
 
         // Add the "greater than" case for the selected duration

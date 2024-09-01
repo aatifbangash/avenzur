@@ -114,15 +114,21 @@
                                     $duration = $this->input->post('duration') ? $this->input->post('duration') : 120;
                                     $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
                                     $previous_limit = 0;
-
+                                    $count = 1;
                                     foreach ($intervals as $interval) {
                                         if ($interval > $duration) {
                                             break;
                                         }
-                                        $start = $previous_limit + 1;
+                                        if($count == 1) {
+                                            $start = $previous_limit;
+                                        }else{
+                                            $start = $previous_limit + 1;
+                                        }
+                                        //$start = $previous_limit + 1;
                                         $end = $interval;
                                         $previous_limit = $end;
                                         echo "<th>{$start}-{$end}</th>";
+                                        $count = $count+1;
                                     }
 
                                     echo "<th>>{$duration}</th>";
@@ -135,7 +141,7 @@
                                     $count = 0;
                                     $totals = [
                                         //'Current' => 0,
-                                        '1-30' => 0,
+                                        '0-30' => 0,
                                         '31-60' => 0,
                                         '61-90' => 0,
                                         '91-120' => 0,
@@ -174,14 +180,21 @@
                                                 <td><?= $data['supplier_name']; ?></td>
                                                 <td><?= $data['payment_term']; ?></td>
                                                 <?php
+                                                    $i=1;
                                                     foreach ($intervals as $interval) {
                                                         if ($interval > $duration) {
                                                             break;
+                                                        }
+                                                        if($i == 1) {
+                                                            $start = $previous_limit;
+                                                        }else{
+                                                            $start = $previous_limit + 1;
                                                         }
                                                         $start = $previous_limit + 1;
                                                         $end = $interval;
                                                         $previous_limit = $end;
                                                         echo "<td>{$this->sma->formatNumber($data["{$start}-{$end}"])}</td>";
+                                                        $i = $i+1;   
                                                     }
 
                                                     echo "<td>{$this->sma->formatNumber($data[">{$duration}"])}</td>";
@@ -198,14 +211,21 @@
                                     <td><strong></strong></td>
                                     <?php
                                         $previous_limit = 0;
+                                        $i=1;
                                         foreach ($intervals as $interval) {
                                             if ($interval > $duration) {
                                                 break;
                                             }
-                                            $start = $previous_limit + 1;
+                                            if($i == 1) {
+                                                $start = $previous_limit;
+                                            }else{
+                                                $start = $previous_limit + 1;
+                                            }
+                                            //$start = $previous_limit + 1;
                                             $end = $interval;
                                             $previous_limit = $end;
                                             echo "<td><strong>{$this->sma->formatNumber($totals["{$start}-{$end}"])}</strong></td>";
+                                            $i=$i+1;
                                         }
 
                                         echo "<td><strong>{$this->sma->formatNumber($totals[">{$duration}"])}</strong></td>";
