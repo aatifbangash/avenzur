@@ -190,7 +190,7 @@
                                                         }else{
                                                             $start = $previous_limit + 1;
                                                         }
-                                                        $start = $previous_limit + 1;
+                                                        
                                                         $end = $interval;
                                                         $previous_limit = $end;
                                                         echo "<td>{$this->sma->formatNumber($data["{$start}-{$end}"])}</td>";
