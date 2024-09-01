@@ -63,7 +63,7 @@
 
                         <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('From Date', 'fromdate'); ?>
+                                <?= lang('Date', 'fromdate'); ?>
                                 <?php echo form_input('from_date', ($start_date ?? ''), 'class="form-control input-tip date" id="fromdate"'); ?>
                             </div>
                         </div>
