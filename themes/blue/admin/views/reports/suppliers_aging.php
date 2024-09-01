@@ -159,7 +159,7 @@
                                         '>240' => 0,
                                         'total' => 0
                                     ];
-                                    $previous_limit = 0;
+                                 
                                     
                                     foreach ($supplier_aging as $key => $data){
                                         $data = (array)$data;
@@ -181,6 +181,7 @@
                                                 <td><?= $data['payment_term']; ?></td>
                                                 <?php
                                                     $i=1;
+                                                    $previous_limit = 0;
                                                     foreach ($intervals as $interval) {
                                                         if ($interval > $duration) {
                                                             break;
