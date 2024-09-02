@@ -155,7 +155,7 @@ if ($this->Settings->indian_gst) {
                     <div class="d-flex w-100 radio-button-wrapper my-3">
                     <div class="d-flex align-items-center item1">
                         <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="showCardDetails();" value="1" id="flexRadioDefault2" checked>
-                        <img src="<?= base_url('assets/images/creditcard.png'); ?>" style="width:60px;" alt="Credit Debit Card" />
+                        <img src="<?= base_url('assets/images/creditcard.png'); ?>" style="width:40px;" alt="Credit Debit Card" />
                      </div>
                     <div class="d-flex align-items-center item2">
                         <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();" value="3" id="apple-pay">
