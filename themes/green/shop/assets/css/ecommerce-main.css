@@ -2348,7 +2348,7 @@ html[lang="ar"] #thumb .item {margin: 0 0px 0 10px !important;}
 #thumb .owl-item .item{border:1px solid #dfdfdf ;  border-radius: 10px;}
 .categoryTabs .products-card {direction: ltr !important;}
 #thumb .owl-stage {display: flex; padding: 10px; }
-.radio-button-wrapper .item1,.radio-button-wrapper .item2 {flex: 0 0 40%}
+.radio-button-wrapper .item1,.radio-button-wrapper .item2,.radio-button-wrapper .item3 {flex: 0 0 25%}
 html[lang='ar'] .item1 {flex:0 0 60%}
 html[lang='ar'] .item2 {flex:0 0 40%}
 .form-check .form-check-input {margin-left:0 !important;}
