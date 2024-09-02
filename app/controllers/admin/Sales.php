@@ -26,7 +26,7 @@ class Sales extends MY_Controller
         $this->thumbs_path         = 'assets/uploads/thumbs/';
         $this->image_types         = 'gif|jpg|jpeg|png|tif';
         $this->digital_file_types  = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt';
-        $this->allowed_file_size   = '1024';
+        $this->allowed_file_size   = '2048';
         $this->data['logo']        = true;
         $this->load->library('attachments', [
             'path'     => $this->digital_upload_path,
