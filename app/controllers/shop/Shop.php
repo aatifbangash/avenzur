@@ -1372,6 +1372,8 @@ class Shop extends MY_Shop_Controller
             $product->price = $productPrice + $productTaxAmount;
         }
 
+        $this->site->logVisitor();
+
         $this->data['product'] = $product;
         $this->data['other_products'] = $this->shop_model->getOtherProducts($product->id, $product->category_id, $product->brand);
         $this->data['unit'] = $this->site->getUnitByID($product->unit);
@@ -1525,6 +1527,8 @@ class Shop extends MY_Shop_Controller
     public function products($category_slug = null, $subcategory_slug = null, $brand_slug = null, $promo = null)
     {
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
+        $this->site->logVisitor();
+
         if ($this->input->get('category')) {
             $category_slug = $this->input->get('category', true);
         }
