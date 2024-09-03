@@ -1040,7 +1040,7 @@ class Sales_model extends CI_Model
     }
 
     public function updateSaleWithCourier($id, $courier_id, $tracking_id, $pickup_location=null){
-        $this->db->update('sales', ['courier_id' => $courier_id, 'courier_order_tracking_id' => $tracking_id, 'pickup_location_id' => $pickup_location], ['id' => $id]);
+        $this->db->update('sales', ['courier_id' => $courier_id, 'courier_order_tracking_id' => $tracking_id, 'pickup_location_id' => $pickup_location, 'courier_assignment_time' => date('Y-m-d H:i:s')], ['id' => $id]);
     }
 
     public function updateSaleCourierStatus($courier_id, $tracking_id, $tracking_status){

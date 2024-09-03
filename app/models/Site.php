@@ -584,6 +584,52 @@ public function getallCountry()
     return false;
 }
 
+public function logVisitor() {
+    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        $ip = $_SERVER['HTTP_CLIENT_IP'];
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    } else {
+        $ip = $_SERVER['REMOTE_ADDR'];
+    }
+    
+    if ($ip == '::1') {
+        $ip = '127.0.0.1';
+    }
+
+    $userAgent = $_SERVER['HTTP_USER_AGENT'];
+    $bots = [
+        'Googlebot', 'Bingbot', 'Slurp', 'DuckDuckBot', 'Baiduspider',
+        'YandexBot', 'Sogou', 'Exabot', 'facebot', 'ia_archiver'
+    ];
+
+    $isBot = false;
+    
+    foreach ($bots as $bot) {
+        if (stripos($userAgent, $bot) !== false) {
+            $isBot = true;
+        }
+    }
+
+    $location = @file_get_contents("http://ip-api.com/json/{$ip}");
+    if ($location) {
+        $locationData = json_decode($location, true);
+        $location = $locationData['city'] . ', ' . $locationData['regionName'] . ', ' . $locationData['country'];
+    }
+    $location = 'Unknown';
+    $landingUrl = $_SERVER['REQUEST_URI'];
+    $accessTime = date('Y-m-d H:i:s');
+
+    $this->db->insert('user_logs', [
+        'ip_address' => $ip,
+        'location' => $location,
+        'is_bot' => $isBot,
+        'user_agent' => $userAgent,
+        'landing_url' => $landingUrl,
+        'access_time' => $accessTime,
+    ]);
+}
+
  public function getallWCountry()
     {
         $q = $this->db->get('warehouses_country');

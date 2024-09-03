@@ -140,6 +140,9 @@ class Main extends MY_Shop_Controller
 
             $this->session->sess_destroy();
         }*/
+
+        $this->site->logVisitor();
+
         $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->data['featured_categories'] = $this->shop_model->getFeaturedCategories();
         $this->data['popular_categories'] = $this->shop_model->getPopularCategories();
