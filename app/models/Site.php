@@ -612,11 +612,14 @@ public function logVisitor() {
     }
 
     $location = @file_get_contents("http://ip-api.com/json/{$ip}");
+    
     if ($location) {
         $locationData = json_decode($location, true);
         $location = $locationData['city'] . ', ' . $locationData['regionName'] . ', ' . $locationData['country'];
+    }else{
+        $location = 'Unknown';
     }
-    $location = 'Unknown';
+    
     $landingUrl = $_SERVER['REQUEST_URI'];
     $accessTime = date('Y-m-d H:i:s');
 
