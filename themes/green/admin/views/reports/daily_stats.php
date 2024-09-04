@@ -57,7 +57,8 @@
                                 <th><?= lang('date'); ?></th>
                                 <th><?= lang('PageViews'); ?></th>
                                 <th><?= lang('Website Logins'); ?></th>
-                                <th><?= lang('Orders'); ?></th>
+                                <th><?= lang('Created Orders'); ?></th>
+                                <th><?= lang('Delivered Orders'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
@@ -67,6 +68,7 @@
                                 <td><?= $daily_stats['page_views']; ?></td>
                                 <td><?= $daily_stats['total_logins']; ?></td>
                                 <td><?= $daily_stats['total_orders']; ?></td>
+                                <td><?= $daily_stats['total_orders_delivered']; ?></td>
                                 
                             </tr>
 
