@@ -205,7 +205,7 @@
                     _doc.save('generated-document.pdf');
                 },
                 margin: [startingY + 10, 10, 10, 10], // Adjust top margin to account for the text
-                x: 0,
+                x: 20,
                 y: startingY + 20,
                 width: 600,
                 windowWidth: 675,
@@ -218,5 +218,3 @@
         };
     }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
