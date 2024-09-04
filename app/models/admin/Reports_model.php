@@ -224,6 +224,84 @@ class Reports_model extends CI_Model
         return $data_res;
     }
 
+    public function getUserStats($date){
+        $response = array();
+        $dateObj = DateTime::createFromFormat('d/m/Y', $date);
+        if ($dateObj) {
+            $date = $dateObj->format('Y-m-d');
+        } else {
+            // Handle error if the date format is incorrect
+            return array(); // or some error message
+        }
+        $start_date = $date.' 00:00:00';
+        $end_date = $date.' 23:59:59';
+
+        $data_res = array();
+        $this->db
+            ->select('Count(*) as page_views, location, is_bot, user_agent')
+            ->from('sma_user_logs')
+            ->where('is_bot', 0)
+            ->where('access_time >=', $start_date)
+            ->where('access_time <=', $end_date)
+            ->group_by('location')
+            ->order_by('page_views', 'DESC');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        $response['user_stats'] = $data_res;
+
+        // Prepare the SQL query
+        $sql = "
+        SELECT
+        (SELECT COUNT(*) FROM sma_user_logs WHERE is_bot = 0 AND access_time >= ? AND access_time <= ?) AS page_views,
+        (SELECT COUNT(*) FROM sma_sales WHERE payment_status = 'paid' AND shop = 1 AND sale_status = 'completed' AND date >= ? AND date <= ?) AS total_orders,
+        (SELECT COUNT(*) FROM sma_users WHERE FROM_UNIXTIME(last_login) >= ? AND FROM_UNIXTIME(last_login) <= ?) AS total_logins";
+        $query = $this->db->query($sql, array($start_date, $end_date, $start_date, $end_date, $start_date, $end_date));
+        // Fetch the result
+        if ($query->num_rows() > 0) {
+            $data_res = $query->row_array();
+        } else {
+            $data_res = array(
+                'page_views' => 0,
+                'total_orders' => 0,
+                'total_logins' => 0
+            );
+        }
+        
+        $response['daily_stats'] = $data_res;
+
+
+        $data_res = array();
+        $this->db
+            ->select('sma_sales.id, sma_sales.courier_id, sma_sales.total as order_value, sma_sales.date as order_date, sma_sales.courier_assignment_time as assignment_time, sma_sales.courier_pickup_time as pickup_time, sma_sales.courier_delivery_time as delivery_time, sma_companies.city as location, sma_courier.name as courier_name')
+            ->from('sma_sales')
+            ->join('sma_companies', 'sma_companies.id=sma_sales.customer_id')
+            ->join('sma_courier', 'sma_courier.id=sma_sales.courier_id')
+            ->where('sma_sales.shop', 1)
+            ->where('sma_sales.sale_status', 'completed')
+            ->where('sma_sales.payment_status', 'paid')
+            ->where('sma_sales.date >=', $start_date)
+            ->where('sma_sales.date <=', $end_date)
+            ->order_by('sma_sales.id', 'DESC');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        $response['order_stats'] = $data_res;
+
+        return $response;
+    }
 
     public function getCustomerAging($duration, $start_date, $supplier_id_array)
     {
