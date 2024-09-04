@@ -206,7 +206,7 @@
                 },
                 margin: [startingY + 10, 10, 10, 10], // Adjust top margin to account for the text
                 x: 20,
-                y: startingY,
+                y: startingY - 20,
                 width: 600,
                 windowWidth: 675,
                 html2canvas: {

@@ -236,6 +236,10 @@ class Reports_model extends CI_Model
         $start_date = $date.' 00:00:00';
         $end_date = $date.' 23:59:59';
 
+        // Adjust the time to account for the 3-hour difference
+        $start_date = date('Y-m-d H:i:s', strtotime($start_date) - 3 * 3600);
+        $end_date = date('Y-m-d H:i:s', strtotime($end_date) - 3 * 3600);
+
         $data_res = array();
         $this->db
             ->select('Count(*) as page_views, location, is_bot, user_agent')
@@ -279,7 +283,17 @@ class Reports_model extends CI_Model
 
         $data_res = array();
         $this->db
-            ->select('sma_sales.id, sma_sales.courier_id, sma_sales.total as order_value, sma_sales.date as order_date, sma_sales.courier_assignment_time as assignment_time, sma_sales.courier_pickup_time as pickup_time, sma_sales.courier_delivery_time as delivery_time, sma_companies.city as location, sma_courier.name as courier_name')
+            ->select('
+                sma_sales.id, 
+                sma_sales.courier_id, 
+                sma_sales.total as order_value, 
+                DATE_ADD(sma_sales.date, INTERVAL 3 HOUR) as order_date,
+                DATE_ADD(sma_sales.courier_assignment_time, INTERVAL 3 HOUR) as assignment_time, 
+                DATE_ADD(sma_sales.courier_pickup_time, INTERVAL 3 HOUR) as pickup_time, 
+                DATE_ADD(sma_sales.courier_delivery_time, INTERVAL 3 HOUR) as delivery_time, 
+                sma_companies.city as location, 
+                sma_courier.name as courier_name
+            ')
             ->from('sma_sales')
             ->join('sma_companies', 'sma_companies.id=sma_sales.customer_id')
             ->join('sma_courier', 'sma_courier.id=sma_sales.courier_id')
