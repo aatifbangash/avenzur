@@ -80,7 +80,7 @@
                                 <h3>Daily Orders Breakdown</h3>
                             <tr>
                                 <th>#</th>
-                                <th><?= lang('Order Location'); ?></th>
+                                
                                 <th><?= lang('Courier'); ?></th>
                                 <th><?= lang('Order Time'); ?></th>
                                 <th><?= lang('Order Value'); ?></th>
@@ -97,7 +97,7 @@
                                     ?>
                                         <tr>
                                             <td><?= $count; ?></td>
-                                            <td><?= $order->location; ?></td>
+                                            
                                             <td><?= $order->courier_name; ?></td>
                                             <td><?= $order->order_time; ?></td>
                                             <td><?= $order->order_value; ?></td>
@@ -188,7 +188,7 @@
             doc.addImage(image, 'PNG', logoXPosition, logoYPosition, logoWidth, logoHeight);
 
             // Set starting position for further content below the logo
-            const startingY = logoYPosition + logoHeight + 20; // Adjust space below the logo
+            const startingY = logoYPosition + logoHeight; // Adjust space below the logo
 
             // Continue with other content, like adding text or HTML
             // var elementText = document.querySelector('#pdfTextContent');
@@ -206,7 +206,7 @@
                 },
                 margin: [startingY + 10, 10, 10, 10], // Adjust top margin to account for the text
                 x: 20,
-                y: startingY + 20,
+                y: startingY,
                 width: 600,
                 windowWidth: 675,
                 html2canvas: {
