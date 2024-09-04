@@ -287,7 +287,7 @@ class Reports_model extends CI_Model
                 sma_sales.id, 
                 sma_sales.courier_id, 
                 sma_sales.total as order_value, 
-                DATE_ADD(sma_sales.date, INTERVAL 3 HOUR) as order_date,
+                DATE_ADD(sma_sales.date, INTERVAL 3 HOUR) as order_time,
                 DATE_ADD(sma_sales.courier_assignment_time, INTERVAL 3 HOUR) as assignment_time, 
                 DATE_ADD(sma_sales.courier_pickup_time, INTERVAL 3 HOUR) as pickup_time, 
                 DATE_ADD(sma_sales.courier_delivery_time, INTERVAL 3 HOUR) as delivery_time, 
