@@ -3639,6 +3639,23 @@ class Reports extends MY_Controller
         $this->page_construct('reports/suppliers', $meta, $this->data);
     }
 
+    public function daily_stats(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $date = $this->input->post('date') ? $this->input->post('date') : null;
+
+        if ($date) {
+            $response = $this->reports_model->getUserStats($date);
+            $this->data['date'] = $date;
+            $this->data['user_stats'] = $response['user_stats'];
+            $this->data['daily_stats'] = $response['daily_stats'];
+            $this->data['order_stats'] = $response['order_stats'];
+        }
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('daily_stats')]];
+        $meta = ['page_title' => lang('daily_stats'), 'bc' => $bc];
+        $this->page_construct('reports/daily_stats', $meta, $this->data);  
+    }
+
     public function general_ledger_trial_balance()
     {
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
