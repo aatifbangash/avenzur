@@ -308,12 +308,13 @@ class Reports_model extends CI_Model
                 ->where('sma_sales.date >=', $start_date)
                 ->where('sma_sales.date <=', $end_date)
                 ->or_group_start() // Start a nested group for the delivery time condition
-                    ->where('DATE_ADD(sma_sales.courier_delivery_time, INTERVAL 3 HOUR) >=', $start_date)
-                    ->where('DATE_ADD(sma_sales.courier_delivery_time, INTERVAL 3 HOUR) <=', $end_date)
+                    ->where('sma_sales.courier_delivery_time >=', $start_date)
+                    ->where('sma_sales.courier_delivery_time <=', $end_date)
                 ->group_end() // End the nested group
             ->group_end() // End the main group
             ->order_by('sma_sales.id', 'DESC');
         $q = $this->db->get();
+        echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data_res[] = $row;
