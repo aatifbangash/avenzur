@@ -314,7 +314,7 @@ class Reports_model extends CI_Model
             ->group_end() // End the main group
             ->order_by('sma_sales.id', 'DESC');
         $q = $this->db->get();
-        echo $this->db->last_query();exit;
+        //echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data_res[] = $row;
