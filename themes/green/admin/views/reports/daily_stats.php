@@ -125,6 +125,7 @@
                                 <th>#</th>
                                 <th><?= lang('Location'); ?></th>
                                 <th><?= lang('date'); ?></th>
+                                <th><?= lang('Unique Visitors'); ?></th>
                                 <th><?= lang('PageViews'); ?></th>
                             </tr>
                             </thead>
@@ -138,6 +139,7 @@
                                         <td><?= $count; ?></td>
                                         <td><?= $usr_stats->location; ?></td>
                                         <td><?= $date; ?></td>
+                                        <td><?= $usr_stats->unique_users; ?></td>
                                         <td><?= $usr_stats->page_views; ?></td>
                                     </tr>
                                 <?php
