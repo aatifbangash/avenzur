@@ -3649,6 +3649,7 @@ class Reports extends MY_Controller
             $this->data['user_stats'] = $response['user_stats'];
             $this->data['daily_stats'] = $response['daily_stats'];
             $this->data['order_stats'] = $response['order_stats'];
+            $this->data['social_stats'] = $response['social_stats'];
         }
 
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('daily_stats')]];

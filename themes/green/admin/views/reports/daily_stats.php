@@ -80,6 +80,39 @@
                             <tfoot></tfoot>
                         </table>
 
+                        <table id="stTable"
+                               class="table items table-striped table-bordered table-condensed table-hover sortable_table">
+                            <thead>
+                                <h3>Social Media Traffic Stats</h3>
+                            <tr>
+                                <th><?= lang('date'); ?></th>
+                                <?php 
+                                    foreach ($social_stats as $social => $val){
+                                        ?>
+                                            <th><?= $social; ?></th>
+                                        <?php
+                                    }
+                                ?>
+                            </tr>
+                            </thead>
+                            <tbody style="text-align:center;">
+                            
+                            <tr>
+                                <td><?= $date; ?></td>
+                                <?php 
+                                    foreach ($social_stats as $social => $val){
+                                        ?>
+                                            <td><?= $val; ?></td>
+                                            
+                                        <?php
+                                    }
+                                ?>
+                            </tr>
+
+                            </tbody>
+                            <tfoot></tfoot>
+                        </table>
+
                         <table id="dobTable"
                                class="table items table-striped table-bordered table-condensed table-hover sortable_table">
                             <thead>
