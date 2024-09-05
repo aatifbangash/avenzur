@@ -56,7 +56,7 @@
                             <tr>
                                 <th><?= lang('date'); ?></th>
                                 <th><?= lang('Unique Visitors'); ?></th>
-                                <th><?= lang('PageViews'); ?></th>
+                                
                                 <th><?= lang('Impressions'); ?></th>
                                 <th><?= lang('Website Logins'); ?></th>
                                 <th><?= lang('Created Orders'); ?></th>
@@ -68,7 +68,7 @@
                             <tr>
                                 <td><?= $date; ?></td>
                                 <td><?= $daily_stats['unique_users']; ?></td>
-                                <td><?= $daily_stats['page_views']; ?></td>
+                                
                                 <td><?= $daily_stats['impressions']; ?></td>
                                 <td><?= $daily_stats['total_logins']; ?></td>
                                 <td><?= $daily_stats['total_orders']; ?></td>
@@ -128,13 +128,15 @@
                                 <th><?= lang('Location'); ?></th>
                                 <th><?= lang('date'); ?></th>
                                 <th><?= lang('Unique Visitors'); ?></th>
-                                <th><?= lang('PageViews'); ?></th>
+                                
+                                <th><?= lang('Impressions'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
                             <?php
                             $count = 0;
                             foreach ($user_stats as $usr_stats) {
+                                if($usr_stats->unique_users > 5){
                                 $count++;
                                 ?>  
                                     <tr>
@@ -142,9 +144,11 @@
                                         <td><?= $usr_stats->location; ?></td>
                                         <td><?= $date; ?></td>
                                         <td><?= $usr_stats->unique_users; ?></td>
-                                        <td><?= $usr_stats->page_views; ?></td>
+                                        
+                                        <td><?= $usr_stats->impressions; ?></td>
                                     </tr>
                                 <?php
+                                }
                             }
                             ?>
                             <tr>
