@@ -242,7 +242,7 @@ class Reports_model extends CI_Model
 
         $data_res = array();
         $this->db
-            ->select('Count(*) as page_views, location, is_bot, user_agent')
+            ->select('Count(*) as page_views, location, is_bot, COUNT(DISTINCT ip_address) as unique_users, user_agent')
             ->from('sma_user_logs')
             ->where('is_bot', 0)
             ->where('access_time >=', $start_date)

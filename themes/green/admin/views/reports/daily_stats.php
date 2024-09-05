@@ -55,6 +55,7 @@
                                 <h3>Daily Traffic Stats</h3>
                             <tr>
                                 <th><?= lang('date'); ?></th>
+                                <th><?= lang('Unique Users'); ?></th>
                                 <th><?= lang('PageViews'); ?></th>
                                 <th><?= lang('Website Logins'); ?></th>
                                 <th><?= lang('Created Orders'); ?></th>
@@ -65,6 +66,7 @@
                             
                             <tr>
                                 <td><?= $date; ?></td>
+                                <td><?= $daily_stats['unique_users']; ?></td>
                                 <td><?= $daily_stats['page_views']; ?></td>
                                 <td><?= $daily_stats['total_logins']; ?></td>
                                 <td><?= $daily_stats['total_orders']; ?></td>
