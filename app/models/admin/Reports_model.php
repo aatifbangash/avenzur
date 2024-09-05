@@ -242,7 +242,7 @@ class Reports_model extends CI_Model
 
         $data_res = array();
         $this->db
-            ->select('Count(*) as page_views, location, is_bot, COUNT(DISTINCT ip_address) as unique_users, user_agent')
+            ->select('Count(DISTINCT ip_address) as page_views, location, is_bot, COUNT(DISTINCT ip_address) as unique_users, COUNT(*) as impressions, user_agent')
             ->from('sma_user_logs')
             ->where('is_bot', 0)
             ->where('user_agent NOT LIKE ', 'bot')
@@ -265,7 +265,8 @@ class Reports_model extends CI_Model
         // Prepare the SQL query
         $sql = "
         SELECT
-        (SELECT COUNT(*) FROM sma_user_logs WHERE is_bot = 0 AND user_agent NOT LIKE 'bot' AND access_time >= ? AND access_time <= ?) AS page_views,
+        (SELECT COUNT(*) FROM sma_user_logs WHERE is_bot = 0 AND user_agent NOT LIKE 'bot' AND access_time >= ? AND access_time <= ?) AS impressions,
+        (SELECT COUNT(DISTINCT landing_url) FROM sma_user_logs WHERE is_bot = 0 AND user_agent NOT LIKE 'bot' AND access_time >= ? AND access_time <= ?) AS page_views,
         (SELECT COUNT(DISTINCT ip_address) FROM sma_user_logs WHERE is_bot = 0 AND user_agent NOT LIKE 'bot' AND access_time >= ? AND access_time <= ?) AS unique_users,
         (SELECT COUNT(*) FROM sma_sales WHERE payment_status = 'paid' AND shop = 1 AND sale_status = 'completed' AND date >= ? AND date <= ?) AS total_orders,
         (SELECT COUNT(*) FROM sma_sales WHERE payment_status = 'paid' AND shop = 1 AND sale_status = 'completed' AND courier_delivery_time >= ? AND courier_delivery_time <= ?) AS total_orders_delivered,
@@ -280,7 +281,8 @@ class Reports_model extends CI_Model
                 'total_orders' => 0,
                 'total_orders_delivered' => 0,
                 'total_logins' => 0,
-                'unique_users' => 0
+                'unique_users' => 0,
+                'impressions' => 0
             );
         }
         
