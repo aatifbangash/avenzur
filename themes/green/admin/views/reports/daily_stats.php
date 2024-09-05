@@ -55,7 +55,7 @@
                                 <h3>Daily Traffic Stats</h3>
                             <tr>
                                 <th><?= lang('date'); ?></th>
-                                <th><?= lang('Unique Users'); ?></th>
+                                <th><?= lang('Unique Visitors'); ?></th>
                                 <th><?= lang('PageViews'); ?></th>
                                 <th><?= lang('Website Logins'); ?></th>
                                 <th><?= lang('Created Orders'); ?></th>
