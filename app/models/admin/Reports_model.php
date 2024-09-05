@@ -263,6 +263,52 @@ class Reports_model extends CI_Model
 
         $response['user_stats'] = $data_res;
 
+        // Social Media Campaigns 
+
+        /*$this->db
+            ->select("
+                SUM(CASE WHEN landing_url LIKE '%fbclid%' THEN 1 ELSE 0 END) AS facebook_traffic,
+                SUM(CASE WHEN landing_url LIKE '%utm_source=fb%' THEN 1 ELSE 0 END) AS facebook_click,
+                SUM(CASE WHEN landing_url LIKE '%snapchat%' THEN 1 ELSE 0 END) AS snapchat_traffic,
+                SUM(CASE WHEN landing_url LIKE '%wbraid%' THEN 1 ELSE 0 END) AS google_video_360_ad,
+                SUM(CASE WHEN landing_url LIKE '%gbraid%' THEN 1 ELSE 0 END) AS google_ad_campaign,
+                SUM(CASE WHEN landing_url LIKE '%gclid%' THEN 1 ELSE 0 END) AS google_click,
+                SUM(CASE WHEN 
+                    landing_url NOT LIKE '%fbclid%' AND
+                    landing_url NOT LIKE '%utm_source=fb%' AND
+                    landing_url NOT LIKE '%snapchat%' AND
+                    landing_url NOT LIKE '%wbraid%' AND
+                    landing_url NOT LIKE '%gbraid%' AND
+                    landing_url NOT LIKE '%gclid%' 
+                THEN 1 ELSE 0 END) AS other_traffic
+            ")*/
+            $this->db
+            ->select("
+                SUM(CASE WHEN landing_url LIKE '%fbclid%' THEN 1 ELSE 0 END) AS facebook_traffic,
+                SUM(CASE WHEN landing_url LIKE '%utm_source=fb%' THEN 1 ELSE 0 END) AS facebook_click,
+                SUM(CASE WHEN landing_url LIKE '%snapchat%' THEN 1 ELSE 0 END) AS snapchat_traffic,
+                SUM(CASE WHEN landing_url LIKE '%wbraid%' THEN 1 ELSE 0 END) AS google_video_360_ad,
+                SUM(CASE WHEN landing_url LIKE '%gbraid%' THEN 1 ELSE 0 END) AS google_ad_campaign,
+                SUM(CASE WHEN landing_url LIKE '%gclid%' THEN 1 ELSE 0 END) AS google_click
+            ")
+            ->from('sma_user_logs')
+            ->where('is_bot', 0)
+            ->where('user_agent NOT LIKE ', 'bot')
+            ->where('access_time >=', $start_date)
+            ->where('access_time <=', $end_date);
+        
+        $q = $this->db->get();
+        $data_res = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        $response['social_stats'] = $data_res[0];
+        //print_r($response['social_stats']);exit;
         // Prepare the SQL query
         $sql = "
         SELECT
