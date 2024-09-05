@@ -245,11 +245,13 @@ class Reports_model extends CI_Model
             ->select('Count(*) as page_views, location, is_bot, COUNT(DISTINCT ip_address) as unique_users, user_agent')
             ->from('sma_user_logs')
             ->where('is_bot', 0)
+            ->where('user_agent NOT LIKE ', 'bot')
             ->where('access_time >=', $start_date)
             ->where('access_time <=', $end_date)
             ->group_by('location')
-            ->order_by('page_views', 'DESC');
+            ->order_by('unique_users', 'DESC');
         $q = $this->db->get();
+        //echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data_res[] = $row;
@@ -266,7 +268,7 @@ class Reports_model extends CI_Model
         (SELECT COUNT(*) FROM sma_user_logs WHERE is_bot = 0 AND access_time >= ? AND access_time <= ?) AS page_views,
         (SELECT COUNT(*) FROM sma_sales WHERE payment_status = 'paid' AND shop = 1 AND sale_status = 'completed' AND date >= ? AND date <= ?) AS total_orders,
         (SELECT COUNT(*) FROM sma_sales WHERE payment_status = 'paid' AND shop = 1 AND sale_status = 'completed' AND courier_delivery_time >= ? AND courier_delivery_time <= ?) AS total_orders_delivered,
-        (SELECT COUNT(*) FROM sma_users WHERE FROM_UNIXTIME(last_login) >= ? AND FROM_UNIXTIME(last_login) <= ?) AS total_logins";
+        (SELECT COUNT(*) FROM sma_users WHERE group_id = 3 AND FROM_UNIXTIME(last_login) >= ? AND FROM_UNIXTIME(last_login) <= ?) AS total_logins";
         $query = $this->db->query($sql, array($start_date, $end_date, $start_date, $end_date, $start_date, $end_date, $start_date, $end_date));
         // Fetch the result
         if ($query->num_rows() > 0) {
@@ -276,7 +278,8 @@ class Reports_model extends CI_Model
                 'page_views' => 0,
                 'total_orders' => 0,
                 'total_orders_delivered' => 0,
-                'total_logins' => 0
+                'total_logins' => 0,
+                'unique_users' => 0
             );
         }
         
