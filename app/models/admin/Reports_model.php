@@ -270,7 +270,7 @@ class Reports_model extends CI_Model
         (SELECT COUNT(*) FROM sma_sales WHERE payment_status = 'paid' AND shop = 1 AND sale_status = 'completed' AND date >= ? AND date <= ?) AS total_orders,
         (SELECT COUNT(*) FROM sma_sales WHERE payment_status = 'paid' AND shop = 1 AND sale_status = 'completed' AND courier_delivery_time >= ? AND courier_delivery_time <= ?) AS total_orders_delivered,
         (SELECT COUNT(*) FROM sma_users WHERE group_id = 3 AND FROM_UNIXTIME(last_login) >= ? AND FROM_UNIXTIME(last_login) <= ?) AS total_logins";
-        $query = $this->db->query($sql, array($start_date, $end_date, $start_date, $end_date, $start_date, $end_date, $start_date, $end_date));
+        $query = $this->db->query($sql, array($start_date, $end_date, $start_date, $end_date, $start_date, $end_date, $start_date, $end_date, $start_date, $end_date));
         // Fetch the result
         if ($query->num_rows() > 0) {
             $data_res = $query->row_array();
