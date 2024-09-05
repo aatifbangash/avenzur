@@ -57,6 +57,7 @@
                                 <th><?= lang('date'); ?></th>
                                 <th><?= lang('Unique Visitors'); ?></th>
                                 <th><?= lang('PageViews'); ?></th>
+                                <th><?= lang('Impressions'); ?></th>
                                 <th><?= lang('Website Logins'); ?></th>
                                 <th><?= lang('Created Orders'); ?></th>
                                 <th><?= lang('Delivered Orders'); ?></th>
@@ -68,6 +69,7 @@
                                 <td><?= $date; ?></td>
                                 <td><?= $daily_stats['unique_users']; ?></td>
                                 <td><?= $daily_stats['page_views']; ?></td>
+                                <td><?= $daily_stats['impressions']; ?></td>
                                 <td><?= $daily_stats['total_logins']; ?></td>
                                 <td><?= $daily_stats['total_orders']; ?></td>
                                 <td><?= $daily_stats['total_orders_delivered']; ?></td>
