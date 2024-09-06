@@ -352,7 +352,7 @@ class Reports_model extends CI_Model
             ')
             ->from('sma_sales')
             ->join('sma_companies', 'sma_companies.id=sma_sales.customer_id')
-            ->join('sma_courier', 'sma_courier.id=sma_sales.courier_id')
+            ->join('sma_courier', 'sma_courier.id=sma_sales.courier_id', 'left')
             ->where('sma_sales.shop', 1)
             ->where('sma_sales.sale_status', 'completed')
             ->where('sma_sales.payment_status', 'paid')
