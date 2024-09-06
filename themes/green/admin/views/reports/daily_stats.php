@@ -137,12 +137,12 @@
                                         <tr>
                                             <td><?= $count; ?></td>
                                             
-                                            <td><?= $order->courier_name; ?></td>
+                                            <td><?= !empty($order->courier_name) ? $order->courier_name : 'Not Assigned'; ?></td>
                                             <td><?= $order->order_time; ?></td>
                                             <td><?= $order->order_value; ?></td>
-                                            <td><?= $order->assignment_time; ?></td>
-                                            <td><?= $order->pickup_time; ?></td>
-                                            <td><?= $order->delivery_time; ?></td>
+                                            <td><?= !empty($order->assignment_time) ? $order->assignment_time : '-'; ?></td>
+                                            <td><?= !empty($order->pickup_time) ? $order->pickup_time : '-'; ?></td>
+                                            <td><?= !empty($order->delivery_time) ? $order->delivery_time : '-'; ?></td>
                                         </tr>
                                     <?php
                                 }
