@@ -558,7 +558,7 @@ class Products extends MY_Controller
                         'price' => $old_price,
                         'promo_price' => $old_promo_price
                     ];
-                }else{
+                }else if($product->tax_rate == 5){
                     $dataToUpdate = [
                         'cost' => $new_price,
                         'price' => $new_price,
