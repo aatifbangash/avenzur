@@ -823,9 +823,9 @@ class Pos extends MY_Controller
             $medicinename     = $this->input->post('medicinename');
             $instructionsArr = array();
 
-            for($i=0;$i<sizeOf($medicinename);$i++){
+            /*for($i=0;$i<sizeOf($medicinename);$i++){
                 $instructionsArr[$medicinename[$i]] = $instructions[$i];
-            }
+            }*/
             $instructions_json = json_encode($instructionsArr);
 
             $total            = 0;
@@ -1147,6 +1147,7 @@ class Pos extends MY_Controller
                         //$amount_paid_pos = $_POST['amount'][0];
                         $amount_paid_pos = 0;
                         $amount_due_pos = 0;
+                        $pos_amount_balance = 0;
                         foreach ($payemntsTypes as $payemntsType){
                             $paidBillType = $payemntsType->paid_by;
                             $amount_due_pos += $payemntsType->amount;
@@ -1177,16 +1178,20 @@ class Pos extends MY_Controller
                                     )
                                 );  
                             }
+
+                            $pos_amount_balance = $payemntsType->pos_balance;
                         }
 
                         //$price_difference = $amount_paid_pos - ($totalSalePrice + $inv->total_tax - $inv->total_discount);
                         
-                        $price_difference = $amount_due_pos - $amount_paid_pos;
+                        //$price_difference = $amount_due_pos - $amount_paid_pos;
+
+                        $price_difference = $pos_amount_balance;
                         
                         if($price_difference > 0){
-                            $difference_type = 'D';
-                        }else if($price_difference < 0){
                             $difference_type = 'C';
+                        }else if($price_difference < 0){
+                            $difference_type = 'D';
                         }
 
                         // cost of goods sold
