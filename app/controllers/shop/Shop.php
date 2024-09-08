@@ -1992,6 +1992,9 @@ class Shop extends MY_Shop_Controller
                     $productPrice = $row->price;
                     $productTaxAmount = $productPrice * ($productTaxPercent / 100);
                     $row->price = $productPrice + $productTaxAmount;
+
+                    $original_price_tax = $original_price * ($productTaxPercent / 100);
+                    $original_price = $original_price + $original_price_tax;
                 }
 
                 // New tax block end 
