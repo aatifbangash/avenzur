@@ -823,9 +823,9 @@ class Pos extends MY_Controller
             $medicinename     = $this->input->post('medicinename');
             $instructionsArr = array();
 
-            /*for($i=0;$i<sizeOf($medicinename);$i++){
+            for($i=0;$i<sizeOf($medicinename);$i++){
                 $instructionsArr[$medicinename[$i]] = $instructions[$i];
-            }*/
+            }
             $instructions_json = json_encode($instructionsArr);
 
             $total            = 0;
