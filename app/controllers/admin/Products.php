@@ -514,6 +514,55 @@ class Products extends MY_Controller
         }
     }
 
+    public function update_product_prices(){
+        $csvFile = $this->upload_path.'csv/promo_price_without_vat.csv';
+        
+        if (!file_exists($csvFile)) {
+            echo 'CSV file not found.';
+            return;
+        }
+
+        $handle = fopen($csvFile, 'r');
+        
+        if ($handle === false) {
+            echo 'Error opening CSV file.';
+            return;
+        }
+
+        while (($rowData = fgetcsv($handle)) !== false) {
+            $productCode = $rowData[1]; 
+            $new_price = $rowData[4];
+            $old_price = $rowData[3];
+            $old_cost = $rowData[2];
+            $old_promo_price = $rowData[5];
+            $new_promo_price = $rowData[6];
+
+            $this->db->select('*');
+            $this->db->from('sma_products');
+            $this->db->where('code', $productCode);
+            $query = $this->db->get();
+            $product = $query->row();
+            
+            if ($product) {
+                $dataToUpdate = [
+                    'cost' => $new_price,
+                    'price' => $new_price,
+                    'promo_price' => $new_promo_price
+                ];
+    
+                $this->db->where('id', $product->id);
+                $this->db->update('sma_products', $dataToUpdate);
+
+                echo "Product with code $productCode has updated price now i.e $new_price from $old_price<br>";
+            } else {
+                echo "Product not found with IBC $productCode .<br>";
+            }
+
+        }
+
+        fclose($handle);
+    }
+
     public function update_intl_barcode(){
 
         //$csvFile = 'https://avenzur.com/assets/uploads/temp/iherb_updated.csv';
