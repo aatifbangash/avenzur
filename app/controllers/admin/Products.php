@@ -551,11 +551,20 @@ class Products extends MY_Controller
             $product = $query->row();
             
             if ($product) {
-                $dataToUpdate = [
-                    'cost' => $new_price,
-                    'price' => $new_price,
-                    'promo_price' => $new_promo_price
-                ];
+
+                if($product->tax_rate == 0 || $product->tax_rate == 1){
+                    $dataToUpdate = [
+                        'cost' => $old_price,
+                        'price' => $old_price,
+                        'promo_price' => $old_promo_price
+                    ];
+                }else{
+                    $dataToUpdate = [
+                        'cost' => $new_price,
+                        'price' => $new_price,
+                        'promo_price' => $new_promo_price
+                    ];
+                }
     
                 $this->db->where('id', $product->id);
                 $this->db->update('sma_products', $dataToUpdate);
