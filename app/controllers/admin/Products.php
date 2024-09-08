@@ -539,7 +539,14 @@ class Products extends MY_Controller
 
             $this->db->select('*');
             $this->db->from('sma_products');
-            $this->db->where('code', $productCode);
+            $this->db->where_in('code', array(
+                '05000158102903','06285096000798','06285096002938','06285096000842','06285096000811',
+                '06285096000835','05000167019360','05000167023978','05000158106802','05000167019391',
+                '033674115343','076280544336','033674157886','05000158106925','06285097001367',
+                '05000158106796','06285096000965','06285096002853','05903719673372','064642073976',
+                '064642073921','064642077196','064642025883','064642079527','064642078483','064642077295'
+            ));
+            $this->db->where('code', '0'.$productCode);
             $query = $this->db->get();
             $product = $query->row();
             
@@ -554,8 +561,6 @@ class Products extends MY_Controller
                 $this->db->update('sma_products', $dataToUpdate);
 
                 echo "Product with code $productCode has updated price now i.e $new_price from $old_price<br>";
-            } else {
-                echo "Product not found with IBC $productCode .<br>";
             }
 
         }
