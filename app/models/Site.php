@@ -1943,9 +1943,10 @@ public function logVisitor() {
         $this->db->join('warehouses_products wp', 'wp.batchno=inv.batch_number AND  wp.product_id= inv.product_id and wp.warehouse_id=inv.location_id', 'LEFT');   
         $this->db->where('inv.location_id',$warehouse);
         $this->db->where('inv.product_id',$product_id); 
-        $this->db->group_by('inv.batch_number'); 
+        $this->db->group_by('inv.batch_number, inv.expiry_date'); 
         $this->db->having('SUM(inv.quantity)>=0'); 
 	    $query = $this->db->get();
+        // echo $this->db->last_query();exit; 
         if($query->num_rows() > 0){
             foreach (($query->result()) as $row) {
 

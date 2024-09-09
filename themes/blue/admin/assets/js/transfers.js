@@ -22,21 +22,20 @@ $(document).ready(function () {
          .on('change', '.rbatchno', function () {
              var row = $(this).closest('tr');
              var new_batchno = $(this).val(),
-                 item_id = row.attr('data-item-id');
-            
-                 var batchExpiry =  $(this).find(':selected').data('batchexpiry');
-                 toitems[item_id].row.expiry = batchExpiry;
-     
-                 var batchQty =  $(this).find(':selected').data('batchqty');
-                 toitems[item_id].row.batchQuantity = batchQty;
-     
-                 var batchPurchaseCost =  $(this).find(':selected').data('batchpurchasecost');
-                 toitems[item_id].row.batchPurchaseCost = batchPurchaseCost;
-                
-     
+                 item_id = row.attr('data-item-id'); 
+                 
+                var batchExpiry =  $(this).find(':selected').data('batchexpiry');
+                toitems[item_id].row.expiry = batchExpiry;
+
+                var batchQty =  $(this).find(':selected').data('batchqty');
+                toitems[item_id].row.batchQuantity = batchQty;
+
+                var batchPurchaseCost =  $(this).find(':selected').data('batchpurchasecost');
+                toitems[item_id].row.batchPurchaseCost = batchPurchaseCost;
+
                  toitems[item_id].row.batch_no = new_batchno;
-             localStorage.setItem('toitems', JSON.stringify(toitems));            
-             loadItems();
+                localStorage.setItem('toitems', JSON.stringify(toitems));            
+                loadItems();
          });
 
     var old_shipping;
@@ -524,15 +523,14 @@ function loadItems() {
                 item_id +
                 '" id="serialno_' +
                 row_no +
-                '"></td>';
-
-
+                '"></td>'; 
         
                 var batchesOptions = '<option value="" data-batchExpiry="null" data-batchQty="0"  data-batchpurchasecost="0">--</option>';
                 if (item.batches !== false) {
                     $.each(item.batches, function () {
                         batchSelected = "";
-                        if (this.batchno == batchno) {
+ 
+                        if (this.batchno == batchno && this.expiry==item.row.expiry) {
                             batchSelected = "selected";
                         }
                         batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'"  data-batchpurchasecost="'+this.purchase_cost+'" value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
