@@ -3707,14 +3707,38 @@ class Reports extends MY_Controller
             }
 
             foreach ($trial_balance_array['ob'] as $supplier_data) {
+                $idExists = false;
                 foreach ($response_arr as $response_item) {
                     if ($response_item->id == $supplier_data->id) {
+                        $idExists = true;
                         if ($supplier_data->dc == 'D') {
                             $response_item->ob_debit = $this->sma->formatDecimal($supplier_data->total_amount);
                         } else if ($supplier_data->dc == 'C') {
                             $response_item->ob_credit = $this->sma->formatDecimal($supplier_data->total_amount);
                         }
+                        break;
                     }
+                }
+
+                // check object exists or not
+                if (!$idExists) {
+                    $obj = new stdClass();
+                    $obj->id = $supplier_data->id;
+                    $obj->name = $supplier_data->name;
+                    $obj->code = $supplier_data->code;
+                    $obj->notes = $supplier_data->notes;
+                    $obj->trs_debit = 0;
+                    $obj->trs_credit = 0;
+                    $obj->ob_debit = 0;
+                    $obj->ob_credit = 0;
+                    $obj->total_trs_credit = 0;
+                    $obj->total_trs_debit = 0;
+                    if ($supplier_data->dc == 'D') {
+                        $obj->trs_debit = $this->sma->formatDecimal($supplier_data->total_amount);
+                    } else if ($supplier_data->dc == 'C') {
+                        $obj->trs_credit = $this->sma->formatDecimal($supplier_data->total_amount);
+                    }
+                    array_push($response_arr, $obj);
                 }
             }
 
