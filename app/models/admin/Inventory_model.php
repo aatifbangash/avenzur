@@ -10,6 +10,7 @@ class Inventory_model extends CI_Model {
     // Function to add an inventory movement for any operation, explicitly including location
     public function add_movement($product_id, $batch_no, $type, $quantity, $location_id, $reference_id=null, $net_unit_cost=null, $expiry_date=null, $net_unit_sale=null, $real_unit_cost=null)
     {
+        $quantity = abs($quantity);
 
         $data = array(
             'product_id' => $product_id,
