@@ -111,7 +111,8 @@ class Purchases_model extends CI_Model
                 
                 //handle inventory movement
                 if($item['status']=='received'){
-                $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost']);
+                    $type = $item['quantity'] < 0 ? 'return_to_supplier' : 'purchase';
+                $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost']);
                 }
                 // Code for serials here
                 $serials_reference = $data['reference_no'];
