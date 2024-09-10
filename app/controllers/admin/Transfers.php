@@ -109,6 +109,7 @@ class Transfers extends MY_Controller
             $to_warehouse_code      = $to_warehouse_details->code;
             $to_warehouse_name      = $to_warehouse_details->name;
 
+            $grand_total_cost_price      = 0;
             $total       = 0;
             $product_tax = 0;
             $gst_data    = [];
@@ -119,6 +120,7 @@ class Transfers extends MY_Controller
                 $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $unit_cost          = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
                 $real_unit_cost     = $this->sma->formatDecimal($_POST['real_unit_cost'][$r]);
+                $net_unit_cost     = $this->sma->formatDecimal($_POST['net_unit_cost'][$r]);
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_tax_rate      = $_POST['product_tax'][$r] ?? null;
                 $item_batchno       = $_POST['batchno'][$r];
@@ -138,7 +140,7 @@ class Transfers extends MY_Controller
 
                 $net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
                 $real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
-
+              
                 if (isset($item_code) && isset($item_quantity)) {
                     
                     // if (!$this->Settings->overselling) {
@@ -174,15 +176,15 @@ class Transfers extends MY_Controller
 
                     $product_tax += $pr_item_tax;
                     $subtotal = $this->sma->formatDecimal((($item_net_cost * $item_unit_quantity) + $pr_item_tax), 4);
-                    $unit     = $this->site->getUnitByID($item_unit);
-
+                    $unit     = $this->site->getUnitByID($item_unit); 
                     $product = [
                         'product_id'        => $product_details->id,
                         'product_code'      => $item_code,
                         'product_name'      => $product_details->name,
                         'option_id'         => $item_option,
                         'net_unit_cost'     => $net_cost,
-                        'unit_cost'         => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),
+                        //'net_unit_cost1'          => $net_unit_cost,
+                        'unit_cost'         => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),  
                         'quantity'          => $item_quantity,
                         'product_unit_id'   => $item_unit,
                         'product_unit_code' => $unit->code,
@@ -204,6 +206,9 @@ class Transfers extends MY_Controller
 
                     $products[] = ($product + $gst_data);
                     $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
+                    $grand_total_cost_price +=  $this->sma->formatDecimal(($net_cost* $item_unit_quantity), 4);   
+
+
                 }
             }
             if (empty($products)) {
@@ -224,7 +229,7 @@ class Transfers extends MY_Controller
                 'note'                    => $note,
                 'total_tax'               => $product_tax,
                 'total'                   => $total,
-                'grand_total'             => $grand_total,
+                'grand_total'             => $grand_total,   
                 'created_by'              => $this->session->userdata('user_id'),
                 'status'                  => $status,
                 'shipping'                => $shipping,
@@ -240,7 +245,7 @@ class Transfers extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            // $this->sma->print_arrays($data, $products);
+            //  $this->sma->print_arrays($data, $products);
         }
 
         if ($this->form_validation->run() == true && $transfer_id = $this->transfers_model->addTransfer($data, $products, $attachments)) {
@@ -617,6 +622,7 @@ class Transfers extends MY_Controller
 
                     $products[] = ($product + $gst_data);
                     $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
+                    $grand_total_cost_price +=  $this->sma->formatDecimal(($net_cost* $item_unit_quantity), 4);  
                 }
             }
 
@@ -639,7 +645,7 @@ class Transfers extends MY_Controller
                 'note'                    => $note,
                 'total_tax'               => $product_tax,
                 'total'                   => $total,
-                'grand_total'             => $grand_total,
+                'grand_total'             => $grand_total, 
                 'created_by'              => $this->session->userdata('user_id'),
                 'status'                  => $status,
                 'shipping'                => $shipping,
@@ -681,6 +687,7 @@ class Transfers extends MY_Controller
                 $row->base_quantity    = $item->quantity;
                 $row->base_unit        = $row->unit ? $row->unit : $item->product_unit_id;
                 $row->base_unit_cost   = $row->cost ? $row->cost : $item->unit_cost;
+                $row->net_unit_cost    = $item->net_unit_cost;
                 $row->unit             = $item->product_unit_id;
                 $row->qty              = $item->unit_quantity;
                 $row->quantity_balance = $item->quantity_balance;
@@ -958,6 +965,7 @@ class Transfers extends MY_Controller
                 $row->quantity         = 0;
                 $row->item_tax_method  = $row->tax_method;
                 $row->base_quantity    = 0;
+                $row->net_unit_cost    = 0;
                 $row->base_unit        = $row->unit;
                 $row->base_unit_cost   = $row->cost;
                 $row->unit             = $row->purchase_unit ? $row->purchase_unit : $row->unit;
@@ -1511,6 +1519,7 @@ class Transfers extends MY_Controller
         if ($this->input->get('id')) {
             $transfer_id = $this->input->get('id');
         }
+        
         $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $transfer            = $this->transfers_model->getTransferByID($transfer_id);
         if (!$this->session->userdata('view_right')) {

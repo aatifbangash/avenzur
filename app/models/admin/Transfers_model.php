@@ -10,9 +10,22 @@ class Transfers_model extends CI_Model
         $this->load->admin_model('Inventory_model');
     }
 
+    public function get_cost_price_grand_total($transfer_id){
+
+        $this->db->select('SUM(quantity * net_unit_cost) as total_cost_price');
+        $this->db->from('sma_purchase_items');  
+        $this->db->where('transfer_id', $transfer_id);
+        $query = $this->db->get(); 
+        //echo $this->db->last_query(); exit; 
+        if ($query->num_rows() > 0) {
+            return $query->row();
+        } 
+    }
+
     public function addTransferAccountEntries($transferId){
 
         $transfer = $this->getTransferByID($transferId);
+        $result= $this->get_cost_price_grand_total($transferId);
 
         $toWareHouseId = $transfer->to_warehouse_id;
         $fromWareHouseId = $transfer->from_warehouse_id;
@@ -20,9 +33,10 @@ class Transfers_model extends CI_Model
        $toWareHouse =  $this->site->getWarehouseByID($toWareHouseId);
        $fromWareHouse =  $this->site->getWarehouseByID($fromWareHouseId);
        $goodsTrasitWareHouse = $this->site->getGoodsTrasitWareHouse();
+       
 
         // Credit & Debit to one same Account (Goods in Transit)
-        $accountsTotal = $transfer->grand_total + $transfer->grand_total;
+        $accountsTotal = $result->total_cost_price +  $result->total_cost_price;
 
          /*Accounts Entries*/
          $entry = array(
@@ -47,7 +61,7 @@ class Transfers_model extends CI_Model
                 'dc' => 'D',
                 'ledger_id' => $goodsTrasitWareHouse->inventory_ledger,
                 
-                'amount' => $transfer->grand_total,
+                'amount' =>  $result->total_cost_price,
                 'narration' => 'goods in transit'
             )
             );
@@ -57,7 +71,7 @@ class Transfers_model extends CI_Model
                     'entry_id' => $insert_id,
                     'dc' => 'C',
                     'ledger_id' => $fromWareHouse->inventory_ledger,
-                    'amount' => $transfer->grand_total,
+                    'amount' =>  $result->total_cost_price,
                     'narration' => 'inventry'
                 )
             );  
@@ -67,7 +81,7 @@ class Transfers_model extends CI_Model
                     'entry_id' => $insert_id,
                     'dc' => 'C',
                     'ledger_id' => $goodsTrasitWareHouse->inventory_ledger,
-                    'amount' => $transfer->grand_total,
+                    'amount' =>  $result->total_cost_price,
                     'narration' => 'goods in transit'
                 )
             );  
@@ -77,7 +91,7 @@ class Transfers_model extends CI_Model
                     'entry_id' => $insert_id,
                     'dc' => 'D',
                     'ledger_id' => $toWareHouse->inventory_ledger,
-                    'amount' => $transfer->grand_total,
+                    'amount' =>  $result->total_cost_price,
                     'narration' => 'inventry'
                 )
             );  
