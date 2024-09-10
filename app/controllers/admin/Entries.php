@@ -27,6 +27,7 @@ class Entries extends MY_Controller
 		$config['base_url'] = admin_url('entries'); 
 		$config['total_rows'] = $this->count_entries();
 		$config['per_page'] = 100; 
+		$config['reuse_query_string'] = TRUE;
 		$this->pagination->initialize($config); 
         $this->data['pagination_links']=  $this->pagination->create_links();  
 		

@@ -33,6 +33,11 @@ $(document).ready(function () {
                 var batchPurchaseCost =  $(this).find(':selected').data('batchpurchasecost');
                 toitems[item_id].row.batchPurchaseCost = batchPurchaseCost;
 
+                var net_unit_cost =  $(this).find(':selected').data('netunitcost');
+                toitems[item_id].row.net_unit_cost = net_unit_cost;
+
+                
+
                  toitems[item_id].row.batch_no = new_batchno;
                 localStorage.setItem('toitems', JSON.stringify(toitems));            
                 loadItems();
@@ -429,8 +434,7 @@ function loadItems() {
                 item_expiry = new Date(item.row.expiry).toLocaleDateString('en-GB')
             }
 
-            item.row.cost = item.row.price;
-
+            item.row.cost = item.row.price; 
             var product_id = item.row.id,
                 item_type = item.row.type,
                 item_cost = item.row.cost,
@@ -449,7 +453,7 @@ function loadItems() {
                 item_serial = item.row.serial,
                 item_batchQuantity = item.row.batchQuantity,
                 item_name = item.row.name.replace(/"/g, '&#034;').replace(/'/g, '&#039;');
-            
+            var net_unit_cost= item.row.net_unit_cost;
             var batchno = item.row.batch_no;
             //var unit_cost = item.row.real_unit_cost;
             var unit_cost = item.row.cost;
@@ -533,7 +537,7 @@ function loadItems() {
                         if (this.batchno == batchno && this.expiry==item.row.expiry) {
                             batchSelected = "selected";
                         }
-                        batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'"  data-batchpurchasecost="'+this.purchase_cost+'" value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
+                        batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'" data-netunitcost="'+this.net_unit_cost+'"  data-batchpurchasecost="'+this.purchase_cost+'" value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
                     });
                 }
     
@@ -589,6 +593,12 @@ function loadItems() {
                 item.row.real_unit_cost +
                 '"></td>';
 
+                tr_html +=
+                '<td class="text-right">'+formatMoney(net_unit_cost)+'<input class="rnet_unit_cost" name="net_unit_cost[]" type="hidden" value="' +
+                item.row.net_unit_cost +'"></td>';
+                
+
+                
                 
             tr_html +=
                 '<td><input name="quantity_balance[]" type="hidden" class="rbqty" value="' +
@@ -666,7 +676,7 @@ function loadItems() {
 
         });
 
-        var col = 4;
+        var col = 5;
         if (site.settings.product_expiry == 1) {
             col++;
         }
