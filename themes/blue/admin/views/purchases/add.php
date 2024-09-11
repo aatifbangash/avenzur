@@ -133,9 +133,9 @@ table#poTable td input.form-control {
             response: function (event, ui) {
                 if ($(this).val().length >= 16 && ui.content[0].id == 0) {
                     //audio_error.play();
-                    bootbox.alert('<?= lang('no_match_found') ?>', function () {
-                        $('#add_item').focus();
-                    });
+                    // bootbox.alert('<?= lang('no_match_found') ?>', function () {
+                    //     $('#add_item').focus();
+                    // });
                     $(this).removeClass('ui-autocomplete-loading');
                     $(this).val('');
                 }
@@ -147,9 +147,9 @@ table#poTable td input.form-control {
                 }
                 else if (ui.content.length == 1 && ui.content[0].id == 0) {
                     //audio_error.play();
-                    bootbox.alert('<?= lang('no_match_found') ?>', function () {
-                        $('#add_item').focus();
-                    });
+                    // bootbox.alert('<?= lang('no_match_found') ?>', function () {
+                    //     $('#add_item').focus();
+                    // });
                     $(this).removeClass('ui-autocomplete-loading');
                     $(this).val('');
                 }
@@ -162,7 +162,7 @@ table#poTable td input.form-control {
                         $(this).val('');
                 } else {
                     //audio_error.play();
-                    bootbox.alert('<?= lang('no_match_found') ?>');
+                    //bootbox.alert('<?= lang('no_match_found') ?>');
                 }
             }
         });
