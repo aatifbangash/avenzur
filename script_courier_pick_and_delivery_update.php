@@ -13,16 +13,13 @@ if ($conn->connect_error) {
 }
 
 $current_date = date('Y-m-d');
-//$start_date = $current_date . ' 00:00:00';
-//$end_date = $current_date . ' 23:59:59';
-
 $start_date = date('Y-m-d', strtotime('-10 days'));
 $end_date = date('Y-m-d');
 
 $stmt = $conn->prepare("SELECT * FROM sma_sales WHERE payment_status = 'paid' AND shop = 1 AND sale_status = 'completed' AND `date` BETWEEN ? AND ?");
 $stmt->bind_param("ss", $start_date, $end_date);
 
-//$stmt = $conn->prepare("SELECT * FROM sma_sales WHERE payment_status = 'paid' AND id = 732 AND shop = 1 AND sale_status = 'completed'");
+//$stmt = $conn->prepare("SELECT * FROM sma_sales WHERE payment_status = 'paid' AND id = 1986 AND shop = 1 AND sale_status = 'completed'");
 
 $stmt->execute();
 $result_sales = $stmt->get_result();
@@ -82,6 +79,31 @@ if ($result_sales->num_rows > 0) {
             }
         }else if($sale['courier_id'] == 4){
             $courier_name = $courier->name;
+            /*$url = 'https://dal.channels.com.sa/aggregator/shipment/getShipmentStatus/'.$sale['courier_order_tracking_id'];
+            $apiKey = '55511b89cebb7edb480f450f78e139f9';
+            $ch = curl_init($url);
+
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Return response as a string
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Api-Key: ' . $apiKey
+            ]);
+
+            // Execute the request
+            $response = curl_exec($ch);
+
+            // Check for errors
+            if (curl_errno($ch)) {
+                echo 'Error:' . curl_error($ch);
+            } else {
+                // Decode and print the response
+                $responseData = json_decode($response, true);
+                echo "<pre>";
+                print_r($responseData);
+            }
+
+            // Close the cURL session
+            curl_close($ch);*/
         }
 
     }
