@@ -19,6 +19,7 @@ class Purchases extends MY_Controller
         $this->load->library('form_validation');
         $this->load->admin_model('purchases_model');
         $this->load->admin_model('transfers_model');
+        $this->load->admin_model('Inventory_model');
         $this->load->admin_model('deals_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path = 'assets/uploads/';
@@ -42,6 +43,9 @@ class Purchases extends MY_Controller
 
     public function add($quote_id = null)
     {
+        ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
         $this->sma->checkPermissions();
 
         $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
@@ -153,7 +157,7 @@ class Purchases extends MY_Controller
                     $amount_after_dis1 = $unit_cost - $pr_discount;
                     $pr_discount2 = $this->site->calculateDiscount($item_discount2 . '%', $amount_after_dis1);
 
-                    $item_net_cost = $this->sma->formatDecimal($unit_cost - $pr_discount - $pr_discount2);
+                    $item_net_cost = $unit_cost - $pr_discount - $pr_discount2;
                     //$item_net_cost    = $unit_cost;
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
                     $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $item_unit_quantity);
@@ -847,7 +851,7 @@ class Purchases extends MY_Controller
                     $pr_discount2 = $this->site->calculateDiscount($item_discount2 . '%', $amount_after_dis1);
 
                     //$unit_cost        = $this->sma->formatDecimal($unit_cost - $pr_discount);
-                    $item_net_cost = $this->sma->formatDecimal($unit_cost - $pr_discount - $pr_discount2);
+                    $item_net_cost = $unit_cost - $pr_discount - $pr_discount2;
                     //$item_net_cost    = $unit_cost;
                     //$pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
@@ -1488,11 +1492,12 @@ class Purchases extends MY_Controller
 
             $entryitemdata = array();
 
+            $inventory_amount = 0;
             foreach ($inv_items as $item) {
                 $proid = $item->product_id;
                 $product = $this->site->getProductByID($proid);
                 //products
-                $entryitemdata[] = array(
+                /*$entryitemdata[] = array(
                     'Entryitem' => array(
                         'entry_id' => $insert_id,
                         'dc' => 'D',
@@ -1501,9 +1506,25 @@ class Purchases extends MY_Controller
                         'amount' => $item->main_net,
                         'narration' => 'Inventory'
                     )
-                );
+                );*/
+
+                $inventory_amount += $item->main_net;
 
             }
+
+            // Inventory Entry
+
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    //'ledger_id' => $product->inventory_account,
+                    'ledger_id' => $warehouse_ledgers->inventory_ledger,
+                    'amount' => $inventory_amount,
+                    'narration' => 'Inventory'
+                )
+            );
+
             //vat on purchase
             $entryitemdata[] = array(
                 'Entryitem' => array(
@@ -2434,11 +2455,12 @@ class Purchases extends MY_Controller
         $entryitemdata = array();
 
         //$inv_items = $this->purchases_model->getReturnItems($sid);
+        $inventory_amount = 0;
         foreach ($inv_items as $item) {
             $proid = $item->product_id;
             $product = $this->site->getProductByID($proid);
             //products
-            $entryitemdata[] = array(
+            /*$entryitemdata[] = array(
                 'Entryitem' => array(
                     'entry_id' => $insert_id,
                     'dc' => 'C',
@@ -2447,8 +2469,22 @@ class Purchases extends MY_Controller
                     'amount' => -1 * ($item->net_unit_cost * $item->quantity),
                     'narration' => 'Inventory'
                 )
-            );
+            );*/
+
+            $inventory_amount += (-1 * ($item->net_unit_cost * $item->quantity));
         }
+
+        // Inventory Entry
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                //'ledger_id' => $product->inventory_account,
+                'ledger_id' => $warehouse_ledgers->inventory_ledger,
+                'amount' => $inventory_amount,
+                'narration' => 'Inventory'
+            )
+        );
 
         //vat on purchase
         $entryitemdata[] = array(
@@ -2488,10 +2524,10 @@ class Purchases extends MY_Controller
         }
 
         $purchase = $this->purchases_model->getPurchaseByID($id);
-        if ($purchase->return_id) {
+        /*if ($purchase->return_id) {
             $this->session->set_flashdata('error', lang('purchase_already_returned'));
             redirect($_SERVER['HTTP_REFERER']);
-        }
+        }*/
         $this->form_validation->set_rules('return_surcharge', lang('return_surcharge'), 'required');
 
         if ($this->form_validation->run() == true) {
@@ -2519,6 +2555,7 @@ class Purchases extends MY_Controller
                 $item_option = isset($_POST['product_option'][$r]) && !empty($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' ? $_POST['product_option'][$r] : null;
                 $real_unit_cost = $this->sma->formatDecimal($_POST['real_unit_cost'][$r]);
                 $unit_cost = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
+                $sale_price = $this->sma->formatDecimal($_POST['sale_price'][$r]);
                 $item_unit_quantity = (0 - $_POST['quantity'][$r]);
                 //$item_expiry        = $_POST['expiry'][$r]           ?? '';
 
@@ -2543,7 +2580,7 @@ class Purchases extends MY_Controller
                     $pr_discount2 = $this->site->calculateDiscount($item_discount2 . '%', $amount_after_dis1);
 
                     //$unit_cost        = $this->sma->formatDecimal($unit_cost - $pr_discount);
-                    $item_net_cost = $this->sma->formatDecimal($unit_cost - $pr_discount - $pr_discount2);
+                    $item_net_cost = $unit_cost - $pr_discount - $pr_discount2;
                     //$pr_item_discount = $this->sma->formatDecimal(($pr_discount * $item_unit_quantity), 4);
 
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
@@ -2602,6 +2639,7 @@ class Purchases extends MY_Controller
                         'item_discount' => $pr_item_discount,
                         'subtotal' => $this->sma->formatDecimal($subtotal),
                         'real_unit_cost' => $real_unit_cost,
+                        'sale_price' => $sale_price,
                         'purchase_item_id' => $purchase_item_id,
                         'status' => 'received',
                     ];
@@ -2685,6 +2723,7 @@ class Purchases extends MY_Controller
             $c = rand(100000, 9999999);
             foreach ($inv_items as $item) {
                 $row = $this->site->getProductByID($item->product_id);
+                $this->Inventory_model->get_current_stock($item->product_id,'null',$item->batchno);
                 $row->batchno = $item->batchno;
                 $row->bonus = $item->bonus;
                 $row->discount1 = $item->discount1;
@@ -2693,6 +2732,7 @@ class Purchases extends MY_Controller
                 $row->net_unit_cost = $item->net_unit_cost;
                 $row->expiry = (($item->expiry && $item->expiry != '0000-00-00') ? $this->sma->hrsd($item->expiry) : '');
                 $row->base_quantity = $item->quantity;
+                
                 $row->base_unit = $row->unit ? $row->unit : $item->product_unit_id;
                 $row->base_unit_cost = $row->cost ? $row->cost : $item->unit_cost;
                 $row->unit = $item->product_unit_id;
@@ -2708,6 +2748,7 @@ class Purchases extends MY_Controller
                 $row->real_unit_cost = $item->real_unit_cost;
                 //$row->cost             = $this->sma->formatDecimal($item->net_unit_cost + ($item->item_discount / $item->quantity));
                 $row->cost = $this->sma->formatDecimal($item->unit_cost);
+                $row->sale_price = $this->sma->formatDecimal($item->sale_price);
                 $row->tax_rate = $item->tax_rate_id;
                 $row->main_net = $item->main_net;
                 unset($row->details, $row->product_details, $row->price, $row->file, $row->product_group_id);

@@ -218,7 +218,7 @@ class Transfers_model extends CI_Model
         if ($this->db->trans_status() === false) {
             log_message('error', 'An errors has been occurred while adding the sale (Add:Transfers_model.php)');
         } else {
-            return true;
+            return $transfer_id;
         }
         return false;
     }

@@ -1801,46 +1801,51 @@ class Sales extends MY_Controller
             $insert_id = $this->db->insert_id();
              //$insert_id = 999;
              $entryitemdata = array();
+             $inventory_amount = 0;
+             $sale_amount = 0;
+             $cogs_amount = 0;
              foreach ($inv_items as $item) 
              {
                  $proid = $item->product_id;
                  $product  = $this->site->getProductByID($proid);
                  //products
                  
-
-                $entryitemdata[] = array(
-                    'Entryitem' => array(
-                        'entry_id' => $insert_id,
-                        'dc' => 'D',
-                        'ledger_id' => $customer->cogs_ledger,
-                        //'amount' => $item->main_net,
-                        'amount' => ($item->net_cost * $item->quantity),
-                        'narration' => 'cost of goods sold'
-                    )
-                );
- 
-                $entryitemdata[] = array(
-                    'Entryitem' => array(
-                        'entry_id' => $insert_id,
-                        'dc' => 'C',
-                        'ledger_id' => $customer->sales_ledger,
-                        'amount' => $item->main_net,
-                        'narration' => 'sale account'
-                    )
-                );
- 
-                $entryitemdata[] = array(
-                    'Entryitem' => array(
-                        'entry_id' => $insert_id,
-                        'dc' => 'C',
-                        'ledger_id' => $warehouse_ledgers->inventory_ledger,
-                        //'amount' => $item->main_net,
-                        'amount' => ($item->net_cost * $item->quantity),
-                        'narration' => 'inventory account'
-                    )
-                );
- 
+                $inventory_amount += ($item->net_cost * $item->quantity);
+                $sale_amount += $item->main_net;
+                $cogs_amount += ($item->net_cost * $item->quantity);
              }
+
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $customer->cogs_ledger,
+                    //'amount' => $item->main_net,
+                    'amount' => $cogs_amount,
+                    'narration' => 'cost of goods sold'
+                )
+            );
+
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $customer->sales_ledger,
+                    'amount' => $sale_amount,
+                    'narration' => 'sale account'
+                )
+            );
+
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $warehouse_ledgers->inventory_ledger,
+                    //'amount' => $item->main_net,
+                    'amount' => $inventory_amount,
+                    'narration' => 'inventory account'
+                )
+            );
           
              // //vat on sale
              $entryitemdata[] = array(
