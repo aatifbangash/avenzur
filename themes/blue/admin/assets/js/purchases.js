@@ -1113,13 +1113,13 @@ function loadItems() {
                
                var total_purchases = (parseFloat(item_cost)) * parseFloat(item_qty);
                //var total_sales = (parseFloat(item_sale_price)) * parseFloat(item_qty + item_bonus);
-               var total_sales = (parseFloat(item_sale_price)) * parseFloat(item_qty);
+               var total_sales = (parseFloat(item_sale_price)) * parseFloat(item_qty + item_bonus);
                total_after_dis1 = total_purchases * parseFloat((item_dis1 / 100));
                total_after_dis2 = (total_purchases - total_after_dis1) * parseFloat((item_dis2 / 100));
                //main_net = net_price_a;// + net_price_b;
                main_net = total_purchases - (total_after_dis1 + total_after_dis2);
                //var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus);
-               var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty);
+               var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus);
 
                //var item_qty = item_qty + item_bonus;
 
@@ -1195,8 +1195,8 @@ function loadItems() {
                 formatMoney(item_cost) +
                 '</span> */}
 
-            tr_html +=
-                '<td><input class="form-control rserialno" name="serial_no[]" type="text" value="' +
+            /*tr_html +=
+                '<td><input class="form-control rserialno" name="serial_no[]" type="hidden" value="' +
                 item_serialno +
                 '" data-id="' +
                 row_no +
@@ -1204,7 +1204,7 @@ function loadItems() {
                 item_id +
                 '" id="serialno_' +
                 row_no +
-                '"></td>';
+                '"></td>';*/
 
             tr_html +=
                 '<td><input class="form-control rbatchno" name="batchno[]" type="text" value="' +
@@ -1247,7 +1247,7 @@ function loadItems() {
                 base_quantity +
                 '"></td>';
 
-            /*tr_html +=
+            tr_html +=
                 '<td><input class="form-control text-center rbonus" name="bonus[]" type="text" data-id="' +
                 row_no +
                 '" data-item="' +
@@ -1255,7 +1255,7 @@ function loadItems() {
                 '" id="bonus_' +
                 row_no +
                 '" value="'+ formatDecimal(item_bonus)
-                +'"onClick="this.select();"></td>';*/
+                +'"onClick="this.select();"></td>';
 
             tr_html +=
                 '<td><input class="form-control text-center rdis1" name="dis1[]" type="text" data-id="' +
@@ -1425,7 +1425,6 @@ function loadItems() {
         if (site.settings.tax2 != 0) {
             if ((potax2 = localStorage.getItem('potax2'))) {
                 $.each(tax_rates, function () {
-                    console.log( this);
                    if (this.id == potax2) {
                         if (this.type == 2) {
                             invoice_tax = formatDecimal(this.rate);
