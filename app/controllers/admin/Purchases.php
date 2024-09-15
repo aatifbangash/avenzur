@@ -43,9 +43,6 @@ class Purchases extends MY_Controller
 
     public function add($quote_id = null)
     {
-        ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
         $this->sma->checkPermissions();
 
         $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
