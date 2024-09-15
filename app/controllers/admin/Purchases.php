@@ -126,7 +126,7 @@ class Purchases extends MY_Controller
                     $item_batchno = 'Default-' . $product_id;
                 }
                 $item_serial_no = $_POST['serial_no'][$r];
-                //$item_bonus = $_POST['bonus'][$r];
+                $item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
@@ -154,7 +154,7 @@ class Purchases extends MY_Controller
                     $amount_after_dis1 = $unit_cost - $pr_discount;
                     $pr_discount2 = $this->site->calculateDiscount($item_discount2 . '%', $amount_after_dis1);
 
-                    $item_net_cost = $unit_cost - $pr_discount - $pr_discount2;
+                    //$item_net_cost = $unit_cost - $pr_discount - $pr_discount2;
                     //$item_net_cost    = $unit_cost;
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
                     $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $item_unit_quantity);
@@ -171,9 +171,9 @@ class Purchases extends MY_Controller
                         $item_tax = $this->sma->formatDecimal($ctax['amount']);
                         $tax = $ctax['tax'];
 
-                        if ($product_details->tax_method != 1) {
+                        /*if ($product_details->tax_method != 1) {
                             $item_net_cost = $unit_cost - $item_tax;
-                        }
+                        }*/
                         $pr_item_tax = $this->sma->formatDecimal(($totalpurcahsesbeforevat * ($tax_details->rate / 100)), 4);//$this->sma->formatDecimal($item_tax * $item_unit_quantity, 4);
 
                         if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($this->Settings->state == $supplier_details->state), $tax_details)) {
@@ -181,12 +181,16 @@ class Purchases extends MY_Controller
                             $total_sgst += $gst_data['sgst'];
                             $total_igst += $gst_data['igst'];
                         }
+
                     }
 
                     $product_tax += $pr_item_tax;
                     $subtotal = $main_net; //(($item_net_cost * $item_unit_quantity) + $pr_item_tax);
-                    $subtotal2 = (($item_net_cost * $item_unit_quantity));// + $pr_item_tax);
+                    $subtotal2 = (($unit_cost * $item_unit_quantity));// + $pr_item_tax);
                     $unit = $this->site->getUnitByID($item_unit);
+
+                    $item_net_cost = ($totalpurcahsesbeforevat) / ($item_quantity + $item_bonus);
+                    $item_net_price = ($totalpurcahsesbeforevat) / ($item_quantity);
 
                     $product = [
                         'product_id' => $product_details->id,
@@ -195,12 +199,12 @@ class Purchases extends MY_Controller
                         'option_id' => $item_option,
                         'net_unit_cost' => $item_net_cost,
                         'unit_cost' => $this->sma->formatDecimal($unit_cost), //+ $item_tax),
-                        'quantity' => $item_quantity,
+                        'quantity' => $item_quantity + $item_bonus,
                         'product_unit_id' => $item_unit,
                         'product_unit_code' => $unit->code,
                         'unit_quantity' => $item_unit_quantity,
-                        'quantity_balance' => $status == 'received' ? $item_quantity : 0,
-                        'quantity_received' => $status == 'received' ? $item_quantity : 0,
+                        'quantity_balance' => $status == 'received' ? $item_quantity + $item_bonus : 0,
+                        'quantity_received' => $status == 'received' ? $item_quantity + $item_bonus : 0,
                         'warehouse_id' => $warehouse_id,
                         'item_tax' => $pr_item_tax,
                         'tax_rate_id' => $item_tax_rate,
@@ -216,12 +220,12 @@ class Purchases extends MY_Controller
                         'supplier_part_no' => $supplier_part_no,
                         'subtotal2' => $this->sma->formatDecimal($subtotal2),
                         'batchno' => $item_batchno,
-                        'serial_number' => $item_serial_no,
-                        //'bonus'             => $item_bonus,
-                        'bonus' => 0,
+                        'serial_number' => $item_serial_no ? $item_serial_no : 'Default',
+                        'bonus'             => $item_bonus,
+                        //'bonus' => 0,
                         'discount1' => $item_dis1,
                         'discount2' => $item_dis2,
-                        'totalbeforevat' => $totalbeforevat,
+                        'totalbeforevat' => $subtotal,
                         'main_net' => $main_net
                     ];
 
@@ -285,7 +289,7 @@ class Purchases extends MY_Controller
 
             $attachments = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            // $this->sma->print_arrays($data, $products);exit;
+            //$this->sma->print_arrays($data, $products);exit;
         }
 
         if ($this->form_validation->run() == true && $purchase_id = $this->purchases_model->addPurchase($data, $products, $attachments)) {
@@ -354,6 +358,7 @@ class Purchases extends MY_Controller
                         $row->base_unit_cost = $row->cost ? $row->cost : $item->unit_cost;
                         $row->unit = $item->product_unit_id;
                         $row->qty = $item->unit_quantity;
+                        $row->bonus = $item->bonus;
                         $row->option = $item->option_id;
                         $row->discount = $item->discount ? $item->discount : '0';
                         $supplier_cost = $supplier_id ? $this->getSupplierCost($supplier_id, $row) : $row->cost;
@@ -810,7 +815,7 @@ class Purchases extends MY_Controller
                     $item_batchno = 'Default-' . $product_id;
                 }
                 $item_serial_no = $_POST['serial_no'][$r];
-                //$item_bonus = $_POST['bonus'][$r];
+                $item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
@@ -861,16 +866,16 @@ class Purchases extends MY_Controller
                     $tax = '';
 
                     //$totalbeforevat = ($item_sale_price*$item_quantity) - $pr_item_discount - $pr_item_discount2;
-                    $totalpurcahsesbeforevat = ($unit_cost * $item_quantity) - $pr_item_discount - $pr_item_discount2;
+                    $totalpurcahsesbeforevat = ($unit_cost * ($item_quantity - $item_bonus)) - $pr_item_discount - $pr_item_discount2;
 
                     if (isset($item_tax_rate) && $item_tax_rate != 0) {
                         $tax_details = $this->site->getTaxRateByID($item_tax_rate);
                         $ctax = $this->site->calculateTax($product_details, $tax_details, $unit_cost);
                         $item_tax = $this->sma->formatDecimal($ctax['amount']);
                         $tax = $ctax['tax'];
-                        if ($product_details->tax_method != 1) {
+                        /*if ($product_details->tax_method != 1) {
                             $item_net_cost = $unit_cost - $item_tax;
-                        }
+                        }*/
                         //$pr_item_tax = $this->sma->formatDecimal($item_tax * $item_unit_quantity, 4);
                         $pr_item_tax = $this->sma->formatDecimal(($totalpurcahsesbeforevat * ($tax_details->rate / 100)), 4);//$this->sma->formatDecimal($item_tax * $item_unit_quantity, 4);
 
@@ -883,8 +888,11 @@ class Purchases extends MY_Controller
 
                     $product_tax += $pr_item_tax;
                     $subtotal = $main_net;//(($item_net_cost * $item_unit_quantity) + $pr_item_tax);
-                    $subtotal2 = (($item_net_cost * $item_unit_quantity));// + $pr_item_tax);
+                    $subtotal2 = (($unit_cost * $item_unit_quantity));// + $pr_item_tax);
                     $unit = $this->site->getUnitByID($item_unit);
+
+                    $item_net_cost = ($totalpurcahsesbeforevat) / ($item_quantity);
+                    $item_net_price = ($totalpurcahsesbeforevat) / ($item_quantity - $item_bonus);
 
                     $item = [
                         'product_id' => $product_details->id,
@@ -896,7 +904,7 @@ class Purchases extends MY_Controller
                         'quantity' => $item_quantity,
                         'product_unit_id' => $item_unit,
                         'product_unit_code' => $unit->code,
-                        'unit_quantity' => $item_unit_quantity,
+                        'unit_quantity' => $item_unit_quantity + $item_bonus,
                         'quantity_balance' => $balance_qty,
                         'quantity_received' => $quantity_received,
                         'warehouse_id' => $warehouse_id,
@@ -913,7 +921,7 @@ class Purchases extends MY_Controller
                         'date' => date('Y-m-d', strtotime($date)),
                         'subtotal2' => $this->sma->formatDecimal($subtotal2),
                         'batchno' => $item_batchno,
-                        'serial_number' => $item_serial_no,
+                        'serial_number' => $item_serial_no ? $item_serial_no : 'Default',
                         //'bonus'             => $item_bonus,
                         'bonus' => 0,
                         'discount1' => $item_dis1,

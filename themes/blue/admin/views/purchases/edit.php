@@ -435,7 +435,7 @@
                                                 <th class="col-md-2">item name</th>
                                                 <th class="col-md-1">sale price</th>
                                                 <th class="col-md-1">purchase price</th>
-                                                <th class="col-md-1">Serial No.</th>
+                                                <!--<th class="col-md-1">Serial No.</th>-->
                                                 <th class="col-md-1">Batch</th>
                                                 <?php
                                                 if ($Settings->product_expiry) {
@@ -443,7 +443,7 @@
                                                 }
                                                 ?>
                                                 <th class="col-md-1">qty</th>
-                                                <!--<th class="col-md-1">bonus</th>-->
+                                                <th class="col-md-1">bonus</th>
                                                 <th class="col-md-1">dis 1</th>
                                                 <th class="col-md-1">dis 2</th>
                                                 <th class="col-md-1">Vat 15%</th>
