@@ -58,8 +58,9 @@
                             <?php
                     } ?>
                             <th style="text-align:center; vertical-align:middle;"><?= lang('batch_no'); ?></th>
+                            <th style="text-align:center; vertical-align:middle;"><?= lang('Expiry'); ?></th>
                             <th style="text-align:center; vertical-align:middle;"><?= lang('quantity'); ?></th>
-                            <th style="text-align:center; vertical-align:middle;"><?= lang('unit_cost'); ?></th>
+                            <th style="text-align:center; vertical-align:middle;"><?= lang('Sale_price'); ?></th>
                             <?php if ($Settings->tax1) {
                         echo '<th style="text-align:center; vertical-align:middle;">' . lang('tax') . '</th>';
                     } ?>
@@ -82,12 +83,13 @@
                             <?php
                         } ?>
                             <td style="text-align:center; width:80px; "><?= $row->batchno; ?></td>
+                            <td style="text-align:center; width:80px; "><?= $row->expiry; ?></td>
                             <td style="text-align:center; width:80px; "><?= $this->sma->formatQuantity($row->unit_quantity); ?></td>
-                            <td style="width: 100px; text-align:right; vertical-align:middle;"><?= $this->sma->formatMoney($row->net_unit_cost); ?></td>
+                            <td style="width: 100px; text-align:right; vertical-align:middle;"><?= $this->sma->formatNumber($row->sale_price); ?></td>
                             <?php if ($Settings->tax1) {
                             echo '<td style="width: 80px; text-align:right; vertical-align:middle;">' . ($Settings->indian_gst ? '<small>(' . $row->tax . ')</small>' : '') . ' ' . $this->sma->formatMoney($row->item_tax) . '</td>';
                         } ?>
-                            <td style="width:100px; text-align:right; vertical-align:middle;"><?= $this->sma->formatMoney($row->subtotal); ?></td>
+                            <td style="width:100px; text-align:right; vertical-align:middle;"><?= $this->sma->formatNumber($row->subtotal); ?></td>
                         </tr>
                         <?php $r++;
                         endforeach; ?>
