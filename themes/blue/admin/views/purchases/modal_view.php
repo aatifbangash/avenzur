@@ -2,45 +2,57 @@
 <style>
 
 @media print {
-  /* General Styles for the Body */
-  body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: auto;
-    color: black;
-    background: none;
-    font-size: 12pt; /* Adjust font size for better readability on paper */
-  }
+    body {
+        zoom: 90%;
+        margin: 0;
+        padding: 0;
+    }
 
-  /* Ensure Modal Content is Visible for Printing */
-  .modal, 
-  .modal * {
-    visibility: visible;
-  }
+    /* Ensure modal content is printed */
+    .modal {
+        position: static; /* Ensure it's positioned well for print */
+        display: block !important; /* Ensure modal content is visible */
+        width: 100%; /* Ensure modal uses full width */
+        background-color: #fff; /* Set a white background for clarity */
+    }
 
-  /* Ensure Modal Takes Up Full Space on the Printed Page */
-  .modal {
-    /* position: absolute; */
-    top: 0;
-    left: 0;
-    width: 100%;
-  }
+    /* Hide backdrop, buttons, or other interactive elements */
+    .modal-backdrop, .print-hide {
+        display: none !important;
+    }
 
-  /* Prevent Page Breaks Within Important Elements */
-  .modal-content, 
-  .table, 
-  .section {
-    page-break-inside: avoid;
-  }
+    /* Ensure proper page breaks inside tables */
+    table, tr, td {
+        page-break-inside: avoid;
+    }
 
+    /* Optional: Remove shadows, borders, or extra elements that might interfere with printing */
+    .modal-shadow, .modal-border {
+        box-shadow: none;
+        border: none;
+    }
 
-  /* Make Sure No Extra Pages Appear by Removing Margins */
-  @page {
-    margin: 10mm; /* Set standard margin for printed page */
-  }
+    /* Adjust font size for better readability */
+    body, table {
+        font-size: 12px;
+    }
 
-
+    /* Ensure proper table formatting in print */
+    table {
+        width: 100%; /* Ensure tables use full width */
+        border-collapse: collapse;
+    }
+    
+    th, td {
+        border: 1px solid #000; /* Ensure tables are clearly printed */
+    }
+    .table-summary {
+        float: right !important;
+        width: 30% !important; /* Ensure it maintains 30% width */
+    }
+    .clear{
+        clear: both;
+    }
 }
 
 </style>
@@ -425,7 +437,7 @@
                 </table>
             </div>
 
-            <div class="table-responsive" style="float: right">
+            <div class="table-responsive table-summary" style="width:30%; float: right">
             <table class="table table-bordered table-hover table-striped print-table order-table">
                 
                             <tr>
@@ -468,7 +480,7 @@
                         ?>
                 </div>
 
-                <div class="col-xs-5 pull-right">
+                <!-- <div class="col-xs-5 pull-right">
                     <div class="well well-sm">
                         <p>
                             <?= lang('created_by'); ?>: <?= $created_by->first_name . ' ' . $created_by->last_name; ?> <br>
@@ -483,13 +495,13 @@
                         <?php
                         } ?>
                     </div>
-                </div>
+                </div> -->
             </div>
 
-            <?php include(dirname(__FILE__) . '/../partials/attachments.php'); ?>
+            <?php //include(dirname(__FILE__) . '/../partials/attachments.php'); ?>
             <?php if (!$Supplier || !$Customer) {
                             ?>
-                <div class="buttons">
+                <!-- <div class="buttons">
                     <div class="btn-group btn-group-justified">
                         <div class="btn-group">
                             <a href="<?= admin_url('purchases/add_payment/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal2" class="tip btn btn-primary" title="<?= lang('add_payment') ?>">
@@ -524,7 +536,7 @@
                             </a>
                         </div>
                     </div>
-                </div>
+                </div> -->
             <?php
                         } ?>
         </div>
