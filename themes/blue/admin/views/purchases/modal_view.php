@@ -209,8 +209,9 @@
 
                     <?php $r     = 1;
                     $tax_summary = [];
+                    $totalAmount = 0;
                     foreach ($rows as $row):
-                       $subTotal = $this->sma->formatNumber($row->sale_price * $row->unit_quantity);
+                       $subTotal = ($row->sale_price * $row->unit_quantity);
                     ?>
                         <tr>
                             <td style="text-align:center; width:40px; vertical-align:middle;"><?= $r; ?></td>
@@ -238,7 +239,7 @@
                                 <?= $this->sma->formatNumber($row->sale_price); ?>
                             </td>
                            
-                            <td style="text-align:right; width:120px;"><?=$subTotal; ?></td>
+                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($subTotal); ?></td>
                             <?php
                              if ($Settings->product_discount && $inv->product_discount != 0) {
                                 echo '<td style=" text-align:right; vertical-align:middle;">' . ($row->discount != 0 ?  $row->discount  : '') .  '</td>'; 
