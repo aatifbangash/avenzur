@@ -42,7 +42,7 @@
               <li> الرياض , 12241</li>-->
                 <!--<h6>KSA ,Riyadh ,Olaya main road,Mousa bin nosair street.</h6>
                     <h6>Silicon building no.1, Office 7</h6>-->
-                <li><b> Phone No: </b> 114654636</li>
+                <li><b> Phone No: </b> +966 11 213 3551</li>
                 <!--<li><a href="mailto:Email info@avenzur.com" class="text-dark text-decoration-none"> <b> Email: </b>
                   info@avenzur.com</a></li>-->
               </ul>
