@@ -12,7 +12,7 @@
              <div class="panel panel-default margin-top-lg checkLeftCol-k contleftbar">
                  
                 <div class="p-3 py-4 contleft">
-                  <h4><i class="bi bi-telephone-forward"></i> 0114654636</h4>
+                  <h4><i class="bi bi-telephone-forward"></i> +966 11 213 3551</h4>
                   <h4><i class="bi bi-envelope"></i> info@avenzur.com</h4>
                   <h4 class="mb-1"><i class="bi bi-geo-alt"></i> KSA, 6675, Olaya, Olaya District, 2628 </h4>
              
