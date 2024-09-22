@@ -1188,6 +1188,7 @@ function loadItems() {
 				sn +
 				'">' +
 				sn +
+				"</td>" +
 				'<td><input name="product_id[]" type="hidden" class="rid" value="' +
 				product_id +
 				'"><input name="product[]" type="hidden" class="rcode" value="' +
