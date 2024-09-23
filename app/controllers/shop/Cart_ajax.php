@@ -55,6 +55,7 @@ class Cart_ajax extends MY_Shop_Controller
         }
     }
 
+
     public function remove_coupon_code(){
         $coupon_details = $this->session->userdata('coupon_details');
         
@@ -119,8 +120,13 @@ class Cart_ajax extends MY_Shop_Controller
             redirect('cart');
         }
     }
+   
+
+    
 
     public function apply_coupon(){
+        $cartId = $this->cart->cart_id;
+         
         $coupon_arr = array('mpay' => 10, 'zaps10' => 10, 'welcome' => 5, 'alf10' => 10, 'mc24' => 10, 'neqaty10' => 10, 'enbd24' => 10, 'anb10' => 10, 'eid10' => 10);
         $coupon_cap_arr = array('mpay' => 100, 'zaps10' => 10, 'welcome' => 10, 'alf10' => 50, 'mc24' => 50, 'neqaty10' => 50, 'enbd24' => 50, 'anb10' => 50, 'eid10' => 50);
         $pattern_match = 0;
@@ -150,9 +156,12 @@ class Cart_ajax extends MY_Shop_Controller
         }
 
         $coupon_details = $this->session->userdata('coupon_details');
+       
         if(isset($coupon_details['code'])){
             $c_code = $coupon_details['code'];
+            
         }
+
     
         if(isset($coupon_arr[$coupon_code]) && $this->cart->get_total_discount() <= 0 && $pattern_match == 0 && $this->cart->total() >= $coupon_cap_arr[$coupon_code]){
             // Set All Coupon Discount except ENBD
@@ -285,9 +294,55 @@ class Cart_ajax extends MY_Shop_Controller
             $this->session->set_flashdata('message', 'Coupon Code Applied');
             redirect('cart');
         }else{
-            $this->session->set_flashdata(['error' => 1, 'message' => 'Invalid Coupon Code']);
+         
+            if( $coupon_code  ){
+                $cart_contents = $this->cart->contents();
+                $is_customer_logged_in = $this->loggedIn;
+                $userId = null;
+                if($is_customer_logged_in){
+                    $userId = $this->session->userdata('company_id');
+                }
+                  
+                $response = $this->shop_model->can_apply_coupon($coupon_code,$userId, $cartId);
+                if( $response != null){
+                    $coupon_data = $response['coupon_data'];
+                    $eligible_products = $response['eligible_products'];
+                    $cart_arr = array();
+                    if($coupon_data->discount_type == "percent"){
+                        $cart_total = $cart_arr->cart_contents['cart_total'];
+                        foreach ($cart_contents as $item => $val) {
+                             
+                            if(in_array($val['product_id'], $eligible_products)){
+                                $data = [
+                                    'rowid'  => $val['rowid'],
+                                    'discount'  => ($val['price'] *$val['qty']* $coupon_data->amount) / 100
+                                ];
+                            }else{
+                                 $data = [
+                                    'rowid'  => $val['rowid'],
+                                    'discount'  => 0
+                                ];
+                            } 
+                            array_push($cart_arr, $data);
+                        }
+                        $this->cart->update($cart_arr);
+                        $this->session->set_userdata('coupon_details', array(
+                            'code' => $coupon_code,
+                            'dis_amount' => $this->cart->get_total_discount(),
+                            'dis_percent' => $coupon_data->amount
+                        ));
+                        $this->session->set_flashdata('message', 'Coupon Code Applied');
+                        redirect('cart');
+                    }                    
+                    
+                }
+                
+            }else{
+                $this->session->set_flashdata(['error' => 1, 'message' => 'Invalid Coupon Code']);
             //$this->sma->send_json(['error' => 1, 'message' => 'Invalid Coupon Code']);
             redirect('cart');
+            }
+            
         }
     }
 

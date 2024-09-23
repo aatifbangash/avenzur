@@ -7,10 +7,129 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class Shop_model extends CI_Model
 {
     protected $table = 'products';
+    protected $coupons_model = "sma_coupons";
 
     public function __construct()
     {
         parent::__construct();
+    }
+
+    /**
+     * Change for coupons 
+     * Author: Rajive
+     * Branch: coupons
+     * Date: 2024-09-22
+     */
+
+    // public function get_latest_cart_record($userId) {
+    //     // Query to get the latest record for the given userId
+    //     $this->db->from('sma_cart');
+    //     $this->db->where('userId', $userId);
+    //     $this->db->order_by('time', 'DESC');
+    //     $this->db->limit(1);
+        
+    //     // Execute the query and fetch the result
+    //     $query = $this->db->get();
+        
+    //     // Return the row as an object (or array if you prefer)
+    //     return $query->row(); // or $query->row_array();
+    // }
+    public function get_latest_cart_products($cartId){
+        
+        $this->db->from('sma_cart');
+        $this->db->where('id', $cartId);
+        
+        // Execute the query and fetch the result
+        $query = $this->db->get();
+        $result = $query->row();
+       
+        $product_ids = $this->extract_product_ids($result);
+         
+        return $product_ids;         
+
+    }
+
+    private function extract_product_ids($cart_data) {
+              
+        // Decode the JSON string into an associative array
+        // $cart_array = json_decode($cart_data,true);
+      
+        // Initialize an empty array to hold product IDs
+        $product_ids = [];
+
+        // Loop through the cart array to extract product_ids
+        foreach ($cart_data as $key => $value) {
+             
+             if($key == "data"){
+                $arr = json_decode($value,true);
+                  
+                 foreach ($arr as $k => $v) {
+                    
+                // Check if the value is an array and contains a product_id
+                if ( isset($v['product_id'])) {
+                    $product_ids[] = $v['product_id'];
+                }
+            }
+             }
+            
+            // Check if the value contains a product_id (it's nested under the unique keys)
+            
+        }
+        
+        
+    // Return the array of product IDs
+    return $product_ids;
+    }
+
+    public function get_order_count($customer_id) {
+     
+        // Query to get the count of orders for the given customer_id
+        $this->db->from('sma_sales');
+        $this->db->where('customer_id', $customer_id);
+        
+        // Get the count of rows that match the condition
+        $count = $this->db->count_all_results();
+        
+        return $count;
+    }
+
+    public function get_auto_apply_coupon(){
+        $this->db->from('sma_coupons');
+        $this->db->where('auto_apply', 1);
+        $this->db->where('is_active', 1);
+        $this->db->limit(1);
+        $query = $this->db->get();
+        return $query->row();
+
+    }
+    public function can_apply_coupon($coupon,$userId, $cartId){
+          
+        $this->db->from('sma_coupons');
+        $this->db->where('code', $coupon);
+ 
+        $query = $this->db->get();
+        $coupon_data = $query -> row();
+        
+       
+        $products_on_cart = $this->get_latest_cart_products($cartId);
+        
+        $orders_by_user = $this->get_order_count($userId);
+        /**
+         * Check each conditions
+        */
+      
+        
+        $ids =   $coupon_data->product_ids  ;
+     
+        if( is_array($ids) && isset($ids)){
+            $product_ids_eligible = json_decode($ids, true);
+            $matching_products = array_intersect($products_on_cart, $product_ids_eligible);
+            if(empty($matching_products)){
+                return null;
+            }
+        }
+        
+        return array("coupon_data" =>$coupon_data, "eligible_products" => json_decode($ids, true));
     }
 
 
