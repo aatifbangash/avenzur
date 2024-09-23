@@ -335,6 +335,10 @@ class Cart_ajax extends MY_Shop_Controller
                         redirect('cart');
                     }                    
                     
+                }else{
+                    $this->session->set_flashdata(['error' => 1, 'message' => 'Invalid Coupon Code']);
+                //$this->sma->send_json(['error' => 1, 'message' => 'Invalid Coupon Code']);
+                redirect('cart');
                 }
                 
             }else{

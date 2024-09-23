@@ -109,7 +109,10 @@ class Shop_model extends CI_Model
  
         $query = $this->db->get();
         $coupon_data = $query -> row();
-        
+        if(!isset($coupon_data)){
+                return null;
+            }
+   
        
         $products_on_cart = $this->get_latest_cart_products($cartId);
         
