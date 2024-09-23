@@ -20,20 +20,7 @@ class Shop_model extends CI_Model
      * Branch: coupons
      * Date: 2024-09-22
      */
-
-    // public function get_latest_cart_record($userId) {
-    //     // Query to get the latest record for the given userId
-    //     $this->db->from('sma_cart');
-    //     $this->db->where('userId', $userId);
-    //     $this->db->order_by('time', 'DESC');
-    //     $this->db->limit(1);
-        
-    //     // Execute the query and fetch the result
-    //     $query = $this->db->get();
-        
-    //     // Return the row as an object (or array if you prefer)
-    //     return $query->row(); // or $query->row_array();
-    // }
+ 
     public function get_latest_cart_products($cartId){
         
         $this->db->from('sma_cart');
@@ -86,10 +73,11 @@ class Shop_model extends CI_Model
         // Query to get the count of orders for the given customer_id
         $this->db->from('sma_sales');
         $this->db->where('customer_id', $customer_id);
+        $this->db->where("sale_status", "completed");
+        $this->db->where("payment_status", "paid");
         
         // Get the count of rows that match the condition
         $count = $this->db->count_all_results();
-        
         return $count;
     }
 
@@ -102,6 +90,38 @@ class Shop_model extends CI_Model
         return $query->row();
 
     }
+    public function is_eligible_for_auto_apply($id){
+        /**
+         * Those users who are created after the coupon was created
+         * And has less than x orders completed then its applicable.
+         */
+        $coupon = $this -> get_auto_apply_coupon();
+        $max_limit = $coupon -> usage_limit_per_user; // User cant have more than this number of orders  to get discount.
+        $coupon_created_at = $coupon -> date_created;
+        $coupon_created_at_timestamp = strtotime($coupon_created_at);
+     
+        /**
+         * Get the user info.
+         */
+
+        $this->db->select('sma_users.*, sma_companies.*'); // Select fields from both tables as required
+        $this->db->from('sma_companies');
+        $this->db->join('sma_users', 'sma_users.email = sma_companies.email');
+        $this->db->where('sma_companies.id', $id);// Filter by companyId
+        $this->db->limit(1);
+        $query = $this->db->get();
+        $result = $query->row();
+        if($result -> created_on <= $coupon_created_at_timestamp){
+            return ["can_apply" => false, "coupon"  => $coupon];
+        }
+        $order_count = $this->get_order_count($id);
+        if($order_count >= $max_limit){
+            return ["can_apply" => false, "coupon"  => $coupon];
+        }
+        return ["can_apply" => true, "coupon"  => $coupon];
+
+    }
+
     public function can_apply_coupon($coupon,$userId, $cartId){
           
         $this->db->from('sma_coupons');

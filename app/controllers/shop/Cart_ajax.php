@@ -16,8 +16,25 @@ class Cart_ajax extends MY_Shop_Controller
         if ($this->shop_settings->private && !$this->loggedIn) {
             redirect('/login');
         }
-            $this->load->admin_model('settings_model');
+        $this->load->admin_model('settings_model');
+
+       
+        $is_customer_logged_in = $this->loggedIn;
+        
+        if($is_customer_logged_in){
+            $id = $this->session->userdata('company_id');
+             
+            $auto_apply_result = $this->shop_model->is_eligible_for_auto_apply($id);
+            if($auto_apply_result['can_apply']) {
+                $this->auto_apply($auto_apply_result['coupon']);
+               
+            } 
+          
+        }
+
+         
     }
+
 
     public function subscribe_newsletter(){
         if ($_GET['newsletterEmail']) {
@@ -113,7 +130,6 @@ class Cart_ajax extends MY_Shop_Controller
             }
 
             $this->cart->update($cart_arr);
-
             $this->session->unset_userdata('coupon_details');
             //echo json_encode(array('status' => 'success', 'action' => 'subtract', 'total' => $this->cart->total(), 'discount' => 0));
             $this->session->set_flashdata('success', 'Coupon Code Removed');
@@ -122,7 +138,27 @@ class Cart_ajax extends MY_Shop_Controller
     }
    
 
-    
+    public function auto_apply($coupon_data){  
+         $cart_contents = $this->cart->contents();
+         $cart_arr = array();
+         foreach ($cart_contents as $item => $val) {
+             $data = [
+                    'rowid'  => $val['rowid'],
+                    'discount'  => ($val['price'] *$val['qty']* $coupon_data->amount) / 100
+                ];
+            array_push($cart_arr, $data);
+        }
+         
+        $this->cart->update($cart_arr);
+        $this->session->set_userdata('coupon_details', array(
+            'code' => $coupon_code,
+            'dis_amount' => $this->cart->get_total_discount(),
+            'dis_percent' => $coupon_data->amount
+        ));
+        $this->session->set_flashdata('message', 'Coupon Code Applied');
+        // redirect('cart');
+
+    }
 
     public function apply_coupon(){
         $cartId = $this->cart->cart_id;
