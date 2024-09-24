@@ -78,6 +78,7 @@ class Shop_model extends CI_Model
         
         // Get the count of rows that match the condition
         $count = $this->db->count_all_results();
+      
         return $count;
     }
 
@@ -96,6 +97,7 @@ class Shop_model extends CI_Model
          * And has less than x orders completed then its applicable.
          */
         $coupon = $this -> get_auto_apply_coupon();
+        
         $max_limit = $coupon -> usage_limit_per_user; // User cant have more than this number of orders  to get discount.
         $coupon_created_at = $coupon -> date_created;
         $coupon_created_at_timestamp = strtotime($coupon_created_at);
@@ -106,10 +108,13 @@ class Shop_model extends CI_Model
 
         $this->db->select('sma_users.*, sma_companies.*'); // Select fields from both tables as required
         $this->db->from('sma_companies');
-        $this->db->join('sma_users', 'sma_users.email = sma_companies.email');
+        $this->db->join('sma_users', 'sma_users.company_id = sma_companies.id');
         $this->db->where('sma_companies.id', $id);// Filter by companyId
         $this->db->limit(1);
+        
         $query = $this->db->get();
+          echo $this->db->last_query();
+        exit();
         $result = $query->row();
         if($result -> created_on <= $coupon_created_at_timestamp){
             return ["can_apply" => false, "coupon"  => $coupon];
