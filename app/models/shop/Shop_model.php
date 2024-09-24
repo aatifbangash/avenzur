@@ -113,8 +113,7 @@ class Shop_model extends CI_Model
         $this->db->limit(1);
         
         $query = $this->db->get();
-          echo $this->db->last_query();
-        exit();
+         
         $result = $query->row();
         if($result -> created_on <= $coupon_created_at_timestamp){
             return ["can_apply" => false, "coupon"  => $coupon];
