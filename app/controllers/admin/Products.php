@@ -4785,4 +4785,37 @@ class Products extends MY_Controller
         $this->data['adjustment']        = $this->products_model->getAdjustmentByCountID($id);
         $this->load->view($this->theme . 'products/view_count', $this->data);
     }
+
+    public function get_avz_item_code_details(){
+        $item_id = $this->input->get('item_id');
+        $warehouse_id = $this->input->get('warehouse_id'); // Optionally filter by warehouse if needed
+    
+        // Validate that avz_item_code is provided
+        if (!$item_id) {
+            echo json_encode(['status' => 'error', 'message' => 'No item code provided']);
+            return;
+        }
+    
+        $this->db->select('pi.avz_item_code, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
+        $this->db->from('sma_purchase_items pi');
+        $this->db->join('sma_purchases p', 'p.id = pi.purchase_id', 'left');
+        $this->db->join('sma_inventory_movements im', 'pi.avz_item_code = im.avz_item_code', 'left');
+        $this->db->where('pi.product_id', $item_id);
+        if ($warehouse_id) {
+            // Optionally filter by warehouse if warehouse_id is provided
+            $this->db->where('pi.warehouse_id', $warehouse_id);
+        }
+        $this->db->group_by(['pi.warehouse_id', 'pi.avz_item_code', 'pi.expiry']);
+
+  
+     $query = $this->db->get();
+    
+        if ($query->num_rows() > 0) {
+            // Return the matching items as a JSON array
+            echo json_encode($query->result_array());
+        } else {
+            // Return an error if no records found
+            echo json_encode(['status' => 'error', 'message' => 'No items found for this item code']);
+        }
+    }
 }
