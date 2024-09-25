@@ -254,9 +254,6 @@ class Shop_model extends CI_Model
             return $row->id;
         } else {
             $this->db->insert('companies', $data);
-            echo '<pre>';
-            print_r($data);
-            exit;
             return ($this->db->affected_rows() > 0) ? $this->db->insert_id() : false;
         }
     }
