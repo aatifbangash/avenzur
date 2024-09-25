@@ -249,7 +249,7 @@ class Shop_model extends CI_Model
         $uniqueColumns = array('email');
         $query = $this->db->get_where('companies', ['email' => $data['email']]);
 
-        if ($query->num_rows() > 0) {
+        if (isset($data['email']) && $query->num_rows() > 0) {
             $row = $this->db->get_where('companies', ['email' => $data['email']], 1)->row();
             return $row->id;
         } else {
