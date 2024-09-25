@@ -933,8 +933,8 @@ class Main extends MY_Shop_Controller
                 }
 
                 //$company_id = $this->shop_model->addCustomer($company_data);
-                echo '<pre>';print_r($company_data);exit;
                 $company_id = $this->shop_model->addUniqueCustomer($company_data);
+                echo 'CompanyId: '.$company_id;exit;
 
                 $additional_data = [
                     'gender' => 'male',
