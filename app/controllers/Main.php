@@ -884,9 +884,6 @@ class Main extends MY_Shop_Controller
         $this->form_validation->set_rules('email', lang('email_address'), 'required');
 
         if ($this->form_validation->run('') == true) {
-            ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
             $email = strtolower($this->input->post('email'));
             $username = strtolower($this->input->post('email'));
 
@@ -936,6 +933,7 @@ error_reporting(E_ALL);
                 }
 
                 //$company_id = $this->shop_model->addCustomer($company_data);
+                echo '<pre>';print_r($company_data);exit;
                 $company_id = $this->shop_model->addUniqueCustomer($company_data);
 
                 $additional_data = [
