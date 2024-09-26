@@ -307,12 +307,15 @@ class Purchases extends MY_Controller
                 $items = $this->purchases_model->getAllQuoteItems($quote_id);
                 krsort($items);
                 $c = rand(100000, 9999999);
+                $count = 0;
                 foreach ($items as $item) {
                     $row = $this->site->getProductByID($item->product_id);
+                    
                     if (!$row) {
                         $this->session->set_flashdata('error', sprintf(lang('product_x_found'), $item->product_name . '(' . $item->product_code . ')'));
                         redirect($_SERVER['HTTP_REFERER']);
                     }
+                    $count++;
                     if ($row->type == 'combo') {
                         $combo_items = $this->site->getProductComboItems($row->id, $item->warehouse_id);
                         foreach ($combo_items as $citem) {
@@ -338,8 +341,8 @@ class Purchases extends MY_Controller
                             $units = $this->site->getUnitsByBUID($row->base_unit);
                             $tax_rate = $this->site->getTaxRateByID($crow->tax_rate);
                             $ri = $this->Settings->item_addition ? $crow->id : $c;
-
-                            $pr[$ri] = ['id' => $c, 'item_id' => $crow->id, 'label' => $crow->name . ' (' . $crow->code . ')', 'row' => $crow, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options];
+                            $row->serial_no = $count;
+                            $pr[$ri] = ['serial_no'=>$count, 'id' => $c, 'item_id' => $crow->id, 'label' => $crow->name . ' (' . $crow->code . ')', 'row' => $crow, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options];
                             $c++;
                         }
                     } elseif ($row->type == 'standard') {
@@ -349,7 +352,7 @@ class Purchases extends MY_Controller
                         } else {
                             unset($row->details, $row->product_details);
                         }
-
+                        $row->serial_no = $count;
                         $row->id = $item->product_id;
                         $row->code = $item->product_code;
                         $row->name = $item->product_name;
@@ -373,6 +376,7 @@ class Purchases extends MY_Controller
                         $ri = $this->Settings->item_addition ? $row->id : $c;
 
                         $pr[$ri] = [
+                            'serial_no' => $count,
                             'id' => $c,
                             'item_id' => $row->id,
                             'label' => $row->name . ' (' . $row->code . ')',
@@ -384,6 +388,7 @@ class Purchases extends MY_Controller
                         $c++;
                     }
                 }
+                 
                 $this->data['quote_items'] = json_encode($pr);
             }
 
@@ -2953,6 +2958,7 @@ class Purchases extends MY_Controller
 
         if ($rows) {
             $r = 0;
+            $count = 0;
             foreach ($rows as $row) {
                 $c = uniqid(mt_rand(), true);
                 $option = false;
@@ -2984,6 +2990,8 @@ class Purchases extends MY_Controller
                 if ($opt->cost != 0) {
                     $row->cost = $opt->cost;
                 }
+                $count++;
+                $row->serial_no = $count;
                 $row->cost = $supplier_id ? $this->getSupplierCost($supplier_id, $row) : $row->cost;
                 $row->real_unit_cost = $row->cost;
                 $row->base_quantity = 1;
