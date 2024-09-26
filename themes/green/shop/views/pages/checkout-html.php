@@ -770,6 +770,10 @@ if ($this->Settings->indian_gst) {
     }
 
     function calCulateShipping(city, country, isExpressDelivery = false) {
+
+
+        const is_free_shipping = '<?php echo $this->session->userdata('coupon_details')['free_shipping']; ?>' ;
+
        // alert(city);
         //$("#express-delivery-check").prop("disabled", true);
         $("#express-delivery-check").hide();
@@ -805,14 +809,20 @@ if ($this->Settings->indian_gst) {
                 'SA'
             ].includes(country)) {
                 $('.payment-k').prop('disabled', false)
-                shipping = 0
+                shipping = 25;
+                if(is_free_shipping){
+                    shipping = 0
+                }
                 deliveryDays = "2 to 4 days"
 
                 if (city.toLowerCase() === 'riyadh' || city.toLowerCase() === 'al riyadh' || city.toLowerCase() === 'al-riyadh' || [
                     'الرياض',
                     'ریاض'
                 ].includes(city)) {
-                    shipping = 0 // 19 SAR
+                    shipping = 20
+                    if(is_free_shipping){
+                        shipping = 0;
+                    }
                     deliveryDays = "1 to 2 days"
                     //$("#express-delivery-check").prop("disabled", false);
                     $("#express-delivery-check").show();
@@ -820,7 +830,10 @@ if ($this->Settings->indian_gst) {
                     $("#express-delivery-details").show(); // After Eid uncomment this line
 
                     if (isExpressDelivery == true) {
-                        shipping = 21
+                        shipping = 30
+                        if(is_free_shipping){
+                            shipping = 0;
+                        }
                         deliveryDays = "5 to 6 hours"
                     }
                 }
