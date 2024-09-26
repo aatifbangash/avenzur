@@ -113,8 +113,7 @@ class Shop_model extends CI_Model
         $this->db->limit(1);
         
         $query = $this->db->get();
-          //echo $this->db->last_query();
-        //exit();
+         
         $result = $query->row();
         if($result -> created_on <= $coupon_created_at_timestamp){
             return ["can_apply" => false, "coupon"  => $coupon];
@@ -126,6 +125,13 @@ class Shop_model extends CI_Model
         return ["can_apply" => true, "coupon"  => $coupon];
 
     }
+    public function get_coupon_by_code($code){
+        $this->db->from('sma_coupons');
+        $this->db->where('code', $coupon);
+        $query = $this->db->get();
+        $coupon_data = $query -> row();
+        return $coupon_data;
+    }
 
     public function can_apply_coupon($coupon,$userId, $cartId){
           
@@ -136,7 +142,7 @@ class Shop_model extends CI_Model
         $coupon_data = $query -> row();
         if(!isset($coupon_data)){
                 return null;
-            }
+        }
    
        
         $products_on_cart = $this->get_latest_cart_products($cartId);
@@ -160,6 +166,15 @@ class Shop_model extends CI_Model
         return array("coupon_data" =>$coupon_data, "eligible_products" => json_decode($ids, true));
     }
 
+    public function get_usage_by_user($customer_id,$coupon_code){
+        $this->db->from('sma_sales');
+        $this->db->where('customer_id', $customer_id);
+        $this->db->where("sale_status", "completed");
+        $this->db->where("payment_status", "paid");
+        $this->db->where("cooupon_code", $coupon_code);
+        $count = $this->db->count_all_results();
+        return $count;
+    }
 
     public function get_count()
     {
