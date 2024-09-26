@@ -5,7 +5,7 @@
 redirect('login') ; 
 }
 $cart_contents = $this->cart->contents();
-
+//print_r($this->session->userdata('coupon_details')['free_shipping']);exit;
 // print_r($cart_contents);
 $not_express_items = 0;
 $cart_total_items = 0;
@@ -140,7 +140,7 @@ if ($this->Settings->indian_gst) {
                         </label>
                         </div>
                         <div>
-                            <p class="m-0 fs-6 fw-semibold px-3 mx-1 delivery_pg">21 SAR</p>
+                            <p class="m-0 fs-6 fw-semibold px-3 mx-1 delivery_pg" id="express-shipping-fees-span">21 SAR</p>
                         </div>
                     </div>
                 </div>
@@ -773,7 +773,6 @@ if ($this->Settings->indian_gst) {
 
 
         const is_free_shipping = '<?php echo $this->session->userdata('coupon_details')['free_shipping']; ?>' ;
-
        // alert(city);
         //$("#express-delivery-check").prop("disabled", true);
         $("#express-delivery-check").hide();
@@ -820,7 +819,9 @@ if ($this->Settings->indian_gst) {
                     'ریاض'
                 ].includes(city)) {
                     shipping = 20
+                    
                     if(is_free_shipping){
+                        
                         shipping = 0;
                     }
                     deliveryDays = "1 to 2 days"
@@ -830,7 +831,7 @@ if ($this->Settings->indian_gst) {
                     $("#express-delivery-details").show(); // After Eid uncomment this line
 
                     if (isExpressDelivery == true) {
-                        shipping = 30
+                        shipping = 30;
                         if(is_free_shipping){
                             shipping = 0;
                         }
@@ -841,7 +842,7 @@ if ($this->Settings->indian_gst) {
                 if (city.toLowerCase() === 'jeddah' || city.toLowerCase() === 'al jeddah' || city.toLowerCase() === 'al-jeddah' || [
                     'جده'
                 ].includes(city)) {
-                    shipping = 0
+                    
                     deliveryDays = "1 to 2 days"
                 }
 
@@ -877,8 +878,6 @@ if ($this->Settings->indian_gst) {
                 deliveryDays = "5 to 8 days"
             }
 
-            var grandTotalPrice = parseFloat(totalPrice) + parseFloat(shipping);
-
             if (non_express_items > 0) {
                 if (saudiOrder == 1 && orderWithTax > 200) {
                     shipping = 0;
@@ -896,14 +895,54 @@ if ($this->Settings->indian_gst) {
                 $("#express-delivery-details").show(); // After eid uncomment this line
             }
 
+            if(totalPrice > 200 && !is_free_shipping && !isExpressDelivery){
+                shipping = 0;
+            }else if(totalPrice > 200 && !is_free_shipping && isExpressDelivery){
+                shipping = 10;
+            }
+
+            if(!saudiOrder){
+                shipping = 62;
+            }
             
-            if(shipping > 0){
+            /*if(shipping > 0){
                 $('#shipping-price').text(parseFloat(shipping).toFixed(2))
                 $('#shipping-fees-span').text(parseFloat(shipping).toFixed(2));
             }else{
                 $('#shipping-price').text('Free');
                 $('#shipping-fees-span').text('Free');
+                //$('#express-shipping-fees-span').text('Free');
+            }*/
+
+            if(!saudiOrder){
+                $('#shipping-price').text(parseFloat(shipping).toFixed(2));
+                $('#shipping-fees-span').text(parseFloat(shipping).toFixed(2));
+                //$('#express-shipping-fees-span').text('Free');
+            }else if(is_free_shipping){
+                // Coupon applied, no express delivery
+                $('#shipping-price').text('Free');
+                $('#shipping-fees-span').text('Free');
+                $('#express-shipping-fees-span').text('Free');
+                
+            }else if(!is_free_shipping && shipping == 0 && totalPrice > 200){
+                $('#shipping-price').text('Free');
+                $('#shipping-fees-span').text('Free');
+                $('#express-shipping-fees-span').text('10.00');
+            }else if(!is_free_shipping && shipping > 0 && totalPrice > 200){
+                // No coupon applied, order value less than 200
+
+                $('#shipping-price').text('10.00');
+                $('#shipping-fees-span').text('Free');
+                $('#express-shipping-fees-span').text('10.00');
+            }else if(!is_free_shipping && shipping > 0 && totalPrice < 200){
+                // No coupon applied, order value less than 200
+
+                $('#shipping-price').text(parseFloat(shipping).toFixed(2));
+                $('#shipping-fees-span').text(parseFloat(shipping).toFixed(2));
+                $('#express-shipping-fees-span').text('30.00');
             }
+
+            var grandTotalPrice = parseFloat(totalPrice) + parseFloat(shipping);
             
             $('#grand-total-price').text(parseFloat(grandTotalPrice).toFixed(2))
             $('#shipping-input').val(parseFloat(shipping).toFixed(2));
