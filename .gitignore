@@ -1,9 +1,12 @@
 
 app/logs/*
 app/config/config.php
+./.DS_Store
 app/config/database.php
 vendor/
 files/
 assets/uploads*
 .editorconfig
 snapchat-product-feed.csv
+composer.lock
+

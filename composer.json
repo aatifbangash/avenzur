@@ -4,7 +4,7 @@
     "description": "Stock Manager Advance",
     "type": "project",
     "require": {
-        "php": "7.4.3",
+        "php": "8.3.11",
         "dompdf/dompdf": "^1.0.2",
         "hybridauth/hybridauth": "^3.6.0",
         "mike42/escpos-php": "^1.5",
