@@ -86,14 +86,18 @@
                     <div class="product-info">
                         <?php if (isset($brand->name)) {
                             ?>
-                            <span style="background: #662d91;color: #fff;padding: 3px;font-size: 13px;border-radius: 3px;">
+                            <a style="text-decoration:none;" href="<?= site_url('brand/' . $brand->slug) ?>">
+                                <span style="background: #662d91;color: #fff;padding: 3px;font-size: 13px;border-radius: 3px;">
                                 <?= $brand->name; ?>
-                            </span>
+                                </span>
+                            </a>
                             <?php
                         } ?>
                         <div class="product-name">
                             <h1 class=" override-h1">
                                 <?= stripslashes($product->name); ?>
+                                <br />
+                                <span style="font-size: 50%;color: #662d91;">Original 100%</span>
                             </h1>
                         </div>
                         <div class="rating">

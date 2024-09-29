@@ -171,7 +171,7 @@ class Sma
     public function formatMoney($number, $symbol = false)
     {
         if ($symbol !== 'none') {
-            $symbol = $symbol ? $symbol : $this->Settings->symbol;
+            $symbol = $symbol ? ' '.$symbol : ' '.$this->Settings->symbol;
         } else {
             
             $symbol = null;
