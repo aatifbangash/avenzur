@@ -1020,12 +1020,14 @@ function loadItems() {
 			return [parseInt(o.order)];
 		}).reverse();
 
+		var serial = 1;
 		var order_no = new Date().getTime();
 		$.each(sortedItems, function () {
 			var item = this;
 			var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
 			item.order = item.order ? item.order : order_no++;
-			var sn = item.row.serial_no;
+			//var sn = item.row.serial_no;
+
 			var product_id = item.row.id,
 				item_type = item.row.type,
 				combo_items = item.combo_items,
@@ -1185,9 +1187,9 @@ function loadItems() {
 			);
 			tr_html =
 				'<td><span name="sno[]"  class="rid" value="' +
-				sn +
+				serial +
 				'">' +
-				sn +
+				serial++ +
 				"</td>" +
 				'<td><input name="product_id[]" type="hidden" class="rid" value="' +
 				product_id +
