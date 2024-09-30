@@ -9,6 +9,14 @@ class Pay_model extends CI_Model
         parent::__construct();
     }
 
+    public function addReferrer($data)
+    {
+        if ($this->db->insert('referrer', $data)) {
+            return true;
+        }
+        return false;
+    }
+
     public function addPayment($data)
     {
         if ($this->db->insert('payments', $data)) {

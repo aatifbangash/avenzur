@@ -428,33 +428,32 @@
                                     <table id="toTable"
                                         class="table items table-striped table-bordered table-condensed table-hover sortable_table">
                                         <thead>
-                                            <tr>
-                                                <th class="col-md-4">
-                                                    <?= lang('product') . ' (' . lang('code') . ' - ' . lang('name') . ')'; ?>
-                                                </th>
-                                                <th class="col-md-1">Serial No. </th>
-                                                <th class="col-md-1">Batch </th>
-                                                <?php
-                                                if ($Settings->product_expiry) {
-                                                    echo '<th class="col-md-2">' . $this->lang->line('expiry_date') . '</th>';
-                                                }
-                                                ?>
-                                                <th class="col-md-1"><?= lang('Sales Price'); ?></th>
-                                                <th class="col-md-1"><?= lang('Cost Price'); ?></th>
-                                                <th class="col-md-1"><?= lang('quantity'); ?></th>
-                                                <th class="col-md-1"><?= lang('Actual Quantity'); ?></th>
-                                                <?php
-                                                if ($Settings->tax1) {
-                                                    echo '<th class="col-md-1">' . $this->lang->line('product_tax') . '</th>';
-                                                }
-                                                ?>
-                                                <th><?= lang('subtotal'); ?> (<span
-                                                        class="currency"><?= $default_currency->code ?></span>)
-                                                </th>
-                                                <th style="width: 30px !important; text-align: center;"><i
-                                                        class="fa fa-trash-o"
-                                                        style="opacity:0.5; filter:alpha(opacity=50);"></i></th>
-                                            </tr>
+
+                                        <tr>
+                                            <th class="col-md-4"><?= lang('product') . ' (' . lang('code') . ' - ' . lang('name') . ')'; ?></th>
+                                            <th class="col-md-1">Serial No. </th>
+                                            <th class="col-md-1">Batch </th>
+                                            <?php
+                                            if ($Settings->product_expiry) {
+                                                echo '<th class="col-md-2">' . $this->lang->line('expiry_date') . '</th>';
+                                            }
+                                            ?>
+                                            <th class="col-md-1"><?= lang('Sales Price'); ?></th>
+                                            <th class="col-md-1"><?= lang('Cost Price'); ?></th>
+                                            <th class="col-md-1"><?= lang('quantity'); ?></th>
+                                            <!-- <th class="col-md-1"><?= lang('Actual Quantity'); ?></th> -->
+                                            <?php
+                                            if ($Settings->tax1) {
+                                                echo '<th class="col-md-1">' . $this->lang->line('product_tax') . '</th>';
+                                            }
+                                            ?>
+                                            <th><?= lang('subtotal'); ?> (<span
+                                                    class="currency"><?= $default_currency->code ?></span>)
+                                            </th>
+                                            <th style="width: 30px !important; text-align: center;"><i
+                                                    class="fa fa-trash-o"
+                                                    style="opacity:0.5; filter:alpha(opacity=50);"></i></th>
+                                        </tr>
                                         </thead>
                                         <tbody></tbody>
                                         <tfoot></tfoot>

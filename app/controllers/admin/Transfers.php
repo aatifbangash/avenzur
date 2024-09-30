@@ -959,6 +959,7 @@ class Transfers extends MY_Controller
         $rows = $this->transfers_model->getProductNamesWithBatches($sr, $warehouse_id);
         if ($rows) {
             $r = 0;
+            $count = 0;
             foreach ($rows as $row) {
                 $c                     = uniqid(mt_rand(), true);
                 $option                = false;
@@ -1026,7 +1027,8 @@ class Transfers extends MY_Controller
 
                 $batches = $this->site->getProductBatchesData($row->id, $warehouse_id);
                 $total_quantity = $this->Inventory_model->get_current_stock($row->id, $warehouse_id);
-                
+                $count++;
+                $row->serial_no = $count;
                 $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
                     'row'     => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options,  'batches'=>$batches, 'total_quantity' => $total_quantity ];
                 $r++;

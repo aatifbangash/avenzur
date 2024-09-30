@@ -1131,7 +1131,6 @@ class Pay extends MY_Shop_Controller
         
         if($response_status == '00000')
         {
-            $this->session->unset_userdata('coupon_details');
             $amount = $_POST['Response_Amount'] / 100;
             
             $reference  = $_POST['Response_ApprovalCode'];
@@ -1143,6 +1142,17 @@ class Pay extends MY_Shop_Controller
                         }
               */          
             if ($inv = $this->pay_model->getSaleByID($invoice_no)) {
+
+                $referrer = [
+                    'referrer_code'  => $this->session->userdata('coupon_details')['code'],
+                    'coupon_code'    => $this->session->userdata('coupon_details')['code'],
+                    'date'           => date('Y-m-d H:i:s'),
+                    'sale_id'        => $invoice_no,
+                    'customer_id'    => $inv->customer_id
+                ];
+                $this->pay_model->addReferrer($referrer);
+                
+                $this->session->unset_userdata('coupon_details');
                 $this->cart->destroy();
                 $payment = [
                     'date'           => date('Y-m-d H:i:s'),
@@ -1313,6 +1323,8 @@ class Pay extends MY_Shop_Controller
                     
                 }
             }
+
+            $this->session->unset_userdata('coupon_details');
         }else {
                 $this->sma->log_payment('ERROR', 'Payment failed for Sale Reference #' . $reference . ' via DirectPay (' . $_POST['Response_TransactionID'] . ').', json_encode($_POST));
                 $this->session->set_flashdata('error', lang('payment_failed'));

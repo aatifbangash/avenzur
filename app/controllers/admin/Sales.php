@@ -3859,10 +3859,11 @@ class Sales extends MY_Controller
         $customer       = $this->site->getCompanyByID($customer_id);
         $customer_group = $this->site->getCustomerGroupByID($customer->customer_group_id);
         $rows           = $this->sales_model->getProductNamesWithBatches($sr, $warehouse_id, $pos);
-
+        $count = 0;
         if ($rows) {
             $r = 0;
             foreach ($rows as $row) {
+
                 $c = uniqid(mt_rand(), true);
                 unset($row->details, $row->product_details, $row->image, $row->barcode_symbology, $row->cf1, $row->cf2, $row->cf3, $row->cf5, $row->cf6, $row->supplier1price, $row->supplier2price, $row->cfsupplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1, $row->supplier2, $row->supplier3, $row->supplier4, $row->supplier5, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
                 $option               = false;
@@ -3929,6 +3930,7 @@ class Sales extends MY_Controller
                 } else {
                     $row->price = $row->price + (($row->price * $customer_group->percent) / 100);
                 }
+                $count++;
                 $row->real_unit_price = $row->price;
                 $row->base_quantity   = 0;
                 $row->base_unit       = $row->unit;
@@ -3954,7 +3956,7 @@ class Sales extends MY_Controller
                 $row->batchQuantity = 0;
                 $row->batchPurchaseCost = 0;
                 $row->expiry  = null;
-                
+                $row->serial_no = $count;
                 $batches = $this->site->getProductBatchesData($row->id, $warehouse_id);
                 $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')', 'category' => $row->category_id,
                     'row'     => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, 'batches'=>$batches];

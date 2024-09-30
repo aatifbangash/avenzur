@@ -16,8 +16,25 @@ class Cart_ajax extends MY_Shop_Controller
         if ($this->shop_settings->private && !$this->loggedIn) {
             redirect('/login');
         }
-            $this->load->admin_model('settings_model');
+        $this->load->admin_model('settings_model');
+
+       
+        $is_customer_logged_in = $this->loggedIn;
+        
+        if($is_customer_logged_in){
+            $id = $this->session->userdata('company_id');
+             
+            $auto_apply_result = $this->shop_model->is_eligible_for_auto_apply($id);
+            if($auto_apply_result['can_apply']) {
+                $this->auto_apply($auto_apply_result['coupon']);
+               
+            } 
+          
+        }
+
+         
     }
+
 
     public function subscribe_newsletter(){
         if ($_GET['newsletterEmail']) {
@@ -54,6 +71,149 @@ class Cart_ajax extends MY_Shop_Controller
             }
         }
     }
+
+    public function apply($code, $userId){
+        $coupon = $this->shop_model->get_coupon_by_code($code);
+        $is_valid = $this->is_valid_coupon($coupon);
+
+        /**
+         * Check for the Free Shipment Category
+         */
+        $is_free_shipping = $coupon['free_shipping'];
+        $referrer = $coupon['referrer_code'];
+        if($is_free_shipping && $referrer){
+             $this->session->set_userdata('coupon_details', array(
+                        'code' => $code,
+                        'coupon' => $coupon,
+                        'free_shipping' => true,
+                        'dis_amount' => $this->cart->get_total_discount(),
+                        'dis_percent' => $coupon_data->amount
+                    ));
+        }
+
+
+         /**
+         * Check if product Ids are added in the Coupon Code, 
+         * If yes, check if the cart has these products.
+         * Else, the coupon cant be applied.
+         */
+        $valid_product_ids = json_decode($coupon['product_ids'], true);
+        if(isset($valid_product_ids) && $valid_product_ids.count > 0){
+            $cart_contents = $this->cart->contents();
+            $products_on_cart = array();
+            foreach ($cart_contents as $item => $val) {
+                $products_on_cart []= $val['product_id'];
+            }
+            $matching_products = array_intersect($products_on_cart, $valid_product_ids);
+            
+            if($coupon_data->discount_type == "percent"){
+                    $cart_total = $cart_arr->cart_contents['cart_total'];
+                    foreach ($cart_contents as $item => $val) {
+                            
+                        if(in_array($val['product_id'], $eligible_products)){
+                            $data = [
+                                'rowid'  => $val['rowid'],
+                                'discount'  => ($val['price'] *$val['qty']* $coupon_data->amount) / 100
+                            ];
+                        }else{
+                                $data = [
+                                'rowid'  => $val['rowid'],
+                                'discount'  => 0
+                            ];
+                        } 
+                        array_push($cart_arr, $data);
+                    }
+                    $this->cart->update($cart_arr);
+                    
+                    $this->session->set_userdata('coupon_details', array(
+                        'code' => $coupon_code,
+                        'dis_amount' => $this->cart->get_total_discount(),
+                        'dis_percent' => $coupon_data->amount
+                    ));
+                }                    
+
+        }else{
+
+            
+            foreach ($cart_contents as $item => $val) {
+                $data = [
+                    'rowid'  => $val['rowid'],
+                    'discount'  => ($val['price'] *$val['qty']* $coupon_data->amount) / 100
+                ];
+                array_push($cart_arr, $data);
+            }
+            $this->cart->update($cart_arr);
+            $this->session->set_userdata('coupon_details', array(
+                'code' => $coupon_code,
+                'dis_amount' => $this->cart->get_total_discount(),
+                'dis_percent' => $coupon_data->amount
+            ));
+        }
+        
+    }
+    
+    public function is_valid_coupon($coupon, $userId){
+        $coupon_code = $coupon['code'];
+        if(!$coupon_code){
+            return false;
+        }
+        if (!$coupon['is_active']) {
+            return false;
+        }
+        /**
+         * Check : If coupon validity period.
+         */
+        $today = date('Y-m-d');
+        $today_time =  strtotime($today);
+        if(!$coupon['valid_from']){
+            return false;
+        }
+        $coupon_valid_from = strtotime($coupon['valid_from']);
+        $coupon_expire_at = strtotime($coupon['date_expires']);
+        if($today_time < $coupon_valid_from){
+            return false;
+        }
+        if($coupon_expire_at){
+            if($coupon_expire_at < today_time){
+                return false;
+            }
+        }
+
+        /**Validity Period Check end */
+       
+        /**Check if the coupon has been used already by the user max_use times */
+        $usage_limit = $coupon['usage_limit_per_user'];
+        if($usage_limit){
+             $is_customer_logged_in = $this->loggedIn;
+            if(!$is_customer_logged_in){ // Since there is a user dependency, user must login first
+                return false;
+            }
+            $id = $this->session->userdata('company_id');
+            $usage_count = $this->shop_model->get_usage_by_user($id,$coupon_code );
+            if($usage_count >= $usage_limit){
+                return false;
+            }
+        }
+
+        /**Minimum Cart Amount is met */
+        $cart_arr = $this->cart;
+        $cart_total = $cart_arr->cart_contents['cart_total'];
+        $min_amount = $coupon['minimum_amount'];
+        $max_amount = $coupon['max_amount'];
+        if($min_amount){
+            if($cart_total < $min_amount){
+                return false;
+            }
+        }
+        if($max_amount){
+            if($cart_total > $max_amount){
+                return false;
+            }
+        }
+      return true;
+    }
+
+
 
     public function remove_coupon_code(){
         $coupon_details = $this->session->userdata('coupon_details');
@@ -112,15 +272,39 @@ class Cart_ajax extends MY_Shop_Controller
             }
 
             $this->cart->update($cart_arr);
-
             $this->session->unset_userdata('coupon_details');
             //echo json_encode(array('status' => 'success', 'action' => 'subtract', 'total' => $this->cart->total(), 'discount' => 0));
             $this->session->set_flashdata('success', 'Coupon Code Removed');
             redirect('cart');
         }
     }
+   
+
+    public function auto_apply($coupon_data){  
+         $cart_contents = $this->cart->contents();
+         $cart_arr = array();
+         foreach ($cart_contents as $item => $val) {
+             $data = [
+                    'rowid'  => $val['rowid'],
+                    'discount'  => ($val['price'] *$val['qty']* $coupon_data->amount) / 100
+                ];
+            array_push($cart_arr, $data);
+        }
+         
+        $this->cart->update($cart_arr);
+        $this->session->set_userdata('coupon_details', array(
+            'code' => $coupon_code,
+            'dis_amount' => $this->cart->get_total_discount(),
+            'dis_percent' => $coupon_data->amount
+        ));
+        $this->session->set_flashdata('message', 'Coupon Code Applied');
+        // redirect('cart');
+
+    }
 
     public function apply_coupon(){
+        $cartId = $this->cart->cart_id;
+         
         $coupon_arr = array('mpay' => 10, 'zaps10' => 10, 'welcome' => 5, 'alf10' => 10, 'mc24' => 10, 'neqaty10' => 10, 'enbd24' => 10, 'anb10' => 10, 'eid10' => 10);
         $coupon_cap_arr = array('mpay' => 100, 'zaps10' => 10, 'welcome' => 10, 'alf10' => 50, 'mc24' => 50, 'neqaty10' => 50, 'enbd24' => 50, 'anb10' => 50, 'eid10' => 50);
         $pattern_match = 0;
@@ -150,9 +334,12 @@ class Cart_ajax extends MY_Shop_Controller
         }
 
         $coupon_details = $this->session->userdata('coupon_details');
+       
         if(isset($coupon_details['code'])){
             $c_code = $coupon_details['code'];
+            
         }
+
     
         if(isset($coupon_arr[$coupon_code]) && $this->cart->get_total_discount() <= 0 && $pattern_match == 0 && $this->cart->total() >= $coupon_cap_arr[$coupon_code]){
             // Set All Coupon Discount except ENBD
@@ -285,9 +472,86 @@ class Cart_ajax extends MY_Shop_Controller
             $this->session->set_flashdata('message', 'Coupon Code Applied');
             redirect('cart');
         }else{
-            $this->session->set_flashdata(['error' => 1, 'message' => 'Invalid Coupon Code']);
+         
+            if( $coupon_code  ){
+                $cart_contents = $this->cart->contents();
+                $is_customer_logged_in = $this->loggedIn;
+                $userId = null;
+                if($is_customer_logged_in){
+                    $userId = $this->session->userdata('company_id');
+                }
+                  
+                $response = $this->shop_model->can_apply_coupon($coupon_code,$userId, $cartId);
+                if( $response != null){
+                    $coupon_data = $response['coupon_data'];
+                    $eligible_products = $response['eligible_products'];
+                    $cart_arr = array();
+
+                    $is_free_shipping = $coupon_data ->free_shipping;
+                    $referrer = $coupon_data -> referrer_code;
+                    $free_shipping_eligible = false;
+ 
+                             
+                    if($coupon_data->discount_type == "percent"){
+                        
+                        
+                        foreach ($cart_contents as $item => $val) {
+                             
+                            if(in_array($val['product_id'], $eligible_products)){
+                                  
+                                if($is_free_shipping && $referrer){
+                                    $free_shipping_eligible = true;
+                                    
+                                }
+                                $data = [
+                                    'rowid'  => $val['rowid'],
+                                    'discount'  => ($val['price'] *$val['qty']* $coupon_data->amount) / 100
+                                ];
+                            }else{
+                                   
+                                 $data = [
+                                    'rowid'  => $val['rowid'],
+                                    'discount'  => 0
+                                ];
+                            } 
+                            array_push($cart_arr, $data);
+                        }
+                       
+                        $this->cart->update($cart_arr);
+                        if($free_shipping_eligible){
+                            $this->session->set_userdata('coupon_details', array(
+                                'code' => $coupon_code,
+                                'dis_amount' => $this->cart->get_total_discount(),
+                                'dis_percent' => $coupon_data->amount,
+                                'free_shipping' =>  true
+                            ));
+                            $this->session->set_flashdata('message', 'Free Shipping Eligible');
+                            redirect('cart');
+                        }else{
+                                $this->session->set_userdata('coupon_details', array(
+                                'code' => $coupon_code,
+                                'dis_amount' => $this->cart->get_total_discount(),
+                                'dis_percent' => $coupon_data->amount,
+                                'free_shipping' => false
+                            ));
+                        }
+                        
+                        $this->session->set_flashdata('message', 'Coupon Code Applied');
+                        redirect('cart');
+                    }                    
+                    
+                }else{
+                    $this->session->set_flashdata(['error' => 1, 'message' => 'Invalid Coupon Code']);
+                //$this->sma->send_json(['error' => 1, 'message' => 'Invalid Coupon Code']);
+                redirect('cart');
+                }
+                
+            }else{
+                $this->session->set_flashdata(['error' => 1, 'message' => 'Invalid Coupon Code']);
             //$this->sma->send_json(['error' => 1, 'message' => 'Invalid Coupon Code']);
             redirect('cart');
+            }
+            
         }
     }
 

@@ -412,6 +412,7 @@ table#poTable td input.form-control {
                                            class="table items table-striped table-bordered table-condensed table-hover sortable_table">
                                         <thead>
                                         <tr>
+                                            <th class="col-md-1">#</th>
                                             <th class="col-md-2">item name</th>
                                             <th class="col-md-1">sale price</th>
                                             <th class="col-md-1">purchase price</th>

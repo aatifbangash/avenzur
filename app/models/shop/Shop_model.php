@@ -7,12 +7,174 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class Shop_model extends CI_Model
 {
     protected $table = 'products';
+    protected $coupons_model = "sma_coupons";
 
     public function __construct()
     {
         parent::__construct();
     }
 
+    /**
+     * Change for coupons 
+     * Author: Rajive
+     * Branch: coupons
+     * Date: 2024-09-22
+     */
+ 
+    public function get_latest_cart_products($cartId){
+        
+        $this->db->from('sma_cart');
+        $this->db->where('id', $cartId);
+        
+        // Execute the query and fetch the result
+        $query = $this->db->get();
+        $result = $query->row();
+       
+        $product_ids = $this->extract_product_ids($result);
+         
+        return $product_ids;         
+
+    }
+
+    private function extract_product_ids($cart_data) {
+              
+        // Decode the JSON string into an associative array
+        // $cart_array = json_decode($cart_data,true);
+      
+        // Initialize an empty array to hold product IDs
+        $product_ids = [];
+
+        // Loop through the cart array to extract product_ids
+        foreach ($cart_data as $key => $value) {
+             
+             if($key == "data"){
+                $arr = json_decode($value,true);
+                  
+                 foreach ($arr as $k => $v) {
+                    
+                // Check if the value is an array and contains a product_id
+                if ( isset($v['product_id'])) {
+                    $product_ids[] = $v['product_id'];
+                }
+            }
+             }
+            
+            // Check if the value contains a product_id (it's nested under the unique keys)
+            
+        }
+        
+        
+    // Return the array of product IDs
+    return $product_ids;
+    }
+
+    public function get_order_count($customer_id) {
+     
+        // Query to get the count of orders for the given customer_id
+        $this->db->from('sma_sales');
+        $this->db->where('customer_id', $customer_id);
+        $this->db->where("sale_status", "completed");
+        $this->db->where("payment_status", "paid");
+        
+        // Get the count of rows that match the condition
+        $count = $this->db->count_all_results();
+      
+        return $count;
+    }
+
+    public function get_auto_apply_coupon(){
+        $this->db->from('sma_coupons');
+        $this->db->where('auto_apply', 1);
+        $this->db->where('is_active', 1);
+        $this->db->limit(1);
+        $query = $this->db->get();
+        return $query->row();
+
+    }
+    public function is_eligible_for_auto_apply($id){
+        /**
+         * Those users who are created after the coupon was created
+         * And has less than x orders completed then its applicable.
+         */
+        $coupon = $this -> get_auto_apply_coupon();
+        
+        $max_limit = $coupon -> usage_limit_per_user; // User cant have more than this number of orders  to get discount.
+        $coupon_created_at = $coupon -> date_created;
+        $coupon_created_at_timestamp = strtotime($coupon_created_at);
+     
+        /**
+         * Get the user info.
+         */
+
+        $this->db->select('sma_users.*, sma_companies.*'); // Select fields from both tables as required
+        $this->db->from('sma_companies');
+        $this->db->join('sma_users', 'sma_users.company_id = sma_companies.id');
+        $this->db->where('sma_companies.id', $id);// Filter by companyId
+        $this->db->limit(1);
+        
+        $query = $this->db->get();
+         
+        $result = $query->row();
+        if($result -> created_on <= $coupon_created_at_timestamp){
+            return ["can_apply" => false, "coupon"  => $coupon];
+        }
+        $order_count = $this->get_order_count($id);
+        if($order_count >= $max_limit){
+            return ["can_apply" => false, "coupon"  => $coupon];
+        }
+        return ["can_apply" => true, "coupon"  => $coupon];
+
+    }
+    public function get_coupon_by_code($code){
+        $this->db->from('sma_coupons');
+        $this->db->where('code', $coupon);
+        $query = $this->db->get();
+        $coupon_data = $query -> row();
+        return $coupon_data;
+    }
+
+    public function can_apply_coupon($coupon,$userId, $cartId){
+          
+        $this->db->from('sma_coupons');
+        $this->db->where('code', $coupon);
+ 
+        $query = $this->db->get();
+        $coupon_data = $query -> row();
+        if(!isset($coupon_data)){
+                return null;
+        }
+   
+       
+        $products_on_cart = $this->get_latest_cart_products($cartId);
+        
+        $orders_by_user = $this->get_order_count($userId);
+        /**
+         * Check each conditions
+        */
+      
+        
+        $ids =   $coupon_data->product_ids  ;
+     
+        if( is_array($ids) && isset($ids)){
+            $product_ids_eligible = json_decode($ids, true);
+            $matching_products = array_intersect($products_on_cart, $product_ids_eligible);
+            if(empty($matching_products)){
+                return null;
+            }
+        }
+        
+        return array("coupon_data" =>$coupon_data, "eligible_products" => json_decode($ids, true));
+    }
+
+    public function get_usage_by_user($customer_id,$coupon_code){
+        $this->db->from('sma_sales');
+        $this->db->where('customer_id', $customer_id);
+        $this->db->where("sale_status", "completed");
+        $this->db->where("payment_status", "paid");
+        $this->db->where("cooupon_code", $coupon_code);
+        $count = $this->db->count_all_results();
+        return $count;
+    }
 
     public function get_count()
     {
