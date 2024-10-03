@@ -515,7 +515,7 @@ class Products extends MY_Controller
     }
 
     public function update_product_prices(){
-        $csvFile = $this->upload_path.'csv/promo_price_without_vat.csv';
+        $csvFile = $this->upload_path.'csv/names_and_brands_file.csv';
         
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
@@ -529,42 +529,51 @@ class Products extends MY_Controller
             return;
         }
 
+        $count = 0;
+
         while (($rowData = fgetcsv($handle)) !== false) {
-            $productCode = $rowData[1]; 
-            $new_price = $rowData[4];
-            $old_price = $rowData[3];
-            $old_cost = $rowData[2];
-            $old_promo_price = $rowData[5];
-            $new_promo_price = $rowData[6];
+            $productCode = $rowData[2]; 
+            $new_code = $rowData[3];
+            $ascon_code = $rowData[4];
+            $old_brand = $rowData[5];
+            $new_brand = $rowData[6];
+
+            $old_name = $rowData[0];
+            $new_name = $rowData[1];
 
             $this->db->select('*');
             $this->db->from('sma_products');
             $this->db->where('code', $productCode);
             $query = $this->db->get();
             $product = $query->row();
+
+            $this->db->select('*');
+            $this->db->from('sma_brands');
+            $this->db->where('name', $new_brand);
+            $query = $this->db->get();
+            $brand = $query->row(); 
             
             if ($product) {
 
-                if($product->tax_rate == 0 || $product->tax_rate == 1){
-                    $dataToUpdate = [
-                        'cost' => $old_price,
-                        'price' => $old_price,
-                        'promo_price' => $old_promo_price
-                    ];
-                }else if($product->tax_rate == 5){
-                    $dataToUpdate = [
-                        'cost' => $new_price,
-                        'price' => $new_price,
-                        'promo_price' => $new_promo_price
-                    ];
-                }
-    
-                $this->db->where('id', $product->id);
-                $this->db->update('sma_products', $dataToUpdate);
+                $dataToUpdate = [
+                    'name' => $new_name,
+                    'brand' => $brand->id,
+                    'ascon_code' => $ascon_code,
+                    'new_code' => $new_code
+                ];
 
-                echo "Product with code $productCode has updated price now i.e $new_price from $old_price<br>";
+                echo '<pre>';
+                print_r($dataToUpdate);
+    
+                /*$this->db->where('id', $product->id);
+                $this->db->update('sma_products', $dataToUpdate);*/
+
+                //echo "Product with code $productCode has updated name now i.e $new_name from $old_name<br>";
+            }else{
+                echo "Product with code $productCode was not found in database<br>";
             }
 
+            $count++;
         }
 
         fclose($handle);
