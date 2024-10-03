@@ -561,14 +561,11 @@ class Products extends MY_Controller
                     'ascon_code' => $ascon_code,
                     'new_code' => $new_code
                 ];
-
-                echo '<pre>';
-                print_r($dataToUpdate);
     
-                /*$this->db->where('id', $product->id);
-                $this->db->update('sma_products', $dataToUpdate);*/
+                $this->db->where('id', $product->id);
+                $this->db->update('sma_products', $dataToUpdate);
 
-                //echo "Product with code $productCode has updated name now i.e $new_name from $old_name<br>";
+                echo "Product with code $productCode has updated name now i.e $new_name from $old_name<br>";
             }else{
                 echo "Product with code $productCode was not found in database<br>";
             }
