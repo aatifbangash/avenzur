@@ -63,7 +63,7 @@ class Pay extends MY_Shop_Controller
                 }
 
                 $hashString . chr(10);
-
+                echo $hashString;exit;
                 //Generate SecureHash with SHA256
                 $secureHash = hash('sha256', $hashString, false);
 
