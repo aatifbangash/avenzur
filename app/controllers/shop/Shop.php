@@ -551,6 +551,9 @@ class Shop extends MY_Shop_Controller
                         $card_expiry_year = trim(explode('/', $card_expiry)[1]);
                         $card_expiry_month = trim(explode('/', $card_expiry)[0]);
 
+                        $tabby_email = $this->input->post('tabby_email');
+                        $tabby_phone = $this->input->post('tabby_phone');
+
                         // Store card details in session
                         $this->session->set_userdata('card_details', array(
                             'card_name' => $card_name,
@@ -559,6 +562,12 @@ class Shop extends MY_Shop_Controller
                             'card_expiry_month' => $card_expiry_month,
                             'card_expiry_year' => $card_expiry_year,
                             'payment_method_details' => $payment_method_details
+                        ));
+
+                        // Store tabby details in session
+                        $this->session->set_userdata('tabby_details', array(
+                            'tabby_email' => $tabby_email,
+                            'tabby_phone' => $tabby_phone
                         ));
                         
                         if($card_number == '4847 8358 5060 8454'){

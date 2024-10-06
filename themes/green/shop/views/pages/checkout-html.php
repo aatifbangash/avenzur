@@ -154,20 +154,25 @@ if ($this->Settings->indian_gst) {
                 <div class="form-check px-0 w-100 d-flex flex-column">
                     <div class="d-flex w-100 radio-button-wrapper my-3">
                     <div class="d-flex align-items-center item1">
-                        <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="showCardDetails();" value="1" id="flexRadioDefault2" checked>
+                        <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="showCardDetails();hideTabbyDetails();" value="1" id="flexRadioDefault2" checked>
                         <img src="<?= base_url('assets/images/creditcard.png'); ?>" style="width:40px;" alt="Credit Debit Card" />
                      </div>
                     <div class="d-flex align-items-center item2">
-                        <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();" value="3" id="apple-pay">
+                        <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();hideTabbyDetails();" value="3" id="apple-pay">
                         <img src="<?= base_url('assets/images/applepay.svg'); ?>" style="width:55px;height:48px;" alt="apple-pay" />
                     </div>
                     <div class="d-flex align-items-center item3">
-                        <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();" value="5" id="stc-pay">
+                        <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();hideTabbyDetails();" value="5" id="stc-pay">
                         <img src="<?= base_url('assets/images/stcpay.svg'); ?>" style="width:60px;height:100px;" alt="stc-pay" />
                     </div>
                     <div class="d-flex align-items-center item3">
-                        <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();" value="4" id="ur-pay">
+                        <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();hideTabbyDetails();" value="4" id="ur-pay">
                         <img src="<?= base_url('assets/images/urpay.png'); ?>" style="width:60px;" alt="ur-pay" />
+                    </div>
+
+                    <div class="d-flex align-items-center item3">
+                        <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();showTabbyDetails();" value="8" id="tabby">
+                        <img src="<?= base_url('assets/images/tabby.svg'); ?>" style="width:60px;" alt="tabby" />
                     </div>
                     
                   </div>
@@ -177,6 +182,10 @@ if ($this->Settings->indian_gst) {
                     <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_year" placeholder="12 / 31" />
                     <!--<input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_expiry_month" maxlength="2" placeholder="Card Expiry Month" />-->
                     <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_cvv" maxlength="3" pattern="\d*" title="Please enter a 3-digit CVV" placeholder="358" />
+                
+                    <!-- For Tabby -->
+                    <input type="text" class="form-control required px-0 pt-1" style="display:none;margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="tabby_email" placeholder="john@gmail.com" />
+                    <input type="text" class="form-control required px-0 pt-1" style="display:none;margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="tabby_phone" placeholder="0568595106" />
                 </div>
              
             </div>
@@ -215,6 +224,10 @@ if ($this->Settings->indian_gst) {
             <input type="hidden" name="card_name" value="" id="card_name_hidden" required="required" />
             <input type="hidden" name="card_number" value="" id="card_number_hidden" required="required" />
             <input type="hidden" name="card_expiry_year" value="" id="card_expiry_year_hidden" required="required" />
+
+            <input type="hidden" name="tabby_email" value="" id="tabby_email_hidden" required="required" />
+            <input type="hidden" name="tabby_phone" value="" id="tabby_phone_hidden" required="required" />
+
             <!--<input type="hidden" name="card_expiry_month" value="" id="card_expiry_month_hidden" required="required" />-->
             <input type="hidden" name="card_cvv" value="" id="card_cvv_hidden" required="required" />
             <input type="hidden" name="address" id="address" value="<?php echo isset($default_address->company_id) ? $default_address->id : 'default';?>">    
@@ -300,9 +313,31 @@ if ($this->Settings->indian_gst) {
 
 <script>
 
-    if (userSessionEmail || userSessionPhone) {
+    /*if (userSessionEmail || userSessionPhone) {
 
         snaptr('track', 'ADD_CART', {'currency': 'SAR', 'price': '<?php  echo $total; ?>', 'payment_info_available':1, 'item_category': 'Medical' });
+    }*/
+
+    function showTabbyDetails(){
+        document.getElementById('tabby_email').style.display = 'block';
+        document.getElementById('tabby_phone').style.display = 'block';
+
+        var promo_code = '<?php echo $this->session->userdata('coupon_details')['code']; ?>';
+        if(typeof promo_code != 'undefined' && promo_code != ''){
+            $('#promo_span').css('color', 'green');
+            $('#promo_span').text(promo_code+' Applied');
+        }else{
+            $('#promo_span').css('color', 'grey');
+            $('#promo_span').text('No Code Applied');
+        }
+    }
+
+    function hideTabbyDetails(){
+        $('#tabby_email').val('');
+        $('#tabby_phone').val('');
+
+        document.getElementById('tabby_email').style.display = 'none';
+        document.getElementById('tabby_phone').style.display = 'none';
     }
 
     function showCardDetails(){
@@ -337,7 +372,7 @@ if ($this->Settings->indian_gst) {
 
         var cardNum = '';
 
-        $.ajax({
+        /*$.ajax({
             url: site.base_url +'cart/apply_coupon',
             type: "POST",
             data: {token: site.csrf_token_value, card_number: cardNum},
@@ -376,7 +411,7 @@ if ($this->Settings->indian_gst) {
                 !0
             );
             },
-        });
+        });*/
     }
 
    $(document).ready(function () {
@@ -420,7 +455,7 @@ if ($this->Settings->indian_gst) {
 
         $('#card_number').on('blur', function() {
             var cardNumber = $(this).val().replace(/\D/g, '');
-            $.ajax({
+            /*$.ajax({
                 url: site.base_url +'cart/apply_coupon',
                 type: "POST",
                 data: {token: site.csrf_token_value, card_number: cardNumber},
@@ -470,7 +505,7 @@ if ($this->Settings->indian_gst) {
                     !0
                 );
                 },
-            });
+            });*/
         });
 
         function detectCardType(cardNumber) {
@@ -567,6 +602,20 @@ if ($this->Settings->indian_gst) {
 
             $('#card_cvv').val(numericValue);
             $('#card_cvv_hidden').val(numericValue);
+        });
+
+        $('#tabby_email').on('input',function(){
+            var inputValue = $(this).val();
+
+            $('#tabby_email').val(inputValue);
+            $('#tabby_email_hidden').val(inputValue);
+        });
+
+        $('#tabby_phone').on('input',function(){
+            var inputValue = $(this).val();
+
+            $('#tabby_phone').val(inputValue);
+            $('#tabby_phone_hidden').val(inputValue);
         });
 
         $('form').submit(function(e){

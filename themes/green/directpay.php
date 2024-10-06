@@ -35,6 +35,13 @@ if(isset($formdata["card_cvv"])){
 }
 
 
+if(isset($formdata["tabby_email"])){
+  $tabby_email = $formdata["tabby_email"];
+}
+if(isset($formdata["tabby_phone"])){
+  $tabby_phone = $formdata["tabby_phone"];
+}
+
 //$expiryDateYear = substr($expiryDateYear, -2);
 
 ?>
@@ -158,6 +165,14 @@ if(isset($formdata["card_cvv"])){
 
     <?php if(isset($cardCVV)){ ?>
       <input type="hidden" name="SecurityCode" value="<?php echo $cardCVV?>">
+    <?php } ?>
+
+    <?php if(isset($tabby_email)){ ?>
+      <input type="hidden" name="email" value="<?php echo $tabby_email?>">
+    <?php } ?>
+
+    <?php if(isset($tabby_phone)){ ?>
+      <input type="hidden" name="phoneNumber" value="<?php echo $tabby_phone?>">
     <?php } ?>
 
     <input name="SecureHash" type="hidden" value="<?php echo $secureHash?>" />
