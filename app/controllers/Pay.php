@@ -289,6 +289,10 @@ class Pay extends MY_Shop_Controller
                 $hashData['PaymentDescription'] = urlencode($paymentDescription);
                 $hashData['GenerateToken'] = $generateToken;
                 $hashData['PaymentMethod'] = $paymentMethod;
+                if($tabby_details && $paymentMethod == 8){
+                    $hashData["email"] = $tabby_details['tabby_email'];
+                    $hashData["phoneNumber"] = $tabby_details['tabby_phone'];
+                }
 
                 // prepare Payment Request parameters and Send It to Redirect handle Page
                 $finalData["TransactionID"] = $transactionId;
