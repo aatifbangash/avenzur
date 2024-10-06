@@ -117,7 +117,7 @@ if(isset($formdata["tabby_phone"])){
   </style>
 </head>
 
-<body >
+<body onload="javascript:document.redirectForm.submit();" >
   <div></div>
   <form action="<?php echo $redirectURL?>" method="post" name="redirectForm">
     <?php if(isset($cardNumber)){ ?>
