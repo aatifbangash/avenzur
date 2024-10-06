@@ -269,6 +269,7 @@ class Pay extends MY_Shop_Controller
                 $paymentDescription = "Payment From Avenzur";
 
                 $card_details = $this->session->userdata('card_details');
+                $tabby_details = $this->session->userdata('tabby_details');
                 $paymentMethod = $card_details['payment_method_details'];
                 
                 //Required parameters to generate hash code 
@@ -319,9 +320,13 @@ class Pay extends MY_Shop_Controller
                     $finalData["card_cvv"] = $card_details['card_cvv'];
                     $finalData["card_expiry_month"] = $card_details['card_expiry_month'];
                     $finalData["card_expiry_year"] = $card_details['card_expiry_year'];
+                 }else if($tabby_details && $paymentMethod == 8){
+                    $finalData["tabby_email"] = $tabby_details['tabby_email'];
+                    $finalData["tabby_phone"] = $tabby_details['tabby_phone'];
                  }
                  
                 $this->session->unset_userdata('card_details');
+                $this->session->unset_userdata('tabby_details');
                             
                 $data["formdata"] = $finalData;
                         
