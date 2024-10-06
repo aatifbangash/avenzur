@@ -155,24 +155,24 @@ if ($this->Settings->indian_gst) {
                     <div class="d-flex w-100 radio-button-wrapper my-3">
                     <div class="d-flex align-items-center item1">
                         <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="showCardDetails();hideTabbyDetails();" value="1" id="flexRadioDefault2" checked>
-                        <img src="<?= base_url('assets/images/creditcard.png'); ?>" style="width:40px;" alt="Credit Debit Card" />
+                        <img src="<?= base_url('assets/images/creditcard.png'); ?>" style="width:32px;" alt="Credit Debit Card" />
                      </div>
                     <div class="d-flex align-items-center item2">
                         <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();hideTabbyDetails();" value="3" id="apple-pay">
-                        <img src="<?= base_url('assets/images/applepay.svg'); ?>" style="width:55px;height:48px;" alt="apple-pay" />
+                        <img src="<?= base_url('assets/images/applepay.svg'); ?>" style="width:50px;height:48px;" alt="apple-pay" />
                     </div>
                     <div class="d-flex align-items-center item3">
                         <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();hideTabbyDetails();" value="5" id="stc-pay">
-                        <img src="<?= base_url('assets/images/stcpay.svg'); ?>" style="width:60px;height:100px;" alt="stc-pay" />
+                        <img src="<?= base_url('assets/images/stcpay.svg'); ?>" style="width:55px;height:100px;" alt="stc-pay" />
                     </div>
-                    <div class="d-flex align-items-center item3">
+                    <div class="d-flex align-items-center item4">
                         <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();hideTabbyDetails();" value="4" id="ur-pay">
-                        <img src="<?= base_url('assets/images/urpay.png'); ?>" style="width:60px;" alt="ur-pay" />
+                        <img src="<?= base_url('assets/images/urpay.png'); ?>" style="width:55px;" alt="ur-pay" />
                     </div>
 
                     <div class="d-flex align-items-center item3">
                         <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();showTabbyDetails();" value="8" id="tabby">
-                        <img src="<?= base_url('assets/images/tabby.svg'); ?>" style="width:60px;" alt="tabby" />
+                        <img src="<?= base_url('assets/images/tabby.svg'); ?>" style="width:55px;" alt="tabby" />
                     </div>
                     
                   </div>
