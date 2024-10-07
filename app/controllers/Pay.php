@@ -63,7 +63,7 @@ class Pay extends MY_Shop_Controller
                 }
 
                 $hashString . chr(10);
-                echo $hashString;exit;
+                //echo $hashString;exit;
                 //Generate SecureHash with SHA256
                 $secureHash = hash('sha256', $hashString, false);
 
@@ -267,66 +267,116 @@ class Pay extends MY_Shop_Controller
                 $clientIp = $this->getclientIP();
                 $generateToken = "yes";
                 $paymentDescription = "Payment From Avenzur";
+                $language = "en";
 
                 $card_details = $this->session->userdata('card_details');
                 $tabby_details = $this->session->userdata('tabby_details');
                 $paymentMethod = $card_details['payment_method_details'];
-                
-                //Required parameters to generate hash code 
-                $hashData['TransactionID'] = $transactionId;
-                $hashData['MerchantID'] = $MerchantID;
-                $hashData['Amount'] = $totalAmount;
-                $hashData['CurrencyISOCode'] = $currencyCode;
-                $hashData['MessageID'] = $messageId;
-                $hashData['Quantity'] = $quantity;
-                $hashData['Channel'] = $channel;
 
-                //optional parameters to generate hash code
-                $hashData['ThemeID'] = $themeId;
-                $hashData['ResponseBackURL'] = $responseBackURL;
-                $hashData['Version'] = $version;
-                $hashData['ItemID'] = $itemId;
-                $hashData['PaymentDescription'] = urlencode($paymentDescription);
-                $hashData['GenerateToken'] = $generateToken;
-                $hashData['PaymentMethod'] = $paymentMethod;
                 if($tabby_details && $paymentMethod == 8){
-                    $hashData["email"] = $tabby_details['tabby_email'];
+                    $version = '2.0';
+                    $channel = 1;
+                }
+                
+                
+                if($tabby_details && $paymentMethod == 8){
+                    // Hash Data For Tabby
+                    $hashData['Amount'] = $totalAmount;
+                    $hashData['Channel'] = $channel;
+                    $hashData['CurrencyISOCode'] = $currencyCode;
+                    $hashData['Language'] = $language;
+                    $hashData['MerchantID'] = $MerchantID;
+                    $hashData['MessageID'] = $messageId;
+                    $hashData['PaymentDescription'] = urlencode($paymentDescription);
+                    $hashData['PaymentMethod'] = $paymentMethod;
+                    $hashData['ResponseBackURL'] = $responseBackURL;
+                    $hashData['TransactionID'] = $transactionId;
+                    $hashData['Version'] = $version;
+                    $hashData["email"] = urlencode($tabby_details['tabby_email']);
                     $hashData["phoneNumber"] = $tabby_details['tabby_phone'];
+                }else{
+                    //Required parameters to generate hash code 
+                    $hashData['TransactionID'] = $transactionId;
+                    $hashData['MerchantID'] = $MerchantID;
+                    $hashData['Amount'] = $totalAmount;
+                    $hashData['CurrencyISOCode'] = $currencyCode;
+                    $hashData['MessageID'] = $messageId;
+                    $hashData['Quantity'] = $quantity;
+                    $hashData['Channel'] = $channel;
+
+                    //optional parameters to generate hash code
+                    $hashData['ThemeID'] = $themeId;
+                    $hashData['ResponseBackURL'] = $responseBackURL;
+                    $hashData['Version'] = $version;
+                    $hashData['ItemID'] = $itemId;
+                    $hashData['PaymentDescription'] = urlencode($paymentDescription);
+                    $hashData['GenerateToken'] = $generateToken;
+                    $hashData['PaymentMethod'] = $paymentMethod;
                 }
 
-                // prepare Payment Request parameters and Send It to Redirect handle Page
-                $finalData["TransactionID"] = $transactionId;
-                $finalData["MerchantID"] = $MerchantID;
-                $finalData["Amount"] = $totalAmount;
-                $finalData["CurrencyISOCode"] = $currencyCode;
-                $finalData["MessageID"] = $messageId;
-                $finalData["Quantity"] = $quantity;
-                $finalData["Channel"] = $channel;
-                $finalData["ThemeID"] = $themeId;
-                $finalData["ItemID"] = $itemId;
-                $finalData["ResponseBackURL"] = $responseBackURL;
-                $finalData["Version"] = $version;
-                $finalData['PaymentDescription'] = $paymentDescription;
-                $finalData['GenerateToken'] = $generateToken;
-                
-                
                 $redirectHandle = site_url('pay/RedirectPaymentResponsePage');
-                
                 $secureHash = $this->setSecureHash($hashData, $authenticationToken);
-                
-                 $finalData["RedirectURL"] = $redirectURL;
-                 $finalData['PaymentMethod'] = $paymentMethod;
-                 $finalData["SecureHash"] = $secureHash;
+
+                // prepare Payment Request parameters and Send It to Redirect handle Page
                  
                  if ($card_details && $paymentMethod == 1) {
+                    $finalData["TransactionID"] = $transactionId;
+                    $finalData["MerchantID"] = $MerchantID;
+                    $finalData["Amount"] = $totalAmount;
+                    $finalData["CurrencyISOCode"] = $currencyCode;
+                    $finalData["MessageID"] = $messageId;
+                    $finalData["Quantity"] = $quantity;
+                    $finalData["Channel"] = $channel;
+                    $finalData["ThemeID"] = $themeId;
+                    $finalData["ItemID"] = $itemId;
+                    $finalData["ResponseBackURL"] = $responseBackURL;
+                    $finalData["Version"] = $version;
+                    $finalData['PaymentDescription'] = $paymentDescription;
+                    $finalData['GenerateToken'] = $generateToken;
+                    
+                    $finalData["RedirectURL"] = $redirectURL;
+                    $finalData['PaymentMethod'] = $paymentMethod;
+                    $finalData["SecureHash"] = $secureHash;
                     $finalData["card_name"] = $card_details['card_name'];
                     $finalData["card_number"] = $card_details['card_number'];
                     $finalData["card_cvv"] = $card_details['card_cvv'];
                     $finalData["card_expiry_month"] = $card_details['card_expiry_month'];
                     $finalData["card_expiry_year"] = $card_details['card_expiry_year'];
                  }else if($tabby_details && $paymentMethod == 8){
+                    // Form Data For Tabby
+                    $finalData["Amount"] = $totalAmount;
+                    $finalData["Channel"] = $channel;
+                    $finalData["CurrencyISOCode"] = $currencyCode;
+                    $finalData['Language'] = $language;
+                    $finalData["MerchantID"] = $MerchantID;
+                    $finalData["MessageID"] = $messageId;
+                    $finalData['PaymentDescription'] = $paymentDescription;
+                    $finalData["RedirectURL"] = $redirectURL;
+                    $finalData['PaymentMethod'] = $paymentMethod;
+                    $finalData["ResponseBackURL"] = $responseBackURL;
+                    $finalData["TransactionID"] = $transactionId;
+                    $finalData["Version"] = $version;
                     $finalData["tabby_email"] = $tabby_details['tabby_email'];
                     $finalData["tabby_phone"] = $tabby_details['tabby_phone'];
+                    $finalData["SecureHash"] = $secureHash;
+                 }else{
+                    $finalData["TransactionID"] = $transactionId;
+                    $finalData["MerchantID"] = $MerchantID;
+                    $finalData["Amount"] = $totalAmount;
+                    $finalData["CurrencyISOCode"] = $currencyCode;
+                    $finalData["MessageID"] = $messageId;
+                    $finalData["Quantity"] = $quantity;
+                    $finalData["Channel"] = $channel;
+                    $finalData["ThemeID"] = $themeId;
+                    $finalData["ItemID"] = $itemId;
+                    $finalData["ResponseBackURL"] = $responseBackURL;
+                    $finalData["Version"] = $version;
+                    $finalData['PaymentDescription'] = $paymentDescription;
+                    $finalData['GenerateToken'] = $generateToken;
+                    
+                    $finalData["RedirectURL"] = $redirectURL;
+                    $finalData['PaymentMethod'] = $paymentMethod;
+                    $finalData["SecureHash"] = $secureHash;
                  }
                  
                 $this->session->unset_userdata('card_details');
