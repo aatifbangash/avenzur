@@ -1,14 +1,19 @@
 <?php
 
-
-$redirectURL= $formdata["RedirectURL"];
+if(isset($formdata["RedirectURL"])){
+  $redirectURL= $formdata["RedirectURL"];
+}
 $merchantID= $formdata['MerchantID'];
 $amount= $formdata['Amount'];
 $currencyCode= $formdata['CurrencyISOCode'];
 $messageID= $formdata['MessageID'];
 $transactionID = $formdata['TransactionID'];
-$themeID= $formdata['ThemeID'];
-$ItemID= $formdata['ItemID'];
+if(isset($formdata["ThemeID"])){
+  $themeID= $formdata['ThemeID'];
+}
+if(isset($formdata["ItemID"])){
+  $ItemID= $formdata['ItemID'];
+}
 $responseBackURL= $formdata['ResponseBackURL'];
 $quantity= $formdata['Quantity'];
 $channel= $formdata['Channel'];
@@ -16,7 +21,9 @@ $secureHash= $formdata['SecureHash'];
 $version= $formdata['Version'];
 $paymentMethod =$formdata["PaymentMethod"];
 $paymentDescription= $formdata['PaymentDescription'];
-$genertaeToken =$formdata["GenerateToken"];
+if(isset($formdata["GenerateToken"])){
+  $genertaeToken =$formdata["GenerateToken"];
+}
 if(isset($formdata["card_number"])){
   $cardNumber = $formdata["card_number"];
   $cardNumber = preg_replace('/\s+/', '', $cardNumber);
@@ -34,7 +41,9 @@ if(isset($formdata["card_cvv"])){
   $cardCVV = $formdata["card_cvv"];
 }
 
-
+if(isset($formdata["Language"])){
+  $Language = $formdata["Language"];
+}
 if(isset($formdata["tabby_email"])){
   $tabby_email = $formdata["tabby_email"];
 }
@@ -137,21 +146,31 @@ if(isset($formdata["tabby_phone"])){
 
     <input name="CurrencyISOCode" type="hidden" value="<?php echo $currencyCode?>" />
 
+    <?php if(isset($Language)){ ?>
+      <input name="Language" type="hidden" value="<?php echo $Language?>">
+    <?php } ?>
+
     <input name="MessageID" type="hidden" value="<?php echo $messageID?>" />
 
     <?php if(isset($expiryDateYear)){ ?>
-      <input type="hidden" name="ExpiryDateYear" value="<?php echo $expiryDateYear?>">
+      <input name="ExpiryDateYear" type="hidden" value="<?php echo $expiryDateYear?>">
     <?php } ?>
 
     <input name="TransactionID" type="hidden" value="<?php echo $transactionID?>" />
 
-    <input name="ThemeID" type="hidden" value="<?php echo $themeID?>" />
+    <?php if(isset($themeID)){ ?>
+      <input name="ThemeID" type="hidden" value="<?php echo $themeID?>" />
+    <?php } ?>
 
-    <input name="ItemID" type="hidden" value="<?php echo $ItemID?>" />
+    <?php if(isset($ItemID)){ ?>
+      <input name="ItemID" type="hidden" value="<?php echo $ItemID?>" />
+    <?php } ?>
 
     <input name="ResponseBackURL" type="hidden" value="<?php echo $responseBackURL?>" />
 
+    <?php if(isset($quantity)){ ?>
     <input name="Quantity" type="hidden" value="<?php echo $quantity?>" />
+    <?php } ?>
 
     <input name="Channel" type="hidden" value="<?php echo $channel?>" />
 
@@ -161,18 +180,20 @@ if(isset($formdata["tabby_phone"])){
 
     <input name="PaymentDescription" type="hidden" value="<?php echo $paymentDescription?>" />
 
-    <input name="GenerateToken" type="hidden" value="<?php echo $genertaeToken?>" />
+    <?php if(isset($genertaeToken)){ ?>
+      <input name="GenerateToken" type="hidden" value="<?php echo $genertaeToken?>" />
+    <?php } ?>
 
     <?php if(isset($cardCVV)){ ?>
-      <input type="hidden" name="SecurityCode" value="<?php echo $cardCVV?>">
+      <input name="SecurityCode" type="hidden" value="<?php echo $cardCVV?>">
     <?php } ?>
 
     <?php if(isset($tabby_email)){ ?>
-      <input type="hidden" name="email" value="<?php echo $tabby_email?>">
+      <input name="email" type="hidden" value="<?php echo $tabby_email?>">
     <?php } ?>
 
     <?php if(isset($tabby_phone)){ ?>
-      <input type="hidden" name="phoneNumber" value="<?php echo $tabby_phone?>">
+      <input name="phoneNumber" type="hidden" value="<?php echo $tabby_phone?>">
     <?php } ?>
 
     <input name="SecureHash" type="hidden" value="<?php echo $secureHash?>" />
