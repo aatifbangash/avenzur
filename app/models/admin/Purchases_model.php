@@ -107,12 +107,17 @@ class Purchases_model extends CI_Model
             foreach ($items as $item) {
                 $item['purchase_id'] = $purchase_id;
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
+                
+                if($data['status'] == 'received'){
+                    $uuid = $this->sma->generateUUIDv4();
+                    $item['avz_item_code'] = $uuid;
+                }
                 $this->db->insert('purchase_items', $item);
                 
                 //handle inventory movement
                 if($item['status']=='received'){
                     $type = $item['quantity'] < 0 ? 'return_to_supplier' : 'purchase';
-                $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost']);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost'], $uuid);
                 }
                 // Code for serials here
                 $serials_reference = $data['reference_no'];
@@ -775,13 +780,19 @@ class Purchases_model extends CI_Model
             foreach ($items as $item) {
                 $item['purchase_id'] = $id;
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
+                
+                if($data['status'] == 'received'){
+                    $uuid = $this->sma->generateUUIDv4();
+                    $item['avz_item_code'] = $uuid;
+                }
+                
                 $this->db->insert('purchase_items', $item);
                 if ($data['status'] == 'received' || $data['status'] == 'partial') {
                     $this->updateAVCO(['product_id' => $item['product_id'], 'batch' => $item['batchno'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'cost' => $item['real_unit_cost']]);
                 }
                 
                 if($item['status']=='received'){
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost']);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost'], $uuid);
                 }
                 // $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
                 // Code for serials here
