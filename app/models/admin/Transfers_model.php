@@ -201,9 +201,9 @@ class Transfers_model extends CI_Model
                 if ($status == 'sent' || $status == 'completed') {
                     if($status == 'completed') { 
                         //Inventory Movement - Transfer IN
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code']);
                         ////Inventory Movement - Transfer Out
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code']);
                     }
                     $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'add');
                 }
@@ -296,13 +296,56 @@ class Transfers_model extends CI_Model
                 ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
                 ->group_by('purchase_items.id')
                 ->where('transfer_id', $transfer_id);
+
+            /*$this->db->select('
+                pi.*,
+                pv.name as variant,
+                p.unit,
+                p.hsn_code as hsn_code,
+                p.second_name as second_name,
+                SUM(CASE 
+                    WHEN im.type = "purchase" THEN im.quantity 
+                    WHEN im.type IN ("sale", "transfer") THEN -im.quantity 
+                    ELSE 0 
+                END) as available_quantity
+            ')
+            ->from('purchase_items pi')
+            ->join('products p', 'p.id = pi.product_id', 'left')
+            ->join('product_variants pv', 'pv.id = pi.option_id', 'left')
+            ->join('inventory_movements im', 'im.avz_item_code = pi.avz_item_code', 'left')  // Join inventory movements based on avz_item_code
+            ->where('pi.transfer_id', $transfer_id)  // Optional: filter based on a specific transfer_id
+            ->where('im.location_id', $warehouse_id) // Ensure we are filtering by warehouse (location_id)
+            ->group_by('pi.id')  // Group by the purchase item
+            ->having('available_quantity > 0');*/
         } else {
-            $this->db->select('transfer_items.*, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
+                $this->db->select('transfer_items.*, SUM(IFNULL(im.quantity, 0)) as base_quantity, im.avz_item_code, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
                 ->from('transfer_items')
                 ->join('products', 'products.id=transfer_items.product_id', 'left')
                 ->join('product_variants', 'product_variants.id=transfer_items.option_id', 'left')
-                ->group_by('transfer_items.id')
+                ->join('inventory_movements im', 'transfer_items.avz_item_code = im.avz_item_code', 'left')
+                ->group_by(['transfer_items.id', 'im.avz_item_code'])
                 ->where('transfer_id', $transfer_id);
+
+                /*$this->db->select('
+                    pi.*,
+                    pv.name as variant,
+                    p.unit,
+                    p.hsn_code as hsn_code,
+                    p.second_name as second_name,
+                    SUM(CASE 
+                        WHEN im.type = "purchase" THEN im.quantity 
+                        WHEN im.type IN ("sale", "transfer") THEN -im.quantity 
+                        ELSE 0 
+                    END) as available_quantity
+                ')
+                ->from('transfer_items pi')
+                ->join('products p', 'p.id = pi.product_id', 'left')
+                ->join('product_variants pv', 'pv.id = pi.option_id', 'left')
+                ->join('inventory_movements im', 'im.avz_item_code = pi.avz_item_code', 'left')  // Join inventory movements based on avz_item_code
+                ->where('pi.transfer_id', $transfer_id)  // Optional: filter based on a specific transfer_id
+                ->where('im.location_id', $warehouse_id) // Ensure we are filtering by warehouse (location_id)
+                ->group_by('pi.id')  // Group by the purchase item
+                ->having('available_quantity > 0');*/
         }
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
@@ -835,9 +878,9 @@ class Transfers_model extends CI_Model
                     $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'edit');
                     if($data['status'] == 'completed'){
                         //Inventory Movement - Transfer IN
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code']);
                         //Inventory Movement - Transfer Out
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code']);
                         }
                 }
             }

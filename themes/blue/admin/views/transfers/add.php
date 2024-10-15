@@ -124,7 +124,7 @@
             select: function (event, ui) {
                 event.preventDefault();
                 if (ui.item.id !== 0) {
-                    console.log('itemid', ui.item);
+                    
                     openPopup(ui.item);
                     $(this).val('');
                     // var row = add_transfer_item(ui.item);
@@ -186,55 +186,77 @@
 
                     // Loop through each item and create clickable entries in the modal
                     var table = `
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Supplier</th>
-                <th>Batch No</th>
-                <th>Expiry</th>
-                <th>Quantity</th>
-            </tr>
-        </thead>
-        <tbody id="itemTableBody"></tbody>
-    </table>
-`;
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th>Supplier</th>
+                                    <th>Batch No</th>
+                                    <th>Expiry</th>
+                                    <th>Quantity</th>
+                                    <th>Locked</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemTableBody"></tbody>
+                        </table>
+                    `;
 
                     // Append the table to the modal body
                     modalBody.append(table);
-
+                    
                     // Populate the table body with the data
+                    var count = 0;
+                    var toitemsStorageValue = JSON.parse(localStorage.getItem('toitems'));
                     data.forEach(function (item) {
+                        count++;
+
+                        var avzItemCode = item.row.avz_item_code;
+                        var found = false;
+
+                        Object.keys(toitems).forEach(function (key) {
+                            if (toitems[key].row && toitems[key].row.avz_item_code === avzItemCode) {
+                                found = true;
+                            }
+                        });
+
+                        var tickOrCross = found ? '✔' : '✖';
+
                         var row = `
-        <tr class="modal-item" tabindex="0" data-item-id="${item.avz_item_code}">
-            <td>${item.product_name}</td>
-            <td>${item.supplier}</td>
-            <td>${item.batchno}</td>
-            <td>${item.expiry}</td>
-            <td>${item.total_quantity}</td>
-        </tr>
-    `;
+                            <tr style="cursor:pointer;" class="modal-item" tabindex="0" data-item-id="${item.row.avz_item_code}">
+                                <td>${count}</td>
+                                <td data-product="${item.row.name}">${item.row.name}</td>
+                                <td data-supplier="${item.row.supplier}">${item.row.supplier}</td>
+                                <td data-batchno="${item.row.batchno}">${item.row.batchno}</td>
+                                <td data-expiry="${item.row.expiry}">${item.row.expiry}</td>
+                                <td data-quantity="${item.total_quantity}">${item.total_quantity}</td>
+                                <td>${tickOrCross}</td>
+                            </tr>
+                        `;
                         $('#itemTableBody').append(row);
+                        $('#itemTableBody tr:last-child').data('available', found);
                     });
 
                     // Show the modal
                     $('#itemModal').modal('show');
                     $('#itemTableBody').on('click', 'tr', function () {
-                        // Get the clicked item's data
-                        var selectedItem = {
-                            avz_item_code: $(this).data('item-id'),
-                            product_name: $(this).data('product'),
-                            supplier: $(this).data('supplier'),
-                            batchno: $(this).data('batchno'),
-                            expiry: $(this).data('expiry'),
-                            total_quantity: $(this).data('quantity')
-                        };
+                        
+                        var clickedItemCode = $(this).data('item-id');
+                        var selectedItem = data.find(function (item) {
+                            return item.row.avz_item_code === clickedItemCode;
+                        });
 
-                        // Close the modal
-                        $('#itemModal').modal('hide');
-
-                        // Call the add_transfer_item function with the selected item
-                        add_transfer_item(selectedItem);
+                        if (selectedItem) {
+                            $('#itemModal').modal('hide');
+                            var available = $(this).data('available');
+                            if(!available){
+                                add_transfer_item(selectedItem);
+                            }else{
+                                bootbox.alert('Row already added');
+                            }
+                        }else{
+                            console.log('Item not found');
+                        }
                     });
                     
                 } else {
@@ -277,7 +299,7 @@
         var row = add_transfer_item(selectedRecord);
         if (row) {
             // If the row was successfully added, you can do additional actions here
-            console.log('Item added:', selectedRecord);
+            
         }
     }
 
@@ -431,7 +453,7 @@
 
                                         <tr>
                                             <th class="col-md-4"><?= lang('product') . ' (' . lang('code') . ' - ' . lang('name') . ')'; ?></th>
-                                            <th class="col-md-1">Serial No. </th>
+                                            
                                             <th class="col-md-1">Batch </th>
                                             <?php
                                             if ($Settings->product_expiry) {

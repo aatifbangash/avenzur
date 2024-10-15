@@ -1454,7 +1454,17 @@ function loadItems() {
                 tr_html +=
                 '<td class="text-right"><span class="text-right item_expiry" id="item_expiry' +
                 row_no +
-                '">' +item_expiry+'</span></td>';
+                '">' +item_expiry+'</span><input name="item_expiry[]" type="hidden" value="' +
+                item_expiry +
+                '"><input name="batchno[]" type="hidden" value="' +
+                item.row.batchno +
+                '"><input name="item_unit_cost[]" type="hidden" value="' +
+                item.row.net_unit_cost +
+                '"><input name="real_unit_cost[]" type="hidden" value="' +
+                item.row.real_unit_cost +
+                '"><input name="avz_item_code[]" type="hidden" value="' +
+                item.row.avz_item_code +
+                '"></td>';
 
             tr_html +=
                 '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' +
@@ -1484,7 +1494,8 @@ function loadItems() {
                 //  alert(item_code + " - "+item_name + " Expired Please Remove from the list"); 
                  $('#row_' + row_no).addClass('danger');
             }
-            if (item_type == 'standard' && item.options !== false) {
+            
+            if (item_type == 'standard' && item.options !== false && item.options.length > 0) {
                 $.each(item.options, function () {
                     if (this.id == item_option && base_quantity > this.quantity) {
                         $('#row_' + row_no).addClass('danger');
@@ -1789,6 +1800,9 @@ function add_invoice_item(item) {
         positems[item_id] = item;
     }
     display_item_id = item_id;
+    positems[item_id].row.base_quantity = positems[item_id].row.qty;
+    positems[item_id].row.price = positems[item_id].row.net_unit_sale;
+    positems[item_id].row.real_unit_price = positems[item_id].row.net_unit_sale;
     positems[item_id].order = new Date().getTime();
     localStorage.setItem('positems', JSON.stringify(positems));
     loadItems();

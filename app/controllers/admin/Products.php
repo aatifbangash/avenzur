@@ -4796,23 +4796,68 @@ class Products extends MY_Controller
             return;
         }
     
-        $this->db->select('pi.avz_item_code, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
+        $this->db->select('pi.avz_item_code, pi.product_code, im.net_unit_sale, im.net_unit_cost, im.real_unit_cost, pr.tax_rate, pr.type, pr.unit, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
         $this->db->from('sma_purchase_items pi');
         $this->db->join('sma_purchases p', 'p.id = pi.purchase_id', 'left');
         $this->db->join('sma_inventory_movements im', 'pi.avz_item_code = im.avz_item_code', 'left');
+        $this->db->join('sma_products pr', 'pr.id = pi.product_id', 'left');
         $this->db->where('pi.product_id', $item_id);
         if ($warehouse_id) {
-            // Optionally filter by warehouse if warehouse_id is provided
             $this->db->where('pi.warehouse_id', $warehouse_id);
+            $this->db->where('im.location_id', $warehouse_id);
         }
         $this->db->group_by(['pi.warehouse_id', 'pi.avz_item_code', 'pi.expiry']);
-
-  
-     $query = $this->db->get();
+        $this->db->having('total_quantity >', 0);
+        $query = $this->db->get();
     
         if ($query->num_rows() > 0) {
-            // Return the matching items as a JSON array
-            echo json_encode($query->result_array());
+            $rows = $query->result();
+
+            $r = 0;
+            $count = 0;
+
+            foreach ($rows as $row) {
+                $c                     = uniqid(mt_rand(), true);
+                $option                = false;
+                $row->quantity         = $row->total_quantity;
+                //$row->item_tax_method  = $row->tax_method;
+                $row->base_quantity    = 0;
+                //$row->net_unit_cost    = 0; // commented because coming in query
+                //$row->base_unit        = $row->unit;
+                //$row->base_unit_cost   = $row->cost;
+                //$row->unit             = $row->purchase_unit ? $row->purchase_unit : $row->unit;
+                $row->qty              = $row->total_quantity;
+                $row->discount         = '0';
+
+                $row->quantity_balance = 0;
+                $row->ordered_quantity = 0;
+                $row->cost = 0;
+
+                $row->batch_no = $row->batchno;
+                $row->batchQuantity = 0;
+                $row->batchPurchaseCost = 0;
+                //$row->expiry  = null;
+
+                $row->id = $row->product_id;
+                $row->name = $row->product_name;
+                $row->code = $row->product_code;
+
+                $row->base_unit = $row->unit;
+
+                $units               = $this->site->getUnitsByBUID($row->base_unit);
+                $tax_rate            = $this->site->getTaxRateByID($row->tax_rate);
+
+                $batches = [];
+                $options = [];
+                $total_quantity = $row->total_quantity;
+                $count++;
+                $row->serial_no = $count;
+                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->product_id, 'label' => $row->product_name . ' (' . $row->code . ')',
+                    'row'     => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options,  'batches'=>$batches, 'total_quantity' => $total_quantity ];
+                $r++;
+            }
+            $this->sma->send_json($pr);
+            
         } else {
             // Return an error if no records found
             echo json_encode(['status' => 'error', 'message' => 'No items found for this item code']);
