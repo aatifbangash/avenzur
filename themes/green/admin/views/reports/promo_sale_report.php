@@ -42,7 +42,7 @@
             if($viewtype!='pdf')
             {
             $attrib = ['data-toggle' => 'validator', 'role' => 'form' ,'id' => 'searchForm'];
-            echo admin_form_open_multipart('reports/promo_code_report', $attrib)
+            echo admin_form_open_multipart('reports/daily_sales_with_promo_code', $attrib)
             ?>
              <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" > 
                 <div class="row">
