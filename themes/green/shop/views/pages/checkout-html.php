@@ -170,10 +170,7 @@ if ($this->Settings->indian_gst) {
                         <img src="<?= base_url('assets/images/urpay.png'); ?>" style="width:55px;" alt="ur-pay" />
                     </div>
 
-                    <div class="d-flex align-items-center item3">
-                        <input class="form-check-input" style="float:none;" type="radio" name="payment_method_details" onclick="hideCardDetails();showTabbyDetails();" value="8" id="tabby">
-                        <img src="<?= base_url('assets/images/tabby.svg'); ?>" style="width:55px;" alt="tabby" />
-                    </div>
+                    
                     
                   </div>
                     <input type="text" class="form-control required px-0 pt-1" style="margin-bottom: 5px;padding: 12px !important;font-size: 14px;" value="" id="card_name" placeholder="John Doe" />
