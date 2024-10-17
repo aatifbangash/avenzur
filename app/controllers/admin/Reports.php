@@ -4077,6 +4077,10 @@ class Reports extends MY_Controller
 
     public function daily_sales_with_promo_code(){
 
+        ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
         $this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
