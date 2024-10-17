@@ -1058,6 +1058,11 @@
                                             <i class="fa fa-line-chart"></i><span class="text"> <?= lang('Promotion_Items_Report'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="reports_promo_sales">
+                                        <a href="<?= admin_url('reports/daily_sales_with_promo_code') ?>">
+                                            <i class="fa fa-calendar"></i><span class="text"> <?= lang('promo_code_sale'); ?></span>
+                                        </a>
+                                    </li>
                                     
                                 </ul>
                             </li>
@@ -1150,6 +1155,7 @@
                                             <i class="fa fa-heart"></i><span class="text"> <?= lang('sales_report'); ?></span>
                                         </a>
                                     </li>
+                                   
                                     <li id="reports_payments">
                                         <a href="<?= admin_url('reports/payments') ?>">
                                             <i class="fa fa-money"></i><span class="text"> <?= lang('payments_report'); ?></span>

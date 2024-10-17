@@ -173,6 +173,13 @@
                         <p><?= lang('daily_sales') ?></p>
                     </a>
                 </div>
+                <div class="col-md-2 col-xs-4 padding1010">
+                    <a class="bdarkGreen white quick-button" href="<?= admin_url('reports/promotion_items_report') ?>">
+                        <i class="fa fa-calendar-o"></i>
+
+                        <p><?= lang('promo_code_sale') ?></p>
+                    </a>
+                </div>
 
                 <div class="col-md-2 col-xs-4 padding1010">
                     <a class="bdarkGreen white quick-button" href="<?= admin_url('reports/monthly_sales') ?>">

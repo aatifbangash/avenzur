@@ -30,6 +30,7 @@ $lang['profit_loss']              = 'Profit and/or Loss';
 $lang['daily_sales_report']       = 'Daily Sales Report';
 $lang['reports_calendar_text']    = 'You can change the month by clicking the >> (next) or << (previous)';
 $lang['monthly_sales_report']     = 'Monthly Sales Report';
+$lang['promo_code_sale']           = 'Promo Code Report';
 $lang['product_qty']              = 'Product (Qty)';
 $lang['payment_ref']              = 'Payment Reference';
 $lang['sale_ref']                 = 'Sale Reference';
