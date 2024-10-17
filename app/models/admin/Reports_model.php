@@ -1010,7 +1010,7 @@ class Reports_model extends CI_Model
             ORDER BY 
                 s.date DESC");
             
-        $results = $query->getResultArray(); 
+        $results = $query->result_array(); 
         return $results;
     }
 
