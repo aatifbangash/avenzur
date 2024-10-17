@@ -4073,7 +4073,7 @@ class Reports extends MY_Controller
         }
     }
 
-    
+
 
     public function daily_sales_with_promo_code(){
 
@@ -4150,7 +4150,7 @@ class Reports extends MY_Controller
             if ($viewtype == 'pdf') {
                 $this->data['viewtype'] = $viewtype;
                 $name = lang('suppliers_trial_balance_report') . '.pdf';
-                $html = $this->load->view($this->theme . 'r', $this->data, true);
+                $html = $this->load->view($this->theme . 'reports/suppliers_trial_balance', $this->data, true);
                 $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
             } else {
                 $this->page_construct('reports/suppliers_trial_balance', $meta, $this->data);
