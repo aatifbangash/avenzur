@@ -998,8 +998,8 @@ class Reports_model extends CI_Model
             JOIN 
                 sma_coupons c ON s.coupon_code = c.referrer_code
             WHERE 
-                s.date >= '2024-10-01'   
-                AND s.date <= '2024-10-15'  
+                s.date >= ${$start_date}   
+                AND s.date <= ${$end_date}  
                 AND s.coupon_code IS NOT NULL
                 AND si.product_code IS NOT NULL
                 AND JSON_CONTAINS(c.product_ids, CAST(si.product_id AS JSON), '$')  -- Check if product_id is in product_ids
