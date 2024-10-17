@@ -99,7 +99,7 @@
                                     <td><?= $data['product_code']; ?></td>
                                     <td><?= $data['product_name']; ?></td>
                                     <td><?= $data['total_quantity_sold'] > 0 ? number_format($data['total_quantity_sold'], 2, '.', ',') : '-'; ?></td>
-                                    <td><?= $data['total_amount_sold'] > 0 ? formatMoney($data['total_amount_sold']) : '-'; ?></td>
+                                    <td><?= $data['total_amount_sold'] > 0 ? number_format($data['total_amount_sold'], 2, '.', ',').' SAR' : '-'; ?></td>
                                     <td><?= $data['coupon_code']?></td>
                                     
                                 </tr>
