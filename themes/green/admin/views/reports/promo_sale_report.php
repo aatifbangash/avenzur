@@ -29,8 +29,7 @@
                 <li class="dropdown">
                 <a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'Promo_code_report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
                 class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i
-                class="icon fa fa-file-pdf-o"></i></a></li>
+                
             </ul>
         </div>
         <?php } ?>
@@ -91,7 +90,7 @@
                             </thead>
                             <tbody style="text-align:center;">
                             <?php
-                            $count = 0;
+                            $count = 1;
                             
                             foreach ($coupon_data as $data) {
                                 ?>
@@ -99,8 +98,8 @@
                                     <td><?= $count; ?></td>
                                     <td><?= $data['product_code']; ?></td>
                                     <td><?= $data['product_name']; ?></td>
-                                    <td><?= $data['quantity'] > 0 ? number_format($data['quantity'], 2, '.', ',') : '-'; ?></td>
-                                    <td><?= $data['subtotal'] > 0 ? number_format($data['subtotal'], 2, '.', ',') : '-'; ?></td>
+                                    <td><?= $data['total_quantity_sold'] > 0 ? number_format($data['total_quantity_sold'], 2, '.', ',') : '-'; ?></td>
+                                    <td><?= $data['total_amount_sold'] > 0 ? number_format($data['total_amount_sold'], 2, '.', ',') : '-'; ?></td>
                                     <td><?= $data['coupon_code']?></td>
                                     
                                 </tr>
