@@ -90,42 +90,11 @@
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
-                            <!-- <?php
+                            <?php
                             $count = 0;
-                            $totalObDebit = 0;
-                            $totalObCredit = 0;
-                            $totalTrsDebit = 0;
-                            $totalTrsCredit = 0;
-                            $totalFinalEndDebit = 0;
-                            $totalFinalEndCredit = 0;
-                            foreach ($trial_balance as $data) {
-                                if ($data['trsDebit'] == 0 && $data['trsCredit'] == 0 && $data['obDebit'] == 0 && $data['obCredit'] == 0) continue;
-                                $eb_credit = $data['obCredit'] + $data['trsCredit'];
-                                $eb_debit = $data['obDebit'] + $data['trsDebit'];
-
-                                $finalEndDebit = "-";
-                                $finalEndCredit = "-";
-                                if ($eb_credit >= $eb_debit) {
-                                    $finalEndCredit = $eb_credit - $eb_debit;
-                                } else {
-                                    $finalEndDebit = $eb_debit - $eb_credit;
-                                }
-
-
-                                $totalObDebit += $data['obDebit'];
-                                $totalObCredit += $data['obCredit'];
-                                $totalTrsDebit += $data['trsDebit'];
-                                $totalTrsCredit += $data['trsCredit'];
-
-                                if (gettype($finalEndDebit) != 'string')
-                                    $totalFinalEndDebit += $finalEndDebit;
-
-                                if (gettype($finalEndCredit) != 'string')
-                                    $totalFinalEndCredit += $finalEndCredit;
-
-
-                                $count++;
-                                ?> -->
+                            
+                            foreach ($coupon_data as $data) {
+                                ?>
                                 <tr>
                                     <td><?= $count; ?></td>
                                     <td><?= $data['product_code']; ?></td>
@@ -136,6 +105,7 @@
                                     
                                 </tr>
                                 <?php
+                                $count++;
                             }
                             ?>
 

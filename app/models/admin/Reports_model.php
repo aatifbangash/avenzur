@@ -984,41 +984,35 @@ class Reports_model extends CI_Model
     }
  
     public function get_sales_report_with_promocode($start_date, $end_date) {  
-        $query = $this->db->query("
-        SELECT 
-            si.product_code,
-            si.product_name,
-            SUM(si.quantity) AS total_quantity_sold,
-            SUM(si.subtotal) AS total_amount_sold,
-            s.coupon_code,
-            s.id
-        FROM 
-            sma_sale_items si
-        JOIN 
-            sma_sales s ON si.sale_id = s.id
-        JOIN 
-            sma_coupons c ON s.coupon_code = c.referrer_code
-        WHERE 
-            s.date >= '2024-10-01'   
-            AND s.date <= '2024-10-15'  
-            AND s.coupon_code IS NOT NULL
-            AND si.product_code IS NOT NULL
-           AND JSON_CONTAINS(c.product_ids, JSON_QUOTE(si.product_id))
-        GROUP BY 
-            si.product_code, s.coupon_code
-        HAVING 
-            total_quantity_sold > 0
-        ORDER BY 
-            s.date DESC
-    ");
-    
-    $results = $query->getResult();
-        
-        
+        $query = $this->db->query("SELECT 
+                si.product_code,
+                si.product_name,
+                SUM(si.quantity) AS total_quantity_sold,
+                SUM(si.subtotal) AS total_amount_sold,
+                s.coupon_code,
+                s.id
+            FROM 
+                sma_sale_items si
+            JOIN 
+                sma_sales s ON si.sale_id = s.id
+            JOIN 
+                sma_coupons c ON s.coupon_code = c.referrer_code
+            WHERE 
+                s.date >= '2024-10-01'   
+                AND s.date <= '2024-10-15'  
+                AND s.coupon_code IS NOT NULL
+                AND si.product_code IS NOT NULL
+                AND JSON_CONTAINS(c.product_ids, CAST(si.product_id AS JSON), '$')  -- Check if product_id is in product_ids
+            GROUP BY 
+                si.product_code, s.coupon_code
+            HAVING 
+                total_quantity_sold > 0
+            ORDER BY 
+                s.date DESC");
+            
+        $results = $query->getResultArray(); 
+        return $results;
     }
-        
-
-    
 
     public function get_suppliers_trial_balance($start_date, $end_date)
     {
