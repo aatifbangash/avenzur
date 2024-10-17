@@ -411,7 +411,7 @@
                                             <!-- <th class="col-md-1"><?= lang('Purchase Price'); ?></th> -->
                                             <th class="col-md-1"><?= lang('batch'); ?></th>
                                             <th class="col-md-1"><?= lang('expiry_date'); ?></th>
-                                            <th class="col-md-1"><?= lang('qty'); ?></th>  
+                                            <th class="col-md-1"><?= lang('Quantity'); ?></th>  
                                             <!--<th class="col-md-1"><?php //echo lang('Bonus'); ?></th>-->
                                             <th class="col-md-1"><?= lang('Cost Price'); ?></th> 
                                             <?php
@@ -430,11 +430,11 @@
 
                                            <!-- <th class="col-md-1"><?= lang('Total Purchase'); ?></th> -->
                                            <th>
-                                                <?= lang('Total Purchase'); ?>
-                                                (<span class="currency"><?= $default_currency->code ?></span>)
+                                                <?= lang('Total Purchases'); ?>
+                                               
                                             </th>
-                                           <th class="col-md-1"><?= lang('Net Purchase'); ?></th>
-                                           <th class="col-md-1"><?= lang('Unit Price'); ?></th>
+                                           <th class="col-md-1"><?= lang('Net Purchases'); ?></th>
+                                           <th class="col-md-1"><?= lang('Unit Cost'); ?></th>
                                            
                                             <th style="width: 30px !important; text-align: center;">
                                                 <i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i>

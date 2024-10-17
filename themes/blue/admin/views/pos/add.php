@@ -1336,7 +1336,7 @@ var lang = {
         KB = <?=$pos_settings->keyboard?>, tax_rates =<?php echo json_encode($tax_rates); ?>;
     var protect_delete = <?= (!$Owner && !$Admin) ? ($pos_settings->pin_code ? '1' : '0') : '0'; ?>, billers = <?= json_encode($posbillers); ?>, biller = <?= json_encode($posbiller); ?>;
     var username = '<?=$this->session->userdata('username');?>', order_data = '', bill_data = '';
-
+    var positems = [];
     function widthFunctions(e) {
         var wh = $(window).height(),
             lth = $('#left-top').height(),
