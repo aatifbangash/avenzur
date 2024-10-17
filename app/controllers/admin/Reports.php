@@ -4073,6 +4073,45 @@ class Reports extends MY_Controller
         }
     }
 
+    
+
+    public function daily_sales_with_promo_code(){
+
+        $this->sma->checkPermissions('suppliers');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+      
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            
+            $response_arr = $this->reports_model->get_sales_report_with_promocode($start_date, $end_date);
+            
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['coupon_data']  =  $response_arr;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('promo_code_report')]];
+            $meta = ['page_title' => lang('promo_code_report'), 'bc' => $bc];
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('promo_sale_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'r', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/promo_sale_report', $meta, $this->data);
+            }
+        }else{
+                    
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('promo_code_report')]];
+            $meta = ['page_title' => lang('promo_code_report'), 'bc' => $bc];
+            $this->page_construct('reports/promo_sale_report', $meta, $this->data);
+        }
+    }
+
     public function suppliers_trial_balance()
     {
         $this->sma->checkPermissions('suppliers');
@@ -4111,7 +4150,7 @@ class Reports extends MY_Controller
             if ($viewtype == 'pdf') {
                 $this->data['viewtype'] = $viewtype;
                 $name = lang('suppliers_trial_balance_report') . '.pdf';
-                $html = $this->load->view($this->theme . 'reports/suppliers_trial_balance', $this->data, true);
+                $html = $this->load->view($this->theme . 'r', $this->data, true);
                 $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
             } else {
                 $this->page_construct('reports/suppliers_trial_balance', $meta, $this->data);
