@@ -5,46 +5,48 @@
         tax_rates = <?php echo json_encode($tax_rates); ?>;
     var rseitems = {};
 
-    $(document).ready(function () {
-
-        if (localStorage.getItem('remove_rlls')) {
-            if (localStorage.getItem('rseitems')) {
-                localStorage.removeItem('rseitems');
-            }
-
-            if (localStorage.getItem('rsediscount')) {
-                    localStorage.removeItem('rsediscount');
-                }
-                if (localStorage.getItem('rseshipping')) {
-                    localStorage.removeItem('rseshipping');
-                }
-                if (localStorage.getItem('rsetax2')) {
-                    localStorage.removeItem('rsetax2');
-                }
-                if (localStorage.getItem('rseref')) {
-                    localStorage.removeItem('rseref');
-                }
-                if (localStorage.getItem('rsewarehouse')) {
-                    localStorage.removeItem('rsewarehouse');
-                }
-                if (localStorage.getItem('rsenote')) {
-                    localStorage.removeItem('rsenote');
-                }
-                if (localStorage.getItem('rseinnote')) {
-                    localStorage.removeItem('rseinnote');
-                }
-                if (localStorage.getItem('rsesupplier')) {
-                    localStorage.removeItem('rsesupplier');
-                }
-                if (localStorage.getItem('rsedate')) {
-                    localStorage.removeItem('rsedate');
-                }
-                if (localStorage.getItem('rsebiller')) {
-                    localStorage.removeItem('rsebiller');
-                }
-                
-            localStorage.removeItem('remove_rlls');
+    <?php if ($this->session->userdata('remove_rlls')) {
+    ?>
+        if (localStorage.getItem('rseitems')) {
+            localStorage.removeItem('rseitems');
         }
+
+        if (localStorage.getItem('rsediscount')) {
+                localStorage.removeItem('rsediscount');
+            }
+            if (localStorage.getItem('rseshipping')) {
+                localStorage.removeItem('rseshipping');
+            }
+            if (localStorage.getItem('rsetax2')) {
+                localStorage.removeItem('rsetax2');
+            }
+            if (localStorage.getItem('rseref')) {
+                localStorage.removeItem('rseref');
+            }
+            if (localStorage.getItem('rsewarehouse')) {
+                localStorage.removeItem('rsewarehouse');
+            }
+            if (localStorage.getItem('rsenote')) {
+                localStorage.removeItem('rsenote');
+            }
+            if (localStorage.getItem('rseinnote')) {
+                localStorage.removeItem('rseinnote');
+            }
+            if (localStorage.getItem('rsesupplier')) {
+                localStorage.removeItem('rsesupplier');
+            }
+            if (localStorage.getItem('rsedate')) {
+                localStorage.removeItem('rsedate');
+            }
+            if (localStorage.getItem('rsebiller')) {
+                localStorage.removeItem('rsebiller');
+            }
+            
+        
+    <?php $this->sma->unset_data('remove_rlls');
+    } ?>
+
+    $(document).ready(function () {
 
         ItemnTotals();
         $('.bootbox').on('hidden.bs.modal', function (e) {
@@ -218,6 +220,7 @@
             
         }
     }
+
 </script>
 
 <div class="modal fade" id="itemModal" tabindex="-1" role="dialog" aria-labelledby="itemModalLabel" aria-hidden="true">

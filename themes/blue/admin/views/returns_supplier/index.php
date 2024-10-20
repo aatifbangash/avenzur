@@ -19,23 +19,25 @@
                 nRow.className = "oreturn_supplier_link";
                 return nRow;
             },
-            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld}, null, null, null, {"mRender": currencyFormat}, {"bSortable": false,"mRender": attachment}, {"bSortable": false}],
+            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld}, null, null, null, null, {"mRender": currencyFormat}, {"bSortable": false,"mRender": attachment}, {"bSortable": false}],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0;
                 for (var i = 0; i < aaData.length; i++) {
-                    gtotal += parseFloat(aaData[aiDisplay[i]][5]);
+                    gtotal += parseFloat(aaData[aiDisplay[i]][6]);
                 }
                 var nCells = nRow.getElementsByTagName('th');
-                nCells[5].innerHTML = currencyFormat(parseFloat(gtotal));
+                nCells[6].innerHTML = currencyFormat(parseFloat(gtotal));
             }
         }).fnSetFilteringDelay().dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
             {column_number: 2, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
-            {column_number: 3, filter_default_label: "[<?=lang('biller');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('supplier');?>]", filter_type: "text", data: []},
+            {column_number: 3, filter_default_label: "[<?=lang('sequence code');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('supplier');?>]", filter_type: "text", data: []},
         ], "footer");
 
-        if (localStorage.getItem('remove_rels')) {
+        <?php if ($this->session->userdata('remove_rlls')) {
+        ?>
             if (localStorage.getItem('reitems')) {
                 localStorage.removeItem('reitems');
             }
@@ -66,10 +68,11 @@
             if (localStorage.getItem('redate')) {
                 localStorage.removeItem('redate');
             }
-            localStorage.removeItem('remove_rels');
-        }
+            
+            <?php $this->sma->unset_data('remove_rlls');
+        } ?>
 
-        <?php if ($this->session->userdata('remove_rels')) {
+        <?php if ($this->session->userdata('remove_rlls')) {
             ?>
         if (localStorage.getItem('reitems')) {
                 localStorage.removeItem('reitems');
@@ -101,7 +104,7 @@
             if (localStorage.getItem('redate')) {
                 localStorage.removeItem('redate');
             }
-            <?php $this->sma->unset_data('remove_rels');
+            <?php $this->sma->unset_data('remove_rlls');
         }
         ?>
 
@@ -203,7 +206,8 @@
                             </th>
                             <th><?= lang('date'); ?></th>
                             <th><?= lang('reference_no'); ?></th>
-                            <th><?= lang('biller'); ?></th>
+                            <th><?= lang('Sequence Code'); ?></th>
+                            <th><?= lang('Status'); ?></th>
                             <th><?= lang('supplier'); ?></th>
                             <th><?= lang('grand_total'); ?></th>
                             <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i></th>
@@ -220,7 +224,7 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
-                            <th></th><th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th><th></th>
                             <th><?= lang('grand_total'); ?></th>
                             <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>

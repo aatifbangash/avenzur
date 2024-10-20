@@ -1015,6 +1015,7 @@ function loadItems() {
                 item_discount = 0,
                 item_option = item.row.option,
                 item_code = item.row.code,
+                avz_code = item.row.avz_item_code,
                 item_serial = item.row.serial,
                 item_expiry = item.row.expiry,
                 item_batchno = item.row.batch_no,
@@ -1131,7 +1132,7 @@ function loadItems() {
 
             
             main_net = (parseFloat(item_cost)) * parseFloat(item_qty);
-            var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus); 
+            var new_unit_cost = parseFloat(main_net) / parseFloat(parseFloat(item_qty) + parseFloat(item_bonus)); 
 
             var row_no = item.id;
             var newTr = $('<tr id="row_' + row_no + '" class="row_' + item_id + '" data-item-id="' + item_id + '"></tr>');
@@ -1142,7 +1143,9 @@ function loadItems() {
                 item_type +
                 '"><input name="product_code[]" type="hidden" class="rcode" value="' +
                 item_code +
-                '"><input name="product_name[]" type="hidden" class="rname" value="' +
+                '"><input name="avz_code[]" type="hidden" class="avzcode" value="' +
+				avz_code +
+				'"><input name="product_name[]" type="hidden" class="rname" value="' +
                 item_name +
                 '"><input name="product_option[]" type="hidden" class="roption" value="' +
                 item_option +
@@ -1178,7 +1181,7 @@ function loadItems() {
                     '<input id="rreturn_' +
                     row_no +
                     '" class="form-control rcost text-center" name="net_cost[]" type="hidden" value="' +
-                    formatDecimal(item.row.batchPurchaseCost, 2) +
+                    formatDecimal(new_unit_cost, 2) +
                     '" data-id="' +
                     row_no +
                     '" data-item="' +
@@ -1483,6 +1486,7 @@ function add_return_item(item) {
         rseitems[item_id].row.qty = new_qty;
     } else {
         rseitems[item_id] = item;
+        rseitems[item_id].row.base_quantity = rseitems[item_id].row.qty;
     }
     rseitems[item_id].order = new Date().getTime();
     localStorage.setItem('rseitems', JSON.stringify(rseitems));

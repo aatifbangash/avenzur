@@ -61,7 +61,7 @@ class Returns_supplier_model extends CI_Model
                     //TODO will check later
                     $this->site->setPurchaseItem($clause, -1 * $item['quantity'], 'supplier');
                     $this->site->syncQuantityReturnSupplier($return_id, $item['product_id']);
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'return_to_supplier', $item['quantity'], $item['warehouse_id'], $return_id,  $item['net_cost'], $item['expiry'], $item['unit_price'], $real_cost);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'return_to_supplier', $item['quantity'], $item['warehouse_id'], $return_id,  $item['net_cost'], $item['expiry'], $item['unit_price'], $real_cost, $item['avz_item_code']);
                     
                 } elseif ($item['product_type'] == 'combo') {
                     $combo_items = $this->site->getProductComboItems($item['product_id']);
