@@ -108,7 +108,9 @@ class Purchases_model extends CI_Model
                 $item['purchase_id'] = $purchase_id;
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 
-                if($data['status'] == 'received'){
+                $type = $item['quantity'] < 0 ? 'return_to_supplier' : 'purchase';
+
+                if($data['status'] == 'received' && $type == 'purchase'){
                     $uuid = $this->sma->generateUUIDv4();
                     $item['avz_item_code'] = $uuid;
                 }
@@ -117,7 +119,12 @@ class Purchases_model extends CI_Model
                 //handle inventory movement
                 if($item['status']=='received'){
                     $type = $item['quantity'] < 0 ? 'return_to_supplier' : 'purchase';
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost'], $uuid);
+                    if($type == 'purchase'){
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost'], $uuid, $item['bonus']);
+                    }else if($type == 'return_to_supplier'){
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost'], $item['avz_item_code'], -1*($item['bonus']));
+                    }
+                    
                 }
                 // Code for serials here
                 $serials_reference = $data['reference_no'];
@@ -360,6 +367,63 @@ class Purchases_model extends CI_Model
         }
         return false;
     }
+
+    public function getAllReturnInvoiceItems($purchase_id)
+    {
+        $warehouse_id = 32;  // Define your main warehouse ID here
+
+        $this->db->select('
+            purchase_items.*, 
+            tax_rates.code as tax_code, 
+            tax_rates.name as tax_name, 
+            tax_rates.rate as tax_rate, 
+            products.unit, 
+            products.details as details, 
+            product_variants.name as variant, 
+            products.hsn_code as hsn_code, 
+            products.second_name as second_name, 
+            SUM(IFNULL(CASE WHEN sma_inventory_movements.location_id = ' . $warehouse_id . ' THEN sma_inventory_movements.quantity ELSE 0 END, 0)) as total_quantity, 
+            SUM(IFNULL(CASE WHEN sma_inventory_movements.location_id = ' . $warehouse_id . ' THEN sma_inventory_movements.bonus ELSE 0 END, 0)) as total_bonus
+        ')
+        ->join('products', 'products.id=purchase_items.product_id', 'left')
+        ->join('inventory_movements', 'inventory_movements.avz_item_code=purchase_items.avz_item_code', 'left')
+        ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
+        ->join('tax_rates', 'tax_rates.id=purchase_items.tax_rate_id', 'left')
+        ->group_by('purchase_items.id, purchase_items.avz_item_code')
+        ->having('total_quantity >', 0)
+        ->order_by('purchase_items.id', 'asc');  // Make sure to order by the correct field here
+
+        // Fetch the purchase items for the given purchase ID
+        $q = $this->db->get_where('purchase_items', ['purchase_items.purchase_id' => $purchase_id]);
+
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+
+    /*public function getAllReturnInvoiceItems($purchase_id)
+    {
+        $this->db->select('purchase_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, products.unit, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, products.second_name as second_name, SUM(IFNULL(sma_inventory_movements.quantity, 0)) as total_quantity, SUM(IFNULL(sma_inventory_movements.bonus, 0)) as total_bonus')
+            ->join('products', 'products.id=purchase_items.product_id', 'left')
+            ->join('inventory_movements', 'inventory_movements.avz_item_code=purchase_items.avz_item_code', 'left')
+            ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
+            ->join('tax_rates', 'tax_rates.id=purchase_items.tax_rate_id', 'left')
+            ->group_by('purchase_items.id, purchase_items.avz_item_code')
+            ->order_by('id', 'asc');
+        $q = $this->db->get_where('purchase_items', ['purchase_id' => $purchase_id]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }*/
 
     public function getAllPurchases()
     {
@@ -792,7 +856,7 @@ class Purchases_model extends CI_Model
                 }
                 
                 if($item['status']=='received'){
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost'], $uuid);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost'], $uuid, $item['bonus']);
                 }
                 // $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
                 // Code for serials here

@@ -55,6 +55,34 @@
         if (localStorage.getItem('reitems')) {
             loadItems();
         }
+
+        /* --------------------------
+        * Edit Row Bonus Method rbonus
+        -------------------------- */
+        var old_row_bonus;
+        $(document)
+            .on("focus", ".rbonus", function () {
+                old_row_bonus = $(this).val();
+            })
+            .on("change", ".rbonus", function () {
+                var row = $(this).closest("tr");
+                if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+                    $(this).val(old_row_bonus);
+                    bootbox.alert(lang.unexpected_value);
+                    return;
+                }
+                var new_bonus = parseFloat($(this).val()),
+                    item_id = row.attr("data-item-id");
+                if (!is_numeric(new_bonus) || (new_bonus > reitems[item_id].row.bonus)) {
+                    $(this).val(old_row_bonus);
+                    bootbox.alert('<?= lang('unexpected_value'); ?>');
+                    return false;
+                }
+                    reitems[item_id].row.bonus = new_bonus;
+                localStorage.setItem("reitems", JSON.stringify(reitems));
+                loadItems();
+            });
+
         /* ------------------------------
          * Edit Row Quantity
          ------------------------------- */
@@ -128,6 +156,10 @@
             $("#reTable tbody").empty();
             reitems = JSON.parse(localStorage.getItem('reitems'));
 
+            if(reitems == null || reitems.length <= 0){
+                return false;
+            }
+
             $.each(reitems, function () {
 
                 var item = this;
@@ -149,6 +181,7 @@
                 var net_unit_cost = item.row.net_unit_cost; // new addition mm
                 var cost_price =net_unit_cost; // new addition mm
                 var sale_price = item.row.sale_price;
+                var avz_item_code = item.row.avz_item_code;
 
                 var total_after_dis1 = 0.0;
                 var total_after_dis2 = 0.0;
@@ -159,25 +192,33 @@
                 pr_tax_rate = ptax[1];
                 }
                 pr_tax_val = formatDecimal(pr_tax_val);
+                console.log(item);
+                item_cost = item_tax_method == 0 ? formatDecimal(unit_cost - pr_tax_val, 4) : formatDecimal(unit_cost);
 
-               item_cost = item_tax_method == 0 ? formatDecimal(unit_cost - pr_tax_val, 4) : formatDecimal(unit_cost);
-
-               var total_before_dis_vat = (parseFloat(item_cost)) * parseFloat(item_qty);
+               /*var total_before_dis_vat = (parseFloat(item_cost)) * parseFloat(item_qty);
                dis1_a = total_before_dis_vat * parseFloat((discount1 / 100)); 
                total_after_dis1 =  total_before_dis_vat - dis1_a;
                dis2_a = total_after_dis1 *  parseFloat((discount2/100));
                total_after_dis2 =  total_after_dis1 - dis2_a;
                 vat_15_a = total_after_dis2 * parseFloat(item.tax_rate.rate/100);//total_after_dis2 * parseFloat(15/100);
-               net_price_a = vat_15_a + total_after_dis2; 
+               net_price_a = vat_15_a + total_after_dis2; */
 
-               var total_purchases = (parseFloat(item_cost)) * parseFloat(item_qty);
-               total_after_dis1 = total_purchases * parseFloat((discount1 / 100));
-               total_after_dis2 = (total_purchases - total_after_dis1) * parseFloat((discount2 / 100));
+               var total_purchases = (parseFloat(unit_cost)) * (parseFloat(item_qty));
+
+               dis1_a = total_purchases * parseFloat(discount1 / 100);
+               total_after_dis1 = total_purchases - dis1_a;
+               dis2_a = total_after_dis1 * parseFloat(discount2 / 100);
+               total_after_dis2 = total_after_dis1 - dis2_a;
+               vat_15_a = total_after_dis2 * parseFloat(item.tax_rate.rate / 100);
+               net_price_a = vat_15_a + total_after_dis2;
+               
+               //total_after_dis1 = total_purchases * parseFloat((discount1 / 100));
+               //total_after_dis2 = (total_purchases - total_after_dis1) * parseFloat((discount2 / 100));
                //main_net = net_price_a;// + net_price_b;
-               main_net = total_purchases - (total_after_dis1 + total_after_dis2);
+               main_net = total_purchases - (dis1_a + dis2_a);
                total_product_discount= formatDecimal((total_after_dis1 + total_after_dis2),4);
-                 product_discount += formatDecimal((total_after_dis1 + total_after_dis2),4);  
-               var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + bonus);
+               product_discount += formatDecimal((total_after_dis1 + total_after_dis2),4);  
+               var new_unit_cost = parseFloat(main_net) / parseFloat(parseFloat(item_qty) + parseFloat(bonus));
 
                 var product_unit = item.row.unit, base_quantity = item.row.base_quantity;
                 if(product_unit != item.row.base_unit) {
@@ -225,18 +266,13 @@
                     }
                 }
                 item_cost = item_tax_method == 0 ? formatDecimal((unit_cost-pr_tax_val), 4) : formatDecimal(unit_cost); 
-                //unit_cost = formatDecimal((unit_cost+item_discount), 4); 
-                //--------------------- new---mm--------------------------------
-              // var total_purchases =((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty)); 
-              //var product_vat_tax= pr_tax_val * item_qty; 
-              if (pr_tax !== false) {
-              var product_vat_tax= vat_15_a; 
-              product_tax +=product_vat_tax;
-              }
+                
+                if (pr_tax !== false) {
+                    var product_vat_tax= vat_15_a; 
+                    product_tax +=product_vat_tax;
+                }
               
-             //  alert(total_purchases);
-             //  var total_purchases =(parseFloat(total_purchases) + parseFloat(product_vat_tax) );
-             var per_product_total_purchase =((parseFloat(total_purchases)-parseFloat(total_product_discount)) + parseFloat(product_vat_tax) );
+                var per_product_total_purchase = parseFloat(total_purchases);
                  
                 var sel_opt = '';
                 $.each(item.options, function () {
@@ -247,9 +283,11 @@
 
                 var row_no = item.id;
                 var newTr = $('<tr id="row_' + row_no + '" class="row_' + item_id + '" data-item-id="' + item_id + '"></tr>');
-                tr_html = '<td><input name="purchase_item_id[]" type="hidden" class="rpiid" value="' + purchase_item_id + '"><input name="product_id[]" type="hidden" class="rid" value="' + product_id + '"><input name="product[]" type="hidden" class="rcode" value="' + item_code + '"><input name="product_name[]" type="hidden" class="rname" value="' + item_name + '"><input name="product_option[]" type="hidden" class="roption" value="' + item_option + '"><input name="part_no[]" type="hidden" class="rpart_no" value="' + item_supplier_part_no + '"><span class="sname" id="name_' + row_no + '">' + item_name + ' (' + item_code + ')'+(sel_opt != '' ? ' ('+sel_opt+')' : '')+' <span class="label label-default">'+item_supplier_part_no+'</span></span></td>';
+                tr_html = '<td><input name="purchase_item_id[]" type="hidden" class="rpiid" value="' + purchase_item_id + '"><input name="avz_item_code[]" type="hidden" class="avzcode" value="' +
+				avz_item_code +
+				'"><input name="product_id[]" type="hidden" class="rid" value="' + product_id + '"><input name="product[]" type="hidden" class="rcode" value="' + item_code + '"><input name="product_name[]" type="hidden" class="rname" value="' + item_name + '"><input name="product_option[]" type="hidden" class="roption" value="' + item_option + '"><input name="part_no[]" type="hidden" class="rpart_no" value="' + item_supplier_part_no + '"><span class="sname" id="name_' + row_no + '">' + item_name + ' (' + item_code + ')'+(sel_opt != '' ? ' ('+sel_opt+')' : '')+' <span class="label label-default">'+item_supplier_part_no+'</span></span></td>';
 
-                tr_html += '<td class="text-right"><input class="form-control input-sm text-right rcost" name="net_cost[]" type="hidden" id="cost_' + row_no + '" value="' + item_cost + '"><input class="form-control input-sm text-right sprice" name="sale_price[]" type="hidden" id="sale_price_' + row_no + '" value="' + sale_price + '"><input class="rucost" name="unit_cost[]" type="hidden" value="' + unit_cost + '"><input class="realucost" name="real_unit_cost[]" type="hidden" value="' + item.row.real_unit_cost + '"><span class="text-right scost" id="scost_' + row_no + '">' + formatMoney(item_cost) + '</span></td>';
+                tr_html += '<td class="text-right"><input class="form-control input-sm text-right rcost" name="net_cost[]" type="hidden" id="cost_' + row_no + '" value="' + new_unit_cost + '"><input class="form-control input-sm text-right sprice" name="sale_price[]" type="hidden" id="sale_price_' + row_no + '" value="' + sale_price + '"><input class="rucost" name="unit_cost[]" type="hidden" value="' + unit_cost + '"><input class="realucost" name="real_unit_cost[]" type="hidden" value="' + item.row.real_unit_cost + '"><span class="text-right scost" id="scost_' + row_no + '">' + formatMoney(item_cost) + '</span></td>';
                 
 
                 tr_html += '<td><input class="form-control batch_no" name="batch_no[]" type="text" value="' + batch_no + '" data-id="' + row_no + '" data-item="' + item_id + '" id="batch_no' + row_no + '"></td>';
@@ -259,14 +297,16 @@
                 }
               
                 
-                tr_html += '<td class="text-center"><span>'+formatDecimal(item_oqty)+'</span></td>';
+                /*tr_html += '<td class="text-center"><span>'+formatDecimal(item_oqty)+'</span></td>';
                 if (po_edit) {
                     tr_html += '<td class="text-center"><span>'+formatDecimal(qty_received)+'</span></td>';
-                }
-                
-                tr_html += '<td><input class="form-control text-center rquantity" name="quantity[]" type="text" value="' + formatDecimal(item_qty) + '" data-id="' + row_no + '" data-item="' + item_id + '" id="quantity_' + row_no + '" onClick="this.select();"><input name="product_unit[]" type="hidden" class="runit" value="' + product_unit + '"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' + base_quantity + '"></td>';
+                }*/
 
-                //tr_html += '<td><input class="form-control bonus" name="bonus[]" type="text" value="' + bonus + '" data-id="' + row_no + '" data-item="' + item_id + '" id="bonus' + row_no + '"></td>';
+                tr_html += '<td><input class="form-control rbonus" name="bonus[]" type="text" value="' + Math.floor(bonus) + '" data-id="' + row_no + '" data-item="' + item_id + '" id="bonus' + row_no + '"><span style="font-size:11px;text-align:center;color:blue;">Av('+Math.floor(item.row.bonus)+')</span></td>';
+                
+                tr_html += '<td class="text-center"><span>'+formatDecimal(qty_received)+'</span></td>';
+
+                tr_html += '<td><input class="form-control text-center rquantity" name="quantity[]" type="text" value="' + formatDecimal(item_qty) + '" data-id="' + row_no + '" data-item="' + item_id + '" id="quantity_' + row_no + '" onClick="this.select();"><input name="product_unit[]" type="hidden" class="runit" value="' + product_unit + '"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' + base_quantity + '"></td>';
 
                 tr_html += '<td><input class="form-control discount1" readonly name="discount1[]" type="text" value="' + discount1 + '" data-id="' + row_no + '" data-item="' + item_id + '" id="discount1' + row_no + '"></td>';
 
@@ -450,17 +490,18 @@
                                         <thead>
                                         <tr>
                                             <th class="col-md-4"><?= lang('product_name') . ' (' . $this->lang->line('product_code') . ')'; ?></th>
-                                            <th class="col-md-1"><?= lang('purchase_cost'); ?></th>
-                                            <th class="col-md-1"><?= lang('batch_no'); ?></th>
+                                            <th class="col-md-1"><?= lang('Purchase Price'); ?></th>
+                                            <th class="col-md-1"><?= lang('Batch'); ?></th>
                                             <?php
                                             if ($Settings->product_expiry) {
                                                 echo '<th class="col-md-1">' . $this->lang->line('expiry_date') . '</th>';
                                             }
                                             ?>
                                             <!-- <th class="col-md-1"><?= lang('net_unit_cost'); ?></th> -->
-                                            <th class="col-md-1"><?= lang('quantity'); ?></th>
+                                            <th class="col-md-1"><?= lang('Bonus'); ?></th>
                                             <th class="col-md-1"><?= lang('received'); ?></th>
-                                            <th class="col-md-1"><?= lang('return_quantity'); ?></th>
+                                            <th class="col-md-1"><?= lang('quantity'); ?></th>
+                                            <!--<th class="col-md-1"><?= lang('return_quantity'); ?></th>-->
 
                                             <!--<th class="col-md-1"><?php //echo lang('bonus'); ?></th>-->
                                             <th class="col-md-1"><?= lang('dis 1'); ?></th>
@@ -472,17 +513,14 @@
                                             ?> -->
                                             <?php
                                             if ($Settings->tax1) {
-                                                echo '<th class="col-md-1">' . $this->lang->line('vat_tax') . '</th>';
+                                                echo '<th class="col-md-1">' . $this->lang->line('Vat 15%') . '</th>';
                                             }
                                             ?>
-                                            <th><?= lang('total_purchase'); ?> (<span
-                                                    class="currency"><?= $default_currency->code ?></span>)
+                                            <th><?= lang('Total Purchases'); ?> 
                                             </th>
-                                            <th><?= lang('net_purchase'); ?> (<span
-                                                    class="currency"><?= $default_currency->code ?></span>)
+                                            <th><?= lang('Net Purchases'); ?> 
                                             </th>
-                                            <th><?= lang('unit_cost'); ?> (<span
-                                                    class="currency"><?= $default_currency->code ?></span>)
+                                            <th><?= lang('unit_cost'); ?> 
                                             </th>
                                             <th style="width: 30px !important; text-align: center;">
                                                 <i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i>
