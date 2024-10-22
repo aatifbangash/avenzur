@@ -1120,8 +1120,6 @@ class Pay extends MY_Shop_Controller
 
     public function RedirectPaymentResponsePageMobile()
     {
-        shop_redirect('orders/123?gateway_response=completed&payment_status=paid');
-        exit;
         $req = 'cmd=_notify-validate';
         foreach ($_POST as $key => $value) {
             // foreach ($_REQUEST as $key => $value) {
