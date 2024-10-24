@@ -978,7 +978,7 @@ class Returns extends MY_Controller
         . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
         . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
-                <li>' . $edit_link . '</li> 
+                
                 <li>' . $journal_entry_link . '</li>
                 <li>' . $delete_link . '</li> 
         </ul>
