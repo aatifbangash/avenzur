@@ -274,10 +274,11 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                            class="table items table-striped table-bordered table-condensed table-hover sortable_table">
                                         <thead>
                                         <tr>
+                                            <th class="col-md-1">#</th>
                                             <th class="col-md-2">item name</th>
                                             <th class="col-md-1">sale price</th>
                                             <!-- <th class="col-md-1">purchase price</th> -->
-                                            <th class="col-md-1"><?= lang('Serial No.'); ?></th>
+                                            <!--<th class="col-md-1"><?= lang('Serial No.'); ?></th>-->
                                             <th class="col-md-1"><?= lang('Batch_No'); ?></th>
                                             <th class="col-md-1"><?= lang('Expiry Date'); ?></th>
                                             <?php

@@ -111,16 +111,19 @@ class Sales extends MY_Controller
             $gst_data         = [];
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             $i                = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
+            //echo '<pre>';print_r($_POST);exit;
             for ($r = 0; $r < $i; $r++) {
                 $item_id            = $_POST['product_id'][$r];
                 $item_type          = $_POST['product_type'][$r];
                 $item_code          = $_POST['product_code'][$r];
+                $avz_code           = $_POST['avz_code'][$r];
                 $item_name          = $_POST['product_name'][$r];
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 //$real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
                 $unit_price         = $this->sma->formatDecimal($_POST['unit_price'][$r]);
                 $real_unit_price = $unit_price;
-                //$net_cost           = $this->sma->formatDecimal($_POST['net_cost'][$r]);
+                $net_cost           = $this->sma->formatDecimal($_POST['net_cost'][$r]);
+                $real_cost          = $this->sma->formatDecimal($_POST['real_cost'][$r]);
 
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_serial        = $_POST['serial'][$r]           ?? '';
@@ -132,7 +135,7 @@ class Sales extends MY_Controller
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
                 $item_discount      = $_POST['product_discount'][$r] ?? null;
                 $item_unit          = $_POST['product_unit'][$r];
-                $item_quantity      = $_POST['product_base_quantity'][$r];
+                $item_quantity      = $_POST['quantity'][$r];
                 //$item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
@@ -142,12 +145,10 @@ class Sales extends MY_Controller
                 //$net_cost_obj = $this->sales_model->getAvgCost($item_batchno, $item_id);
                 //$net_cost = $net_cost_obj[0]->cost_price;
 
-                $net_cost = $this->sales_model->getAvgCost($item_batchno, $item_id);
-                $real_cost = $this->sales_model->getRealAvgCost($item_batchno, $item_id);
+                //$net_cost = $this->sales_model->getAvgCost($item_batchno, $item_id);
+                //$real_cost = $this->sales_model->getRealAvgCost($item_batchno, $item_id);
                
-                if(empty($net_cost) || $net_cost == NULL || is_nan($net_cost)){
-                    $net_cost = 0;
-                } 
+                
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details = $item_type != 'manual' ? $this->sales_model->getProductByCode($item_code) : null;
                     // $unit_price = $real_unit_price;
@@ -237,7 +238,8 @@ class Sales extends MY_Controller
                         'discount2'         => $item_dis2,
                         'totalbeforevat'    => $totalbeforevat,
                         'main_net'          => $main_net,
-                        'real_cost'         => $real_cost
+                        'real_cost'         => $real_cost,
+                        'avz_item_code'     => $avz_code
                     ];
                     
                     $products[] = ($product + $gst_data);
@@ -348,7 +350,7 @@ class Sales extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            // $this->sma->print_arrays($data, $products, $payment, $attachments); exit; 
+            //$this->sma->print_arrays($data, $products, $payment, $attachments); exit; 
         }
         
         if ($this->form_validation->run() == true && $sale_id = $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
@@ -1012,11 +1014,12 @@ class Sales extends MY_Controller
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             $i                = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
 
-
+            //echo '<pre>';print_r($_POST);exit;
             for ($r = 0; $r < $i; $r++) {
                 $item_id            = $_POST['product_id'][$r];
                 $item_type          = $_POST['product_type'][$r];
                 $item_code          = $_POST['product_code'][$r];
+                $item_avz_code      = $_POST['avz_code'][$r];
                 $item_name          = $_POST['product_name'][$r];
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 //$net_cost           = $this->sma->formatDecimal($_POST['net_cost'][$r]);
@@ -1033,7 +1036,9 @@ class Sales extends MY_Controller
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
                 $item_discount      = $_POST['product_discount'][$r] ?? null;
                 $item_unit          = $_POST['product_unit'][$r];
-                $item_quantity      = $_POST['product_base_quantity'][$r];
+                $item_quantity      = $_POST['quantity'][$r];
+                $net_cost           = $this->sma->formatDecimal($_POST['net_cost'][$r]);
+                $real_cost          = $this->sma->formatDecimal($_POST['real_cost'][$r]);
 
 
                 //$item_bonus = $_POST['bonus'][$r];
@@ -1064,12 +1069,10 @@ class Sales extends MY_Controller
                 //$net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
                 //$net_cost = $net_cost_obj[0]->cost_price;
 
-                $net_cost = $this->sales_model->getAvgCost($item_batchno, $item_id);
-                $real_cost = $this->sales_model->getRealAvgCost($item_batchno, $item_id);
+                //$net_cost = $this->sales_model->getAvgCost($item_batchno, $item_id);
+                //$real_cost = $this->sales_model->getRealAvgCost($item_batchno, $item_id);
 
-                if(empty($net_cost) || $net_cost == NULL || is_nan($net_cost)){
-                    $net_cost = 0;
-                } 
+               
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details = $item_type != 'manual' ? $this->sales_model->getProductByCode($item_code) : null;
 
@@ -1168,6 +1171,7 @@ class Sales extends MY_Controller
                         'discount2'         => $item_dis2,
                         'totalbeforevat'    => $totalbeforevat,
                         'main_net'          => $main_net,
+                        'avz_item_code'     => $item_avz_code,
                         'real_cost'         => $real_cost
                     ];
 
@@ -1228,7 +1232,7 @@ class Sales extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            // $this->sma->print_arrays($data, $products);
+            //$this->sma->print_arrays($data, $products);exit;
         }
 
         if ($this->form_validation->run() == true && $this->sales_model->updateSale($id, $data, $products, $attachments)) {
@@ -1271,6 +1275,7 @@ class Sales extends MY_Controller
                         $row->quantity += $pi->quantity_balance;
                     }
                 }
+                //echo '<pre>';print_r($item);exit;
                 $row->id              = $item->product_id;
                 $row->code            = $item->product_code;
                 $row->name            = $item->product_name;
@@ -1285,6 +1290,9 @@ class Sales extends MY_Controller
                 $row->discount        = $item->discount ? $item->discount : '0';
                 $row->item_tax        = $item->item_tax      > 0 ? $item->item_tax      / $item->quantity : 0;
                 $row->item_discount   = $item->item_discount > 0 ? $item->item_discount / $item->quantity : 0;
+                $row->avz_item_code   = $item->avz_item_code; 
+                $row->net_unit_cost   = $item->net_cost;
+                $row->real_unit_cost  = $item->real_cost;
 
                 //Discount calculation----------------------------------
                 // this row is deleted becasue of discount must not be added in sale price 
@@ -1292,6 +1300,8 @@ class Sales extends MY_Controller
                 
                 $row->price           = $this->sma->formatDecimal($item->real_unit_price);
                 //Discount calculation----------------------------------
+
+                $row->net_unit_sale = $this->sma->formatDecimal($item->real_unit_price);
 
                 $row->unit_price      = $row->tax_method ? $item->unit_price + $this->sma->formatDecimal($row->item_discount) + $this->sma->formatDecimal($row->item_tax) : $item->unit_price + ($row->item_discount);
                 $row->real_unit_price = $item->real_unit_price;

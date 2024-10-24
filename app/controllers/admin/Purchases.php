@@ -1898,7 +1898,7 @@ class Purchases extends MY_Controller
         if (empty($this->data['inv']->invoice_number) || $this->data['inv']->invoice_number == '') {
             $this->session->set_flashdata('error', 'Cannot transfer orders that are not invoiced');
             //return false;
-            //admin_redirect('purchases');
+            admin_redirect('purchases');
         }
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -1963,6 +1963,7 @@ class Purchases extends MY_Controller
             $item_option = $purchase_inovice[$i]->option_id;
             $item_unit = $purchase_inovice[$i]->product_unit_id;
             $item_quantity = $purchase_inovice[$i]->quantity;
+            $avz_code = $purchase_inovice[$i]->avz_item_code;
                 //check quantity with reutrn products
                 $pid = $purchase_inovice[$i]->product_id;
                 if( isset($return_products[$pid]) ) {
@@ -1977,8 +1978,10 @@ class Purchases extends MY_Controller
 
             $product_details = $this->transfers_model->getProductByCode($item_code);
 
-            $net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
-            $real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
+            $net_cost = $item_net_cost;
+            $real_cost = $real_unit_cost;
+            //$net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
+            //$real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
 
             if (isset($item_code) && isset($item_quantity)) {
 
@@ -1995,12 +1998,12 @@ class Purchases extends MY_Controller
 
                 if (isset($item_tax_rate) && $item_tax_rate != 0) {
                     $tax_details = $this->site->getTaxRateByID($item_tax_rate);
-                    $ctax = $this->site->calculateTax($product_details, $tax_details, $unit_cost);
+                    $ctax = $this->site->calculateTax($product_details, $tax_details, $purchase_inovice[$i]->sale_price);
                     $item_tax = $ctax['amount'];
                     $tax = $ctax['tax'];
 
                     if (!empty($product_details) && $product_details->tax_method != 1) {
-                        $item_net_cost = $unit_cost - $item_tax;
+                        $item_net_cost = $purchase_inovice[$i]->sale_price - $item_tax;
                     }
 
                     $pr_item_tax = $this->sma->formatDecimal(($item_tax * $item_unit_quantity), 4);
@@ -2012,7 +2015,7 @@ class Purchases extends MY_Controller
                 }
 
                 $product_tax += $pr_item_tax;
-                $subtotal = $this->sma->formatDecimal((($item_net_cost * $item_unit_quantity) + $pr_item_tax), 4);
+                $subtotal = $this->sma->formatDecimal((($purchase_inovice[$i]->sale_price * $item_unit_quantity) + $pr_item_tax), 4);
                 $unit = $this->site->getUnitByID($item_unit);
 
                 $product = [
@@ -2038,7 +2041,8 @@ class Purchases extends MY_Controller
                     'date' => date('Y-m-d', strtotime($date)),
                     'batchno' => $item_batchno,
                     'serial_number' => $item_serial_no,
-                    'real_cost' => $real_cost
+                    'real_cost' => $real_cost,
+                    'avz_item_code'     => $avz_code
                 ];
 
                 $products[] = ($product + $gst_data);
@@ -2077,6 +2081,8 @@ class Purchases extends MY_Controller
 
         $attachments = $this->attachments->upload();
         $data['attachment'] = !empty($attachments);
+
+        //$this->sma->print_arrays($data, $products);exit;
 
         //if ($this->transfers_model->transferPurchaseInvoice($data, $products, $attachments)) {
         if ($this->transfers_model->addTransfer($data, $products, $attachments)) {
