@@ -24,7 +24,7 @@ class Returns_model extends CI_Model
             foreach ($items as $item) {
                 $item['return_id'] = $return_id;
                 $real_cost = $item['real_cost'];
-                unset($item['real_cost']);
+                //unset($item['real_cost']);
                 $this->db->insert('return_items', $item);
                 
                 if ($item['product_type'] == 'standard') {
@@ -32,7 +32,7 @@ class Returns_model extends CI_Model
                     $this->site->setPurchaseItem($clause, $item['quantity']);
                     $this->site->syncQuantityReturn($return_id, $item['product_id']);
 
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'customer_return', $item['quantity'], $item['warehouse_id'], $return_id, $item['net_cost'], $item['expiry'], $item['unit_price'], $real_cost); 
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'customer_return', $item['quantity'], $item['warehouse_id'], $return_id, $item['net_cost'], $item['expiry'], $item['unit_price'], $real_cost, $item['avz_item_code']); 
                     
                 } elseif ($item['product_type'] == 'combo') {
                     $combo_items = $this->site->getProductComboItems($item['product_id']);

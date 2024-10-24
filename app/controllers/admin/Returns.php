@@ -254,10 +254,12 @@ class Returns extends MY_Controller
             $gst_data         = [];
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             $i                = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
+            
             for ($r = 0; $r < $i; $r++) {
                 $item_id            = $_POST['product_id'][$r];
                 $item_type          = $_POST['product_type'][$r];
                 $item_code          = $_POST['product_code'][$r];
+                $avz_item_code      = $_POST['avz_code'][$r];
                 $item_name          = $_POST['product_name'][$r];
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 $real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
@@ -276,17 +278,19 @@ class Returns extends MY_Controller
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
                 $item_discount      = $_POST['product_discount'][$r] ?? null;
                 $item_unit          = $_POST['product_unit'][$r];
-                $item_quantity      = $_POST['product_base_quantity'][$r];
+                $item_quantity      = $_POST['quantity'][$r];
+                $net_cost           = $_POST['net_cost'][$r];
+                $real_cost          = $_POST['real_cost'][$r];
 
-                $totalbeforevat = $_POST['totalbeforevat'][$r];
+                //$totalbeforevat = $_POST['totalbeforevat'][$r];
 
                 // Net average cost required to maintain balance
                 //$net_cost_obj = $this->returns_model->getAverageCost($item_batchno, $item_code);
                 //$net_cost = $net_cost_obj[0]->cost_price;
 
-                $net_cost = $this->site->getAvgCost($item_batchno, $item_id);
-                $real_cost = $this->site->getRealAvgCost($item_batchno, $item_id);
-
+                //$net_cost = $this->site->getAvgCost($item_batchno, $item_id);
+                //$real_cost = $this->site->getRealAvgCost($item_batchno, $item_id);
+                
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details  = $item_type != 'manual' ? $this->site->getProductByCode($item_code) : null;
                     $pr_discount      = $this->site->calculateDiscount($item_discount, $unit_price);
@@ -310,19 +314,26 @@ class Returns extends MY_Controller
                     $total_product_discount += $product_item_discount;
                     //Discount calculation----------------------------------
 
+                    //echo $real_unit_price * $item_quantity;exit;
+
+                    // NEW: Net unit price calculation
+                    $item_net_price   = $this->sma->formatDecimal((($real_unit_price * $item_quantity) - $product_item_discount1 - $product_item_discount2) / $item_quantity);
+                    $main_net = $this->sma->formatDecimal((($real_unit_price * $item_quantity) - $product_item_discount1 - $product_item_discount2));
+
                     $pr_item_tax = $item_tax = 0;
-                    $tax         = '';
+                    $tax         = ''; 
 
                     if (isset($item_tax_rate) && $item_tax_rate != 0) {
                         $tax_details = $this->site->getTaxRateByID($item_tax_rate);
-                        $ctax        = $this->site->calculateTax($product_details, $tax_details, $unit_price);
-                        $item_tax    = $this->sma->formatDecimal($ctax['amount']);
+                        $ctax        = $this->site->calculateTax($product_details, $tax_details, $this->sma->formatDecimal($main_net/$item_unit_quantity, 4));
+                        
+                        $item_tax    = $this->sma->formatDecimal($ctax['amount'], 4);
                         $tax         = $ctax['tax'];
                         if (!$product_details || (!empty($product_details) && $product_details->tax_method != 1)) {
                             $item_net_price = $unit_price - $item_tax;
-                            //$item_net_price = $item_net_price - $item_tax;
                         }
                         $pr_item_tax = $this->sma->formatDecimal(($item_tax * $item_unit_quantity), 4);
+                        
                         if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($biller_details->state == $customer_details->state), $tax_details)) {
                             $total_cgst += $gst_data['cgst'];
                             $total_sgst += $gst_data['sgst'];
@@ -342,7 +353,7 @@ class Returns extends MY_Controller
                         'option_id'         => $item_option,
                         'net_cost'          => $net_cost,
                         'net_unit_price'    => $item_net_price,
-                        'unit_price'        => $this->sma->formatDecimal($item_net_price + $item_tax),
+                        'unit_price'        => $this->sma->formatDecimal($item_net_price),
                         'quantity'          => $item_quantity,
                         'product_unit_id'   => $unit ? $unit->id : null,
                         'product_unit_code' => $unit ? $unit->code : null,
@@ -363,7 +374,8 @@ class Returns extends MY_Controller
                         'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
-                        'real_cost'         => $real_cost
+                        'real_cost'         => $real_cost,
+                        'avz_item_code'     => $avz_item_code
                     ];
 
                     $products[] = ($product + $gst_data);
@@ -375,7 +387,7 @@ class Returns extends MY_Controller
             } else {
                 krsort($products);
             }
-
+            
             $order_discount = $this->site->calculateDiscount($this->input->post('order_discount'), ($total + $product_tax), true);
             $total_discount = $this->sma->formatDecimal(($order_discount + $product_discount), 4);
             $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
