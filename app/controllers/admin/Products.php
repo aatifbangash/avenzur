@@ -4809,7 +4809,7 @@ class Products extends MY_Controller
         $this->db->join('sma_products pr', 'pr.id = pi.product_id', 'left');
         $this->db->where('pi.product_id', $item_id);
         if ($warehouse_id) {
-            $this->db->where('pi.warehouse_id', $warehouse_id);
+            //$this->db->where('pi.warehouse_id', $warehouse_id);
             $this->db->where('im.location_id', $warehouse_id);
         }
         $this->db->group_by(['pi.warehouse_id', 'pi.avz_item_code', 'pi.expiry']);
