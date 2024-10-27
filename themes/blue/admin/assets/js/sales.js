@@ -1323,11 +1323,11 @@ $(document).ready(function (e) {
 			}
 			var new_qty = parseFloat($(this).val()),
 				item_id = row.attr("data-item-id");
-			slitems[item_id].row.base_quantity = new_qty;
+			//slitems[item_id].row.base_quantity = new_qty;
 			if (slitems[item_id].row.unit != slitems[item_id].row.base_unit) {
 				$.each(slitems[item_id].units, function () {
 					if (this.id == slitems[item_id].row.unit) {
-						slitems[item_id].row.base_quantity = unitToBaseQty(new_qty, this);
+						//slitems[item_id].row.base_quantity = unitToBaseQty(new_qty, this);
 					}
 				});
 			}
@@ -1478,7 +1478,7 @@ function loadItems() {
 			item.order = item.order ? item.order : new Date().getTime();
 			const pattern = /^\d{2}\/\d{2}\/\d{4}$/;
 			const isFormattedDate = pattern.test(item.row.expiry);
-
+			
 			var item_expiry_date = "";
 			if (item.row.expiry != null) {
 				if (isFormattedDate) {
@@ -1496,7 +1496,7 @@ function loadItems() {
 				item_price = item.row.price,
 				item_cost = item.row.cost,
 				//item_sale_price = item.row.base_unit_price,
-				item_sale_price = item.row.price,
+				item_sale_price = item.row.net_unit_sale,
 				item_qty = item.row.qty,
 				item_aqty = item.row.quantity,
 				item_tax_method = item.row.tax_method,
@@ -1504,6 +1504,7 @@ function loadItems() {
 				item_discount = 0,
 				item_option = item.row.option,
 				item_code = item.row.code,
+				avz_code = item.row.avz_item_code,
 				item_serial = item.row.serial,
 				item_expiry = item_expiry_date,
 				item_batchno = item.row.batch_no,
@@ -1513,6 +1514,7 @@ function loadItems() {
 				item_dis1 = item.row.dis1,
 				item_dis2 = item.row.dis2,
 				item_batchQuantity = item.row.batchQuantity,
+				item_base_quantity = item.row.base_quantity,
 				// if(item_expiry == 'undefined'){
 				//     item_expiry = '';
 				//    }
@@ -1645,15 +1647,16 @@ function loadItems() {
 			var total_purchases = parseFloat(item_cost) * parseFloat(item_qty);
 			var total_sales =
 				parseFloat(item_sale_price) *
-				(parseFloat(item_qty) + parseFloat(item_bonus));
-			//console.log(item_qty+' -- '+item_bonus+' -- '+item_sale_price+' -- '+total_sales);
+				(parseFloat(item_qty));
+			
 			total_after_dis1 = total_sales * parseFloat(item_dis1 / 100);
+			
 			total_after_dis2 =
 				(total_sales - total_after_dis1) * parseFloat(item_dis2 / 100);
 			//main_net = net_price_a;// + net_price_b;
 			main_net = total_sales - (total_after_dis1 + total_after_dis2);
 			var new_unit_cost =
-				parseFloat(main_net) / parseFloat(item_qty + item_bonus);
+				parseFloat(main_net) / parseFloat(item_qty);
 
 			var row_no = item.id;
 
@@ -1669,9 +1672,9 @@ function loadItems() {
 
 			tr_html =
 				'<td><span name="sno[]"  class="rid" value="' +
-				sn +
+				count +
 				'">' +
-				sn +
+				count +
 				"</td>" +
 				'<td><input name="product_id[]" type="hidden" class="rid" value="' +
 				product_id +
@@ -1679,6 +1682,8 @@ function loadItems() {
 				item_type +
 				'"><input name="product_code[]" type="hidden" class="rcode" value="' +
 				item_code +
+				'"><input name="avz_code[]" type="hidden" class="avzcode" value="' +
+				avz_code +
 				'"><input name="product_name[]" type="hidden" class="rname" value="' +
 				item_name +
 				'"><input name="product_option[]" type="hidden" class="roption" value="' +
@@ -1740,8 +1745,18 @@ function loadItems() {
 			tr_html +=
 				'<input id="ssale_' +
 				row_no +
-				'" class="form-control scost text-center" name="net_cost[]" type="hidden" value="' +
-				formatDecimal(item.row.batchPurchaseCost, 2) +
+				'" name="net_cost[]" type="hidden" value="' +
+				formatDecimal(item.row.net_unit_cost, 2) +
+				'" data-id="' +
+				row_no +
+				'" data-item="' +
+				item_id +
+				'" id="ssale_' +
+				row_no +
+				'"><input id="ssale_' +
+				row_no +
+				'" name="real_cost[]" type="hidden" value="' +
+				formatDecimal(item.row.real_unit_cost, 2) +
 				'" data-id="' +
 				row_no +
 				'" data-item="' +
@@ -1766,7 +1781,7 @@ function loadItems() {
                     row_no +
                     '"></td>';*/
 
-			tr_html +=
+			/*tr_html +=
 				'<td><input class="form-control rserialno" name="serial_no[]" type="text" value="' +
 				item_serialno +
 				'" data-id="' +
@@ -1775,7 +1790,7 @@ function loadItems() {
 				item_id +
 				'" id="serialno_' +
 				row_no +
-				'"></td>';
+				'"></td>';*/
 
 			// tr_html +=
 			//         '<td><input class="form-control rbatchno" name="batchno[]" type="text" value="' +
@@ -1784,39 +1799,16 @@ function loadItems() {
 			//         row_no +
 			//         '"></td>';
 
-			var batchesOptions =
-				'<option value="" data-batchExpiry="null" data-batchQty="0"  data-batchpurchasecost="0" data-batchsaleprice="0">--</option>';
-			if (item.batches !== false) {
-				$.each(item.batches, function () {
-					batchSelected = "";
-					if (this.batchno == item_batchno) {
-						batchSelected = "selected";
-					}
-					batchesOptions +=
-						'<option data-batchExpiry="' +
-						this.expiry +
-						'" data-batchQty="' +
-						this.quantity +
-						'" data-batchsaleprice="' +
-						this.batch_sale_price +
-						'"  data-batchpurchasecost="' +
-						this.purchase_cost +
-						'" value="' +
-						this.batchno +
-						'" ' +
-						batchSelected +
-						">" +
-						this.batchno +
-						"</option>";
-				});
-			}
-
 			tr_html +=
-				'<td><select class="form-control rbatchno" name="batchno[]" id="batchno_' +
+				'<td><input class="form-control date rbatchno" name="batchno[]" type="text" value="' +
+				item_batchno +
+				'" data-id="' +
 				row_no +
-				'" required>' +
-				batchesOptions +
-				"</select></td>";
+				'" data-item="' +
+				item_id +
+				'" id="batchno_' +
+				row_no +
+				'"></td>';
 
 			tr_html +=
 				'<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="' +
@@ -1845,7 +1837,7 @@ function loadItems() {
 				'"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' +
 				base_quantity +
 				'"><span style="position:absolute;font-size:10px;margin-top:5px;" class="batchQuantity">' +
-				item_batchQuantity +
+				item_base_quantity +
 				"</span></td>";
 			/* if ((site.settings.product_discount == 1 && allow_discount == 1) || item_discount) {
                 tr_html +=
@@ -2048,8 +2040,7 @@ function loadItems() {
 
 			// Thi will override all the above checks
 			if (
-				parseFloat(base_quantity) > parseFloat(item_batchQuantity) ||
-				item_batchQuantity == null
+				parseFloat(item_qty) > parseFloat(base_quantity)
 			) {
 				$("#row_" + row_no).addClass("danger");
 				if (site.settings.overselling != 1) {
@@ -2176,6 +2167,9 @@ function add_invoice_item(item) {
 		slitems[item_id].row.qty = new_qty;
 	} else {
 		slitems[item_id] = item;
+		slitems[item_id].row.base_quantity = slitems[item_id].row.qty;
+		slitems[item_id].row.dis1 = 0;
+		slitems[item_id].row.dis2 = 0;
 	}
 	slitems[item_id].order = new Date().getTime();
 	localStorage.setItem("slitems", JSON.stringify(slitems));

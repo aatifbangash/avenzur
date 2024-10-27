@@ -852,16 +852,23 @@ class Pos extends MY_Controller
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
-                $product_details = $this->pos_model->getProductQuantityWithNearestExpiry($item_id, $item_code, $warehouse_id);
-               if(empty($product_details)){
-                 $this->session->set_flashdata('error', lang( $item_code. '-'. $item_name . ' may Expired Please remove it from the list'));
-                 admin_redirect('pos');
-               }  
+                /*$product_details = $this->pos_model->getProductQuantityWithNearestExpiry($item_id, $item_code, $warehouse_id);
+                if(empty($product_details)){
+                    $this->session->set_flashdata('error', lang( $item_code. '-'. $item_name . ' may Expired Please remove it from the list'));
+                    admin_redirect('pos');
+                }  
                 $batch_no = $product_details['batchno'];
-                $expiry = $product_details['expiry'];
-               // $item_unit_cost = $product_details['avg_cost']; 
-                $item_unit_cost = $this->site->getAvgCost($batch_no, $item_id); 
-                $real_cost = $this->site->getRealAvgCost($batch_no, $item_id);
+                $expiry = $product_details['expiry'];*/
+                // $item_unit_cost = $product_details['avg_cost']; 
+
+                $batch_no = $_POST['batchno'][$r];
+                $expiry = $_POST['item_expiry'][$r];
+                $item_unit_cost = $_POST['item_unit_cost'][$r];
+                $real_cost = $_POST['real_unit_cost'][$r];
+                $avz_item_code = $_POST['avz_item_code'][$r];
+
+                //$item_unit_cost = $this->site->getAvgCost($batch_no, $item_id); 
+                //$real_cost = $this->site->getRealAvgCost($batch_no, $item_id);
 
                 if(empty($item_unit_cost)){
                     $this->session->set_flashdata('error', lang('Avg Cost not found for product: '.$item_code. '-'. $item_name ));
@@ -933,7 +940,8 @@ class Pos extends MY_Controller
                         'batch_no'          => $batch_no,
                         'real_unit_price'   => $real_unit_price,
                         'comment'           => $item_comment,
-                        'real_cost'         => $real_cost
+                        'real_cost'         => $real_cost,
+                        'avz_item_code'     => $avz_item_code
                     ];
 
                     $products[] = ($product + $gst_data);

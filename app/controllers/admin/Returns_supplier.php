@@ -31,6 +31,10 @@ class Returns_supplier extends MY_Controller
         $this->digital_file_types = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt';
         $this->allowed_file_size = '1024';
         $this->data['logo'] = true;
+
+        // Sequence-Code
+        $this->load->library('SequenceCode');
+        $this->sequenceCode = new SequenceCode();
     }
 
     public function add_return()
@@ -251,28 +255,30 @@ class Returns_supplier extends MY_Controller
             $shipping = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
 
             $total = 0;
+            $net_total = 0;
             $product_tax = 0;
             $product_discount = 0;
             $total_product_discount = 0;
             $gst_data = [];
             $total_cgst = $total_sgst = $total_igst = 0;
-            //echo '<pre>'; print_r($_POST);  exit; 
+            //echo '<pre>';print_r($_POST);exit;
             $i = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
             for ($r = 0; $r < $i; $r++) {
                 $item_id = $_POST['product_id'][$r];
                 $item_type = $_POST['product_type'][$r];
                 $item_code = $_POST['product_code'][$r];
+                $avz_code = $_POST['avz_code'][$r];
                 $item_name = $_POST['product_name'][$r];
                 $item_option = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 
-                $unit_price = $this->sma->formatDecimal($_POST['unit_price'][$r]);
-                $real_unit_price = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
+                $unit_price = $this->sma->formatDecimal($_POST['net_price'][$r]);
+                $real_unit_price = $this->sma->formatDecimal($_POST['net_price'][$r]);
                 $item_net_price = $this->sma->formatDecimal($_POST['net_price'][$r]);
                 $net_price = $this->sma->formatDecimal($_POST['net_price'][$r]);
                  
                 $item_net_cost = $this->sma->formatDecimal($_POST['net_cost'][$r]); 
                 $cost_price = $this->sma->formatDecimal($_POST['cost_price'][$r]);
-                $unit_cost = $this->sma->formatDecimal($_POST['unit_cost'][$r]); 
+                $unit_cost = $this->sma->formatDecimal($_POST['net_cost'][$r]); 
                 $real_unit_cost = $this->sma->formatDecimal($_POST['real_unit_cost'][$r]);  
                    // changes end 
 
@@ -292,7 +298,7 @@ class Returns_supplier extends MY_Controller
                 $product_vat = $this->sma->formatDecimal($_POST['product_vat'][$r]);  
                 $item_discount = $_POST['product_discount'][$r] ?? null;
                 $item_unit = $_POST['product_unit'][$r];
-                $item_quantity = $_POST['product_base_quantity'][$r]; 
+                $item_quantity = $_POST['quantity'][$r]; 
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
 
                 //$net_cost_obj = $this->returns_supplier_model->getAverageCost($item_batchno, $item_code);
@@ -347,7 +353,7 @@ class Returns_supplier extends MY_Controller
                     
                     $product_tax += $pr_item_tax;
                    // $subtotal = (($item_net_price * $item_unit_quantity) + $pr_item_tax - $product_item_discount);
-                   $subtotal = (($cost_price * $item_unit_quantity) + $pr_item_tax - $product_item_discount);
+                   $subtotal = (($item_net_cost * $item_unit_quantity));
                     $unit = $this->site->getUnitByID($item_unit);
 
                     $product = [
@@ -356,11 +362,11 @@ class Returns_supplier extends MY_Controller
                         'product_name' => $item_name,
                         'product_type' => $item_type,
                         'option_id' => $item_option,
-                        'unit_cost' => $unit_cost,
-                        'real_unit_cost' => $real_unit_cost,
+                        //'unit_cost' => $unit_cost,
+                        //'real_unit_cost' => $real_unit_cost,
                         'net_cost' => $net_cost,
                         'net_unit_price' => $item_net_price,
-                        'cost_price' => $cost_price,
+                        //'cost_price' => $cost_price,
                         //'unit_price' => $this->sma->formatDecimal($item_net_price + $item_tax),
                         'unit_price' => $this->sma->formatDecimal($cost_price + $item_tax),
                         'quantity' => $item_quantity,
@@ -374,21 +380,23 @@ class Returns_supplier extends MY_Controller
                         'discount' => $item_discount,
                         'item_discount' => $product_item_discount,
                         'subtotal' => $this->sma->formatDecimal($subtotal),
-                        'serial_no' => $item_serial,
+                        //'serial_no' => $item_serial,
                         'expiry' => $item_expiry,
                         'batch_no' => $item_batchno,
-                        'serial_number' => $item_serial_no,
+                        //'serial_number' => $item_serial_no,
                         'real_unit_price' => $real_unit_price,
                         //'bonus'             => $item_bonus,
                         'bonus' => 0,
                         'discount1' => $item_dis1,
                         'discount2' => $item_dis2,
-                        'real_cost' => $real_cost
+                        'real_cost' => $real_cost,
+                        'avz_item_code' => $avz_code
                     ];
-
+                    
                     $products[] = ($product + $gst_data);
                    // $total += $this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
                    $total += $this->sma->formatDecimal(($cost_price * $item_unit_quantity), 4);
+                   $net_total = $this->sma->formatDecimal(($net_cost * $item_unit_quantity), 4);
                 }
             }
             if (empty($products)) {
@@ -398,7 +406,7 @@ class Returns_supplier extends MY_Controller
             }
 
             $order_discount = $this->site->calculateDiscount($this->input->post('order_discount'), ($total + $product_tax), true);
-            $total_discount = $this->sma->formatDecimal(($order_discount + $product_discount), 4);
+            $total_discount = $this->sma->formatDecimal(($total - $net_total), 4);
             $order_tax = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
             $total_tax = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
 
@@ -406,7 +414,7 @@ class Returns_supplier extends MY_Controller
             // total discount must be deducted from  grandtotal
             //$grand_total    = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
 
-            $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($total_product_discount)), 4);
+            $grand_total = $this->sma->formatDecimal(($net_total + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($total_product_discount)), 4);
             //Discount calculation
 
             $data = [
@@ -423,7 +431,7 @@ class Returns_supplier extends MY_Controller
                 'product_discount' => $total_product_discount,
                 'order_discount_id' => $this->input->post('order_discount'),
                 'order_discount' => $order_discount,
-                'total_discount' => $total_product_discount,
+                'total_discount' => $total_discount,
                 'product_tax' => $product_tax,
                 'order_tax_id' => $this->input->post('order_tax'),
                 'order_tax' => $order_tax,
@@ -433,6 +441,8 @@ class Returns_supplier extends MY_Controller
                 'paid' => 0,
                 'created_by' => $this->session->userdata('user_id'),
                 'hash' => hash('sha256', microtime() . mt_rand()),
+                'status' => 'completed',
+                'sequence_code' => $this->sequenceCode->generate('SRTN', 5)
             ];
 
             if ($this->Settings->indian_gst) {
@@ -458,7 +468,7 @@ class Returns_supplier extends MY_Controller
                 $data['attachment'] = $photo;
             }
 
-            // $this->sma->print_arrays($data, $products);exit;
+            //$this->sma->print_arrays($data, $products);exit;
 
         }
 
@@ -467,7 +477,7 @@ class Returns_supplier extends MY_Controller
             //$this->returns_supplier_model->convert_return_invoice($return_insert_id, $products);
             $this->convert_return_invoice($return_insert_id);
 
-            $this->session->set_userdata('remove_rels', 1);
+            $this->session->set_userdata('remove_rlls', 1);
             $this->session->set_flashdata('message', lang('return_added'));
             admin_redirect('returns_supplier?lastInsertedId='.$return_insert_id);
         } else {
@@ -1375,12 +1385,12 @@ class Returns_supplier extends MY_Controller
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
-                ->select("{$this->db->dbprefix('returns_supplier')}.id as id, DATE_FORMAT({$this->db->dbprefix('returns_supplier')}.date, '%Y-%m-%d %T') as date, reference_no, biller, {$this->db->dbprefix('returns_supplier')}.supplier, grand_total, {$this->db->dbprefix('returns_supplier')}.attachment")
+                ->select("{$this->db->dbprefix('returns_supplier')}.id as id, DATE_FORMAT({$this->db->dbprefix('returns_supplier')}.date, '%Y-%m-%d %T') as date, reference_no, sequence_code, status, {$this->db->dbprefix('returns_supplier')}.supplier, grand_total, {$this->db->dbprefix('returns_supplier')}.attachment")
                 ->from('returns_supplier')
                 ->where('warehouse_id', $warehouse_id);
         } else {
             $this->datatables
-                ->select("{$this->db->dbprefix('returns_supplier')}.id as id, DATE_FORMAT({$this->db->dbprefix('returns_supplier')}.date, '%Y-%m-%d %T') as date, reference_no, biller, {$this->db->dbprefix('returns_supplier')}.supplier, grand_total, {$this->db->dbprefix('returns_supplier')}.attachment")
+                ->select("{$this->db->dbprefix('returns_supplier')}.id as id, DATE_FORMAT({$this->db->dbprefix('returns_supplier')}.date, '%Y-%m-%d %T') as date, reference_no, sequence_code, status, {$this->db->dbprefix('returns_supplier')}.supplier, grand_total, {$this->db->dbprefix('returns_supplier')}.attachment")
                 ->from('returns_supplier');
         }
 
@@ -1399,7 +1409,6 @@ class Returns_supplier extends MY_Controller
         . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
         . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
-                <li>' . $edit_link . '</li> 
                 <li>' . $journal_entry_link . '</li>
                 <li>' . $delete_link . '</li> 
         </ul>

@@ -117,8 +117,9 @@ class Transfers extends MY_Controller
             $i           = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
             for ($r = 0; $r < $i; $r++) {
                 $item_code          = $_POST['product_code'][$r];
+                $avz_code           = $_POST['avz_code'][$r];
                 $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
-                $unit_cost          = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
+                $unit_cost          = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $real_unit_cost     = $this->sma->formatDecimal($_POST['real_unit_cost'][$r]);
                 $net_unit_cost     = $this->sma->formatDecimal($_POST['net_unit_cost'][$r]);
                 $item_unit_quantity = $_POST['quantity'][$r];
@@ -138,8 +139,10 @@ class Transfers extends MY_Controller
 
                 $product_details = $this->transfers_model->getProductByCode($item_code);
 
-                $net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
-                $real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
+                $net_cost = $net_unit_cost;
+                $real_cost = $real_unit_cost;
+                //$net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
+                //$real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
               
                 if (isset($item_code) && isset($item_quantity)) {
                     
@@ -201,7 +204,8 @@ class Transfers extends MY_Controller
                         'date'              => date('Y-m-d', strtotime($date)),
                         'batchno'           => $item_batchno,
                         'serial_number'     => $item_serial_no,
-                        'real_cost'         => $real_cost
+                        'real_cost'         => $real_cost,
+                        'avz_item_code'     => $avz_code
                     ];
 
                     $products[] = ($product + $gst_data);
@@ -544,6 +548,7 @@ class Transfers extends MY_Controller
             $i           = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
             for ($r = 0; $r < $i; $r++) {
                 $item_code          = $_POST['product_code'][$r];
+                $avz_code           = $_POST['avz_code'][$r];
                 $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $unit_cost          = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
                 $real_unit_cost     = $this->sma->formatDecimal($_POST['real_unit_cost'][$r]);
@@ -617,7 +622,8 @@ class Transfers extends MY_Controller
                         'date'              => date('Y-m-d', strtotime($date)),
                         'batchno'           => $item_batchno,
                         'serial_number'     => $item_serial_no,
-                        'real_cost'         => $real_cost
+                        'real_cost'         => $real_cost,
+                        'avz_item_code'     => $avz_code
                     ];
 
                     $products[] = ($product + $gst_data);
@@ -670,6 +676,7 @@ class Transfers extends MY_Controller
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['transfer'] = $this->transfers_model->getTransferByID($id);
             $transfer_items         = $this->transfers_model->getAllTransferItems($id, $this->data['transfer']->status);
+            
             if(!empty($transfer_items)) {
                 krsort($transfer_items);
             }
@@ -684,7 +691,8 @@ class Transfers extends MY_Controller
                 }
                 $row->quantity         = 0;
                 $row->expiry           = (($item->expiry && $item->expiry != '0000-00-00') ? $this->sma->hrsd($item->expiry) : '');
-                $row->base_quantity    = $item->quantity;
+                $row->base_quantity    = $item->base_quantity;
+                $row->avz_item_code    = $item->avz_item_code;
                 $row->base_unit        = $row->unit ? $row->unit : $item->product_unit_id;
                 $row->base_unit_cost   = $row->cost ? $row->cost : $item->unit_cost;
                 $row->net_unit_cost    = $item->net_unit_cost;
@@ -693,7 +701,8 @@ class Transfers extends MY_Controller
                 $row->quantity_balance = $item->quantity_balance;
                 $row->ordered_quantity = $item->quantity;
                 $row->quantity        += $item->quantity_balance;
-                $row->cost           = $item->net_unit_cost;
+                $row->cost             = $item->net_unit_cost;
+                $row->net_unit_sale    = $item->sale_price;
                 
                 if($item->quantity > 0){
                     $row->unit_cost      = $item->net_unit_cost + ($item->item_tax / $item->quantity);
@@ -751,7 +760,7 @@ class Transfers extends MY_Controller
                     'row'        => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options,  'batches'=>$batches];
                 $c++;
             }
-
+            
             $this->data['transfer_items'] = json_encode($pr);
             $this->data['id']             = $id;
             $this->data['warehouses']     = $this->site->getAllWarehouses();

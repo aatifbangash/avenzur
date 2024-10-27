@@ -927,8 +927,8 @@ class Purchases extends MY_Controller
                         'subtotal2' => $this->sma->formatDecimal($subtotal2),
                         'batchno' => $item_batchno,
                         'serial_number' => $item_serial_no ? $item_serial_no : 'Default',
-                        //'bonus'             => $item_bonus,
-                        'bonus' => 0,
+                        'bonus'             => $item_bonus,
+                        //'bonus' => 0,
                         'discount1' => $item_dis1,
                         'discount2' => $item_dis2,
                         'totalbeforevat' => $totalbeforevat,
@@ -1898,7 +1898,7 @@ class Purchases extends MY_Controller
         if (empty($this->data['inv']->invoice_number) || $this->data['inv']->invoice_number == '') {
             $this->session->set_flashdata('error', 'Cannot transfer orders that are not invoiced');
             //return false;
-            //admin_redirect('purchases');
+            admin_redirect('purchases');
         }
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -1963,6 +1963,7 @@ class Purchases extends MY_Controller
             $item_option = $purchase_inovice[$i]->option_id;
             $item_unit = $purchase_inovice[$i]->product_unit_id;
             $item_quantity = $purchase_inovice[$i]->quantity;
+            $avz_code = $purchase_inovice[$i]->avz_item_code;
                 //check quantity with reutrn products
                 $pid = $purchase_inovice[$i]->product_id;
                 if( isset($return_products[$pid]) ) {
@@ -1977,8 +1978,10 @@ class Purchases extends MY_Controller
 
             $product_details = $this->transfers_model->getProductByCode($item_code);
 
-            $net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
-            $real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
+            $net_cost = $item_net_cost;
+            $real_cost = $real_unit_cost;
+            //$net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
+            //$real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
 
             if (isset($item_code) && isset($item_quantity)) {
 
@@ -1995,12 +1998,12 @@ class Purchases extends MY_Controller
 
                 if (isset($item_tax_rate) && $item_tax_rate != 0) {
                     $tax_details = $this->site->getTaxRateByID($item_tax_rate);
-                    $ctax = $this->site->calculateTax($product_details, $tax_details, $unit_cost);
+                    $ctax = $this->site->calculateTax($product_details, $tax_details, $purchase_inovice[$i]->sale_price);
                     $item_tax = $ctax['amount'];
                     $tax = $ctax['tax'];
 
                     if (!empty($product_details) && $product_details->tax_method != 1) {
-                        $item_net_cost = $unit_cost - $item_tax;
+                        $item_net_cost = $purchase_inovice[$i]->sale_price - $item_tax;
                     }
 
                     $pr_item_tax = $this->sma->formatDecimal(($item_tax * $item_unit_quantity), 4);
@@ -2012,7 +2015,7 @@ class Purchases extends MY_Controller
                 }
 
                 $product_tax += $pr_item_tax;
-                $subtotal = $this->sma->formatDecimal((($item_net_cost * $item_unit_quantity) + $pr_item_tax), 4);
+                $subtotal = $this->sma->formatDecimal((($purchase_inovice[$i]->sale_price * $item_unit_quantity) + $pr_item_tax), 4);
                 $unit = $this->site->getUnitByID($item_unit);
 
                 $product = [
@@ -2038,7 +2041,8 @@ class Purchases extends MY_Controller
                     'date' => date('Y-m-d', strtotime($date)),
                     'batchno' => $item_batchno,
                     'serial_number' => $item_serial_no,
-                    'real_cost' => $real_cost
+                    'real_cost' => $real_cost,
+                    'avz_item_code'     => $avz_code
                 ];
 
                 $products[] = ($product + $gst_data);
@@ -2077,6 +2081,8 @@ class Purchases extends MY_Controller
 
         $attachments = $this->attachments->upload();
         $data['attachment'] = !empty($attachments);
+
+        //$this->sma->print_arrays($data, $products);exit;
 
         //if ($this->transfers_model->transferPurchaseInvoice($data, $products, $attachments)) {
         if ($this->transfers_model->addTransfer($data, $products, $attachments)) {
@@ -2558,15 +2564,18 @@ class Purchases extends MY_Controller
             $gst_data = [];
             $total_cgst = $total_sgst = $total_igst = 0;
             $i = isset($_POST['product']) ? sizeof($_POST['product']) : 0;
+            
             for ($r = 0; $r < $i; $r++) {
                 $item_id = $_POST['product_id'][$r];
                 $item_code = $_POST['product'][$r];
+                $avz_item_code = $_POST['avz_item_code'][$r];
                 $purchase_item_id = $_POST['purchase_item_id'][$r];
                 $item_option = isset($_POST['product_option'][$r]) && !empty($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' ? $_POST['product_option'][$r] : null;
                 $real_unit_cost = $this->sma->formatDecimal($_POST['real_unit_cost'][$r]);
                 $unit_cost = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
                 $sale_price = $this->sma->formatDecimal($_POST['sale_price'][$r]);
-                $item_unit_quantity = (0 - $_POST['quantity'][$r]);
+                $item_unit_quantity = (0 - ($_POST['quantity'][$r] + $_POST['bonus'][$r]));
+                $item_bonus = $_POST['bonus'][$r];
                 //$item_expiry        = $_POST['expiry'][$r]           ?? '';
 
                 $item_expiry = (isset($_POST['expiry'][$r]) && !empty($_POST['expiry'][$r])) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
@@ -2593,16 +2602,16 @@ class Purchases extends MY_Controller
                     $item_net_cost = $unit_cost - $pr_discount - $pr_discount2;
                     //$pr_item_discount = $this->sma->formatDecimal(($pr_discount * $item_unit_quantity), 4);
 
-                    $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
-                    $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $item_unit_quantity);
+                    $pr_item_discount = $this->sma->formatDecimal($pr_discount * ($item_unit_quantity + $item_bonus));
+                    $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * ($item_unit_quantity + $item_bonus));
                     $product_discount += ($pr_item_discount + $pr_item_discount2);
                     //$product_discount += $pr_item_discount;
                     //$item_net_cost = $unit_cost;
-
+                    
                     $pr_item_tax = $item_tax = 0;
                     $tax = '';
-                    $totalpurcahsesbeforevat = ($unit_cost * $item_quantity) - $pr_item_discount - $pr_item_discount2;
-
+                    $totalpurcahsesbeforevat = ($unit_cost * ($item_quantity + $item_bonus)) - $pr_item_discount - $pr_item_discount2;
+                    
                     if (isset($item_tax_rate) && $item_tax_rate != 0) {
                         $tax_details = $this->site->getTaxRateByID($item_tax_rate);
                         $ctax = $this->site->calculateTax($product_details, $tax_details, $unit_cost);
@@ -2620,9 +2629,13 @@ class Purchases extends MY_Controller
                             $total_igst += $gst_data['igst'];
                         }
                     }
+                    //echo $totalpurcahsesbeforevat.' -- '.$item_quantity.' -- '.$item_bonus;exit;
+                    $item_net_cost = ($totalpurcahsesbeforevat) / ($item_quantity);
 
                     $product_tax += $pr_item_tax;
-                    $subtotal = $this->sma->formatDecimal((($item_net_cost * $item_unit_quantity) + $pr_item_tax), 4);
+                    $subtotal = $this->sma->formatDecimal((($item_net_cost * $item_unit_quantity)), 4);
+                    $main_net = $this->sma->formatDecimal((($item_net_cost * $item_unit_quantity)), 4);
+                    $subtotal2 = $this->sma->formatDecimal((($item_net_cost * $item_unit_quantity) + $pr_item_tax), 4);
                     $unit = $this->site->getUnitByID($item_unit);
 
                     $product = [
@@ -2634,6 +2647,7 @@ class Purchases extends MY_Controller
                         'unit_cost' => $this->sma->formatDecimal($unit_cost),
                         'quantity' => $item_quantity,
                         'batchno' => $item_batch,
+                        'bonus' => $item_bonus,
                         'expiry' => $item_expiry,
                         'discount1' => $item_discount,
                         'discount2' => $item_discount2,
@@ -2648,10 +2662,13 @@ class Purchases extends MY_Controller
                         'discount' => $item_discount,
                         'item_discount' => $pr_item_discount,
                         'subtotal' => $this->sma->formatDecimal($subtotal),
+                        'subtotal2' => $this->sma->formatDecimal($subtotal2),
                         'real_unit_cost' => $real_unit_cost,
                         'sale_price' => $sale_price,
                         'purchase_item_id' => $purchase_item_id,
                         'status' => 'received',
+                        'main_net' => $main_net,
+                        'avz_item_code' => $avz_item_code
                     ];
 
                     $products[] = ($product + $gst_data);
@@ -2702,7 +2719,7 @@ class Purchases extends MY_Controller
 
             $attachments = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            // $this->sma->print_arrays($data, $products); exit; 
+            //$this->sma->print_arrays($data, $products); exit; 
         }
 
         if ($this->form_validation->run() == true && $this->purchases_model->addPurchase($data, $products, $attachments)) {
@@ -2727,15 +2744,16 @@ class Purchases extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
             }
-            $inv_items = $this->purchases_model->getAllPurchaseItems($id);
-            //echo '<pre>';print_r( $inv_items);exit; 
+            $inv_items = $this->purchases_model->getAllReturnInvoiceItems($id); 
             // krsort($inv_items);
             $c = rand(100000, 9999999);
             foreach ($inv_items as $item) {
                 $row = $this->site->getProductByID($item->product_id);
                 $this->Inventory_model->get_current_stock($item->product_id,'null',$item->batchno);
                 $row->batchno = $item->batchno;
-                $row->bonus = $item->bonus;
+                $row->bonus = $item->total_bonus;
+                $row->obonus = $item->bonus;
+                $row->avz_item_code = $item->avz_item_code;
                 $row->discount1 = $item->discount1;
                 $row->discount2 = $item->discount2;
                 // $row->discount2          = $item->discount2;
@@ -2746,11 +2764,15 @@ class Purchases extends MY_Controller
                 $row->base_unit = $row->unit ? $row->unit : $item->product_unit_id;
                 $row->base_unit_cost = $row->cost ? $row->cost : $item->unit_cost;
                 $row->unit = $item->product_unit_id;
-                $row->qty = $item->unit_quantity;
-                $row->oqty = $item->unit_quantity;
+                //$row->qty = $item->unit_quantity - $row->bonus;
+                //$row->oqty = $item->unit_quantity - $row->bonus;
+                $row->qty = $item->total_quantity - $row->bonus;
+                $row->oqty = $item->total_quantity - $row->bonus;
+                
                 $row->purchase_item_id = $item->id;
                 $row->supplier_part_no = $item->supplier_part_no;
                 $row->received = $item->quantity_received ? $item->quantity_received : $item->quantity;
+                $row->received = $row->received - $row->bonus;
                 $row->quantity_balance = $item->quantity_balance + ($item->quantity - $row->received);
                 $row->discount = $item->discount ? $item->discount : '0';
                 $options = $this->purchases_model->getProductOptions($row->id);
@@ -2770,7 +2792,7 @@ class Purchases extends MY_Controller
 
                 $c++;
             }
-
+            
             $this->data['inv_items'] = json_encode($pr);
             $this->data['id'] = $id;
             $this->data['reference'] = '';

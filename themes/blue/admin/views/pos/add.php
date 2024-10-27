@@ -49,6 +49,22 @@
     </div>
 </noscript>
 
+<div class="modal fade" id="itemModal" tabindex="-1" role="dialog" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemModalLabel">Select an Item</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- The content will be dynamically generated here -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="wrapper">
     <header id="header" class="navbar">
         <div class="container">
@@ -1320,7 +1336,7 @@ var lang = {
         KB = <?=$pos_settings->keyboard?>, tax_rates =<?php echo json_encode($tax_rates); ?>;
     var protect_delete = <?= (!$Owner && !$Admin) ? ($pos_settings->pin_code ? '1' : '0') : '0'; ?>, billers = <?= json_encode($posbillers); ?>, biller = <?= json_encode($posbiller); ?>;
     var username = '<?=$this->session->userdata('username');?>', order_data = '', bill_data = '';
-
+    var positems = [];
     function widthFunctions(e) {
         var wh = $(window).height(),
             lth = $('#left-top').height(),
@@ -1827,7 +1843,10 @@ var lang = {
             select: function (event, ui) {
                 event.preventDefault();
                 if (ui.item.id !== 0) {
-                    var row = add_invoice_item(ui.item);
+
+                    openPopup(ui.item);
+                    $(this).val('');
+                    /*var row = add_invoice_item(ui.item);
                     var wh = $("#poswarehouse").val();
                     $.ajax({
                         type: "get",
@@ -1846,12 +1865,125 @@ var lang = {
                         $('#modal-loading').hide();
                     });
                     if (row)
-                        $(this).val('');
+                        $(this).val('');*/
                 } else {
                     bootbox.alert('<?=lang('no_match_found')?>');
                 }
             }
         });
+
+
+        function openPopup(selectedItem) {
+            // Assuming selectedItem has avz_item_code as part of its data
+            $.ajax({
+                type: 'get',
+                url: '<?= admin_url('products/get_avz_item_code_details'); ?>', // Adjust the URL as needed
+                dataType: "json",
+                data: {
+                    item_id: selectedItem.item_id, // Send the unique item code
+                    warehouse_id: $('#poswarehouse').val() // Optionally include warehouse ID if needed
+                },
+                success: function (data) {
+                    $(this).removeClass('ui-autocomplete-loading');
+
+                    // Populate the modal with the returned data
+                    if (data && data.length > 0) {
+                        var modalBody = $('#itemModal .modal-body');
+                        modalBody.empty();
+
+                        // Loop through each item and create clickable entries in the modal
+                        var table = `
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Product</th>
+                                        <th>Batch No</th>
+                                        <th>Expiry</th>
+                                        <th>Quantity</th>
+                                        <th>Locked</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemTableBody"></tbody>
+                            </table>
+                        `;
+
+                        // Append the table to the modal body
+                        modalBody.append(table);
+                        
+                        // Populate the table body with the data
+                        var count = 0;
+                        var toitemsStorageValue = JSON.parse(localStorage.getItem('positems'));
+                        data.forEach(function (item) {
+                            count++;
+
+                            var avzItemCode = item.row.avz_item_code;
+                            var found = false;
+
+                            Object.keys(positems).forEach(function (key) {
+                                if (positems[key].row && positems[key].row.avz_item_code === avzItemCode) {
+                                    found = true;
+                                }
+                            });
+
+                            var tickOrCross = found ? '✔' : '✖';
+
+                            var row = `
+                                <tr style="cursor:pointer;" class="modal-item" tabindex="0" data-item-id="${item.row.avz_item_code}">
+                                    <td>${count}</td>
+                                    <td data-product="${item.row.name}">${item.row.name}</td>
+                                    <td data-batchno="${item.row.batchno}">${item.row.batchno}</td>
+                                    <td data-expiry="${item.row.expiry}">${item.row.expiry}</td>
+                                    <td data-quantity="${item.total_quantity}">${item.total_quantity}</td>
+                                    <td>${tickOrCross}</td>
+                                </tr>
+                            `;
+                            $('#itemTableBody').append(row);
+                            $('#itemTableBody tr:last-child').data('available', found);
+                        });
+
+                        // Show the modal
+                        $('#itemModal').modal('show');
+                        $('#itemTableBody').on('click', 'tr', function () {
+                            
+                            var clickedItemCode = $(this).data('item-id');
+                            var selectedItem = data.find(function (item) {
+                                return item.row.avz_item_code === clickedItemCode;
+                            });
+
+                            if (selectedItem) {
+                                $('#itemModal').modal('hide');
+                                var available = $(this).data('available');
+                                if(!available){
+                                    add_invoice_item(selectedItem);
+                                }else{
+                                    bootbox.alert('Row already added');
+                                }
+                            }else{
+                                console.log('Item not found');
+                            }
+                        });
+                        
+                    } else {
+                        bootbox.alert('No records found for this item code.');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('AJAX error:', error);
+                    bootbox.alert('An error occurred while fetching the item details.');
+                }
+            });
+        }
+
+        function onSelectFromPopup(selectedRecord) {
+            $('#itemModal').modal('hide');
+
+            var row = add_invoice_item(selectedRecord);
+            if (row) {
+                // If the row was successfully added, you can do additional actions here
+                
+            }
+        }
 
         <?php if ($pos_settings->tooltips) {
                 echo '$(".pos-tip").tooltip();';
@@ -2521,7 +2653,7 @@ var wh_count = 1, wh_an = 1, wh_total = 0, toitems = {};
             select: function (event, ui) {
                 event.preventDefault();
                 if (ui.item.id !== 0) {
-                    var row = add_transfer_item(ui.item);
+                    var row = add_invoice_item(ui.item);
                     if (row)
                         $(this).val('');
                 } else {
@@ -2817,12 +2949,12 @@ var wh_count = 1, wh_an = 1, wh_total = 0, toitems = {};
 }
 
 
-function add_transfer_item(item) {
+/*function add_invoice_item(item) {
     
     if (wh_count == 1) {
         toitems = {};
-        if ($('#from_warehouse').val()) {
-            $('#from_warehouse').select2('readonly', true);
+        if ($('#poswarehouse').val()) {
+            $('#poswarehouse').select2('readonly', true);
         } else {
             bootbox.alert(lang.select_above);
             item = null;
@@ -2850,7 +2982,7 @@ function add_transfer_item(item) {
     localStorage.setItem('toitems', JSON.stringify(toitems));
     wh_loadItems();
     return true;
-}
+}*/
 
 
 function allowDiscountValue(){

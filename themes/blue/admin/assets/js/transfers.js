@@ -232,14 +232,14 @@ $(document).ready(function () {
 			}
 			var new_qty = parseFloat($(this).val()),
 				item_id = row.attr("data-item-id");
-			toitems[item_id].row.base_quantity = new_qty;
+			/*toitems[item_id].row.base_quantity = new_qty;
 			if (toitems[item_id].row.unit != toitems[item_id].row.base_unit) {
 				$.each(toitems[item_id].units, function () {
 					if (this.id == toitems[item_id].row.unit) {
 						toitems[item_id].row.base_quantity = unitToBaseQty(new_qty, this);
 					}
 				});
-			}
+			}*/
 			toitems[item_id].row.qty = new_qty;
 			localStorage.setItem("toitems", JSON.stringify(toitems));
 			loadItems();
@@ -459,7 +459,8 @@ function loadItems() {
 			var sn = item.row.serial_no;
 			var product_id = item.row.id,
 				item_type = item.row.type,
-				item_cost = item.row.cost,
+				//item_cost = item.row.cost, // old code
+				item_cost = item.row.net_unit_sale, // This is actually the sale price
 				//item_price = item.row.price,
 				item_qty = item.row.qty,
 				item_bqty = item.row.quantity_balance,
@@ -472,18 +473,21 @@ function loadItems() {
 				item_discount = 0,
 				item_option = item.row.option,
 				item_code = item.row.code,
+				avz_code = item.row.avz_item_code,
 				item_serial = item.row.serial,
 				item_batchQuantity = item.row.batchQuantity,
 				item_name = item.row.name
 					.replace(/"/g, "&#034;")
 					.replace(/'/g, "&#039;");
-			var net_unit_cost = item.row.net_unit_cost;
+			//var net_unit_cost = item.row.net_unit_cost; // Old code
+			var net_unit_cost = item.row.net_unit_cost; // This is actually cost price
+			
 			var batchno = item.row.batch_no;
 			//var unit_cost = item.row.real_unit_cost;
-			var unit_cost = item.row.cost;
+			var unit_cost = item.row.net_unit_sale;
 			var product_unit = item.row.unit,
 				base_quantity = item.row.base_quantity;
-
+			
 			var pr_tax = item.tax_rate;
 			var pr_tax_val = 0,
 				pr_tax_rate = 0;
@@ -513,10 +517,11 @@ function loadItems() {
 					product_tax += formatDecimal(formatDecimal(pr_tax_val) * item_qty);
 				}
 			}
-			item_cost =
+
+			/*item_cost =
 				item_tax_method == 0
 					? formatDecimal(unit_cost - pr_tax_val, 4)
-					: formatDecimal(unit_cost);
+					: formatDecimal(unit_cost);*/
 			unit_cost = formatDecimal(unit_cost + item_discount, 4);
 			var sel_opt = "";
 			$.each(item.options, function () {
@@ -542,6 +547,8 @@ function loadItems() {
 				item_type +
 				'"><input name="product_code[]" type="hidden" class="rcode" value="' +
 				item_code +
+				'"><input name="avz_code[]" type="hidden" class="avzcode" value="' +
+				avz_code +
 				'"><input name="product_name[]" type="hidden" class="rname" value="' +
 				item_name +
 				'"><input name="product_option[]" type="hidden" class="roption" value="' +
@@ -560,61 +567,9 @@ function loadItems() {
 				'" title="Edit" style="cursor:pointer;"></i></td>';
 
 			tr_html +=
-				'<td><input class="form-control rserialno" name="serial_no[]" type="text" value="' +
-				item_serialno +
-				'" data-id="' +
-				row_no +
-				'" data-item="' +
-				item_id +
-				'" id="serialno_' +
-				row_no +
-				'"></td>';
-
-			var batchesOptions =
-				'<option value="" data-batchExpiry="null" data-batchQty="0"  data-batchpurchasecost="0">--</option>';
-			if (item.batches !== false) {
-				$.each(item.batches, function () {
-					batchSelected = "";
-
-					if (this.batchno == batchno && this.expiry == item.row.expiry) {
-						batchSelected = "selected";
-					}
-					batchesOptions +=
-						'<option data-batchExpiry="' +
-						this.expiry +
-						'" data-batchQty="' +
-						this.quantity +
-						'" data-netunitcost="' +
-						this.net_unit_cost +
-						'"  data-batchpurchasecost="' +
-						this.purchase_cost +
-						'" value="' +
-						this.batchno +
-						'" ' +
-						batchSelected +
-						">" +
-						this.batchno +
-						"</option>";
-				});
-			}
-
-			tr_html +=
-				'<td><select class="form-control rbatchno" name="batchno[]" id="batchno_' +
-				row_no +
-				'">' +
-				batchesOptions +
-				"</select></td>";
-
-			// tr_html +=
-			//     '<td><input class="form-control" name="batchno[]" type="text" value="' +
-			//     batchno +
-			//     '" data-id="' +
-			//     row_no +
-			//     '" data-item="' +
-			//     item_id +
-			//     '" id="batchno_' +
-			//     row_no +
-			//     '"></td>';
+				'<td><input name="batchno[]" type="hidden" value="' +
+				item.row.batch_no +
+				'">'+item.row.batch_no+'</td>';
 
 			if (site.settings.product_expiry == 1) {
 				tr_html +=
@@ -628,21 +583,6 @@ function loadItems() {
 					row_no +
 					'"></td>';
 			}
-
-			/*tr_html +=
-                '<td class="text-right"><input class="form-control input-sm text-right rcost" name="net_cost[]" type="hidden" id="cost_' +
-                row_no +
-                '" value="' +
-                formatDecimal(item_cost) +
-                '"><input class="rucost" name="unit_cost[]" type="hidden" value="' +
-                unit_cost +
-                '"><input class="realucost" name="real_unit_cost[]" type="hidden" value="' +
-                item.row.real_unit_cost +
-                '"><span class="text-right scost" id="scost_' +
-                row_no +
-                '">' +
-                formatMoney(item_cost) +
-                '</span></td>';*/
 
 			tr_html +=
 				'<td class="text-right"><input class="form-control input-sm text-left rcost" name="net_cost[]" type="text" id="cost_' +
@@ -682,10 +622,10 @@ function loadItems() {
 				'"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' +
 				base_quantity +
 				'"><span style="font-size:10px;margin-top:5px;" class="batchQuantity">' +
-				item_batchQuantity +
+				base_quantity +
 				"</span></td>";
 
-			tr_html += "<td><span>" + formatDecimal(item_aqty, 4) + "</span></td>";
+			//tr_html += "<td><span>" + formatDecimal(item_aqty, 4) + "</span></td>";
 
 			if (site.settings.tax1 == 1) {
 				tr_html +=
@@ -734,13 +674,7 @@ function loadItems() {
                 $('#add_transfer, #edit_transfer').attr('disabled', true);
             }*/
 
-			console.log("Current status: " + currentstatus);
-			// Thi will override all the above checks
-			if (
-				(parseFloat(base_quantity) > parseFloat(item_batchQuantity) &&
-					currentstatus != "sent") ||
-				item_batchQuantity == null
-			) {
+			if ((parseFloat(base_quantity) < parseFloat(item_qty))) {
 				$("#row_" + row_no).addClass("danger");
 				$("#add_transfer, #edit_transfer").attr("disabled", true);
 			}
@@ -751,11 +685,7 @@ function loadItems() {
 			col++;
 		}
 		var tfoot =
-			'<tr id="tfoot" class="tfoot active"><th colspan="' +
-			col +
-			'">Total</th><th class="text-center">' +
-			formatQty(parseFloat(count) - 1) +
-			"</th>";
+			'<tr id="tfoot" class="tfoot active"><th colspan="4">Total</th><th class="text-center"></th>';
 		tfoot += '<th class="text-right"> </th>';
 		if (site.settings.tax1 == 1) {
 			tfoot += '<th class="text-right">' + formatMoney(product_tax) + "</th>";
@@ -817,6 +747,7 @@ function add_transfer_item(item) {
 		toitems[item_id].row.qty = new_qty;
 	} else {
 		toitems[item_id] = item;
+		toitems[item_id].row.base_quantity = item.row.qty;
 	}
 	toitems[item_id].order = new Date().getTime();
 	localStorage.setItem("toitems", JSON.stringify(toitems));

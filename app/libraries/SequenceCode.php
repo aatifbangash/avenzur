@@ -95,6 +95,12 @@ class SequenceCode
                 $this->_ci->db->select('MAX(sequence_code) as maxNumber');
                 $latestCode = $this->_ci->db->get('sma_transfers')->row_array();
                 break;
+            
+            // Return Supplier Code
+            case 'SRTN':
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_returns_supplier')->row_array();
+                break;
 
                 // Department Code
             case 'DP':

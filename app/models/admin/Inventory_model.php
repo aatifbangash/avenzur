@@ -8,7 +8,7 @@ class Inventory_model extends CI_Model {
     }
 
     // Function to add an inventory movement for any operation, explicitly including location
-    public function add_movement($product_id, $batch_no, $type, $quantity, $location_id, $reference_id=null, $net_unit_cost=null, $expiry_date=null, $net_unit_sale=null, $real_unit_cost=null)
+    public function add_movement($product_id, $batch_no, $type, $quantity, $location_id, $reference_id=null, $net_unit_cost=null, $expiry_date=null, $net_unit_sale=null, $real_unit_cost=null, $avz_item_code=null, $bonus=null)
     {
         $quantity = abs($quantity);
 
@@ -22,7 +22,9 @@ class Inventory_model extends CI_Model {
             'net_unit_cost' => $net_unit_cost,
             'expiry_date' => $expiry_date,
             'net_unit_sale' => $net_unit_sale,
-            'real_unit_cost' => $real_unit_cost
+            'real_unit_cost' => $real_unit_cost,
+            'avz_item_code' => $avz_item_code,
+            'bonus' => $bonus
         );
         if ($this->db->insert('sma_inventory_movements', $data)) {
            // echo "insrted";
