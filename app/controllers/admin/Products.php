@@ -3953,7 +3953,7 @@ class Products extends MY_Controller
         // Get the product name and quantity from the form
         $productName =  '1548654678';//$this->input->post('product_name');
         $quantity = 2; //$this->input->post('quantity');
-
+        
         // Generate the ZPL for the given quantity
         $zpl = $this->generate_zpl($productName, $quantity);
 
@@ -3975,10 +3975,25 @@ class Products extends MY_Controller
     private function send_to_printer($zpl) {
         // Add the correct path to your printer here
         $printerName = 'Zebra_S4M'; // Modify to match your printer name
-        $handle = printer_open($printerName);
-        printer_set_option($handle, PRINTER_MODE, "RAW");
-        printer_write($handle, $zpl);
-        printer_close($handle);
+
+        $fileName = tempnam(sys_get_temp_dir(), 'zpl');
+        file_put_contents($fileName, $zpl);
+
+        $printerName = 'Zebra_S4M';  // Change to your printer name configured in CUPS
+$command = "lp -d {$printerName} {$fileName}";
+exec($command);
+
+//         $printerName = '\\\\computername\\Zebra_S4M';  // Use the network path or local path to your printer
+// $command = "copy /B {$fileName} {$printerName}";
+// exec($command);
+unlink($fileName);
+
+
+        // $handle = printer_open($printerName);
+        
+        // printer_set_option($handle, PRINTER_MODE, "RAW");
+        // printer_write($handle, $zpl);
+        // printer_close($handle);
     }
     public function print_barcodes_old($product_id = null)
     {
