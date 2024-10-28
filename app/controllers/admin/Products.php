@@ -4795,27 +4795,51 @@ class Products extends MY_Controller
     public function get_avz_item_code_details(){
         $item_id = $this->input->get('item_id');
         $warehouse_id = $this->input->get('warehouse_id'); // Optionally filter by warehouse if needed
+        $customer_id = $this->input->get('customer_id');
     
         // Validate that avz_item_code is provided
         if (!$item_id) {
             echo json_encode(['status' => 'error', 'message' => 'No item code provided']);
             return;
         }
-    
-        $this->db->select('pi.avz_item_code, pi.product_code, im.net_unit_sale, im.net_unit_cost, im.real_unit_cost, pr.tax_rate, pr.type, pr.unit, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
-        $this->db->from('sma_purchase_items pi');
-        $this->db->join('sma_purchases p', 'p.id = pi.purchase_id', 'left');
-        $this->db->join('sma_inventory_movements im', 'pi.avz_item_code = im.avz_item_code', 'left');
-        $this->db->join('sma_products pr', 'pr.id = pi.product_id', 'left');
-        $this->db->where('pi.product_id', $item_id);
-        if ($warehouse_id) {
-            //$this->db->where('pi.warehouse_id', $warehouse_id);
+        
+        if($customer_id){
+
+            $this->db->select("im.net_unit_sale, 
+                            im.net_unit_cost, 
+                            im.real_unit_cost,
+                            im.customer_id,
+                            im.product_id,
+                            pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
+                            pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
+                            (SUM(CASE WHEN im.type = 'customer_return' THEN -1*im.quantity ELSE 0 END) - SUM(CASE WHEN im.type = 'sale' THEN im.quantity ELSE 0 END) ) AS total_quantity", false);
+            $this->db->from('sma_inventory_movements im');
+            $this->db->join('sma_products pr', 'pr.id = im.product_id', 'left');
             $this->db->where('im.location_id', $warehouse_id);
+            $this->db->where('im.product_id', $item_id);
+            $this->db->where('im.customer_id', $customer_id);
+
+            $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
+            $this->db->having('total_quantity !=', 0);
+            $query = $this->db->get();
+            
+        }else{
+            $this->db->select('pi.avz_item_code, pi.product_code, im.net_unit_sale, im.net_unit_cost, im.real_unit_cost, pr.tax_rate, pr.type, pr.unit, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
+            $this->db->from('sma_purchase_items pi');
+            $this->db->join('sma_purchases p', 'p.id = pi.purchase_id', 'left');
+            $this->db->join('sma_inventory_movements im', 'pi.avz_item_code = im.avz_item_code', 'left');
+            $this->db->join('sma_products pr', 'pr.id = pi.product_id', 'left');
+            $this->db->where('pi.product_id', $item_id);
+            if ($warehouse_id) {
+                $this->db->where('pi.warehouse_id', $warehouse_id);
+                $this->db->where('im.location_id', $warehouse_id);
+            }
+            $this->db->group_by(['pi.warehouse_id', 'pi.avz_item_code', 'pi.expiry']);
+            $this->db->having('total_quantity >', 0);
+            $query = $this->db->get();
+        
         }
-        $this->db->group_by(['pi.warehouse_id', 'pi.avz_item_code', 'pi.expiry']);
-        $this->db->having('total_quantity >', 0);
-        $query = $this->db->get();
-    
+
         if ($query->num_rows() > 0) {
             $rows = $query->result();
 
@@ -4868,5 +4892,6 @@ class Products extends MY_Controller
             // Return an error if no records found
             echo json_encode(['status' => 'error', 'message' => 'No items found for this item code']);
         }
+    
     }
 }
