@@ -55,7 +55,7 @@
                     type: 'get',
                     url: '<?= admin_url('returns/bch_suggestions'); ?>',
                     dataType: "json",
-                    data: { term: request.term, warehouse_id: $("#rewarehouse").val(), },
+                    data: { term: request.term, warehouse_id: $("#rewarehouse").val() },
                     success: function (data) {
                         $(this).removeClass('ui-autocomplete-loading');
                         response(data);
@@ -110,7 +110,8 @@
             dataType: "json",
             data: {
                 item_id: selectedItem.item_id, // Send the unique item code
-                warehouse_id: $("#rewarehouse").val() // Optionally include warehouse ID if needed
+                warehouse_id: $("#rewarehouse").val(), // Optionally include warehouse ID if needed
+                customer_id: $('#recustomer').val()
             },
             success: function (data) {
                 $(this).removeClass('ui-autocomplete-loading');
@@ -300,6 +301,7 @@
                     foreach ($warehouses as $warehouse) {
                         $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                     }
+                    
                     echo form_dropdown('warehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : $Settings->default_warehouse), 'id="rewarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
                                 </div>
                             </div>

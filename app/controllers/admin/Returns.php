@@ -463,7 +463,8 @@ class Returns extends MY_Controller
             
             $this->data['error']      = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['billers']    = $this->site->getAllCompanies('biller');
-            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            //$this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['warehouses'] = $this->site->getMainWarehouse();
             $this->data['tax_rates']  = $this->site->getAllTaxRates();
             $this->data['units']      = $this->site->getAllBaseUnits();
             $bc                       = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('returns'), 'page' => lang('returns')], ['link' => '#', 'page' => lang('add_return')]];
@@ -933,7 +934,8 @@ class Returns extends MY_Controller
             $this->data['id']         = $id;
             $this->data['error']      = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['billers']    = $this->site->getAllCompanies('biller');
-            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            //$this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['warehouses'] = $this->site->getMainWarehouse();
             $this->data['tax_rates']  = $this->site->getAllTaxRates();
             $this->data['units']      = $this->site->getAllBaseUnits();
             $bc                       = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('returns'), 'page' => lang('returns')], ['link' => '#', 'page' => lang('edit_return')]];
