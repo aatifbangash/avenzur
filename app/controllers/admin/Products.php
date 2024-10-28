@@ -3949,7 +3949,38 @@ class Products extends MY_Controller
         }
     }
 
-    public function print_barcodes($product_id = null)
+    public function print_barcodes() {
+        // Get the product name and quantity from the form
+        $productName =  '1548654678';//$this->input->post('product_name');
+        $quantity = 2; //$this->input->post('quantity');
+
+        // Generate the ZPL for the given quantity
+        $zpl = $this->generate_zpl($productName, $quantity);
+
+        // Print the ZPL to the printer
+        $this->send_to_printer($zpl);
+
+        // Redirect or inform the user of success
+        echo "Printed {$quantity} labels for {$productName}";
+    }
+
+    private function generate_zpl($productName, $quantity) {
+        $zpl = '';
+        for ($i = 0; $i < $quantity; $i++) {
+            $zpl .= "^XA^FO100,100^BY3^BCN,100,Y,N,N^FD{$productName}^FS^XZ";
+        }
+        return $zpl;
+    }
+
+    private function send_to_printer($zpl) {
+        // Add the correct path to your printer here
+        $printerName = 'Zebra_S4M'; // Modify to match your printer name
+        $handle = printer_open($printerName);
+        printer_set_option($handle, PRINTER_MODE, "RAW");
+        printer_write($handle, $zpl);
+        printer_close($handle);
+    }
+    public function print_barcodes_old($product_id = null)
     {
         $this->sma->checkPermissions('barcode', true);
 
