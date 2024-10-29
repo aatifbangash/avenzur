@@ -73,19 +73,41 @@
                     $('#add_item').focus();
                     return false;
                 }
-                $.ajax({
-                    type: 'get',
-                    url: '<?= admin_url('transfers/bch_suggestions'); ?>',
-                    dataType: "json",
-                    data: {
-                        term: request.term,
-                        warehouse_id: $("#from_warehouse").val()
-                    },
-                    success: function (data) {
-                        $(this).removeClass('ui-autocomplete-loading');
-                        response(data);
-                    }
-                });
+
+                if(request.term.includes('AVZ')){
+                    $.ajax({
+                        type: 'get',
+                        url: '<?=admin_url('products/get_items_by_avz_code');?>',
+                        dataType: "json",
+                        data: {
+                            term: request.term,
+                            warehouse_id: $("#from_warehouse").val()
+                        },
+                        success: function (data) {
+                            $(this).removeClass('ui-autocomplete-loading');
+                            if(data){
+                                add_transfer_item(data[0]);
+                            }else{
+                                bootbox.alert('No records found for this item code.');
+                            }
+                            
+                        }
+                    });
+                }else{
+                    $.ajax({
+                        type: 'get',
+                        url: '<?= admin_url('transfers/bch_suggestions'); ?>',
+                        dataType: "json",
+                        data: {
+                            term: request.term,
+                            warehouse_id: $("#from_warehouse").val()
+                        },
+                        success: function (data) {
+                            $(this).removeClass('ui-autocomplete-loading');
+                            response(data);
+                        }
+                    });
+                }
             },
             minLength: 1,
             autoFocus: false,

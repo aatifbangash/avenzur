@@ -51,16 +51,39 @@
         });
         $("#add_item").autocomplete({
             source: function (request, response) {
-                $.ajax({
-                    type: 'get',
-                    url: '<?= admin_url('returns/bch_suggestions'); ?>',
-                    dataType: "json",
-                    data: { term: request.term, warehouse_id: $("#rewarehouse").val() },
-                    success: function (data) {
-                        $(this).removeClass('ui-autocomplete-loading');
-                        response(data);
-                    }
-                });
+
+                if(request.term.includes('AVZ')){
+                    $.ajax({
+                        type: 'get',
+                        url: '<?=admin_url('products/get_items_by_avz_code');?>',
+                        dataType: "json",
+                        data: {
+                            term: request.term,
+                            warehouse_id: $("#rewarehouse").val(),
+                            customer_id: $("#recustomer").val()
+                        },
+                        success: function (data) {
+                            $(this).removeClass('ui-autocomplete-loading');
+                            if(data){
+                                add_return_item(data[0]);
+                            }else{
+                                bootbox.alert('No records found for this item code.');
+                            }
+                            
+                        }
+                    });
+                }else{
+                    $.ajax({
+                        type: 'get',
+                        url: '<?= admin_url('returns/bch_suggestions'); ?>',
+                        dataType: "json",
+                        data: { term: request.term, warehouse_id: $("#rewarehouse").val() },
+                        success: function (data) {
+                            $(this).removeClass('ui-autocomplete-loading');
+                            response(data);
+                        }
+                    });
+                }
             },
             minLength: 1,
             autoFocus: false,
