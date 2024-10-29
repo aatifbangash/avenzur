@@ -1177,9 +1177,11 @@ class Products_model extends CI_Model
     public function syncAdjustment($data = [])
     {
         if (!empty($data)) {
+            $avz_item_code = $this->sma->generateUUIDv4();
+
             $clause = ['product_id' => $data['product_id'], 'unit_cost' => $data['unit_cost'], 'sale_price' => $data['sale_price'], 'vat' => $data['vat'], 'batchno' => $data['batchno'], 'expiry' => $data['expiry'], 'option_id' => $data['option_id'], 'warehouse_id' => $data['warehouse_id'], 'status' => 'received'];
             $qty = $data['type'] == 'subtraction' ? 0 - $data['quantity'] : 0 + $data['quantity'];
-            $this->site->setAdjustmentPurchaseItem($clause, $qty);
+            $this->site->setAdjustmentPurchaseItem($clause, $qty, $avz_item_code);
 
             $this->site->syncProductQty($data['product_id'], $data['warehouse_id'], $data['batchno']);
             if ($data['option_id']) {
@@ -1187,7 +1189,7 @@ class Products_model extends CI_Model
             }
             $movement_type = $data['type'] == 'subtraction' ? 'adjustment_decrease': 'adjustment_increase';
             $adjustment_id = isset($data['adjustment_id']) ? $data['adjustment_id'] : null;
-            $this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id'], $adjustment_id, $data['unit_cost'], $data['expiry'], $data['sale_price'], $data['unit_cost']);
+            $this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id'], $adjustment_id, $data['unit_cost'], $data['expiry'], $data['sale_price'], $data['unit_cost'], $avz_item_code);
                
         }
     }
