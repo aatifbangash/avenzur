@@ -1361,7 +1361,7 @@ public function logVisitor() {
         return '<script type="text/javascript">' . file_get_contents($this->data['assets'] . 'js/modal.js') . '</script>';
     }
 
-    public function setAdjustmentPurchaseItem($clause, $qty){
+    public function setAdjustmentPurchaseItem($clause, $qty, $avz_item_code){
         if ($product = $this->getProductByID($clause['product_id'])) {
             $vat = $clause['vat'];
             unset($clause['vat']);
@@ -1386,6 +1386,7 @@ public function logVisitor() {
             $clause['net_unit_cost']     = $clause['real_unit_cost']     = $clause['unit_cost'];
             $clause['quantity_balance']  = $clause['quantity']  = $clause['unit_quantity']  = $clause['quantity_received']  = $qty;
             $clause['subtotal']          = ($clause['net_unit_cost'] * $qty);
+            $clause['avz_item_code']     = $avz_item_code;
             
             if (isset($vat) && $vat != 0) {
                 $tax_details           = $this->site->getTaxRateByID($vat);
