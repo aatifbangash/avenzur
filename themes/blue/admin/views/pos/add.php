@@ -1803,20 +1803,45 @@ var lang = {
                     $('#add_item').focus();
                     return false;
                 }
-                $.ajax({
-                    type: 'get',
-                    url: '<?=admin_url('sales/suggestions/1');?>',
-                    dataType: "json",
-                    data: {
-                        term: request.term,
-                        warehouse_id: $("#poswarehouse").val(),
-                        customer_id: $("#poscustomer").val()
-                    },
-                    success: function (data) {
-                        $(this).removeClass('ui-autocomplete-loading');
-                        response(data);
-                    }
-                });
+
+                if(request.term.includes('AVZ')){
+                    $.ajax({
+                        type: 'get',
+                        url: '<?=admin_url('products/get_items_by_avz_code');?>',
+                        dataType: "json",
+                        data: {
+                            term: request.term,
+                            warehouse_id: $("#poswarehouse").val(),
+                            customer_id: $("#poscustomer").val()
+                        },
+                        success: function (data) {
+                            $(this).removeClass('ui-autocomplete-loading');
+                            if(data){
+                                add_invoice_item(data[0]);
+                            }else{
+                                bootbox.alert('No records found for this item code.');
+                            }
+                            
+                        }
+                    });
+                }else{
+                    $.ajax({
+                        type: 'get',
+                        url: '<?=admin_url('sales/suggestions/1');?>',
+                        dataType: "json",
+                        data: {
+                            term: request.term,
+                            warehouse_id: $("#poswarehouse").val(),
+                            customer_id: $("#poscustomer").val()
+                        },
+                        success: function (data) {
+                            $(this).removeClass('ui-autocomplete-loading');
+                            console.log(data);
+                            response(data);
+                        }
+                    });
+                }
+                
             },
             minLength: 1,
             autoFocus: false,
