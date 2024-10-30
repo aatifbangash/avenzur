@@ -286,6 +286,7 @@ table#slTable td input.form-control {
                             <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>Avz Code</th>
                                     <th>Product</th>
                                     <th>Supplier</th>
                                     <th>Batch No</th>
@@ -321,6 +322,7 @@ table#slTable td input.form-control {
                         var row = `
                             <tr style="cursor:pointer;" class="modal-item" tabindex="0" data-item-id="${item.row.avz_item_code}">
                                 <td>${count}</td>
+                                <td data-avzcode="${item.row.avz_item_code}">${item.row.avz_item_code}</td>
                                 <td data-product="${item.row.name}">${item.row.name}</td>
                                 <td data-supplier="${item.row.supplier}">${item.row.supplier}</td>
                                 <td data-batchno="${item.row.batchno}">${item.row.batchno}</td>
@@ -379,7 +381,7 @@ table#slTable td input.form-control {
 
 <div class="modal fade" id="itemModal" tabindex="-1" role="dialog" aria-labelledby="itemModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
-        <div class="modal-content">
+        <div class="modal-content" style="min-width:800px !important;">
             <div class="modal-header">
                 <h5 class="modal-title" id="itemModalLabel">Select an Item</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
