@@ -3950,51 +3950,62 @@ class Products extends MY_Controller
     }
 
     public function print_barcodes() {
-        // Get the product name and quantity from the form
-        $productName =  '1548654678';//$this->input->post('product_name');
-        $quantity = 2; //$this->input->post('quantity');
-        
-        // Generate the ZPL for the given quantity
-        $zpl = $this->generate_zpl($productName, $quantity);
+        if( $this->input->get('use') == 'command'){
+            $filePath =  base_url('assets/new_label.zpl');
+            echo $filePath = FCPATH . 'assets' . DIRECTORY_SEPARATOR . 'new_label.zpl';
 
-        // Print the ZPL to the printer
-        $this->send_to_printer($zpl);
+            // Check if the file actually exists before attempting to copy
+            if (!file_exists($filePath)) {
+                die("Error: File not found at path - $filePath");
+            }
+            // Network path of the Zebra printer
+            $printerPath = "\\\\192.168.30.113\\Zebra_S4M"; // Double backslashes are necessary in PHP strings
 
-        // Redirect or inform the user of success
-        echo "Printed {$quantity} labels for {$productName}";
-    }
+            // Build the copy command
+            $command = "copy /B \"$filePath\" \"$printerPath\" 2>&1";
 
-    private function generate_zpl($productName, $quantity) {
-        $zpl = '';
-        for ($i = 0; $i < $quantity; $i++) {
-            $zpl .= "^XA^FO100,100^BY3^BCN,100,Y,N,N^FD{$productName}^FS^XZ";
+            // Execute the copy command and capture output
+            $output = shell_exec($command);
+
+            // Display the output or an error message if there's an issue
+            if (strpos($output, '0 file(s) copied') !== false || $output === null) {
+                echo "Error: " . $output;
+            } else {
+                echo "Command output: $output";
+            }
         }
-        return $zpl;
+        else {
+               
+            $zplFilePath = base_url('assets/new_label.zpl');
+            $host = "192.168.30.113";  
+            $port = 6101;              // Use port 9100 (or 6101 if specified for Zebra printers)
+            // Send the ZPL data to the printer
+            $result = $this->sendZplToPrinter($host, $port, $zplFilePath);
+            echo $result;
+        }
+     
+
     }
 
-    private function send_to_printer($zpl) {
-        // Add the correct path to your printer here
-        $printerName = 'Zebra_S4M'; // Modify to match your printer name
-
-        $fileName = tempnam(sys_get_temp_dir(), 'zpl');
-        file_put_contents($fileName, $zpl);
-
-        $printerName = 'Zebra_S4M';  // Change to your printer name configured in CUPS
-$command = "lp -d {$printerName} {$fileName}";
-exec($command);
-
-//         $printerName = '\\\\computername\\Zebra_S4M';  // Use the network path or local path to your printer
-// $command = "copy /B {$fileName} {$printerName}";
-// exec($command);
-unlink($fileName);
-
-
-        // $handle = printer_open($printerName);
-        
-        // printer_set_option($handle, PRINTER_MODE, "RAW");
-        // printer_write($handle, $zpl);
-        // printer_close($handle);
+function sendZplToPrinter($host, $port, $zplFilePath) {
+    $zpl = file_get_contents($zplFilePath);
+    $fp = @fsockopen($host, $port, $errno, $errstr, 30);
+    if (!$fp) {
+        return "ERROR: $errstr ($errno)";
+    } else {
+        fwrite($fp, $zpl);
+        fclose($fp);
+        return 'ZPL data sent successfully';
     }
+}
+
+private function generate_zpl($productName, $quantity) {
+    $zpl = '';
+    for ($i = 0; $i < $quantity; $i++) {
+        $zpl .= "^XA^FO100,100^BY3^BCN,100,Y,N,N^FD{$productName}^FS^XZ";
+    }
+    return $zpl;
+}
     public function print_barcodes_old($product_id = null)
     {
         $this->sma->checkPermissions('barcode', true);
