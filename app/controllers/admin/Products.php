@@ -3961,7 +3961,7 @@ class Products extends MY_Controller
             // Network path of the Zebra printer
             $printerPath = "\\\\192.168.30.113\\Zebra_S4M"; // Double backslashes are necessary in PHP strings
 
-            // Build the copy command
+            // Build the copy command 
             $command = "cp \"$filePath\" \"$printerPath\" 2>&1";
 
             // Execute the cp command and capture output
