@@ -3962,13 +3962,13 @@ class Products extends MY_Controller
             $printerPath = "\\\\192.168.30.113\\Zebra_S4M"; // Double backslashes are necessary in PHP strings
 
             // Build the copy command
-            $command = "copy /B \"$filePath\" \"$printerPath\" 2>&1";
+            $command = "cp \"$filePath\" \"$printerPath\" 2>&1";
 
-            // Execute the copy command and capture output
+            // Execute the cp command and capture output
             $output = shell_exec($command);
 
             // Display the output or an error message if there's an issue
-            if (strpos($output, '0 file(s) copied') !== false || $output === null) {
+            if ($output === null || strpos($output, 'No such file or directory') !== false) {
                 echo "Error: " . $output;
             } else {
                 echo "Command output: $output";
