@@ -253,12 +253,16 @@ class Sma
     }
 
     public function generateUUIDv4() {
-        $prefix = 'AVZ';  // Your custom prefix
-        $timestamp = time();  // Current timestamp
-        $randomString = substr(md5(uniqid(mt_rand(), true)), 0, 7);  // Generate a random string of 7 characters
+        // $prefix = 'AVZ';  // Your custom prefix
+        // $timestamp = time();  // Current timestamp
+        // $randomString = substr(md5(uniqid(mt_rand(), true)), 0, 7);  // Generate a random string of 7 characters
 
-        // Combine them to form the unique code
-        $uniqueCode = $prefix . $timestamp . $randomString;
+        // // Combine them to form the unique code
+        // $uniqueCode = $prefix . $timestamp . $randomString;
+
+        $timestamp = microtime(true) * 10000;  
+        $randomNumber = mt_rand(100, 999);     
+        $uniqueCode = substr($timestamp . $randomNumber, -6);
 
         return $uniqueCode;
     }
