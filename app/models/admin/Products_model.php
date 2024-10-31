@@ -1366,4 +1366,18 @@ class Products_model extends CI_Model
         }
         return false;
     }
+
+    public function getProductAvzCode($product_id)
+    {
+        $this->db->select('avz_item_code');
+        $this->db->from('purchase_items');
+        $this->db->where('product_id', $product_id);
+        $this->db->limit(1); 
+        $q = $this->db->get();
+    
+        if ($q->num_rows() > 0) {
+            return $q->row()->avz_item_code;
+        }
+        return false;
+    }
 }

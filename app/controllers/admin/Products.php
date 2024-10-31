@@ -3949,11 +3949,24 @@ class Products extends MY_Controller
         }
     }
 
-    public function print_barcodes() {
+    public function print_barcodes_new() {
         if( $this->input->get('use') == 'command'){
             $filePath =  base_url('assets/new_label.zpl');
             echo $filePath = FCPATH . 'assets' . DIRECTORY_SEPARATOR . 'new_label.zpl';
-
+            $productName = 'sulfad' ;
+            $avzCode = '123456';
+            $price = 5;
+            $zplCode = "^XA\n"
+            . "^FO20,20^A0N,15,15^FD{$productName}^FS\n" // Product name at top with a smaller font
+            . "^FO5,30\n"                               // Position barcode
+            . "^BY2,2,50\n"                             // Bar width, space between bars, height
+            . "^BCN,50,Y,N,N\n"                         // Code 128 Barcode, 50 dots tall, HRI off
+            . "^FD{$avzCode}^FS\n"                   // GTIN Number (dynamic)
+            . "^FO20,120\n"                             // Position price below the barcode
+            . "^A0N,20,20\n"                            // Font size for price text
+            . "^FD{$price}^FS\n"                        // Price (dynamic)
+            . "^XZ";
+            file_put_contents($filePath, $zplCode);
             // Check if the file actually exists before attempting to copy
             if (!file_exists($filePath)) {
                 die("Error: File not found at path - $filePath");
@@ -3961,8 +3974,8 @@ class Products extends MY_Controller
             // Network path of the Zebra printer
             $printerPath = "\\\\192.168.30.113\\Zebra_S4M"; // Double backslashes are necessary in PHP strings
 
-            // Build the copy command 
-            $command = "cp \"$filePath\" \"$printerPath\" 2>&1";
+            // Build the copy command
+            $command = "copy /B \"$filePath\" \"$printerPath\" 2>&1";
 
             // Execute the cp command and capture output
             $output = shell_exec($command);
@@ -4006,13 +4019,96 @@ private function generate_zpl($productName, $quantity) {
     }
     return $zpl;
 }
-    public function print_barcodes_old($product_id = null)
+    public function print_barcodes($product_id = null)
     {
         $this->sma->checkPermissions('barcode', true);
 
         $this->form_validation->set_rules('style', lang('style'), 'required');
 
         if ($this->form_validation->run() == true) {
+
+            // print barcodes
+            $s          = isset($_POST['product']) ? sizeof($_POST['product']) : 0;
+            if ($s < 1) {
+                $this->session->set_flashdata('error', lang('no_product_selected'));
+                admin_redirect('products/print_barcodes');
+            }
+            for ($m = 0; $m < $s; $m++) {
+                $pid            = $_POST['product'][$m];
+                $quantity       = $_POST['quantity'][$m];
+                $product        = $this->products_model->getProductWithCategory($pid);
+                $product->price = $this->input->post('check_promo') ? ($product->promotion ? $product->promo_price : $product->price) : $product->price;
+                $pr_item_tax = 0;
+                
+                $item_tax_rate = $product->tax_rate;
+                if (isset($item_tax_rate) && $item_tax_rate != 0) {
+                    $tax_details = $this->site->getTaxRateByID($item_tax_rate);
+                    $ctax        = $this->site->calculateTax($product, $tax_details,$product->price);
+                    $item_tax    = $this->sma->formatDecimal($ctax['amount']);
+                    $tax         = $ctax['tax'];
+
+                    $pr_item_tax = $this->sma->formatDecimal(($product->price*($tax_details->rate/100)), 4);
+                }
+
+                $productPrice = $product->price + $pr_item_tax;
+                $productName = $product->name;//substr($product->name, 0, 80); 
+                $avzCode = $this->products_model->getProductAvzCode($pid);
+
+                $maxLength = 30;
+                $line1 = substr($productName, 0, $maxLength);
+                $line2 = strlen($productName) > $maxLength ? substr($productName, $maxLength) : '';
+
+                // Generate the ZPL code
+               
+
+                for($i=1; $i <= $quantity; $i++) {
+                    // print barcode
+                     $filePath = FCPATH . 'assets' . DIRECTORY_SEPARATOR . 'new_label.zpl';
+                     $zplCode = "^XA\n"
+                    . "^FO20,20^A0N,15,15^FD{$line1}^FS\n";     
+
+                // Add second line if it exists
+                if ($line2) {
+                    $zplCode .= "^FO20,40^A0N,15,15^FD{$line2}^FS\n"; 
+                }
+                    $zplCode .= 
+                     "^FO20,60\n"                               // Position barcode
+                    . "^BY2,2,50\n"                             // Bar width, space between bars, height
+                    . "^BCN,50,Y,N,N\n"                         // Code 128 Barcode, 50 dots tall, HRI off
+                    . "^FD{$avzCode}^FS\n"                   // GTIN Number (dynamic)
+                    . "^FO170,130\n"                             // Position price below the barcode
+                    . "^A0N,20,20\n"                            // Font size for price text
+                    . "^FD{$this->sma->formatMoney($productPrice)}^FS\n"                        // Price (dynamic)
+                    . "^XZ";
+                    file_put_contents($filePath, $zplCode);
+                    // Check if the file actually exists before attempting to copy
+                    if (!file_exists($filePath)) {
+                        die("Error: File not found at path - $filePath");
+                    }
+                    // Network path of the Zebra printer
+                    $printerPath = "\\\\192.168.30.113\\Zebra_S4M"; // Double backslashes are necessary in PHP strings
+        
+                    // Build the copy command
+                    $command = "copy /B \"$filePath\" \"$printerPath\" 2>&1";
+        
+                    // Execute the cp command and capture output
+                    $output = shell_exec($command);
+        
+                    // Display the output or an error message if there's an issue
+                    if ($output === null || strpos($output, 'No such file or directory') !== false) {
+                        echo "Error: " . $output;
+                    } 
+                }
+
+
+               
+            }
+            echo "success";
+
+            exit;
+            //end barcodes
+
+
             $style      = $this->input->post('style');
             $bci_size   = ($style == 10 || $style == 12 ? 50 : ($style == 14 || $style == 18 ? 30 : 20));
             $currencies = $this->site->getAllCurrencies();
