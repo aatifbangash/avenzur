@@ -4076,7 +4076,7 @@ class Products extends MY_Controller
         $this->form_validation->set_rules('style', lang('style'), 'required');
 
         if ($this->form_validation->run() == true) {
-
+            $purchase_id =  $this->input->post('purchase_id') ;
             // print barcodes
             $s = isset($_POST['product']) ? sizeof($_POST['product']) : 0;
             if ($s < 1) {
@@ -4102,7 +4102,7 @@ class Products extends MY_Controller
 
                 $productPrice = $product->price + $pr_item_tax;
                 $productName = $product->name;//substr($product->name, 0, 80); 
-                $avzCode = $this->products_model->getProductAvzCode($pid);
+                $avzCode = $this->products_model->getProductAvzCode($pid, $purchase_id);
 
                 $maxLength = 30;
                 $line1 = substr($productName, 0, $maxLength);
