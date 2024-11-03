@@ -1805,25 +1805,7 @@ var lang = {
                 }
 
                 if(request.term.includes('AVZ')){
-                    $.ajax({
-                        type: 'get',
-                        url: '<?=admin_url('products/get_items_by_avz_code');?>',
-                        dataType: "json",
-                        data: {
-                            term: request.term,
-                            warehouse_id: $("#poswarehouse").val(),
-                            customer_id: $("#poscustomer").val()
-                        },
-                        success: function (data) {
-                            $(this).removeClass('ui-autocomplete-loading');
-                            if(data){
-                                add_invoice_item(data[0]);
-                            }else{
-                                bootbox.alert('No records found for this item code.');
-                            }
-                            
-                        }
-                    });
+                    
                 }else{
                     $.ajax({
                         type: 'get',
@@ -1835,9 +1817,31 @@ var lang = {
                             customer_id: $("#poscustomer").val()
                         },
                         success: function (data) {
-                            $(this).removeClass('ui-autocomplete-loading');
-                            console.log(data);
-                            response(data);
+                            if(data[0].id != 0){
+                                $(this).removeClass('ui-autocomplete-loading');
+                                response(data);
+                            }else{
+                                $.ajax({
+                                    type: 'get',
+                                    url: '<?=admin_url('products/get_items_by_avz_code');?>',
+                                    dataType: "json",
+                                    data: {
+                                        term: request.term,
+                                        warehouse_id: $("#poswarehouse").val(),
+                                        customer_id: $("#poscustomer").val()
+                                    },
+                                    success: function (data) {
+                                        $(this).removeClass('ui-autocomplete-loading');
+                                        if(data){
+                                            add_invoice_item(data[0]);
+                                        }else{
+                                            bootbox.alert('No records found for this item code.');
+                                        }
+                                        
+                                    }
+                                });
+                            }
+                            
                         }
                     });
                 }
