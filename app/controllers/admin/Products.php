@@ -4131,7 +4131,7 @@ class Products extends MY_Controller
                         . "^XZ";
 
                         // CALL PYTHON HELPER LOCALLY
-                        $url = "http://192.168.30.104:5000/print";
+                        $url = "https://f283-2001-16a4-9-7870-443a-c87f-a5b1-f8ea.ngrok-free.app/print";
 
                         // Use cURL to send the ZPL data to the helper app
                         $ch = curl_init($url);
