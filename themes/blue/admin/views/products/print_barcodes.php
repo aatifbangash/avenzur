@@ -1,4 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+
 <div class="box">
     <div class="box-header no-print">
         <h2 class="blue"><i class="fa-fw fa fa-plus"></i><?= lang('print_barcode_label'); ?></h2>
@@ -30,6 +31,7 @@
                         <?php echo form_input('add_item', '', 'class="form-control" id="add_item" placeholder="' . $this->lang->line('add_item') . '"'); ?>
                     </div>
                     <?= admin_form_open('products/print_barcodes', 'id="barcode-print-form" data-toggle="validator"'); ?>
+                    <input type="hidden" name="purchase_id" value="<?php echo $this->input->get('purchase', true);?>" >
                     <div class="controls table-controls">
                         <table id="bcTable"
                                class="table items table-striped table-bordered table-condensed table-hover">
@@ -51,6 +53,8 @@
                             <?= lang('style', 'style'); ?>
                             <?php $opts = ['' => lang('select') . ' ' . lang('style'), 40 => lang('40_per_sheet'), 30 => lang('30_per_sheet'), 24 => lang('24_per_sheet'), 20 => lang('20_per_sheet'), 18 => lang('18_per_sheet'), 14 => lang('14_per_sheet'), 12 => lang('12_per_sheet'), 10 => lang('10_per_sheet'), 50 => lang('continuous_feed')]; ?>
                             <?= form_dropdown('style', $opts, set_value('style', 24), 'class="form-control tip" id="style" required="required"'); ?>
+                            
+
                             <div class="row cf-con" style="margin-top: 10px; display: none;">
                                 <div class="col-xs-4">
                                     <div class="form-group">
