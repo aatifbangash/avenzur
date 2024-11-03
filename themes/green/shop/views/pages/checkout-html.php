@@ -132,6 +132,7 @@ if ($this->Settings->indian_gst) {
                             <p class="m-0 fst-italic text-white px-4  rounded" id="shipping-fees-span" style="background:#662d91">Free</p>
                         </div>
                     </div>
+                    <?php if($virtual_pharmacy_items <= 0){ ?>
                     <div class="d-flex align-items-center  py-3 standard-div" id="express-delivery-details" style="display: none !important;">
                         <div class="form-check px-0">
                         <input class="form-check-input" type="radio" name="delivery" id="express-delivery-check" value="shipping_express">
@@ -143,6 +144,7 @@ if ($this->Settings->indian_gst) {
                             <p class="m-0 fs-6 fw-semibold px-3 mx-1 delivery_pg" id="express-shipping-fees-span">21 SAR</p>
                         </div>
                     </div>
+                    <?php } ?>
                 </div>
 
             </div>
