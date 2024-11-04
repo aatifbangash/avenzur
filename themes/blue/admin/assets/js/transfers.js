@@ -344,10 +344,28 @@ $(document).on("click", ".edit", function () {
 });
 
 $("#prModal").on("shown.bs.modal", function (e) {
+	console.log('modal open');
 	if ($("#poption").select2("val") != "") {
 		$("#poption").select2("val", product_variant);
 		product_variant = 0;
 	}
+});
+
+$("#itemModal").on("shown.bs.modal", function (e) {
+	console.log('modal open');
+
+	$(this).find('.modal-item').first().focus();
+	const rows = document.querySelectorAll('#itemTableBody .modal-item');
+
+    rows.forEach(row => {
+        // Add event listener for "keydown" to handle the Enter key only
+        row.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                row.click(); // Trigger click event when Enter is pressed
+            }
+        });
+    });
 });
 
 $(document).on("change", "#punit", function () {
@@ -532,7 +550,7 @@ function loadItems() {
 
 			var row_no = item.id;
 			var newTr = $(
-				'<tr id="row_' +
+				'<tr tabindex="0" id="row_' +
 					row_no +
 					'" class="row_' +
 					item_id +
@@ -617,7 +635,7 @@ function loadItems() {
 				item_id +
 				'" id="quantity_' +
 				row_no +
-				'" onClick="this.select();"><input name="product_unit[]" type="hidden" class="runit" value="' +
+				'" onClick="this.select();" onChange="document.getElementById(\'add_item\').focus();" ><input name="product_unit[]" type="hidden" class="runit" value="' +
 				product_unit +
 				'"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' +
 				base_quantity +
@@ -763,3 +781,5 @@ if (typeof Storage === "undefined") {
 		}
 	});
 }
+
+
