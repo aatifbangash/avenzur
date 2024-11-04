@@ -267,9 +267,10 @@
                         
                         var clickedItemCode = $(this).data('item-id');
                         var selectedItem = data.find(function (item) {
-                            return item.row.avz_item_code === clickedItemCode;
+                            console.log(item.row.avz_item_code, clickedItemCode);
+                            return String(item.row.avz_item_code).trim() === String(clickedItemCode).trim();
                         });
-
+                     
                         if (selectedItem) {
                             $('#itemModal').modal('hide');
                             var available = $(this).data('available');
@@ -329,7 +330,7 @@
 
 </script>
 
-<div class="modal fade" id="itemModal" tabindex="-1" role="dialog" aria-labelledby="itemModalLabel" aria-hidden="true">
+<div class="modal fade test" id="itemModal" tabindex="-1" role="dialog" aria-labelledby="itemModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content" style="min-width:800px !important;">
             <div class="modal-header">
