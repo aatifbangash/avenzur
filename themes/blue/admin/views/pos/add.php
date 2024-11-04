@@ -1975,7 +1975,7 @@ var lang = {
 
                         // Show the modal
                         $('#itemModal').modal('show');
-                        $('#itemTableBody').on('click', 'tr', function () {
+                        /*$('#itemTableBody').on('click', 'tr', function () {
                             
                             var clickedItemCode = $(this).data('item-id');
                             var selectedItem = data.find(function (item) {
@@ -1991,6 +1991,28 @@ var lang = {
                                     bootbox.alert('Row already added');
                                 }
                             }else{
+                                console.log('Item not found');
+                            }
+                        });*/
+
+                        $('#itemTableBody').on('click touchstart', 'tr', function (e) {
+                            // Prevent the default action for touch events to avoid double triggers
+                            e.preventDefault();
+
+                            var clickedItemCode = $(this).data('item-id');
+                            var selectedItem = data.find(function (item) {
+                                return item.row.avz_item_code === clickedItemCode;
+                            });
+
+                            if (selectedItem) {
+                                $('#itemModal').modal('hide');
+                                var available = $(this).data('available');
+                                if (!available) {
+                                    add_invoice_item(selectedItem);
+                                } else {
+                                    bootbox.alert('Row already added');
+                                }
+                            } else {
                                 console.log('Item not found');
                             }
                         });
