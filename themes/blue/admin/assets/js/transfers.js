@@ -368,6 +368,17 @@ $("#itemModal").on("shown.bs.modal", function (e) {
     });
 });
 
+$('#itemModal').on('hidden.bs.modal', function () {
+    console.log('Modal closed');
+   
+	setTimeout(() => {
+        const targetY = 400; 
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
+    }, 200); // Adjust delay as needed
+     
+});
+
+
 $(document).on("change", "#punit", function () {
 	var row = $("#" + $("#row_id").val());
 	var item_id = row.attr("data-item-id");
@@ -781,5 +792,3 @@ if (typeof Storage === "undefined") {
 		}
 	});
 }
-
-
