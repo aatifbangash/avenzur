@@ -236,7 +236,8 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                         
                         var clickedItemCode = $(this).data('item-id');
                         var selectedItem = data.find(function (item) {
-                            return item.row.avz_item_code === clickedItemCode;
+                            //return item.row.avz_item_code === clickedItemCode;
+                            return String(item.row.avz_item_code).trim() === String(clickedItemCode).trim();
                         });
 
                         if (selectedItem) {
