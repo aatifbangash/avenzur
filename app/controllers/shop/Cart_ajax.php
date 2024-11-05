@@ -51,7 +51,7 @@ class Cart_ajax extends MY_Shop_Controller
 
     public function remove($rowid = null)
     {
-        $this->session->unset_userdata('coupon_details');
+        //$this->session->unset_userdata('coupon_details');
         if ($rowid) {
             $item = $this->cart->get_item($rowid);
             if($item['code'] == '06285193000301'){
