@@ -4076,11 +4076,12 @@ class Products extends MY_Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     
         $response = curl_exec($ch);
+      //  var_dump($response);exit;
         if ($response === false) {
             // If the request failed, ngrok is probably not running
            // echo "Ngrok is not running, starting ngrok...\n";
             exec('ngrok http 5000 > /dev/null &');  // Start ngrok in the background
-            sleep(5);  // Give ngrok some time to initialize
+            sleep(2);  // Give ngrok some time to initialize
             return getNgrokUrl();  // Recursive call to try getting the URL again
         }
     
@@ -4112,6 +4113,13 @@ class Products extends MY_Controller
             }
             
             $ngrokUrl = $this->getNgrokUrl();
+        // if ($ngrokUrl) {
+        //             echo "Ngrok URL: " . $ngrokUrl . "\n";
+        //         } else {
+        //             echo "No HTTP tunnel found.\n";
+        //         }
+
+        //         exit;
             
             for ($m = 0; $m < $s; $m++) {
                 $pid = $_POST['product'][$m];
@@ -4173,9 +4181,9 @@ class Products extends MY_Controller
 
                         // CALL PYTHON HELPER LOCALLY
                        // $url = "https://f283-2001-16a4-9-7870-443a-c87f-a5b1-f8ea.ngrok-free.app/print";
-
+                        $url = $ngrokUrl."/print";
                         // Use cURL to send the ZPL data to the helper app
-                        $ch = curl_init($ngrokUrl);
+                        $ch = curl_init($url);
 
                         // Set cURL options
                         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -4192,9 +4200,9 @@ class Products extends MY_Controller
 
                         // Check response and provide feedback
                         if ($http_status == 200) {
-                            echo "Print request successful: " . $response;
+                           // echo "Print request successful: " . $response;
                         } else {
-                            echo "Print request failed with status $http_status: " . $response;
+                            //echo "Print request failed with status $http_status: " . $response;
                         }
                         //END PYTHON HELPER
 
