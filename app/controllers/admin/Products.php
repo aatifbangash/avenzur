@@ -4069,6 +4069,33 @@ class Products extends MY_Controller
         }
         return $zpl;
     }
+
+    public function getNgrokUrl() {
+        // Try to fetch the ngrok tunnels via the ngrok API
+        $ch = curl_init('http://localhost:4040/api/tunnels');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    
+        $response = curl_exec($ch);
+        if ($response === false) {
+            // If the request failed, ngrok is probably not running
+           // echo "Ngrok is not running, starting ngrok...\n";
+            exec('ngrok http 5000 > /dev/null &');  // Start ngrok in the background
+            sleep(5);  // Give ngrok some time to initialize
+            return getNgrokUrl();  // Recursive call to try getting the URL again
+        }
+    
+        $data = json_decode($response, true);
+    
+        if (isset($data['tunnels']) && !empty($data['tunnels'])) {
+            foreach ($data['tunnels'] as $tunnel) {
+                if ($tunnel['proto'] === 'http' || $tunnel['proto'] === 'https') {  // Find the HTTP tunnel
+                    return $tunnel['public_url'];
+                }
+            }
+        }
+    
+        return null;
+    }
     public function print_barcodes($product_id = null)
     {
         $this->sma->checkPermissions('barcode', true);
@@ -4083,6 +4110,9 @@ class Products extends MY_Controller
                 $this->session->set_flashdata('error', lang('no_product_selected'));
                 admin_redirect('products/print_barcodes');
             }
+            
+            $ngrokUrl = $this->getNgrokUrl();
+            
             for ($m = 0; $m < $s; $m++) {
                 $pid = $_POST['product'][$m];
                 $quantity = $_POST['quantity'][$m];
@@ -4130,11 +4160,22 @@ class Products extends MY_Controller
                         . "^FD{$this->sma->formatMoney($productPrice)}^FS\n"                        // Price (dynamic)
                         . "^XZ";
 
+                        // first check if ngrok is running or not
+                        
+                    
+                        // if ($url) {
+                        //     echo "Ngrok URL: " . $url . "\n";
+                        // } else {
+                        //     echo "No HTTP tunnel found.\n";
+                        // }
+
+                        // exit;
+
                         // CALL PYTHON HELPER LOCALLY
-                        $url = "https://f283-2001-16a4-9-7870-443a-c87f-a5b1-f8ea.ngrok-free.app/print";
+                       // $url = "https://f283-2001-16a4-9-7870-443a-c87f-a5b1-f8ea.ngrok-free.app/print";
 
                         // Use cURL to send the ZPL data to the helper app
-                        $ch = curl_init($url);
+                        $ch = curl_init($ngrokUrl);
 
                         // Set cURL options
                         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
