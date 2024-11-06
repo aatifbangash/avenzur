@@ -64,42 +64,42 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                     return false;
                 }
 
-                if(request.term.includes('AVZ')){
-                    $.ajax({
-                        type: 'get',
-                        url: '<?=admin_url('products/get_items_by_avz_code');?>',
-                        dataType: "json",
-                        data: {
-                            term: request.term,
-                            warehouse_id: $("#slwarehouse").val(),
-                            customer_id: $("#slcustomer").val()
-                        },
-                        success: function (data) {
-                            $(this).removeClass('ui-autocomplete-loading');
-                            if(data){
-                                add_invoice_item(data[0]);
-                            }else{
-                                bootbox.alert('No records found for this item code.');
-                            }
-                            
-                        }
-                    });
-                }else{
-                    $.ajax({
-                        type: 'get',
-                        url: '<?= admin_url('sales/bch_suggestions'); ?>',
-                        dataType: "json",
-                        data: {
-                            term: request.term,
-                            warehouse_id: $("#slwarehouse").val(),
-                            customer_id: $("#slcustomer").val()
-                        },
-                        success: function (data) {
+                $.ajax({
+                    type: 'get',
+                    url: '<?= admin_url('sales/bch_suggestions'); ?>',
+                    dataType: "json",
+                    data: {
+                        term: request.term,
+                        warehouse_id: $("#slwarehouse").val(),
+                        customer_id: $("#slcustomer").val()
+                    },
+                    success: function (data) {
+                        if(data[0].id != 0){
                             $(this).removeClass('ui-autocomplete-loading');
                             response(data);
-                        }
-                    });
-                }
+                        }else{
+                            $.ajax({
+                                type: 'get',
+                                url: '<?=admin_url('products/get_items_by_avz_code');?>',
+                                dataType: "json",
+                                data: {
+                                    term: request.term,
+                                    warehouse_id: $("#slwarehouse").val(),
+                                    customer_id: $("#slcustomer").val()
+                                },
+                                success: function (data) {
+                                    $(this).removeClass('ui-autocomplete-loading');
+                                    if(data){
+                                        add_invoice_item(data[0]);
+                                    }else{
+                                        bootbox.alert('No records found for this item code.');
+                                    }
+                                    
+                                }
+                            });
+                        } 
+                    }
+                });
             },
             minLength: 1,
             autoFocus: false,
