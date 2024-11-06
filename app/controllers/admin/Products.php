@@ -4113,13 +4113,14 @@ class Products extends MY_Controller
             }
             
             $ngrokUrl = $this->getNgrokUrl();
-        // if ($ngrokUrl) {
-        //             echo "Ngrok URL: " . $ngrokUrl . "\n";
-        //         } else {
-        //             echo "No HTTP tunnel found.\n";
-        //         }
+            if ($ngrokUrl) {
+                    echo "Ngrok URL: " . $ngrokUrl . "\n";
+                } else {
+                    $ngrokUrl = '';
+                    echo "No HTTP tunnel found.\n";
+                }
 
-        //         exit;
+               
             
             for ($m = 0; $m < $s; $m++) {
                 $pid = $_POST['product'][$m];
