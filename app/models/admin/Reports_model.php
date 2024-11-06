@@ -983,6 +983,37 @@ class Reports_model extends CI_Model
         return $response;
     }
  
+    public function get_sales_report_with_promocode_by_order($start_date, $end_date) {  
+        $query = $this->db->query("SELECT 
+                si.product_code,
+                si.product_name,
+                SUM(si.quantity) AS total_quantity_sold,
+                SUM(si.subtotal) AS total_amount_sold,
+                s.coupon_code,
+                s.id
+            FROM 
+                sma_sale_items si
+            JOIN 
+                sma_sales s ON si.sale_id = s.id
+            JOIN 
+                sma_coupons c ON s.coupon_code = c.referrer_code
+            WHERE 
+                s.date >= '".$start_date."'   
+                AND s.date <= '".$end_date."'  
+                AND s.coupon_code IS NOT NULL
+                AND si.product_code IS NOT NULL
+                AND JSON_CONTAINS(c.product_ids, CAST(si.product_id AS JSON), '$')  -- Check if product_id is in product_ids
+            GROUP BY 
+                si.product_code, s.id, s.coupon_code
+            HAVING 
+                total_quantity_sold > 0
+            ORDER BY 
+                s.date DESC");
+            
+        $results = $query->result_array(); 
+        return $results;
+    }
+
     public function get_sales_report_with_promocode($start_date, $end_date) {  
         $query = $this->db->query("SELECT 
                 si.product_code,
