@@ -1060,10 +1060,14 @@
                                     </li>
                                     <li id="reports_promo_sales">
                                         <a href="<?= admin_url('reports/daily_sales_with_promo_code') ?>">
-                                            <i class="fa fa-calendar"></i><span class="text"> <?= lang('promo_code_sale'); ?></span>
+                                            <i class="fa fa-calendar"></i><span class="text"> <?= lang('Promo Sales By Item'); ?></span>
                                         </a>
                                     </li>
-                                     
+                                    <li id="reports_promo_sales">
+                                        <a href="<?= admin_url('reports/daily_sales_with_promo_code_by_order') ?>">
+                                            <i class="fa fa-calendar"></i><span class="text"> <?= lang('Promo Sales By Order'); ?></span>
+                                        </a>
+                                    </li>
                                 </ul>
                             </li>
 
