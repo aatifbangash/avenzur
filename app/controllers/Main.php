@@ -532,7 +532,7 @@ class Main extends MY_Shop_Controller
 
                             $cart_contents = $this->cart->contents();
                             if ($cart_contents) {
-                                redirect('cart/checkout');
+                                redirect('cart');
                             } else {
                                 $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
                                 redirect($referrer);
@@ -642,7 +642,7 @@ class Main extends MY_Shop_Controller
                             if ($cart_contents) {
                                 //redirect('cart/checkout');
                                 header('Content-Type: application/json');
-                                echo json_encode(['status' => 'success', 'redirect' => base_url() . 'cart/checkout']);
+                                echo json_encode(['status' => 'success', 'redirect' => base_url() . 'cart']);
                             } else {
                                 $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : base_url();
                                 //redirect($referrer);

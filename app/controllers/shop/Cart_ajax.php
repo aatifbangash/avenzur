@@ -339,7 +339,6 @@ class Cart_ajax extends MY_Shop_Controller
             $c_code = $coupon_details['code'];
             
         }
-
     
         if(isset($coupon_arr[$coupon_code]) && $this->cart->get_total_discount() <= 0 && $pattern_match == 0 && $this->cart->total() >= $coupon_cap_arr[$coupon_code]){
             // Set All Coupon Discount except ENBD
@@ -490,8 +489,24 @@ class Cart_ajax extends MY_Shop_Controller
                     $is_free_shipping = $coupon_data ->free_shipping;
                     $referrer = $coupon_data -> referrer_code;
                     $free_shipping_eligible = false;
- 
+                    $max_discount_amount = $coupon_data->max_discount_amount;
+                    //$usage_limit_per_user = $coupon_data->usage_limit_per_user;
+
+                    if(isset($coupon_data->usage_limit_per_user) && !empty($coupon_data->usage_limit_per_user)){
+                        if($userId == null){
+                            $this->session->set_flashdata(['error' => 1, 'message' => 'Please login to use this code']);
+                            redirect('cart');
+                        }else{
+                            $code_usage_count = $this->shop_model->coupon_usage_count($userId, $coupon_code);
+                            if($code_usage_count >= $coupon_data->usage_limit_per_user){
+                                $this->session->set_flashdata(['error' => 1, 'message' => 'Coupon usage limit reached']);
+                                redirect('cart');
+                            }
+                        }
+                    }
                              
+                    $applied_discount = 0;
+                    $allowed_discount = 0;
                     if($coupon_data->discount_type == "percent"){
                         
                         
@@ -503,10 +518,19 @@ class Cart_ajax extends MY_Shop_Controller
                                     $free_shipping_eligible = true;
                                     
                                 }
+
+                                $calculated_discount = ($val['price'] *$val['qty']* $coupon_data->amount) / 100;
+
+                                if($max_discount_amount && ($applied_discount + $calculated_discount) > $max_discount_amount){
+                                    $calculated_discount = $max_discount_amount - $applied_discount;
+                                }
+
                                 $data = [
                                     'rowid'  => $val['rowid'],
-                                    'discount'  => ($val['price'] *$val['qty']* $coupon_data->amount) / 100
+                                    'discount'  => $calculated_discount
                                 ];
+
+                                $applied_discount += $calculated_discount; 
                             }else{
                                    
                                  $data = [

@@ -133,6 +133,15 @@ class Shop_model extends CI_Model
         return $coupon_data;
     }
 
+    public function coupon_usage_count($userId, $coupon_code){
+        $this->db->from('sma_referrer');
+        $this->db->where('customer_id', $userId);
+        $this->db->where("coupon_code", $coupon_code);
+        $count = $this->db->count_all_results();
+      
+        return $count;
+    }
+
     public function can_apply_coupon($coupon,$userId, $cartId){
           
         $this->db->from('sma_coupons');
