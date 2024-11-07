@@ -86,7 +86,7 @@
                                 <th><?= lang('Quantity Sold'); ?></th>
                                 <th><?= lang('Total Amount'); ?></th>
                                 <th><?= lang('Promo Code'); ?></th>
-                                
+                                <th><?= lang('Date'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
@@ -103,7 +103,7 @@
                                     <td><?= $data['total_quantity_sold'] > 0 ? number_format($data['total_quantity_sold'], 2, '.', ',') : '-'; ?></td>
                                     <td><?= $data['total_amount_sold'] > 0 ? number_format($data['total_amount_sold'], 2, '.', ',').' SAR' : '-'; ?></td>
                                     <td><?= $data['coupon_code']?></td>
-                                    
+                                    <td><?= $data['date']?></td>
                                 </tr>
                                 <?php
                                 $count++;
