@@ -4112,13 +4112,13 @@ class Products extends MY_Controller
                 admin_redirect('products/print_barcodes');
             }
             
-            $ngrokUrl = $this->getNgrokUrl();
-            if ($ngrokUrl) {
-                    echo "Ngrok URL: " . $ngrokUrl . "\n";
-                } else {
-                    $ngrokUrl = '';
-                    echo "No HTTP tunnel found.\n";
-                }
+            // $ngrokUrl = $this->getNgrokUrl();
+            // if ($ngrokUrl) {
+            //         echo "Ngrok URL: " . $ngrokUrl . "\n";
+            //     } else {
+            //         $ngrokUrl = '';
+            //         echo "No HTTP tunnel found.\n";
+            //     }
 
                
             
@@ -4181,8 +4181,8 @@ class Products extends MY_Controller
                         // exit;
 
                         // CALL PYTHON HELPER LOCALLY
-                       // $url = "https://f283-2001-16a4-9-7870-443a-c87f-a5b1-f8ea.ngrok-free.app/print";
-                        $url = $ngrokUrl."/print";
+                        $url = "https://c49b-51-252-146-135.ngrok-free.app/print";
+                       // $url = $ngrokUrl."/print";
                         // Use cURL to send the ZPL data to the helper app
                         $ch = curl_init($url);
 
