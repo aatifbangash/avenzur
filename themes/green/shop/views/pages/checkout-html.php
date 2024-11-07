@@ -280,12 +280,12 @@ if ($this->Settings->indian_gst) {
                                                     $default_address->country != 'المملكة العربية السعودية' &&
                                                     $default_address->country != 'SA'){
                                                     if($this->cart->total_items() > 2){
-                                                        echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment"');
+                                                        echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment" onclick="disableButtonAndShowLoader()"');
                                                     }else{
                                                         echo '<button class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment" disabled>'.lang('Proceed to Pay').'</button>';
                                                     }
                                                 }else{
-                                                    echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment"');
+                                                    echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment" onclick="disableButtonAndShowLoader()"');
                                                 }
                                             } elseif ($this->Staff) {
                                                 echo '<div class="alert alert-warning margin-bottom-no">' . lang('staff_not_allowed') . '</div>';
@@ -316,6 +316,13 @@ if ($this->Settings->indian_gst) {
 
         snaptr('track', 'ADD_CART', {'currency': 'SAR', 'price': '<?php  echo $total; ?>', 'payment_info_available':1, 'item_category': 'Medical' });
     }*/
+
+    function disableButtonAndShowLoader() {
+        var submitButton = document.getElementById('proceed-to-payment');
+        submitButton.disabled = true;
+
+        submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...'; // Add spinner
+    }
 
     function showTabbyDetails(){
         document.getElementById('tabby_email').style.display = 'block';
