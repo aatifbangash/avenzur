@@ -92,6 +92,10 @@ class Pay_model extends CI_Model
         return $this->db->get_where('skrill', ['id' => 1])->row();
     }
 
+    public function updatePayment($id, $status, $note = null){
+        $this->db->update('sales', ['payment_status' => $status, 'note' => $note], ['id' => $id]);
+    }
+
     public function updateStatus($id, $status, $note = null)
     {
         $sale  = $this->getSaleByID($id);
