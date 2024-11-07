@@ -82,7 +82,8 @@
                                 <th>#</th>
                                 <th><?= lang('Sale Id'); ?></th>
                                 <th><?= lang('Code'); ?></th>
-                                <th><?= lang('name'); ?></th>
+                                <th><?= lang('Dr. Name'); ?></th>
+                                <th><?= lang('Product Name'); ?></th>
                                 <th><?= lang('Quantity Sold'); ?></th>
                                 <th><?= lang('Total Amount'); ?></th>
                                 <th><?= lang('Promo Code'); ?></th>
@@ -99,6 +100,7 @@
                                     <td><?= $count; ?></td>
                                     <td><?= $data['id']; ?></td>
                                     <td><?= $data['product_code']; ?></td>
+                                    <td><?= $data['description']; ?></td>
                                     <td><?= $data['product_name']; ?></td>
                                     <td><?= $data['total_quantity_sold'] > 0 ? number_format($data['total_quantity_sold'], 2, '.', ',') : '-'; ?></td>
                                     <td><?= $data['total_amount_sold'] > 0 ? number_format($data['total_amount_sold'], 2, '.', ',').' SAR' : '-'; ?></td>

@@ -991,7 +991,8 @@ class Reports_model extends CI_Model
                 SUM(si.subtotal) AS total_amount_sold,
                 s.coupon_code,
                 s.id,
-                s.date
+                s.date,
+                c.description
             FROM 
                 sma_sale_items si
             JOIN 
