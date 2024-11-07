@@ -386,6 +386,8 @@ class Pay extends MY_Shop_Controller
                         
                       
                 $this->load->view('green/directpay', $data);
+            }else{
+                redirect('pay/directsale/' . $id);
             }
         }
         //$this->session->set_flashdata('error', lang('sale_x_found'));
@@ -1170,6 +1172,49 @@ class Pay extends MY_Shop_Controller
         }
         
         $this->page_construct('pages/payment_error', $this->data);
+    }
+
+    public function directsale($id)
+    {
+        if ($inv = $this->pay_model->getSaleByID($id)) {
+            $referrer = [
+                'referrer_code'  => $this->session->userdata('coupon_details')['code'],
+                'coupon_code'    => $this->session->userdata('coupon_details')['code'],
+                'date'           => date('Y-m-d H:i:s'),
+                'sale_id'        => $id,
+                'customer_id'    => $inv->customer_id
+            ];
+            $this->pay_model->addReferrer($referrer);
+            
+            $this->session->unset_userdata('coupon_details');
+            $this->cart->destroy();
+
+            $this->pay_model->updateStatus($inv->id, 'completed');
+
+            $address_id = $inv->address_id;
+            $customer = $this->pay_model->getCompanyByID($inv->customer_id);
+            $address = $this->pay_model->getAddressByID($address_id);
+            if($address_id == 0){
+                $customer_mobile = $customer->phone;
+            }else{
+                $customer_mobile = $address->phone;
+            }
+            // send sms to customer
+            $message_to_send = 'Hello '.$customer->first_name.' '.$customer->last_name.', thank you for your order with Avenzur.com! Your Invoice No: '.$inv->id;
+            $sms_sent = $this->sma->send_sms_new($customer_mobile, $message_to_send);
+            
+            $email = $this->order_received($id);
+            if($customer_mobile != ''){
+                //$attachment = $this->orders($invoice_no, null, true, 'S');
+                $whatsapp_order_message = $this->sma->whatsapp_order_confirmation($customer_mobile, $id, site_url('shop/invoiceorders/'.$id));
+            }
+
+            if ($inv->shop) {
+                shop_redirect('orders/' . $inv->id . '/' . ($this->loggedIn ? '' : $inv->hash));
+            }
+            
+            //$this->page_construct('pages/payment_error', $this->data);
+        }
     }
     
     public function RedirectPaymentResponsePage()
