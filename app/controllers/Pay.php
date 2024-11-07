@@ -235,7 +235,7 @@ class Pay extends MY_Shop_Controller
 
         if ($inv = $this->pay_model->getSaleByID($id)) {
             //$paypal = $this->pay_model->getPaypalSettings();
-            if ((($inv->grand_total - $inv->paid) > 0)) {
+            //if ((($inv->grand_total - $inv->paid) > 0)) {
                 
                 
                 $hashData = array();
@@ -386,9 +386,9 @@ class Pay extends MY_Shop_Controller
                         
                       
                 $this->load->view('green/directpay', $data);
-            }else{
+            /*}else{
                 redirect('pay/directsale/' . $id);
-            }
+            }*/
         }
         //$this->session->set_flashdata('error', lang('sale_x_found'));
         //redirect('/');
