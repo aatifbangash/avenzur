@@ -150,7 +150,7 @@ if ($this->Settings->indian_gst) {
             </div>
          
         <div class="col-md-4 payment-method-wrapper">
-            <?php echo shop_form_open('order', 'class="validate addressform-k p-0"'); ?>
+            <?php echo shop_form_open('order', 'class="validate addressform-k p-0" id="payment-form"'); ?>
             <h3 class=" fw-bold pb-2 border-bottom m-0">Payment</h2>
             <div class="d-flex align-items-center justify-content-between py-3 border-bottom mobile-wrap  mobile-start">
                 <div class="form-check px-0 w-100 d-flex flex-column">
@@ -280,12 +280,12 @@ if ($this->Settings->indian_gst) {
                                                     $default_address->country != 'المملكة العربية السعودية' &&
                                                     $default_address->country != 'SA'){
                                                     if($this->cart->total_items() > 2){
-                                                        echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment" onclick="disableButtonAndShowLoader()"');
+                                                        echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment"');
                                                     }else{
                                                         echo '<button class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment" disabled>'.lang('Proceed to Pay').'</button>';
                                                     }
                                                 }else{
-                                                    echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment" onclick="disableButtonAndShowLoader()"');
+                                                    echo form_submit('add_order', lang('Proceed to Pay'), 'class="btn primary-buttonAV mt-3 pt-1 rounded-4 w-100 payment-k validate" id="proceed-to-payment"');
                                                 }
                                             } elseif ($this->Staff) {
                                                 echo '<div class="alert alert-warning margin-bottom-no">' . lang('staff_not_allowed') . '</div>';
@@ -316,13 +316,6 @@ if ($this->Settings->indian_gst) {
 
         snaptr('track', 'ADD_CART', {'currency': 'SAR', 'price': '<?php  echo $total; ?>', 'payment_info_available':1, 'item_category': 'Medical' });
     }*/
-
-    function disableButtonAndShowLoader() {
-        var submitButton = document.getElementById('proceed-to-payment');
-        submitButton.disabled = true;
-
-        submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...'; // Add spinner
-    }
 
     function showTabbyDetails(){
         document.getElementById('tabby_email').style.display = 'block';
@@ -657,8 +650,11 @@ if ($this->Settings->indian_gst) {
         });
 
         $('#proceed-to-payment').click(function (e) {
-            // On purchase track on snapchat
-            snaptr('track', 'PURCHASE', {'currency': 'SAR', 'price': '<?php  echo $total; ?>', 'payment_info_available':1, 'item_category': 'Medical' });
+            e.preventDefault();
+            $(this).prop('disabled', true); // Disable the button
+            $(this).html('<i class="fa fa-spinner fa-spin"></i> Processing...');
+
+            $('#payment-form').submit();
         });
 
         $('#proceed-payment').click(function (e) {
