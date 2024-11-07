@@ -1003,6 +1003,7 @@ class Reports_model extends CI_Model
                 s.date >= '".$start_date."'   
                 AND s.date <= '".$end_date."'  
                 AND s.coupon_code IS NOT NULL
+                AND s.payment_status = 'paid'
                 AND si.product_code IS NOT NULL
                 AND JSON_CONTAINS(c.product_ids, CAST(si.product_id AS JSON), '$')  -- Check if product_id is in product_ids
             GROUP BY 
