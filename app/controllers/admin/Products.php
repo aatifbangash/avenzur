@@ -4119,9 +4119,8 @@ class Products extends MY_Controller
             //         $ngrokUrl = '';
             //         echo "No HTTP tunnel found.\n";
             //     }
-
-               
-            
+  
+            $zplCode = '';
             for ($m = 0; $m < $s; $m++) {
                 $pid = $_POST['product'][$m];
                 $quantity = $_POST['quantity'][$m];
@@ -4149,11 +4148,11 @@ class Products extends MY_Controller
 
                 // Generate the ZPL code
 
-
+              
                 for ($i = 1; $i <= $quantity; $i++) {
+                    $zplCode .= "^XA\n"; 
                     $filePath = FCPATH . 'assets' . DIRECTORY_SEPARATOR . 'new_label.zpl';
-                    $zplCode = "^XA\n"
-                        . "^FO20,20^A0N,15,15^FD{$line1}^FS\n";
+                    $zplCode .= "^FO20,20^A0N,15,15^FD{$line1}^FS\n";
 
                     // Add second line if it exists
                     if ($line2) {
@@ -4166,8 +4165,9 @@ class Products extends MY_Controller
                         . "^FD{$avzCode}^FS\n"                   // GTIN Number (dynamic)
                         . "^FO170,130\n"                             // Position price below the barcode
                         . "^A0N,20,20\n"                            // Font size for price text
-                        . "^FD{$this->sma->formatMoney($productPrice)}^FS\n"                        // Price (dynamic)
-                        . "^XZ";
+                        . "^FD{$this->sma->formatMoney($productPrice)}^FS\n";
+                    
+                    $zplCode .= "^XZ\n";
 
                         // first check if ngrok is running or not
                         
@@ -4181,30 +4181,7 @@ class Products extends MY_Controller
                         // exit;
 
                         // CALL PYTHON HELPER LOCALLY
-                        $url = "https://c49b-51-252-146-135.ngrok-free.app/print";
-                       // $url = $ngrokUrl."/print";
-                        // Use cURL to send the ZPL data to the helper app
-                        $ch = curl_init($url);
-
-                        // Set cURL options
-                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                        curl_setopt($ch, CURLOPT_POST, true);
-                        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/octet-stream'));
-                        curl_setopt($ch, CURLOPT_POSTFIELDS, $zplCode);
-
-                        // Execute the cURL request
-                        $response = curl_exec($ch);
-                        $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-                        // Close the cURL session
-                        curl_close($ch);
-
-                        // Check response and provide feedback
-                        if ($http_status == 200) {
-                           // echo "Print request successful: " . $response;
-                        } else {
-                            //echo "Print request failed with status $http_status: " . $response;
-                        }
+                     
                         //END PYTHON HELPER
 
                     /*file_put_contents($filePath, $zplCode);
@@ -4227,6 +4204,32 @@ class Products extends MY_Controller
 
 
 
+            }
+           
+            echo "<pre>" . htmlspecialchars($zplCode) . "</pre>";
+           // exit;
+            $url = "https://c49b-51-252-146-135.ngrok-free.app/print";
+                       
+            $ch = curl_init($url);
+
+           
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/octet-stream'));
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $zplCode);
+
+            
+            $response = curl_exec($ch);
+            $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+           
+            curl_close($ch);
+
+          
+            if ($http_status == 200) {
+                echo "Print request successful: " . $response;
+            } else {
+                echo "Print request failed with status $http_status: " . $response;
             }
             echo "success";
 

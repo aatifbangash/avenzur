@@ -25,6 +25,17 @@ class Products_model extends CI_Model
                 $product['sequence_code'] = $this->sequenceCode->generate('PRD', 5);
                 if ($this->db->insert('products', $product)) {
                     $product_id = $this->db->insert_id();
+                    // update item_code
+                    $cat_id_q = $this->db->get_where('categories', ['id' => $product['category_id']], 1);
+                    $category_code = 0;
+                    if ($cat_id_q->num_rows() > 0) {
+                        $row_cat = $cat_id_q->row();
+                        $category_code = $row_cat->category_code;
+                        $formatted_id = str_pad($product_id, 6, '0', STR_PAD_LEFT);
+                        // Concatenate the category code and formatted ID
+                        $item_code = $category_code . $formatted_id;
+                        $this->db->update('sma_products', ['item_code' => $item_code], ['id' => $product_id]);
+                    }
                     foreach ($warehouses as $warehouse) {
                         $this->db->insert('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse->id, 'quantity' => 0]);
                     }
@@ -227,6 +238,17 @@ class Products_model extends CI_Model
         $data['sequence_code'] = $this->sequenceCode->generate('PRD', 5);
         if ($this->db->insert('products', $data)) {
             $product_id = $this->db->insert_id();
+            // update item_code
+            $cat_id_q = $this->db->get_where('categories', ['id' => $data['category_id']], 1);
+            $category_code = 0;
+            if ($cat_id_q->num_rows() > 0) {
+                 $row_cat = $cat_id_q->row();
+                 $category_code = $row_cat->category_code;
+                 $formatted_id = str_pad($product_id, 6, '0', STR_PAD_LEFT);
+                // Concatenate the category code and formatted ID
+                 $item_code = $category_code . $formatted_id;
+                 $this->db->update('sma_products', ['item_code' => $item_code], ['id' => $product_id]);
+            }
 
             if ($items) {
                 foreach ($items as $item) {
@@ -1238,6 +1260,16 @@ class Products_model extends CI_Model
     public function updateProduct($id, $data, $items, $warehouse_qty, $product_attributes, $photos, $update_variants)
     {
         if ($this->db->update('products', $data, ['id' => $id])) {
+            $cat_id_q = $this->db->get_where('categories', ['id' => $data['category_id']], 1);
+            $category_code = 0;
+            if ($cat_id_q->num_rows() > 0) {
+                 $row_cat = $cat_id_q->row();
+                 $category_code = $row_cat->category_code;
+                 $formatted_id = str_pad($id, 6, '0', STR_PAD_LEFT);
+                // Concatenate the category code and formatted ID
+                 $item_code = $category_code . $formatted_id;
+                 $this->db->update('sma_products', ['item_code' => $item_code], ['id' => $id]);
+            }
             if ($items) {
                 $this->db->delete('combo_items', ['product_id' => $id]);
                 foreach ($items as $item) {
