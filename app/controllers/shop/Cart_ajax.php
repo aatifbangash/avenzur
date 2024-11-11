@@ -305,8 +305,8 @@ class Cart_ajax extends MY_Shop_Controller
     public function apply_coupon(){
         $cartId = $this->cart->cart_id;
          
-        $coupon_arr = array('mpay' => 10, 'zaps10' => 10, 'welcome' => 5, 'alf10' => 10, 'mc24' => 10, 'neqaty10' => 10, 'enbd24' => 10, 'anb10' => 10, 'eid10' => 10);
-        $coupon_cap_arr = array('mpay' => 100, 'zaps10' => 10, 'welcome' => 10, 'alf10' => 50, 'mc24' => 50, 'neqaty10' => 50, 'enbd24' => 50, 'anb10' => 50, 'eid10' => 50);
+        $coupon_arr = array('mpay' => 10, 'zaps10' => 10, 'welcome' => 5, 'alf10' => 10, 'mc24' => 10, 'neqaty10' => 10, 'enbd24' => 10, 'anb10' => 10, 'eid10' => 10, 'singlesday10' => 10);
+        $coupon_cap_arr = array('mpay' => 100, 'zaps10' => 10, 'welcome' => 10, 'alf10' => 50, 'mc24' => 50, 'neqaty10' => 50, 'enbd24' => 50, 'anb10' => 50, 'eid10' => 50, 'singlesday10' => 100);
         $pattern_match = 0;
 
         $sulfad_coupon_code = 'fitness';
