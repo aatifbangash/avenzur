@@ -1393,6 +1393,7 @@ class Pos_model extends CI_Model
         $this->db->group_by(['im.product_id', 'im.location_id']);
         $this->db->having('total_quantity !=', 0);
         $query = $this->db->get();
+        //echo $this->db->last_query();exit;
         return $query->result();
     }
 

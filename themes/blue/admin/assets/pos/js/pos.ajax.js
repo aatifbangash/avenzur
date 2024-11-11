@@ -1205,6 +1205,7 @@ function loadItems() {
             $('#bill-table').empty();
         }
         positems = JSON.parse(localStorage.getItem('positems'));
+        //console.log(positems);
         if (pos_settings.item_order == 1) {
             sortedItems = _.sortBy(positems, function (o) {
                 return [parseInt(o.category), parseInt(o.order)];
