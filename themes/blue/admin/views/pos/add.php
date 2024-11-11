@@ -2018,8 +2018,8 @@ var lang = {
                         /*if (row)
                             $(this).val('');
 
-                            bootbox.alert('No records found for this item code.');
-                        }*/
+                            bootbox.alert('No records found for this item code.');*/
+                    }
                 },
                 error: function (xhr, status, error) {
                     console.error('AJAX error:', error);
