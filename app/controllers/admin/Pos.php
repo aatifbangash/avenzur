@@ -672,10 +672,10 @@ class Pos extends MY_Controller
                      }
 
                     $row->option          = $option;
-                    //$row->real_unit_price = $row->price;
+                    $row->real_unit_price = $row->net_unit_sale;
                     $row->base_quantity   = 1;
                     $row->base_unit       = $row->unit;
-                    //$row->base_unit_price = $row->price;
+                    $row->base_unit_price = $row->net_unit_sale;
                     $row->unit            = $row->sale_unit ? $row->sale_unit : $row->unit;
                     $row->comment         = '';
                     $combo_items          = false;
