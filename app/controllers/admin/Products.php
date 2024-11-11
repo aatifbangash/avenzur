@@ -5257,6 +5257,8 @@ class Products extends MY_Controller
             $this->db->having('total_quantity >', 0);
             $query = $this->db->get();
 
+            echo $this->db->last_query();exit;
+
         }
 
         if ($query->num_rows() > 0) {
