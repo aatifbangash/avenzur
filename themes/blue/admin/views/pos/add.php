@@ -1997,18 +1997,19 @@ var lang = {
                         
                     } else {
 
-                        var row = add_invoice_item(selectedItem);
+                        //var row = add_invoice_item(selectedItem);
+                        console.log(selectedItem);
                         var wh = $("#poswarehouse").val();
                         $.ajax({
                             type: "get",
-                            url: "<?=admin_url('pos/getProductPromo');?>",
+                            url: "<?=admin_url('pos/getProductData');?>",
                             data: {product_id: selectedItem.item_id, warehouse_id: wh},
                             dataType: "json",
                             success: function (data) {
                                 if (data) {
-                                    data.free = true;
-                                    data.parent = selectedItem.item_id;
-                                    console.log(data);
+                                    //data.free = true;
+                                    //data.parent = selectedItem.item_id;
+                                    //console.log(data);
                                     add_invoice_item(data);
                                 }
                                 $("#add_item").removeClass('ui-autocomplete-loading');

@@ -638,6 +638,84 @@ class Pos extends MY_Controller
         }
     }
 
+    public function getProductData($pId = null, $warehouse_id = null){
+        $this->sma->checkPermissions('index');
+        if ($this->input->get('product_id')) {
+            $pId = $this->input->get('product_id', true);
+        }
+        if ($this->input->get('warehouse_id')) {
+            $warehouse_id = $this->input->get('warehouse_id', true);
+        }
+
+        $rows       = $this->pos_model->getWHProductById($pId, $warehouse_id);
+        $r = 0;
+        $count = 0;
+
+        $option    = false;
+        if ($rows) {
+            $c = uniqid(mt_rand(), true);
+            $row = $rows[0];
+            unset($row->cost, $row->details, $row->product_details, $row->image, $row->barcode_symbology, $row->cf1, $row->cf2, $row->cf3, $row->cf4, $row->cf5, $row->cf6, $row->supplier1price, $row->supplier2price, $row->cfsupplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1, $row->supplier2, $row->supplier3, $row->supplier4, $row->supplier5, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
+            $row->item_tax_method = $row->tax_method;
+            $row->qty             = 1;
+            $row->price           = $row->net_unit_sale;
+            $row->discount        = '0';
+            $row->serial          = '';
+            //$options              = $this->pos_model->getProductOptions($row->id, $warehouse_id);
+
+            if ($options) {
+                $opt = current($options);
+                if (!$option) {
+                    $option = $opt->id;
+                }
+                }
+
+            $row->option          = $option;
+            $row->real_unit_price = $row->net_unit_sale;
+            $row->base_quantity   = 1;
+            $row->base_unit       = $row->unit;
+            $row->base_unit_price = $row->net_unit_sale;
+            $row->unit            = $row->sale_unit ? $row->sale_unit : $row->unit;
+            $row->comment         = '';
+            $combo_items          = false;
+
+            $row->batch_no = $row->batchno;
+            $row->qty = $row->total_quantity;
+
+            $row->id = $row->product_id;
+            $row->name = $row->product_name;
+            $row->code = $row->product_code;
+
+            // if ($row->type == 'combo') {
+            //     $combo_items = $this->pos_model->getProductComboItems($row->id, $warehouse_id);
+            // }
+            $units    = $this->site->getUnitsByBUID($row->base_unit);
+            $tax_rate = false; // $this->site->getTaxRateByID($row->tax_rate);
+
+            //$pr = ['id' => sha1(uniqid(mt_rand(), true)), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')', 'category' => $row->category_id, 'row' => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options];
+
+            $total_quantity = $row->total_quantity;
+            $row->quantity = $row->total_quantity;
+            $count++;
+            $row->serial_no = $count;
+            $options = [];
+            $pr = (object)[
+                'id' => sha1($c . $r),
+                'item_id' => $row->product_id,
+                'label' => $row->product_name . ' (' . $row->code . ')',
+                'row' => $row,
+                'tax_rate' => $tax_rate,
+                'units' => $units,
+                'options' => $options,
+                'batches' => $batches,
+                'total_quantity' => $total_quantity
+            ];
+            $r++;
+
+            $this->sma->send_json($pr);
+        }
+    }
+
     public function getProductPromo($pId = null, $warehouse_id = null)
     {
         $this->sma->checkPermissions('index');
