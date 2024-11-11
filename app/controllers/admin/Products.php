@@ -5261,13 +5261,14 @@ class Products extends MY_Controller
                 (pi.avz_item_code IS NOT NULL AND pi.avz_item_code = im.avz_item_code)
                 OR (pi.avz_item_code IS NULL AND pi.product_id = im.product_id)
             )', 'left');
+            $this->db->join('sma_purchases p', 'p.id = pi.purchase_id', 'left');
             if ($warehouse_id) {
                 $this->db->where('im.location_id', $warehouse_id);
             }
             $this->db->where('im.product_id', $item_id);
             
 
-            $this->db->group_by(['im.location_id, im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
+            $this->db->group_by(['im.location_id', 'im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
             $this->db->having('total_quantity >', 0);
             $query = $this->db->get();
 
