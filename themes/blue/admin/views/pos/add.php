@@ -2008,6 +2008,7 @@ var lang = {
                                 if (data) {
                                     data.free = true;
                                     data.parent = selectedItem.item_id;
+                                    console.log(data);
                                     add_invoice_item(data);
                                 }
                                 $("#add_item").removeClass('ui-autocomplete-loading');
