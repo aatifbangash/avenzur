@@ -5243,7 +5243,7 @@ class Products extends MY_Controller
             $query = $this->db->get();*/
 
 
-            $this->db->select("im.net_unit_sale, 
+            /*$this->db->select("im.net_unit_sale, 
                             im.net_unit_cost, 
                             im.real_unit_cost,
                             im.customer_id,
@@ -5272,9 +5272,9 @@ class Products extends MY_Controller
             $this->db->having('total_quantity >', 0);
             $query = $this->db->get();
 
-            echo $this->db->last_query();exit;
+            echo $this->db->last_query();exit;*/
 
-            /*$this->db->select('pi.avz_item_code, pi.product_code, im.net_unit_sale, im.net_unit_cost, im.real_unit_cost, pr.tax_rate, pr.type, pr.unit, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
+            $this->db->select('pi.avz_item_code, pi.product_code, im.net_unit_sale, im.net_unit_cost, im.real_unit_cost, pr.tax_rate, pr.type, pr.unit, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
             $this->db->from('sma_purchase_items pi');
             $this->db->join('sma_purchases p', 'p.id = pi.purchase_id', 'left');
             $this->db->join('sma_inventory_movements im', '(
@@ -5292,7 +5292,7 @@ class Products extends MY_Controller
 
             $this->db->group_by(['pi.warehouse_id', 'pi.avz_item_code', 'pi.expiry']);
             $this->db->having('total_quantity >', 0);
-            $query = $this->db->get();*/
+            $query = $this->db->get();
 
             //echo $this->db->last_query();exit;
 
