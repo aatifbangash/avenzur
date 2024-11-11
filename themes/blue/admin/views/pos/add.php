@@ -1871,26 +1871,7 @@ var lang = {
 
                     openPopup(ui.item);
                     $(this).val('');
-                    /*var row = add_invoice_item(ui.item);
-                    var wh = $("#poswarehouse").val();
-                    $.ajax({
-                        type: "get",
-                        url: "<?=admin_url('pos/getProductPromo');?>",
-                        data: {product_id: ui.item.row.id, warehouse_id: wh},
-                        dataType: "json",
-                        success: function (data) {
-                            if (data) {
-                                data.free = true;
-                                data.parent = ui.item.row.id;
-                                add_invoice_item(data);
-                            }
-                            $("#add_item").removeClass('ui-autocomplete-loading');
-                        }
-                    }).done(function () {
-                        $('#modal-loading').hide();
-                    });
-                    if (row)
-                        $(this).val('');*/
+                   
                 } else {
                     bootbox.alert('<?=lang('no_match_found')?>');
                 }
@@ -2015,8 +1996,30 @@ var lang = {
                         });
                         
                     } else {
-                        bootbox.alert('No records found for this item code.');
-                    }
+
+                        var row = add_invoice_item(selectedItem);
+                        var wh = $("#poswarehouse").val();
+                        $.ajax({
+                            type: "get",
+                            url: "<?=admin_url('pos/getProductPromo');?>",
+                            data: {product_id: selectedItem.item_id, warehouse_id: wh},
+                            dataType: "json",
+                            success: function (data) {
+                                if (data) {
+                                    data.free = true;
+                                    data.parent = ui.item.row.id;
+                                    add_invoice_item(data);
+                                }
+                                $("#add_item").removeClass('ui-autocomplete-loading');
+                            }
+                        }).done(function () {
+                            $('#modal-loading').hide();
+                        });
+                        if (row)
+                            $(this).val('');
+
+                            bootbox.alert('No records found for this item code.');
+                        }
                 },
                 error: function (xhr, status, error) {
                     console.error('AJAX error:', error);
