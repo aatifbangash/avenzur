@@ -1851,7 +1851,16 @@ class Purchases extends MY_Controller
             $this->sma->view_rights($inv->created_by, true);
         }
         $this->data['rows'] = $this->purchases_model->getAllPurchaseItems($purchase_id);
-        $this->data['supplier'] = $this->site->getCompanyByID($inv->supplier_id);
+        $supplier = $this->site->getCompanyByID($inv->supplier_id);
+        $this->data['parent_supplier'] = '';
+        if($supplier->level == 2 && $supplier->parent_code != '') {
+            $parentSupplier = $this->site->getCompanyByParentCode($supplier->parent_code);
+            if(isset($parentSupplier->name)) {
+                $this->data['parent_supplier'] = $parentSupplier;
+            }
+        }
+        $this->data['journal_entry'] = $this->site->getJournalEntryByTypeId('purchase', $purchase_id);
+        $this->data['supplier'] = $supplier;
         $this->data['warehouse'] = $this->site->getWarehouseByID($inv->warehouse_id);
         $this->data['inv'] = $inv;
         $this->data['payments'] = $this->purchases_model->getPaymentsForPurchase($purchase_id);
