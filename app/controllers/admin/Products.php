@@ -4165,7 +4165,12 @@ class Products extends MY_Controller
                         . "^FD{$avzCode}^FS\n"                   // GTIN Number (dynamic)
                         . "^FO170,130\n"                             // Position price below the barcode
                         . "^A0N,20,20\n"                            // Font size for price text
-                        . "^FD{$this->sma->formatMoney($productPrice)}^FS\n";
+                        . "^FDitem#{$product->code}^FS\n"               // Item Number (dynamic)
+                        . "^FO400,130\n"                            // Position price on the right side
+                        . "^A0N,20,20\n"                            // Font size for price text
+                        . "^FD{$this->sma->formatMoney($productPrice)}^FS\n";  // Price (formatted)
+                        //. "^FD{$this->sma->formatMoney($productPrice)}^FS\n";
+                        
                     
                     $zplCode .= "^XZ\n";
 
@@ -4207,7 +4212,7 @@ class Products extends MY_Controller
             }
            
             echo "<pre>" . htmlspecialchars($zplCode) . "</pre>";
-           // exit;
+            //exit;
             $url = "https://c49b-51-252-146-135.ngrok-free.app/print";
                        
             $ch = curl_init($url);
