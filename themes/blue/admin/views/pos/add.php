@@ -2007,7 +2007,7 @@ var lang = {
                             success: function (data) {
                                 if (data) {
                                     data.free = true;
-                                    data.parent = ui.item.row.id;
+                                    data.parent = selectedItem.item_id;
                                     add_invoice_item(data);
                                 }
                                 $("#add_item").removeClass('ui-autocomplete-loading');
@@ -2015,11 +2015,11 @@ var lang = {
                         }).done(function () {
                             $('#modal-loading').hide();
                         });
-                        if (row)
+                        /*if (row)
                             $(this).val('');
 
                             bootbox.alert('No records found for this item code.');
-                        }
+                        }*/
                 },
                 error: function (xhr, status, error) {
                     console.error('AJAX error:', error);

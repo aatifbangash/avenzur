@@ -1360,7 +1360,7 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function getWHProductById($id, $warehouse_id)
+    /*public function getWHProductById($id, $warehouse_id)
     {
         $this->db->select('products.*, warehouses_products.quantity, categories.id as category_id, categories.name as category_name')
             ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
@@ -1372,6 +1372,28 @@ class Pos_model extends CI_Model
         }
 
         return false;
+    }*/
+
+    public function getWHProductById($id, $warehouse_id)
+    {
+        $this->db->select("im.net_unit_sale, 
+                            im.net_unit_cost, 
+                            im.real_unit_cost,
+                            im.customer_id,
+                            im.product_id,
+                            pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
+                            pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
+                            SUM(IFNULL(im.quantity, 0)) as total_quantity
+                            ");
+        $this->db->from('sma_inventory_movements im');
+        $this->db->join('sma_products pr', 'pr.id = im.product_id', 'left');
+        $this->db->where('im.location_id', $warehouse_id);
+        $this->db->where('im.product_id', $id);
+
+        $this->db->group_by(['im.product_id', 'im.location_id']);
+        $this->db->having('total_quantity !=', 0);
+        $query = $this->db->get();
+        return $query->result();
     }
 
     public function insertQuantity($product_id, $warehouse_id, $quantity)
