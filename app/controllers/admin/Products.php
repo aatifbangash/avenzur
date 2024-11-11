@@ -5247,7 +5247,7 @@ class Products extends MY_Controller
             $this->db->join('sma_purchases p', 'p.id = pi.purchase_id', 'left');
             $this->db->join('sma_inventory_movements im', '(
                 (pi.avz_item_code IS NOT NULL AND pi.avz_item_code = im.avz_item_code)
-                OR (pi.avz_item_code IS NULL AND pi.product_code = im.product_code)
+                OR (pi.avz_item_code IS NULL AND pi.product_id = im.product_id)
             )', 'left');
 
             $this->db->join('sma_products pr', 'pr.id = pi.product_id', 'left');
