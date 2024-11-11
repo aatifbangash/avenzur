@@ -87,11 +87,11 @@
                 </div>
                 <?php
             } ?>
-            <div class="well well-sm">
+            <div class="well-sm">
                 <div class="row bold">
-                    <div class="col-xs-5">
+                    <div class="col-xs-4">
                         <p class="bold">
-                            <?= lang('date'); ?>: <?= $this->sma->hrld($inv->date); ?><br>
+                            <?= lang('Transaction Date'); ?>: <?= $this->sma->hrld($inv->date); ?><br>
                             <?= lang('ref'); ?>: <?= $inv->reference_no; ?><br>
                             <?php if (!empty($inv->return_purchase_ref)) {
                                 echo lang('return_ref') . ': ' . $inv->return_purchase_ref;
@@ -101,25 +101,46 @@
                                     echo '<br>';
                                 }
                             } ?>
-                            <?= lang('status'); ?>: <?= lang($inv->status); ?><br>
-                            <?= lang('payment_status'); ?>: <?= lang($inv->payment_status); ?><br>
+                            <?= lang('Store Code'); ?>: <?= $warehouse->code; ?><br>
+                            <?= lang('Store Name'); ?>: <?= $warehouse->name; ?><br>
                             <?php
-                            if ($inv->payment_status != 'paid' && $inv->due_date) {
-                                echo '<br>' . lang('due_date') . ': ' . $this->sma->hrsd($inv->due_date);
-                            } ?>
+                            // if ($inv->payment_status != 'paid' && $inv->due_date) {
+                            //     echo '<br>' . lang('due_date') . ': ' . $this->sma->hrsd($inv->due_date);
+                            // } ?>
                         </p>
                     </div>
-                    <div class="col-xs-7 text-right order_barcodes">
+                    
+                    <div class="col-xs-4">
+                        <p class="bold">
+                        <?= lang('Parent Supplier Code'); ?>: <?= isset($parent_supplier->sequence_code) ? $parent_supplier->sequence_code : $supplier->sequence_code;?><br>
+                        <?= lang('Parent Supplier Name'); ?>: <?= isset($parent_supplier->name) ? $parent_supplier->name : $supplier->name;?><br>
+                          
+                        <?= lang('Child Supplier Code'); ?>: <?= !isset($parent_supplier->sequence_code) ? $supplier->sequence_code : '';?><br>
+                        <?= lang('Child Supplier Name'); ?>: <?= !isset($parent_supplier->name) ? $supplier->name : '';?><br>
+                           
+                        </p>
+                    </div>
+
+                    <div class="col-xs-4">
+                        <p class="bold">
+                            <?= lang('Document No.'); ?>: <?= isset($inv->sequence_code) ? $inv->sequence_code : '';?><br>
+                            <?= lang('Invoice No.'); ?>: <?= isset($inv->invoice_number) ? $inv->invoice_number : '';?><br>
+                            <?= lang('JL Entry'); ?>: ID : <?= isset($journal_entry->id) ? $journal_entry->id : '';?> Date: <?= isset($journal_entry->date) ? date('Y', strtotime($journal_entry->date)) : '';?><br>
+                          
+                        </p>
+                    </div>
+
+                    <!-- <div class="col-xs-7 text-right order_barcodes">
                         <img src="<?= admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1'); ?>"
                             alt="<?= $inv->reference_no; ?>" class="bcimg" />
                         <?= $this->sma->qrcode('link', urlencode(admin_url('purchases/view/' . $inv->id)), 2); ?>
-                    </div>
+                    </div> -->
                     <div class="clearfix"></div>
                 </div>
                 <div class="clearfix"></div>
             </div>
 
-            <div class="row" style="margin-bottom:15px;">
+            <!-- <div class="row" style="margin-bottom:15px;">
                 <div class="col-xs-6">
                     <?php echo $this->lang->line('to'); ?>:
                     <h2 style="margin-top:10px;">
@@ -171,7 +192,7 @@
                     echo ($warehouse->phone ? lang('tel') . ': ' . $warehouse->phone . '<br>' : '') . ($warehouse->email ? lang('email') . ': ' . $warehouse->email : '');
                     ?>
                 </div>
-            </div>
+            </div> -->
             <?php $total_col = 5; ?>
             <div class="table-responsive">
                 <table class="table table-bordered table-hover table-striped print-table order-table">

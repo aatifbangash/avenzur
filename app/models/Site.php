@@ -2031,4 +2031,28 @@ public function logVisitor() {
         }
         return false;
     }
+
+    public function getCompanyByParentCode($parent_id)
+    {
+        $q = $this->db->get_where('companies', ['parent_code' => $parent_id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getJournalEntryByTypeId($type='', $type_id)
+    {
+        if($type == '' || $type_id == '') {
+            return false;
+        }
+        if($type == 'purchase') {
+            $this->db->where('pid',$type_id); 
+        }
+        $q = $this->db->get_where('sma_accounts_entries', ['pid' => $type_id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
 }
