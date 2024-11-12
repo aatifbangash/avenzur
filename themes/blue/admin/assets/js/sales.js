@@ -1354,6 +1354,8 @@ $(document).ready(function (e) {
 			var new_price = parseFloat($(this).val()),
 				item_id = row.attr("data-item-id");
 			slitems[item_id].row.price = new_price;
+			slitems[item_id].row.actual_prod_price = new_price;
+			slitems[item_id].row.net_unit_sale = new_price;
 			localStorage.setItem("slitems", JSON.stringify(slitems));
 			loadItems();
 		});
@@ -1474,6 +1476,7 @@ function loadItems() {
 		$("#add_sale, #edit_sale").attr("disabled", false);
 		$.each(sortedItems, function () {
 			var item = this;
+			console.log('item', item);
 			var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
 			item.order = item.order ? item.order : new Date().getTime();
 			const pattern = /^\d{2}\/\d{2}\/\d{4}$/;
