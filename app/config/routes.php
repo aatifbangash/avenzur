@@ -83,4 +83,5 @@ $route['admin/entries/(:num)']   = 'admin/entries/index/$1';
 
 //courier call back urls
 $route['courier/stc/callback'] = 'shop/courier/stc_callback';
+$route['api/update_ngrok_url'] = 'api/v1/ngrok/index';
 
