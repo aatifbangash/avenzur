@@ -1875,7 +1875,7 @@ class Sales extends MY_Controller
                              'entry_id' => $insert_id,
                              'dc' => 'D',
                              'ledger_id' => $customer->ledger_account,
-                             'amount' => ($inv->grand_total),
+                             'amount' => ($inv->grand_total - $inv->total_discount),
                              'narration' => 'customer'
                            )
                      );
