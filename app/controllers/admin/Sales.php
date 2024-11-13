@@ -1881,15 +1881,15 @@ class Sales extends MY_Controller
                      );
 
              // //total discount
-             /*$entryitemdata[] = array(
+             $entryitemdata[] = array(
                     'Entryitem' => array(
                         'entry_id' => $insert_id,
                         'dc' => 'D',
-                        'ledger_id' => $this->vat_on_sale,
+                        'ledger_id' => $customer->discount_ledger,
                         'amount' => $inv->total_discount,
                         'narration' => 'total discount'
                     )
-             );*/
+             );
                      
             //   /*Accounts Entry Items*/
             foreach ($entryitemdata as $row => $itemdata)
@@ -2022,12 +2022,13 @@ class Sales extends MY_Controller
 
         // API endpoint URL
         $url = $courier->url.'order/getOrders';
+        $body_digest='';
 
         $privateKey = $courier->auth_key;
         $customerCode= $courier->username;
         $pwd  = $courier->password;
         $account = $courier->api_account;
-
+       
         $bizContent = '{
             "command": "1",
             "serialNumber": ["33", "30", "28"],
