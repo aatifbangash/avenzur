@@ -2085,13 +2085,16 @@ class Reports_model extends CI_Model
         // Use the query builder to safely escape and build the query
         $this->db->select('
             SUM(IF(movement_date < "' . $start_date . '", quantity, 0)) AS total_opening_qty,
-            SUM(IF(type IN ("purchase","adjustment_increase") AND movement_date < "' . $start_date . '", net_unit_cost, 0)) AS cost_price', FALSE);
+            ABS(SUM(IF(movement_date < "' . $start_date . '", net_unit_cost, 0)) / NULLIF(SUM(IF(movement_date < "' . $start_date . '", quantity, 0)), 0)) AS cost_price', FALSE);
         $this->db->from('sma_inventory_movements');
         $this->db->where('product_id', $productId);
+        if($warehouseId){
+            $this->db->where('location_id', $warehouseId);
+        }
         $this->db->where('movement_date > ', $reports_start_date);
     
         $query = $this->db->get();
-        
+        //echo $this->db->last_query();exit;
         $response = array();
         if ($query->num_rows() > 0) {
             $response = $query->row_array();
@@ -2105,7 +2108,10 @@ class Reports_model extends CI_Model
         $reports_start_date = '2024-07-07';
         
         $query = "SELECT 
-                    iv.trs_type,
+                    CASE 
+                        WHEN iv.trs_type = 'pos' THEN 'pharmacy sale'
+                        ELSE iv.trs_type
+                    END AS trs_type,
                     iv.movement_date,
                     iv.quantity,
                     iv.location_id,
@@ -2115,6 +2121,7 @@ class Reports_model extends CI_Model
                     iv.net_unit_cost,
                     iv.net_unit_sale,
                     iv.real_unit_cost,
+                    iv.avz_item_code,
                     CASE 
                         WHEN iv.trs_type = 'purchase' THEN sp.reference_no
                         WHEN iv.trs_type = 'sale' THEN ss.reference_no
@@ -2126,7 +2133,7 @@ class Reports_model extends CI_Model
                     CASE 
                         WHEN iv.trs_type = 'purchase' THEN sp.supplier
                         WHEN iv.trs_type = 'sale' THEN ss.customer
-                        WHEN iv.trs_type = 'pos' THEN ps.customer
+                        WHEN iv.trs_type = 'pos' THEN sw.name
                         WHEN iv.trs_type = 'transfer_out' THEN sto.from_warehouse_name
                         WHEN iv.trs_type = 'transfer_in' THEN sti.to_warehouse_name
                         ELSE NULL
@@ -2143,7 +2150,8 @@ class Reports_model extends CI_Model
                         reference_id,
                         net_unit_cost,
                         net_unit_sale,
-                        real_unit_cost
+                        real_unit_cost,
+                        avz_item_code
                     FROM sma_inventory_movements
                     WHERE product_id = ".$productId." AND ";
 
@@ -2160,6 +2168,7 @@ class Reports_model extends CI_Model
                     LEFT JOIN sma_purchases sp ON iv.reference_id = sp.id AND iv.trs_type = 'purchase'
                     LEFT JOIN sma_sales ss ON iv.reference_id = ss.id AND iv.trs_type = 'sale'
                     LEFT JOIN sma_sales ps ON iv.reference_id = ps.id AND iv.trs_type = 'pos'
+                    LEFT JOIN sma_warehouses sw ON ps.warehouse_id = sw.id
                     LEFT JOIN sma_transfers sto ON iv.reference_id = sto.id AND iv.trs_type = 'transfer_out'
                     LEFT JOIN sma_transfers sti ON iv.reference_id = sti.id AND iv.trs_type = 'transfer_in'";
 
