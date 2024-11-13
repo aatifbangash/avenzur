@@ -1803,7 +1803,7 @@ function loadItems() {
 			//         '"></td>';
 
 			tr_html +=
-				'<td><input class="form-control date rbatchno" name="batchno[]" type="text" value="' +
+				'<td><input class="form-control rbatchno" name="batchno[]" type="text" value="' +
 				item_batchno +
 				'" data-id="' +
 				row_no +
