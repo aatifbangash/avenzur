@@ -311,7 +311,7 @@ class Cart_ajax extends MY_Shop_Controller
 
         $sulfad_coupon_code = 'fitness';
 
-        if($this->input->post('card_number') && preg_match('/^510510/', $this->input->post('card_number'))){
+        /*if($this->input->post('card_number') && preg_match('/^510510/', $this->input->post('card_number'))){
             $coupon_code = 'enbd24';
             $pattern_match = 1;
         }else if($this->input->post('card_number') && preg_match('/^410685/', $this->input->post('card_number'))){
@@ -331,8 +331,9 @@ class Cart_ajax extends MY_Shop_Controller
             $pattern_match = 1;
         }else{
             $coupon_code    = strtolower($this->input->post('coupon_code'));
-        }
+        }*/
 
+        $coupon_code    = strtolower($this->input->post('coupon_code'));
         $coupon_details = $this->session->userdata('coupon_details');
        
         if(isset($coupon_details['code'])){
