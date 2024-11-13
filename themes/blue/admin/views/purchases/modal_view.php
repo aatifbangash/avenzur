@@ -217,6 +217,9 @@
                             }
                             ?>
                             <th><?= lang('Sale_price'); ?></th>
+                            <th><?= lang('Cost_price'); ?></th>
+                            <th><?= lang('Purchase_price'); ?></th>
+                            <th><?= lang('Bonus'); ?></th>
 
                             <th><?= lang('subtotal'); ?></th>
                             <?php if ($Settings->product_discount && $inv->product_discount != 0) {
@@ -250,6 +253,8 @@
                         $totalAmount = 0;
                         foreach ($rows as $row):
                             $subTotal = ($row->sale_price * $row->unit_quantity);
+                            // echo "<pre>";
+                            // print_r($row);
                             ?>
                             <tr>
                                 <td style="text-align:center; width:40px; vertical-align:middle;"><?= $r; ?></td>
@@ -278,7 +283,15 @@
                                     <!-- <?= $row->unit_cost != $row->real_unit_cost && $row->item_discount > 0 ? '<del>' . $this->sma->formatMoney($row->real_unit_cost) . '</del>' : ''; ?> -->
                                     <?= $this->sma->formatNumber($row->sale_price); ?>
                                 </td>
-
+                                <td style="text-align:right; width:100px;">
+                                     <?= $this->sma->formatNumber($row->real_unit_cost); ?>
+                                </td>
+                                <td style="text-align:right; width:100px;">
+                                   <?= $this->sma->formatNumber($row->net_unit_cost); ?>
+                                </td>
+                                <td style="text-align:right; width:100px;">
+                                   <?= $this->sma->formatNumber($row->bonus); ?>
+                                </td>
                                 <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($subTotal); ?></td>
                                 <?php
                                 if ($Settings->product_discount && $inv->product_discount != 0) {
