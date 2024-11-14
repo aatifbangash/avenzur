@@ -263,6 +263,7 @@
                                 echo '<th>' . lang('received') . '</th>';
                             }
                         ?>
+                        <th><?= lang('Bonus'); ?></th>
                         <th><?= lang('Sale_price'); ?></th>
                      
                         <th><?= lang('subtotal'); ?></th>
@@ -355,10 +356,15 @@
                             }
                             ?>
                             <td style="text-align:right; width:100px;">
+                                <?= $this->sma->formatNumber($row->bonus); ?>
+                            </td>
+                            <td style="text-align:right; width:100px;">
                                  <!-- <?= $row->unit_cost != $row->real_unit_cost && $row->item_discount > 0 ? '<del>' . $this->sma->formatMoney($row->real_unit_price) . '</del>' : ''; ?> -->
                                 <?= $this->sma->formatNumber($row->real_unit_price); ?>
                             </td>
                            
+                            
+
                             <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($subTotal); ?></td>
                             <?php
                              if ($Settings->product_discount && $inv->product_discount != 0) {
