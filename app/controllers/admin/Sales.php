@@ -136,7 +136,7 @@ class Sales extends MY_Controller
                 $item_discount      = $_POST['product_discount'][$r] ?? null;
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['quantity'][$r];
-                //$item_bonus = $_POST['bonus'][$r];
+                $item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
@@ -175,7 +175,7 @@ class Sales extends MY_Controller
                     //Discount calculation----------------------------------
 
                     // NEW: Net unit price calculation
-                    $item_net_price   = $this->sma->formatDecimal((($real_unit_price * $item_quantity) - $pr_item_discount - $pr_item_discount2) / $item_quantity);
+                    $item_net_price   = $this->sma->formatDecimal((($real_unit_price * ($item_quantity)) - $pr_item_discount - $pr_item_discount2) / ($item_quantity + $item_bonus));
                     
                     $pr_item_tax = $item_tax = 0;
                     $tax         = '';
@@ -201,7 +201,8 @@ class Sales extends MY_Controller
 
                     $product_tax += $pr_item_tax;
                     $subtotal = $main_net;//(($item_net_price * $item_unit_quantity) + $pr_item_tax);
-                    $subtotal2 = (($item_net_price * $item_unit_quantity) + $product_tax);// + $pr_item_tax);
+                    //$subtotal2 = (($item_net_price * $item_unit_quantity) + $product_tax);// + $pr_item_tax);
+                    $subtotal2 = $main_net + $pr_item_tax;
                     $unit     = $this->site->getUnitByID($item_unit);
 
                     $product = [
@@ -212,8 +213,8 @@ class Sales extends MY_Controller
                         'option_id'         => $item_option,
                         'net_cost'          => $net_cost,
                         'net_unit_price'    => $item_net_price,
-                        'unit_price'        => $this->sma->formatDecimal($item_net_price + $item_tax),
-                        'quantity'          => $item_quantity,
+                        'unit_price'        => $item_net_price,
+                        'quantity'          => $item_quantity + $item_bonus,
                         'product_unit_id'   => $unit ? $unit->id : null,
                         'product_unit_code' => $unit ? $unit->code : null,
                         'unit_quantity'     => $item_unit_quantity,
@@ -232,8 +233,8 @@ class Sales extends MY_Controller
 
                         'real_unit_price'   => $real_unit_price,
                         'subtotal2'         => $this->sma->formatDecimal($subtotal2),
-                        //'bonus'           => $item_bonus,
-                        'bonus'             => 0,
+                        'bonus'             => $item_bonus,
+                        //'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
                         'totalbeforevat'    => $totalbeforevat,
@@ -1041,7 +1042,7 @@ class Sales extends MY_Controller
                 $real_cost          = $this->sma->formatDecimal($_POST['real_cost'][$r]);
 
 
-                //$item_bonus = $_POST['bonus'][$r];
+                $item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
@@ -1108,7 +1109,7 @@ class Sales extends MY_Controller
                     //Discount calculation----------------------------------
 
                     // NEW: Net unit price calculation
-                    $item_net_price   = $this->sma->formatDecimal((($real_unit_price * $item_quantity) - $pr_item_discount - $pr_item_discount2) / $item_quantity);
+                    $item_net_price   = $this->sma->formatDecimal((($real_unit_price * $item_quantity) - $pr_item_discount - $pr_item_discount2) / ($item_quantity + $item_bonus));
                     
                     $pr_item_tax = $item_tax = 0;
                     $tax         = '';
@@ -1134,7 +1135,7 @@ class Sales extends MY_Controller
                     $subtotal = $main_net;//(($item_net_price * $item_unit_quantity) + $pr_item_tax);
                     //$subtotal2 = (($item_net_price * $item_unit_quantity));
 
-                    $subtotal2 = (($item_net_price * $item_unit_quantity) + $product_tax);
+                    $subtotal2 = ($main_net + $product_tax);
 
                     $unit     = $this->site->getUnitByID($item_unit);
 
@@ -1146,7 +1147,7 @@ class Sales extends MY_Controller
                         'option_id'         => $item_option,
                         'net_cost'          => $net_cost,
                         'net_unit_price'    => $item_net_price,
-                        'unit_price'        => $this->sma->formatDecimal($item_net_price + $item_tax),
+                        'unit_price'        => $item_net_price,
                         'quantity'          => $item_quantity,
                         'product_unit_id'   => $unit ? $unit->id : null,
                         'product_unit_code' => $unit ? $unit->code : null,
@@ -1165,8 +1166,8 @@ class Sales extends MY_Controller
                         'lot_no'            => $item_lotno,
                         'real_unit_price'   => $real_unit_price,
                         'subtotal2'         => $this->sma->formatDecimal($subtotal2),
-                        //'bonus'           => $item_bonus,
-                        'bonus'             => 0,
+                        'bonus'           => $item_bonus,
+                        //'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
                         'totalbeforevat'    => $totalbeforevat,
