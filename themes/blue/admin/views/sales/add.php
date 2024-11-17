@@ -183,7 +183,8 @@ table#slTable td input.form-control {
                                 data: {
                                     term: request.term,
                                     warehouse_id: $("#slwarehouse").val(),
-                                    customer_id: $("#slcustomer").val()
+                                    customer_id: $("#slcustomer").val(),
+                                    module: 'sales'
                                 },
                                 success: function (data) {
                                     $(this).removeClass('ui-autocomplete-loading');
