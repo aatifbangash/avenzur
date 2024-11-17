@@ -67,6 +67,7 @@
         $("#add_item").autocomplete({
             //source: '<?= admin_url('transfers/suggestions'); ?>',
             source: function (request, response) {
+                console.log('Autocomplete triggered');
                 if (!$('#from_warehouse').val()) {
                     $('#add_item').val('').removeClass('ui-autocomplete-loading');
                     bootbox.alert('<?= lang('select_above'); ?>');
@@ -161,7 +162,7 @@
         $('#add_item').bind('keypress', function (e) {
             if (e.keyCode == 13) {
                 e.preventDefault();
-                $(this).autocomplete("search");
+                //$(this).autocomplete("search");
             }
         });
 
