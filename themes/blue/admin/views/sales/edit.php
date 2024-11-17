@@ -71,7 +71,8 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                     data: {
                         term: request.term,
                         warehouse_id: $("#slwarehouse").val(),
-                        customer_id: $("#slcustomer").val()
+                        customer_id: $("#slcustomer").val(),
+                        module: 'sales'
                     },
                     success: function (data) {
                         if(data[0].id != 0){

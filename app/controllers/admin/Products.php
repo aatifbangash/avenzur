@@ -5092,8 +5092,9 @@ class Products extends MY_Controller
         $term = $this->input->get('term');
         $warehouse_id = $this->input->get('warehouse_id'); // Optionally filter by warehouse if needed
         $customer_id = $this->input->get('customer_id');
+        $module = $this->input->get('module');
 
-        if ($customer_id) {
+        if ($customer_id && $module != 'sales') { // This block is for return by customer only
             $this->db->select("im.net_unit_sale, 
                             im.net_unit_cost, 
                             im.real_unit_cost,

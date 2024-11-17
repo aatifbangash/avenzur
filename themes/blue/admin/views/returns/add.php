@@ -70,7 +70,8 @@
                                 data: {
                                     term: request.term,
                                     warehouse_id: $("#rewarehouse").val(),
-                                    customer_id: $("#recustomer").val()
+                                    customer_id: $("#recustomer").val(),
+                                    module: 'return_by_customer'
                                 },
                                 success: function (data) {
                                     $(this).removeClass('ui-autocomplete-loading');
