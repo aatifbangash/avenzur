@@ -4163,12 +4163,12 @@ class Products extends MY_Controller
                         . "^BY2,2,50\n"                             // Bar width, space between bars, height
                         . "^BCN,50,Y,N,N\n"                         // Code 128 Barcode, 50 dots tall, HRI off
                         . "^FD{$avzCode}^FS\n"                   // GTIN Number (dynamic)
-                        . "^FO170,130\n"                             // Position price below the barcode
+                        . "^FO20,135\n"                             // Position price below the barcode
                         . "^A0N,20,20\n"                            // Font size for price text
                         . "^FDitem#{$product->code}^FS\n"               // Item Number (dynamic)
-                        . "^FO400,130\n"                            // Position price on the right side
+                        . "^FO200,135\n"                            // Position price on the right side
                         . "^A0N,20,20\n"                            // Font size for price text
-                        . "^FD{$this->sma->formatMoney($productPrice)}^FS\n";  // Price (formatted)
+                        . "^FDSR{$productPrice}^FS\n";  // Price (formatted)
                         //. "^FD{$this->sma->formatMoney($productPrice)}^FS\n";
                         
                     
@@ -4211,9 +4211,9 @@ class Products extends MY_Controller
 
             }
            
-            //echo "<pre>" . htmlspecialchars($zplCode) . "</pre>";
+            echo "<pre>" . htmlspecialchars($zplCode) . "</pre>";
             //exit;
-            $url = "https://35da-51-252-146-135.ngrok-free.ap/print";
+            $url = "https://35da-51-252-146-135.ngrok-free.app/print";
                        
             $ch = curl_init($url);
 
