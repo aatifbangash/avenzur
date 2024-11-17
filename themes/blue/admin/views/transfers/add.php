@@ -64,6 +64,7 @@
             <?php
         } ?>
         ItemnTotals();
+        var queriedTerms = [];
         $("#add_item").autocomplete({
             //source: '<?= admin_url('transfers/suggestions'); ?>',
             source: function (request, response) {
@@ -75,6 +76,11 @@
                     return false;
                 }
 
+                if (queriedTerms.includes(request.term)) {
+                 console.log("No need to fetch; term already queried.");
+                 return; // Stop further processing
+                }
+ 
                 $.ajax({
                     type: 'get',
                     url: '<?= admin_url('transfers/bch_suggestions'); ?>',
@@ -100,6 +106,7 @@
                                     $(this).removeClass('ui-autocomplete-loading');
                                     if(data){
                                         add_transfer_item(data[0]);
+                                        queriedTerms.push(request.term);
                                     }else{
                                         bootbox.alert('No records found for this item code.');
                                     }
@@ -160,6 +167,7 @@
             }
         });
         $('#add_item').bind('keypress', function (e) {
+            
             if (e.keyCode == 13) {
                 e.preventDefault();
                 //$(this).autocomplete("search");
