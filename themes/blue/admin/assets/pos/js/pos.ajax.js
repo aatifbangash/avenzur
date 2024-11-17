@@ -1799,6 +1799,7 @@ function add_invoice_item(item) {
         positems[item_id].row.qty = new_qty;
     } else {
         positems[item_id] = item;
+        positems[item_id].row.qty = 1;
     }
     display_item_id = item_id;
     positems[item_id].row.base_quantity = positems[item_id].row.qty;

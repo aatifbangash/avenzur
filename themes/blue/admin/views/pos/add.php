@@ -1825,13 +1825,33 @@ var lang = {
                                 data: {
                                     term: request.term,
                                     warehouse_id: $("#poswarehouse").val(),
-                                    customer_id: $("#poscustomer").val()
+                                    customer_id: $("#poscustomer").val(),
+                                    module: 'pos'
                                 },
                                 success: function (data) {
                                     $(this).removeClass('ui-autocomplete-loading');
                                     if(data){
-                                        add_invoice_item(data[0]);
+                                        var avzItemCode = data[0].row.avz_item_code;
+                                        var found = false;
+                                        var foundKey = '';
+
+                                        Object.keys(positems).forEach(function (key) {
+                                            if (positems[key].row && positems[key].row.avz_item_code === avzItemCode) {
+                                                found = true;
+                                                foundKey = key;
+                                            }
+                                        });
+
+                                        if(found == true){
+                                            new_qty = parseInt(positems[foundKey].row.qty) + 1;
+                                            positems[foundKey].row.qty = new_qty;
+                                            localStorage.setItem('positems', JSON.stringify(positems));
+                                            loadItems();
+                                        }else{
+                                            add_invoice_item(data[0]);
+                                        }
                                     }else{
+                                        
                                         bootbox.alert('No records found for this item code.');
                                     }
                                     
