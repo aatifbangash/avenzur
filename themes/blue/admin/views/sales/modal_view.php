@@ -374,7 +374,7 @@
                                 $pr_discount      = $this->site->calculateDiscount($row->discount1.'%', $row->real_unit_price);
                                 $amount_after_dis1 = $unit_cost - $pr_discount;
                                 $pr_discount2      = $this->site->calculateDiscount($row->discount2.'%', $amount_after_dis1);  
-                                $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $row->quantity);
+                                $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $row->unit_quantity);
                                 $row->discount2= $this->sma->formatNumber($row->discount2,null);
                                 echo '<td style=" text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($row->item_discount - $pr_item_discount2) . '</td>';
                        

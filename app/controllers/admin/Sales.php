@@ -1821,9 +1821,10 @@ class Sales extends MY_Controller
                  $product  = $this->site->getProductByID($proid);
                  //products
                  
-                $inventory_amount += ($item->net_cost * $item->quantity);
-                $sale_amount += $item->main_net;
-                $cogs_amount += ($item->net_cost * $item->quantity);
+                $inventory_amount += ($item->net_cost * ($item->quantity + $item->bonus));
+                $sale_amount +=  ($item->real_unit_price * $item->unit_quantity); //$item->main_net;
+                //add bonus to quantity
+                $cogs_amount += ($item->net_cost * ($item->quantity + $item->bonus));
              }
 
             $entryitemdata[] = array(
@@ -1876,7 +1877,7 @@ class Sales extends MY_Controller
                              'entry_id' => $insert_id,
                              'dc' => 'D',
                              'ledger_id' => $customer->ledger_account,
-                             'amount' => ($inv->grand_total - $inv->total_discount),
+                             'amount' => ($inv->grand_total),
                              'narration' => 'customer'
                            )
                      );
