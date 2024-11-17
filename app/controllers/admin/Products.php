@@ -5132,9 +5132,9 @@ class Products extends MY_Controller
             $this->db->select('
                 pi.avz_item_code, 
                 pi.product_code, 
-                pur.net_unit_sale AS purchase_net_unit_sale, 
-                pur.net_unit_cost AS purchase_net_unit_cost, 
-                pur.real_unit_cost AS purchase_real_unit_cost, 
+                pur.net_unit_sale, 
+                pur.net_unit_cost, 
+                pur.real_unit_cost, 
                 pr.tax_rate, 
                 pr.type, 
                 pr.unit, 
