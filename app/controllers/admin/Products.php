@@ -4211,9 +4211,9 @@ class Products extends MY_Controller
 
             }
            
-            echo "<pre>" . htmlspecialchars($zplCode) . "</pre>";
+            //echo "<pre>" . htmlspecialchars($zplCode) . "</pre>";
             //exit;
-            $url = "https://c49b-51-252-146-135.ngrok-free.app/print";
+            $url = "https://35da-51-252-146-135.ngrok-free.ap/print";
                        
             $ch = curl_init($url);
 
