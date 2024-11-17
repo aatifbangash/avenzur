@@ -1,6 +1,6 @@
 $(document).ready(function () {
 	$("body a, body button").attr("tabindex", -1);
-	check_add_item_val();
+	//check_add_item_val();
 	if (site.settings.set_focus != 1) {
 		$("#add_item").focus();
 	}
@@ -463,6 +463,7 @@ function loadItems() {
 		$("#toTable tbody").empty();
 		$("#add_transfer, #edit_transfer").attr("disabled", false);
 		toitems = JSON.parse(localStorage.getItem("toitems"));
+		console.log('items',toitems);
 		currentstatus = localStorage.getItem("currentstatus");
 		sortedItems =
 			site.settings.item_addition == 1
@@ -750,6 +751,13 @@ function loadItems() {
  * @returns {Boolean}
  ---------------------------- */
 function add_transfer_item(item) {
+	
+	// // check if already exist
+	// if (localStorage.getItem("toitems")) {
+	// 	toitems = JSON.parse(localStorage.getItem("toitems"));
+	// 	var avz_item_code = item.row.avz_item_code;
+	// }
+	
 	if (count == 1) {
 		toitems = {};
 		if ($("#from_warehouse").val()) {
