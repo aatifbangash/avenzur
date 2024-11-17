@@ -1843,10 +1843,18 @@ var lang = {
                                         });
 
                                         if(found == true){
-                                            new_qty = parseInt(positems[foundKey].row.qty) + 1;
-                                            positems[foundKey].row.qty = new_qty;
-                                            localStorage.setItem('positems', JSON.stringify(positems));
-                                            loadItems();
+
+                                            var available_qty = parseInt(positems[foundKey].row.quantity);
+                                            var new_qty = parseInt(positems[foundKey].row.qty) + 1;
+                                            //console.log(available_qty+' -- '+new_qty);
+                                            if(parseInt(new_qty) <= parseInt(available_qty)){
+                                                positems[foundKey].row.qty = new_qty;
+                                                localStorage.setItem('positems', JSON.stringify(positems));
+                                                loadItems();
+                                            }else{
+                                                bootbox.alert('No more quantity available.');
+                                            }
+                                            
                                         }else{
                                             add_invoice_item(data[0]);
                                         }
