@@ -189,7 +189,21 @@ table#slTable td input.form-control {
                                 success: function (data) {
                                     $(this).removeClass('ui-autocomplete-loading');
                                     if(data){
-                                        add_invoice_item(data[0]);
+
+                                        var avzItemCode = data[0].row.avz_item_code;
+                                        var found = false;
+
+                                        Object.keys(slitems).forEach(function (key) {
+                                            if (slitems[key].row && slitems[key].row.avz_item_code === avzItemCode) {
+                                                found = true;
+                                            }
+                                        });
+
+                                        if(found == true){
+                                            bootbox.alert('Row already exists for this code.');
+                                        }else{
+                                            add_invoice_item(data[0]);
+                                        }
                                     }else{
                                         bootbox.alert('No records found for this item code.');
                                     }
