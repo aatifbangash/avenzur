@@ -430,46 +430,7 @@ $(document).ready(function () {
     $(document).on('click', '.posdel', function () {
         var row = $(this).closest('tr');
         var item_id = row.attr('data-item-id');
-        if (protect_delete == 1) {
-            var boxd = bootbox.dialog({
-                title: "<i class='fa fa-key'></i> Pin Code",
-                message: '<input id="pos_pin" name="pos_pin" type="password" placeholder="Pin Code" class="form-control"> ',
-                buttons: {
-                    success: {
-                        label: "<i class='fa fa-tick'></i> OK",
-                        className: 'btn-success verify_pin',
-                        callback: function () {
-                            var pos_pin = md5($('#pos_pin').val());
-                            if (pos_pin == pos_settings.pin_code) {
-                                delete positems[item_id];
-                                checkPromoItem(item_id);
-                                // row.remove();
-                                display_item_id = 'update';
-                                if (positems.hasOwnProperty(item_id)) {
-                                } else if (checkPromoItem(item_id)) {
-                                    localStorage.setItem('positems', JSON.stringify(positems));
-                                    loadItems();
-                                }
-                            } else {
-                                bootbox.alert('Wrong Pin Code');
-                            }
-                        },
-                    },
-                },
-            });
-            boxd.on('shown.bs.modal', function () {
-                $('#pos_pin')
-                    .focus()
-                    .keypress(function (e) {
-                        if (e.keyCode == 13) {
-                            e.preventDefault();
-                            $('.verify_pin').trigger('click');
-                            return false;
-                        }
-                    });
-            });
-        } else {
-            delete positems[item_id];
+        delete positems[item_id];
             // row.remove();
             display_item_id = 'update';
             if (positems.hasOwnProperty(item_id)) {
@@ -477,7 +438,54 @@ $(document).ready(function () {
                 localStorage.setItem('positems', JSON.stringify(positems));
                 loadItems();
             }
-        }
+        // if (protect_delete == 1) {
+        //     var boxd = bootbox.dialog({
+        //         title: "<i class='fa fa-key'></i> Pin Code",
+        //         message: '<input id="pos_pin" name="pos_pin" type="password" placeholder="Pin Code" class="form-control"> ',
+        //         buttons: {
+        //             success: {
+        //                 label: "<i class='fa fa-tick'></i> OK",
+        //                 className: 'btn-success verify_pin',
+        //                 callback: function () {
+        //                     var pos_pin = md5($('#pos_pin').val());
+        //                     if (pos_pin == pos_settings.pin_code) {
+        //                         delete positems[item_id];
+        //                         checkPromoItem(item_id);
+        //                         // row.remove();
+        //                         display_item_id = 'update';
+        //                         if (positems.hasOwnProperty(item_id)) {
+        //                         } else if (checkPromoItem(item_id)) {
+        //                             localStorage.setItem('positems', JSON.stringify(positems));
+        //                             loadItems();
+        //                         }
+        //                     } else {
+        //                         bootbox.alert('Wrong Pin Code');
+        //                     }
+        //                 },
+        //             },
+        //         },
+        //     });
+        //     boxd.on('shown.bs.modal', function () {
+        //         $('#pos_pin')
+        //             .focus()
+        //             .keypress(function (e) {
+        //                 if (e.keyCode == 13) {
+        //                     e.preventDefault();
+        //                     $('.verify_pin').trigger('click');
+        //                     return false;
+        //                 }
+        //             });
+        //     });
+        // } else {
+        //     delete positems[item_id];
+        //     // row.remove();
+        //     display_item_id = 'update';
+        //     if (positems.hasOwnProperty(item_id)) {
+        //     } else if (checkPromoItem(item_id)) {
+        //         localStorage.setItem('positems', JSON.stringify(positems));
+        //         loadItems();
+        //     }
+        // }
         return false;
     });
 
@@ -1476,7 +1484,7 @@ function loadItems() {
 
 
             tr_html +=
-                '<td class="text-center"><i class="fa fa-times tip pointer" id="' +
+                '<td class="text-center"><i class="fa fa-times tip pointer posdel" id="' +
                 row_no +
                 '" title="Remove" style="cursor:pointer;"></i></td>';
             newTr.html(tr_html);
