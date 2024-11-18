@@ -135,7 +135,7 @@ class Sales_model extends CI_Model
                 $this->db->where('sma_invoice_serials.tid', 0);
                 $this->db->where('sma_invoice_serials.pid !=', 0);
                 $this->db->where('sma_purchases.status', 'received');
-                $this->db->limit($serials_quantity);
+                $this->db->limit(abs($serials_quantity));
 
                 $notification_serials = $this->db->get();
                 
