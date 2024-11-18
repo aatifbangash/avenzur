@@ -933,6 +933,7 @@ class Pos extends MY_Controller
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
+
                 /*$product_details = $this->pos_model->getProductQuantityWithNearestExpiry($item_id, $item_code, $warehouse_id);
                 if(empty($product_details)){
                     $this->session->set_flashdata('error', lang( $item_code. '-'. $item_name . ' may Expired Please remove it from the list'));
@@ -975,7 +976,7 @@ class Pos extends MY_Controller
                     $product_discount += $pr_item_discount;
                     $pr_item_tax = $item_tax = 0;
                     $tax         = '';
-
+                    
                     if (isset($item_tax_rate) && $item_tax_rate != 0) {
                         $tax_details = $this->site->getTaxRateByID($item_tax_rate);
                         $ctax        = $this->site->calculateTax($product_details, $tax_details, $unit_price);
@@ -1037,9 +1038,9 @@ class Pos extends MY_Controller
                 krsort($products);
             }
 
-            $order_discount = $this->site->calculateDiscount($this->input->post('discount'), ($total + $product_tax), true);
+            $order_discount = $this->site->calculateDiscount($this->input->post('discount'), ($total), true);
             $total_discount = $this->sma->formatDecimal(($order_discount + $product_discount), 4);
-            $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
+            $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total - $order_discount));
             $total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
             // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
             $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
