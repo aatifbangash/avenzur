@@ -2157,7 +2157,7 @@ function check_add_item_val() {
         e.stopPropagation();
         if (e.keyCode == 13 || e.keyCode == 9) {
             e.preventDefault();
-            $(this).autocomplete('search');
+            //$(this).autocomplete('search');
         }
     });
 }
