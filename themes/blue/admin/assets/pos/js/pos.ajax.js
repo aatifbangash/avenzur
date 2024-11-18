@@ -1277,8 +1277,9 @@ function loadItems() {
             } else {
                 item_discount = formatDecimal(ds);
             }
+            
             product_discount += formatDecimal(item_discount * item_qty);
-
+            
             unit_price = formatDecimal(unit_price - item_discount);
             var pr_tax = item.tax_rate;
             var pr_tax_val = 0,
@@ -1609,17 +1610,17 @@ function loadItems() {
             if (ds.indexOf('%') !== -1) {
                 var pds = ds.split('%'); 
                 if (!isNaN(pds[0])) {
-                    order_discount = formatDecimal(parseFloat((total * parseFloat(pds[0])) / 100), 4);
+                    order_discount = formatDecimal(parseFloat(((parseFloat(total) - parseFloat(total_vat)) * parseFloat(pds[0])) / 100), 4);
                 } else {
                     order_discount = parseFloat(ds);
                 }
             } else {
                // order_discount = parseFloat(ds);
-               order_discount = formatDecimal(parseFloat((total * parseFloat(ds)) / 100), 4);
+               order_discount = formatDecimal(parseFloat(((parseFloat(total) - parseFloat(total_vat)) * parseFloat(ds)) / 100), 4);
             }
             //total_discount += parseFloat(order_discount);
         }
-
+        
         // Order level tax calculations
         if (site.settings.tax2 != 0) {
             if ((postax2 = localStorage.getItem('postax2'))) {
@@ -1639,7 +1640,7 @@ function loadItems() {
         total = formatDecimal(total);
         product_tax = formatDecimal(product_tax);
         total_discount = formatDecimal(order_discount + product_discount);
-
+        
         $('#ttax2').text(formatMoney(total_vat));
         //localStorage.setItem('postax2', total_vat);
 
