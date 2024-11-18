@@ -1476,7 +1476,7 @@ function loadItems() {
 
 
             tr_html +=
-                '<td class="text-center"><i class="fa fa-times tip pointer posdel" id="' +
+                '<td class="text-center"><i class="fa fa-times tip pointer" id="' +
                 row_no +
                 '" title="Remove" style="cursor:pointer;"></i></td>';
             newTr.html(tr_html);
