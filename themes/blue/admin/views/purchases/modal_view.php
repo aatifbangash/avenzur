@@ -276,10 +276,10 @@
                                     <?= $this->sma->formatNumber($row->sale_price); ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
-                                     <?= $this->sma->formatNumber($row->real_unit_cost); ?>
+                                     <?= $this->sma->formatNumber($row->net_unit_cost); ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
-                                   <?= $this->sma->formatNumber($row->net_unit_cost); ?>
+                                   <?= $this->sma->formatNumber($row->real_unit_cost); ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
                                    <?= $this->sma->formatNumber($row->bonus); ?>
