@@ -1,11 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <style>
     @media print {
-        body {
-            zoom: 90%;
+        /* body {
+            zoom: 80%;
             margin: 0;
             padding: 0;
-        }
+        } */
 
         /* Ensure modal content is printed */
         .modal {
@@ -20,24 +20,24 @@
         }
 
         /* Hide backdrop, buttons, or other interactive elements */
-        .modal-backdrop,
+        /* .modal-backdrop,
         .print-hide {
             display: none !important;
-        }
+        } */
 
         /* Ensure proper page breaks inside tables */
-        table,
+        /* table,
         tr,
         td {
             page-break-inside: avoid;
-        }
+        } */
 
         /* Optional: Remove shadows, borders, or extra elements that might interfere with printing */
-        .modal-shadow,
+        /* .modal-shadow,
         .modal-border {
             box-shadow: none;
             border: none;
-        }
+        } */
 
         /* Adjust font size for better readability */
         body,
@@ -46,27 +46,19 @@
         }
 
         /* Ensure proper table formatting in print */
-        table {
-            width: 100%;
-            /* Ensure tables use full width */
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            border: 1px solid #000;
-            /* Ensure tables are clearly printed */
-        }
 
         .table-summary {
             float: right !important;
             width: 30% !important;
-            /* Ensure it maintains 30% width */
         }
 
-        .clear {
+        /* .clear {
             clear: both;
-        }
+        } */
+
+        .header, .footer, .navigation, .no-print {
+        display: none;
+    }
     }
 </style>
 <div class="modal-dialog modal-lg no-modal-header" style="width: 90%; font-size: 12px;">
