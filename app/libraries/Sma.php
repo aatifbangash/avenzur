@@ -162,9 +162,10 @@ class Sma
         if (!is_numeric($number)) {
             return null;
         }
-        if (!$decimals && $decimals !== 0) {
-            $decimals = $this->Settings->decimals;
-        }
+        $decimals = $this->Settings->decimals;
+        // if (!$decimals && $decimals !== 0) {
+        //     $decimals = $this->Settings->decimals;
+        // }
         return number_format($number, $decimals, '.', '');
     }
 
