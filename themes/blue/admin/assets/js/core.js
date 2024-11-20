@@ -963,7 +963,7 @@ function check_add_item_val() {
     $('#add_item').bind('keypress', function (e) {
         if (e.keyCode == 13 || e.keyCode == 9) {
             e.preventDefault();
-            $(this).autocomplete('search');
+            //$(this).autocomplete('search');
         }
     });
 }
