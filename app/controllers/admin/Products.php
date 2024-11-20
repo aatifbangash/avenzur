@@ -4328,7 +4328,8 @@ class Products extends MY_Controller
             if ($this->input->get('purchase') || $this->input->get('transfer')) {
                 if ($this->input->get('purchase')) {
                     $purchase_id = $this->input->get('purchase', true);
-                    $items = $this->products_model->getPurchaseItems($purchase_id);
+                    $item_code = $this->input->get('item_code', true);
+                    $items = $this->products_model->getPurchaseItems($purchase_id, $item_code);
                 } elseif ($this->input->get('transfer')) {
                     $transfer_id = $this->input->get('transfer', true);
                     $items = $this->products_model->getTransferItems($transfer_id);

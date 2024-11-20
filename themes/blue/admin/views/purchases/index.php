@@ -6,7 +6,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?= admin_url('purchases/getPurchases' . ($warehouse_id ? '/' . $warehouse_id : '')) ?>',
+            'sAjaxSource': '<?= admin_url('purchases/getPurchases' . ($warehouse_id ? '/' . $warehouse_id : '') .'?pid='.$pid ) ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -174,7 +174,9 @@
         <div class="row">
             <div class="col-lg-12">
 
-                <p class="introtext"><?= lang('list_results'); ?></p>
+                <!-- <p class="introtext"><?= lang('list_results'); ?></p> -->
+                 <div class="col-md-3"><input type="text" id="pid" name="pid" class="form-control input-tip"></div>
+                 <div class="col-md-3"> <input type="button" id="searchByNumber" class="btn btn-primary" value="Search By Purchase Number"></div>
 
                 <div class="table-responsive">
                     <table id="POData" cellpadding="0" cellspacing="0" border="0"
@@ -238,3 +240,18 @@
     <?php
 }
 ?>
+
+<script>
+    document.getElementById('searchByNumber').addEventListener('click', function() {
+    var pidValue = document.getElementById('pid').value; 
+    if (pidValue) { 
+       
+        var baseUrl = window.location.href.split('?')[0]; 
+        var newUrl = baseUrl + "?pid=" + encodeURIComponent(pidValue);
+        window.location.href = newUrl; 
+    } else {
+        alert("Please enter a purchase number."); 
+    }
+});
+
+</script>

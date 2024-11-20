@@ -83,6 +83,7 @@
                 <div class="row bold">
                     <div class="col-xs-4">
                         <p class="bold">
+                        <?= lang('Purchase Invoice No.'); ?>: <?= $purchase_id; ?><br>
                             <?= lang('Transaction Date'); ?>: <?= $this->sma->hrld($inv->date); ?><br>
                             <?= lang('ref'); ?>: <?= $inv->reference_no; ?><br>
                             <?php if (!empty($inv->return_purchase_ref)) {
@@ -256,6 +257,7 @@
                                     <?= $row->supplier_part_no ? '<br>' . lang('supplier_part_no') . ': ' . $row->supplier_part_no : ''; ?>
                                     <?= $row->details ? '<br>' . $row->details : ''; ?>
                                     <?= ($row->expiry && $row->expiry != '0000-00-00') ? '<br>' . lang('EX') . ': ' . $this->sma->hrsd($row->expiry) : ''; ?>
+                                    <?= 'Item# '.$row->item_code ;?>
                                 </td>
                                 <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->batchno ?: ''; ?>
                                 </td>
