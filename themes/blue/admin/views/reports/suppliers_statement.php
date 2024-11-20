@@ -94,11 +94,11 @@
                             <thead>
                             <tr>
                                 <th>#</th>
+                                <th><?= lang('Serial No'); ?></th>
                                 <th><?= lang('type'); ?></th>
                                 <th><?= lang('date'); ?></th>
                                 <th><?= lang('Num'); ?></th>
-                                <th><?= lang('name'); ?></th>
-                                <th><?= lang('Memo'); ?></th>
+                                <th><?= lang('Description'); ?></th>
                                 <th><?= lang('Debit'); ?></th>
                                 <th><?= lang('Credit'); ?></th>
                                 <th><?= lang('balance'); ?></th>
@@ -118,8 +118,15 @@
                             $totalDebit = 0;
                             $totalBalance = 0;
                             $openingBalance = $total_ob;
+                            $serialArray = array(
+                                                'pos' => 'sid',
+                                                'purchaseorder' => 'pid',
+                                                'returnorder' => 'rsid',
+                                                'saleorder' => 'sid',
+                                                'transferorder' => 'tid',
+                                                'returncustomerorder' => 'rid'
+                                             );
                             foreach ($supplier_statement as $statement) {
-
                                 if ($statement->dc == 'D') {
                                     $balance = $balance - $statement->amount;
                                 } else {
@@ -127,13 +134,14 @@
                                 }
 
                                 $count++;
+                                $index = $serialArray[$statement->transaction_type];
                                 ?>
                                 <tr>
                                     <td><?= $count; ?></td>
+                                    <td><?= $statement->$index; ?></td>
                                     <td><?= $statement->transaction_type; ?></td>
                                     <td><?= $statement->date; ?></td>
                                     <td><?= $statement->code; ?></td>
-                                    <td><?= $statement->company; ?></td>
                                     <td><?= $statement->narration; ?></td>
                                     <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '-';
                                         $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
