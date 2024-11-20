@@ -244,7 +244,7 @@
                         $tax_summary = [];
                         $totalAmount = 0;
                         foreach ($rows as $row):
-                            $subTotal = ($row->sale_price * $row->unit_quantity);
+                            $subTotal = ($row->real_unit_cost * $row->unit_quantity);
                             // echo "<pre>";
                             // print_r($row);
                             ?>
@@ -276,10 +276,10 @@
                                     <?= $this->sma->formatNumber($row->sale_price); ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
-                                     <?= $this->sma->formatNumber($row->net_unit_cost); ?>
+                                     <?= $this->sma->formatNumber($row->real_unit_cost); ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
-                                   <?= $this->sma->formatNumber($row->real_unit_cost); ?>
+                                   <?= $this->sma->formatNumber($row->net_unit_cost); ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
                                    <?= $this->sma->formatNumber($row->bonus); ?>
