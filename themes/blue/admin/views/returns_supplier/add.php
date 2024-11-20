@@ -5,6 +5,18 @@
         tax_rates = <?php echo json_encode($tax_rates); ?>;
     var rseitems = {};
 
+    <?php if ($inv) {
+    ?>
+        //localStorage.setItem('redate', '<?= $this->sma->hrld($inv->date) ?>');
+        localStorage.setItem('rseref', '<?= $reference ?>');
+        localStorage.setItem('rsenote', '<?= $this->sma->decode_html($inv->note); ?>');
+        localStorage.setItem('rseitems', JSON.stringify(<?= $inv_items; ?>));
+        localStorage.setItem('rsediscount', '<?= $inv->order_discount_id ?>');
+        localStorage.setItem('rsetax2', '<?= $inv->order_tax_id ?>');
+        localStorage.setItem('return_surcharge', '0');
+        <?php
+    } ?>
+
     <?php if ($this->session->userdata('remove_rlls')) {
     ?>
         if (localStorage.getItem('rseitems')) {
@@ -443,7 +455,7 @@
                                             <th class="col-md-1"><?= lang('batch'); ?></th>
                                             <th class="col-md-1"><?= lang('expiry_date'); ?></th>
                                             <th class="col-md-1"><?= lang('Quantity'); ?></th>  
-                                            <!--<th class="col-md-1"><?php //echo lang('Bonus'); ?></th>-->
+                                            <th class="col-md-1"><?= lang('Bonus'); ?></th>
                                             <th class="col-md-1"><?= lang('Cost Price'); ?></th> 
                                             <?php
                                             /* if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {

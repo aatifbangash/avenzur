@@ -1020,17 +1020,18 @@ function loadItems() {
                 item_expiry = item.row.expiry,
                 item_batchno = item.row.batch_no,
                 item_serialno = item.row.serial_number,
-                item_bonus = 0;//item.row.bonus,
-                item_dis1 = 0, // item.row.discount1,
-                item_dis2 = 0, //item.row.discount2,
+                item_bonus = item.row.bonus ? item.row.bonus : 0;//item.row.bonus,
+                item_dis1 = item.row.discount1 ? item.row.discount1 : 0,
+                item_dis2 = item.row.discount2 ? item.row.discount2 : 0,
                 item_batchQuantity = item.row.batchQuantity,
                 item_name = item.row.name.replace(/"/g, '&#034;').replace(/'/g, '&#039;');
             var product_unit = item.row.unit,
                 base_quantity = item.row.base_quantity;
+                base_quantity = base_quantity - item_bonus;
             // var cost_price= item.row.cost_price,
              var cost_price  = item.row.net_cost;
              var batch_no    = item.row.batch_no;
-             var bonus       = item.row.bonus;
+             var bonus       = item.row.bonus ? item.row.bonus : 0;
              var expiry       = item_expiry_date;//item.row.expiry;
              var discount1       = item.row.discount1;
              var discount2       = item.row.discount2; 
@@ -1120,7 +1121,7 @@ function loadItems() {
             var main_net = 0.0;
             // alert(item_cost);
            // var total_before_dis_vat = (parseFloat(item_sale_price)) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty);
-           var total_before_dis_vat = (parseFloat(item_cost)) * parseFloat(item_qty);
+           var total_before_dis_vat = (parseFloat(real_unit_cost)) * parseFloat(item_qty);
             dis1_a = total_before_dis_vat * parseFloat((item_dis1 / 100));
             total_after_dis1 =  total_before_dis_vat - dis1_a;
             dis2_a = total_after_dis1 *  parseFloat((item_dis2/100));
@@ -1130,8 +1131,7 @@ function loadItems() {
 
             var total_purchases = (parseFloat(real_unit_cost)) * parseFloat(item_qty);
 
-            
-            main_net = (parseFloat(item_cost)) * parseFloat(item_qty);
+            main_net = (parseFloat(item_cost)) * parseFloat(parseFloat(item_qty) + parseFloat(item_bonus));
             var new_unit_cost = parseFloat(main_net) / parseFloat(parseFloat(item_qty) + parseFloat(item_bonus)); 
 
             var row_no = item.id;
@@ -1223,12 +1223,12 @@ function loadItems() {
 				base_quantity +
 				'</span></td>';
 
-                /*tr_html +=
+                tr_html +=
                 '<td class="text-right"><input class="form-control input-sm text-right rbonus" name="bonus[]" type="text" id="bonus_' +
                 row_no +
                 '" value="' +
                 bonus +
-                '"></td>';*/
+                '"></td>';
 
                 tr_html +=
                     '<td><input class="form-control rs_cost_price" name="cost_price[]" type="text" value="' +
@@ -1393,7 +1393,7 @@ function loadItems() {
         //     '</th><th class="text-center"><i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i></th></tr>';
         // $('#reTable tfoot').html(tfoot);
 
-        var col = 6;
+        var col = 7;
         if (site.settings.product_serial == 1) {
             col++;
         }
