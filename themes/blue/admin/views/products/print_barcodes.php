@@ -17,18 +17,25 @@
     <div class="box-content">
         <div class="row">
             <div class="col-lg-12">
-                <p class="introtext no-print"><?php echo sprintf(
+                <div class="row" style="padding:10px;">
+                    <div class="col-md-3">Purchase Inv No:<input type="text" id="purchase_id" name="purchase_id" class="form-control input-tip"></div>
+                    <div class="col-md-3">Item Code:<input type="text" id="item_code" name="item_code" class="form-control input-tip"></div>
+                    <div class="col-md-3" style="margin-top:19px;"> <input type="button" id="searchByNumber" class="btn btn-primary" value="Search"></div>
+             </div>
+                <!-- <p class="introtext no-print"><?php echo sprintf(
                     lang('print_barcode_heading'),
                     anchor('admin/system_settings/categories', lang('categories') . ' & ' . lang('subcategories')),
                     '',
                     anchor('admin/purchases', lang('purchases')),
                     anchor('admin/transfers', lang('transfers'))
-); ?></p>
+); ?></p> -->
 
                 <div class="well well-sm no-print">
                     <div class="form-group">
-                        <?= lang('add_product', 'add_item'); ?>
-                        <?php echo form_input('add_item', '', 'class="form-control" id="add_item" placeholder="' . $this->lang->line('add_item') . '"'); ?>
+                        
+                    
+                        <?php //lang('add_product', 'add_item'); ?>
+                        <?php //echo form_input('add_item', '', 'class="form-control" id="add_item" placeholder="' . $this->lang->line('add_item') . '"'); ?>
                     </div>
                     <?= admin_form_open('products/print_barcodes', 'id="barcode-print-form" data-toggle="validator"'); ?>
                     <input type="hidden" name="purchase_id" value="<?php echo $this->input->get('purchase', true);?>" >
@@ -242,14 +249,17 @@
 </div>
 <script type="text/javascript">
     var ac = false; bcitems = {};
-    if (localStorage.getItem('bcitems')) {
-        bcitems = JSON.parse(localStorage.getItem('bcitems'));
-    }
+    // if (localStorage.getItem('bcitems')) {
+    //     bcitems = JSON.parse(localStorage.getItem('bcitems'));
+    // }
+   
     <?php if ($items) {
         ?>
     localStorage.setItem('bcitems', JSON.stringify(<?= $items; ?>));
         <?php
-    } ?>
+    } else {?>
+     localStorage.setItem('bcitems', JSON.stringify(bcitems));
+    <?php }?>
     $(document).ready(function() {
         <?php if ($this->input->post('print')) {
             ?>
@@ -598,5 +608,18 @@
             return true;
         }
     }
+
+    document.getElementById('searchByNumber').addEventListener('click', function() {
+    var pidValue = document.getElementById('purchase_id').value; 
+    var itemCodeValue = document.getElementById('item_code').value; 
+    if (pidValue) { 
+       
+        var baseUrl = window.location.href.split('?')[0]; 
+        var newUrl = baseUrl + "?purchase=" + encodeURIComponent(pidValue) + "&item_code=" + encodeURIComponent(itemCodeValue);
+        window.location.href = newUrl; 
+    } else {
+        alert("Please enter a purchase number."); 
+    }
+});
 
 </script>

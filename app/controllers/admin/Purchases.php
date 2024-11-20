@@ -1567,6 +1567,7 @@ class Purchases extends MY_Controller
     public function getPurchases($warehouse_id = null)
     {
         $this->sma->checkPermissions('index');
+        $pid = $this->input->get('pid');
 
         if ((!$this->Owner || !$this->Admin) && !$warehouse_id) {
             $user = $this->site->getUser();
@@ -1648,6 +1649,9 @@ class Purchases extends MY_Controller
             $this->datatables
                 ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, sequence_code, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
                 ->from('purchases');
+        }
+        if(is_numeric($pid)) {
+            $this->datatables->where('id', $pid);
         }
 
         // if($this->sma->checkPermissionsForRequest('p_status_pending'))
@@ -1795,7 +1799,6 @@ class Purchases extends MY_Controller
     public function index($warehouse_id = null)
     {
         $this->sma->checkPermissions();
-
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -1808,6 +1811,7 @@ class Purchases extends MY_Controller
         }
 
         $this->data['lastInsertedId'] = $this->input->get('lastInsertedId');
+        $this->data['pid'] = $this->input->get('pid');
 
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('purchases')]];
         $meta = ['page_title' => lang('purchases'), 'bc' => $bc];
@@ -1869,6 +1873,7 @@ class Purchases extends MY_Controller
         $this->data['return_purchase'] = $inv->return_id ? $this->purchases_model->getPurchaseByID($inv->return_id) : null;
         $this->data['return_rows'] = $inv->return_id ? $this->purchases_model->getAllPurchaseItems($inv->return_id) : null;
         $this->data['attachments'] = $this->site->getAttachments($purchase_id, 'purchase');
+        $this->data['purchase_id'] = $purchase_id;
 
         $this->load->view($this->theme . 'purchases/modal_view', $this->data);
     }
