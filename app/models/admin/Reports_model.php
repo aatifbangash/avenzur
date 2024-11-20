@@ -683,7 +683,13 @@ class Reports_model extends CI_Model
 
         $this->db
             ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, 
-            sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, 
+            sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, 
+            sma_accounts_entries.date,
+            sma_accounts_entries.sid, 
+            sma_accounts_entries.pid,
+            sma_accounts_entries.tid,
+            sma_accounts_entries.rsid,
+            sma_accounts_entries.rid, 
             sma_accounts_ledgers.code, 
             companies.company')
             ->from('sma_accounts_entryitems')
@@ -707,7 +713,13 @@ class Reports_model extends CI_Model
 
         $this->db
             ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, 
-            sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, 
+            sma_accounts_entryitems.narration, 
+            sma_accounts_entries.transaction_type, sma_accounts_entries.date,
+            sma_accounts_entries.sid, 
+            sma_accounts_entries.pid,
+            sma_accounts_entries.tid,
+            sma_accounts_entries.rsid,
+            sma_accounts_entries.rid,
             sma_accounts_ledgers.code, 
             companies.company')
             ->from('sma_accounts_entryitems')

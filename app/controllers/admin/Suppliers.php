@@ -595,6 +595,9 @@ class Suppliers extends MY_Controller
             $ledger_account = $this->input->post('ledger_account');
             $bank_charges_account = $this->input->post('bank_charges_account');
             $bank_charges = $this->input->post('bank_charges');
+            if($bank_charges == '') {
+                $bank_charges = 0;
+            }
             //$date = $this->input->post('date');
             $due_amount_array = $this->input->post('due_amount');
 
