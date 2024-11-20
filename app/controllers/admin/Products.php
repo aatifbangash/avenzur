@@ -15,6 +15,7 @@ class Products extends MY_Controller
         $this->load->library('form_validation');
         $this->load->admin_model('products_model');
         $this->load->admin_model('settings_model');
+        $this->load->admin_model('purchases_model');
 
         $this->digital_upload_path = 'files/';
         $this->upload_path = 'assets/uploads/';
@@ -4122,7 +4123,10 @@ class Products extends MY_Controller
   
             $zplCode = '';
             for ($m = 0; $m < $s; $m++) {
-                $pid = $_POST['product'][$m];
+                $item_id = $_POST['product'][$m];
+                //get item details from purchase
+                $itemDetail = $this->purchases_model->getItemByID($item_id);
+                $pid = $itemDetail->product_id;
                 $quantity = $_POST['quantity'][$m];
                 $product = $this->products_model->getProductWithCategory($pid);
                 $product->price = $this->input->post('check_promo') ? ($product->promotion ? $product->promo_price : $product->price) : $product->price;
@@ -4140,7 +4144,7 @@ class Products extends MY_Controller
 
                 $productPrice = $product->price + $pr_item_tax;
                 $productName = $product->name;//substr($product->name, 0, 80); 
-                $avzCode = $this->products_model->getProductAvzCode($pid, $purchase_id);
+                $avzCode = $itemDetail->avz_item_code ;//$this->products_model->getProductAvzCode($pid, $purchase_id);
 
                 $maxLength = 30;
                 $line1 = substr($productName, 0, $maxLength);
@@ -4173,6 +4177,8 @@ class Products extends MY_Controller
                         
                     
                     $zplCode .= "^XZ\n";
+
+                    //echo $zplCode;exit;
 
                         // first check if ngrok is running or not
                         
@@ -4336,7 +4342,7 @@ class Products extends MY_Controller
                                     $selected_variants[$variant->id] = isset($pr[$row->id]['selected_variants'][$variant->id]) && !empty($pr[$row->id]['selected_variants'][$variant->id]) ? 1 : ($variant->id == $item->option_id ? 1 : 0);
                                 }
                             }
-                            $pr[] = ['id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')', 'code' => $row->code, 'name' => $row->name, 'price' => $row->price, 'qty' => $item->quantity, 'variants' => $variants, 'selected_variants' => $selected_variants];
+                            $pr[] = ['id' => $item->id, 'label' => $row->name . ' (' . $row->code . ')', 'code' => $row->code, 'name' => $row->name, 'price' => $row->price, 'qty' => $item->quantity, 'variants' => $variants, 'selected_variants' => $selected_variants];
                         }
                     }
                     $this->data['message'] = lang('products_added_to_list');
