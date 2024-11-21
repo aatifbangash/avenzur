@@ -2859,7 +2859,7 @@ class Sales extends MY_Controller
     public function getSales($warehouse_id = null)
     {
         $this->sma->checkPermissions('index');
-
+        $sid = $this->input->get('sid');
         if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
             $user         = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
@@ -2948,6 +2948,9 @@ class Sales extends MY_Controller
                 ->from('sales')
                 ->where('shop', 0); 
         } 
+        if(is_numeric($sid)) {
+            $this->datatables->where('id', $sid);
+        }
         // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
         if ($this->input->get('shop') == 'yes') {
             $this->datatables->where('shop', 1);
@@ -3057,6 +3060,7 @@ class Sales extends MY_Controller
         $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('sales')]];
         $meta = ['page_title' => lang('sales'), 'bc' => $bc];
+        $this->data['sid'] = $this->input->get('sid');
         $this->page_construct('sales/index', $meta, $this->data);
     }
 
