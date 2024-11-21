@@ -3106,6 +3106,7 @@ class Sales extends MY_Controller
         $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
         $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
         $this->data['attachments'] = $this->site->getAttachments($id, 'sale');
+        $this->data['sale_id'] = $id;
 
         $this->load->view($this->theme . 'sales/modal_view', $this->data);
     }

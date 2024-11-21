@@ -67,13 +67,15 @@
             </button> 
            
                 <div class="text-center" style="margin-bottom:20px;">
-                <h1><?= lang('Sale_Invoice'); ?></h1>
+                <h1><?= lang('VAT_Invoice'); ?></h1>
                 </div>
 
             <div class="well well-sm">
                 <div class="row bold">
                     <div class="col-xs-5">
                     <p class="bold">
+                    
+                       <?= lang('Serial Number'); ?>: <?= $sale_id; ?><br>
                         <?= lang('date'); ?>: <?= $this->sma->hrld($inv->date); ?><br>
                         <?= lang('ref'); ?>: <?= $inv->reference_no; ?><br>
                         <?php if (!empty($inv->return_sale_ref)) {
