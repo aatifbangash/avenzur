@@ -202,7 +202,7 @@
                                 <th><?= lang('hsn_sac_code'); ?></th>
                                 <?php
                             } ?>
-                            <th><?= lang('quantity'); ?></th>
+                            <th><?= lang('Base Quantity'); ?></th>
                             <?php
                             if ($inv->status == 'partial') {
                                 $total_col += 1;
@@ -248,6 +248,7 @@
                             $subTotal = ($row->unit_cost * $row->unit_quantity);
                             // echo "<pre>";
                             // print_r($row);
+                            $base_quantity = $row->unit_quantity - $row->bonus;
                             ?>
                             <tr>
                                 <td style="text-align:center; width:40px; vertical-align:middle;"><?= $r; ?></td>
@@ -267,7 +268,7 @@
                                     <?php
                                 } ?>
                                 <td style="text-align:center; vertical-align:middle;">
-                                    <?= $this->sma->formatQuantity($row->unit_quantity); ?></td>
+                                    <?= $this->sma->formatQuantity($base_quantity); ?></td>
                                 <?php
                                 if ($inv->status == 'partial') {
                                     echo '<td style="text-align:center;vertical-align:middle;width:80px;">' . $this->sma->formatQuantity($row->quantity_received) . '</td>';
@@ -286,7 +287,7 @@
                                 <td style="text-align:right; width:100px;">
                                    <?= $this->sma->formatNumber($row->bonus); ?>
                                 </td>
-                                <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($subTotal); ?></td>
+                                <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->unit_cost * $base_quantity); ?></td>
                                 <?php
                                 if ($Settings->product_discount && $inv->product_discount != 0) {
                                     echo '<td style=" text-align:right; vertical-align:middle;">' . ($row->discount != 0 ? $row->discount : '') . '</td>';
