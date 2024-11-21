@@ -136,7 +136,7 @@
                                     <th><?= lang('SN'); ?></th>
                                     <th><?= lang('Date'); ?></th>
                                     <th><?= lang('Document No'); ?></th>
-                                    <th><?= lang('Code'); ?></th>
+                                    <th><?= lang('Item Code'); ?></th>
                                     <th><?= lang('Type'); ?></th>
                                     <th><?= lang('Name Of'); ?></th>
                                     <th><?= lang('Expire Date'); ?></th>
