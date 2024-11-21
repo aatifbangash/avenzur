@@ -980,6 +980,7 @@ function loadItems() {
         order_discount = 0;
         total_discount = 0;
         
+        $("#add_return, #edit_return").attr("disabled", false);
         $('#reTable tbody').empty();
         rseitems = JSON.parse(localStorage.getItem('rseitems'));
         sortedItems =
