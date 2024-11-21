@@ -131,9 +131,9 @@
 
                     echo '<p>';
 
-                    if ($customer->vat_no != '-' && $customer->vat_no != '') {
+                    //if ($customer->vat_no != '-' && $customer->vat_no != '') {
                         echo '<br>' . lang('vat_no') . ': ' . $customer->vat_no;
-                    }
+                    //}
                     if ($customer->gst_no != '-' && $customer->gst_no != '') {
                         echo '<br>' . lang('gst_no') . ': ' . $customer->gst_no;
                     }
@@ -171,9 +171,9 @@
 
                     echo '<p>';
 
-                    if ($biller->vat_no != '-' && $biller->vat_no != '') {
+                    //if ($biller->vat_no != '-' && $biller->vat_no != '') {
                         echo '<br>' . lang('vat_no') . ': ' . $biller->vat_no;
-                    }
+                    //}
                     if ($biller->gst_no != '-' && $biller->gst_no != '') {
                         echo '<br>' . lang('gst_no') . ': ' . $biller->gst_no;
                     }

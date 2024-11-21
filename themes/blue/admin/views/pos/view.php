@@ -97,7 +97,7 @@
                 if ($Settings->invoice_view == 1 || $Settings->indian_gst) {
                     ?>
                     <div class="col-sm-12 text-center">
-                        <h4 style="font-weight:bold;"><?=lang('VAT_INVOICE'); ?></h4>
+                        <h4 style="font-weight:bold;"><?=lang('INVOICE'); ?></h4>
                     </div>
                     <?php
                 }

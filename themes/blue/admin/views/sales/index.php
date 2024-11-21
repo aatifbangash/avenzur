@@ -6,7 +6,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?=lang('all')?>"]],
             "iDisplayLength": <?=$Settings->rows_per_page?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?=admin_url('sales/getSales' . ($warehouse_id ? '/' . $warehouse_id : '') . '?v=1' . ($this->input->get('shop') ? '&shop=' . $this->input->get('shop') : '') . ($this->input->get('attachment') ? '&attachment=' . $this->input->get('attachment') : '') . ($this->input->get('delivery') ? '&delivery=' . $this->input->get('delivery') : '')); ?>',
+            'sAjaxSource': '<?=admin_url('sales/getSales' . ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid.'&v=1' . ($this->input->get('shop') ? '&shop=' . $this->input->get('shop') : '') . ($this->input->get('attachment') ? '&attachment=' . $this->input->get('attachment') : '') . ($this->input->get('delivery') ? '&delivery=' . $this->input->get('delivery') : '')); ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?=$this->security->get_csrf_token_name()?>",
@@ -318,7 +318,10 @@
         <div class="row">
             <div class="col-lg-12">
 
-                <p class="introtext"><?=lang('list_results');?></p>
+                <!-- <p class="introtext"><?=lang('list_results');?></p> -->
+                <div class="col-md-3"><input type="text" id="sid" name="sid" class="form-control input-tip"></div>
+                <div class="col-md-3"> <input type="button" id="searchByNumber" class="btn btn-primary" value="Search By Serial Number"></div>
+
 
                 <div class="table-responsive">
                     <table id="SLData" class="table table-bordered table-hover table-striped" cellpadding="0" cellspacing="0" border="0">
@@ -378,3 +381,18 @@
     <?php
 }
 ?>
+
+<script>
+    document.getElementById('searchByNumber').addEventListener('click', function() {
+    var pidValue = document.getElementById('sid').value; 
+    if (pidValue) { 
+       
+        var baseUrl = window.location.href.split('?')[0]; 
+        var newUrl = baseUrl + "?sid=" + encodeURIComponent(pidValue);
+        window.location.href = newUrl; 
+    } else {
+        alert("Please enter a purchase number."); 
+    }
+});
+
+</script>
