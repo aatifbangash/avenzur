@@ -113,7 +113,8 @@ function row_status($x)
                                 <tr>
                                     <th><?= lang('SN'); ?></th>
                                     <th><?= lang('Date'); ?></th>
-                                    <th><?= lang('Product Name'); ?></th>
+                                    <th><?= lang('Item Name'); ?></th>
+                                    <th><?= lang('Item Code'); ?></th>
                                     <th><?= lang('Type'); ?></th>
                                     <th><?= lang('Warehouse/Pharmacy'); ?></th>
                                  
@@ -141,6 +142,7 @@ function row_status($x)
                                             <td><?= $count; ?></td>
                                             <td><?= $rp->movement_date; ?></td>
                                             <td><?= $rp->product_name; ?></td>
+                                            <td><?= $rp->item_code; ?></td>
                                             <td><?= $rp->type; ?></td>
                                             <td><?= $rp->warehouse_name; ?></td>
                                          
