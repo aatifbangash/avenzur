@@ -293,15 +293,17 @@
                                     echo '<td style=" text-align:right; vertical-align:middle;">' . ($row->discount != 0 ? $row->discount : '') . '</td>';
                                     echo '<td style=" text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($row->item_discount) . '</td>';
                                 }
+                               
                                 if ($Settings->product_discount != 0 && $inv->product_discount != 0) {
                                     $unit_cost = $row->unit_cost;
                                     $pr_discount = $this->site->calculateDiscount($row->discount1 . '%', $row->unit_cost);
-                                    $amount_after_dis1 = $unit_cost - $pr_discount;
+                                    $subtotal_discount = $row->unit_cost * $base_quantity;
+                                    $amount_after_dis1 =  $subtotal_discount- $row->item_discount; //$unit_cost - $pr_discount;
                                     $pr_discount2 = $this->site->calculateDiscount($row->discount2 . '%', $amount_after_dis1);
                                     $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $row->quantity);
                                     $row->discount2 = $this->sma->formatNumber($row->discount2, null);
                                     echo '<td style="width: 120px; text-align:right; vertical-align:middle;">' . ($row->discount2 != 0 ? $row->discount2 : '') . '</td>';
-                                    echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($pr_item_discount2) . '</td>';
+                                    echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($pr_discount2) . '</td>';
                                 }
                                 ?>
                                 <td style="text-align:right; width:120px;">
