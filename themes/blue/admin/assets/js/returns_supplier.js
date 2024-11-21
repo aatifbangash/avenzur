@@ -905,9 +905,16 @@ $(document).ready(function (e) {
              }
              var new_bonus = parseFloat($(this).val()),
                  item_id = row.attr('data-item-id');
-                 rseitems[item_id].row.bonus = new_bonus;
-             localStorage.setItem('rseitems', JSON.stringify(rseitems));
-             loadItems();
+            console.log(parseFloat(rseitems[item_id].row.qty));
+            if(parseFloat(new_bonus) + parseFloat(rseitems[item_id].row.qty) > parseFloat(rseitems[item_id].row.base_quantity)){
+                $(this).val(old_row_bonus);
+                 bootbox.alert("Bonus cannot exceed the available quantity");
+                 return;
+            }else{
+                rseitems[item_id].row.bonus = new_bonus;
+                localStorage.setItem('rseitems', JSON.stringify(rseitems));
+                loadItems();
+            }
          });
 
     /* --------------------------
@@ -1190,7 +1197,7 @@ function loadItems() {
                     row_no +
                     '"></td>';
 
-                tr_html += '<td><input class="form-control rbatchno" value="'+item_batchno+'" name="batch_no[]" id="batch_no_' + row_no +'"></td>';
+                tr_html += '<td><input class="form-control rbatchno" readonly value="'+item_batchno+'" name="batch_no[]" id="batch_no_' + row_no +'"></td>';
 
                 tr_html +=
                 '<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="' +
