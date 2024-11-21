@@ -210,7 +210,7 @@
                                             <td><?= $rp->counterparty; ?></td>
                                             <td><?= $rp->expiry; ?></td>
                                             <td><?= $rp->batch_no; ?></td>
-                                            <td><?= $rp->net_unit_sale; ?></td>
+                                            <td><?= $this->sma->formatMoney($rp->net_unit_sale, 'none'); ?></td>
                                             <td><?= $rp->real_unit_cost; ?></td>
                                             <td><?= $rp->net_unit_cost; ?></td>
                                             <td><?= $this->sma->formatQuantity($rp->quantity); ?></td>
