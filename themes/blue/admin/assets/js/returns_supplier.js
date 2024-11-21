@@ -1374,7 +1374,7 @@ function loadItems() {
             
             if ((parseFloat(base_quantity) < parseFloat(item_qty))) {
 				$("#row_" + row_no).addClass("danger");
-				$("#add_transfer, #edit_transfer").attr("disabled", true);
+				$("#add_return, #edit_return").attr("disabled", true);
 			}
         });
 
