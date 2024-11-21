@@ -2120,6 +2120,7 @@ class Reports_model extends CI_Model
         $reports_start_date = '2024-07-07';
         
         $query = "SELECT 
+                    iv.id,
                     CASE 
                         WHEN iv.trs_type = 'pos' THEN 'pharmacy sale'
                         ELSE iv.trs_type
@@ -2131,7 +2132,10 @@ class Reports_model extends CI_Model
                     iv.expiry_date as expiry,
                     iv.reference_id,
                     iv.net_unit_cost,
-                    iv.net_unit_sale,
+                    CASE
+                        WHEN iv.trs_type = 'sale' THEN si.real_unit_price
+                        ELSE iv.net_unit_sale
+                    END AS net_unit_sale,
                     iv.real_unit_cost,
                     iv.avz_item_code,
                     CASE 
@@ -2152,6 +2156,7 @@ class Reports_model extends CI_Model
                     END AS counterparty
                 FROM 
                     (SELECT 
+                        id,
                         product_id,
                         type as trs_type,
                         movement_date,
@@ -2179,10 +2184,11 @@ class Reports_model extends CI_Model
                     movement_date BETWEEN '".date('Y-m-d', strtotime($start_date . ' -1 day'))."' AND '".date('Y-m-d', strtotime($end_date . ' +1 day'))."') iv
                     LEFT JOIN sma_purchases sp ON iv.reference_id = sp.id AND iv.trs_type = 'purchase'
                     LEFT JOIN sma_sales ss ON iv.reference_id = ss.id AND iv.trs_type = 'sale'
+                    LEFT JOIN sma_sale_items si ON iv.reference_id = si.sale_id AND iv.trs_type = 'sale'
                     LEFT JOIN sma_sales ps ON iv.reference_id = ps.id AND iv.trs_type = 'pos'
                     LEFT JOIN sma_warehouses sw ON ps.warehouse_id = sw.id
                     LEFT JOIN sma_transfers sto ON iv.reference_id = sto.id AND iv.trs_type = 'transfer_out'
-                    LEFT JOIN sma_transfers sti ON iv.reference_id = sti.id AND iv.trs_type = 'transfer_in'";
+                    LEFT JOIN sma_transfers sti ON iv.reference_id = sti.id AND iv.trs_type = 'transfer_in' ORDER BY iv.id ASC";
 
         if($document_number) {
             $query .=" WHERE sp.reference_no like '%".$document_number."%' 
