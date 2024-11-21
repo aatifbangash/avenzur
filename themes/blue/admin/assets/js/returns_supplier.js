@@ -133,10 +133,141 @@ $(document).ready(function (e) {
         $('#rsewarehouse').select2('val', rsewarehouse);
     }
 
-    $('#rsesupplier').change(function (e) {
+    /*$('#rsesupplier').change(function (e) {
         localStorage.setItem('rsesupplier', $(this).val());
-    });
-    if ((rsesupplier = localStorage.getItem('rsesupplier'))) {
+    });*/
+
+    var $supplier = $("#rsesupplier"),
+		$currency = $("#rsecurrency");
+
+	var $childsupplierselectbox = $("#childsupplier");
+
+    $supplier.change(function (e) {
+		localStorage.setItem("rsesupplier", $(this).val());
+		localStorage.setItem("childsupplier", null);
+		$("#supplier_id").val($(this).val());
+
+		//localStorage.removeItem('childsupplier');
+		//$childsupplierselectbox.empty();
+		//$childsupplierselectbox.val();
+		populateChildSuppliers($(this).val());
+	});
+
+    $childsupplierselectbox.change(function (e) {
+		localStorage.setItem("childsupplier", $(this).val());
+		$("#child_supplier_id").val($(this).val());
+	});
+
+    function populateChildSuppliers(pid) {
+		$.ajax({
+			url: site.base_url + "suppliers/getChildById",
+			data: { term: "", limit: 10, pid: pid },
+			dataType: "json",
+			success: function (data) {
+				$childsupplierselectbox.empty();
+				$.each(data.results, function (index, value) {
+					$childsupplierselectbox.append(new Option(value.text, value.id));
+				});
+
+				if (localStorage.getItem("childsupplier")) {
+					$childsupplierselectbox
+						.val(localStorage.getItem("childsupplier"))
+						.trigger("change");
+				}
+			},
+		});
+	}
+
+    if ((rsesupplier = localStorage.getItem("rsesupplier"))) {
+		$supplier.val(rsesupplier).select2({
+			minimumInputLength: 1,
+			data: [],
+			initSelection: function (element, callback) {
+				$.ajax({
+					type: "get",
+					async: false,
+					url: site.base_url + "suppliers/getSupplier/" + $(element).val(),
+					dataType: "json",
+					success: function (data) {
+						callback(data[0]);
+					},
+				});
+			},
+			ajax: {
+				url: site.base_url + "suppliers/suggestions",
+				dataType: "json",
+				quietMillis: 15,
+				data: function (term, page) {
+					return {
+						term: term,
+						limit: 10,
+					};
+				},
+				results: function (data, page) {
+					if (data.results != null) {
+						return { results: data.results };
+					} else {
+						return { results: [{ id: "", text: "No Match Found" }] };
+					}
+				},
+			},
+		});
+
+		populateChildSuppliers(rsesupplier);
+	} else {
+		nsSupplier();
+		//nsChildSupplierByParentId($(this).val());
+	}
+
+    function nsChildSupplier() {
+        $("#childsupplier").select2({
+            minimumInputLength: 1,
+            ajax: {
+                url: site.base_url + "suppliers/childsuggestions",
+                dataType: "json",
+                quietMillis: 15,
+                data: function (term, page) {
+                    return {
+                        term: term,
+                        limit: 10,
+                    };
+                },
+                results: function (data, page) {
+                    if (data.results != null) {
+                        return { results: data.results };
+                    } else {
+                        return { results: [{ id: "", text: "No Match Found" }] };
+                    }
+                },
+            },
+        });
+    }
+
+    function nsSupplier() {
+        $("#rsesupplier").select2({
+            minimumInputLength: 1,
+            ajax: {
+                url: site.base_url + "suppliers/suggestions",
+                dataType: "json",
+                quietMillis: 15,
+                data: function (term, page) {
+                    return {
+                        term: term,
+                        limit: 10,
+                    };
+                },
+                results: function (data, page) {
+                    if (data.results != null) {
+                        return { results: data.results };
+                    } else {
+                        return { results: [{ id: "", text: "No Match Found" }] };
+                    }
+                },
+            },
+        });
+    }
+
+    /*if ((rsesupplier = localStorage.getItem('rsesupplier'))) {
         $('#rsesupplier')
             .val(rsesupplier)
             .select2({
@@ -172,7 +303,7 @@ $(document).ready(function (e) {
                     },
                 },
             });
-    }
+    }*/
 
     $('#rsetax2').change(function (e) {
         localStorage.setItem('rsetax2', $(this).val());

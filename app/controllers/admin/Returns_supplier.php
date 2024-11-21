@@ -238,7 +238,9 @@ class Returns_supplier extends MY_Controller
             $date = ($this->Owner || $this->Admin) ? $this->sma->fld(trim($this->input->post('date'))) : date('Y-m-d H:i:s');
             $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('re');
             $warehouse_id = $this->input->post('warehouse');
-            $supplier_id = $this->input->post('supplier');
+            //$supplier_id = $this->input->post('supplier');
+            $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
+            $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
             $biller_id = null;
             $total_items = $this->input->post('total_items');
             $supplier_details = $this->site->getCompanyByID($supplier_id);
