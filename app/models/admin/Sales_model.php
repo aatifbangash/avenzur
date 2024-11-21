@@ -333,7 +333,7 @@ class Sales_model extends CI_Model
             ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
             ->join('units', 'units.id=products.unit', 'left')
             ->group_by('sale_items.id')
-            ->order_by('id', 'asc');
+            ->order_by('sale_items.id', 'desc');
         if ($sale_id && !$return_id) {
             $this->db->where('sale_id', $sale_id);
         } elseif ($return_id) {
