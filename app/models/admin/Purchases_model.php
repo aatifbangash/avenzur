@@ -120,9 +120,9 @@ class Purchases_model extends CI_Model
                 if($item['status']=='received'){
                     $type = $item['quantity'] < 0 ? 'return_to_supplier' : 'purchase';
                     if($type == 'purchase'){
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost'], $uuid, $item['bonus']);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $uuid, $item['bonus']);
                     }else if($type == 'return_to_supplier'){
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost'], $item['avz_item_code'], -1*($item['bonus']));
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $item['avz_item_code'], -1*($item['bonus']));
                     }
                     
                 }
@@ -856,7 +856,7 @@ class Purchases_model extends CI_Model
                 }
                 
                 if($item['status']=='received'){
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['real_unit_cost'], $uuid, $item['bonus']);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $uuid, $item['bonus']);
                 }
                 // $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
                 // Code for serials here
