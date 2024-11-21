@@ -1148,7 +1148,7 @@ class Sales extends MY_Controller
                         'net_cost'          => $net_cost,
                         'net_unit_price'    => $item_net_price,
                         'unit_price'        => $item_net_price,
-                        'quantity'          => $item_quantity,
+                        'quantity'          => $item_quantity + $item_bonus,
                         'product_unit_id'   => $unit ? $unit->id : null,
                         'product_unit_code' => $unit ? $unit->code : null,
                         'unit_quantity'     => $item_unit_quantity,
