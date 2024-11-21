@@ -2276,7 +2276,7 @@ class Reports_model extends CI_Model
         if ($productId > 0) {
 
             $q = $this->db->query(
-                "SELECT a.batch_number, a.movement_date,a.type,a.quantity, b.name as product_name, b.code , c.name as warehouse_name
+                "SELECT a.batch_number, a.movement_date,a.type,a.quantity, b.name as product_name, b.code , b.item_code, c.name as warehouse_name
                                 FROM `sma_inventory_movements` a 
                                 LEFT JOIN sma_products b on a.product_id = b.id 
                                 LEFT JOIN sma_warehouses c on a.location_id = c.id 
