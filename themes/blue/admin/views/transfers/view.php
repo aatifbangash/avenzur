@@ -20,7 +20,9 @@
 } ?>
             <div class="well well-sm">
                 <div class="row bold">
-                    <div class="col-xs-4"><?= lang('date'); ?>: <?= $this->sma->hrld($transfer->date); ?>
+                    <div class="col-xs-4">
+                    <?= lang('Serial Number'); ?>: <?php echo $tid; ?><br>
+                        <?= lang('date'); ?>: <?= $this->sma->hrld($transfer->date); ?>
                         <br><?= lang('ref'); ?>: <?= $transfer->transfer_no; ?>
                         <br><?= lang('Transfer No'); ?>: <?= $transfer->sequence_code; ?>
                     </div>

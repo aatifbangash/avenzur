@@ -857,6 +857,7 @@ class Transfers extends MY_Controller
     public function getTransfers()
     {
         $this->sma->checkPermissions('index');
+        $tid = $this->input->get('tid');
         $detail_link   = anchor('admin/transfers/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('transfer_details'), 'data-toggle="modal" data-target="#myModal"');
         $email_link    = anchor('admin/transfers/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_transfer'), 'data-toggle="modal" data-target="#myModal"');
         $edit_link     = anchor('admin/transfers/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_transfer'));
@@ -895,6 +896,9 @@ class Transfers extends MY_Controller
         }
         
         $this->datatables->where('type', 'transfer');
+        if(is_numeric($tid)) {
+            $this->datatables->where('id', $tid);
+        }
 
             $this->datatables->add_column('Actions', $action, 'id')
             ->unset_column('fcode')
@@ -910,6 +914,7 @@ class Transfers extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         
         $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
+        $this->data['tid'] = $this->input->get('tid');
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('transfers')]];
         $meta = ['page_title' => lang('transfers'), 'bc' => $bc];
