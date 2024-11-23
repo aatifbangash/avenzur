@@ -34,7 +34,7 @@
 			grouping : 3		// digit grouping (not implemented yet)
 		},
 		number: {
-			precision : 0,		// default precision on numbers is 0
+			precision : 2,		// default precision on numbers is 0
 			grouping : 3,		// digit grouping (not implemented yet)
 			thousand : ",",
 			decimal : "."
@@ -216,9 +216,20 @@
 	var toFixed = lib.toFixed = function(value, precision) {
 		precision = checkPrecision(precision, lib.settings.number.precision);
 
-		var exponentialForm = Number(lib.unformat(value) + 'e' + precision);
-		var rounded = Math.round(exponentialForm);
-		var finalResult = Number(rounded + 'e-' + precision).toFixed(precision);
+		// var exponentialForm = Number(lib.unformat(value) + 'e' + precision);
+		// var rounded = Math.round(exponentialForm);
+		// var finalResult = Number(rounded + 'e-' + precision).toFixed(precision);
+
+		value = lib.unformat(value);
+    
+		// Shift the number by the precision and truncate it.
+		var shift = Math.pow(10, precision);
+		var truncated = Math.floor(value * shift) / shift;
+		var finalResult = truncated.toFixed(precision);
+
+		console.log('value', value);
+		console.log('precision', precision);
+		console.log('finresults', finalResult);
 		return finalResult;
 	};
 
@@ -275,7 +286,58 @@
 	 *
 	 * To do: tidy up the parameters
 	 */
+
 	var formatMoney = lib.formatMoney = function(number, symbol, precision, thousand, decimal, format) {
+		// Recursively format arrays:
+		if (isArray(number)) {
+			return map(number, function(val){
+				return formatMoney(val, symbol, precision, thousand, decimal, format);
+			});
+		}
+	
+		// Clean up number:
+		number = unformat(number);
+	
+		// Build options object from second param (if object) or all params, extending defaults:
+		var opts = defaults(
+			(isObject(symbol) ? symbol : {
+				symbol : symbol,
+				precision : precision,
+				thousand : thousand,
+				decimal : decimal,
+				format : format
+			}),
+			lib.settings.currency
+		);
+	
+		// Function to truncate decimals
+		function truncateNumber(num, precision) {
+			var factor = Math.pow(10, precision);
+			return Math.floor(num * factor) / factor;
+		}
+	
+		// Check format (returns object with pos, neg and zero):
+		var formats = checkCurrencyFormat(opts.format),
+	
+		// Choose which format to use for this value:
+		useFormat = number > 0 ? formats.pos : number < 0 ? formats.neg : formats.zero;
+	
+		// Truncate the number to the specified precision
+		var truncatedNumber = truncateNumber(Math.abs(number), checkPrecision(opts.precision));
+	
+		// Convert the number to a string with fixed decimals
+		var formattedNumber = truncatedNumber.toFixed(checkPrecision(opts.precision));
+	
+		// Formatting the number string with thousands separator
+		formattedNumber = formattedNumber.replace(/\B(?=(\d{3})+(?!\d))/g, opts.thousand);
+	
+		// Return with currency symbol added:
+		return useFormat.replace('%s', opts.symbol).replace('%v', formattedNumber);
+	};
+	
+	
+	var formatMoneyOld = lib.formatMoneyold = function(number, symbol, precision, thousand, decimal, format) {
+		return 123;
 		// Resursively format arrays:
 		if (isArray(number)) {
 			return map(number, function(val){

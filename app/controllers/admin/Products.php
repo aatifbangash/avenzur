@@ -3715,8 +3715,8 @@ class Products extends MY_Controller
                         'unit' => isset($value[5]) ? trim($value[5]) : 1,
                         'sale_unit' => isset($value[6]) ? trim($value[6]) : 1,
                         'purchase_unit' => isset($value[7]) ? trim($value[7]) : 1,
-                        'cost' => isset($value[8]) ? trim($value[8]) : '',
-                        'price' => isset($value[9]) ? trim($value[9]) : '',
+                        'cost' => isset($value[8]) ? $this->sma->formatDecimal( trim($value[8]) ): '',
+                        'price' => isset($value[9]) ? $this->sma->formatDecimal( trim($value[9]) ): '',
                         'alert_quantity' => isset($value[10]) ? trim($value[10]) : 2,
                         'tax_rate' => isset($value[11]) ? trim($value[11]) : '',
                         'tax_method' => isset($value[12]) ? (trim($value[12]) == 'exclusive' ? 1 : 0) : '',
@@ -5248,7 +5248,8 @@ class Products extends MY_Controller
         $item_id = $this->input->get('item_id');
         $warehouse_id = $this->input->get('warehouse_id'); // Optionally filter by warehouse if needed
         $customer_id = $this->input->get('customer_id');
-
+        //echo json_encode(['status' => 'error', 'message' => $customer_id.'-'.$item_id.'-'.$warehouse_id]);
+       // return;
         // Validate that avz_item_code is provided
         if (!$item_id) {
             echo json_encode(['status' => 'error', 'message' => 'No item code provided']);
@@ -5289,6 +5290,7 @@ class Products extends MY_Controller
             $this->db->group_by(['pi.warehouse_id', 'pi.avz_item_code', 'pi.expiry']);
             $this->db->having('total_quantity >', 0);
             $query = $this->db->get();
+
 
 
             /*$this->db->select("im.net_unit_sale, 

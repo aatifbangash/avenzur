@@ -819,7 +819,8 @@ $(document).ready(function () {
 				return;
 			}
 			var new_qty = parseFloat($(this).val()),
-				item_id = row.attr("data-item-id");
+			
+			item_id = row.attr("data-item-id");
 			poitems[item_id].row.base_quantity = new_qty;
 			if (poitems[item_id].row.unit != poitems[item_id].row.base_unit) {
 				$.each(poitems[item_id].units, function () {
@@ -1031,8 +1032,8 @@ function loadItems() {
 			var product_id = item.row.id,
 				item_type = item.row.type,
 				combo_items = item.combo_items,
-				item_cost = item.row.cost,
-				item_sale_price = item.row.sale_price,
+				item_cost = formatDecimal( item.row.cost ),
+				item_sale_price = formatDecimal( item.row.sale_price ),
 				item_oqty = item.row.oqty,
 				item_qty = item.row.qty,
 				item_bqty = item.row.quantity_balance,
@@ -1151,7 +1152,6 @@ function loadItems() {
 			total_after_dis2 = total_after_dis1 - dis2_a;
 			vat_15_a = total_after_dis2 * parseFloat(item.tax_rate.rate / 100); //total_after_dis2 * parseFloat(15/100);
 			net_price_a = vat_15_a + total_after_dis2;
-
 			/*dis1_b = item_bonus * parseFloat(item_cost) * (item_dis1/100);
                total_after_dis1_b =  (item_bonus * parseFloat(item_cost))- dis1_b;
                dis2_b =  total_after_dis1_b * (item_dis2/100);
@@ -1160,15 +1160,17 @@ function loadItems() {
                net_price_b = vat_15_b;*/
 
 			var total_purchases = parseFloat(item_cost) * parseFloat(item_qty);
+			
 			//var total_sales = (parseFloat(item_sale_price)) * parseFloat(item_qty + item_bonus);
 			var total_sales =
 				parseFloat(item_sale_price) * parseFloat(parseFloat(item_qty) + parseFloat(item_bonus));
 				
 			total_after_dis1 = total_purchases * parseFloat(item_dis1 / 100);
-			total_after_dis2 =
-				(total_purchases - total_after_dis1) * parseFloat(item_dis2 / 100);
+			total_after_dis2 = (total_purchases - total_after_dis1) * parseFloat(item_dis2 / 100);
+			// console.log('totalpurchase', total_purchases);
+			// console.log('discount', (formatDecimal(total_after_dis1) + formatDecimal(total_after_dis2)));	
 			//main_net = net_price_a;// + net_price_b;
-			main_net = total_purchases - (total_after_dis1 + total_after_dis2);
+			main_net = total_purchases - (formatDecimal(total_after_dis1) + formatDecimal(total_after_dis2));
 			//var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus);
 			var new_unit_cost =
 				parseFloat(main_net) / parseFloat(parseFloat(item_qty) + parseFloat(item_bonus));
@@ -1402,7 +1404,7 @@ function loadItems() {
                     '</span></td>';
             } formatMoney((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty))*/
 			tr_html +=
-				'<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' +
+				'<td class="text-right"><span class="text-right ssubtotal mycalss" id="subtotal_' +
 				row_no +
 				'">' +
 				formatMoney(total_purchases) +
@@ -1419,7 +1421,7 @@ function loadItems() {
 				'<td class="text-right"><span class="text-right rnet" id="net_' +
 				row_no +
 				'">' +
-				formatMoney(main_net) +
+				formatMoney( main_net ) +
 				"</span></td>";
 
 			tr_html +=
@@ -1436,9 +1438,12 @@ function loadItems() {
 			newTr.html(tr_html);
 			newTr.prependTo("#poTable");
 			total += formatDecimal(main_net, 4); //formatDecimal((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty), 4);
-			grand_total_vat += formatDecimal(vat_15_a, 4);
-			grand_total_purchases += formatDecimal(total_purchases, 4);
-			grand_total_sales += formatDecimal(total_sales, 4);
+			grand_total_vat += formatDecimal( vat_15_a);
+			console.log('vat', formatDecimal(vat_15_a, 2));
+			console.log('grant', grand_total_vat);
+			console.log('vat without dec', vat_15_a);
+			grand_total_purchases += formatDecimal(total_purchases, 2);
+			grand_total_sales += formatDecimal(total_sales, 2);
 			count += parseFloat(item_qty);
 			an++;
 			if (!belong) $("#row_" + row_no).addClass("warning");
@@ -1449,7 +1454,7 @@ function loadItems() {
 			$(".row_" + trRowClas).css("color", "green");
 		}
 
-		var col = 8;
+		var col = 9;
 		if (site.settings.product_expiry == 1) {
 			col++;
 		}
@@ -1457,7 +1462,7 @@ function loadItems() {
 			'<tr id="tfoot" class="tfoot active"><th colspan="' +
 			col +
 			'">Total</th><th class="text-center">' +
-			formatMoney(grand_total_vat) +
+			grand_total_vat +
 			"</th>";
 		/*if (po_edit) {
             tfoot += '<th class="rec_con"></th>';

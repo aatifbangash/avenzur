@@ -247,8 +247,8 @@
                         foreach ($rows as $row):
                             $subTotal = ($row->unit_cost * $row->unit_quantity);
                             // echo "<pre>";
-                            // print_r($row);
-                            $base_quantity = $row->unit_quantity - $row->bonus;
+                             //print_r($row);
+                            //$base_quantity = $row->unit_quantity - $row->bonus;
                             ?>
                             <tr>
                                 <td style="text-align:center; width:40px; vertical-align:middle;"><?= $r; ?></td>
@@ -268,7 +268,7 @@
                                     <?php
                                 } ?>
                                 <td style="text-align:center; vertical-align:middle;">
-                                    <?= $this->sma->formatQuantity($base_quantity); ?></td>
+                                    <?= $this->sma->formatQuantity($row->unit_quantity); ?></td>
                                 <?php
                                 if ($inv->status == 'partial') {
                                     echo '<td style="text-align:center;vertical-align:middle;width:80px;">' . $this->sma->formatQuantity($row->quantity_received) . '</td>';
@@ -287,7 +287,7 @@
                                 <td style="text-align:right; width:100px;">
                                    <?= $this->sma->formatNumber($row->bonus); ?>
                                 </td>
-                                <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->unit_cost * $base_quantity); ?></td>
+                                <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->unit_cost * $row->unit_quantity); ?></td>
                                 <?php
                                 if ($Settings->product_discount && $inv->product_discount != 0) {
                                     echo '<td style=" text-align:right; vertical-align:middle;">' . ($row->discount != 0 ? $row->discount : '') . '</td>';
@@ -297,7 +297,7 @@
                                 if ($Settings->product_discount != 0 && $inv->product_discount != 0) {
                                     $unit_cost = $row->unit_cost;
                                     $pr_discount = $this->site->calculateDiscount($row->discount1 . '%', $row->unit_cost);
-                                    $subtotal_discount = $row->unit_cost * $base_quantity;
+                                    $subtotal_discount = $row->unit_cost * $row->unit_quantity;
                                     $amount_after_dis1 =  $subtotal_discount- $row->item_discount; //$unit_cost - $pr_discount;
                                     $pr_discount2 = $this->site->calculateDiscount($row->discount2 . '%', $amount_after_dis1);
                                     $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $row->quantity);
@@ -318,7 +318,7 @@
                                 ?>
 
                                 <td style="text-align:right; width:120px;">
-                                    <?= $this->sma->formatNumber($row->subtotal + $vat_value); ?></td>
+                                    <?= $this->sma->formatNumber($row->subtotal)  + $this->sma->formatNumber($vat_value); ?></td>
 
                             </tr>
                             <?php
