@@ -189,7 +189,8 @@ class Purchases extends MY_Controller
                     $subtotal2 = (($unit_cost * $item_unit_quantity));// + $pr_item_tax);
                     $unit = $this->site->getUnitByID($item_unit);
 
-                    $item_net_cost = ($totalpurcahsesbeforevat) / ($item_quantity + $item_bonus);
+                    //$item_net_cost = ($totalpurcahsesbeforevat) / ($item_quantity + $item_bonus);
+                    $item_net_cost = ($main_net / ($item_quantity + $item_bonus) );
                     $item_net_price = ($totalpurcahsesbeforevat) / ($item_quantity);
 
                     $product = [
@@ -740,11 +741,11 @@ class Purchases extends MY_Controller
         }
         $inv = $this->purchases_model->getPurchaseByID($id);
 
-        if ($inv->status == 'received') {
-            $this->session->set_flashdata('error', 'Cannot edit received orders');
+        // if ($inv->status == 'received') {
+        //     $this->session->set_flashdata('error', 'Cannot edit received orders');
 
-            admin_redirect('purchases');
-        }
+        //     admin_redirect('purchases');
+        // }
 
         $supplier_purchase_discount = $this->deals_model->getPurchaseDiscount($inv->supplier_id);
         if ($inv->status == 'returned' || $inv->return_id || $inv->return_purchase_ref) {
@@ -760,6 +761,9 @@ class Purchases extends MY_Controller
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
 
         $this->session->unset_userdata('csrf_token');
+        // echo "<pre>";
+        // print_r($this->input->post());
+        // exit;
         if ($this->form_validation->run() == true) {
             $reference = $this->input->post('reference_no');
             if ($this->Owner || $this->Admin) {
@@ -882,8 +886,11 @@ class Purchases extends MY_Controller
                             $item_net_cost = $unit_cost - $item_tax;
                         }*/
                         //$pr_item_tax = $this->sma->formatDecimal($item_tax * $item_unit_quantity, 4);
-                        $pr_item_tax = $this->sma->formatDecimal(($totalpurcahsesbeforevat * ($tax_details->rate / 100)), 4);//$this->sma->formatDecimal($item_tax * $item_unit_quantity, 4);
-
+                        $pr_item_tax = $this->sma->formatDecimal(($totalpurcahsesbeforevat * ($tax_details->rate / 100)), 2);//$this->sma->formatDecimal($item_tax * $item_unit_quantity, 4);
+                        //echo 'main:'.$main_net;
+                        //echo 'tax:'.$tax_details->rate;
+                        //echo $main_net * ($tax_details->rate / 100);
+                        $pr_item_tax =  $this->sma->formatDecimal(($main_net * ($tax_details->rate / 100)), 2);
                         if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($this->Settings->state == $supplier_details->state), $tax_details)) {
                             $total_cgst += $gst_data['cgst'];
                             $total_sgst += $gst_data['sgst'];
@@ -896,7 +903,8 @@ class Purchases extends MY_Controller
                     $subtotal2 = (($unit_cost * $item_unit_quantity));// + $pr_item_tax);
                     $unit = $this->site->getUnitByID($item_unit);
 
-                    $item_net_cost = ($totalpurcahsesbeforevat) / ($item_quantity);
+                    //$item_net_cost = ($totalpurcahsesbeforevat) / ($item_quantity);
+                    $item_net_cost = ($main_net / ($item_quantity + $item_bonus) );
                     $item_net_price = ($totalpurcahsesbeforevat) / ($item_quantity - $item_bonus);
 
                     $item = [
@@ -904,12 +912,12 @@ class Purchases extends MY_Controller
                         'product_code' => $item_code,
                         'product_name' => $product_details->name,
                         'option_id' => $item_option,
-                        'net_unit_cost' => $item_net_cost,
+                        'net_unit_cost' =>  $this->sma->formatDecimal($item_net_cost),
                         'unit_cost' => $this->sma->formatDecimal($unit_cost),
                         'quantity' => $item_quantity,
                         'product_unit_id' => $item_unit,
                         'product_unit_code' => $unit->code,
-                        'unit_quantity' => $item_unit_quantity + $item_bonus,
+                        'unit_quantity' => $item_unit_quantity,
                         'quantity_balance' => $balance_qty,
                         'quantity_received' => $quantity_received,
                         'warehouse_id' => $warehouse_id,
@@ -1009,7 +1017,14 @@ class Purchases extends MY_Controller
             $attachments = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
             //$this->sma->print_arrays($data, $products);exit;
+
+            // echo "<pre>";
+            // print_r($this->input->post());
+            // print_r($data);
+            // print_r($products);
+            // exit;
         }
+
 
         if ($this->form_validation->run() == true && $this->purchases_model->updatePurchase($id, $data, $products, $attachments)) {
             if ($status == 'received') {

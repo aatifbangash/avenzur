@@ -1043,9 +1043,33 @@ function formatNumber(x, d) {
     if (site.settings.sac == 1) {
         return formatSA(parseFloat(x).toFixed(d));
     }
-    return accounting.formatNumber(x, d, site.settings.thousands_sep == 0 ? ' ' : site.settings.thousands_sep, site.settings.decimals_sep);
+    return accounting.toFixed(x, d);
+    //return accounting.formatNumber(x, d, site.settings.thousands_sep == 0 ? ' ' : site.settings.thousands_sep, site.settings.decimals_sep);
 }
-function formatMoney(x, symbol) {
+
+function formatMoney(x, symbol = 'SR') {
+    function truncateToDecimal(num, precision = 2) {
+        let parts = num.toString().split('.');
+        if (parts.length < 2) {
+            return num.toFixed(precision);
+        }
+        const integerPart = parts[0];
+        let decimalPart = parts[1].substring(0, precision);
+        while (decimalPart.length < precision) {
+            decimalPart += "0";
+        }
+        return parseFloat(integerPart + '.' + decimalPart).toFixed(precision);
+    }
+
+    // Parse the input to ensure it is a number and truncate
+    const truncated = truncateToDecimal(parseFloat(x));
+
+    // Return the number formatted with the currency symbol
+    return truncated + symbol;
+}
+
+
+function formatMoneyOld(x, symbol) {
     if (!symbol) {
         symbol = '';
     }
@@ -1095,14 +1119,12 @@ function formatDecimal(x, d) {
     if (!d) {
         d = site.settings.decimals;
     }
-    return parseFloat(accounting.formatNumber(x, d, '', '.'));
+  //  return x;
+    return parseFloat(accounting.toFixed(x,d));
+    //return parseFloat(accounting.formatNumber(x, d, '', '.'));
+    
 }
-function formatDecimals(x, d) {
-    if (!d) {
-        d = site.settings.decimals;
-    }
-    return parseFloat(accounting.formatNumber(x, d, '', '.')).toFixed(d);
-}
+
 function pqFormat(x) {
     if (x != null) {
         var d = '',
