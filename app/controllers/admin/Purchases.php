@@ -914,7 +914,7 @@ class Purchases extends MY_Controller
                         'option_id' => $item_option,
                         'net_unit_cost' =>  $this->sma->formatDecimal($item_net_cost),
                         'unit_cost' => $this->sma->formatDecimal($unit_cost),
-                        'quantity' => $item_quantity,
+                        'quantity' => ($item_quantity + $item_bonus),
                         'product_unit_id' => $item_unit,
                         'product_unit_code' => $unit->code,
                         'unit_quantity' => $item_unit_quantity,
