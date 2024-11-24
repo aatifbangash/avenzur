@@ -1009,7 +1009,7 @@ function loadItems() {
 		order_discount = 0;
 		total_discount = 0;
 		$("#poTable tbody").empty();
-		poitems = JSON.parse(localStorage.getItem("poitems"));
+
 		/*sortedItems =
             site.settings.item_addition == 1
                 ? _.sortBy(poitems, function (o) {
@@ -1017,18 +1017,20 @@ function loadItems() {
                   })
                 : poitems;*/
 
-		sortedItems = _.sortBy(poitems, function (o) {
-			return [parseInt(o.order)];
-		}).reverse();
+		// sortedItems = _.sortBy(poitems, function (o) {
+		// 	return [parseInt(o.order)];
+		// }).reverse();
 
 		var serial = 1;
 		var order_no = new Date().getTime();
-		$.each(sortedItems, function () {
+		$.each(poitems, function () {
 			var item = this;
+			new_entry = calucalteInventory(item.row);
+			console.log(new_entry);
 			var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
 			item.order = item.order ? item.order : order_no++;
 			//var sn = item.row.serial_no;
-
+			 
 			var product_id = item.row.id,
 				item_type = item.row.type,
 				combo_items = item.combo_items,
@@ -1152,6 +1154,7 @@ function loadItems() {
 			total_after_dis2 = total_after_dis1 - dis2_a;
 			vat_15_a = total_after_dis2 * parseFloat(item.tax_rate.rate / 100); //total_after_dis2 * parseFloat(15/100);
 			net_price_a = vat_15_a + total_after_dis2;
+			
 			/*dis1_b = item_bonus * parseFloat(item_cost) * (item_dis1/100);
                total_after_dis1_b =  (item_bonus * parseFloat(item_cost))- dis1_b;
                dis2_b =  total_after_dis1_b * (item_dis2/100);
@@ -1439,9 +1442,6 @@ function loadItems() {
 			newTr.prependTo("#poTable");
 			total += formatDecimal(main_net, 4); //formatDecimal((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty), 4);
 			grand_total_vat += formatDecimal( vat_15_a);
-			console.log('vat', formatDecimal(vat_15_a, 2));
-			console.log('grant', grand_total_vat);
-			console.log('vat without dec', vat_15_a);
 			grand_total_purchases += formatDecimal(total_purchases, 2);
 			grand_total_sales += formatDecimal(total_sales, 2);
 			count += parseFloat(item_qty);
