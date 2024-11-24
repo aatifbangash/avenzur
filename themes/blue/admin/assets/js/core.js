@@ -1655,3 +1655,48 @@ function parse_scale_barcode(barcode) {
 
     return { item_code: item_code, price: price, weight: weight };
 }
+
+function calucalteInventory(item){
+
+      const toTwoDecimals = (value) => Math.floor(value * 100) / 100;
+
+    var cost_price = toTwoDecimals( item.cost );
+    var sale_price = item.sale_price;
+    var base_quantity = item.qty;
+    var bonus = item.bonus;
+    var tax_rate = item.tax_rate;
+    var discount1 = item.dis1;
+    var discount2 = item.dis2;
+
+
+console.log(cost_price,sale_price,base_quantity,bonus);
+    //calculation
+    var total_quantity = base_quantity + bonus ;
+    var total_purchase = cost_price * base_quantity ;
+    var total_sale =    sale_price * total_quantity;
+
+    //discounts
+    var first_discount = total_purchase * (discount1/100) ;
+    var after_first_discount = total_purchase - first_discount ;
+    var second_discount = after_first_discount * (discount2/100);
+
+    var total_discount = first_discount + second_discount ;
+    var net_purchase = total_purchase - total_discount ;
+
+    // vat 15% calculation
+    var total_vat = 0;
+    if(item.tax_rate == 5) {
+         total_vat = net_purchase * (15/100) ;
+    }
+    var net_cost = net_purchase / total_quantity ;
+
+    return {
+        new_total_purchase : net_purchase ,
+        new_total_sale : total_sale,
+        new_first_discount: first_discount,
+        new_second_discount: second_discount,
+        new_vat_value: total_vat,
+        new_unit_cost: net_cost
+    }
+
+}
