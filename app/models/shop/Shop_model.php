@@ -86,6 +86,7 @@ class Shop_model extends CI_Model
         $this->db->from('sma_coupons');
         $this->db->where('auto_apply', 1);
         $this->db->where('is_active', 1);
+        $this->db->where('source', 'web');
         $this->db->limit(1);
         $query = $this->db->get();
         return $query->row();
@@ -97,7 +98,12 @@ class Shop_model extends CI_Model
          * And has less than x orders completed then its applicable.
          */
         $coupon = $this -> get_auto_apply_coupon();
-        
+        if(!$coupon){
+            return ["can_apply" => false, "coupon"  => null];
+        }
+        if($coupon -> source != 'web'){
+            return ["can_apply" => false, "coupon"  => $coupon];
+        }
         $max_limit = $coupon -> usage_limit_per_user; // User cant have more than this number of orders  to get discount.
         $coupon_created_at = $coupon -> date_created;
         $coupon_created_at_timestamp = strtotime($coupon_created_at);
@@ -115,6 +121,7 @@ class Shop_model extends CI_Model
         $query = $this->db->get();
          
         $result = $query->row();
+         
         if($result -> created_on <= $coupon_created_at_timestamp){
             return ["can_apply" => false, "coupon"  => $coupon];
         }
