@@ -1656,47 +1656,56 @@ function parse_scale_barcode(barcode) {
     return { item_code: item_code, price: price, weight: weight };
 }
 
-function calucalteInventory(item){
+function calculateInventory(item) {
+    // Helper function to ensure precise decimal numbers
+    const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+    // Convert all inputs to Decimal and ensure precision
+    const cost_price = toTwoDecimals(item.cost);
+    const sale_price = toTwoDecimals(item.sale_price);
+    const base_quantity = new Decimal(item.qty);
+    const bonus = new Decimal(item.bonus);
+    const tax_rate = toTwoDecimals(item.tax_rate);
+    const discount1 = toTwoDecimals(item.dis1);
+    const discount2 = toTwoDecimals(item.dis2);
 
-      const toTwoDecimals = (value) => Math.floor(value * 100) / 100;
+    // Calculations
+    const total_quantity = base_quantity.plus(bonus);
+    const total_purchase = toTwoDecimals(cost_price.times(base_quantity));
+    const total_sale = toTwoDecimals(sale_price.times(total_quantity));
 
-    var cost_price = toTwoDecimals( item.cost );
-    var sale_price = item.sale_price;
-    var base_quantity = item.qty;
-    var bonus = item.bonus;
-    var tax_rate = item.tax_rate;
-    var discount1 = item.dis1;
-    var discount2 = item.dis2;
+    // Discounts
+    const first_discount = toTwoDecimals(total_purchase.times(discount1.dividedBy(100)));
+    const after_first_discount = toTwoDecimals(total_purchase.minus(first_discount));
+    const second_discount = toTwoDecimals(after_first_discount.times(discount2.dividedBy(100)));
 
+    const total_discount = toTwoDecimals(first_discount.plus(second_discount));
+    const net_purchase = toTwoDecimals(total_purchase.minus(first_discount).minus(second_discount));
+    const net_cost = total_quantity.greaterThan(0)
+        ? toTwoDecimals(net_purchase.dividedBy(total_quantity))
+        : new Decimal(0);
 
-console.log(cost_price,sale_price,base_quantity,bonus);
-    //calculation
-    var total_quantity = base_quantity + bonus ;
-    var total_purchase = cost_price * base_quantity ;
-    var total_sale =    sale_price * total_quantity;
-
-    //discounts
-    var first_discount = total_purchase * (discount1/100) ;
-    var after_first_discount = total_purchase - first_discount ;
-    var second_discount = after_first_discount * (discount2/100);
-
-    var total_discount = first_discount + second_discount ;
-    var net_purchase = total_purchase - total_discount ;
-
-    // vat 15% calculation
-    var total_vat = 0;
-    if(item.tax_rate == 5) {
-         total_vat = net_purchase * (15/100) ;
+    // VAT Calculation (15% if tax_rate is 5)
+    let total_vat = new Decimal(0);
+    if (tax_rate.equals(5)) {
+        total_vat = toTwoDecimals(net_purchase.times(new Decimal(15).dividedBy(100)));
     }
-    var net_cost = net_purchase / total_quantity ;
 
+    // Grant Total
+    const grant_total = toTwoDecimals(net_purchase.plus(total_vat));
+
+    // Return calculated values
     return {
-        new_total_purchase : net_purchase ,
-        new_total_sale : total_sale,
-        new_first_discount: first_discount,
-        new_second_discount: second_discount,
-        new_vat_value: total_vat,
-        new_unit_cost: net_cost
-    }
-
+        new_cost_price: cost_price.toNumber(),
+        new_sale_price: sale_price.toNumber(),
+        new_total_purchase: total_purchase.toNumber(),
+        new_total_discount: total_discount.toNumber(),
+        new_net_purchase: net_purchase.toNumber(),
+        new_total_sale: total_sale.toNumber(),
+        new_first_discount: first_discount.toNumber(),
+        new_second_discount: second_discount.toNumber(),
+        new_vat_value: total_vat.toNumber(),
+        new_unit_cost: net_cost.toNumber(),
+        new_grant_total: grant_total.toNumber(),
+    };
 }
+
