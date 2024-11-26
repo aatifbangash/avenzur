@@ -29,7 +29,7 @@
                 for (var i = 0; i < aaData.length; i++) {
                     gtotal += parseFloat(aaData[aiDisplay[i]][6]);
                     paid += parseFloat(aaData[aiDisplay[i]][7]);
-                    balance += parseFloat(formatDecimals(aaData[aiDisplay[i]][8]));
+                    balance += parseFloat(aaData[aiDisplay[i]][8]);
                 }
                 var nCells = nRow.getElementsByTagName('th');
                 nCells[6].innerHTML = currencyFormat(parseFloat(gtotal));

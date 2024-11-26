@@ -32,7 +32,7 @@ class Returns_model extends CI_Model
                     $this->site->setPurchaseItem($clause, $item['quantity']);
                     $this->site->syncQuantityReturn($return_id, $item['product_id']);
 
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'customer_return', $item['quantity'], $item['warehouse_id'], $return_id, $item['net_cost'], $item['expiry'], $item['unit_price'], $real_cost, $item['avz_item_code'], NULL, $data['customer_id']); 
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'customer_return', $item['quantity'], $item['warehouse_id'], $return_id, $item['net_cost'], $item['expiry'], $item['unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id'], $item['real_unit_price']); 
                     
                 } elseif ($item['product_type'] == 'combo') {
                     $combo_items = $this->site->getProductComboItems($item['product_id']);
@@ -192,6 +192,23 @@ class Returns_model extends CI_Model
         $q = $this->db->get_where('sma_accounts_entries', ['rid' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
+        }
+        return false;
+    }
+
+    public function getReturnInvoice($return_id)
+    {
+        $this->db->select('inventory_movements.*')
+            ->join('products', 'products.id=return_items.product_id', 'left')
+            ->where('reference_id', $return_id)
+            ->order_by('id', 'asc');
+
+        $q = $this->db->get('inventory_movements');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
         }
         return false;
     }
