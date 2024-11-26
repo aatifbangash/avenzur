@@ -956,7 +956,7 @@ class Purchases extends MY_Controller
                         'option_id' => $item_option,
                         'net_unit_cost' => $_POST['item_unit_cost'][$r], //item_net_cost,
                         'unit_cost' => $_POST['net_cost'][$r], //+ $item_tax),
-                        'quantity' => $item_quantity,
+                        'quantity' => $item_quantity + $item_bonus,
                         'product_unit_id' => $item_unit,
                         'product_unit_code' => $unit->code,
                         'unit_quantity' => $item_unit_quantity,
