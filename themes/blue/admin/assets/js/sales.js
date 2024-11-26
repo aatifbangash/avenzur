@@ -1525,7 +1525,8 @@ function loadItems() {
 				item_name = item.row.name
 					.replace(/"/g, "&#034;")
 					.replace(/'/g, "&#039;");
-
+			console.log('Sale Price: '+item_sale_price);
+			
 			var product_unit = item.row.unit,
 				base_quantity = item.row.base_quantity;
 
@@ -2079,6 +2080,8 @@ function add_invoice_item(item) {
 		slitems[item_id].row.dis1 = 0;
 		slitems[item_id].row.dis2 = 0;
 	}
+
+	slitems[item_id].row.bonus = slitems[item_id].row.bonus ? slitems[item_id].row.bonus : 0;
 	slitems[item_id].order = new Date().getTime();
 	localStorage.setItem("slitems", JSON.stringify(slitems));
 	loadItems();

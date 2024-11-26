@@ -5257,10 +5257,10 @@ class Products extends MY_Controller
         }
 
         if ($customer_id) {
-
             $this->db->select("im.net_unit_sale, 
                             im.net_unit_cost, 
                             im.real_unit_cost,
+                            im.real_unit_sale,
                             im.customer_id,
                             im.product_id,
                             pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
