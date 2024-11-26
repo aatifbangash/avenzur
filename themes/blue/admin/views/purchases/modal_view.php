@@ -244,6 +244,8 @@
                         <?php $r = 1;
                         $tax_summary = [];
                         $totalAmount = 0;
+                        // echo "<pre>";
+                        // print_r($inv);
                         foreach ($rows as $row):
                             $subTotal = ($row->unit_cost * $row->unit_quantity);
                             // echo "<pre>";
@@ -276,7 +278,7 @@
                                 ?>
                                 <td style="text-align:right; width:100px;">
                                     <!-- <?= $row->unit_cost != $row->real_unit_cost && $row->item_discount > 0 ? '<del>' . $this->sma->formatMoney($row->real_unit_cost) . '</del>' : ''; ?> -->
-                                    <?= $this->sma->formatNumber($row->sale_price); ?>
+                                    <?= $row->sale_price; ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
                                      <?= $this->sma->formatNumber($row->unit_cost); ?>
@@ -287,7 +289,7 @@
                                 <td style="text-align:right; width:100px;">
                                    <?= $this->sma->formatNumber($row->bonus); ?>
                                 </td>
-                                <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->unit_cost * $row->unit_quantity); ?></td>
+                                <td style="text-align:right; width:120px;"><?php echo $row->subtotal; ?></td>
                                 <?php
                                 if ($Settings->product_discount && $inv->product_discount != 0) {
                                     echo '<td style=" text-align:right; vertical-align:middle;">' . ($row->discount != 0 ? $row->discount : '') . '</td>';
@@ -303,11 +305,11 @@
                                     $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $row->quantity);
                                     $row->discount2 = $this->sma->formatNumber($row->discount2, null);
                                     echo '<td style="width: 120px; text-align:right; vertical-align:middle;">' . ($row->discount2 != 0 ? $row->discount2 : '') . '</td>';
-                                    echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($pr_discount2) . '</td>';
+                                    echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . $row->second_discount_value . '</td>';
                                 }
                                 ?>
                                 <td style="text-align:right; width:120px;">
-                                    <?= $this->sma->formatNumber($row->subtotal, null); ?></td>
+                                    <?php echo $row->totalbeforevat; ?></td>
                                 <?php
                                 $vat_value = 0;
                                 if ($Settings->tax1 && $inv->product_tax > 0) {
@@ -318,7 +320,7 @@
                                 ?>
 
                                 <td style="text-align:right; width:120px;">
-                                    <?= $this->sma->formatNumber($row->subtotal)  + $this->sma->formatNumber($vat_value); ?></td>
+                                    <?php echo $row->main_net; //$this->sma->formatNumber($row->subtotal)  + $this->sma->formatNumber($vat_value); ?></td>
 
                             </tr>
                             <?php
@@ -495,23 +497,23 @@
 
                     <tr>
                         <td>Total</td>
-                        <td><?php echo $this->sma->formatNumber($totalAmount); ?></td>
+                        <td><?php echo $totalAmount; ?></td>
                     </tr>
                     <tr>
                         <td>T-DISC</td>
-                        <td><?php echo $this->sma->formatNumber($totalDiscount); ?></td>
+                        <td><?php echo $inv->total_discount; ?></td>
                     </tr>
                     <tr>
                         <td>Net Before VAT</td>
-                        <td><?php echo $this->sma->formatNumber($netBeforeVAT); ?></td>
+                        <td><?php echo $inv->total_net_purchase; ?></td>
                     </tr>
                     <tr>
                         <td>Total VAT</td>
-                        <td><?php echo $this->sma->formatNumber($totalVAT); ?></td>
+                        <td><?php echo $inv->total_tax; ?></td>
                     </tr>
                     <tr>
                         <td>Total After VAT</td>
-                        <td><?php echo $this->sma->formatNumber($netBeforeVAT + $totalVAT); ?></td>
+                        <td><?php echo $inv->grand_total; ?></td>
                     </tr>
                 </table>
             </div>

@@ -76,9 +76,12 @@ class Purchases extends MY_Controller
             );
         }
 
-
+       
         $this->session->unset_userdata('csrf_token');
         if ($this->form_validation->run() == true) {
+
+            // echo "<pre>";
+            // print_r($this->input->post());exit;
             $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('po');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
@@ -136,6 +139,10 @@ class Purchases extends MY_Controller
                 //$net_cost_sales = $net_cost_obj[0]->cost_price;
 
                 if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity)) {
+
+                    /**
+                     * NEED TO DISCUSS
+                     */
                     $product_details = $this->purchases_model->getProductByCode($item_code);
                     if ($product_details->price != $item_sale_price) {
                         // update product sale price
@@ -149,6 +156,7 @@ class Purchases extends MY_Controller
                             redirect($_SERVER['HTTP_REFERER']);
                         }
                     }
+                    
                     // $unit_cost = $real_unit_cost;
                     $pr_discount = $this->site->calculateDiscount($item_discount . '%', $unit_cost);
                     $amount_after_dis1 = $unit_cost - $pr_discount;
@@ -193,13 +201,20 @@ class Purchases extends MY_Controller
                     $item_net_cost = ($main_net / ($item_quantity + $item_bonus) );
                     $item_net_price = ($totalpurcahsesbeforevat) / ($item_quantity);
 
+                    /**
+                     * POST FIELDS
+                     */
+                    $new_item_first_discount = $_POST['item_first_discount'][$r];
+                    $new_item_second_discount = $_POST['item_second_discount'][$r];
+                    $new_item_vat_value = $_POST['item_vat_values'][$r];
+                    
                     $product = [
                         'product_id' => $product_details->id,
                         'product_code' => $item_code,
                         'product_name' => $product_details->name,
                         'option_id' => $item_option,
-                        'net_unit_cost' => $item_net_cost,
-                        'unit_cost' => $this->sma->formatDecimal($unit_cost), //+ $item_tax),
+                        'net_unit_cost' => $_POST['item_unit_cost'][$r], //item_net_cost,
+                        'unit_cost' => $_POST['net_cost'][$r], //+ $item_tax),
                         'quantity' => $item_quantity + $item_bonus,
                         'product_unit_id' => $item_unit,
                         'product_unit_code' => $unit->code,
@@ -207,14 +222,14 @@ class Purchases extends MY_Controller
                         'quantity_balance' => $status == 'received' ? $item_quantity + $item_bonus : 0,
                         'quantity_received' => $status == 'received' ? $item_quantity + $item_bonus : 0,
                         'warehouse_id' => $warehouse_id,
-                        'item_tax' => $pr_item_tax,
+                        'item_tax' => $new_item_vat_value,
                         'tax_rate_id' => $item_tax_rate,
                         'tax' => $tax,
                         'discount' => $item_discount,
-                        'item_discount' => $pr_item_discount,
-                        'subtotal' => $this->sma->formatDecimal($subtotal),
+                        'item_discount' => $new_item_first_discount,
+                        'subtotal' => $_POST['item_total_purchase'][$r],
                         'expiry' => $item_expiry,
-                        'real_unit_cost' => $real_unit_cost,
+                        'real_unit_cost' => $_POST['real_unit_cost'][$r],
                         'sale_price' => $item_sale_price,
                         'date' => date('Y-m-d', strtotime($date)),
                         'status' => $status,
@@ -226,7 +241,8 @@ class Purchases extends MY_Controller
                         //'bonus' => 0,
                         'discount1' => $item_dis1,
                         'discount2' => $item_dis2,
-                        'totalbeforevat' => $subtotal,
+                        'second_discount_value' => $new_item_second_discount,
+                        'totalbeforevat' => $_POST['item_net_purchase'][$r],
                         'main_net' => $main_net
                     ];
 
@@ -257,6 +273,17 @@ class Purchases extends MY_Controller
             // below line commented by mm
             // $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
             $grand_total = $this->sma->formatDecimal(($total + $product_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+           
+            /**
+             * post values
+             */
+            
+            $grand_total_purchase = $this->input->post('grand_total_purchase');
+            $grand_total_net_purchase = $this->input->post('grand_total_net_purchase');
+            $grand_total_discount = $this->input->post('grand_total_discount');
+            $grand_total_vat = $this->input->post('grand_total_vat');
+            $grand_total_sale = $this->input->post('grand_total_sale');
+            $grand_total = $this->input->post('grand_total');
             $data = [
                 'reference_no' => $reference,
                 'date' => $date,
@@ -264,16 +291,17 @@ class Purchases extends MY_Controller
                 'supplier' => $supplier,
                 'warehouse_id' => $warehouse_id,
                 'note' => $note,
-                'total' => $total,
-                'total_sale' => $total_sale_price,
+                'total' => $grand_total_purchase,
+                'total_net_purchase' => $grand_total_net_purchase,
+                'total_sale' => $grand_total_sale,
                 'product_discount' => $product_discount,
                 'order_discount_id' => $this->input->post('discount'),
                 'order_discount' => $order_discount,
-                'total_discount' => $total_discount,
+                'total_discount' => $grand_total_discount,
                 'product_tax' => $product_tax,
                 'order_tax_id' => $this->input->post('order_tax'),
                 'order_tax' => $order_tax,
-                'total_tax' => $total_tax,
+                'total_tax' => $grand_total_vat,
                 'shipping' => $this->sma->formatDecimal($shipping),
                 'grand_total' => $grand_total,
                 'status' => $status,
@@ -297,6 +325,8 @@ class Purchases extends MY_Controller
             if ($status == 'received') {
                 $this->convert_purchse_invoice($purchase_id);
             }
+            //   echo "<pre>";
+            // print_r($this->input->post());exit;
 
             $this->session->set_userdata('remove_pols', 1);
             $this->session->set_flashdata('message', $this->lang->line('purchase_added'));
@@ -765,6 +795,9 @@ class Purchases extends MY_Controller
         // print_r($this->input->post());
         // exit;
         if ($this->form_validation->run() == true) {
+        //     echo "<pre>";
+        // print_r($this->input->post());
+        // exit;
             $reference = $this->input->post('reference_no');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
@@ -907,13 +940,22 @@ class Purchases extends MY_Controller
                     $item_net_cost = ($main_net / ($item_quantity + $item_bonus) );
                     $item_net_price = ($totalpurcahsesbeforevat) / ($item_quantity - $item_bonus);
 
+                        /**
+                     * POST FIELDS
+                     */
+                    $new_item_first_discount = $_POST['item_first_discount'][$r];
+                    $new_item_second_discount = $_POST['item_second_discount'][$r];
+                    $new_item_vat_value = $_POST['item_vat_values'][$r];
+                    $new_subtotal = $_POST['item_total_purchase'][$r];
+                    $new_real_unit_cost = $_POST['real_unit_cost'][$r];
+
                     $item = [
                         'product_id' => $product_details->id,
                         'product_code' => $item_code,
                         'product_name' => $product_details->name,
                         'option_id' => $item_option,
-                        'net_unit_cost' =>  $this->sma->formatDecimal($item_net_cost),
-                        'unit_cost' => $this->sma->formatDecimal($unit_cost),
+                        'net_unit_cost' => $_POST['item_unit_cost'][$r], //item_net_cost,
+                        'unit_cost' => $_POST['net_cost'][$r], //+ $item_tax),
                         'quantity' => $item_quantity,
                         'product_unit_id' => $item_unit,
                         'product_unit_code' => $unit->code,
@@ -921,14 +963,14 @@ class Purchases extends MY_Controller
                         'quantity_balance' => $balance_qty,
                         'quantity_received' => $quantity_received,
                         'warehouse_id' => $warehouse_id,
-                        'item_tax' => $pr_item_tax,
+                        'item_tax' => $new_item_vat_value,
                         'tax_rate_id' => $item_tax_rate,
                         'tax' => $tax,
                         'discount' => $item_discount,
-                        'item_discount' => $pr_item_discount,
-                        'subtotal' => $this->sma->formatDecimal($subtotal),
+                        'item_discount' =>  $new_item_first_discount,
+                        'subtotal' => $new_subtotal,
                         'expiry' => $item_expiry,
-                        'real_unit_cost' => $real_unit_cost,
+                        'real_unit_cost' => $new_real_unit_cost,
                         'sale_price' => $item_sale_price,
                         'supplier_part_no' => $supplier_part_no,
                         'date' => date('Y-m-d', strtotime($date)),
@@ -939,7 +981,8 @@ class Purchases extends MY_Controller
                         //'bonus' => 0,
                         'discount1' => $item_dis1,
                         'discount2' => $item_dis2,
-                        'totalbeforevat' => $totalbeforevat,
+                        'second_discount_value' => $new_item_second_discount,
+                        'totalbeforevat' => $_POST['item_net_purchase'][$r],
                         'main_net' => $main_net,
                         'warehouse_shelf' => ($warehouse_shelf ? $warehouse_shelf : '')
                     ];
@@ -976,21 +1019,35 @@ class Purchases extends MY_Controller
             // below line commented by mm
             // $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
             $grand_total = $this->sma->formatDecimal(($total + $product_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+           
+              /**
+             * post values
+             */
+            
+             $grand_total_purchase = $this->input->post('grand_total_purchase');
+             $grand_total_net_purchase = $this->input->post('grand_total_net_purchase');
+             $grand_total_discount = $this->input->post('grand_total_discount');
+             $grand_total_vat = $this->input->post('grand_total_vat');
+             $grand_total_sale = $this->input->post('grand_total_sale');
+             $grand_total = $this->input->post('grand_total');
+
             $data = [
                 'reference_no' => $reference,
                 'supplier_id' => $supplier_id,
                 'supplier' => $supplier,
                 'warehouse_id' => $warehouse_id,
                 'note' => $note,
-                'total' => $total,
+                'total' => $grand_total_purchase,
+                'total_net_purchase' => $grand_total_net_purchase,
+                'total_sale' => $grand_total_sale,
                 'product_discount' => $product_discount,
                 'order_discount_id' => $this->input->post('discount'),
                 'order_discount' => $order_discount,
-                'total_discount' => $total_discount,
+                'total_discount' => $grand_total_discount,
                 'product_tax' => $product_tax,
                 'order_tax_id' => $this->input->post('order_tax'),
                 'order_tax' => $order_tax,
-                'total_tax' => $total_tax,
+                'total_tax' => $grand_total_vat,
                 'shipping' => $this->sma->formatDecimal($shipping),
                 'grand_total' => $grand_total,
                 'status' => $status,
@@ -1545,7 +1602,7 @@ class Purchases extends MY_Controller
                     'dc' => 'D',
                     //'ledger_id' => $product->inventory_account,
                     'ledger_id' => $warehouse_ledgers->inventory_ledger,
-                    'amount' => $inventory_amount,
+                    'amount' => $inv->total_net_purchase,
                     'narration' => 'Inventory'
                 )
             );
@@ -1557,7 +1614,7 @@ class Purchases extends MY_Controller
                     'dc' => 'D',
                     'ledger_id' => $this->vat_on_purchase,
                     //'amount' => $inv->order_tax,
-                    'amount' => $inv->product_tax,
+                    'amount' => $inv->total_tax,
                     'narration' => 'Vat on Purchase'
                 )
             );
