@@ -1040,7 +1040,7 @@ function loadItems() {
 			if(item.id != '') {
 
 			}
-			const new_calc = calculateInventory(item.row);
+			const new_calc = calculateInventory(item.row, 'purchase');
 			//console.log(new_calc);
 
 			/**
