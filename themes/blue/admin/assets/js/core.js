@@ -1673,8 +1673,8 @@ function calculatePurchaseInventory(item) {
     const total_sale = toTwoDecimals(sale_price.times(total_quantity));
 
     // Discounts
-    const first_discount = toTwoDecimals(cost_price.times(discount1.dividedBy(100)));
-    const after_first_discount = toTwoDecimals(cost_price.minus(first_discount));
+    const first_discount = toTwoDecimals(total_purchase.times(discount1.dividedBy(100)));
+    const after_first_discount = toTwoDecimals(total_purchase.minus(first_discount));
     const second_discount = toTwoDecimals(after_first_discount.times(discount2.dividedBy(100)));
     const total_discount = toTwoDecimals(first_discount.plus(second_discount));
 
