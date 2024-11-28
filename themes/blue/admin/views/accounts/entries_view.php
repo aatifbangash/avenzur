@@ -68,7 +68,6 @@
         <div class="row">
             <div class="col-xs-12">
                 <div class="box">
-
                     <!-- /.box-header -->
                     <div class="box-body" style="padding:5px">
                         <div>
@@ -122,6 +121,7 @@
 
                                     /* Intial rows */
                                     foreach ($curEntryitems as $row => $entryitem) {
+                                        print_r($entryitem);
                                         echo '<tr>';
 
                                         echo '<td>';
