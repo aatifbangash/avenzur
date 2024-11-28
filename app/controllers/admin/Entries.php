@@ -1325,6 +1325,7 @@ class Entries extends MY_Controller
 		// loop to store selected entry items to current entry items array
 		foreach ($curEntryitemsData as $row => $data)
 		{
+			print_r($data);
 			// if debit entry
 			if ($data['dc'] == 'D')
 			{
@@ -1333,7 +1334,7 @@ class Entries extends MY_Controller
 					'dc' => $data['dc'],
 					'ledger_id' => $data['ledger_id'],
 					'ledger_name' => $this->ledger_model->getName($data['ledger_id']),
-					'dr_amount' => $this->sma->formatDecimal($data['amount']),
+					'dr_amount' => $data['amount'],
 					'cr_amount' => '',
 					'narration' => $data['narration']
 				);
@@ -1346,7 +1347,7 @@ class Entries extends MY_Controller
 					'ledger_id' => $data['ledger_id'],
 					'ledger_name' => $this->ledger_model->getName($data['ledger_id']),
 					'dr_amount' => '',
-					'cr_amount' => $this->sma->formatDecimal($data['amount']),
+					'cr_amount' => $data['amount'],
 					'narration' => $data['narration']
 
 				);
