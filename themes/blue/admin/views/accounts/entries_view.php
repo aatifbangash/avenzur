@@ -121,7 +121,6 @@
 
                                     /* Intial rows */
                                     foreach ($curEntryitems as $row => $entryitem) {
-                                        print_r($entryitem);
                                         echo '<tr>';
 
                                         echo '<td>';
