@@ -1103,8 +1103,9 @@ class Products_model extends CI_Model
     }
 
     public function getUnitByCode($code)
-    {
+    { 
         $q = $this->db->get_where('units', ['code' => $code], 1);
+        //echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             return $q->row();
         }

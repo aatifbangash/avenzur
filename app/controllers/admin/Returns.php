@@ -24,6 +24,7 @@ class Returns extends MY_Controller
         $this->lang->admin_load('returns', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('returns_model');
+        $this->load->admin_model('sales_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path         = 'assets/uploads/';
         $this->thumbs_path         = 'assets/uploads/thumbs/';
@@ -271,7 +272,7 @@ class Returns extends MY_Controller
                 $item_serial_no     = $_POST['serial_no'][$r];
                 //$item_expiry        = $_POST['expiry'][$r];
                 $item_expiry        = (isset($_POST['expiry'][$r]) && !empty($_POST['expiry'][$r])) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
-                //$item_bonus         = $_POST['bonus'][$r];
+                $item_bonus         = $_POST['bonus'][$r];
                 $item_dis1          = $_POST['dis1'][$r];
                 $item_dis2          = $_POST['dis2'][$r];
                 $item_serial        = $_POST['serial'][$r]           ?? '';
@@ -281,15 +282,7 @@ class Returns extends MY_Controller
                 $item_quantity      = $_POST['quantity'][$r];
                 $net_cost           = $_POST['net_cost'][$r];
                 $real_cost          = $_POST['real_cost'][$r];
-
-                //$totalbeforevat = $_POST['totalbeforevat'][$r];
-
-                // Net average cost required to maintain balance
-                //$net_cost_obj = $this->returns_model->getAverageCost($item_batchno, $item_code);
-                //$net_cost = $net_cost_obj[0]->cost_price;
-
-                //$net_cost = $this->site->getAvgCost($item_batchno, $item_id);
-                //$real_cost = $this->site->getRealAvgCost($item_batchno, $item_id);
+                $main_net           = $_POST['main_net'][$r];
                 
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details  = $item_type != 'manual' ? $this->site->getProductByCode($item_code) : null;
@@ -317,8 +310,8 @@ class Returns extends MY_Controller
                     //echo $real_unit_price * $item_quantity;exit;
 
                     // NEW: Net unit price calculation
-                    $item_net_price   = $this->sma->formatDecimal((($real_unit_price * $item_quantity) - $product_item_discount1 - $product_item_discount2) / $item_quantity);
-                    $main_net = $this->sma->formatDecimal((($real_unit_price * $item_quantity) - $product_item_discount1 - $product_item_discount2));
+                    $item_net_price   = $this->sma->formatDecimal((($real_unit_price * $item_quantity) - $product_item_discount1 - $product_item_discount2) / ($item_quantity + $item_bonus));
+                    //$main_net = $this->sma->formatDecimal((($real_unit_price * $item_quantity) - $product_item_discount1 - $product_item_discount2));
 
                     $pr_item_tax = $item_tax = 0;
                     $tax         = ''; 
@@ -342,7 +335,7 @@ class Returns extends MY_Controller
                     }
 
                     $product_tax += $pr_item_tax;
-                    $subtotal = (($item_net_price * $item_unit_quantity) + $pr_item_tax-$product_item_discount);
+                    $subtotal = $main_net;
                     $unit     = $this->site->getUnitByID($item_unit);
 
                     $product = [
@@ -354,7 +347,7 @@ class Returns extends MY_Controller
                         'net_cost'          => $net_cost,
                         'net_unit_price'    => $item_net_price,
                         'unit_price'        => $this->sma->formatDecimal($item_net_price),
-                        'quantity'          => $item_quantity,
+                        'quantity'          => ($item_quantity + $item_bonus),
                         'product_unit_id'   => $unit ? $unit->id : null,
                         'product_unit_code' => $unit ? $unit->code : null,
                         'unit_quantity'     => $item_unit_quantity,
@@ -370,8 +363,8 @@ class Returns extends MY_Controller
                         'batch_no'          => $item_batchno,
                         'serial_number'     => $item_serial_no,
                         'real_unit_price'   => $real_unit_price,
-                        //'bonus'             => $item_bonus,
-                        'bonus'             => 0,
+                        'bonus'             => $item_bonus,
+                        //'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
                         'real_cost'         => $real_cost,
@@ -379,7 +372,7 @@ class Returns extends MY_Controller
                     ];
 
                     $products[] = ($product + $gst_data);
-                    $total += $this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                    $total += $this->sma->formatDecimal(($subtotal), 4);
                 }
             }
             if (empty($products)) {
@@ -397,7 +390,8 @@ class Returns extends MY_Controller
             // total discount must be deducted from  grandtotal
             //$grand_total    = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
             
-            $grand_total    = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($total_product_discount)), 4);
+            $grand_total    = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping)), 4);
+            
             //Discount calculation
 
             $data           = [
@@ -460,16 +454,82 @@ class Returns extends MY_Controller
             $this->session->set_flashdata('message', lang('return_added'));
             admin_redirect('returns?lastInsertedId='.$return_insert_id);
         } else {
-            
-            $this->data['error']      = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
-            $this->data['billers']    = $this->site->getAllCompanies('biller');
-            //$this->data['warehouses'] = $this->site->getAllWarehouses();
-            $this->data['warehouses'] = $this->site->getMainWarehouse();
-            $this->data['tax_rates']  = $this->site->getAllTaxRates();
-            $this->data['units']      = $this->site->getAllBaseUnits();
-            $bc                       = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('returns'), 'page' => lang('returns')], ['link' => '#', 'page' => lang('add_return')]];
-            $meta                     = ['page_title' => lang('add_return'), 'bc' => $bc];
-            $this->page_construct('returns/add', $meta, $this->data);
+
+            if(isset($_GET['sale']) && !empty($_GET['sale'])){
+                $sale = $this->sales_model->getSaleByID($_GET['sale']);
+                $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+                $this->data['inv'] = $sale;
+                $inv_items = $this->sales_model->getAllReturnInvoiceItems($_GET['sale'], $sale->customer_id);
+                
+                $c = rand(100000, 9999999);
+                foreach ($inv_items as $item) {
+                    $row = $this->site->getProductByID($item->product_id);
+                    $row->batch_no = $item->batch_no;
+                    $row->bonus = -1*($item->total_bonus);
+                    $row->obonus = -1*($item->total_bonus);
+                    $row->avz_item_code = $item->avz_item_code;
+                    $row->discount1 = $item->discount1;
+                    $row->discount2 = $item->discount2;
+                    
+                    $row->net_unit_cost = $item->net_cost;
+                    $row->expiry = (($item->expiry && $item->expiry != '0000-00-00') ? $this->sma->hrsd($item->expiry) : '');
+                    $row->base_quantity = -1*($item->total_quantity);
+                    
+                    $row->base_unit = $row->unit ? $row->unit : $item->product_unit_id;
+                    $row->base_unit_cost = $row->cost ? $row->cost : $item->unit_cost;
+                    $row->unit = $item->product_unit_id;
+                    //$row->qty = $item->unit_quantity - $row->bonus;
+                    //$row->oqty = $item->unit_quantity - $row->bonus;
+                    $row->qty = $row->base_quantity - $row->bonus;
+                    $row->oqty = $row->base_quantity - $row->bonus;
+                    
+                    $row->sale_item_id = $item->id;
+                    $row->received = $item->quantity_received ? $item->quantity_received : $item->quantity;
+                    $row->received = $row->received - $row->bonus;
+                    $row->quantity_balance = $item->quantity_balance + ($item->quantity - $row->received);
+                    $row->discount = $item->discount ? $item->discount : '0';
+                    //$options = $this->purchases_model->getProductOptions($row->id);
+                    //$row->option = !empty($item->option_id) ? $item->option_id : '';
+                    $row->real_unit_cost = $item->real_cost;
+                    //$row->cost             = $this->sma->formatDecimal($item->net_unit_cost + ($item->item_discount / $item->quantity));
+                    $row->cost = $this->sma->formatDecimal($item->net_cost);
+                    $row->sale_price = $this->sma->formatDecimal($item->real_unit_price);
+                    $row->real_unit_sale = $row->sale_price;
+                    $row->net_unit_sale = $this->sma->formatDecimal($item->net_unit_price);
+                    $row->tax_rate = $item->tax_rate_id;
+                    $row->main_net = $item->main_net;
+                    unset($row->details, $row->product_details, $row->price, $row->file, $row->product_group_id);
+                    $units = $this->site->getUnitsByBUID($row->base_unit);
+                    $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
+                    $ri = $this->Settings->item_addition ? $row->id : $c;
+    
+                    $options = false;
+                    $pr[$ri] = ['id' => $c, 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')', 'row' => $row, 'units' => $units, 'tax_rate' => $tax_rate, 'options' => $options];
+    
+                    $c++;
+                }
+                $this->data['inv_items'] = json_encode($pr);
+                $this->data['id'] = $_GET['sale'];
+                $this->data['reference'] = '';
+                $this->data['billers']    = $this->site->getAllCompanies('biller');
+                $this->data['warehouses'] = $this->site->getMainWarehouse();
+                $this->data['tax_rates'] = $this->site->getAllTaxRates();
+                $this->data['units']      = $this->site->getAllBaseUnits();
+                $bc                       = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('returns'), 'page' => lang('returns')], ['link' => '#', 'page' => lang('add_return')]];
+                $meta                     = ['page_title' => lang('add_return'), 'bc' => $bc];
+                $this->page_construct('returns/add', $meta, $this->data);
+
+            }else{
+                $this->data['error']      = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+                $this->data['billers']    = $this->site->getAllCompanies('biller');
+                //$this->data['warehouses'] = $this->site->getAllWarehouses();
+                $this->data['warehouses'] = $this->site->getMainWarehouse();
+                $this->data['tax_rates']  = $this->site->getAllTaxRates();
+                $this->data['units']      = $this->site->getAllBaseUnits();
+                $bc                       = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('returns'), 'page' => lang('returns')], ['link' => '#', 'page' => lang('add_return')]];
+                $meta                     = ['page_title' => lang('add_return'), 'bc' => $bc];
+                $this->page_construct('returns/add', $meta, $this->data);
+            }
         }
     }
 

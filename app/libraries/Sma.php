@@ -157,7 +157,7 @@ class Sma
         return '0000-00-00 00:00:00';
     }
 
-    public function formatDecimal($number, $decimals = null)
+    public function formatDecimal($number, $decimals = 2)
     {
         if (!is_numeric($number)) {
             return null;
@@ -166,7 +166,15 @@ class Sma
         // if (!$decimals && $decimals !== 0) {
         //     $decimals = $this->Settings->decimals;
         // }
-        return number_format($number, $decimals, '.', '');
+        $truncated = intval($number * 100) / 100;
+
+    // Now format the number to two decimal places
+    // number_format($truncated, 2, '.', '');
+    //     echo '<br>'.$number;
+    //     echo '<br>'.number_format($number, $decimals, '.', '');
+    //    echo '<br>'. number_format($truncated, 2, '.', '');
+       return number_format($truncated, 2, '.', '');
+       // return number_format($number, $decimals, '.', '');
     }
 
     public function formatMoney($number, $symbol = false)
@@ -191,7 +199,7 @@ class Sma
         ($this->Settings->display_symbol == 2 && $number != 0 ? $symbol : '');
     }
 
-    public function formatNumber($number, $decimals = null)
+    public function formatNumberold($number, $decimals = null)
     {
         if (!$decimals) {
             $decimals = $this->Settings->decimals;
@@ -201,8 +209,30 @@ class Sma
         }
         $ts = $this->Settings->thousands_sep == '0' ? ' ' : $this->Settings->thousands_sep;
         $ds = $this->Settings->decimals_sep;
+        // echo "number".$number;
+        // echo "#decimal:".$decimals;
         return number_format($number, $decimals, $ds, $ts);
     }
+
+    public function formatNumber($number, $decimals = null)
+{
+    if (!is_numeric($number)) {
+        return null;
+    }
+    $decimals = $this->Settings->decimals;
+    // if (!$decimals && $decimals !== 0) {
+    //     $decimals = $this->Settings->decimals;
+    // }
+    //$truncated = intval($number * 100) / 100;
+
+// Now format the number to two decimal places
+// number_format($truncated, 2, '.', '');
+    
+   return number_format($number, $decimals, '.', '');
+//    echo '<br>'. number_format($truncated, 2, '.', '');
+//    return number_format($truncated, 2, '.', '');
+}
+
 
     public function formatQuantity($number, $decimals = null)
     {

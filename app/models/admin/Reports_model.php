@@ -2133,8 +2133,13 @@ class Reports_model extends CI_Model
                     iv.reference_id,
                     iv.net_unit_cost,
                     CASE
-                        WHEN iv.trs_type = 'sale' THEN si.real_unit_price
-                        ELSE iv.net_unit_sale
+                    WHEN iv.trs_type = 'sale' THEN (
+                        SELECT si.real_unit_price 
+                        FROM sma_sale_items si 
+                        WHERE si.sale_id = iv.reference_id 
+                        LIMIT 1
+                    )
+                    ELSE iv.net_unit_sale
                     END AS net_unit_sale,
                     iv.real_unit_cost,
                     iv.avz_item_code,
@@ -2184,7 +2189,6 @@ class Reports_model extends CI_Model
                     movement_date BETWEEN '".date('Y-m-d', strtotime($start_date . ' -1 day'))."' AND '".date('Y-m-d', strtotime($end_date . ' +1 day'))."') iv
                     LEFT JOIN sma_purchases sp ON iv.reference_id = sp.id AND iv.trs_type = 'purchase'
                     LEFT JOIN sma_sales ss ON iv.reference_id = ss.id AND iv.trs_type = 'sale'
-                    LEFT JOIN sma_sale_items si ON iv.reference_id = si.sale_id AND iv.trs_type = 'sale'
                     LEFT JOIN sma_sales ps ON iv.reference_id = ps.id AND iv.trs_type = 'pos'
                     LEFT JOIN sma_warehouses sw ON ps.warehouse_id = sw.id
                     LEFT JOIN sma_transfers sto ON iv.reference_id = sto.id AND iv.trs_type = 'transfer_out'
