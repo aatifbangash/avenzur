@@ -66,6 +66,12 @@ class Purchases_model extends CI_Model
         return $totalPurchases;
     }
 
+    public function addPaymentReference($data = [])
+    {
+        $this->db->insert('payment_reference', $data);
+        return $this->db->insert_id();
+    }
+
     public function addPayment($data = [])
     {
         if ($this->db->insert('payments', $data)) {
@@ -517,6 +523,35 @@ class Purchases_model extends CI_Model
         return false;
     }
 
+    public function getPaymentReferenceByID($id){
+        $this->db->select('payment_reference.*, companies.name, la.name as bank_ledger, lb.name as transfer_from')
+            ->join('companies', 'companies.id=payment_reference.supplier_id', 'left')
+            ->join('accounts_ledgers la', 'la.id=payment_reference.bank_charges_ledger', 'left')
+            ->join('accounts_ledgers lb', 'lb.id=payment_reference.transfer_from_ledger', 'left')
+            ->where('payment_reference.id =', $id);
+        $q = $this->db->get('payment_reference');
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getPaymentByReferenceID($id)
+    {
+        $this->db->select('payments.*, companies.company, type, purchases.grand_total')
+            ->join('purchases', 'purchases.id=payments.purchase_id', 'left')
+            ->join('companies', 'companies.id=purchases.supplier_id', 'left')
+            ->where('payments.payment_id =', $id);
+        $q = $this->db->get('payments');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getPaymentByID($id)
     {
         $q = $this->db->get_where('payments', ['id' => $id], 1);
@@ -533,6 +568,19 @@ class Purchases_model extends CI_Model
             return $q->row();
         }
 
+        return false;
+    }
+
+    public function getPaymentReferences(){
+        $this->db->select('payment_reference.*, companies.name as company')
+                ->join('companies', 'companies.id=payment_reference.supplier_id', 'left');
+        $q = $this->db->get('payment_reference');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
         return false;
     }
 
