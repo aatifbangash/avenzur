@@ -258,7 +258,7 @@
                             <th><?= lang('hsn_sac_code'); ?></th>
                         <?php
                     } ?>
-                        <th><?= lang('quantity'); ?></th>
+                        <th><?= lang('Base Quantity'); ?></th>
                         <?php
                             if ($inv->status == 'partial') {
                                 $total_col +=1; 
@@ -333,7 +333,11 @@
                    $r     = 1;
                     $tax_summary = [];
                     $totalAmount = 0;
+                    // echo "<pre>";
+                    // print_r($inv);
                     foreach ($rows as $row):
+                        // echo "<pre>";
+                        // print_r($row);
                        $subTotal = ($row->real_unit_price * $row->unit_quantity);
                     ?>
                         <tr>
@@ -367,7 +371,7 @@
                            
                             
 
-                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($subTotal); ?></td>
+                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->subtotal); ?></td>
                             <?php
                              if ($Settings->product_discount && $inv->product_discount != 0) {
                                 echo '<td style=" text-align:right; vertical-align:middle;">' . ($row->discount1 != 0 ?  $row->discount1  : '') .  '</td>'; 
@@ -378,23 +382,23 @@
                                 $pr_discount2      = $this->site->calculateDiscount($row->discount2.'%', $amount_after_dis1);  
                                 $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $row->unit_quantity);
                                 $row->discount2= $this->sma->formatNumber($row->discount2,null);
-                                echo '<td style=" text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($row->item_discount - $pr_item_discount2) . '</td>';
+                                echo '<td style=" text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($row->item_discount) . '</td>';
                        
                                 echo '<td style="width: 120px; text-align:right; vertical-align:middle;">' . ($row->discount2 != 0 ?  $row->discount2  : '') . '</td>';
-                                echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($pr_item_discount2) . '</td>';
+                                echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($row->second_discount_value) . '</td>';
                             }
                             ?>
-                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->subtotal, null); ?></td>
+                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->totalbeforevat, null); ?></td>
                             <?php
                             $vat_value = 0;
                             if ($Settings->tax1 && $inv->product_tax > 0) {
                                 $vat_value = $this->sma->formatNumber($row->item_tax);
                                 echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ?  ($Settings->indian_gst ? $row->tax : $row->tax_code)  : '') . '</td>';
-                                echo '<td>'.$vat_value.'</td>';
+                                echo '<td>'.$row->tax.'</td>';
                             }
                             ?>
                             
-                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->subtotal + $vat_value); ?></td>
+                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->main_net); ?></td>
                             
                         </tr>
                         <?php
@@ -479,23 +483,23 @@
                 
                             <tr>
                                 <td>Total</td>
-                                <td><?php echo $this->sma->formatNumber($totalAmount);?></td>
+                                <td><?php echo $this->sma->formatNumber($inv->total);?></td>
                             </tr>
                             <tr>
                                 <td>T-DISC</td>
-                                <td><?php echo $this->sma->formatNumber($totalDiscount);?></td>
+                                <td><?php echo $this->sma->formatNumber($inv->total_discount);?></td>
                             </tr>
                             <tr>
                                 <td>Net Before VAT</td>
-                                <td><?php echo $this->sma->formatNumber($netBeforeVAT);?></td>
+                                <td><?php echo $this->sma->formatNumber($inv->total_net_sale);?></td>
                             </tr>
                             <tr>
                                 <td>Total VAT</td>
-                                <td><?php echo $this->sma->formatNumber($totalVAT); ?></td>
+                                <td><?php echo $this->sma->formatNumber($inv->total_tax); ?></td>
                             </tr>
                             <tr>
                                 <td>Total After VAT</td>
-                                <td><?php echo $this->sma->formatNumber($netBeforeVAT + $totalVAT);?></td>
+                                <td><?php echo $this->sma->formatNumber($inv->grand_total);?></td>
                             </tr>
             </table>
             </div>
