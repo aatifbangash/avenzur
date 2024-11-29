@@ -1,3 +1,53 @@
+<style>
+    /* Basic styling for pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.pagination a, .pagination strong {
+    color: #007bff;
+    float: left;
+    padding: 6px 14px;
+    text-decoration: none;
+    transition: background-color .3s;
+    margin: 0 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Active page */
+.pagination strong {
+    background-color: #007bff;
+    color: white;
+    border: 1px solid #007bff;
+}
+
+/* Hover effect */
+.pagination a:hover:not(.active) {
+    background-color: #ddd;
+}
+
+/* Disabled links */
+.pagination .disabled {
+    color: #6c757d;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* Additional styling */
+.pagination a {
+    cursor: pointer;
+}
+
+.pagination strong {
+    cursor: default;
+}
+
+    </style>
+
+
 <div class="box">
 	<div class="box-header">
         <h2 class="blue"><i
@@ -128,6 +178,9 @@
                 <?php } ?>
                     </tbody>
                 </table>
+
+
+                <div class="pagination mt-5">   <?php echo $pagination_links; ?> </div>
             </div>
           </div>
       </div>

@@ -7,11 +7,25 @@ class Transfers_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->admin_model('Inventory_model');
+    }
+
+    public function get_cost_price_grand_total($transfer_id){
+
+        $this->db->select('SUM(quantity * net_unit_cost) as total_cost_price');
+        $this->db->from('sma_purchase_items');  
+        $this->db->where('transfer_id', $transfer_id);
+        $query = $this->db->get(); 
+        //echo $this->db->last_query(); exit; 
+        if ($query->num_rows() > 0) {
+            return $query->row();
+        } 
     }
 
     public function addTransferAccountEntries($transferId){
 
         $transfer = $this->getTransferByID($transferId);
+        $result= $this->get_cost_price_grand_total($transferId);
 
         $toWareHouseId = $transfer->to_warehouse_id;
         $fromWareHouseId = $transfer->from_warehouse_id;
@@ -19,9 +33,10 @@ class Transfers_model extends CI_Model
        $toWareHouse =  $this->site->getWarehouseByID($toWareHouseId);
        $fromWareHouse =  $this->site->getWarehouseByID($fromWareHouseId);
        $goodsTrasitWareHouse = $this->site->getGoodsTrasitWareHouse();
+       
 
         // Credit & Debit to one same Account (Goods in Transit)
-        $accountsTotal = $transfer->grand_total + $transfer->grand_total;
+        $accountsTotal = $result->total_cost_price +  $result->total_cost_price;
 
          /*Accounts Entries*/
          $entry = array(
@@ -46,7 +61,7 @@ class Transfers_model extends CI_Model
                 'dc' => 'D',
                 'ledger_id' => $goodsTrasitWareHouse->inventory_ledger,
                 
-                'amount' => $transfer->grand_total,
+                'amount' =>  $result->total_cost_price,
                 'narration' => 'goods in transit'
             )
             );
@@ -56,7 +71,7 @@ class Transfers_model extends CI_Model
                     'entry_id' => $insert_id,
                     'dc' => 'C',
                     'ledger_id' => $fromWareHouse->inventory_ledger,
-                    'amount' => $transfer->grand_total,
+                    'amount' =>  $result->total_cost_price,
                     'narration' => 'inventry'
                 )
             );  
@@ -66,7 +81,7 @@ class Transfers_model extends CI_Model
                     'entry_id' => $insert_id,
                     'dc' => 'C',
                     'ledger_id' => $goodsTrasitWareHouse->inventory_ledger,
-                    'amount' => $transfer->grand_total,
+                    'amount' =>  $result->total_cost_price,
                     'narration' => 'goods in transit'
                 )
             );  
@@ -76,7 +91,7 @@ class Transfers_model extends CI_Model
                     'entry_id' => $insert_id,
                     'dc' => 'D',
                     'ledger_id' => $toWareHouse->inventory_ledger,
-                    'amount' => $transfer->grand_total,
+                    'amount' =>  $result->total_cost_price,
                     'narration' => 'inventry'
                 )
             );  
@@ -138,6 +153,8 @@ class Transfers_model extends CI_Model
             }
             foreach ($items as $item) {
                 $item['transfer_id'] = $transfer_id;
+                $real_cost = $item['real_cost'];
+                unset($item['real_cost']);
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 if ($status == 'completed') {
                     $item['date']         = date('Y-m-d');
@@ -182,7 +199,12 @@ class Transfers_model extends CI_Model
                 }
 
                 if ($status == 'sent' || $status == 'completed') {
-                //if ($status == 'completed') {
+                    if($status == 'completed') { 
+                        //Inventory Movement - Transfer IN
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code']);
+                        ////Inventory Movement - Transfer Out
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code']);
+                    }
                     $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'add');
                 }
             }
@@ -196,7 +218,7 @@ class Transfers_model extends CI_Model
         if ($this->db->trans_status() === false) {
             log_message('error', 'An errors has been occurred while adding the sale (Add:Transfers_model.php)');
         } else {
-            return true;
+            return $transfer_id;
         }
         return false;
     }
@@ -225,7 +247,11 @@ class Transfers_model extends CI_Model
 
         if ($totalPurchseResultSet->num_rows() > 0) {
             foreach ($totalPurchseResultSet->result() as $row) {
-                $row->cost_price = ($row->total_cost_price / $row->quantity);
+                if($row->quantity > 0){
+                    $row->cost_price = ($row->total_cost_price / $row->quantity);
+                }else{
+                    $row->cost_price = 0;
+                }
                 $totalPurchases[] = $row;
             }
         }
@@ -270,13 +296,56 @@ class Transfers_model extends CI_Model
                 ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
                 ->group_by('purchase_items.id')
                 ->where('transfer_id', $transfer_id);
+
+            /*$this->db->select('
+                pi.*,
+                pv.name as variant,
+                p.unit,
+                p.hsn_code as hsn_code,
+                p.second_name as second_name,
+                SUM(CASE 
+                    WHEN im.type = "purchase" THEN im.quantity 
+                    WHEN im.type IN ("sale", "transfer") THEN -im.quantity 
+                    ELSE 0 
+                END) as available_quantity
+            ')
+            ->from('purchase_items pi')
+            ->join('products p', 'p.id = pi.product_id', 'left')
+            ->join('product_variants pv', 'pv.id = pi.option_id', 'left')
+            ->join('inventory_movements im', 'im.avz_item_code = pi.avz_item_code', 'left')  // Join inventory movements based on avz_item_code
+            ->where('pi.transfer_id', $transfer_id)  // Optional: filter based on a specific transfer_id
+            ->where('im.location_id', $warehouse_id) // Ensure we are filtering by warehouse (location_id)
+            ->group_by('pi.id')  // Group by the purchase item
+            ->having('available_quantity > 0');*/
         } else {
-            $this->db->select('transfer_items.*, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
+                $this->db->select('transfer_items.*, SUM(IFNULL(im.quantity, 0)) as base_quantity, im.avz_item_code, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
                 ->from('transfer_items')
                 ->join('products', 'products.id=transfer_items.product_id', 'left')
                 ->join('product_variants', 'product_variants.id=transfer_items.option_id', 'left')
-                ->group_by('transfer_items.id')
+                ->join('inventory_movements im', 'transfer_items.avz_item_code = im.avz_item_code', 'left')
+                ->group_by(['transfer_items.id', 'im.avz_item_code'])
                 ->where('transfer_id', $transfer_id);
+
+                /*$this->db->select('
+                    pi.*,
+                    pv.name as variant,
+                    p.unit,
+                    p.hsn_code as hsn_code,
+                    p.second_name as second_name,
+                    SUM(CASE 
+                        WHEN im.type = "purchase" THEN im.quantity 
+                        WHEN im.type IN ("sale", "transfer") THEN -im.quantity 
+                        ELSE 0 
+                    END) as available_quantity
+                ')
+                ->from('transfer_items pi')
+                ->join('products p', 'p.id = pi.product_id', 'left')
+                ->join('product_variants pv', 'pv.id = pi.option_id', 'left')
+                ->join('inventory_movements im', 'im.avz_item_code = pi.avz_item_code', 'left')  // Join inventory movements based on avz_item_code
+                ->where('pi.transfer_id', $transfer_id)  // Optional: filter based on a specific transfer_id
+                ->where('im.location_id', $warehouse_id) // Ensure we are filtering by warehouse (location_id)
+                ->group_by('pi.id')  // Group by the purchase item
+                ->having('available_quantity > 0');*/
         }
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
@@ -334,8 +403,38 @@ class Transfers_model extends CI_Model
         }
         return false;
     }
-
+    
     public function getProductNamesWithBatches($term, $warehouse_id, $limit = 10)
+    {
+       
+        // removed from select ->  purchase_items.serial_number
+        $this->db->select('products.id, products.price, code, name, SUM(sma_inventory_movements.quantity) as quantity, cost, tax_rate, sma_products.type, unit, purchase_unit, tax_method')
+        ->join('inventory_movements', 'inventory_movements.product_id=products.id', 'left')
+        //   ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
+         //    ->join('purchase_items', 'purchase_items.product_id=products.id', 'left')
+            ->group_by('products.id');
+        if ($this->Settings->overselling) {
+            $this->db->where("products.type = 'standard' AND (name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
+        } else {
+            $this->db->where("products.type = 'standard' AND inventory_movements.location_id = '" . $warehouse_id . "' AND "
+                . "(name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
+        }
+        $this->db->having("SUM(sma_inventory_movements.quantity)>0"); 
+        $this->db->limit($limit);
+        $q = $this->db->get('products');
+        //echo  $this->db->last_query(); exit; 
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+
+                $row->serial_number=''; 
+                $data[] = $row;
+            }
+            return $data;
+        }  
+
+    }
+
+    public function getProductNamesWithBatches__BK($term, $warehouse_id, $limit = 10)
     {
         $this->db->select('products.id, products.price, code, name, warehouses_products.quantity, cost, tax_rate, type, unit, purchase_unit, tax_method, purchase_items.serial_number')
             ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
@@ -477,10 +576,20 @@ class Transfers_model extends CI_Model
 
     public function getWarehouseProductQuantity($warehouse_id, $product_id, $item_batchno)
     {
-        $q = $this->db->get_where('warehouses_products', ['warehouse_id' => $warehouse_id, 'product_id' => $product_id, 'batchno' => $item_batchno], 1);
-        if ($q->num_rows() > 0) {
-            return $q->row();
-        }
+        // $q = $this->db->get_where('warehouses_products', ['warehouse_id' => $warehouse_id, 'product_id' => $product_id, 'batchno' => $item_batchno], 1);
+        // if ($q->num_rows() > 0) {
+        //     return $q->row();
+        // }  
+        $this->db->select('SUM(inv.quantity) as quantity ');
+		$this->db->from('inventory_movements inv');
+        // $this->db->join('warehouses_products wp', 'wp.warehouse_id=inv.location_id AND inv.product_id=wp.product_id AND wp.batchno=inv.batch_number', 'LEFT'); 
+        $this->db->where('inv.location_id',$warehouse_id);
+        $this->db->where('inv.product_id',$product_id);
+        $this->db->where('inv.batch_number',$item_batchno); 
+	    $query = $this->db->get();
+        if ($query->num_rows() > 0) {
+                return $query->row();
+        } 
         return false;
     }
 
@@ -726,6 +835,8 @@ class Transfers_model extends CI_Model
 
             foreach ($items as $item) {
                 $item['transfer_id'] = $id;
+                $real_cost = $item['real_cost'];
+                unset($item['real_cost']);
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 if ($status == 'completed') {
                     $item['date']         = date('Y-m-d');
@@ -765,6 +876,12 @@ class Transfers_model extends CI_Model
                     $this->syncTransderdSavedItems($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'edit');
                 }else if($data['status'] == 'sent' || $data['status'] == 'completed'){
                     $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'edit');
+                    if($data['status'] == 'completed'){
+                        //Inventory Movement - Transfer IN
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code']);
+                        //Inventory Movement - Transfer Out
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code']);
+                        }
                 }
             }
 

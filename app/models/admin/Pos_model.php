@@ -7,6 +7,7 @@ class Pos_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function addOptionQuantity($option_id, $quantity)
@@ -144,6 +145,8 @@ class Pos_model extends CI_Model
             foreach ($items as $item) {
 
                 $item['sale_id'] = $sale_id;
+                $real_cost = $item['real_cost'];
+                unset($item['real_cost']);
                 $this->db->insert('sale_items', $item);
                 // Code for serials here
                 $serials_quantity = $item['quantity'];
@@ -157,6 +160,7 @@ class Pos_model extends CI_Model
                 $this->db->where('sma_invoice_serials.rsid', 0);
                 $this->db->where('sma_invoice_serials.pid !=', 0);
                 $this->db->where('sma_invoice_serials.tid !=', 0);
+                $this->db->where('sma_invoice_serials.batch_no =', $item['batch_no']);
                 $this->db->where('sma_transfers.to_warehouse_id', $item['warehouse_id']);
                 $this->db->where('sma_transfers.status', 'completed');
                 $this->db->limit($serials_quantity);
@@ -185,6 +189,10 @@ class Pos_model extends CI_Model
 
                 $sale_item_id = $this->db->insert_id();
                 if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
+
+                     //handle inventory movement
+                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'pos', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code']);
+
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
@@ -705,9 +713,38 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function getProductQuantityWithNearestExpiry($product_id, $warehouse)
+    public function getProductQuantityWithNearestExpiry_old($product_id, $item_code, $warehouse)
     {
         $now = date('Y-m-d');  // Current date in the format 'YYYY-MM-DD'
+
+        $this->db->select('batch_no');
+        $this->db->from('invoice_serials');
+        $this->db->where('gtin', $item_code);
+        $this->db->where('tid >', 0);
+        $this->db->where('sid =', 0);
+        $q = $this->db->get();
+        
+        $batch_details = $q->result_array();
+        
+        if(!empty($batch_details)){
+            $batch_nos = array_column($batch_details, 'batch_no');
+
+            $this->db->select('*');
+            $this->db->from('warehouses_products');
+            $this->db->where('product_id', $product_id);
+            $this->db->where('warehouse_id', $warehouse);
+            $this->db->where('quantity >', 0);
+            $this->db->where('expiry >=', $now);  // Select products with expiry greater than or equal to the current date
+            $this->db->where_in('batchno', $batch_nos); // Check for batch numbers in the serials
+            $this->db->order_by('expiry', 'ASC'); // Order by expiry in ascending order
+            $this->db->limit(1);
+            $q = $this->db->get();
+            
+            if ($q->num_rows() > 0) {
+                return $q->row_array();
+            }
+        }  
+
 
         $this->db->select('*');
         $this->db->from('warehouses_products');
@@ -722,6 +759,60 @@ class Pos_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row_array(); //$q->row();
         }
+        
+        return false;
+    }
+    public function getProductQuantityWithNearestExpiry($product_id, $item_code, $warehouse)
+    {
+        $now = date('Y-m-d');  // Current date in the format 'YYYY-MM-DD'
+
+        $this->db->select('batch_no');
+        $this->db->from('invoice_serials');
+        $this->db->where('gtin', $item_code);
+        $this->db->where('tid >', 0);
+        $this->db->where('sid =', 0);
+        $q = $this->db->get();
+        
+        $batch_details = $q->result_array();
+        
+        if(!empty($batch_details)){
+            $batch_nos = array_column($batch_details, 'batch_no'); 
+            $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, inv.expiry_date as expiry');
+            $this->db->from('inventory_movements inv'); 
+            $this->db->where('inv.location_id',$warehouse);
+            $this->db->where('inv.product_id',$product_id); 
+            $this->db->where('inv.expiry_date >=', $now);  // Select products with expiry greater than or equal to the current date
+            $this->db->where_in('inv.batch_number', $batch_nos); 
+            $this->db->group_by('inv.batch_number'); 
+            $this->db->having('SUM(inv.quantity)>=0'); 
+            $this->db->order_by('inv.expiry_date', 'ASC');  
+            $this->db->limit(1); 
+            $q = $this->db->get(); 
+            //echo $this->db->last_query(); 
+            if ($q->num_rows() > 0) {
+                $rs= $q->row_array();
+                //echo 'aa <pre>';print_r($rs); exit;
+                return $rs; 
+            }
+        }  
+ 
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, inv.expiry_date as expiry');
+        $this->db->from('inventory_movements inv'); 
+        $this->db->where('inv.location_id',$warehouse);
+        $this->db->where('inv.product_id',$product_id); 
+        $this->db->where('inv.expiry_date >=', $now);  // Select products with expiry greater than or equal to the current date             
+        $this->db->group_by('inv.batch_number'); 
+        $this->db->having('SUM(inv.quantity)>=0'); 
+        $this->db->order_by('inv.expiry_date', 'ASC'); 
+        $this->db->limit(1);
+        $q = $this->db->get(); 
+        //echo $this->db->last_query(); 
+        if ($q->num_rows() > 0) {
+            $rs= $q->row_array(); //$q->row();
+            //echo 'bb <pre>';print_r($rs); exit; 
+            return $rs; 
+        }
+        
         return false;
     }
 
@@ -1269,7 +1360,7 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function getWHProductById($id, $warehouse_id)
+    /*public function getWHProductById($id, $warehouse_id)
     {
         $this->db->select('products.*, warehouses_products.quantity, categories.id as category_id, categories.name as category_name')
             ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
@@ -1281,6 +1372,29 @@ class Pos_model extends CI_Model
         }
 
         return false;
+    }*/
+
+    public function getWHProductById($id, $warehouse_id)
+    {
+        $this->db->select("im.net_unit_sale, 
+                            im.net_unit_cost, 
+                            im.real_unit_cost,
+                            im.customer_id,
+                            im.product_id,
+                            pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
+                            pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
+                            SUM(IFNULL(im.quantity, 0)) as total_quantity
+                            ");
+        $this->db->from('sma_inventory_movements im');
+        $this->db->join('sma_products pr', 'pr.id = im.product_id', 'left');
+        $this->db->where('im.location_id', $warehouse_id);
+        $this->db->where('im.product_id', $id);
+
+        $this->db->group_by(['im.product_id', 'im.location_id']);
+        $this->db->having('total_quantity !=', 0);
+        $query = $this->db->get();
+        //echo $this->db->last_query();exit;
+        return $query->result();
     }
 
     public function insertQuantity($product_id, $warehouse_id, $quantity)
@@ -1490,6 +1604,18 @@ class Pos_model extends CI_Model
         $q = $this->db->get_where('payments', ['sale_id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
+        }
+        return false;
+    }
+
+    public function getPaymentTypes($id)
+    {
+        $q = $this->db->get_where('payments', ['sale_id' => $id]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
         }
         return false;
     }

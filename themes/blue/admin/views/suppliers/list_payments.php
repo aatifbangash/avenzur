@@ -53,7 +53,8 @@
                                                 <td><?= $payment->date; ?></td>
                                                 <td><?= $payment->amount; ?></td>
                                                 <td><?= $payment->note; ?></td>
-                                                <td><a href="<?php echo admin_url('suppliers/edit_payment/' . $payment->id); ?>" class="tip" title="Edit Payment"><i class="fa fa-edit"></i></a></td>
+                                                <!--<td><a href="<?php echo admin_url('suppliers/edit_payment/' . $payment->id); ?>" class="tip" title="Edit Payment"><i class="fa fa-edit"></i></a></td>-->
+                                                <td><a href="<?php echo admin_url('suppliers/view_payment/' . $payment->id); ?>" class="tip" title="View Payment"><i class="fa fa-eye"></i></a></td>
                                             </tr>
                                         <?php
                                     }

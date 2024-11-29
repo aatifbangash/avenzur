@@ -11,6 +11,7 @@ class Products_model extends CI_Model
         // Sequence-Code
         $this->load->library('SequenceCode');
         $this->sequenceCode = new SequenceCode();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function add_products($products = [])
@@ -24,6 +25,17 @@ class Products_model extends CI_Model
                 $product['sequence_code'] = $this->sequenceCode->generate('PRD', 5);
                 if ($this->db->insert('products', $product)) {
                     $product_id = $this->db->insert_id();
+                    // update item_code
+                    $cat_id_q = $this->db->get_where('categories', ['id' => $product['category_id']], 1);
+                    $category_code = 0;
+                    if ($cat_id_q->num_rows() > 0) {
+                        $row_cat = $cat_id_q->row();
+                        $category_code = $row_cat->category_code;
+                        $formatted_id = str_pad($product_id, 6, '0', STR_PAD_LEFT);
+                        // Concatenate the category code and formatted ID
+                        $item_code = $category_code . $formatted_id;
+                        $this->db->update('sma_products', ['item_code' => $item_code], ['id' => $product_id]);
+                    }
                     foreach ($warehouses as $warehouse) {
                         $this->db->insert('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse->id, 'quantity' => 0]);
                     }
@@ -57,6 +69,158 @@ class Products_model extends CI_Model
         return false;
     }
 
+    public function addCombo($data, $products)
+    {
+        if ($this->db->insert('combos', $data)) {
+            $combo_id = $this->db->insert_id();
+            foreach ($products as $product) {
+                $product['combo_id'] = $combo_id;
+                $this->db->insert('combo_products', $product); 
+            } 
+            return true;
+        }
+        return false;
+    }
+    public function updateCombo($id, $data, $products)
+    {   
+        if ($this->db->update('combos', $data, ['id' => $id]) && $this->db->delete('combo_products', ['combo_id' => $id])) {
+            foreach ($products as $product) {
+                $product['combo_id'] = $id;
+                $this->db->insert('combo_products', $product); 
+            }
+            return true;
+        }
+        return false;
+    }
+    public function getComboByID($id)
+    {
+        
+        $this->db->select('combos.*, products.code as product_code, products.name as product_name, products.price')
+            ->join('products', 'products.id=combos.primary_product_id', 'left') ;  
+        $this->db->where('combos.id', $id); 
+        $q = $this->db->get('combos'); 
+       // $q = $this->db->get_where('combos', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+    public function getComboItems($combo_id)
+    {
+        $this->db->select('combo_products.*, products.code as product_code, products.name as product_name, products.price, products.image, products.details as details')
+            ->join('products', 'products.id=combo_products.product_id', 'left') 
+            ->group_by('combo_products.id')
+            ->order_by('id', 'asc');
+
+        $this->db->where('combo_id', $combo_id); 
+        $q = $this->db->get('combo_products');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+    public function deleteCombo($id)
+    { 
+        $this->site->log('Deleted Combo', ['model' => $this->getComboByID($id), 'items' => $this->getComboItems($id)]);
+        if ($this->db->delete('combos', ['id' => $id]) && $this->db->delete('combo_products', ['combo_id' => $id])) {
+            return true;
+        }
+        return false;
+    }
+
+    public function addBundle($data, $products)
+    {
+        if ($this->db->insert('bundles', $data)) {
+            $bundle_id = $this->db->insert_id();
+            foreach ($products as $product) {
+                $product['bundle_id'] = $bundle_id;
+                $this->db->insert('bundle_items', $product); 
+            } 
+            return true;
+        }
+        return false;
+    }
+    public function updateBundle($id, $data, $products)
+    {   
+        if ($this->db->update('bundles', $data, ['id' => $id]) && $this->db->delete('bundle_items', ['bundle_id' => $id])) {
+            foreach ($products as $product) {
+                $product['bundle_id'] = $id;
+                $this->db->insert('bundle_items', $product); 
+            }
+            return true;
+        }
+        return false;
+    }
+    public function deleteBundle($id)
+    { 
+        $this->site->log('Deleted Bundle', ['model' => $this->getBundleByID($id), 'items' => $this->getBundleItems($id)]);
+        if ($this->db->delete('bundles', ['id' => $id]) && $this->db->delete('bundle_items', ['bundle_id' => $id])) {
+            return true;
+        }
+        return false;
+    }
+    public function getBundleByID($id)
+    {
+        $q = $this->db->get_where('bundles', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+    public function getBundleItems($bundle_id)
+    {
+        $this->db->select('bundle_items.*, products.code as product_code, products.name as product_name, products.price, products.image, products.details as details')
+            ->join('products', 'products.id=bundle_items.product_id', 'left') 
+            ->group_by('bundle_items.id')
+            ->order_by('id', 'asc');
+
+        $this->db->where('bundle_id', $bundle_id); 
+        $q = $this->db->get('bundle_items');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+    public function getBUSuggestions($term, $limit = 5)
+    {
+        $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name, '.$this->db->dbprefix('products') . '.price')
+            ->where("type != 'combo' AND "
+                . '(' . $this->db->dbprefix('products') . ".name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR
+                concat(" . $this->db->dbprefix('products') . ".name, ' (', code, ')') LIKE '%" . $term . "%')")
+            ->limit($limit);
+        $q = $this->db->get('products');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+    public function getComboSuggestions($term, $limit = 5)
+    {
+        $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name, '.$this->db->dbprefix('products') . '.price')
+            ->where("type != 'combo' AND "
+                . '(' . $this->db->dbprefix('products') . ".name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR
+                concat(" . $this->db->dbprefix('products') . ".name, ' (', code, ')') LIKE '%" . $term . "%')")
+            ->limit($limit);
+        $q = $this->db->get('products');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+
     public function addAjaxProduct($data)
     {
         // Sequence-Code
@@ -74,6 +238,17 @@ class Products_model extends CI_Model
         $data['sequence_code'] = $this->sequenceCode->generate('PRD', 5);
         if ($this->db->insert('products', $data)) {
             $product_id = $this->db->insert_id();
+            // update item_code
+            $cat_id_q = $this->db->get_where('categories', ['id' => $data['category_id']], 1);
+            $category_code = 0;
+            if ($cat_id_q->num_rows() > 0) {
+                 $row_cat = $cat_id_q->row();
+                 $category_code = $row_cat->category_code;
+                 $formatted_id = str_pad($product_id, 6, '0', STR_PAD_LEFT);
+                // Concatenate the category code and formatted ID
+                 $item_code = $category_code . $formatted_id;
+                 $this->db->update('sma_products', ['item_code' => $item_code], ['id' => $product_id]);
+            }
 
             if ($items) {
                 foreach ($items as $item) {
@@ -255,7 +430,7 @@ class Products_model extends CI_Model
         }
         return false;
     }
-
+    
     public function deleteAdjustment($id)
     {
         $this->reverseAdjustment($id);
@@ -310,7 +485,6 @@ class Products_model extends CI_Model
         }
         return false;
     }
-
     public function getAdjustmentByCountID($count_id)
     {
         $q = $this->db->get_where('adjustments', ['count_id' => $count_id], 1);
@@ -374,6 +548,27 @@ class Products_model extends CI_Model
     }
 
     public function getAllWarehousesWithPQ($product_id)
+    {   
+        // , wp.rack, wp.avg_cost //  ->join('(SELECT warehouse_id, product_id,  rack, avg_cost FROM sma_warehouses_products where product_id='.$product_id.' order by avg_cost limit 1) as wp', 'wp.warehouse_id = warehouses.id', 'left') 
+        // ' . $this->db->dbprefix('warehouses_products') . '.rack, ' . $this->db->dbprefix('warehouses_products') . '.avg_cost'
+        //$this->db->select('' . $this->db->dbprefix('warehouses') . '.*, SUM(' . $this->db->dbprefix('inventory_movements') . '.quantity) As quantity,' . $this->db->dbprefix('warehouses_products') . '.rack, ' . $this->db->dbprefix('warehouses_products') . '.avg_cost')
+        $this->db->select('' . $this->db->dbprefix('warehouses') . '.*, SUM(' . $this->db->dbprefix('inventory_movements') . '.quantity) As quantity') 
+        // ->join('warehouses_products', 'warehouses_products.warehouse_id=warehouses.id', 'left')
+           ->join('inventory_movements', 'inventory_movements.location_id=warehouses.id', 'left')
+            ->where('inventory_movements.product_id', $product_id)
+            ->group_by('warehouses.id');
+        $q = $this->db->get('warehouses');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+        return false;
+    }
+
+    public function getAllWarehousesWithPQ__BK($product_id)
     {
         $this->db->select('' . $this->db->dbprefix('warehouses') . '.*, SUM(' . $this->db->dbprefix('warehouses_products') . '.quantity) As quantity,' . $this->db->dbprefix('warehouses_products') . '.rack, ' . $this->db->dbprefix('warehouses_products') . '.avg_cost')
             ->join('warehouses_products', 'warehouses_products.warehouse_id=warehouses.id', 'left')
@@ -393,6 +588,15 @@ class Products_model extends CI_Model
     public function getBrandByName($name)
     {
         $q = $this->db->get_where('brands', ['name' => $name], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getBrandByID($id)
+    {
+        $q = $this->db->get_where('brands', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -440,10 +644,22 @@ class Products_model extends CI_Model
 
     public function getProductByCode($code)
     {
-        $q = $this->db->get_where('products', ['code' => $code], 1);
-        if ($q->num_rows() > 0) {
-            return $q->row();
+        //echo $code.'###';
+        $this->db->select('*');
+        $this->db->from('sma_products');
+       
+        if (preg_match('/^[A-Za-z]/', $code)) {
+            $this->db->where('code', $code);
+        } else {
+            $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$code, NULL, FALSE);
         }
+        $query = $this->db->get();
+       //echo $query->num_rows();
+       // $q = $this->db->get_where('products', ['code' => $code], 1);
+        if ($query->num_rows() > 0) {
+           return $query->row();
+        }
+
         return false;
     }
 
@@ -454,6 +670,11 @@ class Products_model extends CI_Model
             return $q->row();
         }
         return false;
+    }
+
+    public function remove_image($id) {
+        $this->db->where('id', $id);
+        $this->db->update('products', ['image' => NULL]);
     }
 
     public function getProductComboItems($pid)
@@ -553,14 +774,26 @@ class Products_model extends CI_Model
         }
     }
 
-    public function getProductQuantity($product_id, $warehouse)
+    public function getProductQuantity($product_id, $warehouse_id)
+    {
+        $this->db->select_sum('quantity');
+        $this->db->where(['product_id' => $product_id, 'location_id' => $warehouse_id]);
+        $q = $this->db->get('sma_inventory_movements');
+
+        if ($q->num_rows() > 0) {
+            return $q->row_array();
+        }
+        return false;
+    }
+
+    /*public function getProductQuantity($product_id, $warehouse)
     {
         $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse], 1);
         if ($q->num_rows() > 0) {
             return $q->row_array();
         }
         return false;
-    }
+    }*/
 
     public function getProductsForPrinting($term, $limit = 5)
     {
@@ -657,9 +890,29 @@ class Products_model extends CI_Model
         return false;
     }
 
-    public function getPurchaseItems($purchase_id)
+    public function getPurchaseItems($purchase_id, $item_code = '')
     {
-        $q = $this->db->get_where('purchase_items', ['purchase_id' => $purchase_id]);
+        //$q = $this->db->get_where('purchase_items', ['purchase_id' => $purchase_id]);
+        // $this->db->where('purchase_id', $purchase_id);
+
+        // if (!empty($item_code)) {
+        //     $this->db->where('product_code', $item_code);
+        // }
+    
+        // $q = $this->db->get('purchase_items');
+
+        $this->db->select('purchase_items.*'); 
+        $this->db->from('purchase_items');
+        $this->db->join('products', 'products.id = purchase_items.product_id', 'inner');
+    
+        // Adding where clause for purchase_id
+        $this->db->where('purchase_items.purchase_id', $purchase_id);
+    
+        // Add a condition for item_code if it is not empty and check on the products table
+        if (!empty($item_code)) {
+            $this->db->where('products.item_code', $item_code);
+        }
+        $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -667,8 +920,7 @@ class Products_model extends CI_Model
             return $data;
         }
         return false;
-    }
-
+    } 
     public function getQASuggestions($term, $limit = 5)
     {
         $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name')
@@ -851,8 +1103,9 @@ class Products_model extends CI_Model
     }
 
     public function getUnitByCode($code)
-    {
+    { 
         $q = $this->db->get_where('units', ['code' => $code], 1);
+        //echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -967,14 +1220,20 @@ class Products_model extends CI_Model
     public function syncAdjustment($data = [])
     {
         if (!empty($data)) {
+            $avz_item_code = $this->sma->generateUUIDv4();
+
             $clause = ['product_id' => $data['product_id'], 'unit_cost' => $data['unit_cost'], 'sale_price' => $data['sale_price'], 'vat' => $data['vat'], 'batchno' => $data['batchno'], 'expiry' => $data['expiry'], 'option_id' => $data['option_id'], 'warehouse_id' => $data['warehouse_id'], 'status' => 'received'];
             $qty = $data['type'] == 'subtraction' ? 0 - $data['quantity'] : 0 + $data['quantity'];
-            $this->site->setAdjustmentPurchaseItem($clause, $qty);
+            $this->site->setAdjustmentPurchaseItem($clause, $qty, $avz_item_code);
 
             $this->site->syncProductQty($data['product_id'], $data['warehouse_id'], $data['batchno']);
             if ($data['option_id']) {
                 $this->site->syncVariantQty($data['option_id'], $data['warehouse_id'], $data['product_id']);
             }
+            $movement_type = $data['type'] == 'subtraction' ? 'adjustment_decrease': 'adjustment_increase';
+            $adjustment_id = isset($data['adjustment_id']) ? $data['adjustment_id'] : null;
+            $this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id'], $adjustment_id, $data['unit_cost'], $data['expiry'], $data['sale_price'], $data['unit_cost'], $avz_item_code);
+               
         }
     }
 
@@ -1022,6 +1281,16 @@ class Products_model extends CI_Model
     public function updateProduct($id, $data, $items, $warehouse_qty, $product_attributes, $photos, $update_variants)
     {
         if ($this->db->update('products', $data, ['id' => $id])) {
+            $cat_id_q = $this->db->get_where('categories', ['id' => $data['category_id']], 1);
+            $category_code = 0;
+            if ($cat_id_q->num_rows() > 0) {
+                 $row_cat = $cat_id_q->row();
+                 $category_code = $row_cat->category_code;
+                 $formatted_id = str_pad($id, 6, '0', STR_PAD_LEFT);
+                // Concatenate the category code and formatted ID
+                 $item_code = $category_code . $formatted_id;
+                 $this->db->update('sma_products', ['item_code' => $item_code], ['id' => $id]);
+            }
             if ($items) {
                 $this->db->delete('combo_items', ['product_id' => $id]);
                 foreach ($items as $item) {
@@ -1147,6 +1416,21 @@ class Products_model extends CI_Model
         if ($this->db->update('warehouses_products', $data, ['product_id' => $product_id, 'warehouse_id' => $warehouse_id])) {
             $this->site->syncProductQty($product_id, $warehouse_id);
             return true;
+        }
+        return false;
+    }
+
+    public function getProductAvzCode($product_id, $purchase_id)
+    {
+        $this->db->select('avz_item_code');
+        $this->db->from('purchase_items');
+        $this->db->where('purchase_id', $purchase_id);
+        $this->db->where('product_id', $product_id);
+        $this->db->limit(1); 
+        $q = $this->db->get();
+    
+        if ($q->num_rows() > 0) {
+            return $q->row()->avz_item_code;
         }
         return false;
     }

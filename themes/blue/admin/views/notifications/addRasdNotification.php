@@ -7,7 +7,7 @@
             <h4 class="modal-title" id="myModalLabel"><?php echo lang('add_notification'); ?></h4>
         </div>
         <?php $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-        echo admin_form_open('notifications/addRasdNotification', $attrib); ?>
+        echo admin_form_open_multipart('notifications/addRasdNotification', $attrib); ?>
         <div class="modal-body">
             <p><?= lang('enter_info'); ?></p>
             <div class="form-group">
@@ -23,6 +23,9 @@
                     <?php echo form_input('invoice_no', '', 'class="form-control" id="invoice_no" required="required"'); ?>
                 </div>
             </div>
+
+            <input id="csv_file_upload" type="file"  name="csv_file_upload" accept="*" />
+
         </div>
         <div class="modal-footer">
             <?php echo form_submit('add_notification', lang('add_notification'), 'class="btn btn-primary"'); ?>

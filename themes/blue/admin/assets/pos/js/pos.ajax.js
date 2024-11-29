@@ -175,8 +175,9 @@ $(document).ready(function () {
         });
     });
     $(document).on('click', '#updateOrderDiscount', function () {
-        var ds = $('#order_discount_input').val() ? $('#order_discount_input').val() : '0';
+        var ds = $('#order_discount_input').val() ? $('#order_discount_input').val()+'%' : '0';
         if (is_valid_discount(ds)) {
+
             $('#posdiscount').val(ds);
             localStorage.removeItem('posdiscount');
             localStorage.setItem('posdiscount', ds);
@@ -429,46 +430,7 @@ $(document).ready(function () {
     $(document).on('click', '.posdel', function () {
         var row = $(this).closest('tr');
         var item_id = row.attr('data-item-id');
-        if (protect_delete == 1) {
-            var boxd = bootbox.dialog({
-                title: "<i class='fa fa-key'></i> Pin Code",
-                message: '<input id="pos_pin" name="pos_pin" type="password" placeholder="Pin Code" class="form-control"> ',
-                buttons: {
-                    success: {
-                        label: "<i class='fa fa-tick'></i> OK",
-                        className: 'btn-success verify_pin',
-                        callback: function () {
-                            var pos_pin = md5($('#pos_pin').val());
-                            if (pos_pin == pos_settings.pin_code) {
-                                delete positems[item_id];
-                                checkPromoItem(item_id);
-                                // row.remove();
-                                display_item_id = 'update';
-                                if (positems.hasOwnProperty(item_id)) {
-                                } else if (checkPromoItem(item_id)) {
-                                    localStorage.setItem('positems', JSON.stringify(positems));
-                                    loadItems();
-                                }
-                            } else {
-                                bootbox.alert('Wrong Pin Code');
-                            }
-                        },
-                    },
-                },
-            });
-            boxd.on('shown.bs.modal', function () {
-                $('#pos_pin')
-                    .focus()
-                    .keypress(function (e) {
-                        if (e.keyCode == 13) {
-                            e.preventDefault();
-                            $('.verify_pin').trigger('click');
-                            return false;
-                        }
-                    });
-            });
-        } else {
-            delete positems[item_id];
+        delete positems[item_id];
             // row.remove();
             display_item_id = 'update';
             if (positems.hasOwnProperty(item_id)) {
@@ -476,7 +438,54 @@ $(document).ready(function () {
                 localStorage.setItem('positems', JSON.stringify(positems));
                 loadItems();
             }
-        }
+        // if (protect_delete == 1) {
+        //     var boxd = bootbox.dialog({
+        //         title: "<i class='fa fa-key'></i> Pin Code",
+        //         message: '<input id="pos_pin" name="pos_pin" type="password" placeholder="Pin Code" class="form-control"> ',
+        //         buttons: {
+        //             success: {
+        //                 label: "<i class='fa fa-tick'></i> OK",
+        //                 className: 'btn-success verify_pin',
+        //                 callback: function () {
+        //                     var pos_pin = md5($('#pos_pin').val());
+        //                     if (pos_pin == pos_settings.pin_code) {
+        //                         delete positems[item_id];
+        //                         checkPromoItem(item_id);
+        //                         // row.remove();
+        //                         display_item_id = 'update';
+        //                         if (positems.hasOwnProperty(item_id)) {
+        //                         } else if (checkPromoItem(item_id)) {
+        //                             localStorage.setItem('positems', JSON.stringify(positems));
+        //                             loadItems();
+        //                         }
+        //                     } else {
+        //                         bootbox.alert('Wrong Pin Code');
+        //                     }
+        //                 },
+        //             },
+        //         },
+        //     });
+        //     boxd.on('shown.bs.modal', function () {
+        //         $('#pos_pin')
+        //             .focus()
+        //             .keypress(function (e) {
+        //                 if (e.keyCode == 13) {
+        //                     e.preventDefault();
+        //                     $('.verify_pin').trigger('click');
+        //                     return false;
+        //                 }
+        //             });
+        //     });
+        // } else {
+        //     delete positems[item_id];
+        //     // row.remove();
+        //     display_item_id = 'update';
+        //     if (positems.hasOwnProperty(item_id)) {
+        //     } else if (checkPromoItem(item_id)) {
+        //         localStorage.setItem('positems', JSON.stringify(positems));
+        //         loadItems();
+        //     }
+        // }
         return false;
     });
 
@@ -1164,7 +1173,6 @@ function loadItems() {
         order_data = {};
         bill_data = {};
         total_vat = 0;
-
         $('#posTable tbody').empty();
         var time = new Date().getTime() / 1000;
         if (pos_settings.remote_printing != 1) {
@@ -1205,6 +1213,7 @@ function loadItems() {
             $('#bill-table').empty();
         }
         positems = JSON.parse(localStorage.getItem('positems'));
+        //console.log(positems);
         if (pos_settings.item_order == 1) {
             sortedItems = _.sortBy(positems, function (o) {
                 return [parseInt(o.category), parseInt(o.order)];
@@ -1276,8 +1285,9 @@ function loadItems() {
             } else {
                 item_discount = formatDecimal(ds);
             }
+            
             product_discount += formatDecimal(item_discount * item_qty);
-
+            
             unit_price = formatDecimal(unit_price - item_discount);
             var pr_tax = item.tax_rate;
             var pr_tax_val = 0,
@@ -1298,9 +1308,9 @@ function loadItems() {
                     }
                     product_tax += pr_tax_val * item_qty;
                 }
-            }
-            pr_tax_val = formatDecimal(pr_tax_val);
-            total_vat += pr_tax_val;
+            } 
+            pr_tax_val = formatDecimal(pr_tax_val); 
+            total_vat += pr_tax_val* item_qty; // befor was  total_vat += pr_tax_val; 
             //item_price = item_tax_method == 0 ? formatDecimal(unit_price - pr_tax_val, 4) : formatDecimal(unit_price);
             item_price = formatDecimal(unit_price);
             unit_price = formatDecimal(unit_price + item_discount, 4);
@@ -1418,6 +1428,14 @@ function loadItems() {
                 '">' +
                 formatMoney(parseFloat(item_price)) +
                 '</span></td>';
+
+                tr_html +=
+                '<td class="text-right"><span class="text-right vattax" id="vattax_' +
+                row_no +
+                '">' +
+                formatMoney(pr_tax_val) +
+                '</span></td>';
+
             tr_html +=
                 '<td>' +
                 (item.free
@@ -1446,7 +1464,17 @@ function loadItems() {
                 tr_html +=
                 '<td class="text-right"><span class="text-right item_expiry" id="item_expiry' +
                 row_no +
-                '">' +item_expiry+'</span></td>';
+                '">' +item_expiry+'</span><input name="item_expiry[]" type="hidden" value="' +
+                item_expiry +
+                '"><input name="batchno[]" type="hidden" value="' +
+                item.row.batchno +
+                '"><input name="item_unit_cost[]" type="hidden" value="' +
+                item.row.net_unit_cost +
+                '"><input name="real_unit_cost[]" type="hidden" value="' +
+                item.row.real_unit_cost +
+                '"><input name="avz_item_code[]" type="hidden" value="' +
+                item.row.avz_item_code +
+                '"></td>';
 
             tr_html +=
                 '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' +
@@ -1469,8 +1497,15 @@ function loadItems() {
             total += formatDecimal((parseFloat(item_price) + parseFloat(pr_tax_val)) * parseFloat(item_qty), 4);
             count += parseFloat(item_qty);
             an++;
-
-            if (item_type == 'standard' && item.options !== false) {
+            
+            var today = new Date();
+            var expiryDate = new Date(item_expiry);
+            if (expiryDate < today) {
+                //  alert(item_code + " - "+item_name + " Expired Please Remove from the list"); 
+                 $('#row_' + row_no).addClass('danger');
+            }
+            
+            if (item_type == 'standard' && item.options !== false && item.options.length > 0) {
                 $.each(item.options, function () {
                     if (this.id == item_option && base_quantity > this.quantity) {
                         $('#row_' + row_no).addClass('danger');
@@ -1581,18 +1616,19 @@ function loadItems() {
         if ((posdiscount = localStorage.getItem('posdiscount'))) {
             var ds = posdiscount;
             if (ds.indexOf('%') !== -1) {
-                var pds = ds.split('%');
+                var pds = ds.split('%'); 
                 if (!isNaN(pds[0])) {
-                    order_discount = formatDecimal(parseFloat((total * parseFloat(pds[0])) / 100), 4);
+                    order_discount = formatDecimal(parseFloat(((parseFloat(total) - parseFloat(total_vat)) * parseFloat(pds[0])) / 100), 4);
                 } else {
                     order_discount = parseFloat(ds);
                 }
             } else {
-                order_discount = parseFloat(ds);
+               // order_discount = parseFloat(ds);
+               order_discount = formatDecimal(parseFloat(((parseFloat(total) - parseFloat(total_vat)) * parseFloat(ds)) / 100), 4);
             }
             //total_discount += parseFloat(order_discount);
         }
-
+        
         // Order level tax calculations
         if (site.settings.tax2 != 0) {
             if ((postax2 = localStorage.getItem('postax2'))) {
@@ -1612,7 +1648,7 @@ function loadItems() {
         total = formatDecimal(total);
         product_tax = formatDecimal(product_tax);
         total_discount = formatDecimal(order_discount + product_discount);
-
+        
         $('#ttax2').text(formatMoney(total_vat));
         //localStorage.setItem('postax2', total_vat);
 
@@ -1772,8 +1808,12 @@ function add_invoice_item(item) {
         positems[item_id].row.qty = new_qty;
     } else {
         positems[item_id] = item;
+        positems[item_id].row.qty = 1;
     }
     display_item_id = item_id;
+    positems[item_id].row.base_quantity = positems[item_id].row.qty;
+    positems[item_id].row.price = positems[item_id].row.net_unit_sale;
+    positems[item_id].row.real_unit_price = positems[item_id].row.net_unit_sale;
     positems[item_id].order = new Date().getTime();
     localStorage.setItem('positems', JSON.stringify(positems));
     loadItems();
@@ -2125,7 +2165,7 @@ function check_add_item_val() {
         e.stopPropagation();
         if (e.keyCode == 13 || e.keyCode == 9) {
             e.preventDefault();
-            $(this).autocomplete('search');
+            //$(this).autocomplete('search');
         }
     });
 }

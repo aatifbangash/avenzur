@@ -57,10 +57,10 @@ class Customers extends MY_Controller
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
-                'dc' => 'D',
+                'dc' => 'C',
                 'ledger_id' => $customer->ledger_account,
                 'amount' => $payment_amount,
-                'narration' => ''
+                'narration' => 'Account Receivable'
             )
         );
 
@@ -79,7 +79,7 @@ class Customers extends MY_Controller
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
-                'dc' => 'C',
+                'dc' => 'D',
                 'ledger_id' => $ledger_account,
                 'amount' => $payment_amount,
                 'narration' => ''
@@ -630,6 +630,7 @@ class Customers extends MY_Controller
             $pg   = $this->site->getPriceGroupByID($this->input->post('price_group'));
             $data = [
                 'name'                => $this->input->post('name'),
+                'name_ar'                => $this->input->post('name_ar'),
                 'email'               => $this->input->post('email'),
                 'group_id'            => '3',
                 'group_name'          => 'customer',
@@ -638,6 +639,7 @@ class Customers extends MY_Controller
                 'price_group_id'      => $this->input->post('price_group') ? $this->input->post('price_group') : null,
                 'price_group_name'    => $this->input->post('price_group') ? $pg->name : null,
                 'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
+                'payment_term'        => $this->input->post('payment_term') ? $this->input->post('payment_term') : '0', 
                 'company'             => $this->input->post('company'),
                 'address'             => $this->input->post('address'),
                 'vat_no'              => $this->input->post('vat_no'),
@@ -1005,6 +1007,7 @@ class Customers extends MY_Controller
             $pg   = $this->site->getPriceGroupByID($this->input->post('price_group'));
             $data = [
                 'name'                => $this->input->post('name'),
+                'name_ar'                => $this->input->post('name_ar'),
                 'email'               => $this->input->post('email'),
                 'group_id'            => '3',
                 'group_name'          => 'customer',
@@ -1013,6 +1016,7 @@ class Customers extends MY_Controller
                 'price_group_id'      => $this->input->post('price_group') ? $this->input->post('price_group') : null,
                 'price_group_name'    => $this->input->post('price_group') ? $pg->name : null,
                 'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
+                'payment_term'        => $this->input->post('payment_term') ? $this->input->post('payment_term') : '0',
                 'company'             => $this->input->post('company'),
                 'address'             => $this->input->post('address'),
                 'vat_no'              => $this->input->post('vat_no'),
@@ -1240,27 +1244,31 @@ class Customers extends MY_Controller
                     $customer = [
                         'company'             => isset($value[0]) ? trim($value[0]) : '',
                         'name'                => isset($value[1]) ? trim($value[1]) : '',
-                        'email'               => isset($value[2]) ? trim($value[2]) : '',
-                        'phone'               => isset($value[3]) ? trim($value[3]) : '',
-                        'address'             => isset($value[4]) ? trim($value[4]) : '',
-                        'city'                => isset($value[5]) ? trim($value[5]) : '',
-                        'state'               => isset($value[6]) ? trim($value[6]) : '',
-                        'postal_code'         => isset($value[7]) ? trim($value[7]) : '',
-                        'country'             => isset($value[8]) ? trim($value[8]) : '',
-                        'vat_no'              => isset($value[9]) ? trim($value[9]) : '',
-                        'gst_no'              => isset($value[10]) ? trim($value[10]) : '',
-                        'cf1'                 => isset($value[11]) ? trim($value[11]) : '',
-                        'cf2'                 => isset($value[12]) ? trim($value[12]) : '',
-                        'cf3'                 => isset($value[13]) ? trim($value[13]) : '',
-                        'cf4'                 => isset($value[14]) ? trim($value[14]) : '',
-                        'cf5'                 => isset($value[15]) ? trim($value[15]) : '',
-                        'cf6'                 => isset($value[16]) ? trim($value[16]) : '',
+                        'name_ar'             => isset($value[2]) ? trim($value[2]) : '',
+                        'email'               => isset($value[3]) ? trim($value[3]) : '',
+                        'phone'               => isset($value[4]) ? trim($value[4]) : '',
+                        'address'             => isset($value[5]) ? trim($value[5]) : '',
+                        'city'                => isset($value[6]) ? trim($value[6]) : '',
+                        'state'               => isset($value[7]) ? trim($value[7]) : '',
+                        'postal_code'         => isset($value[8]) ? trim($value[8]) : '',
+                        'country'             => isset($value[9]) ? trim($value[9]) : '',
+                        'vat_no'              => isset($value[10]) ? trim($value[10]) : '',
+                        'gst_no'              => isset($value[11]) ? trim($value[11]) : '',
+                        'cf1'                 => isset($value[12]) ? trim($value[12]) : '',
+                        'cf2'                 => isset($value[13]) ? trim($value[13]) : '',
+                        'cf3'                 => isset($value[14]) ? trim($value[14]) : '',
+                        'cf4'                 => isset($value[15]) ? trim($value[15]) : '',
+                        'cf5'                 => isset($value[16]) ? trim($value[16]) : '',
+                        'cf6'                 => isset($value[17]) ? trim($value[17]) : '',
+                        'payment_term'        => isset($value[18]) ? trim($value[18]) : '',
+                        'credit_limit'        => isset($value[19]) ? trim($value[19]) : '', 
                         'group_id'            => 3,
                         'group_name'          => 'customer',
                         'customer_group_id'   => (!empty($customer_group)) ? $customer_group->id : null,
                         'customer_group_name' => (!empty($customer_group)) ? $customer_group->name : null,
                         'price_group_id'      => (!empty($price_group)) ? $price_group->id : null,
                         'price_group_name'    => (!empty($price_group)) ? $price_group->name : null,
+                        'sequence_code'       => $this->sequenceCode->generate('CUS', 5)
                     ];
                     if (empty($customer['company']) || empty($customer['name']) || empty($customer['email'])) {
                         $this->session->set_flashdata('error', lang('company') . ', ' . lang('name') . ', ' . lang('email') . ' ' . lang('are_required') . ' (' . lang('line_no') . ' ' . $rw . ')');

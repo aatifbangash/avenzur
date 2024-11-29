@@ -118,6 +118,19 @@
         });
     });
 
+    $(document).ready(function () {
+        function openModalForLastInsertedId(lastInsertedId) {
+
+            $('#myModal').modal({
+                remote: site.base_url + 'returns/view/' + lastInsertedId,
+            });
+            $('#myModal').modal('show');
+        }
+        var lastInsertedId = '<?= $lastInsertedId; ?>';
+        if (lastInsertedId) {
+            openModalForLastInsertedId(lastInsertedId);
+        }
+    });
 </script>
 
 <?php if ($Owner || ($GP && $GP['bulk_actions'])) {

@@ -23,6 +23,14 @@ class Entries extends MY_Controller
     
 	public function index() {
 
+		$this->load->library('pagination'); 
+		$config['base_url'] = admin_url('entries'); 
+		$config['total_rows'] = $this->count_entries();
+		$config['per_page'] = 100; 
+		$config['reuse_query_string'] = TRUE;
+		$this->pagination->initialize($config); 
+        $this->data['pagination_links']=  $this->pagination->create_links();  
+		
 		$eid         = $this->input->get('eid');
         $tran_number   = $this->input->get('tran_number');
 		$start_date     = $this->input->get('start_date');
@@ -32,14 +40,6 @@ class Entries extends MY_Controller
 			$start_date = $this->sma->fld($start_date);
 			$end_date   = $this->sma->fld($end_date);
 		}
-		
-		// $conditions = array(); // conditions if any
-		// if ($conditions)
-		// {
-		// 	// if any conditions apply where clause
-		// 	$this->db->where($conditions);
-		// }
-
 		if ($start_date && $start_date != "0000-00-00") {
             $this->db->where('date >=', $start_date);       
 
@@ -47,22 +47,17 @@ class Entries extends MY_Controller
                 $this->db->where('date <=', $end_date);
             }
         }
-
-
 		if(!empty($eid)){
 			$this->db->where("id LIKE '%$eid%'");	
 		}
-
 		if(!empty($tran_number)){
 			$this->db->where("number LIKE '%$tran_number%'");	
 		}
-
 		// select all entries
-		$query = $this->db->get('sma_accounts_entries');
-
-		
-
-
+		// 	$query = $this->db->get('sma_accounts_entries');
+		$page = ($this->uri->segment(3)) ? $this->uri->segment(3) : 0;
+		$query = $this->db->limit($config['per_page'], $page)->get('accounts_entries');
+		 
 		// pass an array of all entries to view
 		$this->data['entries'] = $query->result_array();
 		
@@ -70,6 +65,42 @@ class Entries extends MY_Controller
 		$bc  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('Entries'), 'page' => lang('Entries')], ['link' => '#', 'page' => lang('Entries')]];
         $meta = ['page_title' => lang('Entries'), 'bc' => $bc];
         $this->page_construct('accounts/entries_index', $meta, $this->data);
+	}
+
+	public function count_entries(){
+
+		$eid         = $this->input->get('eid');
+        $tran_number   = $this->input->get('tran_number');
+		$start_date     = $this->input->get('start_date');
+        $end_date     = $this->input->get('end_date'); 
+		
+		$this->db->select(' COUNT(id) as total_record');
+		$this->db->from('sma_accounts_entries');  
+
+		if ($start_date) {
+			$start_date = $this->sma->fld($start_date);
+			$end_date   = $this->sma->fld($end_date);
+		}
+		if ($start_date && $start_date != "0000-00-00") {
+            $this->db->where('date >=', $start_date);       
+
+            if ($end_date  && $end_date != "0000-00-00") {
+                $this->db->where('date <=', $end_date);
+            }
+        }
+		if(!empty($eid)){
+			$this->db->where("id LIKE '%$eid%'");	
+		}
+		if(!empty($tran_number)){
+			$this->db->where("number LIKE '%$tran_number%'");	
+		}
+
+		$query = $this->db->get();
+		 // echo $this->db->last_query(); exit;
+		$row = $query->row();
+		$count = $row->total_record;
+		return $count;   
+
 	}
 
 	public function ledgerList($entrytypeLabel, $searchTerm = null, $selectedLedgers = array()) {
@@ -1236,31 +1267,55 @@ class Entries extends MY_Controller
 		// pass entrytype to view
 		$this->data['entrytype'] = $entrytype;
 
-		/* Check if valid id */
-		if (empty($id))
-		{
-			// set error alert
-			$this->session->set_flashdata('error', lang('entries_cntrler_edit_entry_not_found_error'));
-			// redirect to index page
-			admin_redirect('accounts/entries_index');
+		$pid = $this->input->get('pid') ? $this->input->get('pid') : null;
+		$sid = $this->input->get('sid') ? $this->input->get('sid') : null;
+		$rid = $this->input->get('rid') ? $this->input->get('rid') : null;
+		$rsid = $this->input->get('rsid') ? $this->input->get('rsid') : null;
+		$tid = $this->input->get('tid') ? $this->input->get('tid') : null; 
+		if ($id=== null && $pid === null && $sid === null && $rid === null && $rsid === null && $tid === null) {
+			// Redirect if all variables are null // set error alert 
+			$this->session->set_flashdata('error', lang('entries_cntrler_edit_entry_not_found_error')); 
+			admin_redirect('accounts/entries_index');// redirect to index page
+		} 
+		if(!empty($id)){
+			$this->db->where('id',$id); 
 		}
-
-		// select entry where id equals $id and store to array
-		$entry = $this->db->where('id',$id)->get('sma_accounts_entries')->row_array();
-
+		if(!empty($pid)){
+			$this->db->where('pid',$pid); 
+		}
+		if(!empty($sid)){
+			$this->db->where('sid',$sid); 
+		}
+		if(!empty($rid)){
+			$this->db->where('rid',$rid); 
+		}
+		if(!empty($rsid)){
+			$this->db->where('rsid',$rsid); 
+		}
+		if(!empty($tid)){
+			$this->db->where('tid',$tid); 
+		} 
+		//$entry = $this->db->where('id',$id)->get('sma_accounts_entries')->row_array();
+		 $entry = $this->db->get('sma_accounts_entries')->row_array(); 
+        
 		/* if entry [NOT] found */
 		if (!$entry)
-		{
-			// set error alert
-			$this->session->set_flashdata('error', lang('entries_cntrler_edit_entry_not_found_error'));
-			// redirect to index page
-			admin_redirect('accounts/entries_index');
+		{  
+			
+			$this->session->set_flashdata('error', lang('Error! Journal entry not found'));
+			$referrer = $this->input->server('HTTP_REFERER', TRUE);
+			if (!empty($referrer)) {
+				redirect($referrer);
+			} else { 
+				  redirect('admin/entries');
+				//admin_redirect('accounts/entries_index'); 
+			}
 		}
 
 		
 		/* Initial data */
 		$curEntryitems = array(); // initilize current entry items array
-		$this->db->where('entry_id', $id); // select where entry_id equals $id
+		$this->db->where('entry_id', $entry['id']); // select where entry_id equals $id
 
 		// store selected data to $curEntryitemsData
 		$curEntryitemsData = $this->db->get('sma_accounts_entryitems')->result_array();
@@ -1278,7 +1333,7 @@ class Entries extends MY_Controller
 					'dc' => $data['dc'],
 					'ledger_id' => $data['ledger_id'],
 					'ledger_name' => $this->ledger_model->getName($data['ledger_id']),
-					'dr_amount' => $this->sma->formatDecimal($data['amount']),
+					'dr_amount' => $data['amount'],
 					'cr_amount' => '',
 					'narration' => $data['narration']
 				);
@@ -1291,7 +1346,7 @@ class Entries extends MY_Controller
 					'ledger_id' => $data['ledger_id'],
 					'ledger_name' => $this->ledger_model->getName($data['ledger_id']),
 					'dr_amount' => '',
-					'cr_amount' => $this->sma->formatDecimal($data['amount']),
+					'cr_amount' => $data['amount'],
 					'narration' => $data['narration']
 
 				);
@@ -1317,12 +1372,31 @@ class Entries extends MY_Controller
 			$this->data['transferAttachments']     = $this->site->getAttachments($entry['tid'], 'transfer');
 		}
 
+		if($entry['transaction_type']=='purchaseorder' and $entry['pid'] > 0){ 
+			$purchase = $this->db->where('id',$entry['pid'])->get('sma_purchases')->row_array();
+			$this->data['purchase'] = $purchase; 
+			// $this->data['supplier'] = $this->db->where('id',$entry['supplier_id'])->get('sma_companies')->row_array(); 
+			$this->data['supplier'] = $this->db->where('id',$purchase['supplier_id'])->get('sma_companies')->row_array(); 
+						  
+		}
+		if($entry['sid']> 0){ 
+			$sales = $this->db->where('id',$entry['sid'])->get('sma_sales')->row_array();
+			$this->data['sales']= $sales ; 
+			$this->data['customer'] = $this->db->where('id',$sales['customer_id'])->get('sma_companies')->row_array();
+		}
+
+		if($entry['tid']> 0){ 
+			$transfer = $this->db->where('id',$entry['tid'])->get('sma_transfers')->row_array();
+			$this->data['transfer']= $transfer ; 
+			 
+		} 
+
 		$this->data['curEntryitems'] = $curEntryitems; // pass current entry items to view
 		$this->data['allTags'] = $this->db->get('sma_accounts_tags')->result_array(); // fetch all tags and pass to view
 		$this->data['entry'] = $entry; // pass entry to view
 		
-		$this->data['dr_amount_total'] = $this->sma->formatDecimal($dr_amount_total);
-		$this->data['cr_amount_total'] = $this->sma->formatDecimal($cr_amount_total);
+		$this->data['dr_amount_total'] = $dr_amount_total;
+		$this->data['cr_amount_total'] = $cr_amount_total;
 		// render page
 		$bc  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('entries'), 'page' => lang('Entries')], ['link' => '#', 'page' => lang('Entries')]];
         $meta = ['page_title' => lang('Accounts'), 'bc' => $bc];

@@ -36,7 +36,7 @@
             "aoColumns": [{
                 "bSortable": false,
                 "mRender": checkbox
-            }, {"mRender": fld}, null, null, null, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": balance}, {"mRender": row_status}, {"mRender": pay_status}, {"bSortable": false}],
+            }, {"mRender": fld}, null, null, null, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": balance}, {"mRender": row_status}, {"mRender": pay_status}, {"bSortable": false}, {"bSortable": false}],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0, paid = 0, bal = 0;
                 for (var i = 0; i < aaData.length; i++) {
@@ -96,6 +96,31 @@
         });
     });
 
+    function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'p',
+            unit: 'pt',
+            format: 'a4'
+        }); 
+        // add image - logo
+        // Adjust these to manage left and top margins
+        var elementHTML = document.querySelector('#POSData');
+        var div = document.getElementById("POSData");
+        var width = div.offsetWidth; 
+
+        doc.html(elementHTML, {
+            callback: function (doc) {
+                doc.save('pos-document.pdf');
+            },
+            margin: [10, 10, 10, 10],
+            x: 0, // Left margin
+            y: 0, // Top margin
+            width: 500, // Adjust width to manage the right margin
+            windowWidth: 775
+        });
+    } 
+
 </script>
 
 <?php if ($Owner || ($GP && $GP['bulk_actions'])) {
@@ -105,16 +130,20 @@
     <div class="box-header">
         <h2 class="blue"><i
                 class="fa-fw fa fa-barcode"></i><?= lang('pos_sales') . ' (' . ($warehouse_id ? $warehouse->name : lang('all_warehouses')) . ')'; ?>
-        </h2>
+            
+            </h2>
 
         <div class="box-icon">
+        
             <ul class="btn-tasks">
+            <button type="button" class="btn btn-primary btn-sm mt-2 " onclick="generatePDF()" style="margin-top:5px; margin-right:5px; " > <?= lang('Generate PDF') ?></button> 
                 <li class="dropdown">
+                
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-tasks tip"  data-placement="left" title="<?= lang('actions') ?>"></i></a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
                         <li><a href="<?= admin_url('pos') ?>"><i class="fa fa-plus-circle"></i> <?= lang('add_sale') ?></a></li>
                         <li><a href="#" id="excel" data-action="export_excel"><i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?></a></li>
-                        <li class="divider"></li>
+                        <li class="divider"></li> 
                         <li><a href="#" class="bpo" title="<b><?= $this->lang->line('delete_sales') ?></b>" data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>" data-html="true" data-placement="left"><i class="fa fa-trash-o"></i> <?= lang('delete_sales') ?></a></li>
                     </ul>
                 </li>
@@ -141,7 +170,7 @@
             <div class="col-lg-12">
                 <p class="introtext"><?= lang('list_results'); ?></p>
 
-                <div class="table-responsive">
+                <div class="table-responsive" id="pdfcontent">
                     <table id="POSData" class="table table-bordered table-hover table-striped">
                         <thead>
                         <tr>
@@ -158,6 +187,7 @@
                             <th><?= lang('balance'); ?></th>
                             <th><?= lang('sale_status'); ?></th>
                             <th><?= lang('payment_status'); ?></th>
+                            <th><?= lang('pickup'); ?></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
                         </thead>
@@ -178,6 +208,7 @@
                             <th><?= lang('grand_total'); ?></th>
                             <th><?= lang('paid'); ?></th>
                             <th><?= lang('balance'); ?></th>
+                            <th class="defaul-color"></th>
                             <th class="defaul-color"></th>
                             <th class="defaul-color"></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>

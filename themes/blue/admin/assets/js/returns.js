@@ -846,11 +846,11 @@ $(document).ready(function (e) {
             }
             var new_qty = parseFloat($(this).val()),
                 item_id = row.attr('data-item-id');
-            reitems[item_id].row.base_quantity = new_qty;
+            //reitems[item_id].row.base_quantity = new_qty;
             if (reitems[item_id].row.unit != reitems[item_id].row.base_unit) {
                 $.each(reitems[item_id].units, function () {
                     if (this.id == reitems[item_id].row.unit) {
-                        reitems[item_id].row.base_quantity = unitToBaseQty(new_qty, this);
+                        //reitems[item_id].row.base_quantity = unitToBaseQty(new_qty, this);
                     }
                 });
             }
@@ -874,10 +874,10 @@ $(document).ready(function (e) {
                 bootbox.alert(lang.unexpected_value);
                 return;
             }
-
+            
             var new_price = parseFloat($(this).val()),
                 item_id = row.attr('data-item-id');
-            reitems[item_id].row.base_unit_price = new_price;
+            reitems[item_id].row.real_unit_sale = new_price;
             localStorage.setItem('reitems', JSON.stringify(reitems));
             loadItems();
         });
@@ -994,7 +994,7 @@ function loadItems() {
                       return [parseInt(o.order)];
                   })
                 : reitems;
-        $('#add_sale, #edit_sale').attr('disabled', false);
+        $("#add_return, #edit_return").attr("disabled", false);
         $.each(sortedItems, function () {
             var item = this;
             var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
@@ -1017,7 +1017,7 @@ function loadItems() {
                 combo_items = item.combo_items,
                 item_price = item.row.price,
                 item_cost = item.row.cost_price,
-                item_sale_price = item.row.price,
+                item_sale_price = item.row.real_unit_sale,
                 item_qty = item.row.qty,
                 item_aqty = item.row.quantity,
                 item_tax_method = item.row.tax_method,
@@ -1025,17 +1025,19 @@ function loadItems() {
                 item_discount = 0,
                 item_option = item.row.option,
                 item_code = item.row.code,
+                avz_code = item.row.avz_item_code,
                 item_serial = item.row.serial,
                 item_expiry = item.row.expiry,
                 item_batchno = item.row.batch_no,
                 item_serialno = item.row.serial_number,
-                item_bonus = 0;//item.row.bonus,
+                item_bonus = item.row.bonus,
                 item_dis1 = item.row.discount1,
                 item_dis2 = item.row.discount2,
                 item_batchQuantity = item.row.batchQuantity,
                 item_name = item.row.name.replace(/"/g, '&#034;').replace(/'/g, '&#039;');
             var product_unit = item.row.unit,
-                base_quantity = item.row.base_quantity;
+                base_quantity = item.row.base_quantity,
+                item_base_quantity = item.row.base_quantity;
 
              var cost_price  = item.row.net_cost;  
              var batch_no    = item.row.batch_no;
@@ -1043,7 +1045,6 @@ function loadItems() {
              var expiry       = item_expiry_date;//item.row.expiry;
              var discount1       = item.row.discount1;
              var discount2       = item.row.discount2;
-
 
             var unit_price = item.row.real_unit_price;
             if (item.units && item.row.fup != 1 && product_unit != item.row.base_unit) {
@@ -1125,7 +1126,7 @@ function loadItems() {
             var main_net = 0.0;
 
             var total_before_dis_vat = (parseFloat(item_sale_price)) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty); 
-
+            
             dis1_a = total_before_dis_vat * parseFloat((item_dis1 / 100));
             total_after_dis1 =  total_before_dis_vat - dis1_a;
             dis2_a = total_after_dis1 *  parseFloat((item_dis2/100));
@@ -1134,13 +1135,13 @@ function loadItems() {
             net_price_a = vat_15_a + total_after_dis2;
 
             var total_purchases = (parseFloat(item_cost)) * parseFloat(item_qty);
-            var total_sales = (parseFloat(item_sale_price)) * (parseFloat(item_qty) + parseFloat(item_bonus));
+            var total_sales = (parseFloat(item_sale_price)) * (parseFloat(item_qty));
             //console.log(item_qty+' -- '+item_bonus+' -- '+item_sale_price+' -- '+total_sales);
             total_after_dis1 = total_sales * parseFloat((item_dis1 / 100));
             total_after_dis2 = (total_sales - total_after_dis1) * parseFloat((item_dis2 / 100));
             //main_net = net_price_a;// + net_price_b;
             main_net = total_sales - (total_after_dis1 + total_after_dis2);
-            var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus);
+            var new_unit_cost = parseFloat(main_net) / parseFloat(parseFloat(item_qty) + parseFloat(item_bonus));
 
             var row_no = item.id;
             var newTr = $('<tr id="row_' + row_no + '" class="row_' + item_id + '" data-item-id="' + item_id + '"></tr>');
@@ -1149,13 +1150,17 @@ function loadItems() {
                 product_id +
                 '"><input name="product_type[]" type="hidden" class="rtype" value="' +
                 item_type +
-                '"><input name="product_code[]" type="hidden" class="rcode" value="' +
+                '"><input name="avz_code[]" type="hidden" class="avzcode" value="' +
+				avz_code +
+				'"><input name="product_code[]" type="hidden" class="rcode" value="' +
                 item_code +
                 '"><input name="product_name[]" type="hidden" class="rname" value="' +
                 item_name +
                 '"><input name="product_option[]" type="hidden" class="roption" value="' +
                 item_option +
-                '"><span class="sname" id="name_' +
+                '"><input name="main_net[]" type="hidden" class="main_net" value="' +
+				main_net +
+				'"><span class="sname" id="name_' +
                 row_no +
                 '">' +
                 item_code +
@@ -1168,25 +1173,11 @@ function loadItems() {
                 item_id +
                 '" title="Edit" style="cursor:pointer;"></i></td>';
 
-                /*tr_html +=
-                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="net_sale_price[]" type="text" id="net_sale_price_' +
-                row_no +
-                '" value="' +
-                item_price +
-                '"></td>';
-
-                tr_html +=
-                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="cost_price[]" type="text" id="cost_price_' +
-                row_no +
-                '" value="' +
-                cost_price +
-                '"></td>';*/
-
                 tr_html +=
                     '<td class="text-right"><input class="rucost" name="unit_price[]" type="hidden" value="' +
-                    unit_price +
+                    item_sale_price +
                     '"><input class="form-control realucost" name="real_unit_price[]" type="hidden" value="' +
-                    item.row.real_unit_price +
+                    item_sale_price +
                     '"><input class="form-control input-sm text-center rprice" type="text" name="net_price[]" id="cost_' +
                     row_no +
                     '" value="' +
@@ -1197,7 +1188,7 @@ function loadItems() {
                     '<input id="rreturn_' +
                     row_no +
                     '" class="form-control rcost text-center" name="net_cost[]" type="hidden" value="' +
-                    formatDecimal(item.row.batchPurchaseCost, 2) +
+                    formatDecimal(item.row.net_unit_cost, 2) +
                     '" data-id="' +
                     row_no +
                     '" data-item="' +
@@ -1206,16 +1197,29 @@ function loadItems() {
                     row_no +
                     '"></td>';
 
-                tr_html +=
-                    '<td><input class="form-control rserialno" name="serial_no[]" type="text" value="' +
-                    item_serialno +
+                tr_html += 
+                    '<input id="rceturn_' +
+                    row_no +
+                    '" class="form-control rcost text-center" name="real_cost[]" type="hidden" value="' +
+                    formatDecimal(item.row.real_unit_cost, 2) +
                     '" data-id="' +
                     row_no +
                     '" data-item="' +
                     item_id +
-                    '" id="serialno_' +
+                    '" id="rreturn_' +
                     row_no +
                     '"></td>';
+
+                //tr_html +=
+                //    '<td><input class="form-control rserialno" name="serial_no[]" type="text" value="' +
+                //    item_serialno +
+                //    '" data-id="' +
+                //    row_no +
+                //    '" data-item="' +
+                //    item_id +
+                //    '" id="serialno_' +
+                //    row_no +
+                //    '"></td>';
 
                 // tr_html +=
                 // '<td class="text-right"><input class="form-control input-sm text-right rbatchno" name="batch_no[]" type="text" id="batch_no_' +
@@ -1224,19 +1228,16 @@ function loadItems() {
                 // batch_no +
                 // '"></td>';
 
-                var batchesOptions = '<option value="" data-batchExpiry="null" data-batchQty="0"  data-batchpurchasecost="0">--</option>';
-                if (item.batches !== false) {
-                    $.each(item.batches, function () {
-                        batchSelected = "";
-                        if (this.batchno == item_batchno) {
-                            batchSelected = "selected";
-                        }
-                        batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'"  data-batchpurchasecost="'+this.purchase_cost+'" value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
-                    });
-                }
-
-                tr_html += '<td><select class="form-control rbatchno" name="batch_no[]" id="batch_no_' + row_no +'">'+batchesOptions+'</select></td>';
-
+                tr_html +=
+                '<td><input class="form-control date rbatchno" name="batch_no[]" type="text" value="' +
+                item_batchno +
+                '" data-id="' +
+                row_no +
+                '" data-item="' +
+                item_id +
+                '" id="batch_no_' +
+                row_no +
+                '"></td>';
 
                 tr_html +=
                 '<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="' +
@@ -1248,21 +1249,6 @@ function loadItems() {
                 '" id="expiry_' +
                 row_no +
                 '"></td>';
-
-                
-
-
-            // if (site.settings.product_serial == 1) {
-            //     tr_html +=
-            //         '<td class="text-right"><input class="form-control input-sm rserial" name="serial[]" type="text" id="serial_' +
-            //         row_no +
-            //         '" value="' +
-            //         item_serial +
-            //         '"></td>';
-            // }
-
-
-
          
 
 
@@ -1281,14 +1267,16 @@ function loadItems() {
                 product_unit +
                 '"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' +
                 base_quantity +
-                '"></td>';
+                '"><span style="position:absolute;font-size:10px;margin-top:5px;" class="batchQuantity">' +
+				item_base_quantity +
+				"</span></td>";
 
-                /*tr_html +=
+                tr_html +=
                 '<td class="text-right"><input class="form-control input-sm text-right rbonus" name="bonus[]" type="text" id="bonus_' +
                 row_no +
                 '" value="' +
                 bonus +
-                '"></td>';*/
+                '"></td>';
 
                
                 /*tr_html +=
@@ -1460,29 +1448,17 @@ function loadItems() {
 
             count += parseFloat(item_qty);
             an++;
-        });
 
-        // var col = 2;
-        // if (site.settings.product_serial == 1) {
-        //     col++;
-        // }
-        // var tfoot =
-        //     '<tr id="tfoot" class="tfoot active"><th colspan="' +
-        //     col +
-        //     '">Total</th><th class="text-center">' +
-        //     formatQty(parseFloat(count) - 1) +
-        //     '</th>';
-        // if ((site.settings.product_discount == 1 && allow_discount == 1) || product_discount) {
-        //     tfoot += '<th class="text-right">' + formatMoney(product_discount) + '</th>';
-        // }
-        // if (site.settings.tax1 == 1) {
-        //     tfoot += '<th class="text-right">' + formatMoney(product_tax) + '</th>';
-        // }
-        // tfoot +=
-        //     '<th class="text-right">' +
-        //     formatMoney(total) +
-        //     '</th><th class="text-center"><i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i></th></tr>';
-        // $('#reTable tfoot').html(tfoot);
+            // Thi will override all the above checks
+            if (
+                parseFloat(parseFloat(item_qty) + parseFloat(item_bonus)) > parseFloat(base_quantity)
+            ) {
+                $("#row_" + row_no).addClass("danger");
+                if (site.settings.overselling != 1) {
+                    $("#add_return, #edit_return").attr("disabled", true);
+                }
+            }
+        });
 
         var col = 7;
         if (site.settings.product_serial == 1) {
@@ -1577,7 +1553,12 @@ function add_return_item(item) {
         reitems[item_id].row.qty = new_qty;
     } else {
         reitems[item_id] = item;
+        reitems[item_id].row.base_quantity = reitems[item_id].row.qty;
+        reitems[item_id].row.discount1 = 0;
+        reitems[item_id].row.discount2 = 0;
     }
+
+    reitems[item_id].row.bonus = reitems[item_id].row.bonus ? reitems[item_id].row.bonus : 0;
     reitems[item_id].order = new Date().getTime();
     localStorage.setItem('reitems', JSON.stringify(reitems));
     loadItems();

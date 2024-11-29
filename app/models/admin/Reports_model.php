@@ -7,6 +7,8 @@ class Reports_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+
+        $this->load->admin_model('companies_model');
     }
 
     public function getCompanyLedgers()
@@ -222,70 +224,383 @@ class Reports_model extends CI_Model
         return $data_res;
     }
 
+    public function getUserStats($date){
+        $response = array();
+        $dateObj = DateTime::createFromFormat('d/m/Y', $date);
+        if ($dateObj) {
+            $date = $dateObj->format('Y-m-d');
+        } else {
+            // Handle error if the date format is incorrect
+            return array(); // or some error message
+        }
+        $start_date = $date.' 00:00:00';
+        $end_date = $date.' 23:59:59';
 
-    public function getCustomerAging($duration)
+        // Adjust the time to account for the 3-hour difference
+        $start_date = date('Y-m-d H:i:s', strtotime($start_date) - 3 * 3600);
+        $end_date = date('Y-m-d H:i:s', strtotime($end_date) - 3 * 3600);
+
+        $data_res = array();
+        $this->db
+            ->select('Count(DISTINCT landing_url) as page_views, location, is_bot, COUNT(DISTINCT ip_address) as unique_users, COUNT(*) as impressions, user_agent')
+            ->from('sma_user_logs')
+            ->where('is_bot', 0)
+            ->where('user_agent NOT LIKE ', 'bot')
+            ->where('access_time >=', $start_date)
+            ->where('access_time <=', $end_date)
+            ->group_by('location')
+            ->order_by('unique_users', 'DESC');
+        $q = $this->db->get();
+        //echo $this->db->last_query();exit;
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+        //echo '<pre>';print_r($data_res);exit;
+
+        $response['user_stats'] = $data_res;
+
+        // Social Media Campaigns 
+
+        /*$this->db
+            ->select("
+                SUM(CASE WHEN landing_url LIKE '%fbclid%' THEN 1 ELSE 0 END) AS facebook_traffic,
+                SUM(CASE WHEN landing_url LIKE '%utm_source=fb%' THEN 1 ELSE 0 END) AS facebook_click,
+                SUM(CASE WHEN landing_url LIKE '%snapchat%' THEN 1 ELSE 0 END) AS snapchat_traffic,
+                SUM(CASE WHEN landing_url LIKE '%wbraid%' THEN 1 ELSE 0 END) AS google_video_360_ad,
+                SUM(CASE WHEN landing_url LIKE '%gbraid%' THEN 1 ELSE 0 END) AS google_ad_campaign,
+                SUM(CASE WHEN landing_url LIKE '%gclid%' THEN 1 ELSE 0 END) AS google_click,
+                SUM(CASE WHEN 
+                    landing_url NOT LIKE '%fbclid%' AND
+                    landing_url NOT LIKE '%utm_source=fb%' AND
+                    landing_url NOT LIKE '%snapchat%' AND
+                    landing_url NOT LIKE '%wbraid%' AND
+                    landing_url NOT LIKE '%gbraid%' AND
+                    landing_url NOT LIKE '%gclid%' 
+                THEN 1 ELSE 0 END) AS other_traffic
+            ")*/
+            $this->db
+            ->select("
+                SUM(CASE WHEN landing_url LIKE '%fbclid%' THEN 1 ELSE 0 END) AS facebook_traffic,
+                SUM(CASE WHEN landing_url LIKE '%utm_source=fb%' THEN 1 ELSE 0 END) AS facebook_click,
+                SUM(CASE WHEN landing_url LIKE '%snapchat%' THEN 1 ELSE 0 END) AS snapchat_traffic,
+                SUM(CASE WHEN landing_url LIKE '%wbraid%' THEN 1 ELSE 0 END) AS google_video_360_ad,
+                SUM(CASE WHEN landing_url LIKE '%gbraid%' THEN 1 ELSE 0 END) AS google_ad_campaign,
+                SUM(CASE WHEN landing_url LIKE '%gclid%' THEN 1 ELSE 0 END) AS google_click
+            ")
+            ->from('sma_user_logs')
+            ->where('is_bot', 0)
+            ->where('user_agent NOT LIKE ', 'bot')
+            ->where('access_time >=', $start_date)
+            ->where('access_time <=', $end_date);
+        
+        $q = $this->db->get();
+        $data_res = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        $response['social_stats'] = $data_res[0];
+        //print_r($response['social_stats']);exit;
+        // Prepare the SQL query
+        $sql = "
+        SELECT
+        (SELECT COUNT(*) FROM sma_user_logs WHERE is_bot = 0 AND user_agent NOT LIKE 'bot' AND access_time >= ? AND access_time <= ?) AS impressions,
+        (SELECT COUNT(DISTINCT landing_url) FROM sma_user_logs WHERE is_bot = 0 AND user_agent NOT LIKE 'bot' AND access_time >= ? AND access_time <= ?) AS page_views,
+        (SELECT COUNT(DISTINCT ip_address) FROM sma_user_logs WHERE is_bot = 0 AND user_agent NOT LIKE 'bot' AND access_time >= ? AND access_time <= ?) AS unique_users,
+        (SELECT COUNT(*) FROM sma_sales WHERE payment_status = 'paid' AND shop = 1 AND sale_status = 'completed' AND date >= ? AND date <= ?) AS total_orders,
+        (SELECT COUNT(*) FROM sma_sales WHERE payment_status = 'paid' AND shop = 1 AND sale_status = 'completed' AND courier_delivery_time >= ? AND courier_delivery_time <= ?) AS total_orders_delivered,
+        (SELECT COUNT(*) FROM sma_users WHERE group_id = 3 AND active = 1 AND FROM_UNIXTIME(last_login) >= ? AND FROM_UNIXTIME(last_login) <= ?) AS total_logins";
+        $query = $this->db->query($sql, array($start_date, $end_date, $start_date, $end_date, $start_date, $end_date, $start_date, $end_date, $start_date, $end_date, $start_date, $end_date));
+        
+        // Fetch the result
+        if ($query->num_rows() > 0) {
+            $data_res = $query->row_array();
+        } else {
+            $data_res = array(
+                'page_views' => 0,
+                'total_orders' => 0,
+                'total_orders_delivered' => 0,
+                'total_logins' => 0,
+                'unique_users' => 0,
+                'impressions' => 0
+            );
+        }
+        
+        $response['daily_stats'] = $data_res;
+
+
+        $data_res = array();
+        $this->db
+            ->select('
+                sma_sales.id, 
+                sma_sales.courier_id, 
+                sma_sales.total as order_value, 
+                DATE_ADD(sma_sales.date, INTERVAL 3 HOUR) as order_time,
+                DATE_ADD(sma_sales.courier_assignment_time, INTERVAL 3 HOUR) as assignment_time, 
+                DATE_ADD(sma_sales.courier_pickup_time, INTERVAL 3 HOUR) as pickup_time, 
+                DATE_ADD(sma_sales.courier_delivery_time, INTERVAL 3 HOUR) as delivery_time, 
+                sma_companies.city as location, 
+                sma_courier.name as courier_name
+            ')
+            ->from('sma_sales')
+            ->join('sma_companies', 'sma_companies.id=sma_sales.customer_id')
+            ->join('sma_courier', 'sma_courier.id=sma_sales.courier_id', 'left')
+            ->where('sma_sales.shop', 1)
+            ->where('sma_sales.sale_status', 'completed')
+            ->where('sma_sales.payment_status', 'paid')
+            //->where('sma_sales.date >=', $start_date)
+            //->where('sma_sales.date <=', $end_date)
+            ->group_start() // Start a group for OR conditions
+                ->where('sma_sales.date >=', $start_date)
+                ->where('sma_sales.date <=', $end_date)
+                ->or_group_start() // Start a nested group for the delivery time condition
+                    ->where('sma_sales.courier_delivery_time >=', $start_date)
+                    ->where('sma_sales.courier_delivery_time <=', $end_date)
+                ->group_end() // End the nested group
+            ->group_end() // End the main group
+            ->order_by('sma_sales.id', 'DESC');
+        $q = $this->db->get();
+        //echo $this->db->last_query();exit;
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        $response['order_stats'] = $data_res;
+
+        return $response;
+    }
+
+    public function getCustomerAging($duration, $start_date, $supplier_id_array)
+    {
+    
+        $response = array();
+        $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
+        $cases = [];
+        $previous_limit = 0;
+
+        // Always include the "Current" case
+        /*$cases[] = "SUM(CASE 
+            WHEN DATEDIFF(CURDATE(), ae.date) <= c.payment_term THEN 
+                CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+            ELSE 0 
+        END) AS 'Current'";*/
+
+        if(empty($start_date)){
+            $start_date = date('Y-m-d');  
+        }
+        $queryCondition='';
+        if(count($supplier_id_array)>0){
+              $supplier_ids= implode(',',$supplier_id_array);  
+            $queryCondition =" AND c.id IN($supplier_ids)";
+        }
+        $count = 1;
+        foreach ($intervals as $index => $interval) {
+            if ($interval > $duration) {
+                break;
+            }
+            if($count == 1) {
+                $start = $previous_limit;
+            }else{
+                $start = $previous_limit + 1;
+            }
+            $end = $interval;
+            $previous_limit = $end;
+
+            $cases[] = "SUM(CASE 
+                WHEN DATEDIFF('$start_date', ae.date) BETWEEN ($start) AND ($end) THEN 
+                    CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                ELSE 0 
+            END) AS '$start-$end'";
+          $count = $count+1;  
+        }
+
+        // Add the "greater than" case for the selected duration
+        $cases[] = "SUM(CASE 
+            WHEN DATEDIFF('$start_date', ae.date) > ($duration) THEN 
+                CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+            ELSE 0 
+        END) AS '>$duration'";
+
+        $cases_str = implode(",\n", $cases);
+
+        $q = $this->db->query("SELECT 
+            c.id AS customer_id,
+            c.name AS customer_name,
+            c.payment_term,
+            $cases_str
+        FROM 
+            sma_companies c
+        JOIN 
+            sma_accounts_entries ae ON c.id = ae.customer_id
+        JOIN 
+            sma_accounts_entryitems ei ON ae.id = ei.entry_id
+        JOIN 
+            sma_accounts_ledgers al ON c.ledger_account = al.id
+        WHERE 
+            ei.ledger_id = c.ledger_account $queryCondition
+
+        GROUP BY 
+            c.id, c.name");
+       
+     //echo $this->db->last_query();exit;
+
+        $data = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+
+       return $data;
+    }
+
+    public function getSupplierAging($duration, $start_date,$supplier_id_array)
+    {
+        $response = array();
+        $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
+        $cases = [];
+        $previous_limit = 0;
+        if(empty($start_date)){
+              $start_date = date('Y-m-d');  
+        }
+        $queryCondition='';
+        if(count($supplier_id_array)>0){
+              $supplier_ids= implode(',',$supplier_id_array);  
+            $queryCondition =" AND c.id IN($supplier_ids)";
+        }
+        // Always include the "Current" case
+        /*$cases[] = "SUM(CASE 
+            WHEN DATEDIFF(CURDATE(), ae.date) <= c.payment_term THEN 
+                CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+            ELSE 0 
+        END) AS 'Current'";*/
+        $count = 1;
+        foreach ($intervals as $index => $interval) {
+            if ($interval > $duration) {
+                break;
+            }
+
+            if($count == 1) {
+                $start = $previous_limit;
+            }else{
+                $start = $previous_limit + 1;
+            }
+            $end = $interval;
+            $previous_limit = $end;
+            // replaced CURDATE() with   $start_date 
+            $cases[] = "SUM(CASE 
+                WHEN DATEDIFF('$start_date', ae.date) BETWEEN ($start) AND ($end) THEN 
+                    CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                ELSE 0 
+            END) AS '$start-$end'";
+
+            $count = $count +1;  
+        }
+
+        // Add the "greater than" case for the selected duration
+        $cases[] = "SUM(CASE 
+            WHEN DATEDIFF('$start_date', ae.date) > ($duration) THEN 
+                CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+            ELSE 0 
+        END) AS '>$duration'";
+
+        $cases_str = implode(",\n", $cases);
+
+        $q = $this->db->query("SELECT 
+            c.id AS supplier_id,
+            c.name AS supplier_name,
+            c.payment_term,
+            $cases_str
+        FROM 
+            sma_companies c
+        JOIN 
+            sma_accounts_entries ae ON c.id = ae.supplier_id
+        JOIN 
+            sma_accounts_entryitems ei ON ae.id = ei.entry_id
+        JOIN 
+            sma_accounts_ledgers al ON c.ledger_account = al.id
+        WHERE 
+            ei.ledger_id = c.ledger_account $queryCondition 
+        GROUP BY 
+            c.id, c.name");
+
+        $data = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+
+        return $data;
+    }
+
+    /*public function getSupplierAging($duration)
     {
         $response = array();
 
-        $results = $this->db
-            ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date')
-            ->from('companies')
-            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
-            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            ->where('companies.group_name', 'customer')
-            ->group_by('companies.id, sma_accounts_entryitems.dc')
-            ->order_by('
-                    CASE
-                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1
-                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 60 DAY) THEN 2
-                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 90 DAY) THEN 3
-                        ELSE 4
-                    END
-                ')
-            ->order_by('companies.company asc')
-            ->get()
-            ->result();
+        $q = $this->db->query("SELECT 
+            c.id AS supplier_id,
+            c.name AS supplier_name,
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) <= 30 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS 'Current',
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 31 AND 60 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS '31-60',
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 61 AND 90 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS '61-90',
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) BETWEEN 91 AND 120 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS '91-120',
+            SUM(CASE 
+                    WHEN DATEDIFF(CURDATE(), ae.date) > 120 THEN 
+                        CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    ELSE 0 
+                END) AS '>120'
+        FROM 
+            sma_companies c
+        JOIN 
+            sma_accounts_entries ae ON c.id = ae.supplier_id
+        JOIN 
+            sma_accounts_entryitems ei ON ae.id = ei.entry_id
+        JOIN 
+            sma_accounts_ledgers al ON c.ledger_account = al.id
+         WHERE 
+            ei.ledger_id = c.ledger_account
+        
+        GROUP BY 
+            c.id, c.name");
 
-        $organizedResults = array();
-        foreach ($results as $result) {
-            $timeRange = $this->getTimeRange($result->date); // Define this function based on your needs
-            $organizedResults[$result->company][$timeRange][] = $result;
+        $data = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
         }
 
-        return $organizedResults;
-    }
-
-    public function getSupplierAging($duration)
-    {
-        $response = array();
-
-        $results = $this->db
-            ->select('companies.id, company, companies.ledger_account, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc, sma_accounts_entries.date')
-            ->from('companies')
-            ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
-            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            ->where('companies.group_name', 'supplier')
-            ->group_by('companies.id, sma_accounts_entryitems.dc')
-            ->order_by('
-                    CASE
-                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1
-                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 60 DAY) THEN 2
-                        WHEN sma_accounts_entries.date >= DATE_SUB(NOW(), INTERVAL 90 DAY) THEN 3
-                        ELSE 4
-                    END
-                ')
-            ->order_by('companies.company asc')
-            ->get()
-            ->result();
-
-        $organizedResults = array();
-        foreach ($results as $result) {
-            $timeRange = $this->getTimeRange($result->date); // Define this function based on your needs
-            $organizedResults[$result->company][$timeRange][] = $result;
-        }
-
-        return $organizedResults;
-    }
+        return $data;
+    }*/
 
     public function getTimeRange($date)
     {
@@ -351,25 +666,42 @@ class Reports_model extends CI_Model
         }
 
         $response_array = array('ob' => $data_res, 'report' => $data);
-//dd($response_array);
+        //dd($response_array);
         return $response_array;
     }
 
     public function getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account)
     {
         $response = array();
+        $supplier_info = $this->companies_model->getCompanyByID($supplier_id);
+
+        if(!$supplier_info){
+            return array();
+        }
+        
+        $supplier_ledger = $supplier_info->ledger_account;
 
         $this->db
-            ->select('COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+            ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, 
+            sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, 
+            sma_accounts_entries.date,
+            sma_accounts_entries.sid, 
+            sma_accounts_entries.pid,
+            sma_accounts_entries.tid,
+            sma_accounts_entries.rsid,
+            sma_accounts_entries.rid, 
+            sma_accounts_ledgers.code, 
+            companies.company')
             ->from('sma_accounts_entryitems')
-            //->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-//                ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
-            ->where('sma_accounts_entries.sid', $supplier_id)
-            // need to join with purchase and suppliers( company)
+            ->join('companies', 'companies.id=sma_accounts_entries.supplier_id')
+            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=companies.ledger_account')
+            ->where('sma_accounts_entries.supplier_id', $supplier_id)
             ->where('sma_accounts_entries.date <', $start_date)
-            ->group_by('sma_accounts_entryitems.dc');
+            ->where('sma_accounts_entryitems.ledger_id', $supplier_ledger)
+            ->order_by('sma_accounts_entries.date asc');
         $q = $this->db->get();
+        //lq($this);
 
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -380,18 +712,28 @@ class Reports_model extends CI_Model
         }
 
         $this->db
-            ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code,(select sum(amount) from sma_accounts_entryitems ei inner join sma_accounts_entries e on e.id =ei.entry_id where e.date < `sma_accounts_entries`.`date` and e.sid = ' . $supplier_id . ') as openingAmount, companies.company')
+            ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, 
+            sma_accounts_entryitems.narration, 
+            sma_accounts_entries.transaction_type, sma_accounts_entries.date,
+            sma_accounts_entries.sid, 
+            sma_accounts_entries.pid,
+            sma_accounts_entries.tid,
+            sma_accounts_entries.rsid,
+            sma_accounts_entries.rid,
+            sma_accounts_ledgers.code, 
+            companies.company')
             ->from('sma_accounts_entryitems')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
-            ->join('companies', 'companies.ledger_account=sma_accounts_entryitems.ledger_id')
-            ->where('sma_accounts_entries.sid', $supplier_id)
+            ->join('companies', 'companies.id=sma_accounts_entries.supplier_id')
+            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=companies.ledger_account')
+            ->where('sma_accounts_entries.supplier_id', $supplier_id)
             ->where('sma_accounts_entries.date >=', $start_date)
             ->where('sma_accounts_entries.date <=', $end_date)
+            ->where('sma_accounts_entryitems.ledger_id', $supplier_ledger)
             ->order_by('sma_accounts_entries.date asc');
 
         $q = $this->db->get();
-//        lq($this);
+        
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -401,7 +743,80 @@ class Reports_model extends CI_Model
         }
 
         $response_array = array('ob' => $data_res, 'report' => $data);
-//        dd($response_array);
+        //        dd($response_array);
+        return $response_array;
+    }
+
+    public function getCustomerStatement($start_date, $end_date, $customer_id, $ledger_account)
+    {
+        // $response = array();
+        // [entry_id] => 11
+        // [amount] => 102.5000
+        // [dc] => C
+        // [narration] => 
+        // [transaction_type] => creditmemo
+        // [date] => 2024-07-15
+        // [code] => 01-01-02-00-0001
+        // [openingAmount] => 
+        // [company] => 
+
+        $this->db
+            ->select('sma_accounts_entryitems.id as entry_id, COALESCE(sum(sma_accounts_entryitems.amount), 0) as amount, 
+                    sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.date, 
+                    sma_accounts_ledgers.code, sma_companies.company, sma_accounts_entries.transaction_type')
+            ->from('sma_accounts_entryitems')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->join('sma_accounts_ledgers', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
+            ->join('sma_companies', 'sma_companies.id=sma_accounts_entries.customer_id')
+            ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->where('sma_accounts_entries.customer_id', $customer_id)
+            ->where('sma_accounts_entries.date >=', $start_date)
+            ->where('sma_accounts_entries.date <=', $end_date)
+            ->group_by('sma_accounts_entryitems.dc')
+            ->group_by('sma_accounts_entries.date')
+            ->group_by('sma_accounts_entries.transaction_type')
+            ->order_by('sma_accounts_entries.date asc');
+        $q = $this->db->get();
+        //lq($this);
+
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+
+        $this->db
+            ->select('sma_accounts_entryitems.id as entry_id, COALESCE(sum(sma_accounts_entryitems.amount), 0) as amount, 
+                    sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.date, 
+                    sma_accounts_ledgers.code, sma_companies.company, sma_accounts_entries.transaction_type')
+            ->from('sma_accounts_entryitems')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->join('sma_accounts_ledgers', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
+            ->join('sma_companies', 'sma_companies.id=sma_accounts_entries.customer_id')
+            ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->where('sma_accounts_entries.customer_id', $customer_id)
+            ->where('sma_accounts_entries.date <', $start_date)
+            ->group_by('sma_accounts_entryitems.dc')
+            ->group_by('sma_accounts_entries.date')
+            ->group_by('sma_accounts_entries.transaction_type')
+            ->order_by('sma_accounts_entries.date asc');
+        $q = $this->db->get();
+        //lq($this);
+
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        } else {
+            $data = array();
+        }
+        
+
+        $response_array = array('ob' => $data, 'report' => $data_res);
+        // dd($response_array);
         return $response_array;
     }
 
@@ -430,7 +845,7 @@ class Reports_model extends CI_Model
         $response['trs'] = $data;
 
         $this->db
-            ->select('accounts_ledgers.id, accounts_ledgers.name, accounts_ledgers.notes, accounts_ledgers.code, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+            ->select('accounts_ledgers.id, accounts_ledgers.name, sma_accounts_entries.supplier_id, accounts_ledgers.notes, accounts_ledgers.code, COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
             ->from('accounts_ledgers')
             ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=accounts_ledgers.id')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
@@ -439,9 +854,19 @@ class Reports_model extends CI_Model
             ->order_by('accounts_ledgers.name asc');
 
         $q = $this->db->get();
+        //echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
-                $data2[] = $row;
+                //print_r($row);exit;
+                if ($row->id == 102) {
+                    if ($row->supplier_id > 0) {
+                        $data2[] = $row;
+                    }
+
+                } else {
+                    $data2[] = $row;
+                }
+
             }
         } else {
             $data2 = array();
@@ -566,8 +991,179 @@ class Reports_model extends CI_Model
             }
         }
         $response['ob'] = $data2;
-//dd($response);
+        //dd($response);
         return $response;
+    }
+ 
+    public function get_sales_report_with_promocode_by_order($start_date, $end_date) {  
+        $query = $this->db->query("SELECT 
+                si.product_code,
+                si.product_name,
+                SUM(si.quantity) AS total_quantity_sold,
+                SUM(si.subtotal) AS total_amount_sold,
+                s.coupon_code,
+                s.id,
+                s.date,
+                c.description
+            FROM 
+                sma_sale_items si
+            JOIN 
+                sma_sales s ON si.sale_id = s.id
+            JOIN 
+                sma_coupons c ON s.coupon_code = c.referrer_code
+            WHERE 
+                s.date >= '".$start_date."'   
+                AND s.date <= '".$end_date."'  
+                AND s.coupon_code IS NOT NULL
+                AND s.payment_status = 'paid'
+                AND si.product_code IS NOT NULL
+                AND JSON_CONTAINS(c.product_ids, CAST(si.product_id AS JSON), '$')  -- Check if product_id is in product_ids
+            GROUP BY 
+                si.product_code, s.id, s.coupon_code
+            HAVING 
+                total_quantity_sold > 0
+            ORDER BY 
+                s.date DESC");
+            
+        $results = $query->result_array(); 
+        return $results;
+    }
+
+    public function get_sales_report_with_promocode($start_date, $end_date) {  
+        $query = $this->db->query("SELECT 
+                si.product_code,
+                si.product_name,
+                SUM(si.quantity) AS total_quantity_sold,
+                SUM(si.subtotal) AS total_amount_sold,
+                s.coupon_code,
+                s.id
+            FROM 
+                sma_sale_items si
+            JOIN 
+                sma_sales s ON si.sale_id = s.id
+            JOIN 
+                sma_coupons c ON s.coupon_code = c.referrer_code
+            WHERE 
+                s.date >= '".$start_date."'   
+                AND s.date <= '".$end_date."'  
+                AND s.coupon_code IS NOT NULL
+                AND si.product_code IS NOT NULL
+                AND JSON_CONTAINS(c.product_ids, CAST(si.product_id AS JSON), '$')  -- Check if product_id is in product_ids
+            GROUP BY 
+                si.product_code, s.coupon_code
+            HAVING 
+                total_quantity_sold > 0
+            ORDER BY 
+                s.date DESC");
+            
+        $results = $query->result_array(); 
+        return $results;
+    }
+
+    public function get_suppliers_trial_balance($start_date, $end_date)
+    {
+        // Calculate OB
+        // $this->db->select('supplier_id, SUM(dr_total) as total_debit, SUM(cr_total) as total_credit');
+        // $this->db->where('date <', $start_date);
+        // $this->db->where('supplier_id IS NOT NULL', null, false);
+        // $this->db->group_by('supplier_id');
+
+        $this->db->select('sma_companies.id as supplier_id, sma_companies.name, sma_companies.sequence_code,
+        SUM(CASE WHEN sma_accounts_entryitems.dc = "D" THEN sma_accounts_entryitems.amount ELSE 0 END) as total_debit, 
+        SUM(CASE WHEN sma_accounts_entryitems.dc = "C" THEN sma_accounts_entryitems.amount ELSE 0 END) as total_credit');
+        $this->db->from('sma_accounts_entries');
+        $this->db->join('sma_accounts_entryitems', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id');
+        $this->db->join('sma_companies', 'sma_accounts_entries.supplier_id = sma_companies.id');
+        $this->db->where('sma_accounts_entries.date <', $start_date);
+        $this->db->where('sma_companies.ledger_account=102');
+        $this->db->where('sma_accounts_entryitems.ledger_id = sma_companies.ledger_account');
+        $this->db->where('sma_accounts_entries.supplier_id IS NOT NULL', null, false);
+        $this->db->group_by('sma_accounts_entries.supplier_id, sma_companies.name');
+
+        $query_ob = $this->db->get();
+        //echo $this->db->last_query();
+        $ob_results = $query_ob->result_array();
+        //print_r($ob_results);
+
+        // Calculate transactions within period
+        $this->db->select('sma_companies.id as supplier_id, sma_companies.name, sma_companies.sequence_code, 
+        SUM(CASE WHEN sma_accounts_entryitems.dc = "D" THEN sma_accounts_entryitems.amount ELSE 0 END) as total_debit, 
+        SUM(CASE WHEN sma_accounts_entryitems.dc = "C" THEN sma_accounts_entryitems.amount ELSE 0 END) as total_credit');
+        $this->db->from('sma_accounts_entries');
+        $this->db->join('sma_accounts_entryitems', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id');
+        $this->db->join('sma_companies', 'sma_accounts_entries.supplier_id = sma_companies.id');
+        $this->db->where('sma_accounts_entries.date >=', $start_date);
+        $this->db->where('sma_accounts_entries.date <=', $end_date);
+        $this->db->where('sma_accounts_entries.supplier_id IS NOT NULL', null, false);
+        $this->db->where('sma_accounts_entryitems.ledger_id = sma_companies.ledger_account');
+        $this->db->group_by('sma_accounts_entries.supplier_id, sma_companies.name');
+
+        $query_period = $this->db->get();
+        //echo $this->db->last_query();
+        $period_results = $query_period->result_array();
+
+        // Combine OB and period transactions to get EB
+        $balances = [];
+        foreach ($ob_results as $ob) {
+            $supplier_id = $ob['supplier_id'];
+
+            if ($ob['total_debit'] >= $ob['total_credit']) {
+                $ob['total_debit'] = $ob['total_debit'] - $ob['total_credit'];
+                $ob['total_credit'] = 0;
+            } else if ($ob['total_credit'] > $ob['total_debit']) {
+                $ob['total_credit'] = $ob['total_credit'] - $ob['total_debit'];
+                $ob['total_debit'] = 0;
+            }
+
+            $balances[$supplier_id] = [
+                'supplier_id' => $supplier_id,
+                'name' => $ob['name'],
+                'sequence_code' => $ob['sequence_code'],
+                'obDebit' => $ob['total_debit'],
+                'obCredit' => $ob['total_credit'],
+                'trsDebit' => 0,
+                'trsCredit' => 0
+            ];
+        }
+        // print_r($balances);
+
+        foreach ($period_results as $period) {
+            $supplier_id = $period['supplier_id'];
+            if (!isset($balances[$supplier_id])) {
+
+                if ($period['total_debit'] >= $period['total_credit']) {
+                    //$period['total_debit'] = $period['total_debit'] - $period['total_credit'];
+                    //$period['total_credit'] = 0;
+                } else if ($period['total_credit'] > $period['total_debit']) {
+                    //$period['total_credit'] = $period['total_credit'] - $period['total_debit'];
+                    //$period['total_debit'] = 0;
+                }
+
+                $balances[$supplier_id] = [
+                    'supplier_id' => $supplier_id,
+                    'name' => $period['name'],
+                    'sequence_code' => $period['sequence_code'],
+                    'obDebit' => 0,
+                    'obCredit' => 0,
+                    'trsDebit' => $period['total_debit'],
+                    'trsCredit' => $period['total_credit'],
+                ];
+            } else {
+                if ($period['total_debit'] >= $period['total_credit']) {
+                    //$period['total_debit'] = $period['total_debit'] - $period['total_credit'];
+                    //$period['total_credit'] = 0;
+                } else if ($period['total_credit'] > $period['total_debit']) {
+                    //$period['total_credit'] = $period['total_credit'] - $period['total_debit'];
+                    //$period['total_debit'] = 0;
+                }
+
+                $balances[$supplier_id]['trsDebit'] = $period['total_debit'];
+                $balances[$supplier_id]['trsCredit'] = $period['total_credit'];
+
+            }
+        }
+
+        return $balances;
     }
 
     public function getCustomersTrialBalance($start_date, $end_date)
@@ -601,6 +1197,7 @@ class Reports_model extends CI_Model
                                 c.id
                             ORDER BY
                                 c.name ASC");
+        echo $this->db->last_query();
 
         $data = array();
         if ($q->num_rows() > 0) {
@@ -638,7 +1235,7 @@ class Reports_model extends CI_Model
                             ORDER BY
                                 c.name ASC");
 
-
+        echo $this->db->last_query();
         $data2 = array();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -649,6 +1246,75 @@ class Reports_model extends CI_Model
 
         return $response;
     }
+
+    public function get_customer_trial_balance($start_date, $end_date)
+    {
+        $response = array();
+        $q = $this->db->query("SELECT 
+                sma_companies.id, 
+                sma_companies.name,
+                sma_companies.company, 
+                sma_companies.sequence_code, 
+                SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
+                SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
+            FROM 
+                sma_accounts_entries 
+            JOIN 
+                sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id 
+            JOIN 
+                sma_companies ON sma_accounts_entries.customer_id = sma_companies.id 
+            WHERE 
+                date(sma_accounts_entries.date) >= '{$start_date}' 
+                AND date(sma_accounts_entries.date) <= '{$end_date}' 
+                AND sma_accounts_entries.customer_id IS NOT NULL 
+                AND sma_accounts_entryitems.ledger_id = sma_companies.ledger_account 
+            GROUP BY 
+                sma_accounts_entries.customer_id, 
+                sma_companies.name");
+
+        $data = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+
+        $response['trs'] = $data;
+
+        $q = $this->db->query("SELECT 
+                    sma_companies.id, 
+                    sma_companies.name, 
+                    sma_companies.company, 
+                    sma_companies.sequence_code, 
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
+                    FROM 
+                    sma_accounts_entries 
+                    JOIN 
+                    sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id 
+                    JOIN 
+                    sma_companies ON sma_accounts_entries.customer_id = sma_companies.id 
+                    WHERE 
+                    date(sma_accounts_entries.date) < '{$start_date}' 
+                    AND sma_accounts_entryitems.ledger_id = sma_companies.ledger_account 
+                    AND sma_accounts_entries.customer_id IS NOT NULL 
+                    GROUP BY 
+                    sma_accounts_entries.customer_id, 
+                    sma_companies.name
+                ");
+        //echo $this->db->last_query();
+        $data2 = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data2[] = $row;
+            }
+        }
+        $response['ob'] = $data2;
+
+        return $response;
+
+    }
+
 
     public function getBestSeller($start_date, $end_date, $warehouse_id = null)
     {
@@ -918,8 +1584,7 @@ class Reports_model extends CI_Model
 
     public function getProductNames($term, $limit = 5)
     {
-        $this->db->select('id, code, name')
-            ->like('name', $term, 'both')->or_like('code', $term, 'both');
+        $this->db->where("type = 'standard' AND (item_code LIKE '%".$term."%' OR name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR supplier1_part_no LIKE '%" . $term . "%' OR supplier2_part_no LIKE '%" . $term . "%' OR supplier3_part_no LIKE '%" . $term . "%' OR supplier4_part_no LIKE '%" . $term . "%' OR supplier5_part_no LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
         $this->db->limit($limit);
         $q = $this->db->get('products');
         if ($q->num_rows() > 0) {
@@ -997,7 +1662,7 @@ class Reports_model extends CI_Model
                                 ORDER BY p.id ASC, w.id ASC";
 
         $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
-        
+
         if ($totalPurchseResultSet->num_rows() > 0) {
             foreach ($totalPurchseResultSet->result() as $row) {
                 $row->cost_price = ($row->total_cost_price / $row->quantity);
@@ -1011,12 +1676,72 @@ class Reports_model extends CI_Model
 
     public function getStockData($at_date, $warehouse, $supplier, $item_group, $item)
     {
+            $stockArray = [];    
+            if ($at_date){
+                $at_date = $this->sma->fld($at_date); 
+            } 
+            $tbl_purchase_items= "(SELECT  product_id, sale_price, net_unit_cost, quantity, unit_cost,batchno , expiry , warehouse_id 
+            ,purchase_item_id, purchase_id  FROM sma_purchase_items  GROUP BY product_id, batchno ) ";  
+
+            $stockQuery = " SELECT p.id,
+            p.code item_code, 
+            p.name as name, 
+            inv.batch_number as batch_no,
+            pi.expiry,
+            SUM(inv.quantity) as quantity,
+            round(avg(pi.sale_price), 2) sale_price,
+            round(avg(pi.net_unit_cost), 2) cost_price,
+            round(sum(pi.net_unit_cost * pi.quantity), 2) total_cost_price,
+            round(avg(pi.unit_cost), 2) purchase_price  
+            FROM `sma_inventory_movements` inv 
+            INNER JOIN sma_products p on p.id=inv.product_id 
+            LEFT JOIN $tbl_purchase_items as pi ON pi.product_id = inv.product_id and pi.batchno=inv.batch_number 
+            LEFT JOIN sma_purchases pc ON pc.id = pi.purchase_id 
+            WHERE   p.id>0   ";  
+           //    pi.purchase_item_id IS NULL AND pc.status = 'received' 
+          // -- AND inv.type='purchase' 
+            if ($at_date) {
+                // $stockQuery .= "AND pi.date <= '{$at_date}' "; 
+                $stockQuery .= " AND date(inv.movement_date)<= '{$at_date}' "; 
+            } 
+            if ($warehouse) {
+              //  $stockQuery .= " AND pi.warehouse_id = {$warehouse} ";
+                 $stockQuery .= " AND inv.location_id = {$warehouse} ";
+            } 
+            if ($supplier) { //TODO: will be checked
+                $stockQuery .= " AND pc.supplier_id = {$supplier} ";
+            } 
+            if ($item_group) {
+                $stockQuery .= " AND p.category_id = '$item_group' ";
+            } 
+            if ($item) { 
+                // $stockQuery .= " AND (p.id = '{$item}') ";
+                $stockQuery .= " AND inv.product_id = '{$item}' "; 
+            } 
+            // $stockQuery .= "GROUP BY p.code, p.name, pi.batchno  ORDER BY p.id DESC";
+            $stockQuery .= "GROUP BY inv.product_id, inv.batch_number  ORDER BY p.id DESC";  
+            $stockResults = $this->db->query($stockQuery);
+            // echo $this->db->last_query(); exit; 
+            if ($stockResults->num_rows() > 0) {
+                foreach ($stockResults->result() as $row) {
+                   //  $row->cost_price = ($row->total_cost_price / $row->quantity);
+                    $stockArray[] = $row;
+                } 
+            }
+            return $stockArray;
+    }
+
+
+    public function getStockData_BK($at_date, $warehouse, $supplier, $item_group, $item)
+    {
         $totalPurchases = [];
         $finalResponse = [];
 
-        if ($at_date) $at_date = $this->sma->fld($at_date);
+        if ($at_date)
+            $at_date = $this->sma->fld($at_date);
 
-        if ($supplier) $supplierJoin = " INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id ";
+        if ($supplier)
+            $supplierJoin = " INNER JOIN sma_purchases pc ON pc.id = pi.purchase_id ";
 
         $totalPurchasesQuery = "SELECT 
                                     p.id, 
@@ -1058,7 +1783,8 @@ class Reports_model extends CI_Model
                                 ORDER BY p.id DESC";
 
         $totalPurchseResultSet = $this->db->query($totalPurchasesQuery);
-        
+        //echo  $this->db->last_query(); exit; 
+
         if ($totalPurchseResultSet->num_rows() > 0) {
             foreach ($totalPurchseResultSet->result() as $row) {
                 $row->cost_price = ($row->total_cost_price / $row->quantity);
@@ -1105,7 +1831,7 @@ class Reports_model extends CI_Model
                             && $purchase->batch_no == $sale->batch_no
                             //&& $purchase->expiry == $sale->expiry
                         ) {
-                            $purchase->quantity -= (int)$sale->quantity;
+                            $purchase->quantity -= (int) $sale->quantity;
                         }
                     }, $totalPurchases);
                 }
@@ -1151,7 +1877,7 @@ class Reports_model extends CI_Model
                             && $purchase->batch_no == $returnSupplier->batch_no
                             //&& $purchase->expiry == $returnSupplier->expiry
                         ) {
-                            $purchase->quantity -= (int)abs($returnSupplier->quantity);
+                            $purchase->quantity -= (int) abs($returnSupplier->quantity);
                             //$purchase->cost_price = ($purchase->cost_price + $returnSupplier->cost_price)/2;
                         }
                     }, $totalPurchases);
@@ -1198,7 +1924,7 @@ class Reports_model extends CI_Model
                             && $purchase->batch_no == $returnCustomer->batch_no
                             //&& $purchase->expiry == $returnCustomer->expiry
                         ) {
-                            $purchase->quantity += (int)abs($returnCustomer->quantity);
+                            $purchase->quantity += (int) abs($returnCustomer->quantity);
                         }
                     }, $totalPurchases);
                 }
@@ -1247,14 +1973,14 @@ class Reports_model extends CI_Model
                             && $warehouse == $transfer->to_warehouse_id
                             //&& $purchase->expiry == $transfer->expiry
                         ) {
-                            $purchase->quantity = $purchase->quantity + (int)abs($transfer->quantity);
-                        }else if(
+                            $purchase->quantity = $purchase->quantity + (int) abs($transfer->quantity);
+                        } else if (
                             $purchase->id == $transfer->id
                             && $purchase->item_code == $transfer->item_code
                             && $purchase->batch_no == $transfer->batch_no
                             && $warehouse == $transfer->from_warehouse_id
-                        ){
-                            $purchase->quantity = $purchase->quantity - (int)abs($transfer->quantity);
+                        ) {
+                            $purchase->quantity = $purchase->quantity - (int) abs($transfer->quantity);
                         }
                     }, $totalPurchases);
                 }
@@ -1303,19 +2029,19 @@ class Reports_model extends CI_Model
                             && $warehouse == $transfer->to_warehouse_id
                             //&& $purchase->expiry == $transfer->expiry
                         ) {
-                            $purchase->quantity = $purchase->quantity + (int)abs($transfer->quantity);
-                        }else if(
+                            $purchase->quantity = $purchase->quantity + (int) abs($transfer->quantity);
+                        } else if (
                             $purchase->id == $transfer->id
                             && $purchase->item_code == $transfer->item_code
                             && $purchase->batch_no == $transfer->batch_no
                             && $warehouse == $transfer->from_warehouse_id
-                        ){
-                            $purchase->quantity = $purchase->quantity - (int)abs($transfer->quantity);
+                        ) {
+                            $purchase->quantity = $purchase->quantity - (int) abs($transfer->quantity);
                         }
                     }, $totalPurchases);
                 }
             }
-        }else{
+        } else {
             $totalPurchases = [];
 
             $totalTransferQuery = "SELECT
@@ -1365,13 +2091,122 @@ class Reports_model extends CI_Model
         return $totalPurchases;
     }
 
-    public function getItemOpeningBalance($productId, $start_date, $warehouseId = 0)
-    {
+    public function getItemOpeningBalance($productId, $start_date, $warehouseId = 0) {
+        $reports_start_date = '2024-07-07';
+        
+        // Use the query builder to safely escape and build the query
+        $this->db->select('
+            SUM(IF(movement_date < "' . $start_date . '", quantity, 0)) AS total_opening_qty,
+            ABS(SUM(IF(movement_date < "' . $start_date . '", net_unit_cost, 0)) / NULLIF(SUM(IF(movement_date < "' . $start_date . '", quantity, 0)), 0)) AS cost_price', FALSE);
+        $this->db->from('sma_inventory_movements');
+        $this->db->where('product_id', $productId);
+        if($warehouseId){
+            $this->db->where('location_id', $warehouseId);
+        }
+        $this->db->where('movement_date > ', $reports_start_date);
+    
+        $query = $this->db->get();
+        //echo $this->db->last_query();exit;
+        $response = array();
+        if ($query->num_rows() > 0) {
+            $response = $query->row_array();
+        }
+        
+        return $response;
+    }
 
-        /*
-        * SELECT AVG(purItem.net_unit_cost) AS purchaseUnitPrice FROM `sma_purchases` AS `purchase` 
-        *  INNER JOIN `sma_purchase_items` AS `purItem` ON `purItem`.`purchase_id`=`purchase`.`id` WHERE `purItem`.`product_id`=$productId AND DATE(purchase.date) < '$start_date' AND `purchase`.`invoice_number` IS NOT NULL AND `purchase`.`grand_total`> 0
-        */
+    public function getItemMovementRecords($productId, $start_date, $end_date, $warehouseId, $filterOnType, $document_number)
+    {
+        $reports_start_date = '2024-07-07';
+        
+        $query = "SELECT 
+                    CASE 
+                        WHEN iv.trs_type = 'pos' THEN 'pharmacy sale'
+                        ELSE iv.trs_type
+                    END AS trs_type,
+                    iv.movement_date,
+                    iv.quantity,
+                    iv.location_id,
+                    iv.batch_number as batch_no,
+                    iv.expiry_date as expiry,
+                    iv.reference_id,
+                    iv.net_unit_cost,
+                    iv.net_unit_sale,
+                    iv.real_unit_cost,
+                    iv.real_unit_sale,
+                    iv.avz_item_code,
+                    CASE 
+                        WHEN iv.trs_type = 'purchase' THEN sp.reference_no
+                        WHEN iv.trs_type = 'sale' THEN ss.reference_no
+                        WHEN iv.trs_type = 'pos' THEN ps.reference_no
+                        WHEN iv.trs_type = 'transfer_out' THEN sto.transfer_no
+                        WHEN iv.trs_type = 'transfer_in' THEN sti.transfer_no
+                        ELSE NULL
+                    END AS reference_number,
+                    CASE 
+                        WHEN iv.trs_type = 'purchase' THEN sp.supplier
+                        WHEN iv.trs_type = 'sale' THEN ss.customer
+                        WHEN iv.trs_type = 'pos' THEN sw.name
+                        WHEN iv.trs_type = 'transfer_out' THEN sto.from_warehouse_name
+                        WHEN iv.trs_type = 'transfer_in' THEN sti.to_warehouse_name
+                        ELSE NULL
+                    END AS counterparty
+                FROM 
+                    (SELECT 
+                        product_id,
+                        type as trs_type,
+                        movement_date,
+                        quantity,
+                        location_id,
+                        batch_number,
+                        expiry_date,
+                        reference_id,
+                        net_unit_cost,
+                        net_unit_sale,
+                        real_unit_cost,
+                        real_unit_sale,
+                        avz_item_code
+                    FROM sma_inventory_movements
+                    WHERE product_id = ".$productId." AND ";
+
+        if($filterOnType){
+            $query .= "type = '".$filterOnType."' AND ";
+        }
+
+        if($warehouseId){
+            $query .= "location_id = '".$warehouseId."' AND ";
+        }
+
+        $query .= "movement_date >= '".$reports_start_date."' AND 
+                    movement_date BETWEEN '".date('Y-m-d', strtotime($start_date . ' -1 day'))."' AND '".date('Y-m-d', strtotime($end_date . ' +1 day'))."') iv
+                    LEFT JOIN sma_purchases sp ON iv.reference_id = sp.id AND iv.trs_type = 'purchase'
+                    LEFT JOIN sma_sales ss ON iv.reference_id = ss.id AND iv.trs_type = 'sale'
+                    LEFT JOIN sma_sales ps ON iv.reference_id = ps.id AND iv.trs_type = 'pos'
+                    LEFT JOIN sma_warehouses sw ON ps.warehouse_id = sw.id
+                    LEFT JOIN sma_transfers sto ON iv.reference_id = sto.id AND iv.trs_type = 'transfer_out'
+                    LEFT JOIN sma_transfers sti ON iv.reference_id = sti.id AND iv.trs_type = 'transfer_in'";
+
+        if($document_number) {
+            $query .=" WHERE sp.reference_no like '%".$document_number."%' 
+                        OR ss.reference_no like '%".$document_number."%' 
+                        OR ps.reference_no like '%".$document_number."%'
+                        OR sto.transfer_no like '%".$document_number."%' 
+                        OR sti.transfer_no like '%".$document_number."%' " ;
+        }
+
+
+        $q = $this->db->query($query);
+        $response = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $response[] = $row;
+            }
+        }
+        return $response; 
+    }
+
+    /*public function getItemOpeningBalance($productId, $start_date, $warehouseId = 0)
+    {
 
         $q = $this->db->query("SELECT
         COALESCE(purchaseQuantity, 0) - COALESCE(saleQuantity, 0) - COALESCE(returnSupplierQuantity, 0) + COALESCE(returnQuantity, 0) + COALESCE(transferInQuantity, 0) - COALESCE(transferOutQuantity, 0) AS openingBalance,
@@ -1411,386 +2246,84 @@ class Reports_model extends CI_Model
             }
         }
         return $response;
-    }
+    }*/
 
-    public function getItemMovementRecords($productId, $start_date, $end_date, $warehouseId, $filterOnType)
+    public function getInventoryItemMovementRecords($productId, $filterOnType)
     {
-
-
-        /* "purchases" => "Purchases",
-            "sales" => "Sales",
-            "returnCustomer"=>"Return-Customer",
-            "returnSupplier"=>"Return-Supplier",
-            "transfer" => "Transfer"
-         */
-
-        switch ($filterOnType) {
-
-            case 'purchases':
-
-                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
-                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
-                FROM sma_products as prd        
-                LEFT JOIN ( 
-                
-                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Purchase' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
-                    pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
-                    pitem.serial_number as system_serial, pitem.sale_price as sale_price, pitem.unit_cost as purchase_price, pitem.product_id as product_id
-
-                    FROM sma_purchases as purchase
-
-                    LEFT JOIN sma_purchase_items as pitem ON pitem.purchase_id = purchase.id
-
-                    WHERE pitem.product_id = $productId AND DATE(purchase.date) >= '{$start_date}' AND DATE(purchase.date) <= '{$end_date}'  AND purchase.grand_total > 0 AND purchase.status = 'received'
-                    
-                )
-                 as data ON data.product_id = prd.id 
-                 WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date ");
-
-                break;
-
-            case 'sales':
-
-                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
-                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
-                FROM sma_products as prd        
-                LEFT JOIN ( 
-                    
-                    SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.reference_no as document_no, 
-                    
-                    CASE WHEN sale.pos = 1 THEN 
-                    CONCAT('POS',' - ',wrs.name)
-                    ELSE
-                    sale.customer
-                    END AS name_of, 
-
-                    saleItem.batch_no as batch_no,
-                    saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_cost as unit_cost,
-                    saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id as product_id
-                
-                    FROM sma_sales as sale
-                
-                    LEFT JOIN sma_sale_items as saleItem ON saleItem.sale_id = sale.id
-                    LEFT JOIN sma_warehouses as wrs ON wrs.id = sale.warehouse_id
-                
-                    WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '{$start_date}' AND DATE(sale.date) <= '{$end_date}' AND sale.sale_status = 'completed' AND saleItem.batch_no <> ''
-                )
-                 AS data ON data.product_id = prd.id 
-                 WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
-
-                break;
-
-            case 'returnCustomer':
-
-                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
-                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
-                FROM sma_products as prd      
-                LEFT JOIN ( 
-                 
-                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.reference_no as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
-                    ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_cost as unit_cost,
-                    ritem.serial_no as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id as product_id
-
-                    FROM sma_returns as rtn
-
-                    LEFT JOIN sma_return_items as ritem ON ritem.return_id = rtn.id
-
-                    WHERE ritem.product_id = $productId AND DATE(rtn.date) >= '$start_date' AND DATE(rtn.date) <= '$end_date' 
-
-                )
-                 AS data ON data.product_id = prd.id 
-                 WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
-
-                break;
-
-            case 'returnSupplier':
-
-                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
-                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
-                FROM sma_products as prd       
-                LEFT JOIN ( 
-
-                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Supplier' as type, rtn.reference_no as document_no, rtn.supplier as name_of, ritem.batch_no, 
-                    ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_cost as unit_cost,
-                    ritem.serial_number as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id as product_id
-
-                    FROM sma_returns_supplier as rtn
-
-                    LEFT JOIN sma_return_supplier_items as ritem ON ritem.return_id = rtn.id
-
-                    WHERE ritem.product_id = $productId AND DATE(rtn.date) >= '$start_date' AND DATE(rtn.date) <= '$end_date'
-
-                )
-                AS data ON data.product_id = prd.id 
-                WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
-
-
-                break;
-
-            case 'transfer':
-
-                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
-                IFNULL(data.sale_price, prd.price) as sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
-                FROM sma_products as prd
-                LEFT JOIN ( 
-                
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-In' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
-                    titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
-                    titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
-
-                    FROM sma_transfers as trnf
-                    
-                    LEFT JOIN (
-
-                        SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, serial_number
-                        
-                        FROM (
-
-                            SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, serial_number
-                        FROM sma_transfer_items 
-                        WHERE  `product_id` = '$productId' 
-                        AND warehouse_id = $warehouseId
-                        AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                        GROUP BY transfer_id
-
-                        UNION ALL
-
-
-                        SELECT transfer_id, 
-                                    batchno, expiry, quantity, net_unit_cost, product_id, serial_number
-                            FROM sma_purchase_items 
-                            WHERE  `product_id` = '$productId' 
-                            AND warehouse_id = $warehouseId
-                            AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                            AND transfer_id IS NOT NULL
-                            GROUP BY transfer_id
-
-
-                                ) AS combined_transfer_in
-
-                        ) AS titm 
-                        ON titm.transfer_id = trnf.id 
-
-                        WHERE  DATE(trnf.date) >= '$start_date' AND DATE(trnf.date) <= '$end_date' AND titm.product_id = $productId
-
-
-                    UNION ALL
-
-                    
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-Out' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
-                    titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
-                    titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
-
-                    FROM sma_transfers as trnf
-
-                    LEFT JOIN (
-
-                        SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, warehouse_id, serial_number
-                        
-                        FROM (
-
-                            SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, warehouse_id, serial_number
-                        FROM sma_transfer_items 
-                        WHERE  `product_id` = '$productId' 
-                        AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                        GROUP BY transfer_id
-
-                        UNION ALL
-
-                        SELECT transfer_id, 
-                                        batchno, expiry, quantity, net_unit_cost, product_id, warehouse_id, serial_number
-                                FROM sma_purchase_items 
-                                WHERE  `product_id` = '$productId' 
-                                AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                                AND transfer_id IS NOT NULL
-                                GROUP BY transfer_id
-
-
-                            ) AS combained
-
-                    ) AS titm 
-                    ON titm.transfer_id = trnf.id
-                    WHERE  DATE(trnf.date) >= '$start_date' AND DATE(trnf.date) <= '$end_date'  AND trnf.from_warehouse_id = $warehouseId AND titm.product_id = $productId
-
-
-                )
-                AS data ON data.product_id = prd.id 
-                WHERE prd.id = $productId  AND data.product_id IS NOT NULL ORDER BY entry_date");
-
-
-                break;
-
-            default;
-
-                $q = $this->db->query("SELECT prd.id, prd.code, prd.name, data.entry_id, data.entry_date, data.type, data.document_no, data.name_of, data.batch_no, data.expiry_date, data.quantity, data.unit_cost, data.system_serial, 
-                CASE
-                    WHEN data.sale_price IS NULL OR data.sale_price = 0 THEN prd.price
-                    ELSE data.sale_price
-                END AS sale_price, IFNULL(data.purchase_price, prd.cost) as purchase_price, data.product_id
-                FROM sma_products as prd        
-                LEFT JOIN ( 
-            
-                    SELECT purchase.id as entry_id, purchase.date as entry_date, 'Purchase' as type, purchase.reference_no as document_no, purchase.supplier as name_of, pitem.batchno as batch_no, 
-                    pitem.expiry as expiry_date, pitem.quantity as quantity, pitem.net_unit_cost as unit_cost,
-                    pitem.serial_number as system_serial, pitem.sale_price as sale_price, pitem.unit_cost as purchase_price, pitem.product_id
-
-                    FROM sma_purchases as purchase
-
-                    LEFT JOIN sma_purchase_items as pitem ON pitem.purchase_id = purchase.id
-
-                    WHERE pitem.product_id = $productId AND DATE(purchase.date) >= '$start_date' AND DATE(purchase.date) <= '$end_date'  AND purchase.grand_total > 0 AND purchase.status = 'received'
-
-                    UNION ALL 
-
-                    SELECT sale.id as entry_id, sale.date as entry_date, 'Sale' as type, sale.reference_no as document_no, 
-                    
-                    CASE WHEN sale.pos = 1 THEN 
-                    CONCAT('POS',' - ',wrs.name)
-                    ELSE
-                    sale.customer
-                    END AS name_of, 
-                    
-                     saleItem.batch_no as batch_no,
-                    saleItem.expiry as expiry_date, saleItem.quantity as quantity, saleItem.net_cost as unit_cost,
-                    saleItem.serial_no as system_serial, NULL as sale_price, saleItem.net_cost as purchase_price, saleItem.product_id
-                
-                    FROM sma_sales as sale
-                
-                    LEFT JOIN sma_sale_items as saleItem ON saleItem.sale_id = sale.id
-                    LEFT JOIN sma_warehouses as wrs ON wrs.id = sale.warehouse_id
-                
-                    WHERE saleItem.product_id = $productId AND DATE(sale.date) >= '$start_date' AND DATE(sale.date) <= '$end_date' AND sale.sale_status = 'completed' AND saleItem.batch_no <> ''
-
-                    UNION ALL 
-
-                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Customer' as type, rtn.reference_no as document_no, rtn.customer as name_of, ritem.batch_no as batch_no, 
-                    ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_cost as unit_cost,
-                    ritem.serial_no as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id
-
-                    FROM sma_returns as rtn
-
-                    LEFT JOIN sma_return_items as ritem ON ritem.return_id = rtn.id
-
-                    WHERE ritem.product_id = $productId AND DATE(rtn.date) >= '$start_date' AND DATE(rtn.date) <= '$end_date' 
-
-                    UNION ALL 
-
-                    SELECT rtn.id as entry_id, rtn.date as entry_date, 'Return-Supplier' as type, rtn.reference_no as document_no, rtn.supplier as name_of, ritem.batch_no as batch_no, 
-                    ritem.expiry as expiry_date, ritem.quantity as quantity, ritem.net_cost as unit_cost,
-                    ritem.serial_number as system_serial, NULL as sale_price, ritem.net_cost as purchase_price, ritem.product_id
-
-                    FROM sma_returns_supplier as rtn
-
-                    LEFT JOIN sma_return_supplier_items as ritem ON ritem.return_id = rtn.id
-
-                    WHERE ritem.product_id = $productId AND DATE(rtn.date) >= '$start_date' AND DATE(rtn.date) <= '$end_date'
-
-                    UNION ALL 
-
-
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-In' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
-                    titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
-                    titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
-
-                    FROM sma_transfers as trnf
-                    
-                    LEFT JOIN (
-
-                        SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, serial_number
-                        
-                        FROM (
-
-                            SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, serial_number
-                        FROM sma_transfer_items 
-                        WHERE  `product_id` = '$productId' 
-                        AND warehouse_id = $warehouseId
-                        AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                        GROUP BY transfer_id
-
-                        UNION ALL
-
-
-                        SELECT transfer_id, 
-                                    batchno, expiry, quantity, net_unit_cost, product_id, serial_number
-                            FROM sma_purchase_items 
-                            WHERE  `product_id` = '$productId' 
-                            AND warehouse_id = $warehouseId
-                            AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                            AND transfer_id IS NOT NULL
-                            GROUP BY transfer_id
-
-
-                                ) AS combined_transfer_in
-
-                        ) AS titm 
-                        ON titm.transfer_id = trnf.id 
-
-                        WHERE  DATE(trnf.date) >= '$start_date' AND DATE(trnf.date) <= '$end_date' AND titm.product_id = $productId
-
-
-                    UNION ALL
-
-                    
-                    SELECT trnf.id as entry_id, trnf.date as entry_date, 'Transfer-Out' as type,  trnf.transfer_no as document_no, CONCAT('Transfer from ',trnf.from_warehouse_name,' - to ',trnf.to_warehouse_name) as name_of, titm.batchno as batch_no, 
-                    titm.expiry as expiry_date, titm.quantity as quantity, titm.net_unit_cost as unit_cost,
-                    titm.serial_number as system_serial, NULL as sale_price, NULL as purchase_price, titm.product_id
-
-                    FROM sma_transfers as trnf
-
-                    LEFT JOIN (
-
-                        SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, warehouse_id, serial_number
-                        
-                        FROM (
-
-                            SELECT transfer_id, 
-                                batchno, expiry, quantity, net_unit_cost, product_id, warehouse_id, serial_number
-                        FROM sma_transfer_items 
-                        WHERE  `product_id` = '$productId' 
-                        AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                        GROUP BY transfer_id
-
-                        UNION ALL
-
-                        SELECT transfer_id, 
-                                        batchno, expiry, quantity, net_unit_cost, product_id, warehouse_id, serial_number
-                                FROM sma_purchase_items 
-                                WHERE  `product_id` = '$productId' 
-                                AND DATE(`date`) >= '$start_date' AND DATE(`date`) <= '$end_date'
-                                AND transfer_id IS NOT NULL
-                                GROUP BY transfer_id
-
-
-                            ) AS combained
-
-                    ) AS titm 
-                    ON titm.transfer_id = trnf.id
-                    WHERE  DATE(trnf.date) >= '$start_date' AND DATE(trnf.date) <= '$end_date'  AND trnf.from_warehouse_id = $warehouseId AND titm.product_id = $productId
-                
-                )
-                AS data ON data.product_id = prd.id 
-                WHERE prd.id = $productId AND data.product_id IS NOT NULL ORDER BY entry_date");
-
+        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : null;
+        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null;
+        $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;
+        if ($start_date) {
+            $start_date = $this->sma->fld($start_date);
         }
+        if ($end_date) {
+            $end_date = $this->sma->fld($end_date);
+        }
+        $where = '';
+        if ($filterOnType != '') {
 
+            if ($filterOnType == 'adjustment') {
+                $where .= " AND (a.type = 'adjustment_increase' OR a.type ='adjustment_decrease') ";
+            } else {
+                $where .= " AND a.type = '" . $filterOnType . "'";
+            }
+        }
+        if (!empty($warehouse)) {
+            $where .= " AND a.location_id = '" . $warehouse . "'";
+        }
+        if (!empty($start_date) and !empty($end_date)) {
+            $where .= ' AND DATE(a.movement_date) BETWEEN "' . $start_date . '" and "' . $end_date . '"';
+        }
         $response = array();
-        if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $response[] = $row;
+        if ($productId > 0) {
+
+            $q = $this->db->query(
+                "SELECT a.batch_number, a.movement_date,a.type,a.quantity, b.name as product_name, b.code , b.item_code, c.name as warehouse_name
+                                FROM `sma_inventory_movements` a 
+                                LEFT JOIN sma_products b on a.product_id = b.id 
+                                LEFT JOIN sma_warehouses c on a.location_id = c.id 
+                                WHERE a.product_id = " . $productId . $where
+            );
+
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $response[] = $row;
+                }
             }
         }
         return $response;
-
     }
 
-    public function getProductsQuantityUnitCost($start_date,$from_warehouse_id){
+    public function getInventoryItemMovementByPharmacy($productId, $warehouses)
+    {
+        $where = '';
+        $response = array();
+        if ($productId > 0) {
+            $sumQuery = '';
+
+            foreach ($warehouses as $warehouse) {
+                $sumQuery .= 'SUM(CASE WHEN a.location_id = ' . $warehouse->id . ' THEN a.quantity ELSE 0 END) AS loc_' . $warehouse->id . ',';
+            }
+            $q = $this->db->query(
+                "SELECT   p.name AS product_name,
+                " . $sumQuery . "
+                    SUM(a.quantity) as total_quantity
+                FROM `sma_inventory_movements` a
+                LEFT JOIN sma_products p ON a.product_id = p.id
+                WHERE a.product_id = " . $productId . " GROUP BY p.name"
+            );
+
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $response[] = $row;
+                }
+            }
+        }
+        return $response;
+    }
+
+    public function getProductsQuantityUnitCost($start_date, $from_warehouse_id)
+    {
         $qry = $this->db->query("SELECT
             product_id,
             SUM(totalPurchaseQuantity) AS total_in_quantity,
@@ -1961,7 +2494,7 @@ class Reports_model extends CI_Model
         $resultSet = array();
         if ($qry->num_rows() > 0) {
             foreach (($qry->result()) as $row) {
-                $resultSet[$row->product_id] = ["total_opening_qty"=>$row->total_in_quantity - $row->total_out_quantity, "avg_unit_cost"=> ($row->avg_unit_cost - $row->avgSaleUnitPrice) / ($row->total_in_quantity - $row->total_out_quantity) , 'all_data'=>$row];
+                $resultSet[$row->product_id] = ["total_opening_qty" => $row->total_in_quantity - $row->total_out_quantity, "avg_unit_cost" => ($row->avg_unit_cost - $row->avgSaleUnitPrice) / ($row->total_in_quantity - $row->total_out_quantity), 'all_data' => $row];
             }
         }
         // echo $this->db->last_query();
@@ -1969,15 +2502,16 @@ class Reports_model extends CI_Model
         return $resultSet;
     }
 
-    public function getInventoryTrialBalanceData($start_date, $end_date, $from_warehouse_id = 0, $to_warehouse_id = 0){
+    public function getInventoryTrialBalanceData($start_date, $end_date, $from_warehouse_id = 0, $to_warehouse_id = 0)
+    {
 
-       # Transfer-OUT
-       // SUM(abs(PI.quantity)) AS movement_out_quantity,
-       // AVG(PI.net_unit_cost) AS movement_out_cost
-    
-       # Transfer-IN
-       // IFNULL(SUM(movement_in_quantity), 0) AS movement_in_quantity,
-       // AVG(net_unit_cost) AS movement_in_cost
+        # Transfer-OUT
+        // SUM(abs(PI.quantity)) AS movement_out_quantity,
+        // AVG(PI.net_unit_cost) AS movement_out_cost
+
+        # Transfer-IN
+        // IFNULL(SUM(movement_in_quantity), 0) AS movement_in_quantity,
+        // AVG(net_unit_cost) AS movement_in_cost
 
 
         $qry = $this->db->query("SELECT 
@@ -2169,7 +2703,7 @@ class Reports_model extends CI_Model
         ) AS movement_in ON movement_in.product_id = prd.id
         
         WHERE movement_in.product_id IS NOT NULL AND movement_out.product_id IS NOT NULL");
-
+       //echo $this->db->last_query(); exit;
         $resultSet = array();
         if ($qry->num_rows() > 0) {
             foreach (($qry->result()) as $row) {
@@ -2186,7 +2720,7 @@ class Reports_model extends CI_Model
 
     }
 
-    public function getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id = 0, $to_warehouse_id = 0)
+    public function getInventoryTrialBalanceOLD($start_date, $end_date, $from_warehouse_id = 0, $to_warehouse_id = 0)
     {
         // Opening subquery
         $openingSubquery = $this->db->select('PI.product_id AS product_id, SUM(PI.quantity) AS opening_quantity, AVG(PI.net_unit_cost) AS opening_cost')
@@ -2323,6 +2857,46 @@ class Reports_model extends CI_Model
         }
     }
 
+    public function getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id = 0, $to_warehouse_id = 0)
+    {
+        $start_date = $start_date." 00:00:00";
+        $end_date   = $end_date." 23:59:59";
+
+        $qry = $this->db->query( "SELECT b.id as product_id, b.code as product_code, b.name as product_name, SUM( IF ( movement_date < '".$start_date."',a.quantity,0)) as openning_qty,
+            
+        AVG(IF(movement_date < '".$start_date."',a.net_unit_cost,null)) as openning_cost,
+            
+        SUM(IF(a.type IN ('purchase', 'customer_return', 'adjustment_increase') AND movement_date BETWEEN '".$start_date."' and '".$end_date."', a.quantity,0)) as movement_in_qty,
+            
+        AVG(IF(a.type IN ('purchase', 'customer_return', 'adjustment_increase') AND movement_date BETWEEN '".$start_date."' and '".$end_date."', a.net_unit_cost,null)) as movement_in_cost,
+        
+        SUM(IF(a.type IN ('sale', 'pos', 'return_to_supplier','adjustment_decrease') AND movement_date BETWEEN '".$start_date."' and '".$end_date."', a.quantity,0)) as movement_out_qty,
+        
+        AVG(IF(a.type IN ('sale', 'pos', 'return_to_supplier','adjustment_decrease') AND movement_date BETWEEN '".$start_date."' and '".$end_date."', a.net_unit_cost,null)) as movement_out_cost,
+            
+        
+        (SUM(IF(movement_date < '".$start_date."', a.quantity, 0)) + 
+        
+        SUM(IF(a.type IN ('purchase', 'customer_return', 'adjustment_increase') AND movement_date BETWEEN '".$start_date."' AND '".$end_date."', a.quantity, 0)) - 
+        
+        SUM( ABS( IF(a.type IN ('sale', 'pos', 'return_to_supplier', 'adjustment_decrease') AND movement_date BETWEEN '".$start_date."' AND '".$end_date."', a.quantity, 0)) )
+        
+        ) as closing_qty
+              
+       FROM `sma_inventory_movements` a
+       INNER JOIN sma_products b on a.product_id = b.id
+         WHERE a.location_id = '".$from_warehouse_id."' and a.net_unit_cost is not null
+         AND movement_date BETWEEN '".$start_date."' and '".$end_date."'
+        GROUP BY a.product_id");
+
+
+        // echo $this->db->last_query();
+        // echo "<br>";
+            return $qry->result();
+        
+    }
+
+
     //=== New Item Movement Report Ends ===//
 
     public function getInventoryMovementReport($start_date = null, $end_date = null)
@@ -2415,8 +2989,8 @@ class Reports_model extends CI_Model
             ->select('DISTINCT (sma_sale_items.product_id)')
             ->from('sma_sale_items')
             ->join('sma_sales', 'sma_sales.id = sma_sale_items.sale_id')
-            ->where('sma_sales.date >=', $start_date)
-            ->where('sma_sales.date <=', $end_date);
+            ->where('date(sma_sales.date) >=', $start_date)
+            ->where('date(sma_sales.date) <=', $end_date);
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach ($q->result() as $row) {
@@ -2429,8 +3003,8 @@ class Reports_model extends CI_Model
             ->select('DISTINCT (sma_return_items.product_id)')
             ->from('sma_return_items')
             ->join('sma_returns', 'sma_returns.id = sma_return_items.return_id')
-            ->where('sma_returns.date >=', $start_date)
-            ->where('sma_returns.date <=', $end_date);
+            ->where('date(sma_returns.date) >=', $start_date)
+            ->where('date(sma_returns.date) <=', $end_date);
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
             foreach ($q->result() as $row) {
@@ -2462,7 +3036,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_cost' => 0.00,
             ];
@@ -2477,8 +3051,8 @@ class Reports_model extends CI_Model
             ->from('sma_return_items')
             ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
             ->where('sma_return_items.product_id', $itemId)
-            ->where('sma_returns.date >=', $start_date)
-            ->where('sma_returns.date <=', $end_date)
+            ->where('date(sma_returns.date) >=', $start_date)
+            ->where('date(sma_returns.date) <=', $end_date)
             ->group_by('sma_return_items.product_id');
 
         $q = $this->db->get();
@@ -2486,7 +3060,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_price' => 0.00,
             ];
@@ -2509,7 +3083,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_cost' => 0.00,
             ];
@@ -2524,8 +3098,8 @@ class Reports_model extends CI_Model
             ->from('sma_sale_items')
             ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
             ->where('sma_sale_items.product_id', $itemId)
-            ->where('sma_sales.date >=', $start_date)
-            ->where('sma_sales.date <=', $end_date)
+            ->where('date(sma_sales.date) >=', $start_date)
+            ->where('date(sma_sales.date) <=', $end_date)
             //->where('sma_purchases.return_id IS NULL')
             ->group_by('sma_sale_items.product_id');
 
@@ -2533,7 +3107,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_price' => 0.00,
             ];
@@ -2557,7 +3131,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_cost' => 0.00,
             ];
@@ -2572,7 +3146,7 @@ class Reports_model extends CI_Model
             ->from('sma_sale_items')
             ->join('sma_sales', 'sma_sales.id=sma_sale_items.sale_id')
             ->where('sma_sale_items.product_id', $itemId)
-            ->where('sma_sales.date <', $start_date)
+            ->where('date(sma_sales.date) <', $start_date)
             //->where('sma_sales.date <=', $end_date)
             //->where('sma_purchases.return_id IS NULL')
             ->group_by('sma_sale_items.product_id');
@@ -2581,7 +3155,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_price' => 0.00,
             ];
@@ -2596,7 +3170,7 @@ class Reports_model extends CI_Model
             ->from('sma_return_items')
             ->join('sma_returns', 'sma_returns.id=sma_return_items.return_id')
             ->where('sma_return_items.product_id', $itemId)
-            ->where('sma_returns.date <', $start_date)
+            ->where('date(sma_returns.date) <', $start_date)
             ->group_by('sma_return_items.product_id');
 
         $q = $this->db->get();
@@ -2604,7 +3178,7 @@ class Reports_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row(); // Return the single row
         } else {
-            $notFoundObject = (object)[
+            $notFoundObject = (object) [
                 'quantity' => 0,
                 'net_unit_price' => 0.00,
             ];
@@ -2815,7 +3389,8 @@ class Reports_model extends CI_Model
     {
 
         $this->db
-            ->select('sma_purchases.id as purchase_id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as purchase_sequence_code,sma_accounts_entries.id as transaction_id, sma_purchases.supplier, sma_accounts_entries.date, sma_purchases.invoice_number, sma_accounts_entries.number, sma_purchases.grand_total as total_with_vat, SUM(sma_accounts_entryitems.amount) as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
+            ->select('sma_purchases.id as purchase_id, SUM(sma_purchase_items.quantity) as total_quantity, sma_purchases.sequence_code as purchase_sequence_code,sma_accounts_entries.id as transaction_id, 
+            sma_purchases.supplier, sma_accounts_entries.date, sma_purchases.invoice_number, sma_accounts_entries.number, sma_purchases.grand_total as total_with_vat, SUM(sma_accounts_entryitems.amount) as total_tax, sma_companies.vat_no, sma_companies.sequence_code as supplier_code')
             ->from('sma_accounts_ledgers')
             ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')

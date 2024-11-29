@@ -30,7 +30,7 @@ $(document).ready(function (e) {
                 item_id = row.attr('data-item-id');
 
            var batchExpiry =  $(this).find(':selected').data('batchexpiry');
-           rseitems[item_id].row.expiry = batchExpiry;
+           rseitems[item_id].row.expiry = batchExpiry; 
 
            var batchQty =  $(this).find(':selected').data('batchqty');
            rseitems[item_id].row.batchQuantity = batchQty;
@@ -38,8 +38,26 @@ $(document).ready(function (e) {
            var batchPurchaseCost =  $(this).find(':selected').data('batchpurchasecost');
            rseitems[item_id].row.batchPurchaseCost = batchPurchaseCost;
 
-
-           rseitems[item_id].row.batch_no = new_batchno;
+           var batchcostprice =  $(this).find(':selected').data('batchcostprice');
+            rseitems[item_id].row.cost_price = batchcostprice;  
+           rseitems[item_id].row.batch_no = new_batchno; 
+           
+           rseitems[item_id].row.unit_cost = $(this).find(':selected').data('unit_cost');
+           rseitems[item_id].row.real_unit_cost = $(this).find(':selected').data('real_unit_cost');
+           rseitems[item_id].row.sale_price = $(this).find(':selected').data('sale_price');
+           rseitems[item_id].row.discount1 = $(this).find(':selected').data('discount1');
+           rseitems[item_id].row.discount2 = $(this).find(':selected').data('discount2');
+           rseitems[item_id].row.tax_rate_id = $(this).find(':selected').data('tax_rate_id');
+           rseitems[item_id].row.tax = $(this).find(':selected').data('tax');
+           
+         
+            localStorage.setItem('rseitems', JSON.stringify(rseitems));
+            loadItems();
+        }).on('change', '.rs_cost_price', function () {
+            var row = $(this).closest('tr');
+            var cost_price = $(this).val(),
+            item_id = row.attr('data-item-id');
+            rseitems[item_id].row.cost_price = cost_price;
             localStorage.setItem('rseitems', JSON.stringify(rseitems));
             loadItems();
         });
@@ -115,10 +133,141 @@ $(document).ready(function (e) {
         $('#rsewarehouse').select2('val', rsewarehouse);
     }
 
-    $('#rsesupplier').change(function (e) {
+    /*$('#rsesupplier').change(function (e) {
         localStorage.setItem('rsesupplier', $(this).val());
-    });
-    if ((rsesupplier = localStorage.getItem('rsesupplier'))) {
+    });*/
+
+    var $supplier = $("#rsesupplier"),
+		$currency = $("#rsecurrency");
+
+	var $childsupplierselectbox = $("#childsupplier");
+
+    $supplier.change(function (e) {
+		localStorage.setItem("rsesupplier", $(this).val());
+		localStorage.setItem("childsupplier", null);
+		$("#supplier_id").val($(this).val());
+
+		//localStorage.removeItem('childsupplier');
+		//$childsupplierselectbox.empty();
+		//$childsupplierselectbox.val();
+		populateChildSuppliers($(this).val());
+	});
+
+    $childsupplierselectbox.change(function (e) {
+		localStorage.setItem("childsupplier", $(this).val());
+		$("#child_supplier_id").val($(this).val());
+	});
+
+    function populateChildSuppliers(pid) {
+		$.ajax({
+			url: site.base_url + "suppliers/getChildById",
+			data: { term: "", limit: 10, pid: pid },
+			dataType: "json",
+			success: function (data) {
+				$childsupplierselectbox.empty();
+				$.each(data.results, function (index, value) {
+					$childsupplierselectbox.append(new Option(value.text, value.id));
+				});
+
+				if (localStorage.getItem("childsupplier")) {
+					$childsupplierselectbox
+						.val(localStorage.getItem("childsupplier"))
+						.trigger("change");
+				}
+			},
+		});
+	}
+
+    if ((rsesupplier = localStorage.getItem("rsesupplier"))) {
+		$supplier.val(rsesupplier).select2({
+			minimumInputLength: 1,
+			data: [],
+			initSelection: function (element, callback) {
+				$.ajax({
+					type: "get",
+					async: false,
+					url: site.base_url + "suppliers/getSupplier/" + $(element).val(),
+					dataType: "json",
+					success: function (data) {
+						callback(data[0]);
+					},
+				});
+			},
+			ajax: {
+				url: site.base_url + "suppliers/suggestions",
+				dataType: "json",
+				quietMillis: 15,
+				data: function (term, page) {
+					return {
+						term: term,
+						limit: 10,
+					};
+				},
+				results: function (data, page) {
+					if (data.results != null) {
+						return { results: data.results };
+					} else {
+						return { results: [{ id: "", text: "No Match Found" }] };
+					}
+				},
+			},
+		});
+
+		populateChildSuppliers(rsesupplier);
+	} else {
+		nsSupplier();
+		//nsChildSupplierByParentId($(this).val());
+	}
+
+    function nsChildSupplier() {
+        $("#childsupplier").select2({
+            minimumInputLength: 1,
+            ajax: {
+                url: site.base_url + "suppliers/childsuggestions",
+                dataType: "json",
+                quietMillis: 15,
+                data: function (term, page) {
+                    return {
+                        term: term,
+                        limit: 10,
+                    };
+                },
+                results: function (data, page) {
+                    if (data.results != null) {
+                        return { results: data.results };
+                    } else {
+                        return { results: [{ id: "", text: "No Match Found" }] };
+                    }
+                },
+            },
+        });
+    }
+
+    function nsSupplier() {
+        $("#rsesupplier").select2({
+            minimumInputLength: 1,
+            ajax: {
+                url: site.base_url + "suppliers/suggestions",
+                dataType: "json",
+                quietMillis: 15,
+                data: function (term, page) {
+                    return {
+                        term: term,
+                        limit: 10,
+                    };
+                },
+                results: function (data, page) {
+                    if (data.results != null) {
+                        return { results: data.results };
+                    } else {
+                        return { results: [{ id: "", text: "No Match Found" }] };
+                    }
+                },
+            },
+        });
+    }
+
+    /*if ((rsesupplier = localStorage.getItem('rsesupplier'))) {
         $('#rsesupplier')
             .val(rsesupplier)
             .select2({
@@ -154,7 +303,7 @@ $(document).ready(function (e) {
                     },
                 },
             });
-    }
+    }*/
 
     $('#rsetax2').change(function (e) {
         localStorage.setItem('rsetax2', $(this).val());
@@ -378,7 +527,7 @@ $(document).ready(function (e) {
                             pr_tax_rate = this.rate;
                         }
                     }
-                });
+                }); 
             }
         }
         if (site.settings.product_serial !== 0) {
@@ -815,14 +964,14 @@ $(document).ready(function (e) {
             }
             var new_qty = parseFloat($(this).val()),
                 item_id = row.attr('data-item-id');
-            rseitems[item_id].row.base_quantity = new_qty;
-            if (rseitems[item_id].row.unit != rseitems[item_id].row.base_unit) {
+            //rseitems[item_id].row.base_quantity = new_qty;
+            /*if (rseitems[item_id].row.unit != rseitems[item_id].row.base_unit) {
                 $.each(rseitems[item_id].units, function () {
                     if (this.id == rseitems[item_id].row.unit) {
                         rseitems[item_id].row.base_quantity = unitToBaseQty(new_qty, this);
                     }
                 });
-            }
+            }*/
             rseitems[item_id].row.qty = new_qty;
             localStorage.setItem('rseitems', JSON.stringify(rseitems));
             loadItems();
@@ -887,9 +1036,16 @@ $(document).ready(function (e) {
              }
              var new_bonus = parseFloat($(this).val()),
                  item_id = row.attr('data-item-id');
-                 rseitems[item_id].row.bonus = new_bonus;
-             localStorage.setItem('rseitems', JSON.stringify(rseitems));
-             loadItems();
+            console.log(parseFloat(rseitems[item_id].row.qty));
+            if(parseFloat(new_bonus) + parseFloat(rseitems[item_id].row.qty) > parseFloat(rseitems[item_id].row.base_quantity)){
+                $(this).val(old_row_bonus);
+                 bootbox.alert("Bonus cannot exceed the available quantity");
+                 return;
+            }else{
+                rseitems[item_id].row.bonus = new_bonus;
+                localStorage.setItem('rseitems', JSON.stringify(rseitems));
+                loadItems();
+            }
          });
 
     /* --------------------------
@@ -954,7 +1110,8 @@ function loadItems() {
         product_discount = 0;
         order_discount = 0;
         total_discount = 0;
-
+        
+        $("#add_return, #edit_return").attr("disabled", false);
         $('#reTable tbody').empty();
         rseitems = JSON.parse(localStorage.getItem('rseitems'));
         sortedItems =
@@ -980,13 +1137,16 @@ function loadItems() {
                     item_expiry_date = new Date(item.row.expiry).toLocaleDateString('en-GB');
                 }
             }
-
+             
             var product_id = item.row.id,
                 item_type = item.row.type,
                 combo_items = item.combo_items,
-                item_price = item.row.price,
-                item_cost = item.row.cost_price,
-                item_sale_price = item.row.price,
+                item_price = item.row.price, // This is sale price
+                //item_cost = item.row.cost_price,
+                item_cost = item.row.net_unit_cost, // This is cost price
+                net_unit_cost = item.row.cost_price, 
+                //item_sale_price = item.row.price, 
+                item_sale_price = item.row.net_unit_sale, 
                 item_qty = item.row.qty,
                 item_aqty = item.row.quantity,
                 item_tax_method = item.row.tax_method,
@@ -994,27 +1154,33 @@ function loadItems() {
                 item_discount = 0,
                 item_option = item.row.option,
                 item_code = item.row.code,
+                avz_code = item.row.avz_item_code,
                 item_serial = item.row.serial,
                 item_expiry = item.row.expiry,
                 item_batchno = item.row.batch_no,
                 item_serialno = item.row.serial_number,
-                item_bonus = 0;//item.row.bonus,
-                item_dis1 = item.row.discount1,
-                item_dis2 = item.row.discount2,
+                item_bonus = item.row.bonus ? item.row.bonus : 0;//item.row.bonus,
+                item_dis1 = item.row.discount1 ? item.row.discount1 : 0,
+                item_dis2 = item.row.discount2 ? item.row.discount2 : 0,
                 item_batchQuantity = item.row.batchQuantity,
                 item_name = item.row.name.replace(/"/g, '&#034;').replace(/'/g, '&#039;');
             var product_unit = item.row.unit,
                 base_quantity = item.row.base_quantity;
-
+                base_quantity = base_quantity - item_bonus;
+            // var cost_price= item.row.cost_price,
              var cost_price  = item.row.net_cost;
              var batch_no    = item.row.batch_no;
-             var bonus       = item.row.bonus;
+             var bonus       = item.row.bonus ? item.row.bonus : 0;
              var expiry       = item_expiry_date;//item.row.expiry;
              var discount1       = item.row.discount1;
-             var discount2       = item.row.discount2;
-
-
+             var discount2       = item.row.discount2; 
             var unit_price = item.row.real_unit_price;
+            // new var and two flds below  
+            var unit_cost = item.row.unit_cost;
+            var real_unit_cost = item.row.real_unit_cost;
+ 
+
+
             if (item.units && item.row.fup != 1 && product_unit != item.row.base_unit) {
                 $.each(item.units, function () {
                     if (this.id == product_unit) {
@@ -1092,9 +1258,9 @@ function loadItems() {
             var dis2_b = 0.0;
 
             var main_net = 0.0;
-
-            var total_before_dis_vat = (parseFloat(item_sale_price)) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty);
-
+            // alert(item_cost);
+           // var total_before_dis_vat = (parseFloat(item_sale_price)) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty);
+           var total_before_dis_vat = (parseFloat(real_unit_cost)) * parseFloat(item_qty);
             dis1_a = total_before_dis_vat * parseFloat((item_dis1 / 100));
             total_after_dis1 =  total_before_dis_vat - dis1_a;
             dis2_a = total_after_dis1 *  parseFloat((item_dis2/100));
@@ -1102,14 +1268,10 @@ function loadItems() {
             vat_15_a = total_after_dis2 * parseFloat(item.tax_rate.rate/100);//total_after_dis2 * parseFloat(15/100);
             net_price_a = vat_15_a + total_after_dis2;
 
-            var total_purchases = (parseFloat(item_cost)) * parseFloat(item_qty);
-            var total_sales = (parseFloat(item_sale_price)) * (parseFloat(item_qty) + parseFloat(item_bonus));
-            //console.log(item_qty+' -- '+item_bonus+' -- '+item_sale_price+' -- '+total_sales);
-            total_after_dis1 = total_sales * parseFloat((item_dis1 / 100));
-            total_after_dis2 = (total_sales - total_after_dis1) * parseFloat((item_dis2 / 100));
-            //main_net = net_price_a;// + net_price_b;
-            main_net = total_sales - (total_after_dis1 + total_after_dis2);
-            var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus);
+            var total_purchases = (parseFloat(real_unit_cost)) * parseFloat(item_qty);
+
+            main_net = (parseFloat(item_cost)) * parseFloat(parseFloat(item_qty) + parseFloat(item_bonus));
+            var new_unit_cost = parseFloat(main_net) / parseFloat(parseFloat(item_qty) + parseFloat(item_bonus)); 
 
             var row_no = item.id;
             var newTr = $('<tr id="row_' + row_no + '" class="row_' + item_id + '" data-item-id="' + item_id + '"></tr>');
@@ -1120,7 +1282,9 @@ function loadItems() {
                 item_type +
                 '"><input name="product_code[]" type="hidden" class="rcode" value="' +
                 item_code +
-                '"><input name="product_name[]" type="hidden" class="rname" value="' +
+                '"><input name="avz_code[]" type="hidden" class="avzcode" value="' +
+				avz_code +
+				'"><input name="product_name[]" type="hidden" class="rname" value="' +
                 item_name +
                 '"><input name="product_option[]" type="hidden" class="roption" value="' +
                 item_option +
@@ -1137,26 +1301,16 @@ function loadItems() {
                 item_id +
                 '" title="Edit" style="cursor:pointer;"></i></td>';
 
-                /*tr_html +=
-                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="net_sale_price[]" type="text" id="net_sale_price_' +
-                row_no +
-                '" value="' +
-                item_price +
-                '"></td>';
 
+                var hidden_flds = '<input class="cls_unit_cost" name="unit_cost[]" type="hidden" value="'+unit_cost+'">';
+                  hidden_flds += '<input class="cls_real_unit_cost" name="real_unit_cost[]" type="hidden" value="'+real_unit_cost+'">'; 
+ 
                 tr_html +=
-                '<td class="text-right"><input class="form-control input-sm text-right rprice" name="cost_price[]" type="text" id="cost_price_' +
-                row_no +
-                '" value="' +
-                cost_price +
-                '"></td>';*/
-
-                tr_html +=
-                    '<td class="text-right"><input class="rucost" name="unit_price[]" type="hidden" value="' +
+                    '<td class="text-right">'+hidden_flds+'<input class="rucost" name="unit_price[]" type="hidden" value="' +
                     unit_price +
                     '"><input class="form-control realucost" name="real_unit_price[]" type="hidden" value="' +
                     item.row.real_unit_price +
-                    '"><input class="form-control input-sm text-center rprice" type="text" name="net_price[]" id="cost_' +
+                    '"><input class="form-control input-sm text-center rprice" type="text" name="net_price[]" id="sale_' +
                     row_no +
                     '" value="' +
                     formatDecimal(item_sale_price, 2) +
@@ -1166,7 +1320,7 @@ function loadItems() {
                     '<input id="rreturn_' +
                     row_no +
                     '" class="form-control rcost text-center" name="net_cost[]" type="hidden" value="' +
-                    formatDecimal(item.row.batchPurchaseCost, 2) +
+                    formatDecimal(new_unit_cost, 2) +
                     '" data-id="' +
                     row_no +
                     '" data-item="' +
@@ -1175,37 +1329,7 @@ function loadItems() {
                     row_no +
                     '"></td>';
 
-                tr_html +=
-                    '<td><input class="form-control rserialno" name="serial_no[]" type="text" value="' +
-                    item_serialno +
-                    '" data-id="' +
-                    row_no +
-                    '" data-item="' +
-                    item_id +
-                    '" id="serialno_' +
-                    row_no +
-                    '"></td>';
-
-                // tr_html +=
-                // '<td class="text-right"><input class="form-control input-sm text-right rbatchno" name="batch_no[]" type="text" id="batch_no_' +
-                // row_no +
-                // '" value="' +
-                // batch_no +
-                // '"></td>';
-
-                var batchesOptions = '<option value="" data-batchExpiry="null" data-batchQty="0"  data-batchpurchasecost="0">--</option>';
-                if (item.batches !== false) {
-                    $.each(item.batches, function () {
-                        batchSelected = "";
-                        if (this.batchno == item_batchno) {
-                            batchSelected = "selected";
-                        }
-                        batchesOptions += '<option data-batchExpiry="'+this.expiry+'" data-batchQty="'+this.quantity+'"  data-batchpurchasecost="'+this.purchase_cost+'" value="'+this.batchno+'" '+batchSelected+'>'+this.batchno+'</option>';
-                    });
-                }
-
-                tr_html += '<td><select class="form-control rbatchno" name="batch_no[]" id="batch_no_' + row_no +'">'+batchesOptions+'</select></td>';
-
+                tr_html += '<td><input class="form-control rbatchno" readonly value="'+item_batchno+'" name="batch_no[]" id="batch_no_' + row_no +'"></td>';
 
                 tr_html +=
                 '<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="' +
@@ -1217,22 +1341,6 @@ function loadItems() {
                 '" id="expiry_' +
                 row_no +
                 '"></td>';
-
-
-
-
-            // if (site.settings.product_serial == 1) {
-            //     tr_html +=
-            //         '<td class="text-right"><input class="form-control input-sm rserial" name="serial[]" type="text" id="serial_' +
-            //         row_no +
-            //         '" value="' +
-            //         item_serial +
-            //         '"></td>';
-            // }
-
-
-
-
 
 
             tr_html +=
@@ -1250,63 +1358,27 @@ function loadItems() {
                 product_unit +
                 '"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' +
                 base_quantity +
-                '"></td>';
+                '"><span style="font-size:10px;margin-top:5px;" class="batchQuantity">' +
+				base_quantity +
+				'</span></td>';
 
-                /*tr_html +=
+                tr_html +=
                 '<td class="text-right"><input class="form-control input-sm text-right rbonus" name="bonus[]" type="text" id="bonus_' +
                 row_no +
                 '" value="' +
                 bonus +
-                '"></td>';*/
-
-
-                /*tr_html +=
-                    '<td class="text-right"><input class="form-control input-sm rdiscount" name="product_discount[]" type="text" id="discount_' +
-                    row_no +
-                    '" value="' +
-                    discount1 +
-                    '"></td>';*/
-
-                // tr_html +=
-                //     '<td class="text-right"><input class="form-control input-sm rdiscount1" name="dis1[]" type="text" id="discount_' +
-                //     row_no +
-                //     '" value="' +
-                //     discount1 +
-                //     '"><input class="form-control input-sm rdiscount" name="product_discount[]" type="hidden" id="discount_' +
-                //     row_no +
-                //     '" value="' +
-                //     discount1 +
-                //     '"></td>';
-
-                // tr_html +=
-                //     '<td class="text-right"><input class="form-control input-sm rdiscount2" name="dis2[]" type="text" id="discount2_' +
-                //     row_no +
-                //     '" value="' +
-                //     discount2 +
-                //     '"></td>';
-
-
-                    tr_html +=
-                    '<td><input class="form-control text-center rdiscount1" name="dis1[]" type="text" data-id="' +
-                    row_no +
-                    '" data-item="' +
-                    item_id +
-                    '" id="discount_' +
-                    row_no +
-                    '" value="'+formatDecimal(discount1)+'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
-                    formatMoney(total_after_dis1)
-                    '</span></td>';
+                '"></td>';
 
                 tr_html +=
-                    '<td><input class="form-control text-center rdiscount2" name="dis2[]" type="text" data-id="' +
+                    '<td><input class="form-control rs_cost_price" name="cost_price[]" type="text" value="' +
+                    item.row.real_unit_cost +
+                    '" data-id="' +
                     row_no +
                     '" data-item="' +
                     item_id +
-                    '" id="discount2_' +
+                    '" id="cost_' +
                     row_no +
-                    '" value="'+formatDecimal(item_dis2)+'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
-                    formatMoney(total_after_dis2)
-                    '</span></td>';
+                    '"></td>';
 
             // <span class="text-right sdiscount text-danger" id="sdiscount_' +
             // row_no +
@@ -1315,7 +1387,7 @@ function loadItems() {
             // '</span>
 
             tr_html +=
-                '<td class="text-right"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' +
+                '<td class="text-right"><input type="hidden" name="product_vat[]" value="'+vat_15_a+'"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' +
                     row_no +
                     '" value="' +
                     pr_tax.id +
@@ -1398,7 +1470,7 @@ function loadItems() {
                 '<td class="text-right"><span class="text-right ssubtotal" id="total_sale_' +
                 row_no +
                 '">' +
-                formatMoney(total_sales) +
+                formatMoney(total_purchases) +
                 '</span></td>';
 
             tr_html +=
@@ -1424,11 +1496,18 @@ function loadItems() {
 
             total += formatDecimal(main_net, 4);
             grand_total_vat += formatDecimal(vat_15_a, 4);
+            
             grand_total_purchases += formatDecimal(total_purchases, 4);
-            grand_total_sales += formatDecimal(total_sales, 4);
+           //  grand_total_purchases +=  formatDecimal(vat_15_a,4) ;  // add vat to total purchase
+            // grand_total_sales += formatDecimal(total_sales, 4);
 
             count += parseFloat(item_qty);
             an++;
+            
+            if ((parseFloat(base_quantity) < parseFloat(item_qty))) {
+				$("#row_" + row_no).addClass("danger");
+				$("#add_return, #edit_return").attr("disabled", true);
+			}
         });
 
         // var col = 2;
@@ -1464,9 +1543,9 @@ function loadItems() {
             formatMoney(grand_total_vat) +
             '</th>';
 
-        //tfoot += '<th class="text-right">' + formatMoney(grand_total_purchases) + '</th>';
+        tfoot += '<th class="text-right">' + formatMoney(grand_total_purchases) + '</th>';
 
-        tfoot += '<th class="text-right">' + formatMoney(grand_total_sales) + '</th>';
+       //  tfoot += '<th class="text-right">' + formatMoney(grand_total_sales) + '</th>';
 
         tfoot +=
             '<th class="text-right">' +
@@ -1546,6 +1625,7 @@ function add_return_item(item) {
         rseitems[item_id].row.qty = new_qty;
     } else {
         rseitems[item_id] = item;
+        rseitems[item_id].row.base_quantity = rseitems[item_id].row.qty;
     }
     rseitems[item_id].order = new Date().getTime();
     localStorage.setItem('rseitems', JSON.stringify(rseitems));

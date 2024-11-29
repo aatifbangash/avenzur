@@ -638,6 +638,84 @@ class Pos extends MY_Controller
         }
     }
 
+    public function getProductData($pId = null, $warehouse_id = null){
+        $this->sma->checkPermissions('index');
+        if ($this->input->get('product_id')) {
+            $pId = $this->input->get('product_id', true);
+        }
+        if ($this->input->get('warehouse_id')) {
+            $warehouse_id = $this->input->get('warehouse_id', true);
+        }
+
+        $rows       = $this->pos_model->getWHProductById($pId, $warehouse_id);
+        $r = 0;
+        $count = 0;
+
+        $option    = false;
+        if ($rows) {
+            $c = uniqid(mt_rand(), true);
+            $row = $rows[0];
+            unset($row->cost, $row->details, $row->product_details, $row->image, $row->barcode_symbology, $row->cf1, $row->cf2, $row->cf3, $row->cf4, $row->cf5, $row->cf6, $row->supplier1price, $row->supplier2price, $row->cfsupplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1, $row->supplier2, $row->supplier3, $row->supplier4, $row->supplier5, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
+            $row->item_tax_method = $row->tax_method;
+            $row->qty             = 1;
+            $row->price           = $row->net_unit_sale;
+            $row->discount        = '0';
+            $row->serial          = '';
+            //$options              = $this->pos_model->getProductOptions($row->id, $warehouse_id);
+
+            if ($options) {
+                $opt = current($options);
+                if (!$option) {
+                    $option = $opt->id;
+                }
+                }
+
+            $row->option          = $option;
+            $row->real_unit_price = $row->net_unit_sale;
+            $row->base_quantity   = 1;
+            $row->base_unit       = $row->unit;
+            $row->base_unit_price = $row->net_unit_sale;
+            $row->unit            = $row->sale_unit ? $row->sale_unit : $row->unit;
+            $row->comment         = '';
+            $combo_items          = false;
+
+            $row->batch_no = $row->batchno;
+            $row->qty = $row->total_quantity;
+
+            $row->id = $row->product_id;
+            $row->name = $row->product_name;
+            $row->code = $row->product_code;
+
+            // if ($row->type == 'combo') {
+            //     $combo_items = $this->pos_model->getProductComboItems($row->id, $warehouse_id);
+            // }
+            $units    = $this->site->getUnitsByBUID($row->base_unit);
+            $tax_rate = false; // $this->site->getTaxRateByID($row->tax_rate);
+
+            //$pr = ['id' => sha1(uniqid(mt_rand(), true)), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')', 'category' => $row->category_id, 'row' => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options];
+
+            $total_quantity = $row->total_quantity;
+            $row->quantity = $row->total_quantity;
+            $count++;
+            $row->serial_no = $count;
+            $options = [];
+            $pr = (object)[
+                'id' => sha1($c . $r),
+                'item_id' => $row->product_id,
+                'label' => $row->product_name . ' (' . $row->code . ')',
+                'row' => $row,
+                'tax_rate' => $tax_rate,
+                'units' => $units,
+                'options' => $options,
+                'batches' => $batches,
+                'total_quantity' => $total_quantity
+            ];
+            $r++;
+
+            $this->sma->send_json($pr);
+        }
+    }
+
     public function getProductPromo($pId = null, $warehouse_id = null)
     {
         $this->sma->checkPermissions('index');
@@ -672,13 +750,16 @@ class Pos extends MY_Controller
                      }
 
                     $row->option          = $option;
-                    $row->real_unit_price = $row->price;
+                    $row->real_unit_price = $row->net_unit_sale;
                     $row->base_quantity   = 1;
                     $row->base_unit       = $row->unit;
-                    $row->base_unit_price = $row->price;
+                    $row->base_unit_price = $row->net_unit_sale;
                     $row->unit            = $row->sale_unit ? $row->sale_unit : $row->unit;
                     $row->comment         = '';
                     $combo_items          = false;
+
+                    $row->batch_no = $row->batchno;
+                    $row->qty = $row->total_quantity;
 
                     // if ($row->type == 'combo') {
                     //     $combo_items = $this->pos_model->getProductComboItems($row->id, $warehouse_id);
@@ -722,6 +803,8 @@ class Pos extends MY_Controller
             . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('sales/delete/$1') . "'>"
             . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
             . lang('delete_sale') . '</a>';
+        $journal_entry_link      = anchor('admin/entries/view/journal/?sid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
+
         $action = '<div class="text-center"><div class="btn-group text-left">'
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
@@ -737,23 +820,26 @@ class Pos extends MY_Controller
                 <li>' . $edit_link . '</li>
                 <li>' . $email_link . '</li>
                 <li>' . $return_link . '</li>
-                <li>' . $delete_link . '</li>
+                <li>' . $delete_link . '</li> 
+                <li>' . $journal_entry_link . '</li>  
             </ul>
         </div></div>';
 
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
-                ->select($this->db->dbprefix('sales') . ".id as id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no,{$this->db->dbprefix('sales')}.sequence_code as code, biller, customer, (grand_total+COALESCE(rounding, 0)), paid, CONCAT(grand_total, '__', rounding, '__', paid) as balance, sale_status, payment_status, companies.email as cemail")
+                ->select($this->db->dbprefix('sales') . ".id as id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no,{$this->db->dbprefix('sales')}.sequence_code as code, biller, customer, (grand_total+COALESCE(rounding, 0)), paid, CONCAT(grand_total, '__', rounding, '__', paid) as balance, sale_status, payment_status, companies.email as cemail, warehouses.name as warehouse_name")
                 ->from('sales')
                 ->join('companies', 'companies.id=sales.customer_id', 'left')
+                ->join('warehouses', 'warehouses.id = sales.warehouse_id', 'left')
                 ->where('warehouse_id', $warehouse_id)
                 ->group_by('sales.id');
         } else {
             $this->datatables
-                ->select($this->db->dbprefix('sales') . ".id as id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no,{$this->db->dbprefix('sales')}.sequence_code as code, biller, customer, (grand_total+COALESCE(rounding, 0)), paid, CONCAT(grand_total, '__', rounding, '__', paid) as balance, sale_status, payment_status, companies.email as cemail")
+                ->select($this->db->dbprefix('sales') . ".id as id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no,{$this->db->dbprefix('sales')}.sequence_code as code, biller, customer, (grand_total+COALESCE(rounding, 0)), paid, CONCAT(grand_total, '__', rounding, '__', paid) as balance, sale_status, payment_status, companies.email as cemail, warehouses.name as warehouse_name")
                 ->from('sales')
                 ->join('companies', 'companies.id=sales.customer_id', 'left')
+                ->join('warehouses', 'warehouses.id = sales.warehouse_id', 'left')
                 ->group_by('sales.id');
         }
         $this->datatables->where('pos', 1);
@@ -847,9 +933,29 @@ class Pos extends MY_Controller
                 $item_unit          = $_POST['product_unit'][$r];
                 $item_quantity      = $_POST['product_base_quantity'][$r];
 
-                $product_details = $this->pos_model->getProductQuantityWithNearestExpiry($item_id, $warehouse_id);
+
+                /*$product_details = $this->pos_model->getProductQuantityWithNearestExpiry($item_id, $item_code, $warehouse_id);
+                if(empty($product_details)){
+                    $this->session->set_flashdata('error', lang( $item_code. '-'. $item_name . ' may Expired Please remove it from the list'));
+                    admin_redirect('pos');
+                }  
                 $batch_no = $product_details['batchno'];
-                $expiry = $product_details['expiry'];
+                $expiry = $product_details['expiry'];*/
+                // $item_unit_cost = $product_details['avg_cost']; 
+
+                $batch_no = $_POST['batchno'][$r];
+                $expiry = $_POST['item_expiry'][$r];
+                $item_unit_cost = $_POST['item_unit_cost'][$r];
+                $real_cost = $_POST['real_unit_cost'][$r];
+                $avz_item_code = $_POST['avz_item_code'][$r];
+
+                //$item_unit_cost = $this->site->getAvgCost($batch_no, $item_id); 
+                //$real_cost = $this->site->getRealAvgCost($batch_no, $item_id);
+
+                if(empty($item_unit_cost)){
+                    $this->session->set_flashdata('error', lang('Avg Cost not found for product: '.$item_code. '-'. $item_name ));
+                    admin_redirect('pos');
+                } 
                     // $this->db->select('cost')->from('products')->where('id', $item_id);
                     // $productCost =$this->db->get()->result();
                 
@@ -870,7 +976,7 @@ class Pos extends MY_Controller
                     $product_discount += $pr_item_discount;
                     $pr_item_tax = $item_tax = 0;
                     $tax         = '';
-
+                    
                     if (isset($item_tax_rate) && $item_tax_rate != 0) {
                         $tax_details = $this->site->getTaxRateByID($item_tax_rate);
                         $ctax        = $this->site->calculateTax($product_details, $tax_details, $unit_price);
@@ -897,7 +1003,7 @@ class Pos extends MY_Controller
                         'product_name'      => $item_name,
                         'product_type'      => $item_type,
                         'option_id'         => $item_option,
-                        'net_cost'          => $productCost,
+                        'net_cost'          => $item_unit_cost, // before it was prodcost
                         'net_unit_price'    => $item_net_price,
                         'unit_price'        => $this->sma->formatDecimal($item_net_price + $item_tax),
                         'quantity'          => $item_quantity,
@@ -916,9 +1022,9 @@ class Pos extends MY_Controller
                         'batch_no'          => $batch_no,
                         'real_unit_price'   => $real_unit_price,
                         'comment'           => $item_comment,
+                        'real_cost'         => $real_cost,
+                        'avz_item_code'     => $avz_item_code
                     ];
-
-                 
 
                     $products[] = ($product + $gst_data);
                     $total += $this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
@@ -932,9 +1038,9 @@ class Pos extends MY_Controller
                 krsort($products);
             }
 
-            $order_discount = $this->site->calculateDiscount($this->input->post('discount'), ($total + $product_tax), true);
+            $order_discount = $this->site->calculateDiscount($this->input->post('discount'), ($total), true);
             $total_discount = $this->sma->formatDecimal(($order_discount + $product_discount), 4);
-            $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
+            $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total - $order_discount));
             $total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
             // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
             $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
@@ -1084,8 +1190,10 @@ class Pos extends MY_Controller
 
                     $sid = $sale['sale_id'];
                     
-                    $payemntsType = $this->pos_model->getPaymentType($sid);
-                    $paidBillType = $payemntsType->paid_by;
+                    //$payemntsType = $this->pos_model->getPaymentType($sid);
+                    //$paidBillType = $payemntsType->paid_by;
+
+                    $payemntsTypes = $this->pos_model->getPaymentTypes($sid);
                     
                     $inv = $this->sales_model->getSaleByID($sid);
                     if($inv->sale_invoice == 0){
@@ -1103,7 +1211,8 @@ class Pos extends MY_Controller
                         'cr_total'     => $inv->grand_total,
                         'notes'        => 'POS Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
                         'sid'          =>  $inv->id,
-                        'transaction_type'   =>  'pos'
+                        'transaction_type'   =>  'pos',
+                        'customer_id'  => $inv->customer_id
                         );
                         
                         $add  = $this->db->insert('sma_accounts_entries', $entry);
@@ -1125,41 +1234,55 @@ class Pos extends MY_Controller
                             $totalPurchasePrice = $totalPurchasePrice + ($item->net_cost * $item->quantity);
                         }
 
-                        $amount_paid_pos = $_POST['amount'][0];
+                        //$amount_paid_pos = $_POST['amount'][0];
+                        $amount_paid_pos = 0;
+                        $amount_due_pos = 0;
+                        $pos_amount_balance = 0;
+                        foreach ($payemntsTypes as $payemntsType){
+                            $paidBillType = $payemntsType->paid_by;
+                            $amount_due_pos += $payemntsType->amount;
+                            $amount_paid_pos += $payemntsType->pos_paid;
 
-                        if($paidBillType =="cash"){
-                            // //cash
-                            $entryitemdata[] = array(
-                            'Entryitem' => array(
-                            'entry_id' => $insert_id,
-                            'dc' => 'D',
-                            'ledger_id' => $customer->fund_books_ledger,
-                            //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
-                            'amount' => $amount_paid_pos,
-                            'narration' => 'cash'
-                            )
-                            );
-                        }else{
-                               // //credit card
-                            $entryitemdata[] = array(
+                            if($paidBillType =="cash"){
+                                // //cash
+                                $entryitemdata[] = array(
                                 'Entryitem' => array(
                                 'entry_id' => $insert_id,
                                 'dc' => 'D',
-                                'ledger_id' => $customer->credit_card_ledger,
+                                'ledger_id' => $customer->fund_books_ledger,
                                 //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
-                                'amount' => $amount_paid_pos,
-                                'narration' => 'Credit Card'
+                                'amount' => $payemntsType->pos_paid,
+                                'narration' => 'cash'
                                 )
-                            );  
+                                );
+                            }else{
+                                   // //credit card
+                                $entryitemdata[] = array(
+                                    'Entryitem' => array(
+                                    'entry_id' => $insert_id,
+                                    'dc' => 'D',
+                                    'ledger_id' => $customer->credit_card_ledger,
+                                    //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
+                                    'amount' => $payemntsType->pos_paid,
+                                    'narration' => 'Credit Card'
+                                    )
+                                );  
+                            }
+
+                            $pos_amount_balance = $payemntsType->pos_balance;
                         }
 
-                        $price_difference = $amount_paid_pos - ($totalSalePrice + $inv->total_tax - $inv->total_discount);
+                        //$price_difference = $amount_paid_pos - ($totalSalePrice + $inv->total_tax - $inv->total_discount);
+                        
+                        //$price_difference = $amount_due_pos - $amount_paid_pos;
+
+                        $price_difference = $pos_amount_balance;
+                        
                         if($price_difference > 0){
                             $difference_type = 'C';
                         }else if($price_difference < 0){
                             $difference_type = 'D';
                         }
-
 
                         // cost of goods sold
                         $entryitemdata[] = array(
@@ -1217,23 +1340,23 @@ class Pos extends MY_Controller
                                     )
                                 );
 
-                        /*if($price_difference != 0){
+                        if($price_difference != 0){
                             // //price difference
                             $entryitemdata[] = array(
                                 'Entryitem' => array(
                                     'entry_id' => $insert_id,
-                                    'dc' => 'C',
+                                    'dc' => $difference_type,
                                     'ledger_id' => $customer->price_difference_ledger,
                                     'amount' => abs($price_difference),
-                                    'narration' => 'price difference'
+                                    'narration' => 'Halala Difference'
                                 )
                             );
-                        }  */    
+                        }    
                         
                         $total_invoice_entry = $inv->total_tax + $totalSalePrice + $totalPurchasePrice;
-                        /*if($price_difference > 0){
-                            $total_invoice_entry += $price_difference;
-                        }*/
+                        if($price_difference != 0){
+                            $total_invoice_entry += abs($price_difference);
+                        }
 
                         $this->db->update('sma_accounts_entries', ['dr_total' => $total_invoice_entry, 'cr_total' => $total_invoice_entry], ['id' => $insert_id]);
                                 
