@@ -297,6 +297,7 @@ class Sales extends MY_Controller
                 'note'              => $note,
                 'staff_note'        => $staff_note,
                 'total'             => $grand_total_sale,
+                'total_net_sale'    => $grand_total_net_sale,
                 'product_discount'  => $product_discount,
                 'order_discount_id' => $this->input->post('order_discount'),
                 'order_discount'    => $order_discount,
