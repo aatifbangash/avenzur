@@ -48,7 +48,8 @@ class Customers extends MY_Controller
             'dr_total'     => $payment_amount,
             'cr_total'     => $payment_amount,
             'notes'        => 'Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
-            'pid'          =>  ''
+            'pid'          =>  '',
+            'customer_id'  => $customer_id
             );
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();

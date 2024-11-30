@@ -577,7 +577,8 @@ class Returns extends MY_Controller
         'cr_total'     => $inv->grand_total,
         'notes'        => 'RCO Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
         'rid'          =>  $inv->id,
-        'transaction_type'   =>  'returncustomerorder'
+        'transaction_type'   =>  'returncustomerorder',
+        'customer_id' => $inv->customer_id
         );
         
         $add  = $this->db->insert('sma_accounts_entries', $entry);
