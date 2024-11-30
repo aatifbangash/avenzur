@@ -397,7 +397,7 @@
                             //}
                             ?>
                             
-                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->subtotal + $totalVAT); ?></td>
+                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->totalbeforevat + $totalVAT); ?></td>
                             
                         </tr>
                         <?php
