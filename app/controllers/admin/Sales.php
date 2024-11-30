@@ -83,6 +83,8 @@ class Sales extends MY_Controller
             }
             // Check If customer pending sales exceeded the customer credit limit END
 
+            $warning_note = $this->input->post('warning_note') ? $this->input->post('warning_note') : NULL;
+            
             $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('so');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
@@ -296,6 +298,7 @@ class Sales extends MY_Controller
                 'warehouse_id'      => $warehouse_id,
                 'note'              => $note,
                 'staff_note'        => $staff_note,
+                'warning_note'      => $warning_note, 
                 'total'             => $grand_total_sale,
                 'total_net_sale'    => $grand_total_net_sale,
                 'product_discount'  => $product_discount,
@@ -1031,6 +1034,7 @@ class Sales extends MY_Controller
             $biller           = !empty($biller_details->company) && $biller_details->company != '-' ? $biller_details->company : $biller_details->name;
             $note             = $this->sma->clear_tags($this->input->post('note'));
             $staff_note       = $this->sma->clear_tags($this->input->post('staff_note'));
+            
 
             $total            = 0;
             $product_tax      = 0;

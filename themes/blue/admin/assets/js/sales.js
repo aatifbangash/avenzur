@@ -1418,11 +1418,29 @@ function nsCustomer() {
 }
 //localStorage.clear();
 
-function validate_confirm() {
-	var isValid = window.confirm("Are you sure to proceed?");
-	if (isValid === false) {
-		return isValid;
+function validate_confirm(e) {
+
+	if(warning_note == 1 && document.getElementById("warning_note").innerHTML == ''){
+		let warning_text = prompt("Sale price entered is less than purchase price!", "Please write note to proceed");
+		if (warning_text != null) {
+			document.getElementById("warning_note").value = warning_text;
+			
+			/*const additionalData = document.createElement('input');
+			additionalData.type = 'hidden';
+			additionalData.name = 'warning_note';
+			additionalData.value = 'Extra Data'; // The data to append
+			this.appendChild(additionalData);*/
+			
+		}else{
+			return false;
+		}
+	}else{
+		var isValid = window.confirm("Are you sure to proceed?");
+		if (isValid === false) {
+			return isValid;
+		}
 	}
+
 	var batchnos = document.getElementsByName("batchno[]");
 	for (var i = 0; i < batchnos.length; i++) {
 		if (batchnos[i].value === "") {
@@ -1465,6 +1483,7 @@ function loadItems() {
 		product_discount = 0;
 		order_discount = 0;
 		total_discount = 0;
+		warning_note = 0;
 		$("#slTable tbody").empty();
 		slitems = JSON.parse(localStorage.getItem("slitems"));
 		sortedItems =
@@ -1487,7 +1506,7 @@ function loadItems() {
 
 		$.each(sortedItems, function () {
 			var item = this;
-			console.log('item', item);
+			
 			// const cost_price = toTwoDecimals(item.cost);
 			// const sale_price = toTwoDecimals(item.sale_price);
 			// const base_quantity = new Decimal(item.qty);
@@ -2019,6 +2038,12 @@ function loadItems() {
 				if (site.settings.overselling != 1) {
 					$("#add_sale, #edit_sale").attr("disabled", true);
 				}
+			}
+
+
+			if(new_item.sale_price < new_item.net_unit_cost){
+				$("#row_" + row_no).addClass("warning");
+				warning_note = 1;
 			}
 		});
 
