@@ -1639,4 +1639,41 @@ class Returns_supplier extends MY_Controller
 
         $this->load->view($this->theme . 'returns_supplier/view', $this->data);
     }
+
+
+    public function modal_view($return_id = null)
+    {
+        $this->sma->checkPermissions('index', true);
+
+        if ($this->input->get('id')) {
+            $return_id = $this->input->get('id');
+        }
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv = $this->returns_supplier_model->getReturnByID($return_id);
+        if (!$this->session->userdata('view_right')) {
+            $this->sma->view_rights($inv->created_by, true);
+        }
+        $this->data['rows'] = $this->returns_supplier_model->getReturnItems($return_id);
+        $supplier = $this->site->getCompanyByID($inv->supplier_id);
+        $this->data['parent_supplier'] = '';
+        if($supplier->level == 2 && $supplier->parent_code != '') {
+            $parentSupplier = $this->site->getCompanyByParentCode($supplier->parent_code);
+            if(isset($parentSupplier->name)) {
+                $this->data['parent_supplier'] = $parentSupplier;
+            }
+        }
+        //$this->data['journal_entry'] = $this->site->getJournalEntryByTypeId('purchase', $purchase_id);
+        $this->data['supplier'] = $supplier;
+        $this->data['warehouse'] = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv'] = $inv;
+        //$this->data['payments'] = $this->purchases_model->getPaymentsForPurchase($purchase_id);
+        $this->data['created_by'] = $this->site->getUser($inv->created_by);
+        $this->data['updated_by'] = $inv->updated_by ? $this->site->getUser($inv->updated_by) : null;
+        //$this->data['return_purchase'] = $inv->return_id ? $this->purchases_model->getPurchaseByID($inv->return_id) : null;
+        //$this->data['return_rows'] = $inv->return_id ? $this->purchases_model->getAllPurchaseItems($inv->return_id) : null;
+        $this->data['attachments'] = $this->site->getAttachments($return_id, 'return_supplier');
+        $this->data['return_id'] = $return_id;
+
+        $this->load->view($this->theme . 'purchases/modal_view', $this->data);
+    }
 }
