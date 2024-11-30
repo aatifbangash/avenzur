@@ -232,6 +232,9 @@ class Returns extends MY_Controller
 
         if ($this->form_validation->run() == true) {
 
+            // echo "<pre>";
+            // print_r($_POST);exit;
+
             $return_screen     = $this->input->post('return_screen');
 
             $date             = ($this->Owner || $this->Admin) ? $this->sma->fld(trim($this->input->post('date'))) : date('Y-m-d H:i:s');
@@ -338,6 +341,15 @@ class Returns extends MY_Controller
                     $subtotal = $main_net;
                     $unit     = $this->site->getUnitByID($item_unit);
 
+                    /**
+                     * POST FIELDS
+                    */
+                    $new_item_first_discount = $_POST['item_first_discount'][$r];
+                    $new_item_second_discount = $_POST['item_second_discount'][$r];
+                    $new_item_vat_value = $_POST['item_vat_values'][$r];
+                    $new_item_total_sale = $_POST['item_total_sale'][$r];
+                    $totalbeforevat = $_POST['totalbeforevat'][$r];
+
                     $product = [
                         'product_id'        => $item_id,
                         'product_code'      => $item_code,
@@ -354,10 +366,10 @@ class Returns extends MY_Controller
                         'warehouse_id'      => $warehouse_id,
                         'item_tax'          => $pr_item_tax,
                         'tax_rate_id'       => $item_tax_rate,
-                        'tax'               => $tax,
+                        'tax'               => $new_item_vat_value,
                         'discount'          => $item_discount,
-                        'item_discount'     => $product_item_discount,
-                        'subtotal'          => $this->sma->formatDecimal($subtotal),
+                        'item_discount'     => $new_item_first_discount,
+                        'subtotal'          => $new_item_total_sale,
                         'serial_no'         => $item_serial,
                         'expiry'            => $item_expiry,
                         'batch_no'          => $item_batchno,
@@ -367,6 +379,8 @@ class Returns extends MY_Controller
                         //'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
+                        'second_discount_value' => $new_item_second_discount,
+                        'totalbeforevat'    => $totalbeforevat,
                         'real_cost'         => $real_cost,
                         'avz_item_code'     => $avz_item_code
                     ];
@@ -394,6 +408,17 @@ class Returns extends MY_Controller
             
             //Discount calculation
 
+            /**
+             * post values
+             */
+            
+             $grand_total_net_return = $this->input->post('grand_total_net_sale');
+             $grand_total_discount = $this->input->post('grand_total_discount');
+             $grand_total_vat = $this->input->post('grand_total_vat');
+             $grand_total_return = $this->input->post('grand_total_sale');
+             $grand_total = $this->input->post('grand_total');
+             $cost_goods_sold = $this->input->post('cost_goods_sold');
+
             $data           = [
                 'date'              => $date,
                 'reference_no'      => $reference,
@@ -404,16 +429,18 @@ class Returns extends MY_Controller
                 'warehouse_id'      => $warehouse_id,
                 'note'              => $note,
                 'staff_note'        => $staff_note,
-                'total'             => $total,
+                'total'             => $grand_total_return,
+                'total_net_return'  => $grand_total_net_return,
                 'product_discount'  => $total_product_discount,
                 'order_discount_id' => $this->input->post('order_discount'),
                 'order_discount'    => $order_discount,
-                'total_discount'    => $total_product_discount,
+                'total_discount'    => $grand_total_discount,
                 'product_tax'       => $product_tax,
                 'order_tax_id'      => $this->input->post('order_tax'),
                 'order_tax'         => $order_tax,
-                'total_tax'         => $total_tax,
+                'total_tax'         => $grand_total_vat,
                 'grand_total'       => $grand_total,
+                'cost_goods_sold'   => $cost_goods_sold,
                 'total_items'       => $total_items,
                 'paid'              => 0,
                 'created_by'        => $this->session->userdata('user_id'),
@@ -574,6 +601,41 @@ class Returns extends MY_Controller
 
         $amount_to_pay = $totalSalePrice + $inv->total_tax - $inv->total_discount;
 
+            // cost of goods sold
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $customer->cogs_ledger,
+                'amount' =>  $inv->cost_goods_sold,
+                'narration' => 'cost of goods sold'
+                )
+            );
+
+              // inventory
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+            'entry_id' => $insert_id,
+            'dc' => 'D',
+            'ledger_id' => $warehouse_ledgers->inventory_ledger,
+            'amount' => $inv->cost_goods_sold,
+            'narration' => 'inventory'
+            )
+        );
+
+            // //discount
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $customer->discount_ledger,
+                    'amount' => $inv->total_discount,
+                    'narration' => 'discount'
+                )
+            );
+            
+
+
         // //cash
         $entryitemdata[] = array(
             'Entryitem' => array(
@@ -581,56 +643,27 @@ class Returns extends MY_Controller
             'dc' => 'C',
             'ledger_id' => $customer->ledger_account,
             //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
-            'amount' => $amount_to_pay,
+            'amount' => $inv->grand_total,
             'narration' => 'customer'
             )
         );
 
-        // cost of goods sold
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-            'entry_id' => $insert_id,
-            'dc' => 'C',
-            'ledger_id' => $customer->cogs_ledger,
-            'amount' => $totalPurchasePrice,
-            'narration' => 'cost of goods sold'
-            )
-        );
+    
 
-        // inventory
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-            'entry_id' => $insert_id,
-            'dc' => 'D',
-            'ledger_id' => $warehouse_ledgers->inventory_ledger,
-            'amount' => $totalPurchasePrice,
-            'narration' => 'inventory'
-            )
-        );
-
+      
         // // sale account
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
                 'dc' => 'D',
                 'ledger_id' => $customer->sales_ledger,
-                'amount' => $totalSalePrice,
+                'amount' => $inv->total,
                 'narration' => 'sale account'
             )
         );
             
 
-        // //discount
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'C',
-                'ledger_id' => $customer->discount_ledger,
-                'amount' => $inv->total_discount,
-                'narration' => 'discount'
-            )
-        );
-        
+    
         // //vat on sale
         $entryitemdata[] = array(
                     'Entryitem' => array(

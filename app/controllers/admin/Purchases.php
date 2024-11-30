@@ -122,7 +122,7 @@ class Purchases extends MY_Controller
                 $item_expiry = (isset($_POST['expiry'][$r]) && !empty($_POST['expiry'][$r])) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
                 $supplier_part_no = (isset($_POST['part_no'][$r]) && !empty($_POST['part_no'][$r])) ? $_POST['part_no'][$r] : null;
                 $item_unit = $_POST['product_unit'][$r];
-                $item_quantity = $_POST['product_base_quantity'][$r];
+                $item_quantity = $item_unit_quantity;//$_POST['product_base_quantity'][$r];
 
                 $item_batchno = trim($_POST['batchno'][$r]);
                 if (empty($item_batchno)) {
@@ -850,7 +850,7 @@ class Purchases extends MY_Controller
                 //$ordered_quantity   = $_POST['ordered_quantity'][$r];
                 $ordered_quantity = $item_unit_quantity;
                 $item_unit = $_POST['product_unit'][$r];
-                $item_quantity = $_POST['product_base_quantity'][$r];
+                $item_quantity = $item_unit_quantity;//$_POST['product_base_quantity'][$r];
 
                 $item_batchno = trim($_POST['batchno'][$r]);
                 if (empty($item_batchno)) {
@@ -1594,6 +1594,19 @@ class Purchases extends MY_Controller
 
             }
 
+
+           //supplier
+                  $entryitemdata[] = array(
+                    'Entryitem' => array(
+                        'entry_id' => $insert_id,
+                        'dc' => 'C',
+                        'ledger_id' => $supplier->ledger_account,
+                        //'amount' => $inv->grand_total + $inv->product_tax,
+                        'amount' => $inv->grand_total,
+                        'narration' => 'Accounts payable'
+                    )
+                );
+    
             // Inventory Entry
 
             $entryitemdata[] = array(
@@ -1618,18 +1631,7 @@ class Purchases extends MY_Controller
                     'narration' => 'Vat on Purchase'
                 )
             );
-            //supplier
-            $entryitemdata[] = array(
-                'Entryitem' => array(
-                    'entry_id' => $insert_id,
-                    'dc' => 'C',
-                    'ledger_id' => $supplier->ledger_account,
-                    //'amount' => $inv->grand_total + $inv->product_tax,
-                    'amount' => $inv->grand_total,
-                    'narration' => 'Accounts payable'
-                )
-            );
-
+      
             foreach ($entryitemdata as $row => $itemdata) {
                 $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
             }
