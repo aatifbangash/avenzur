@@ -853,7 +853,8 @@ class Returns_supplier extends MY_Controller
             'dr_total' => $inv->grand_total,
             'cr_total' => $inv->grand_total,
             'notes' => 'Return Reference: ' . $inv->reference_no . ' Date: ' . date('Y-m-d H:i:s'),
-            'rsid' => $inv->id
+            'rsid' => $inv->id,
+            'supplier_id' => $inv->supplier_id
         );
         $add = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
@@ -1625,12 +1626,15 @@ class Returns_supplier extends MY_Controller
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by, true);
         }
-        $this->data['customer'] = $this->site->getCompanyByID($inv->supplier_id);
+        $this->data['rows'] = $this->returns_supplier_model->getReturnItems($id);
+        //$this->data['customer'] = $this->site->getCompanyByID($inv->supplier_id);
+        $this->data['supplier'] = $this->site->getCompanyByID($inv->supplier_id);
 //        $this->data['biller'] = $this->site->getCompanyByID($inv->biller_id);
         $this->data['created_by'] = $this->site->getUser($inv->created_by);
         $this->data['updated_by'] = $inv->updated_by ? $this->site->getUser($inv->updated_by) : null;
         $this->data['warehouse'] = $this->site->getWarehouseByID($inv->warehouse_id);
         $this->data['inv'] = $inv;
+        //$this->data['payments'] = $this->purchases_model->getPaymentsForPurchase($id);
         $this->data['rows'] = $this->returns_supplier_model->getReturnItems($id);
 
         $this->load->view($this->theme . 'returns_supplier/view', $this->data);
