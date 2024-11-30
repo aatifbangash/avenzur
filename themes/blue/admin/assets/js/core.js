@@ -1418,7 +1418,7 @@ $(document).ready(function () {
     });
     $('body').on('click', '.oreturn_link td:not(:first-child, :last-child)', function () {
         $('#myModal').modal({
-            remote: site.base_url + 'returns/view/' + $(this).parent('.oreturn_link').attr('id'),
+            remote: site.base_url + 'returns/modal_view/' + $(this).parent('.oreturn_link').attr('id'),
         });
         $('#myModal').modal('show');
     });
