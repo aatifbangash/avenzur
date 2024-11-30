@@ -131,6 +131,8 @@ class Suppliers extends MY_Controller
         {
             $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
         }
+
+        return $insert_id;
     }
 
     public function convert_supplier_advance_invoice($memo_id, $supplier_id, $ledger_account, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $type){
@@ -249,15 +251,34 @@ class Suppliers extends MY_Controller
         }
     }
 
-    public function make_supplier_payment($id, $amount, $reference_no, $date){
+    public function add_supplier_reference($amount, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account){
+        $payment_reference = [
+            'supplier_id' => $supplier_id,
+            'date' => $date,
+            'sequence_code' => $this->sequenceCode->generate('PAY', 5),
+            'note' => $note,
+            'reference_no'  => $reference_no,
+            'amount' => $amount,
+            'bank_charges' => $bank_charges,
+            'bank_charges_ledger' => $bank_charges_account,
+            'transfer_from_ledger' => $ledger_account,
+            'created_by'    => $this->session->userdata('user_id')
+        ];
+
+        $payment_id = $this->purchases_model->addPaymentReference($payment_reference);
+        return $payment_id;
+    }
+
+    public function make_supplier_payment($id, $amount, $reference_no, $date, $note, $payment_id){
         $payment = [
-            'date'         => $date,
-            'purchase_id'  => $id,
-            'reference_no' => $reference_no,
-            'amount'       => $amount,
-            'note'         => 'Multiple invoices payment',
-            'created_by'   => $this->session->userdata('user_id'),
-            'type'         => 'sent',
+            'date'          => $date,
+            'purchase_id'   => $id,
+            'reference_no'  => $reference_no,
+            'amount'        => $amount,
+            'note'          => $note,
+            'created_by'    => $this->session->userdata('user_id'),
+            'type'          => 'sent',
+            'payment_id'    => $payment_id
         ];
 
         $this->purchases_model->addPayment($payment);
@@ -572,8 +593,31 @@ class Suppliers extends MY_Controller
         }
     }
 
+    public function view_payment($id = null){
+        $this->sma->checkPermissions(false, true);
+        $this->form_validation->set_rules('id', $this->lang->line('id'), 'required');
+
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('View Supplier Payments')]];
+        $meta = ['page_title' => lang('View Supplier Payments'), 'bc' => $bc];
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->data['payment_ref']  = $this->purchases_model->getPaymentReferenceByID($id);
+        $this->data['payments']  = $this->purchases_model->getPaymentByReferenceID($id);
+        $this->page_construct('suppliers/view_payment', $meta, $this->data);
+        
+    }
+
     public function list_payments(){
-        $this->data['payments'] = $this->purchases_model->getPayments();
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Supplier Payments')]];
+        $meta = ['page_title' => lang('Supplier Payments'), 'bc' => $bc];
+
+        $this->data['payments'] = $this->purchases_model->getPaymentReferences();
         $this->page_construct('suppliers/list_payments', $meta, $this->data);
     }
 
@@ -595,51 +639,67 @@ class Suppliers extends MY_Controller
             $ledger_account = $this->input->post('ledger_account');
             $bank_charges_account = $this->input->post('bank_charges_account');
             $bank_charges = $this->input->post('bank_charges');
+            $note = $this->input->post('note');
+
             if($bank_charges == '') {
                 $bank_charges = 0;
             }
-            //$date = $this->input->post('date');
-            $due_amount_array = $this->input->post('due_amount');
 
-            $date_fmt = $this->input->post('date');
-            
-            $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
-            $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
-            
-            if($isDateValid){
-                $date = $date_fmt;
-            }else{
-                $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
+            $date_fmt = $this->input->post('date'); 
+            $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
+
+            if ($formattedDate) {
                 $date = $formattedDate->format('Y-m-d');
+            } else {
+                echo 'Invalid date format!';
+                $date = null; // Handle invalid input as needed
             }
             
-            for($i = 0; $i < count($payments_array); $i++){
-                $payment_amount = $payments_array[$i];
-                $item_id = $item_ids[$i];
-                $due_amount = $due_amount_array[$i];
-                if($payment_amount > $due_amount){
-                    $this->session->set_flashdata('error', 'Amount paid cannot be greater than due amount');
-                    redirect($_SERVER['HTTP_REFERER']);
-                }
-            }
+            if(!$payments_array || sizeOf($payments_array) == 0){
+                if($payment_total > 0){
+                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account);
+                    $this->make_supplier_payment(NULL, $payment_total, $reference_no, $date, $note, $payment_id);
+                    $this->purchases_model->update_supplier_balance($supplier_id, $payment_total);
 
-            if(array_sum($payments_array) == $payment_total){
-                for ($i = 0; $i < count($payments_array); $i++) {
+                    $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
+                    $this->purchases_model->update_payment_reference($payment_id, $journal_id);
+                    $this->session->set_flashdata('message', lang('Advance payment added Successfully!'));
+                    admin_redirect('suppliers/view_payment/'.$payment_id);
+                }
+            }else{
+                //$date = $this->input->post('date');
+                $due_amount_array = $this->input->post('due_amount');
+                $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account);
+                
+                for($i = 0; $i < count($payments_array); $i++){
                     $payment_amount = $payments_array[$i];
                     $item_id = $item_ids[$i];
                     $due_amount = $due_amount_array[$i];
-                    if($payment_amount > 0){
-                        $this->update_purchase_order($item_id, $payment_amount);
-                        $this->make_supplier_payment($item_id, $payment_amount, $reference_no, $date);
+                    if($payment_amount > $due_amount){
+                        $this->session->set_flashdata('error', 'Amount paid cannot be greater than due amount');
+                        redirect($_SERVER['HTTP_REFERER']);
                     }
                 }
 
-                $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
-                $this->session->set_flashdata('message', lang('Payment invoice added Successfully!'));
-                admin_redirect($_SERVER['HTTP_REFERER']);
-            }else{
-                $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
-                redirect($_SERVER['HTTP_REFERER']);
+                if(array_sum($payments_array) == $payment_total){
+                    for ($i = 0; $i < count($payments_array); $i++) {
+                        $payment_amount = $payments_array[$i];
+                        $item_id = $item_ids[$i];
+                        $due_amount = $due_amount_array[$i];
+                        if($payment_amount > 0){
+                            $this->update_purchase_order($item_id, $payment_amount);
+                            $this->make_supplier_payment($item_id, $payment_amount, $reference_no, $date, $note, $payment_id);
+                        }
+                    }
+
+                    $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
+                    $this->purchases_model->update_payment_reference($payment_id, $journal_id);
+                    $this->session->set_flashdata('message', lang('Payment invoice added Successfully!'));
+                    admin_redirect('suppliers/view_payment/'.$payment_id);
+                }else{
+                    $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
             }
             
         } else {

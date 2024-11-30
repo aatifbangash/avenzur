@@ -1008,6 +1008,7 @@ function loadItems() {
 		product_discount = 0;
 		order_discount = 0;
 		total_discount = 0;
+
 		$("#poTable tbody").empty();
 		poitems = JSON.parse(localStorage.getItem("poitems"));
 		/*sortedItems =
@@ -1017,18 +1018,58 @@ function loadItems() {
                   })
                 : poitems;*/
 
-		sortedItems = _.sortBy(poitems, function (o) {
-			return [parseInt(o.order)];
-		}).reverse();
+		// sortedItems = _.sortBy(poitems, function (o) {
+		// 	return [parseInt(o.order)];
+		// }).reverse();
 
 		var serial = 1;
 		var order_no = new Date().getTime();
-		$.each(sortedItems, function () {
+		/**
+		 * INITILIAZE TOTAL VARIABLES
+		 */
+		let new_total_net_purchase = new Decimal(0);
+		let new_total_purchase = new Decimal(0);
+		let new_total_sale = new Decimal(0);
+		let new_total_vat = new Decimal(0);
+		let new_total_discount = new Decimal(0);
+		let new_grant_total = new Decimal(0);
+
+		$.each(poitems, function () {
 			var item = this;
+			// check if edit case
+			if(item.id != '') {
+
+			}
+			const new_calc = calculateInventory(item.row, 'purchase');
+			//console.log(new_calc);
+
+			/**
+			 * NEW TOTAL CALCULATION ASSIGNMENT
+			 */
+			const new_net_purchase = new Decimal(new_calc.new_net_purchase); 
+			new_total_net_purchase = new_total_net_purchase.plus(new_net_purchase);
+			console.log('totalnetpurchase', new_total_net_purchase);
+
+			const calc_total_purchase = new Decimal(new_calc.new_total_purchase); 
+			new_total_purchase = new_total_purchase.plus(calc_total_purchase);
+
+			const calc_total_sale = new Decimal(new_calc.new_total_sale); 
+			new_total_sale = new_total_sale.plus(calc_total_sale);
+
+			const calc_total_vat = new Decimal(new_calc.new_vat_value); 
+			new_total_vat = new_total_vat.plus(calc_total_vat);
+
+			const calc_total_discount = new Decimal(new_calc.new_total_discount); 
+			new_total_discount = new_total_discount.plus(calc_total_discount);
+
+			const calc_grant_total = new Decimal(new_calc.new_grant_total); 
+			new_grant_total = new_grant_total.plus(calc_grant_total);
+
+
 			var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
 			item.order = item.order ? item.order : order_no++;
 			//var sn = item.row.serial_no;
-
+			 
 			var product_id = item.row.id,
 				item_type = item.row.type,
 				combo_items = item.combo_items,
@@ -1152,6 +1193,7 @@ function loadItems() {
 			total_after_dis2 = total_after_dis1 - dis2_a;
 			vat_15_a = total_after_dis2 * parseFloat(item.tax_rate.rate / 100); //total_after_dis2 * parseFloat(15/100);
 			net_price_a = vat_15_a + total_after_dis2;
+			
 			/*dis1_b = item_bonus * parseFloat(item_cost) * (item_dis1/100);
                total_after_dis1_b =  (item_bonus * parseFloat(item_cost))- dis1_b;
                dis2_b =  total_after_dis1_b * (item_dis2/100);
@@ -1176,6 +1218,22 @@ function loadItems() {
 				parseFloat(main_net) / parseFloat(parseFloat(item_qty) + parseFloat(item_bonus));
 
 			//var item_qty = item_qty + item_bonus;
+
+			/**
+			 *  NEW CALCULATION ASSIGNMENT
+			 */
+			// new_cost_price : cost_price,
+			// new_sale_price : sale_price,
+			// new_total_purchase : total_purchase,
+			// new_total_discount : total_discount,
+			// new_net_purchase: net_purchase ,
+			// new_total_sale : total_sale,
+			// new_first_discount: first_discount,
+			// new_second_discount: second_discount,
+			// new_vat_value: total_vat,
+			// new_unit_cost: net_cost,
+			// new_grant_total: parseFloat(net_purchase) + parseFloat(total_vat)
+
 
 			var row_no = item.id;
 
@@ -1205,9 +1263,23 @@ function loadItems() {
 				'"><input name="part_no[]" type="hidden" class="rpart_no" value="' +
 				item_supplier_part_no +
 				'"><input name="totalbeforevat[]" type="hidden" class="totalbeforevat" value="' +
-				total_after_dis2 +
+				new_calc.new_net_purchase +
 				'"><input name="main_net[]" type="hidden" class="main_net" value="' +
-				main_net +
+				new_calc.new_grant_total +
+				'"><input name="item_first_discount[]" type="hidden" class="main_net" value="' +
+				new_calc.new_first_discount +
+				'"><input name="item_second_discount[]" type="hidden" class="main_net" value="' +
+				new_calc.new_second_discount +
+				'"><input name="item_vat_values[]" type="hidden" class="main_net" value="' +
+				new_calc.new_vat_value +
+				'"><input name="item_net_purchase[]" type="hidden" class="main_net" value="' +
+				new_calc.new_net_purchase +
+				'"><input name="item_total_purchase[]" type="hidden" class="main_net" value="' +
+				new_calc.new_total_purchase +
+				'"><input name="item_total_sale[]" type="hidden" class="main_net" value="' +
+				new_calc.new_total_sale +
+				'"><input name="item_unit_cost[]" type="hidden" class="main_net" value="' +
+				new_calc.new_unit_cost +
 				'"><input name="warehouse_shelf[]" type="hidden" class="warehouse_shelf" value="' +
 				warehouse_shelf +
 				'"><span class="sname" id="name_' +
@@ -1244,13 +1316,13 @@ function loadItems() {
 
 			tr_html +=
 				'<td class="text-right"><input class="rucost" name="unit_cost[]" type="hidden" value="' +
-				unit_cost +
+				new_calc.new_unit_cost +
 				'"><input class="form-control realucost" name="real_unit_cost[]" type="hidden" value="' +
 				item.row.real_unit_cost +
 				'"><input class="form-control input-sm text-center rcost" type="text" name="net_cost[]" type="hidden" id="cost_' +
 				row_no +
 				'" value="' +
-				formatDecimal(item.row.cost, 2) +
+				new_calc.new_cost_price +
 				'"></td>';
 
 			{
@@ -1334,7 +1406,7 @@ function loadItems() {
 				'" value="' +
 				formatDecimal(item_dis1) +
 				'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
-				formatMoney(total_after_dis1);
+				new_calc.new_first_discount;
 			("</span></td>");
 
 			tr_html +=
@@ -1347,7 +1419,7 @@ function loadItems() {
 				'" value="' +
 				formatDecimal(item_dis2) +
 				'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
-				formatMoney(total_after_dis2);
+				new_calc.new_second_discount;
 			("</span></td>");
 
 			tr_html +=
@@ -1358,7 +1430,7 @@ function loadItems() {
 				'"><span class="text-right rvat15" id="vat15_' +
 				row_no +
 				'">' +
-				formatMoney(vat_15_a) +
+				new_calc.new_vat_value +
 				"</span></td>";
 
 			/*if (po_edit) {
@@ -1407,28 +1479,28 @@ function loadItems() {
 				'<td class="text-right"><span class="text-right ssubtotal mycalss" id="subtotal_' +
 				row_no +
 				'">' +
-				formatMoney(total_purchases) +
+				new_calc.new_total_purchase+
 				"</span></td>";
 
 			tr_html +=
 				'<td class="text-right"><span class="text-right ssubtotal" id="total_sale_' +
 				row_no +
 				'">' +
-				formatMoney(total_sales) +
+				new_calc.new_total_sale +
 				"</span></td>";
 
 			tr_html +=
 				'<td class="text-right"><span class="text-right rnet" id="net_' +
 				row_no +
 				'">' +
-				formatMoney( main_net ) +
+				new_calc.new_net_purchase +
 				"</span></td>";
 
 			tr_html +=
 				'<td class="text-right"><span class="text-right ssubtotal" id="tes2_' +
 				row_no +
 				'">' +
-				formatMoney(new_unit_cost) +
+				new_calc.new_unit_cost+
 				"</span></td>";
 
 			tr_html +=
@@ -1437,17 +1509,19 @@ function loadItems() {
 				'" title="Remove" style="cursor:pointer;"></i></td>';
 			newTr.html(tr_html);
 			newTr.prependTo("#poTable");
+
+		
+
 			total += formatDecimal(main_net, 4); //formatDecimal((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty), 4);
 			grand_total_vat += formatDecimal( vat_15_a);
-			console.log('vat', formatDecimal(vat_15_a, 2));
-			console.log('grant', grand_total_vat);
-			console.log('vat without dec', vat_15_a);
 			grand_total_purchases += formatDecimal(total_purchases, 2);
 			grand_total_sales += formatDecimal(total_sales, 2);
 			count += parseFloat(item_qty);
 			an++;
 			if (!belong) $("#row_" + row_no).addClass("warning");
 		});
+
+		
 
 		var trRowClas = localStorage.getItem("trRowClas");
 		if (trRowClas != undefined && trRowClas != "") {
@@ -1461,23 +1535,30 @@ function loadItems() {
 		var tfoot =
 			'<tr id="tfoot" class="tfoot active"><th colspan="' +
 			col +
-			'">Total</th><th class="text-center">' +
-			grand_total_vat +
+			'">Total</th><th class="text-center">' + new_total_vat +
 			"</th>";
 		/*if (po_edit) {
             tfoot += '<th class="rec_con"></th>';
         }*/
 
 		tfoot +=
-			'<th class="text-right">' + formatMoney(grand_total_purchases) + "</th>";
+			'<th class="text-right">' + formatMoney(new_total_purchase) + "</th>";
 
 		tfoot +=
-			'<th class="text-right">' + formatMoney(grand_total_sales) + "</th>";
+			'<th class="text-right">' + formatMoney(new_total_sale) + "</th>";
 
-		tfoot += '<th class="text-right">' + formatMoney(total) + "</th>";
+		tfoot += '<th class="text-right">' + formatMoney(new_total_net_purchase) + "</th>";
 		tfoot += "<th></th>";
-		tfoot += "<th></th>";
-		tfoot += "</tr>";
+		tfoot += "<th>";
+		tfoot += '<input type="hidden" name="grand_total_purchase" value="' + new_total_purchase + '">';
+		tfoot += '<input type="hidden" name="grand_total_net_purchase" value="' + new_total_net_purchase + '">';
+		tfoot += '<input type="hidden" name="grand_total_discount" value="' + new_total_discount + '">';
+		tfoot += '<input type="hidden" name="grand_total_vat" value="' + new_total_vat + '">';
+		tfoot += '<input type="hidden" name="grand_total_sale" value="' + new_total_sale + '">';
+		tfoot += '<input type="hidden" name="grand_total" value="' + new_grant_total + '">';
+	
+		tfoot += "</th></tr>";
+
 
 		$("#poTable tfoot").html(tfoot);
 
@@ -1518,18 +1599,18 @@ function loadItems() {
 		// Totals calculations after item addition
 		// var gtotal = total + invoice_tax - order_discount + shipping;    // commented bu mushtaq
 		var gtotal = total + grand_total_vat - order_discount + shipping; // new line add by mushtaq
-		$("#grand_vat").text(formatMoney(grand_total_vat));
-		$("#total").text(formatMoney(total));
+		$("#grand_vat").text(formatMoney(new_total_vat));
+		$("#total").text(formatMoney(new_total_purchase));
 		$("#titems").text(an - 1 + " (" + formatQty(parseFloat(count) - 1) + ")");
-		$("#tds").text(formatMoney(order_discount));
+		$("#tds").text(formatMoney(new_total_discount));
 		if (site.settings.tax1) {
 			$("#ttax1").text(formatMoney(product_tax));
 			// alert("product_tax: "+product_tax);
 		}
-		if (site.settings.tax2 != 0) {
-			$("#ttax2").text(formatMoney(invoice_tax));
-		}
-		$("#gtotal").text(formatMoney(gtotal));
+		// if (site.settings.tax2 != 0) {
+		// 	$("#ttax2").text(formatMoney(invoice_tax));
+		// }
+		$("#gtotal").text(formatMoney(new_grant_total));
 		if (
 			an > parseInt(site.settings.bc_fix) &&
 			parseInt(site.settings.bc_fix) > 0

@@ -48,7 +48,8 @@ class Customers extends MY_Controller
             'dr_total'     => $payment_amount,
             'cr_total'     => $payment_amount,
             'notes'        => 'Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
-            'pid'          =>  ''
+            'sid'          =>  '',
+            'customer_id'  => $customer_id
             );
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
@@ -90,6 +91,8 @@ class Customers extends MY_Controller
         {
             $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
         }
+
+        return $insert_id;
     }
 
     public function pending_invoices(){
@@ -103,15 +106,32 @@ class Customers extends MY_Controller
         echo $data;
     }
 
-    public function make_customer_payment($id, $amount, $reference_no, $date){
+    public function add_customer_reference($amount, $reference_no, $date, $note, $customer_id, $ledger_account){
+        $payment_reference = [
+            'customer_id' => $customer_id,
+            'date' => $date,
+            'sequence_code' => $this->sequenceCode->generate('PAY', 5),
+            'note' => $note,
+            'reference_no'  => $reference_no,
+            'amount' => $amount,
+            'transfer_from_ledger' => $ledger_account,
+            'created_by'    => $this->session->userdata('user_id')
+        ];
+
+        $payment_id = $this->sales_model->addPaymentReference($payment_reference);
+        return $payment_id;
+    }
+
+    public function make_customer_payment($id, $amount, $reference_no, $date, $note, $payment_id){
         $payment = [
-            'date'         => $date,
-            'sale_id'  => $id,
-            'reference_no' => $reference_no,
-            'amount'       => $amount,
-            'note'         => 'Multiple invoices payment',
-            'created_by'   => $this->session->userdata('user_id'),
-            'type'         => 'sent',
+            'date'          => $date,
+            'sale_id'   => $id,
+            'reference_no'  => $reference_no,
+            'amount'        => $amount,
+            'note'          => $note,
+            'created_by'    => $this->session->userdata('user_id'),
+            'type'          => 'sent',
+            'payment_id'    => $payment_id
         ];
 
         $this->sales_model->addPayment($payment);
@@ -204,8 +224,30 @@ class Customers extends MY_Controller
         }
     }
 
+    public function view_payment($id = null){
+        $this->sma->checkPermissions(false, true);
+        $this->form_validation->set_rules('id', $this->lang->line('id'), 'required');
+
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('View Customer Payments')]];
+        $meta = ['page_title' => lang('View Customer Payments'), 'bc' => $bc];
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['suppliers']  = $this->site->getAllCompanies('customer');
+        $this->data['payment_ref']  = $this->sales_model->getPaymentReferenceByID($id);
+        $this->data['payments']  = $this->sales_model->getPaymentByReferenceID($id);
+        $this->page_construct('customers/view_payment', $meta, $this->data);
+        
+    }
+
     public function list_payments(){
-        $this->data['payments'] = $this->sales_model->getPayments();
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Customer Payments')]];
+        $meta = ['page_title' => lang('Customer Payments'), 'bc' => $bc];
+        $this->data['payments'] = $this->sales_model->getPaymentReferences();
         $this->page_construct('customers/list_payments', $meta, $this->data);
     }
 
@@ -224,51 +266,62 @@ class Customers extends MY_Controller
             $reference_no = $this->input->post('reference_no');
             $payment_total = $this->input->post('payment_total');
             $ledger_account = $this->input->post('ledger_account');
-            //$vat_account = $this->input->post('vat_account');
-            //$vat_charges = $this->input->post('vat_charges');
-            //$date = $this->input->post('date');
             $due_amount_array = $this->input->post('due_amount');
+            $note = $this->input->post('note');
+            $date_fmt = $this->input->post('date'); 
+            $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
 
-            $date_fmt = $this->input->post('date');
-
-            $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
-            $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
-
-            if($isDateValid){
-                $date = $date_fmt;
-            }else{
-                $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
+            if ($formattedDate) {
                 $date = $formattedDate->format('Y-m-d');
+            } else {
+                echo 'Invalid date format!';
+                $date = null; // Handle invalid input as needed
             }
 
-            for($i = 0; $i < count($payments_array); $i++){
-                $payment_amount = $payments_array[$i];
-                $item_id = $item_ids[$i];
-                $due_amount = $due_amount_array[$i];
-                if($payment_amount > $due_amount){
-                    $this->session->set_flashdata('error', 'Amount paid cannot be greater than due amount');
-                    redirect($_SERVER['HTTP_REFERER']);
+            if(!$payments_array || sizeOf($payments_array) == 0){
+                if($payment_total > 0){
+                    $payment_id = $this->add_customer_reference($payment_total, $reference_no, $date, $note, $customer_id, $ledger_account);
+                    $this->make_customer_payment(NULL, $payment_total, $reference_no, $date, $note, $payment_id);
+                    $this->sales_model->update_customer_balance($customer_id, $payment_total);
+
+                    $journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_total, $reference_no, 'customerpayment');
+                    $this->sales_model->update_payment_reference($payment_id, $journal_id);
+                    $this->session->set_flashdata('message', lang('Advance payment received Successfully!'));
+                    admin_redirect('customers/view_payment/'.$payment_id);
                 }
-            }
+            }else{
+                $payment_id = $this->add_customer_reference($payment_total, $reference_no, $date, $note, $customer_id, $ledger_account);
 
-            if(array_sum($payments_array) == $payment_total){
-                for ($i = 0; $i < count($payments_array); $i++) {
+                for($i = 0; $i < count($payments_array); $i++){
                     $payment_amount = $payments_array[$i];
                     $item_id = $item_ids[$i];
                     $due_amount = $due_amount_array[$i];
-
-                    if($payment_amount > 0){
-                        $this->update_sale_order($item_id, $payment_amount);
-                        $this->make_customer_payment($item_id, $payment_amount, $reference_no, $date);
+                    if($payment_amount > $due_amount){
+                        $this->session->set_flashdata('error', 'Amount received cannot be greater than due amount');
+                        redirect($_SERVER['HTTP_REFERER']);
                     }
                 }
 
-                $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_total, $reference_no, 'customerpayment');
-                $this->session->set_flashdata('message', lang('Customer invoice added Successfully!'));
-                admin_redirect($_SERVER['HTTP_REFERER']);
-            }else{
-                $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
-                redirect($_SERVER['HTTP_REFERER']);
+                if(array_sum($payments_array) == $payment_total){
+                    for ($i = 0; $i < count($payments_array); $i++) {
+                        $payment_amount = $payments_array[$i];
+                        $item_id = $item_ids[$i];
+                        $due_amount = $due_amount_array[$i];
+    
+                        if($payment_amount > 0){
+                            $this->update_sale_order($item_id, $payment_amount);
+                            $this->make_customer_payment($item_id, $payment_amount, $reference_no, $date, $note, $payment_id);
+                        }
+                    }
+    
+                    $journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_total, $reference_no, 'customerpayment');
+                    $this->sales_model->update_payment_reference($payment_id, $journal_id);
+                    $this->session->set_flashdata('message', lang('Customer invoice added Successfully!'));
+                    admin_redirect('customers/view_payment/'.$payment_id);
+                }else{
+                    $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
             }
 
         } else {

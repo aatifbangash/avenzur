@@ -60,6 +60,20 @@
 
     $(document).ready(function () {
 
+        if (!localStorage.getItem('rsedate')) {
+            $("#rsedate").datetimepicker({
+                format: site.dateFormats.js_ldate,
+                fontAwesome: true,
+                language: 'sma',
+                weekStart: 1,
+                todayBtn: 1,
+                autoclose: 1,
+                todayHighlight: 1,
+                startView: 2,
+                forceParse: 0
+            }).datetimepicker('update', new Date());
+        }
+
         ItemnTotals();
         $('.bootbox').on('hidden.bs.modal', function (e) {
             $('#add_item').focus();

@@ -37,18 +37,22 @@ class Sales_model extends CI_Model
         return false;
     }
 
-    public function getPendingInvoicesByCustomer($customer_id){
+    public function getPendingInvoicesByCustomer($customer_id) {
         $this->db->order_by('date', 'asc');
-        $q = $this->db->get_where('sales', ['customer_id' => $customer_id, 'payment_status' => 'pending']);
+        $this->db->where('customer_id', $customer_id);
+        $this->db->where('sale_invoice', 1);
+        $this->db->where_in('payment_status', ['pending', 'due', 'partial']);
+        $q = $this->db->get('sales');
+    
         if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $data[] = $row;
-            }
-            return $data; 
-        }else{
-            $data = [];
-            return $data;
+            return $q->result(); // Return the result directly as an array of objects
+        } else {
+            return []; // Return an empty array if no results
         }
+    }
+
+    public function update_payment_reference($payment_id, $journal_id){
+        $this->db->update('sma_payment_reference', ['journal_id' => $journal_id], ['id' => $payment_id]);
     }
 
     /* ----------------- Gift Cards --------------------- */
@@ -73,6 +77,66 @@ class Sales_model extends CI_Model
             if ($this->db->update('product_variants', ['quantity' => $nq], ['id' => $option_id])) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    public function addPaymentReference($data = [])
+    {
+        $this->db->insert('payment_reference', $data);
+        return $this->db->insert_id();
+    }
+
+    public function getPaymentReferenceByID($id){
+        $this->db->select('payment_reference.*, companies.name, lb.name as transfer_from')
+            ->join('companies', 'companies.id=payment_reference.customer_id', 'left')
+            ->join('accounts_ledgers lb', 'lb.id=payment_reference.transfer_from_ledger', 'left')
+            ->where('payment_reference.id =', $id);
+        $q = $this->db->get('payment_reference');
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function update_customer_balance($customer_id, $amount){
+        $current_balance = $this->db->select('balance')
+                                ->where('id', $customer_id)
+                                ->get('sma_companies')
+                                ->row('balance');
+
+        $current_balance = $current_balance !== null ? $current_balance : 0;
+        $new_balance = $current_balance + $amount;
+
+        $this->db->update('sma_companies', ['balance' => $new_balance], ['id' => $customer_id]);
+    }
+
+    public function getPaymentByReferenceID($id)
+    {
+        $this->db->select('payments.*, companies.company, type, sales.grand_total, sales.reference_no as ref_no, sales.date as sale_date')
+            ->join('sales', 'sales.id=payments.sale_id', 'left')
+            ->join('companies', 'companies.id=sales.customer_id', 'left')
+            ->where('payments.payment_id =', $id);
+        $q = $this->db->get('payments');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+    public function getPaymentReferences(){
+        $this->db->select('payment_reference.*, companies.name as company')
+                ->join('companies', 'companies.id=payment_reference.customer_id', 'left')
+                ->where('customer_id <>', NULL);
+        $q = $this->db->get('payment_reference');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
         }
         return false;
     }
@@ -150,7 +214,7 @@ class Sales_model extends CI_Model
 
                 if ($data['sale_status'] == 'completed'){ //handle inventory movement 
                     //$this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id']);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id'], $item['real_unit_price']);
                 } 
                 if ($data['sale_status'] == 'completed' && empty($si_return)) { 
                       
@@ -1101,7 +1165,7 @@ class Sales_model extends CI_Model
                 // Code for serials end here
                 if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
                        //handle inventory movement
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $id,  $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id']); 
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $id,  $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id'], $item['real_unit_price']); 
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
@@ -1163,6 +1227,39 @@ class Sales_model extends CI_Model
         $q = $this->db->get_where('sales', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
+        }
+        return false;
+    }
+
+    public function getAllReturnInvoiceItems($sale_id, $customer_id)
+    {
+        $this->db->select('
+            sale_items.*, 
+            tax_rates.code as tax_code, 
+            tax_rates.name as tax_name, 
+            tax_rates.rate as tax_rate, 
+            products.unit, 
+            products.details as details, 
+            products.hsn_code as hsn_code, 
+            products.second_name as second_name, 
+            SUM(IFNULL(CASE WHEN sma_inventory_movements.customer_id = ' . $customer_id . ' THEN sma_inventory_movements.quantity ELSE 0 END, 0)) as total_quantity, 
+            SUM(IFNULL(CASE WHEN sma_inventory_movements.customer_id = ' . $customer_id . ' THEN sma_inventory_movements.bonus ELSE 0 END, 0)) as total_bonus
+        ')
+        ->join('products', 'products.id=sale_items.product_id', 'left')
+        ->join('inventory_movements', 'inventory_movements.avz_item_code=sale_items.avz_item_code', 'left')
+        ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
+        ->group_by('sale_items.id, sale_items.avz_item_code')
+        ->having('total_quantity <>', 0)
+        ->order_by('sale_items.id', 'asc');  // Make sure to order by the correct field here
+
+        // Fetch the purchase items for the given purchase ID
+        $q = $this->db->get_where('sale_items', ['sale_items.sale_id' => $sale_id]);
+        //echo $this->db->last_query();exit;
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
         }
         return false;
     }

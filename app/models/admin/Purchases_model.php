@@ -66,6 +66,12 @@ class Purchases_model extends CI_Model
         return $totalPurchases;
     }
 
+    public function addPaymentReference($data = [])
+    {
+        $this->db->insert('payment_reference', $data);
+        return $this->db->insert_id();
+    }
+
     public function addPayment($data = [])
     {
         if ($this->db->insert('payments', $data)) {
@@ -120,9 +126,9 @@ class Purchases_model extends CI_Model
                 if($item['status']=='received'){
                     $type = $item['quantity'] < 0 ? 'return_to_supplier' : 'purchase';
                     if($type == 'purchase'){
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $uuid, $item['bonus']);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $uuid, $item['bonus'], $item['sale_price']);
                     }else if($type == 'return_to_supplier'){
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $item['avz_item_code'], -1*($item['bonus']));
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], $type, $item['quantity'], $item['warehouse_id'], $purchase_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $item['avz_item_code'], -1*($item['bonus']), $item['sale_price']);
                     }
                     
                 }
@@ -205,6 +211,22 @@ class Purchases_model extends CI_Model
         $this->db->update('sma_return_items', ['net_cost' => $net_cost_sales], ['batch_no' => $batch_no, 'product_code' => $item_code]);
 
         $this->db->update('sma_return_supplier_items', ['net_cost' => $net_cost_sales], ['batch_no' => $batch_no, 'product_code' => $item_code]);
+    }
+
+    public function update_payment_reference($payment_id, $journal_id){
+        $this->db->update('sma_payment_reference', ['journal_id' => $journal_id], ['id' => $payment_id]);
+    }
+
+    public function update_supplier_balance($supplier_id, $amount){
+        $current_balance = $this->db->select('balance')
+                                ->where('id', $supplier_id)
+                                ->get('sma_companies')
+                                ->row('balance');
+
+        $current_balance = $current_balance !== null ? $current_balance : 0;
+        $new_balance = $current_balance + $amount;
+
+        $this->db->update('sma_companies', ['balance' => $new_balance], ['id' => $supplier_id]);
     }
 
     public function calculatePurchaseTotals($id, $return_id, $surcharge)
@@ -517,6 +539,35 @@ class Purchases_model extends CI_Model
         return false;
     }
 
+    public function getPaymentReferenceByID($id){
+        $this->db->select('payment_reference.*, companies.name, la.name as bank_ledger, lb.name as transfer_from')
+            ->join('companies', 'companies.id=payment_reference.supplier_id', 'left')
+            ->join('accounts_ledgers la', 'la.id=payment_reference.bank_charges_ledger', 'left')
+            ->join('accounts_ledgers lb', 'lb.id=payment_reference.transfer_from_ledger', 'left')
+            ->where('payment_reference.id =', $id);
+        $q = $this->db->get('payment_reference');
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getPaymentByReferenceID($id)
+    {
+        $this->db->select('payments.*, companies.company, type, purchases.grand_total, purchases.reference_no as ref_no, purchases.date as purchase_date')
+            ->join('purchases', 'purchases.id=payments.purchase_id', 'left')
+            ->join('companies', 'companies.id=purchases.supplier_id', 'left')
+            ->where('payments.payment_id =', $id);
+        $q = $this->db->get('payments');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getPaymentByID($id)
     {
         $q = $this->db->get_where('payments', ['id' => $id], 1);
@@ -533,6 +584,20 @@ class Purchases_model extends CI_Model
             return $q->row();
         }
 
+        return false;
+    }
+
+    public function getPaymentReferences(){
+        $this->db->select('payment_reference.*, companies.name as company')
+                ->join('companies', 'companies.id=payment_reference.supplier_id', 'left')
+                ->where('supplier_id <>', NULL);
+        $q = $this->db->get('payment_reference');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
         return false;
     }
 
@@ -858,7 +923,7 @@ class Purchases_model extends CI_Model
                 }
                 
                 if($item['status']=='received'){
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $uuid, $item['bonus']);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $uuid, $item['bonus'], $item['sale_price']);
                 }
                 // $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
                 // Code for serials here
@@ -1020,20 +1085,15 @@ class Purchases_model extends CI_Model
 
     public function getPendingInvoicesBySupplier($supplier_id){
         $this->db->order_by('date', 'asc');
-        //$q = $this->db->get_where('purchases', ['supplier_id' => $supplier_id, 'payment_status' => 'pending', ]);
-        $q = $this->db->get_where('purchases', [
-            'supplier_id' => $supplier_id,
-            'payment_status' => 'pending',
-            'purchase_id IS NULL' => null,
-        ]);
+        $this->db->where('supplier_id', $supplier_id);
+        $this->db->where('purchase_invoice', 1);
+        $this->db->where_in('payment_status', ['pending', 'due', 'partial']);
+        $q = $this->db->get('purchases');
+        
         if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $data[] = $row;
-            }
-            return $data; 
-        }else{
-            $data = [];
-            return $data;
+            return $q->result(); // Return the result directly as an array of objects
+        } else {
+            return []; // Return an empty array if no results
         }
     }
 

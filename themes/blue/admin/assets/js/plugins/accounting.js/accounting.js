@@ -215,7 +215,7 @@
 	 */
 	var toFixed = lib.toFixed = function(value, precision) {
 		precision = checkPrecision(precision, lib.settings.number.precision);
-
+		precision = 2;
 		// var exponentialForm = Number(lib.unformat(value) + 'e' + precision);
 		// var rounded = Math.round(exponentialForm);
 		// var finalResult = Number(rounded + 'e-' + precision).toFixed(precision);
@@ -227,9 +227,9 @@
 		var truncated = Math.floor(value * shift) / shift;
 		var finalResult = truncated.toFixed(precision);
 
-		console.log('value', value);
-		console.log('precision', precision);
-		console.log('finresults', finalResult);
+		// console.log('value', value);
+		// console.log('precision', precision);
+		// console.log('finresults', finalResult);
 		return finalResult;
 	};
 

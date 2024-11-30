@@ -67,7 +67,7 @@
             </button> 
            
                 <div class="text-center" style="margin-bottom:20px;">
-                <h1><?= lang('VAT_Invoice'); ?></h1>
+                <h1><?= lang('Return Invoice'); ?></h1>
                 </div>
 
             <div class="well well-sm">
@@ -86,8 +86,7 @@
                                 echo '<br>';
                             }
                         } ?>
-                        <?= lang('sale_status'); ?>: <?= lang($inv->sale_status); ?><br>
-                        <?= lang('payment_status'); ?>: <?= lang($inv->payment_status); ?><br>
+                        <?= lang('Return Status'); ?>: <?= 'Complete'; ?><br>
                         <?= $inv->payment_method ? lang('payment_method') . ': ' . lang($inv->payment_method) : ''; ?>
                         <?php
                         if ($inv->payment_status != 'paid' && $inv->due_date) {
@@ -122,7 +121,7 @@
               
 
                 <div class="col-xs-6">
-                    <?php echo $this->lang->line('to'); ?>:<br/>
+                    <?php echo $this->lang->line('From'); ?>:<br/>
                     <h2 style="margin-top:10px;"><?= $customer->company && $customer->company != '-' ? $customer->company : $customer->name; ?></h2>
                     <?= $customer->company                              && $customer->company != '-' ? '' : 'Attn: ' . $customer->name ?>
 
@@ -162,7 +161,7 @@
                 </div>
 
                 <div class="col-xs-6">
-                    <?php echo $this->lang->line('from'); ?>:
+                    <?php echo $this->lang->line('To'); ?>:
                     <h2 style="margin-top:10px;"><?= $biller->company && $biller->company != '-' ? $biller->company : $biller->name; ?></h2>
                     <?= $biller->company ? '' : 'Attn: ' . $biller->name ?>
 
@@ -282,11 +281,11 @@
                         } ?>
                          <th><?= lang('Total_without_VAT'); ?></th>
                          <?php
-                        if ($Settings->tax1 && $inv->product_tax > 0) {
+                        //if ($Settings->tax1 && $inv->product_tax > 0) {
                             $total_col +=2; 
                             echo '<th>' . lang('VAT%') . '</th>';
                             echo '<th>' . lang('VAT_value') . '</th>';
-                        }
+                        //}
                         echo '<th>' . lang('Total_with_VAT') . '</th>';
                         ?>
                     </tr>   
@@ -391,14 +390,14 @@
                             <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->totalbeforevat, null); ?></td>
                             <?php
                             $vat_value = 0;
-                            if ($Settings->tax1 && $inv->product_tax > 0) {
+                            //if ($Settings->tax1 && $inv->product_tax > 0) {
                                 $vat_value = $this->sma->formatNumber($row->item_tax);
-                                echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ?  ($Settings->indian_gst ? $row->tax : $row->tax_code)  : '') . '</td>';
-                                echo '<td>'.$row->tax.'</td>';
-                            }
+                                echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ?  ($Settings->indian_gst ? $row->tax : $row->tax_code)  : '0.00') . '</td>';
+                                echo '<td>'.($row->tax ? $row->tax : '0.00').'</td>';
+                            //}
                             ?>
                             
-                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->main_net); ?></td>
+                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($main_net); ?></td>
                             
                         </tr>
                         <?php

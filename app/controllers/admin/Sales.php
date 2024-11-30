@@ -67,6 +67,8 @@ class Sales extends MY_Controller
  
 
         if ($this->form_validation->run() == true) {
+            // echo "<pre>";
+            // print_r($_POST);exit;
 
             $customerId = $this->input->post('customer');
            //  echo 'valid'; exit;  
@@ -205,6 +207,14 @@ class Sales extends MY_Controller
                     $subtotal2 = $main_net + $pr_item_tax;
                     $unit     = $this->site->getUnitByID($item_unit);
 
+                    /**
+                     * POST FIELDS
+                     */
+                    $new_item_first_discount = $_POST['item_first_discount'][$r];
+                    $new_item_second_discount = $_POST['item_second_discount'][$r];
+                    $new_item_vat_value = $_POST['item_vat_values'][$r];
+                    $new_item_total_sale = $_POST['item_total_sale'][$r];
+                    
                     $product = [
                         'product_id'        => $item_id,
                         'product_code'      => $item_code,
@@ -221,10 +231,10 @@ class Sales extends MY_Controller
                         'warehouse_id'      => $warehouse_id,
                         'item_tax'          => $pr_item_tax,
                         'tax_rate_id'       => $item_tax_rate,
-                        'tax'               => $tax,
+                        'tax'               => $new_item_vat_value,
                         'discount'          => $item_discount,
-                        'item_discount'     => $prroduct_item_discount,
-                        'subtotal'          => $this->sma->formatDecimal($subtotal),
+                        'item_discount'     => $new_item_first_discount,
+                        'subtotal'          => $new_item_total_sale,
                         'serial_no'         => $item_serial,
                         'serial_number'     => $item_serial_no,
                         'expiry'            => $item_expiry,
@@ -237,6 +247,7 @@ class Sales extends MY_Controller
                         //'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
+                        'second_discount_value' => $new_item_second_discount,
                         'totalbeforevat'    => $totalbeforevat,
                         'main_net'          => $main_net,
                         'real_cost'         => $real_cost,
@@ -265,7 +276,18 @@ class Sales extends MY_Controller
             
             // NEW: Grand total calculation
             $grand_total = $this->sma->formatDecimal(($total), 4);
-            $data        = ['date'  => $date,
+
+             /**
+             * post values
+             */
+            
+             $grand_total_net_sale = $this->input->post('grand_total_net_sale');
+             $grand_total_discount = $this->input->post('grand_total_discount');
+             $grand_total_vat = $this->input->post('grand_total_vat');
+             $grand_total_sale = $this->input->post('grand_total_sale');
+             $grand_total = $this->input->post('grand_total');
+
+            $data = ['date'  => $date,
                 'reference_no'      => $reference,
                 'customer_id'       => $customer_id,
                 'customer'          => $customer,
@@ -274,15 +296,16 @@ class Sales extends MY_Controller
                 'warehouse_id'      => $warehouse_id,
                 'note'              => $note,
                 'staff_note'        => $staff_note,
-                'total'             => $total,
+                'total'             => $grand_total_sale,
+                'total_net_sale'    => $grand_total_net_sale,
                 'product_discount'  => $product_discount,
                 'order_discount_id' => $this->input->post('order_discount'),
                 'order_discount'    => $order_discount,
-                'total_discount'    => $total_discount,
+                'total_discount'    => $grand_total_discount,
                 'product_tax'       => $product_tax,
                 'order_tax_id'      => $this->input->post('order_tax'),
                 'order_tax'         => $order_tax,
-                'total_tax'         => $total_tax,
+                'total_tax'         => $grand_total_vat,
                 'shipping'          => $this->sma->formatDecimal($shipping),
                 'grand_total'       => $grand_total,
                 'total_items'       => $total_items,
@@ -985,6 +1008,8 @@ class Sales extends MY_Controller
             );
         }
         if ($this->form_validation->run() == true) {
+            // echo "<pre>";
+            // print_r($_POST);exit;
             $reference = $this->input->post('reference_no');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
@@ -1024,8 +1049,8 @@ class Sales extends MY_Controller
                 $item_name          = $_POST['product_name'][$r];
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 //$net_cost           = $this->sma->formatDecimal($_POST['net_cost'][$r]);
-                $real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
                 $unit_price         = $this->sma->formatDecimal($_POST['unit_price'][$r]);
+                $real_unit_price    = $unit_price ; //$this->sma->formatDecimal($_POST['real_unit_price'][$r]);
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_serial        = $_POST['serial'][$r]           ?? '';
 
@@ -1074,7 +1099,8 @@ class Sales extends MY_Controller
                 //$real_cost = $this->sales_model->getRealAvgCost($item_batchno, $item_id);
 
                
-                if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
+                if (isset($item_code) && isset($unit_price) && isset($item_quantity)) {
+                   
                     $product_details = $item_type != 'manual' ? $this->sales_model->getProductByCode($item_code) : null;
 
                     $pr_discount      = $this->site->calculateDiscount($item_discount, $unit_price);
@@ -1139,6 +1165,16 @@ class Sales extends MY_Controller
 
                     $unit     = $this->site->getUnitByID($item_unit);
 
+                     /**
+                     * POST FIELDS
+                     */
+                    $new_item_first_discount = $_POST['item_first_discount'][$r];
+                    $new_item_second_discount = $_POST['item_second_discount'][$r];
+                    $new_item_vat_value = $_POST['item_vat_values'][$r];
+                    $new_item_total_sale = $_POST['item_total_sale'][$r];
+                    $item_net_unit_sale = $_POST['item_unit_sale'][$r];
+                    $item_unit_sale = $_POST['unit_price'][$r];
+
                     $product = [
                         'product_id'        => $item_id,
                         'product_code'      => $item_code,
@@ -1146,8 +1182,8 @@ class Sales extends MY_Controller
                         'product_type'      => $item_type,
                         'option_id'         => $item_option,
                         'net_cost'          => $net_cost,
-                        'net_unit_price'    => $item_net_price,
-                        'unit_price'        => $item_net_price,
+                        'net_unit_price'    => $item_net_unit_sale,
+                        'unit_price'        => $item_unit_sale,
                         'quantity'          => $item_quantity + $item_bonus,
                         'product_unit_id'   => $unit ? $unit->id : null,
                         'product_unit_code' => $unit ? $unit->code : null,
@@ -1155,10 +1191,11 @@ class Sales extends MY_Controller
                         'warehouse_id'      => $warehouse_id,
                         'item_tax'          => $pr_item_tax,
                         'tax_rate_id'       => $item_tax_rate,
-                        'tax'               => $tax,
+                        'tax'               => $new_item_vat_value,
                         'discount'          => $item_discount,
-                        'item_discount'     => $product_item_discount,
-                        'subtotal'          => $this->sma->formatDecimal($subtotal),
+                        'item_discount'     => $new_item_first_discount,
+                        'second_discount_value' => $new_item_second_discount,
+                        'subtotal'          => $new_item_total_sale,
                         'serial_no'         => $item_serial,
                         'expiry'            => $item_expiry,
                         'batch_no'          => $item_batchno,
@@ -1181,6 +1218,8 @@ class Sales extends MY_Controller
                     $total += $this->sma->formatDecimal($subtotal2, 4);
                 }
             }
+            // echo "products<pre>";
+            // print_r($products);
             if (empty($products)) {
                 $this->form_validation->set_rules('product', lang('order_items'), 'required');
             } else {
@@ -1196,6 +1235,17 @@ class Sales extends MY_Controller
             
             // NEW: Grand total calculation
             $grand_total = $this->sma->formatDecimal(($total), 4);
+
+              /**
+             * post values
+             */
+        
+            $grand_total_net_sale = $this->input->post('grand_total_net_sale');
+            $grand_total_discount = $this->input->post('grand_total_discount');
+            $grand_total_vat = $this->input->post('grand_total_vat');
+            $grand_total_sale = $this->input->post('grand_total_sale');
+            $grand_total = $this->input->post('grand_total');
+            $cost_goods_sold = $this->input->post('cost_goods_sold');
             
             $data        = ['date'  => $date,
                 'reference_no'      => $reference,
@@ -1206,17 +1256,19 @@ class Sales extends MY_Controller
                 'warehouse_id'      => $warehouse_id,
                 'note'              => $note,
                 'staff_note'        => $staff_note,
-                'total'             => $total,
+                'total'             => $grand_total_sale,
+                'total_net_sale'    => $grand_total_net_sale,
                 'product_discount'  => $total_product_discount,
                 'order_discount_id' => $this->input->post('order_discount'),
                 'order_discount'    => $order_discount,
-                'total_discount'    => $total_product_discount,
+                'total_discount'    => $grand_total_discount,
                 'product_tax'       => $product_tax,
                 'order_tax_id'      => $this->input->post('order_tax'),
                 'order_tax'         => $order_tax,
-                'total_tax'         => $total_tax,
+                'total_tax'         => $grand_total_vat,
                 'shipping'          => $this->sma->formatDecimal($shipping),
                 'grand_total'       => $grand_total,
+                'cost_goods_sold'   => $cost_goods_sold,
                 'total_items'       => $total_items,
                 'sale_status'       => $sale_status,
                 'payment_status'    => $payment_status,
@@ -1235,6 +1287,9 @@ class Sales extends MY_Controller
             $data['attachment'] = !empty($attachments);
             //$this->sma->print_arrays($data, $products);exit;
         }
+        // echo "<pre>";
+        // print_r($_POST);
+        //  $this->sma->print_arrays($data, $products);exit;
 
         if ($this->form_validation->run() == true && $this->sales_model->updateSale($id, $data, $products, $attachments)) {
             if($sale_status == 'completed'){
@@ -1833,18 +1888,8 @@ class Sales extends MY_Controller
                     'dc' => 'D',
                     'ledger_id' => $customer->cogs_ledger,
                     //'amount' => $item->main_net,
-                    'amount' => $cogs_amount,
+                    'amount' => $inv->cost_goods_sold,
                     'narration' => 'cost of goods sold'
-                )
-            );
-
-            $entryitemdata[] = array(
-                'Entryitem' => array(
-                    'entry_id' => $insert_id,
-                    'dc' => 'C',
-                    'ledger_id' => $customer->sales_ledger,
-                    'amount' => $sale_amount,
-                    'narration' => 'sale account'
                 )
             );
 
@@ -1854,10 +1899,45 @@ class Sales extends MY_Controller
                     'dc' => 'C',
                     'ledger_id' => $warehouse_ledgers->inventory_ledger,
                     //'amount' => $item->main_net,
-                    'amount' => $inventory_amount,
+                    'amount' => $inv->cost_goods_sold,
                     'narration' => 'inventory account'
                 )
             );
+
+
+              // //total discount
+              $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $customer->discount_ledger,
+                    'amount' => $inv->total_discount,
+                    'narration' => 'total discount'
+                )
+         );
+
+         
+             // //customer
+             $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $customer->ledger_account,
+                    'amount' => ($inv->grand_total),
+                    'narration' => 'customer'
+                  )
+            );
+
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $customer->sales_ledger,
+                    'amount' => $inv->total,
+                    'narration' => 'sale account'
+                )
+            );
+          
           
              // //vat on sale
              $entryitemdata[] = array(
@@ -1865,33 +1945,14 @@ class Sales extends MY_Controller
                              'entry_id' => $insert_id,
                              'dc' => 'C',
                              'ledger_id' => $this->vat_on_sale,
-                             'amount' => $inv->product_tax,
+                             'amount' => $inv->total_tax,
                              'narration' => 'vat on sale'
                          )
                      );
  
  
-             // //customer
-               $entryitemdata[] = array(
-                         'Entryitem' => array(
-                             'entry_id' => $insert_id,
-                             'dc' => 'D',
-                             'ledger_id' => $customer->ledger_account,
-                             'amount' => ($inv->grand_total),
-                             'narration' => 'customer'
-                           )
-                     );
 
-             // //total discount
-             $entryitemdata[] = array(
-                    'Entryitem' => array(
-                        'entry_id' => $insert_id,
-                        'dc' => 'D',
-                        'ledger_id' => $customer->discount_ledger,
-                        'amount' => $inv->total_discount,
-                        'narration' => 'total discount'
-                    )
-             );
+           
                      
             //   /*Accounts Entry Items*/
             foreach ($entryitemdata as $row => $itemdata)
@@ -2880,7 +2941,7 @@ class Sales extends MY_Controller
         $email_link        = anchor('admin/sales/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_sale'), 'data-toggle="modal" data-target="#myModal"');
         $edit_link         = anchor('admin/sales/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_sale'), 'class="sledit"');
         $pdf_link          = anchor('admin/sales/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
-        $return_link       = anchor('admin/sales/return_sale/$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
+        $return_link       = anchor('admin/returns/add/?sale=$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
         //$shipment_link     = anchor('$1', '<i class="fa fa-angle-double-left"></i> ' . lang('Shipping_Slip'));
         $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_sale') . "</b>' data-content=\"<p>"
         . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('sales/delete/$1') . "'>"

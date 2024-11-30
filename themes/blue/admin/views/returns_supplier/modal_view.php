@@ -83,7 +83,7 @@
                 <div class="row bold">
                     <div class="col-xs-4">
                         <p class="bold">
-                        <?= lang('Purchase Invoice No.'); ?>: <?= $purchase_id; ?><br>
+                        <?= lang('Return Invoice No.'); ?>: <?= $return_id; ?><br>
                             <?= lang('Transaction Date'); ?>: <?= $this->sma->hrld($inv->date); ?><br>
                             <?= lang('ref'); ?>: <?= $inv->reference_no; ?><br>
                             <?php if (!empty($inv->return_purchase_ref)) {
@@ -126,7 +126,7 @@
                     <!-- <div class="col-xs-7 text-right order_barcodes">
                         <img src="<?= admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1'); ?>"
                             alt="<?= $inv->reference_no; ?>" class="bcimg" />
-                        <?= $this->sma->qrcode('link', urlencode(admin_url('purchases/view/' . $inv->id)), 2); ?>
+                        <?= $this->sma->qrcode('link', urlencode(admin_url('returns_supplier/view/' . $inv->id)), 2); ?>
                     </div> -->
                     <div class="clearfix"></div>
                 </div>
@@ -247,7 +247,7 @@
                         // echo "<pre>";
                         // print_r($inv);
                         foreach ($rows as $row):
-                            $subTotal = ($row->unit_cost * $row->unit_quantity);
+                            $subTotal = ($row->cost_price * $row->unit_quantity);
                             // echo "<pre>";
                              //print_r($row);
                             //$base_quantity = $row->unit_quantity - $row->bonus;
@@ -262,7 +262,7 @@
                                     <?= ($row->expiry && $row->expiry != '0000-00-00') ? '<br>' . lang('EX') . ': ' . $this->sma->hrsd($row->expiry) : ''; ?>
                                     <?= 'Item# '.$row->item_code ;?>
                                 </td>
-                                <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->batchno ?: ''; ?>
+                                <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->batch_no ?: ''; ?>
                                 </td>
                                 <?php if ($Settings->indian_gst) {
                                     ?>
@@ -278,13 +278,13 @@
                                 ?>
                                 <td style="text-align:right; width:100px;">
                                     <!-- <?= $row->unit_cost != $row->real_unit_cost && $row->item_discount > 0 ? '<del>' . $this->sma->formatMoney($row->real_unit_cost) . '</del>' : ''; ?> -->
-                                    <?= $row->sale_price; ?>
+                                    <?= $row->real_unit_price; ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
-                                     <?= $this->sma->formatNumber($row->unit_cost); ?>
+                                     <?= $this->sma->formatNumber($row->cost_price); ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
-                                   <?= $this->sma->formatNumber($row->net_unit_cost); ?>
+                                   <?= $this->sma->formatNumber($row->net_cost); ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
                                    <?= $this->sma->formatNumber($row->bonus); ?>
@@ -304,7 +304,7 @@
                                     $pr_discount2 = $this->site->calculateDiscount($row->discount2 . '%', $amount_after_dis1);
                                     $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $row->quantity);
                                     $row->discount2 = $this->sma->formatNumber($row->discount2, null);
-                                    echo '<td style="width: 120px; text-align:right; vertical-align:middle;">' . ($row->discount2 != 0 ? $row->discount2 : '') . '</td>';
+                                    echo '<td style="width: 120px; text-align:right; vertical-align:middle;">' . ($row->discount2 != 0 ? $row->discount2 : '-') . '</td>';
                                     echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . $row->second_discount_value . '</td>';
                                 }
                                 ?>
@@ -320,7 +320,7 @@
                                 ?>
 
                                 <td style="text-align:right; width:120px;">
-                                    <?php echo $row->main_net; //$this->sma->formatNumber($row->subtotal)  + $this->sma->formatNumber($vat_value); ?></td>
+                                    <?php echo $inv->main_net; //$this->sma->formatNumber($row->subtotal)  + $this->sma->formatNumber($vat_value); ?></td>
 
                             </tr>
                             <?php
@@ -501,7 +501,7 @@
                     </tr>
                     <tr>
                         <td>T-DISC</td>
-                        <td><?php echo $inv->total_discount; ?></td>
+                        <td><?php echo'0.00'; ?></td>
                     </tr>
                     <tr>
                         <td>Net Before VAT</td>

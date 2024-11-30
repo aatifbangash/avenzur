@@ -3,8 +3,35 @@
     var count = 1, an = 1, product_variant = 0, DT = <?= $Settings->default_tax_rate ?>,
         product_tax = 0, invoice_tax = 0, product_discount = 0, reitems = {}, order_discount = 0, total_discount = 0, total = 0, allow_discount = <?= ($Owner || $Admin || $this->session->userdata('allow_discount')) ? 1 : 0; ?>,
         tax_rates = <?php echo json_encode($tax_rates); ?>;
+    var reitems = {};
+
+    <?php if ($inv) {
+    ?>
+        //localStorage.setItem('redate', '<?= $this->sma->hrld($inv->date) ?>');
+        localStorage.setItem('reref', '<?= $reference ?>');
+        localStorage.setItem('renote', '<?= $this->sma->decode_html($inv->note); ?>');
+        localStorage.setItem('reitems', JSON.stringify(<?= $inv_items; ?>));
+        localStorage.setItem('rediscount', '<?= $inv->order_discount_id ?>');
+        localStorage.setItem('retax2', '<?= $inv->order_tax_id ?>');
+        localStorage.setItem('return_surcharge', '0');
+        <?php
+    } ?>
 
     $(document).ready(function () {
+
+        if (!localStorage.getItem('redate')) {
+            $("#redate").datetimepicker({
+                format: site.dateFormats.js_ldate,
+                fontAwesome: true,
+                language: 'sma',
+                weekStart: 1,
+                todayBtn: 1,
+                autoclose: 1,
+                todayHighlight: 1,
+                startView: 2,
+                forceParse: 0
+            }).datetimepicker('update', new Date());
+        }
 
         if (localStorage.getItem('remove_rlls')) {
             if (localStorage.getItem('reitems')) {
@@ -438,7 +465,7 @@
                                             <th class="col-md-1"><?= lang('batch'); ?></th>
                                             <th class="col-md-1"><?= lang('expiry_date'); ?></th>
                                             <th class="col-md-1"><?= lang('qty'); ?></th>
-                                            <!--<th class="col-md-1"><?php //echo lang('Bonus'); ?></th>-->
+                                            <th class="col-md-1"><?= lang('Bonus'); ?></th>
                                             <?php
                                             if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
                                                 echo '<th class="col-md-1">' . lang('dis 1') . '</th>';

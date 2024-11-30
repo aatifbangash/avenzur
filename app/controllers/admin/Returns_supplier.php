@@ -357,7 +357,21 @@ class Returns_supplier extends MY_Controller
                     $product_tax += $pr_item_tax;
                    // $subtotal = (($item_net_price * $item_unit_quantity) + $pr_item_tax - $product_item_discount);
                    $subtotal = (($item_net_cost * ($item_unit_quantity + $item_bonus)));
-                    $unit = $this->site->getUnitByID($item_unit);
+                   $unit = $this->site->getUnitByID($item_unit);
+
+                    /**
+                     * POST FIELDS
+                    */
+                    $new_item_sale_price = $_POST['net_price'][$r];
+                    $new_item_quantity =  $_POST['quantity'][$r];
+                    $new_item_bonus = $_POST['bonus'][$r];
+                    $new_item_cost_price = $_POST['cost_price'][$r];
+                    $new_item_vat_value = $_POST['item_vat_values'][$r];
+                    $totalbeforevat = $_POST['totalbeforevat'][$r];
+                    $total_with_vat = $_POST['main_net'] ;
+                    $new_item_unit_cost = $_POST['item_unit_cost'][$r];
+                    $new_item_total_purchase = $_POST['item_total_purchase'][$r];
+
 
                     $product = [
                         'product_id' => $item_id,
@@ -367,33 +381,35 @@ class Returns_supplier extends MY_Controller
                         'option_id' => $item_option,
                         //'unit_cost' => $unit_cost,
                         //'real_unit_cost' => $real_unit_cost,
-                        'net_cost' => $net_cost,
-                        'net_unit_price' => $item_net_price,
+                        'cost_price' => $new_item_cost_price,
+                        'net_cost'   => $new_item_unit_cost,
+                        'net_unit_price' => $new_item_sale_price,
                         //'cost_price' => $cost_price,
                         //'unit_price' => $this->sma->formatDecimal($item_net_price + $item_tax),
-                        'unit_price' => $this->sma->formatDecimal($cost_price + $item_tax),
-                        'quantity' => ($item_quantity + $item_bonus),
+                        'unit_price' => $new_item_sale_price, //$this->sma->formatDecimal($cost_price + $item_tax),
+                        'quantity' => ($new_item_quantity + $item_bonus),
                         'product_unit_id' => $unit ? $unit->id : null,
                         'product_unit_code' => $unit ? $unit->code : null,
-                        'unit_quantity' => $item_unit_quantity,
+                        'unit_quantity' => $new_item_quantity,
                         'warehouse_id' => $warehouse_id,
                         'item_tax' => $pr_item_tax,
                         'tax_rate_id' => $item_tax_rate,
-                        'tax' => $tax,
+                        'tax' => $new_item_vat_value,
                         'discount' => $item_discount,
                         'item_discount' => $product_item_discount,
-                        'subtotal' => $this->sma->formatDecimal($subtotal),
+                        'subtotal' =>$new_item_total_purchase,
                         //'serial_no' => $item_serial,
                         'expiry' => $item_expiry,
                         'batch_no' => $item_batchno,
                         //'serial_number' => $item_serial_no,
-                        'real_unit_price' => $real_unit_price,
-                        'bonus'             => $item_bonus,
+                        'real_unit_price' => $new_item_sale_price,
+                        'bonus'             => $new_item_bonus,
                         //'bonus' => 0,
                         'discount1' => $item_dis1,
                         'discount2' => $item_dis2,
                         'real_cost' => $real_cost,
-                        'avz_item_code' => $avz_code
+                        'avz_item_code' => $avz_code,
+                        'totalbeforevat' => $totalbeforevat
                     ];
                     
                     $products[] = ($product + $gst_data);
@@ -420,6 +436,16 @@ class Returns_supplier extends MY_Controller
             $grand_total = $this->sma->formatDecimal(($net_total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($total_product_discount)), 4);
             //Discount calculation
 
+             /**
+             * post values
+             */
+            
+             $grand_total_purchase = $this->input->post('grand_total_purchase');
+             $grand_total_net_purchase = $this->input->post('grand_total_net_purchase');
+             $grand_total_vat = $this->input->post('grand_total_vat');
+             //$grand_total_sale = $this->input->post('grand_total_sale');
+             $grand_total = $this->input->post('grand_total');
+
             $data = [
                 'date' => $date,
                 'reference_no' => $reference,
@@ -430,7 +456,8 @@ class Returns_supplier extends MY_Controller
                 'warehouse_id' => $warehouse_id,
                 'note' => $note,
                 'staff_note' => $staff_note,
-                'total' => $net_total,
+                'total' => $grand_total_purchase,
+                'total_net_purchase' => $grand_total_net_purchase,
                 'product_discount' => $total_product_discount,
                 'order_discount_id' => $this->input->post('order_discount'),
                 'order_discount' => $order_discount,
@@ -438,7 +465,7 @@ class Returns_supplier extends MY_Controller
                 'product_tax' => $product_tax,
                 'order_tax_id' => $this->input->post('order_tax'),
                 'order_tax' => $order_tax,
-                'total_tax' => $total_tax,
+                'total_tax' => $grand_total_vat,
                 'grand_total' => $grand_total,
                 'total_items' => $total_items,
                 'paid' => 0,
@@ -826,7 +853,8 @@ class Returns_supplier extends MY_Controller
             'dr_total' => $inv->grand_total,
             'cr_total' => $inv->grand_total,
             'notes' => 'Return Reference: ' . $inv->reference_no . ' Date: ' . date('Y-m-d H:i:s'),
-            'rsid' => $inv->id
+            'rsid' => $inv->id,
+            'supplier_id' => $inv->supplier_id
         );
         $add = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
@@ -838,6 +866,17 @@ class Returns_supplier extends MY_Controller
         foreach ($inv_items as $item) {
             $proid = $item->product_id;
             $product = $this->site->getProductByID($proid);
+
+        //supplier
+         $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $supplier->ledger_account,
+                'amount' => ($inv->grand_total),
+                'narration' => 'Accounts payable'
+            )
+         );
             //products
             $entryitemdata[] = array(
                 'Entryitem' => array(
@@ -845,7 +884,7 @@ class Returns_supplier extends MY_Controller
                     'dc' => 'C',
                     'ledger_id' => $warehouse_ledgers->inventory_ledger,
                     //'amount' => ($item->net_unit_price * $item->quantity),
-                     'amount' => ($item->net_cost * $item->quantity),
+                     'amount' => $inv->total_net_purchase,
                     'narration' => 'Inventory'
                 )
             );
@@ -857,21 +896,12 @@ class Returns_supplier extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => 'C',
                 'ledger_id' => $this->vat_on_purchase,
-                'amount' => ($inv->product_tax),
+                'amount' => $inv->total_tax,
                 'narration' => 'Vat on Purchase'
             )
         );
 
-        //supplier
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'D',
-                'ledger_id' => $supplier->ledger_account,
-                'amount' => ($inv->grand_total),
-                'narration' => 'Accounts payable'
-            )
-        );
+      
 
         foreach ($entryitemdata as $row => $itemdata) {
             $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
@@ -1596,14 +1626,55 @@ class Returns_supplier extends MY_Controller
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by, true);
         }
-        $this->data['customer'] = $this->site->getCompanyByID($inv->supplier_id);
+        $this->data['rows'] = $this->returns_supplier_model->getReturnItems($id);
+        //$this->data['customer'] = $this->site->getCompanyByID($inv->supplier_id);
+        $this->data['supplier'] = $this->site->getCompanyByID($inv->supplier_id);
 //        $this->data['biller'] = $this->site->getCompanyByID($inv->biller_id);
         $this->data['created_by'] = $this->site->getUser($inv->created_by);
         $this->data['updated_by'] = $inv->updated_by ? $this->site->getUser($inv->updated_by) : null;
         $this->data['warehouse'] = $this->site->getWarehouseByID($inv->warehouse_id);
         $this->data['inv'] = $inv;
+        //$this->data['payments'] = $this->purchases_model->getPaymentsForPurchase($id);
         $this->data['rows'] = $this->returns_supplier_model->getReturnItems($id);
 
         $this->load->view($this->theme . 'returns_supplier/view', $this->data);
+    }
+
+
+    public function modal_view($return_id = null)
+    {
+        $this->sma->checkPermissions('index', true);
+
+        if ($this->input->get('id')) {
+            $return_id = $this->input->get('id');
+        }
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv = $this->returns_supplier_model->getReturnByID($return_id);
+        if (!$this->session->userdata('view_right')) {
+            $this->sma->view_rights($inv->created_by, true);
+        }
+        $this->data['rows'] = $this->returns_supplier_model->getReturnItems($return_id);
+        $supplier = $this->site->getCompanyByID($inv->supplier_id);
+        $this->data['parent_supplier'] = '';
+        if($supplier->level == 2 && $supplier->parent_code != '') {
+            $parentSupplier = $this->site->getCompanyByParentCode($supplier->parent_code);
+            if(isset($parentSupplier->name)) {
+                $this->data['parent_supplier'] = $parentSupplier;
+            }
+        }
+
+        $this->data['journal_entry'] = $this->site->getJournalEntryByTypeId('return_supplier', $return_id);
+        $this->data['supplier'] = $supplier;
+        $this->data['warehouse'] = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv'] = $inv;
+        //$this->data['payments'] = $this->purchases_model->getPaymentsForPurchase($purchase_id);
+        $this->data['created_by'] = $this->site->getUser($inv->created_by);
+        $this->data['updated_by'] = $inv->updated_by ? $this->site->getUser($inv->updated_by) : null;
+        //$this->data['return_purchase'] = $inv->return_id ? $this->purchases_model->getPurchaseByID($inv->return_id) : null;
+        //$this->data['return_rows'] = $inv->return_id ? $this->purchases_model->getAllPurchaseItems($inv->return_id) : null;
+        $this->data['attachments'] = $this->site->getAttachments($return_id, 'return_supplier');
+        $this->data['return_id'] = $return_id;
+
+        $this->load->view($this->theme . 'returns_supplier/modal_view', $this->data);
     }
 }
