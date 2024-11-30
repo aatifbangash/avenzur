@@ -2048,8 +2048,13 @@ public function logVisitor() {
         }
         if($type == 'purchase') {
             $this->db->where('pid',$type_id); 
+            $q = $this->db->get_where('sma_accounts_entries', ['pid' => $type_id], 1);
         }
-        $q = $this->db->get_where('sma_accounts_entries', ['pid' => $type_id], 1);
+        if($type == 'return_supplier') {
+            $this->db->where('rsid',$type_id); 
+            $q = $this->db->get_where('sma_accounts_entries', ['rsid' => $type_id], 1);
+        }
+        
         if ($q->num_rows() > 0) {
             return $q->row();
         }

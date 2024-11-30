@@ -1662,7 +1662,8 @@ class Returns_supplier extends MY_Controller
                 $this->data['parent_supplier'] = $parentSupplier;
             }
         }
-        //$this->data['journal_entry'] = $this->site->getJournalEntryByTypeId('purchase', $purchase_id);
+
+        $this->data['journal_entry'] = $this->site->getJournalEntryByTypeId('return_supplier', $return_id);
         $this->data['supplier'] = $supplier;
         $this->data['warehouse'] = $this->site->getWarehouseByID($inv->warehouse_id);
         $this->data['inv'] = $inv;
@@ -1674,6 +1675,6 @@ class Returns_supplier extends MY_Controller
         $this->data['attachments'] = $this->site->getAttachments($return_id, 'return_supplier');
         $this->data['return_id'] = $return_id;
 
-        $this->load->view($this->theme . 'purchases/modal_view', $this->data);
+        $this->load->view($this->theme . 'returns_supplier/modal_view', $this->data);
     }
 }
