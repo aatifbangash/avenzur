@@ -1424,7 +1424,7 @@ $(document).ready(function () {
     });
     $('body').on('click', '.oreturn_supplier_link td:not(:first-child, :last-child)', function () {
         $('#myModal').modal({
-            remote: site.base_url + 'returns_supplier/view/' + $(this).parent('.oreturn_supplier_link').attr('id'),
+            remote: site.base_url + 'returns_supplier/modal_view/' + $(this).parent('.oreturn_supplier_link').attr('id'),
         });
         $('#myModal').modal('show');
     });
