@@ -61,58 +61,49 @@
 
     resetValues();
     function resetValues(){
-        if (localStorage.getItem('psdate')) {
-            localStorage.removeItem('psdate');
-            $('#psdate').val('');
+        if (localStorage.getItem('csdate')) {
+            localStorage.removeItem('csdate');
+            $('#csdate').val('');
         }
 
-        if (localStorage.getItem('psref')) {
-            localStorage.removeItem('psref');
-            $('#psref').val('');
+        if (localStorage.getItem('csref')) {
+            localStorage.removeItem('csref');
+            $('#csref').val('');
         }
 
-        if (localStorage.getItem('pspayment')) {
-            localStorage.removeItem('pspayment');
-            $('#pspayment').val('');
+        if (localStorage.getItem('cspayment')) {
+            localStorage.removeItem('cspayment');
+            $('#cspayment').val('');
         }
 
-        if (localStorage.getItem('pssupplier')) {
-            localStorage.removeItem('pssupplier');
-            $('#pssupplier').val('');
+        if (localStorage.getItem('cscustomer')) {
+            localStorage.removeItem('cscustomer');
+            $('#cscustomer').val('');
         }
 
-        if (localStorage.getItem('psledger')) {
-            localStorage.removeItem('psledger');
-            $('#psledger').val('');
+        if (localStorage.getItem('csledger')) {
+            localStorage.removeItem('csledger');
+            $('#csledger').val('');
         }
 
-        if (localStorage.getItem('psbankcharges')) {
-            localStorage.removeItem('psbankcharges');
-            $('#psbankcharges').val('');
-        }
-
-        if (localStorage.getItem('psbankchargesamt')) {
-            localStorage.removeItem('psbankchargesamt');
-            $('#psbankchargesamt').val('');
-        }
-
-        if (localStorage.getItem('psnote')) {
-            localStorage.removeItem('psnote');
-            $('#psnote').val('');
+        if (localStorage.getItem('csnote')) {
+            localStorage.removeItem('csnote');
+            $('#csnote').val('');
         }
     }
 </script>
 
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-info-circle"></i><?= lang('supplier_payments'); ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-info-circle"></i><?= lang('customer_payments'); ?></h2>
 
         <div class="box-icon">
             <ul class="btn-tasks">
-            <li class="dropdown">
+            <li class="dropdown"> 
                 <a href="admin/entries/view/journal/<?= $payment_ref->journal_id ?>" class="tip" title="<?= lang('Veiw JL') ?>">
                     <i class="icon fa fa-eye"></i>
-                </a> 
+                </a>
+
                 <a href="javascript:void(0);" onclick="generatePDF('print_content')" id="pdf" class="tip" title="<?= lang('download_PDF') ?>">
                     <i class="icon fa fa-file-pdf-o"></i>
                 </a>
@@ -124,7 +115,7 @@
         <div class="row">
             <?php
             $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            echo admin_form_open_multipart('suppliers/add_payment', $attrib)
+            echo admin_form_open_multipart('customers/add_payment', $attrib)
             ?>
             <div class="col-lg-12">
                 
@@ -171,20 +162,6 @@
 
                         <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('Bank Charges', 'psbankcharges'); ?>
-                                <?php echo form_input('bank_charges_account', ($payment_ref->bank_ledger ?? $payment_ref->bank_ledger), 'class="form-control input-tip" readonly id="psbankcharges"'); ?>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <?= lang('Bank Charges Amount', 'psbankchargesamt'); ?>
-                                <?php echo form_input('bank_charges', ($payment_ref->bank_charges ?? $payment_ref->bank_charges), 'class="form-control input-tip" readonly id="psbankchargesamt"'); ?>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="form-group">
                                 <?= lang('Note', 'psnote'); ?>
                                 <?php echo form_input('note', ($payment_ref->note ?? $payment_ref->note), 'class="form-control input-tip" readonly id="psnote"'); ?>
                             </div>
@@ -216,10 +193,10 @@
                                         ?>
                                         <tr>
                                             <td><?= $count; ?></td>
-                                            <td><?= $payment->purchase_id != '' ? $payment->purchase_date : $payment->date; ?></td>
-                                            <td><?= $payment->purchase_id != '' ? $payment->ref_no : $payment->reference_no; ?></td>
-                                            <td><?= $payment->purchase_id != '' ? 'Invoice Payment' : 'Advance Payment'; ?></td>
-                                            <td><?= $payment->grand_total > 0 ? number_format($payment->grand_total, 2) : '0'; ?></td>
+                                            <td><?= $payment->sale_id != '' ? $payment->sale_date: $payment->date; ?></td>
+                                            <td><?= $payment->sale_id != '' ? $payment->ref_no: $payment->reference_no; ?></td>
+                                            <td><?= $payment->sale_id != '' ? 'Invoice Payment' : 'Advance Collection'; ?></td>
+                                            <td><?= $payment->grand_total > 0 ? number_format($payment->grand_total, 2) : '0.00'; ?></td>
                                             <td><?= ($payment->grand_total - $payment->amount) > 0 ? number_format(($payment->grand_total - $payment->amount), 2) : '0.00'; ?></td>
                                             <td><?= number_format($payment->amount, 2); ?></td>
                                         </tr>

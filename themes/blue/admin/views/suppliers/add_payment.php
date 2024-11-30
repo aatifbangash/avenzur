@@ -100,12 +100,18 @@
                             newTr.prependTo('#poTable');
 
                         }else{
+                            total_due = 0;
+                            total_amt = 0;
+                            total_paying = 0;
                             for(var i=0;i<response.length;i++){
                                 var purchase_date = response[i].date;
                                 var reference_id = response[i].reference_no;
-                                var total_amount = response[i].grand_total;
-                                var paid_amount = response[i].paid;
-                                var due_amount = response[i].grand_total - response[i].paid;
+                                var total_amount = parseFloat(response[i].grand_total);
+                                var paid_amount = parseFloat(response[i].paid);
+                                var due_amount = parseFloat(response[i].grand_total) - parseFloat(response[i].paid);
+
+                                total_due += parseFloat(due_amount);
+                                total_amt += parseFloat(total_amount);
 
                                 if(payment_amount > due_amount){
                                     payment_amount = payment_amount - due_amount;
@@ -117,16 +123,26 @@
                                     payment_amount = 0;
                                     to_pay = 0;
                                 }
+
+                                total_paying += parseFloat(to_pay);
                                 
                                 var newTr = $('<tr id="row_' + response[i].id + '" class="row_' + response[i].id + '" data-item-id="' + response[i].id + '"></tr>');
                                 tr_html = '<td>'+purchase_date+'</td>';
                                 tr_html += '<td>'+reference_id+'</td>';
-                                tr_html += '<td>'+total_amount+'</td>';
-                                tr_html += '<td>'+due_amount+'<input name="due_amount[]" data-item-id="' + response[i].id + '" value="'+due_amount+'" type="hidden" class="rid" /></td>';
-                                tr_html += '<td><input name="payment_amount[]" data-item-id="' + response[i].id + '" value="'+to_pay+'" type="text" class="rid" /><input name="item_id[]" type="hidden" value="' + response[i].id + '"></td>';
+                                tr_html += '<td>'+total_amount.toFixed(2)+'</td>';
+                                tr_html += '<td>'+due_amount.toFixed(2)+'<input name="due_amount[]" data-item-id="' + response[i].id + '" value="'+due_amount+'" type="hidden" class="rid" /></td>';
+                                tr_html += '<td><input name="payment_amount[]" data-item-id="' + response[i].id + '" value="'+to_pay.toFixed(2)+'" type="text" class="rid" /><input name="item_id[]" type="hidden" value="' + response[i].id + '"></td>';
                                 newTr.html(tr_html);
                                 newTr.prependTo('#poTable');
                             }
+
+                            var newTr = $('<tr class="row"></tr>');
+                                tr_html = '<td colspan="1"><b>Totals:</b> </td>';
+                                tr_html += '<td><b>'+total_amt.toFixed(2)+'</b></td>';
+                                tr_html += '<td><b>'+total_due.toFixed(2)+'</b></td>';
+                                tr_html += '<td><b>'+total_paying.toFixed(2)+'</b></td>';
+                                newTr.html(tr_html);
+                                newTr.appendTo('#poTable');
                         }
                     }
                 });
@@ -134,7 +150,6 @@
         }
     
     });
-
 
     function resetValues(){
         if (localStorage.getItem('psdate')) {

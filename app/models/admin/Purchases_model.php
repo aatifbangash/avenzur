@@ -213,6 +213,22 @@ class Purchases_model extends CI_Model
         $this->db->update('sma_return_supplier_items', ['net_cost' => $net_cost_sales], ['batch_no' => $batch_no, 'product_code' => $item_code]);
     }
 
+    public function update_payment_reference($payment_id, $journal_id){
+        $this->db->update('sma_payment_reference', ['journal_id' => $journal_id], ['id' => $payment_id]);
+    }
+
+    public function update_supplier_balance($supplier_id, $amount){
+        $current_balance = $this->db->select('balance')
+                                ->where('id', $supplier_id)
+                                ->get('sma_companies')
+                                ->row('balance');
+
+        $current_balance = $current_balance !== null ? $current_balance : 0;
+        $new_balance = $current_balance + $amount;
+
+        $this->db->update('sma_companies', ['balance' => $new_balance], ['id' => $supplier_id]);
+    }
+
     public function calculatePurchaseTotals($id, $return_id, $surcharge)
     {
         $purchase = $this->getPurchaseByID($id);
@@ -538,7 +554,7 @@ class Purchases_model extends CI_Model
 
     public function getPaymentByReferenceID($id)
     {
-        $this->db->select('payments.*, companies.company, type, purchases.grand_total')
+        $this->db->select('payments.*, companies.company, type, purchases.grand_total, purchases.reference_no as ref_no, purchases.date as purchase_date')
             ->join('purchases', 'purchases.id=payments.purchase_id', 'left')
             ->join('companies', 'companies.id=purchases.supplier_id', 'left')
             ->where('payments.payment_id =', $id);
@@ -573,7 +589,8 @@ class Purchases_model extends CI_Model
 
     public function getPaymentReferences(){
         $this->db->select('payment_reference.*, companies.name as company')
-                ->join('companies', 'companies.id=payment_reference.supplier_id', 'left');
+                ->join('companies', 'companies.id=payment_reference.supplier_id', 'left')
+                ->where('supplier_id <>', NULL);
         $q = $this->db->get('payment_reference');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -1068,20 +1085,14 @@ class Purchases_model extends CI_Model
 
     public function getPendingInvoicesBySupplier($supplier_id){
         $this->db->order_by('date', 'asc');
-        //$q = $this->db->get_where('purchases', ['supplier_id' => $supplier_id, 'payment_status' => 'pending', ]);
-        $q = $this->db->get_where('purchases', [
-            'supplier_id' => $supplier_id,
-            'payment_status' => 'pending',
-            'purchase_id IS NULL' => null,
-        ]);
+        $this->db->where('supplier_id', $supplier_id);
+        $this->db->where_in('payment_status', ['pending', 'due', 'partial']);
+        $q = $this->db->get('purchases');
+        
         if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $data[] = $row;
-            }
-            return $data; 
-        }else{
-            $data = [];
-            return $data;
+            return $q->result(); // Return the result directly as an array of objects
+        } else {
+            return []; // Return an empty array if no results
         }
     }
 

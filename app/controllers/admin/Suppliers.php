@@ -131,6 +131,8 @@ class Suppliers extends MY_Controller
         {
             $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
         }
+
+        return $insert_id;
     }
 
     public function convert_supplier_advance_invoice($memo_id, $supplier_id, $ledger_account, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $type){
@@ -657,8 +659,10 @@ class Suppliers extends MY_Controller
                 if($payment_total > 0){
                     $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account);
                     $this->make_supplier_payment(NULL, $payment_total, $reference_no, $date, $note, $payment_id);
+                    $this->purchases_model->update_supplier_balance($supplier_id, $payment_total);
 
-                    $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
+                    $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
+                    $this->purchases_model->update_payment_reference($payment_id, $journal_id);
                     $this->session->set_flashdata('message', lang('Advance payment added Successfully!'));
                     admin_redirect('suppliers/view_payment/'.$payment_id);
                 }
@@ -688,7 +692,8 @@ class Suppliers extends MY_Controller
                         }
                     }
 
-                    $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
+                    $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
+                    $this->purchases_model->update_payment_reference($payment_id, $journal_id);
                     $this->session->set_flashdata('message', lang('Payment invoice added Successfully!'));
                     admin_redirect('suppliers/view_payment/'.$payment_id);
                 }else{

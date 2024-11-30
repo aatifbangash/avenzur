@@ -37,18 +37,21 @@ class Sales_model extends CI_Model
         return false;
     }
 
-    public function getPendingInvoicesByCustomer($customer_id){
+    public function getPendingInvoicesByCustomer($customer_id) {
         $this->db->order_by('date', 'asc');
-        $q = $this->db->get_where('sales', ['customer_id' => $customer_id, 'payment_status' => 'pending']);
+        $this->db->where('customer_id', $customer_id);
+        $this->db->where_in('payment_status', ['pending', 'due', 'partial']);
+        $q = $this->db->get('sales');
+    
         if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $data[] = $row;
-            }
-            return $data; 
-        }else{
-            $data = [];
-            return $data;
+            return $q->result(); // Return the result directly as an array of objects
+        } else {
+            return []; // Return an empty array if no results
         }
+    }
+
+    public function update_payment_reference($payment_id, $journal_id){
+        $this->db->update('sma_payment_reference', ['journal_id' => $journal_id], ['id' => $payment_id]);
     }
 
     /* ----------------- Gift Cards --------------------- */
@@ -73,6 +76,66 @@ class Sales_model extends CI_Model
             if ($this->db->update('product_variants', ['quantity' => $nq], ['id' => $option_id])) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    public function addPaymentReference($data = [])
+    {
+        $this->db->insert('payment_reference', $data);
+        return $this->db->insert_id();
+    }
+
+    public function getPaymentReferenceByID($id){
+        $this->db->select('payment_reference.*, companies.name, lb.name as transfer_from')
+            ->join('companies', 'companies.id=payment_reference.customer_id', 'left')
+            ->join('accounts_ledgers lb', 'lb.id=payment_reference.transfer_from_ledger', 'left')
+            ->where('payment_reference.id =', $id);
+        $q = $this->db->get('payment_reference');
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function update_customer_balance($customer_id, $amount){
+        $current_balance = $this->db->select('balance')
+                                ->where('id', $customer_id)
+                                ->get('sma_companies')
+                                ->row('balance');
+
+        $current_balance = $current_balance !== null ? $current_balance : 0;
+        $new_balance = $current_balance + $amount;
+
+        $this->db->update('sma_companies', ['balance' => $new_balance], ['id' => $customer_id]);
+    }
+
+    public function getPaymentByReferenceID($id)
+    {
+        $this->db->select('payments.*, companies.company, type, sales.grand_total, sales.reference_no as ref_no, sales.date as sale_date')
+            ->join('sales', 'sales.id=payments.sale_id', 'left')
+            ->join('companies', 'companies.id=sales.customer_id', 'left')
+            ->where('payments.payment_id =', $id);
+        $q = $this->db->get('payments');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+    public function getPaymentReferences(){
+        $this->db->select('payment_reference.*, companies.name as company')
+                ->join('companies', 'companies.id=payment_reference.customer_id', 'left')
+                ->where('customer_id <>', NULL);
+        $q = $this->db->get('payment_reference');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
         }
         return false;
     }
