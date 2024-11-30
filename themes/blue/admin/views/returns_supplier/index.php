@@ -125,7 +125,7 @@
         function openModalForLastInsertedId(lastInsertedId) {
 
             $('#myModal').modal({
-                remote: site.base_url + 'returns_supplier/view/' + lastInsertedId,
+                remote: site.base_url + 'returns_supplier/modal_view/' + lastInsertedId,
             });
             $('#myModal').modal('show');
         }
