@@ -1767,6 +1767,60 @@ function calculateSaleInventory(item) {
     };
 }
 
+function calculateReturnSupplierInventory(item) {
+    const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+    // Convert all inputs to Decimal and ensure precision
+    const cost_price = toTwoDecimals(item.cost);
+    const sale_price = toTwoDecimals(item.sale_price);
+    const base_quantity = new Decimal(item.qty);
+    const bonus = new Decimal(item.bonus);
+    const tax_rate = toTwoDecimals(item.tax_rate);
+    const discount1 = toTwoDecimals(item.dis1);
+    const discount2 = toTwoDecimals(item.dis2);
+
+    // Calculations
+    const total_quantity = base_quantity.plus(bonus);
+    const total_purchase = toTwoDecimals(cost_price.times(base_quantity));
+    const total_sale = toTwoDecimals(sale_price.times(total_quantity));
+
+    // Discounts
+    const first_discount = toTwoDecimals(total_purchase.times(discount1.dividedBy(100)));
+    const after_first_discount = toTwoDecimals(total_purchase.minus(first_discount));
+    const second_discount = toTwoDecimals(after_first_discount.times(discount2.dividedBy(100)));
+    const total_discount = toTwoDecimals(first_discount.plus(second_discount));
+   
+
+    const net_purchase = toTwoDecimals(total_purchase.minus(first_discount).minus(second_discount));
+    const net_cost = total_quantity.greaterThan(0)
+        ? toTwoDecimals(net_purchase.dividedBy(total_quantity))
+        : new Decimal(0);
+
+    // VAT Calculation (15% if tax_rate is 5)
+    let total_vat = new Decimal(0);
+    if (tax_rate.equals(5)) {
+        total_vat = toTwoDecimals(net_purchase.times(new Decimal(15).dividedBy(100)));
+    }
+
+    // Grant Total
+    const grant_total = toTwoDecimals(net_purchase.plus(total_vat));
+
+    // Return calculated values
+    return {
+        new_cost_price: cost_price.toNumber(),
+        new_sale_price: sale_price.toNumber(),
+        new_total_purchase: total_purchase.toNumber(),
+        new_total_discount: total_discount.toNumber(),
+        new_net_purchase: net_purchase.toNumber(),
+        new_total_sale: total_sale.toNumber(),
+        new_first_discount: first_discount.toNumber(),
+        new_second_discount: second_discount.toNumber(),
+        new_vat_value: total_vat.toNumber(),
+        new_unit_cost: net_cost.toNumber(),
+        new_grant_total: grant_total.toNumber(),
+    };
+}
+
+
 function calculateInventory(item, module) {
 
     if( module == 'purchase' ) {
@@ -1775,6 +1829,8 @@ function calculateInventory(item, module) {
     else if(module == 'sale') {
         return calculateSaleInventory(item);
     }
-   
+    else if(module == 'return_supplier') {
+        return calculateReturnSupplierInventory(item);
+    }
 }
 

@@ -1594,6 +1594,19 @@ class Purchases extends MY_Controller
 
             }
 
+
+           //supplier
+                  $entryitemdata[] = array(
+                    'Entryitem' => array(
+                        'entry_id' => $insert_id,
+                        'dc' => 'C',
+                        'ledger_id' => $supplier->ledger_account,
+                        //'amount' => $inv->grand_total + $inv->product_tax,
+                        'amount' => $inv->grand_total,
+                        'narration' => 'Accounts payable'
+                    )
+                );
+    
             // Inventory Entry
 
             $entryitemdata[] = array(
@@ -1618,18 +1631,7 @@ class Purchases extends MY_Controller
                     'narration' => 'Vat on Purchase'
                 )
             );
-            //supplier
-            $entryitemdata[] = array(
-                'Entryitem' => array(
-                    'entry_id' => $insert_id,
-                    'dc' => 'C',
-                    'ledger_id' => $supplier->ledger_account,
-                    //'amount' => $inv->grand_total + $inv->product_tax,
-                    'amount' => $inv->grand_total,
-                    'narration' => 'Accounts payable'
-                )
-            );
-
+      
             foreach ($entryitemdata as $row => $itemdata) {
                 $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
             }
