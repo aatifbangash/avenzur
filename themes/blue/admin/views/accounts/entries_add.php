@@ -282,6 +282,114 @@
         color: #000;
     }
 </style>
+ <script>
+        $(document).ready(function () {
+            
+            $("#primary-button-submit").on('click', function(){
+                localStorage.removeItem("Number");
+                localStorage.removeItem("EntryDate");
+                localStorage.removeItem("customerId");
+                localStorage.removeItem("supplierId");
+                localStorage.removeItem("department_id");
+                localStorage.removeItem("employee_id");
+            })
+            $("#number").on('change', function(){
+                 let numerentered = $(this).val();
+                localStorage.setItem("Number", numerentered);
+            });
+            const savedNumber = localStorage.getItem("Number");
+            if(savedNumber){
+                $("#number").val(savedNumber);
+                console.log("Number", savedNumber);
+            }
+
+           $('#customer_id').on('change', function () {
+                const selectedCustomerId = $(this).val(); // Get the selected value
+                localStorage.setItem('customerId', selectedCustomerId); // Save to localStorage
+                console.log(`Saved customer ID: ${selectedCustomerId}`);
+            });
+             function loadCustomerId() {
+                const savedCustomerId = localStorage.getItem('customerId');
+                if (savedCustomerId) {
+                    $('#customer_id').val(savedCustomerId); // Restore the saved value
+                    console.log(`Restored customer ID: ${savedCustomerId}`);
+                }
+            }
+            loadCustomerId();
+
+             $('#supplier_id').on('change', function () {
+                const selectedSupplierId = $(this).val(); // Get the selected value
+                localStorage.setItem('supplierId', selectedSupplierId); // Save to localStorage
+                console.log(`Saved SupplierId: ${selectedSupplierId}`);
+            });
+             function loadSupplierId() {
+                const savedSupplierId = localStorage.getItem('supplierId');
+                if (savedSupplierId) {
+                    $('#supplier_id').val(savedSupplierId); // Restore the saved value
+                    console.log(`Restored Supplier ID: ${savedSupplierId}`);
+                }
+            }
+            loadSupplierId();
+
+             $('#department_id').on('change', function () {
+                const department_id = $(this).val(); // Get the selected value
+                localStorage.setItem('department_id', department_id); // Save to localStorage
+                console.log(`Saved department_id: ${department_id}`);
+            });
+             function loadDepartmentId() {
+                const department_id = localStorage.getItem('department_id');
+                if (department_id) {
+                    $('#department_id').val(department_id); // Restore the saved value
+                    console.log(`Restored department_id : ${department_id}`);
+                }
+            }
+            loadDepartmentId();
+
+               $('#employee_id').on('change', function () {
+                const employee_id = $(this).val(); // Get the selected value
+                localStorage.setItem('employee_id', employee_id); // Save to localStorage
+                console.log(`Saved department_id: ${employee_id}`);
+            });
+             function loadEmployeeId() {
+                const employee_id = localStorage.getItem('employee_id');
+                if (employee_id) {
+                    $('#employee_id').val(employee_id); // Restore the saved value
+                    console.log(`Restored employee_id : ${employee_id}`);
+                }
+            }
+            loadEmployeeId();
+
+            // Get current date and format it as MM/DD/YYYY
+            function getFormattedDate(date) {
+                let month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+                let day = String(date.getDate()).padStart(2, '0');
+                let year = date.getFullYear();
+                return `${month}/${day}/${year}`;
+            }
+
+            // Set default date to current date
+            let today = new Date();
+            let formattedDate = getFormattedDate(today);
+            const savedDate = localStorage.getItem("EntryDate");
+            if(savedDate){
+                $('#EntryDate').val(savedDate);
+
+            }else{
+                 $('#EntryDate').val(formattedDate);
+
+            }
+
+            // Event listener for date selection
+            $('#EntryDate').on('change', function () {
+                let selectedDate = $(this).val();
+                localStorage.setItem("EntryDate", selectedDate);
+                console.log('Selected Date:', selectedDate); // For debugging
+            });
+            
+        });
+    </script>
+
+   
 <script type="text/javascript">
     $(document).ready(function() {
         /* javascript floating point operations */
@@ -344,7 +452,7 @@
 
         /* Calculating Dr and Cr total */
         $(document).on('change', '.dr-item', function() {
-            var drTotal = 0;
+         
             $("table tr .dr-item").each(function() {
                 var curDr = $(this).prop('value');
                 curDr = parseFloat(curDr);
@@ -354,6 +462,7 @@
                 // console.log($(this));
                 // console.log(curDr);
                 // console.log(drTotal);
+  
             });
             $("table tr #dr-total").text(drTotal);
             var crTotal = 0;
@@ -438,6 +547,7 @@
             crValue = parseFloat(crValue);
             if (isNaN(crValue))
                 crValue = 0;
+     
 
             if ($(this).prop('value') == "D") {
                 if (drValue == 0 && crValue != 0) {
@@ -578,6 +688,8 @@
             maxDate: endDate,
             dateFormat: '<?= $this->mDateArray[1]; ?>',
             numberOfMonths: 1,
+        
+            
         });
     
         function checkIfAnyFieldSelected() {
@@ -670,7 +782,7 @@
                             echo form_label(lang('entries_views_add_label_number'), 'number');
                             $data = array(
                                 'id' => "number",
-                                'type' => "text",
+                                'type' => "number",
                                 'name' => "number",
                                 'beforeInput' =>  $prefixNumber,
                                 'afterInput' => $suffixNumber,
@@ -688,25 +800,25 @@
                                 'type' => "text",
                                 'name' => "date",
                                 'class' => "form-control",
-                                'value' => set_value('date'),
+                                'value' => set_value('date')
                             );
                             echo form_input($data);
                             echo "</div>";
                             echo "</div>";
-                            echo '<div class="col-xs-4">';
-                            echo '<div class="form-group">';
-                            echo form_label(lang('entries_views_add_label_tag'), 'tag_id');
+                            // echo '<div class="col-xs-4">';
+                            // echo '<div class="form-group">';
+                            // echo form_label(lang('entries_views_add_label_tag'), 'tag_id');
                             ?>
-                            <select name="tag_id" class="form-control">
+                            <!-- <select name="tag_id" class="form-control">
                                 <option value="0"><?= lang('entries_views_add_tag_first_option'); ?></option>
                                 <?php foreach ($tag_options as $tag) : ?>
                                     <option value="<?= $tag['id']; ?>"><?= $tag['title']; ?></option>
                                 <?php endforeach; ?>
-                            </select>
+                            </select> -->
                             <?php
-                            echo "</div>";
-                            echo "</div>";
-                            echo "</div>";
+                            // echo "</div>";
+                            // echo "</div>";
+                            // echo "</div>";
 
                             echo '<table class="table items table-striped table-bordered table-condensed ">';
                             /* Header */
@@ -736,7 +848,7 @@
                             ?>
                                     <td>
                                         <div class="form-group-entryitem">
-                                            <select class="ledger-dropdown form-control" name="<?= 'Entryitem[' . $row . '][ledger_id]'; ?>">
+                                            <select class="ledger-dropdown form-control"  name="<?= 'Entryitem[' . $row . '][ledger_id]'; ?>">
                                                 <?php // foreach ($ledger_options as $id => $ledger): 
                                                 ?>
                                                 <!-- <option value="<?php // $id; 

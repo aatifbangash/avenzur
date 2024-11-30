@@ -181,7 +181,7 @@ class Entries extends MY_Controller
 		// form validation rules 
 		$this->form_validation->set_rules('number', lang('entries_cntrler_add_form_validation_number_label'), 'is_numeric');
 		$this->form_validation->set_rules('date', lang('entries_cntrler_add_form_validation_date_label'), 'required');
-		$this->form_validation->set_rules('tag_id', lang('entries_cntrler_add_form_validation_tag_label'), 'required');
+		// $this->form_validation->set_rules('tag_id', lang('entries_cntrler_add_form_validation_tag_label'), 'required');
 
 		$this->form_validation->set_rules('product_id', 'Product ID', 'callback_at_least_one_selected');
 		$this->form_validation->set_rules('customer_id', 'Customer ID', 'callback_at_least_one_selected');
