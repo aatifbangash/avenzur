@@ -262,7 +262,7 @@
                                     <?= ($row->expiry && $row->expiry != '0000-00-00') ? '<br>' . lang('EX') . ': ' . $this->sma->hrsd($row->expiry) : ''; ?>
                                     <?= 'Item# '.$row->item_code ;?>
                                 </td>
-                                <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->batchno ?: ''; ?>
+                                <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->batch_no ?: ''; ?>
                                 </td>
                                 <?php if ($Settings->indian_gst) {
                                     ?>
@@ -278,13 +278,13 @@
                                 ?>
                                 <td style="text-align:right; width:100px;">
                                     <!-- <?= $row->unit_cost != $row->real_unit_cost && $row->item_discount > 0 ? '<del>' . $this->sma->formatMoney($row->real_unit_cost) . '</del>' : ''; ?> -->
-                                    <?= $row->sale_price; ?>
+                                    <?= $row->real_unit_price; ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
-                                     <?= $this->sma->formatNumber($row->unit_cost); ?>
+                                     <?= $this->sma->formatNumber($row->cost_price); ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
-                                   <?= $this->sma->formatNumber($row->net_unit_cost); ?>
+                                   <?= $this->sma->formatNumber($row->net_cost); ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
                                    <?= $this->sma->formatNumber($row->bonus); ?>
@@ -320,7 +320,7 @@
                                 ?>
 
                                 <td style="text-align:right; width:120px;">
-                                    <?php echo $row->main_net; //$this->sma->formatNumber($row->subtotal)  + $this->sma->formatNumber($vat_value); ?></td>
+                                    <?php echo $inv->grand_total; //$this->sma->formatNumber($row->subtotal)  + $this->sma->formatNumber($vat_value); ?></td>
 
                             </tr>
                             <?php
