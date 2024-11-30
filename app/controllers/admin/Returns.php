@@ -1295,6 +1295,35 @@ class Returns extends MY_Controller
         }
     }
 
+    public function modal_view($id = null)
+    {
+        $this->sma->checkPermissions('index', true);
+        $this->load->library('inv_qrcode');
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv                 = $this->returns_model->getReturnByID($id);
+        if (!$this->session->userdata('view_right')) {
+            $this->sma->view_rights($inv->created_by, true);
+        }
+        $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
+        $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
+        $this->data['created_by']  = $this->site->getUser($inv->created_by);
+        $this->data['updated_by']  = $inv->updated_by ? $this->site->getUser($inv->updated_by) : null;
+        $this->data['warehouse']   = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv']         = $inv;
+        $this->data['address']     = $this->site->getAddressByID($inv->address_id);
+        $this->data['rows']        = $this->returns_model->getReturnItems($id);
+        //$this->data['return_sale'] = $inv->return_id ? $this->returns_model->getInvoiceByID($inv->return_id) : null;
+        //$this->data['return_rows'] = $inv->return_id ? $this->returns_model->getAllInvoiceItems($inv->return_id) : null;
+        $this->data['attachments'] = $this->site->getAttachments($id, 'return');
+        $this->data['return_id'] = $id;
+
+        $this->load->view($this->theme . 'returns/modal_view', $this->data);
+    }
+
     public function view($id = null)
     {
         $this->sma->checkPermissions('index', true);

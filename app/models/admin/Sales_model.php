@@ -40,6 +40,7 @@ class Sales_model extends CI_Model
     public function getPendingInvoicesByCustomer($customer_id) {
         $this->db->order_by('date', 'asc');
         $this->db->where('customer_id', $customer_id);
+        $this->db->where('sale_invoice', 1);
         $this->db->where_in('payment_status', ['pending', 'due', 'partial']);
         $q = $this->db->get('sales');
     

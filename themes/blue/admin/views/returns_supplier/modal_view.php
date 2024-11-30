@@ -247,7 +247,7 @@
                         // echo "<pre>";
                         // print_r($inv);
                         foreach ($rows as $row):
-                            $subTotal = ($row->unit_cost * $row->unit_quantity);
+                            $subTotal = ($row->cost_price * $row->unit_quantity);
                             // echo "<pre>";
                              //print_r($row);
                             //$base_quantity = $row->unit_quantity - $row->bonus;
@@ -304,7 +304,7 @@
                                     $pr_discount2 = $this->site->calculateDiscount($row->discount2 . '%', $amount_after_dis1);
                                     $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $row->quantity);
                                     $row->discount2 = $this->sma->formatNumber($row->discount2, null);
-                                    echo '<td style="width: 120px; text-align:right; vertical-align:middle;">' . ($row->discount2 != 0 ? $row->discount2 : '') . '</td>';
+                                    echo '<td style="width: 120px; text-align:right; vertical-align:middle;">' . ($row->discount2 != 0 ? $row->discount2 : '-') . '</td>';
                                     echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . $row->second_discount_value . '</td>';
                                 }
                                 ?>
@@ -320,7 +320,7 @@
                                 ?>
 
                                 <td style="text-align:right; width:120px;">
-                                    <?php echo $inv->grand_total; //$this->sma->formatNumber($row->subtotal)  + $this->sma->formatNumber($vat_value); ?></td>
+                                    <?php echo $inv->main_net; //$this->sma->formatNumber($row->subtotal)  + $this->sma->formatNumber($vat_value); ?></td>
 
                             </tr>
                             <?php
@@ -501,7 +501,7 @@
                     </tr>
                     <tr>
                         <td>T-DISC</td>
-                        <td><?php echo $inv->total_discount; ?></td>
+                        <td><?php echo'0.00'; ?></td>
                     </tr>
                     <tr>
                         <td>Net Before VAT</td>
