@@ -28,6 +28,7 @@ class Inventory_model extends CI_Model {
             'bonus' => ($type === 'sale' || $type === 'pos' || $type === 'return_to_supplier' || $type === 'transfer_out' || $type === 'adjustment_decrease') ? -$bonus : $bonus,
             'customer_id' => $customer_id
         );
+        
         if ($this->db->insert('sma_inventory_movements', $data)) {
            // echo "insrted";
         }else{
