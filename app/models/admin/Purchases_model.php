@@ -1086,6 +1086,7 @@ class Purchases_model extends CI_Model
     public function getPendingInvoicesBySupplier($supplier_id){
         $this->db->order_by('date', 'asc');
         $this->db->where('supplier_id', $supplier_id);
+        $this->db->where('return_id', NULL);
         $this->db->where_in('payment_status', ['pending', 'due', 'partial']);
         $q = $this->db->get('purchases');
         
