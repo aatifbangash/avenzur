@@ -852,7 +852,7 @@ table#slTable td input.form-control {
                                     <div class="form-group">
                                         <?= lang('staff_note', 'slinnote'); ?>
                                         <?php echo form_textarea('staff_note', ($_POST['staff_note'] ?? ''), 'class="form-control" id="slinnote" style="margin-top: 10px; height: 100px;"'); ?>
-
+                                        <input type="hidden" id="warning_note" name="warning_note" value=""  />
                                     </div>
                                 </div>
 

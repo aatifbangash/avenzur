@@ -504,61 +504,20 @@
             </table>
             </div>
 
-            <!-- <?= $Settings->invoice_view > 0 ? $this->gst->summary($rows, $return_rows, ($return_sale ? $inv->product_tax + $return_sale->product_tax : $inv->product_tax)) : ''; ?> -->
-
-            
-            <?php include(dirname(__FILE__) . '/../partials/attachments.php'); ?>
-            <!-- <?php include FCPATH . 'themes' . DIRECTORY_SEPARATOR . $Settings->theme . DIRECTORY_SEPARATOR . 'admin' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'partials' . DIRECTORY_SEPARATOR . 'attachments.php'; ?> -->
-            <?php if (!$Supplier || !$Customer) {
-                ?>
-                <div class="buttons">
-                    <div class="btn-group btn-group-justified">
-                        <div class="btn-group">
-                            <a href="<?= admin_url('sales/add_payment/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('add_payment') ?>" data-toggle="modal" data-target="#myModal2">
-                                <i class="fa fa-dollar"></i>
-                                <span class="hidden-sm hidden-xs"><?= lang('payment') ?></span>
-                            </a>
+            <div class="row">
+                <div class="col-xs-12">
+                    <?php
+                    if ($inv->warning_note || $inv->warning_note != '') {
+                        ?>
+                        <div class="well well-sm">
+                            <p class="bold"><?= lang('Warning Note'); ?>:</p>
+                            <div><?= $this->sma->decode_html($inv->warning_note); ?></div>
                         </div>
-                        <div class="btn-group">
-                            <a href="<?= admin_url('sales/add_delivery/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('add_delivery') ?>" data-toggle="modal" data-target="#myModal2">
-                                <i class="fa fa-truck"></i>
-                                <span class="hidden-sm hidden-xs"><?= lang('delivery') ?></span>
-                            </a>
-                        </div>
-                        <div class="btn-group">
-                            <a href="<?= admin_url('sales/email/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal2" class="tip btn btn-primary" title="<?= lang('email') ?>">
-                                <i class="fa fa-envelope-o"></i>
-                                <span class="hidden-sm hidden-xs"><?= lang('email') ?></span>
-                            </a>
-                        </div>
-                        <!-- <div class="btn-group">
-                            <a href="<?= admin_url('sales/pdf/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('download_pdf') ?>">
-                                <i class="fa fa-download"></i>
-                                <span class="hidden-sm hidden-xs"><?= lang('pdf') ?></span>
-                            </a>
-                        </div> -->
-                        <?php if (!$inv->sale_id) {
-                            ?>
-                        <div class="btn-group">
-                            <a href="<?= admin_url('sales/edit/' . $inv->id) ?>" class="tip btn btn-warning sledit" title="<?= lang('edit') ?>">
-                                <i class="fa fa-edit"></i>
-                                <span class="hidden-sm hidden-xs"><?= lang('edit') ?></span>
-                            </a>
-                        </div>
-                        <div class="btn-group">
-                            <a href="#" class="tip btn btn-danger bpo" title="<b><?= $this->lang->line('delete_sale') ?></b>"
-                                data-content="<div style='width:150px;'><p><?= lang('r_u_sure') ?></p><a class='btn btn-danger' href='<?= admin_url('sales/delete/' . $inv->id) ?>'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button></div>"
-                                data-html="true" data-placement="top">
-                                <i class="fa fa-trash-o"></i>
-                                <span class="hidden-sm hidden-xs"><?= lang('delete') ?></span>
-                            </a>
-                        </div>
-                            <?php
-                        } ?>
-                    </div>
+                        <?php
+                    }
+                    ?>
                 </div>
-                <?php
-            } ?>
+            </div>
         </div>
     </div>
 </div>

@@ -397,7 +397,7 @@
                             //}
                             ?>
                             
-                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($main_net); ?></td>
+                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->subtotal + $totalVAT); ?></td>
                             
                         </tr>
                         <?php
@@ -490,7 +490,7 @@
                             </tr>
                             <tr>
                                 <td>Net Before VAT</td>
-                                <td><?php echo $this->sma->formatNumber($inv->total_net_sale);?></td>
+                                <td><?php echo $this->sma->formatNumber($inv->total_net_return);?></td>
                             </tr>
                             <tr>
                                 <td>Total VAT</td>

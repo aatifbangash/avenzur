@@ -608,7 +608,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                     <div class="form-group">
                                         <?= lang('staff_note', 'slinnote'); ?>
                                         <?php echo form_textarea('staff_note', ($_POST['staff_note'] ?? ''), 'class="form-control" id="slinnote" style="margin-top: 10px; height: 100px;"'); ?>
-
+                                        <input type="hidden" id="warning_note" name="warning_note" value="<?= $_POST['warning_note']; ?>"  />
                                     </div>
                                 </div>
 
