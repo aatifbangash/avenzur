@@ -1232,7 +1232,7 @@ function loadItems() {
       var item = this;
       console.log(item);
       const new_item = {
-        cost: item.row.real_unit_cost ?? 0,
+        cost: item.row.net_unit_cost ?? 0,
         sale_price: item.row.real_unit_sale ?? item.row.net_unit_sale,
         qty: item.row.qty,
         bonus: item.row.bonus ?? 0,
