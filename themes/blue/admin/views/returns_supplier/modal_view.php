@@ -320,7 +320,7 @@
                                 ?>
 
                                 <td style="text-align:right; width:120px;">
-                                    <?php echo $inv->main_net; //$this->sma->formatNumber($row->subtotal)  + $this->sma->formatNumber($vat_value); ?></td>
+                                    <?php echo $row->main_net; //$this->sma->formatNumber($row->subtotal)  + $this->sma->formatNumber($vat_value); ?></td>
 
                             </tr>
                             <?php

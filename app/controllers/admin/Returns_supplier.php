@@ -372,7 +372,7 @@ class Returns_supplier extends MY_Controller
                     $new_item_unit_cost = $_POST['item_unit_cost'][$r];
                     $new_item_total_purchase = $_POST['item_total_purchase'][$r];
                     $new_item_purchase_price = $_POST['item_purchase_price'][$r];
-                    $main_net = $_POST['main_net'];
+                    $main_net = $_POST['main_net'][$r];
 
 
                     $product = [
