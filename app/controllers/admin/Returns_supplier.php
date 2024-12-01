@@ -371,6 +371,7 @@ class Returns_supplier extends MY_Controller
                     $total_with_vat = $_POST['main_net'] ;
                     $new_item_unit_cost = $_POST['item_unit_cost'][$r];
                     $new_item_total_purchase = $_POST['item_total_purchase'][$r];
+                    $new_item_purchase_price = $_POST['item_purchase_price'][$r];
 
 
                     $product = [
@@ -381,7 +382,7 @@ class Returns_supplier extends MY_Controller
                         'option_id' => $item_option,
                         //'unit_cost' => $unit_cost,
                         //'real_unit_cost' => $real_unit_cost,
-                        'cost_price' => $new_item_cost_price,
+                        'cost_price' => $new_item_purchase_price,
                         'net_cost'   => $new_item_unit_cost,
                         'net_unit_price' => $new_item_sale_price,
                         //'cost_price' => $cost_price,

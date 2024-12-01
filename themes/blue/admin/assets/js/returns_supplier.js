@@ -1491,6 +1491,8 @@ function loadItems() {
         new_item_total_sale +
         '"><input name="item_unit_cost[]" type="hidden" class="main_net" value="' +
         new_item_unit_cost +
+        '"><input name="item_purchase_price[]" type="hidden" class="main_net" value="' +
+        item.row.cost +
         '"><span class="sname" id="name_' +
         row_no +
         '">' +
@@ -1530,7 +1532,7 @@ function loadItems() {
         '<input id="rreturn_' +
         row_no +
         '" class="form-control rcost text-center" name="net_cost[]" type="hidden" value="' +
-        new_item_cost_price +
+        item.row.cost +
         '" data-id="' +
         row_no +
         '" data-item="' +
