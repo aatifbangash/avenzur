@@ -372,6 +372,7 @@ class Returns_supplier extends MY_Controller
                     $new_item_unit_cost = $_POST['item_unit_cost'][$r];
                     $new_item_total_purchase = $_POST['item_total_purchase'][$r];
                     $new_item_purchase_price = $_POST['item_purchase_price'][$r];
+                    $main_net = $_POST['main_net'];
 
 
                     $product = [
@@ -410,7 +411,8 @@ class Returns_supplier extends MY_Controller
                         'discount2' => $item_dis2,
                         'real_cost' => $real_cost,
                         'avz_item_code' => $avz_code,
-                        'totalbeforevat' => $totalbeforevat
+                        'totalbeforevat' => $totalbeforevat,
+                        'main_net' => $main_net
                     ];
                     
                     $products[] = ($product + $gst_data);
