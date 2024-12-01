@@ -200,7 +200,7 @@ class Transfers extends MY_Controller
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'expiry'            => $item_expiry,
                         'real_unit_cost'    => $real_unit_cost,
-                        'sale_price'        => $this->sma->formatDecimal($item_net_cost, 4),
+                        'sale_price'        => $_POST['net_cost'][$r], //$this->sma->formatDecimal($item_net_cost, 4),
                         'date'              => date('Y-m-d', strtotime($date)),
                         'batchno'           => $item_batchno,
                         'serial_number'     => $item_serial_no,
