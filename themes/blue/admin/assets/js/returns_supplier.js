@@ -1311,8 +1311,10 @@ function loadItems() {
           .replace(/"/g, "&#034;")
           .replace(/'/g, "&#039;"));
       var product_unit = item.row.unit,
-        base_quantity = item.row.base_quantity;
-      base_quantity = base_quantity - item_bonus;
+      
+      //base_quantity = item.row.base_quantity;
+      //base_quantity = base_quantity - item_bonus;
+      base_quantity = item.row.item_total_quantity;
       // var cost_price= item.row.cost_price,
       var cost_price = item.row.net_cost;
       var batch_no = item.row.batch_no;
