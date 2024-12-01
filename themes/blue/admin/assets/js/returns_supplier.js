@@ -1585,7 +1585,7 @@ function loadItems() {
 
       tr_html +=
         '<td><input class="form-control rs_cost_price" name="cost_price[]" type="text" value="' +
-        item.row.real_unit_cost +
+        item.row.net_unit_cost +
         '" data-id="' +
         row_no +
         '" data-item="' +
