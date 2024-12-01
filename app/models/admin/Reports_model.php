@@ -2199,7 +2199,7 @@ class Reports_model extends CI_Model
         }
 
         $query .= "movement_date >= '".$reports_start_date."' AND 
-                    movement_date BETWEEN '".date('Y-m-d', strtotime($start_date . ' -1 day'))."' AND '".date('Y-m-d', strtotime($end_date . ' +1 day'))."') iv
+                    movement_date BETWEEN '".date('Y-m-d', strtotime($start_date))."' AND '".date('Y-m-d', strtotime($end_date . ' +1 day'))."') iv
                     LEFT JOIN sma_purchases sp ON iv.reference_id = sp.id AND iv.trs_type = 'purchase'
                     LEFT JOIN sma_sales ss ON iv.reference_id = ss.id AND iv.trs_type = 'sale'
                     LEFT JOIN sma_sales ps ON iv.reference_id = ps.id AND iv.trs_type = 'pos'

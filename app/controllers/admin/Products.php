@@ -5369,7 +5369,7 @@ class Products extends MY_Controller
 
                 $row->quantity_balance = 0;
                 $row->ordered_quantity = 0;
-                $row->cost = 0;
+                $row->cost = $row->real_unit_cost;
 
                 $row->batch_no = $row->batchno;
                 $row->batchQuantity = 0;
