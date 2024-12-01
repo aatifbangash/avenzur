@@ -420,8 +420,6 @@ class Purchases_model extends CI_Model
         // Fetch the purchase items for the given purchase ID
         $q = $this->db->get_where('purchase_items', ['purchase_items.purchase_id' => $purchase_id]);
 
-        echo $this->db->last_query();
-
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
