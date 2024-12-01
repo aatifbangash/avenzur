@@ -385,12 +385,13 @@
                             </div>
                             <?php
                         } ?>
-                        <div class="col-md-4">
+                        <input type="hidden" name="reference_no" value="">
+                        <!-- <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('reference_no', 'ref'); ?>
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $rnumber), 'class="form-control input-tip" id="ref"'); ?>
                             </div>
-                        </div>
+                        </div> -->
 
                         <div class="col-md-4">
                             <div class="form-group">

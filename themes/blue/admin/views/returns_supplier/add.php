@@ -320,13 +320,13 @@
                             </div>
                         <?php
                 } ?>
-
-                        <div class="col-md-4">
+                        <input type="hidden" name="reference_no" value="">
+                        <!-- <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('reference_no', 'rseref'); ?>
                                 <?php echo form_input('reference_no', (isset($_POST['reference_no']) ? $_POST['reference_no'] : ''), 'class="form-control input-tip" id="rseref"'); ?>
                             </div>
-                        </div>
+                        </div> -->
                         <?php /*if ($Owner || $Admin || !$this->session->userdata('biller_id')) {
                     */?><!--
                             <div class="col-md-4">
