@@ -545,7 +545,7 @@ class Returns_supplier extends MY_Controller
                     //$row->oqty = $item->unit_quantity - $row->bonus;
                     $row->qty = $item->total_quantity - $row->bonus;
                     $row->oqty = $item->total_quantity - $row->bonus;
-                    $row->item_total_quantity = $item->total_quantity;
+                    $row->total_quantity = $item->total_quantity;
                     
                     $row->purchase_item_id = $item->id;
                     $row->supplier_part_no = $item->supplier_part_no;

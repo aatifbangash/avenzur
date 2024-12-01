@@ -1314,7 +1314,7 @@ function loadItems() {
       
       //base_quantity = item.row.base_quantity;
       //base_quantity = base_quantity - item_bonus;
-      base_quantity = item.row.item_total_quantity;
+      base_quantity = item.row.total_quantity;
       // var cost_price= item.row.cost_price,
       var cost_price = item.row.net_cost;
       var batch_no = item.row.batch_no;
