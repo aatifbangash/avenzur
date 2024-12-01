@@ -313,8 +313,8 @@
                                 <?php
                                 $vat_value = 0;
                                 if ($Settings->tax1 && $inv->product_tax > 0) {
-                                    $vat_value = $this->sma->formatNumber($row->item_tax);
-                                    echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ? ($Settings->indian_gst ? $row->tax : $row->tax_code) : '') . '</td>';
+                                    $vat_value = $this->sma->formatNumber($row->tax);
+                                    echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->tax != 0 ? ($Settings->indian_gst ? $row->tax : $row->tax_code) : '') . '</td>';
                                     echo '<td>' . $vat_value . '</td>';
                                 }
                                 ?>
@@ -497,7 +497,7 @@
 
                     <tr>
                         <td>Total</td>
-                        <td><?php echo $totalAmount; ?></td>
+                        <td><?php echo $inv->total; ?></td>
                     </tr>
                     <tr>
                         <td>T-DISC</td>
