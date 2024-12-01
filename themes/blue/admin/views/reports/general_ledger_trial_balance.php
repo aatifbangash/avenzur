@@ -61,6 +61,32 @@
                         </div>
 
                         <div class="col-md-4">
+                            <div class="form-group">
+                            <?= lang('department', 'podepartment'); ?>
+                            <?php
+                            $selected_department_id[] = isset($department) ? $department : '';
+                            $dp[''] = '';
+                            foreach ($departments as $department) {
+                                $dp[$department->id] = $department->name;
+                            }
+                            echo form_dropdown('department', $dp, $selected_department_id, 'id="department_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('department') . '" required="required" style="width:100%;" ', null); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                            <?= lang('employee', 'poemployee'); ?>
+                            <?php
+                            $selected_employee_id[] = isset($employee) ? $employee : '';
+                            $em[''] = '';
+                            foreach ($employees as $employee) {
+                                $em[$employee->id] = $employee->name;
+                            }
+                            echo form_dropdown('employee', $em, $selected_employee_id, 'id="employee_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('employee') . '" required="required" style="width:100%;" ', null); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
                             <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
                             </div>
