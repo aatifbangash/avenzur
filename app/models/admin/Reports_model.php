@@ -820,7 +820,7 @@ class Reports_model extends CI_Model
         return $response_array;
     }
 
-    public function getGeneralLedgerTrialBalance($start_date, $end_date)
+    public function getGeneralLedgerTrialBalance($start_date, $end_date, $department, $employee)
     {
         $response = array();
 
@@ -830,10 +830,21 @@ class Reports_model extends CI_Model
             ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=accounts_ledgers.id')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
             ->where('sma_accounts_entries.date >=', $start_date)
-            ->where('sma_accounts_entries.date <=', $end_date)
+            ->where('sma_accounts_entries.date <=', $end_date);
+
+        if (!empty($employee)) {
+            $this->db->where('sma_accounts_entries.employee_id', $employee);
+        }
+
+        if (!empty($department)) {
+            $this->db->where('sma_accounts_entries.department_id', $department);
+        }
+
+        $this->db
             ->group_by('accounts_ledgers.id, sma_accounts_entryitems.dc')
             ->order_by('accounts_ledgers.name asc');
         $q = $this->db->get();
+        //echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -849,7 +860,17 @@ class Reports_model extends CI_Model
             ->from('accounts_ledgers')
             ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=accounts_ledgers.id')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            ->where('sma_accounts_entries.date <', $start_date)
+            ->where('sma_accounts_entries.date <', $start_date);
+
+        if (!empty($employee)) {
+            $this->db->where('sma_accounts_entries.employee_id', $employee);
+        }
+
+        if (!empty($department)) {
+            $this->db->where('sma_accounts_entries.department_id', $department);
+        }
+
+        $this->db
             ->group_by('accounts_ledgers.id, sma_accounts_entryitems.dc')
             ->order_by('accounts_ledgers.name asc');
 

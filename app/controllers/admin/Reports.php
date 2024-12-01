@@ -3665,10 +3665,15 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $department = $this->input->post('department') ? $this->input->post('department') : null;
+        $employee = $this->input->post('employee') ? $this->input->post('employee') : null;
+
+        $this->data['employees'] = $this->site->getAllEmployees();
+        $this->data['departments'] = $this->site->getAllDepartments();
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $trial_balance_array = $this->reports_model->getGeneralLedgerTrialBalance($start_date, $end_date);
+            $trial_balance_array = $this->reports_model->getGeneralLedgerTrialBalance($start_date, $end_date, $department, $employee);
 
             foreach ($trial_balance_array['trs'] as $supplier_data) {
 
@@ -3774,6 +3779,8 @@ class Reports extends MY_Controller
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
+            $this->data['department'] = $department;
+            $this->data['employee'] = $employee;
             $this->data['trial_balance'] = $response_arr;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
             $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
