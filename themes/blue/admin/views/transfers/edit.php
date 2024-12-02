@@ -253,8 +253,21 @@
                         
                         var clickedItemCode = $(this).data('item-id');
                         var selectedItem = data.find(function (item) {
-                            return item.row.avz_item_code === clickedItemCode;
+                            return String(item.row.avz_item_code).trim() === String(clickedItemCode).trim();
                         });
+
+                        var previousExpiryAvailable = data.find(function (item) {
+                            
+                            var itemExpiry = new Date(item.row.expiry); // Convert to Date object
+                            var clickedExpiry = new Date(clickedItemExpiry); // Convert clickedItemExpiry to Date object
+                            if(clickedExpiry > itemExpiry){
+                                return true;
+                            }
+                        });
+
+                        if(previousExpiryAvailable){
+                            bootbox.alert('Previous Expiry available for this item');
+                        }
 
                         if (selectedItem) {
                             $('#itemModal').modal('hide');

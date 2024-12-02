@@ -154,22 +154,33 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
             }
         });
 
-        $(window).bind('beforeunload', function (e) {
+        /*$(window).bind('beforeunload', function (e) {
             localStorage.setItem('remove_slls', true);
             if (count > 1) {
                 var message = "You will loss data!";
                 return message;
             }
-        });
+        });*/
         $('#reset').click(function (e) {
             $(window).unbind('beforeunload');
         });
         $('#edit_sale').click(function () {
+            
             $(window).unbind('beforeunload');
             $('form.edit-so-form').submit();
+            
         });
     });
 
+    function validate_edit(){
+        if(warning_note == 1 && document.getElementById('warning_note').value == ''){
+            document.getElementById('warning_note').focus();
+            document.getElementById('warning_message').innerHTML = 'This field is required';
+
+            return false;
+        }
+        return true;
+    }
 
     function openPopup(selectedItem) {
         // Assuming selectedItem has avz_item_code as part of its data
@@ -249,10 +260,24 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                     $('#itemTableBody').on('click', 'tr', function () {
                         
                         var clickedItemCode = $(this).data('item-id');
+                        var clickedItemExpiry = $(this).find('td[data-expiry]').data('expiry') || $(this).attr('data-expiry');
                         var selectedItem = data.find(function (item) {
                             //return item.row.avz_item_code === clickedItemCode;
                             return String(item.row.avz_item_code).trim() === String(clickedItemCode).trim();
                         });
+
+                        var previousExpiryAvailable = data.find(function (item) {
+                            
+                            var itemExpiry = new Date(item.row.expiry); // Convert to Date object
+                            var clickedExpiry = new Date(clickedItemExpiry); // Convert clickedItemExpiry to Date object
+                            if(clickedExpiry > itemExpiry){
+                                return true;
+                            }
+                        });
+
+                        if(previousExpiryAvailable){
+                            bootbox.alert('Previous Expiry available for this item');
+                        }
 
                         if (selectedItem) {
                             $('#itemModal').modal('hide');
@@ -316,7 +341,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
 
                 <p class="introtext"><?php echo lang('enter_info'); ?></p>
                 <?php
-                $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'class' => 'edit-so-form'];
+                $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'onclick'=>"  return validate_edit()", 'class' => 'edit-so-form'];
                 echo admin_form_open_multipart('sales/edit/' . $inv->id, $attrib)
                 ?>
 
@@ -333,12 +358,12 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                             </div>
                         <?php
                 } ?>
-                        <div class="col-md-4">
+                        <!--<div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('reference_no', 'slref'); ?>
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? ''), 'class="form-control input-tip" id="slref" required="required"'); ?>
                             </div>
-                        </div>
+                        </div>-->
                         <?php if ($Owner || $Admin || !$this->session->userdata('biller_id')) {
                     ?>
                             <div class="col-md-4">
@@ -599,6 +624,14 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                             <div class="col-md-12">
                                 <div class="col-md-6">
                                     <div class="form-group">
+                                        <?= lang('Note', 'warning_note'); ?>
+                                        <span id="warning_message" style="color:red;font-size:12px;"></span>
+                                        <input type="text" name="warning_note" class="form-control" value="<?= $inv->warning_note ?>" id="warning_note" style="margin-top: 10px; height: 100px;" />
+                                    </div>
+                                </div>
+
+                                <!--<div class="col-md-6">
+                                    <div class="form-group">
                                         <?= lang('sale_note', 'slnote'); ?>
                                         <?php echo form_textarea('note', ($_POST['note'] ?? ''), 'class="form-control" id="slnote" style="margin-top: 10px; height: 100px;"'); ?>
 
@@ -608,11 +641,8 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                     <div class="form-group">
                                         <?= lang('staff_note', 'slinnote'); ?>
                                         <?php echo form_textarea('staff_note', ($_POST['staff_note'] ?? ''), 'class="form-control" id="slinnote" style="margin-top: 10px; height: 100px;"'); ?>
-                                        <input type="hidden" id="warning_note" name="warning_note" value="<?= $_POST['warning_note']; ?>"  />
                                     </div>
-                                </div>
-
-
+                                </div>-->
                             </div>
 
                         </div>

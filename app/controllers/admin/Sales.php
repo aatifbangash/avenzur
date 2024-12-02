@@ -1034,6 +1034,7 @@ class Sales extends MY_Controller
             $biller           = !empty($biller_details->company) && $biller_details->company != '-' ? $biller_details->company : $biller_details->name;
             $note             = $this->sma->clear_tags($this->input->post('note'));
             $staff_note       = $this->sma->clear_tags($this->input->post('staff_note'));
+            $warning_note     = $this->sma->clear_tags($this->input->post('warning_note'));
             
 
             $total            = 0;
@@ -1260,6 +1261,7 @@ class Sales extends MY_Controller
                 'warehouse_id'      => $warehouse_id,
                 'note'              => $note,
                 'staff_note'        => $staff_note,
+                'warning_note'      => $warning_note,
                 'total'             => $grand_total_sale,
                 'total_net_sale'    => $grand_total_net_sale,
                 'product_discount'  => $total_product_discount,
