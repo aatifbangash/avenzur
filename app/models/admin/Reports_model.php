@@ -420,7 +420,7 @@ class Reports_model extends CI_Model
 
             $cases[] = "SUM(CASE 
                 WHEN DATEDIFF('$start_date', ae.date) BETWEEN ($start) AND ($end) THEN 
-                    CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                    CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END
                 ELSE 0 
             END) AS '$start-$end'";
           $count = $count+1;  
@@ -429,7 +429,7 @@ class Reports_model extends CI_Model
         // Add the "greater than" case for the selected duration
         $cases[] = "SUM(CASE 
             WHEN DATEDIFF('$start_date', ae.date) > ($duration) THEN 
-                CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END
             ELSE 0 
         END) AS '>$duration'";
 
