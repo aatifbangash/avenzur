@@ -275,10 +275,24 @@
                     $('#itemTableBody').on('click', 'tr', function () {
                         
                         var clickedItemCode = $(this).data('item-id');
+                        var clickedItemExpiry = $(this).find('td[data-expiry]').data('expiry') || $(this).attr('data-expiry');
                         var selectedItem = data.find(function (item) {
-                            console.log(item.row.avz_item_code, clickedItemCode);
+                            //console.log(item.row.avz_item_code, clickedItemCode);
                             return String(item.row.avz_item_code).trim() === String(clickedItemCode).trim();
                         });
+
+                        var previousExpiryAvailable = data.find(function (item) {
+                            
+                            var itemExpiry = new Date(item.row.expiry); // Convert to Date object
+                            var clickedExpiry = new Date(clickedItemExpiry); // Convert clickedItemExpiry to Date object
+                            if(clickedExpiry > itemExpiry){
+                                return true;
+                            }
+                        });
+
+                        if(previousExpiryAvailable){
+                            bootbox.alert('Previous Expiry available for this item');
+                        }
                      
                         if (selectedItem) {
                             $('#itemModal').modal('hide');

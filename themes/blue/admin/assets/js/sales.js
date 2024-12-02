@@ -1259,6 +1259,25 @@ $(document).ready(function (e) {
 				item_id = row.attr("data-item-id");
 			slitems[item_id].row.dis2 = new_dis2;
 			localStorage.setItem("slitems", JSON.stringify(slitems));
+
+			// Code for purchase price and cost price
+			const new_item = {
+				cost : slitems[item_id].row.cost ?? 0,
+				sale_price : slitems[item_id].row.net_unit_sale,
+				qty: slitems[item_id].row.qty,
+				bonus: slitems[item_id].row.bonus ?? 0,
+				tax_rate: slitems[item_id].row.tax_rate,
+				dis1: slitems[item_id].row.dis1,
+				dis2: slitems[item_id].row.dis2,
+				net_unit_cost: slitems[item_id].row.net_unit_cost
+
+			};
+			const new_calc = calculateInventory(new_item, 'sale');
+			if(new_calc.new_unit_sale < slitems[item_id].row.net_unit_cost && typeof slitems[item_id].row.sale_price_warning == 'undefined'){
+				bootbox.alert('Your are selling at sale price lower than cost price');
+				slitems[item_id].row.sale_price_warning = 0;
+			}
+
 			loadItems();
 		});
 
@@ -1281,6 +1300,25 @@ $(document).ready(function (e) {
 				item_id = row.attr("data-item-id");
 			slitems[item_id].row.dis1 = new_dis1;
 			localStorage.setItem("slitems", JSON.stringify(slitems));
+
+			// Code for purchase price and cost price
+			const new_item = {
+				cost : slitems[item_id].row.cost ?? 0,
+				sale_price : slitems[item_id].row.net_unit_sale,
+				qty: slitems[item_id].row.qty,
+				bonus: slitems[item_id].row.bonus ?? 0,
+				tax_rate: slitems[item_id].row.tax_rate,
+				dis1: slitems[item_id].row.dis1,
+				dis2: slitems[item_id].row.dis2,
+				net_unit_cost: slitems[item_id].row.net_unit_cost
+
+			};
+			const new_calc = calculateInventory(new_item, 'sale');
+			if(new_calc.new_unit_sale < slitems[item_id].row.net_unit_cost && typeof slitems[item_id].row.sale_price_warning == 'undefined'){
+				bootbox.alert('Your are selling at sale price lower than cost price');
+				slitems[item_id].row.sale_price_warning = 0;
+			}
+
 			loadItems();
 		});
 
@@ -1303,6 +1341,25 @@ $(document).ready(function (e) {
 				item_id = row.attr("data-item-id");
 			slitems[item_id].row.bonus = new_bonus;
 			localStorage.setItem("slitems", JSON.stringify(slitems));
+
+			// Code for purchase price and cost price
+			const new_item = {
+				cost : slitems[item_id].row.cost ?? 0,
+				sale_price : slitems[item_id].row.net_unit_sale,
+				qty: slitems[item_id].row.qty,
+				bonus: slitems[item_id].row.bonus ?? 0,
+				tax_rate: slitems[item_id].row.tax_rate,
+				dis1: slitems[item_id].row.dis1,
+				dis2: slitems[item_id].row.dis2,
+				net_unit_cost: slitems[item_id].row.net_unit_cost
+
+			};
+			const new_calc = calculateInventory(new_item, 'sale');
+			if(new_calc.new_unit_sale < slitems[item_id].row.net_unit_cost && typeof slitems[item_id].row.sale_price_warning == 'undefined'){
+				bootbox.alert('Your are selling at sale price lower than cost price');
+				slitems[item_id].row.sale_price_warning = 0;
+			}
+
 			loadItems();
 		});
 
@@ -1333,6 +1390,25 @@ $(document).ready(function (e) {
 			}
 			slitems[item_id].row.qty = new_qty;
 			localStorage.setItem("slitems", JSON.stringify(slitems));
+
+			// Code for purchase price and cost price
+			const new_item = {
+				cost : slitems[item_id].row.cost ?? 0,
+				sale_price : slitems[item_id].row.net_unit_sale,
+				qty: slitems[item_id].row.qty,
+				bonus: slitems[item_id].row.bonus ?? 0,
+				tax_rate: slitems[item_id].row.tax_rate,
+				dis1: slitems[item_id].row.dis1,
+				dis2: slitems[item_id].row.dis2,
+				net_unit_cost: slitems[item_id].row.net_unit_cost
+
+			};
+			const new_calc = calculateInventory(new_item, 'sale');
+			if(new_calc.new_unit_sale < slitems[item_id].row.net_unit_cost && typeof slitems[item_id].row.sale_price_warning == 'undefined'){
+				bootbox.alert('Your are selling at sale price lower than cost price');
+				slitems[item_id].row.sale_price_warning = 0;
+			}
+
 			loadItems();
 		});
 
@@ -1357,6 +1433,25 @@ $(document).ready(function (e) {
 			slitems[item_id].row.actual_prod_price = new_price;
 			slitems[item_id].row.net_unit_sale = new_price;
 			localStorage.setItem("slitems", JSON.stringify(slitems));
+
+			// Code for purchase price and cost price
+			const new_item = {
+				cost : slitems[item_id].row.cost ?? 0,
+				sale_price : slitems[item_id].row.net_unit_sale,
+				qty: slitems[item_id].row.qty,
+				bonus: slitems[item_id].row.bonus ?? 0,
+				tax_rate: slitems[item_id].row.tax_rate,
+				dis1: slitems[item_id].row.dis1,
+				dis2: slitems[item_id].row.dis2,
+				net_unit_cost: slitems[item_id].row.net_unit_cost
+
+			};
+			const new_calc = calculateInventory(new_item, 'sale');
+			if(new_calc.new_unit_sale < slitems[item_id].row.net_unit_cost && typeof slitems[item_id].row.sale_price_warning == 'undefined'){
+				bootbox.alert('Your are selling at sale price lower than cost price');
+				slitems[item_id].row.sale_price_warning = 0;
+			}
+
 			loadItems();
 		});
 
@@ -1420,20 +1515,18 @@ function nsCustomer() {
 
 function validate_confirm(e) {
 
-	if(warning_note == 1 && document.getElementById("warning_note").innerHTML == ''){
-		let warning_text = prompt("Sale price entered is less than purchase price!", "Please write note to proceed");
+	if(warning_note == 1 && document.getElementById('warning_note').value == ''){
+		/*let warning_text = prompt("Sale price entered is less than purchase price!", "Please write note to proceed");
 		if (warning_text != null) {
 			document.getElementById("warning_note").value = warning_text;
-			
-			/*const additionalData = document.createElement('input');
-			additionalData.type = 'hidden';
-			additionalData.name = 'warning_note';
-			additionalData.value = 'Extra Data'; // The data to append
-			this.appendChild(additionalData);*/
-			
 		}else{
 			return false;
-		}
+		}*/
+
+		document.getElementById('warning_note').focus();
+		document.getElementById('warning_message').innerHTML = 'This field is required';
+
+		return false;
 	}else{
 		var isValid = window.confirm("Are you sure to proceed?");
 		if (isValid === false) {
@@ -1470,7 +1563,15 @@ function validate_confirm(e) {
 	return isValid;
 }
 
+$(document)
+	.on("blur", "#warning_note", function () {
+		$("#add_sale, #edit_sale").attr("disabled", false);
+		document.getElementById('warning_note').blur();
+		document.getElementById('warning_message').innerHTML = '';
+	});
+
 function loadItems() {
+	document.getElementById('warning_message').innerHTML = '';
 	if (localStorage.getItem("slitems")) {
 		total = 0;
 		grand_total_vat = 0;
@@ -2040,10 +2141,11 @@ function loadItems() {
 				}
 			}
 
-
-			if(new_item.sale_price < new_item.net_unit_cost){
+			if(new_calc.new_unit_sale < new_item.net_unit_cost){
+				//bootbox.alert('Your are selling at sale price lower than cost price');
 				$("#row_" + row_no).addClass("warning");
 				warning_note = 1;
+				//document.getElementById('slnote').setAttribute("required", "");
 			}
 		});
 

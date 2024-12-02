@@ -356,10 +356,24 @@ table#slTable td input.form-control {
                     $('#itemTableBody').on('click', 'tr', function () {
                         
                         var clickedItemCode = $(this).data('item-id');
+                        var clickedItemExpiry = $(this).find('td[data-expiry]').data('expiry') || $(this).attr('data-expiry');
                         var selectedItem = data.find(function (item) {
                             //return item.row.avz_item_code === clickedItemCode;
                             return String(item.row.avz_item_code).trim() === String(clickedItemCode).trim();
                         });
+
+                        var previousExpiryAvailable = data.find(function (item) {
+                            
+                            var itemExpiry = new Date(item.row.expiry); // Convert to Date object
+                            var clickedExpiry = new Date(clickedItemExpiry); // Convert clickedItemExpiry to Date object
+                            if(clickedExpiry > itemExpiry){
+                                return true;
+                            }
+                        });
+
+                        if(previousExpiryAvailable){
+                            bootbox.alert('Previous Expiry available for this item');
+                        }
 
                         if (selectedItem) {
                             $('#itemModal').modal('hide');
@@ -442,12 +456,12 @@ table#slTable td input.form-control {
                         <?php
                 } ?>
 
-                        <div class="col-md-4">
+                        <!--<div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('reference_no', 'slref'); ?>
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $slnumber), 'class="form-control input-tip" id="slref"'); ?>
                             </div>
-                        </div>
+                        </div>-->
                         <?php if ($Owner || $Admin || !$this->session->userdata('biller_id')) {
                     ?>
                             <div class="col-md-4">
@@ -843,18 +857,25 @@ table#slTable td input.form-control {
                             <div class="col-md-12">
                                 <div class="col-md-6">
                                     <div class="form-group">
+                                        <?= lang('Note', 'warning_note'); ?>
+                                        <span id="warning_message" style="color:red;font-size:12px;"></span>
+                                        <input type="text" name="warning_note" class="form-control" value="" id="warning_note" style="margin-top: 10px; height: 100px;" />
+                                    </div>
+                                </div>
+                                <!--<div class="col-md-6">
+                                    <div class="form-group">
                                         <?= lang('sale_note', 'slnote'); ?>
-                                        <?php echo form_textarea('note', ($_POST['note'] ?? ''), 'class="form-control" id="slnote" style="margin-top: 10px; height: 100px;"'); ?>
-
+                                        <?php //echo form_textarea('note', ($_POST['note'] ?? ''), 'class="form-control" id="slnote" required="required" style="margin-top: 10px; height: 100px;"'); ?>
+                                        <input type="hidden" name="note" class="form-control" required="required" id="slnote" style="margin-top: 10px; height: 100px;" />
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <?= lang('staff_note', 'slinnote'); ?>
-                                        <?php echo form_textarea('staff_note', ($_POST['staff_note'] ?? ''), 'class="form-control" id="slinnote" style="margin-top: 10px; height: 100px;"'); ?>
+                                        <?php //echo form_textarea('staff_note', ($_POST['staff_note'] ?? ''), 'class="form-control" id="slinnote" style="margin-top: 10px; height: 100px;"'); ?>
                                         <input type="hidden" id="warning_note" name="warning_note" value=""  />
                                     </div>
-                                </div>
+                                </div>-->
 
 
                             </div>
