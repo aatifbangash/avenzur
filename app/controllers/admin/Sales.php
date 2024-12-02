@@ -1013,7 +1013,7 @@ class Sales extends MY_Controller
         if ($this->form_validation->run() == true) {
             // echo "<pre>";
             // print_r($_POST);exit;
-            $reference = $this->input->post('reference_no');
+            //$reference = $this->input->post('reference_no');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
             } else {
@@ -1080,7 +1080,7 @@ class Sales extends MY_Controller
                 
                 
                 $data2['OperationType'] = 'DRUG SALE';
-                $data2['TransactionNumber']  = $reference;
+                $data2['TransactionNumber']  = '';
                 $data2['FromID'] =  $id;
                 $data2['ToID'] = 0; 
 
@@ -1253,7 +1253,7 @@ class Sales extends MY_Controller
             $cost_goods_sold = $this->input->post('cost_goods_sold');
             
             $data        = ['date'  => $date,
-                'reference_no'      => $reference,
+                //'reference_no'      => $reference,
                 'customer_id'       => $customer_id,
                 'customer'          => $customer,
                 'biller_id'         => $biller_id,
