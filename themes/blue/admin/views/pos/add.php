@@ -224,6 +224,14 @@
                 <div id="pos">
                     <?php $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'id' => 'pos-sale-form'];
                     echo admin_form_open('pos', $attrib);?>
+                    
+                    <input type="hidden" id="grand_total_sale" name="grand_total_sale" value="">
+                    <input type="hidden" id="grand_total_net_sale" name="grand_total_net_sale" value="">
+                    <input type="hidden" id="grand_total_discount" name="grand_total_discount" value="">
+                    <input type="hidden" id="grand_total_vat" name="grand_total_vat" value="">
+                    <input type="hidden" id="grand_total" name="grand_total" value="">	
+                    <input type="hidden" id="cost_goods_sold" name="cost_goods_sold" value="">
+
                     <div id="leftdiv">
                         <div id="printhead">
                             <h4 style="text-transform:uppercase;"><?php echo $Settings->site_name; ?></h4>
@@ -335,11 +343,11 @@
                                 <table id="totalTable"
                                        style="width:100%; float:right; padding:5px; color:#000; background: #FFF;">
                                     <tr>
-                                        <td style="padding: 5px 10px;border-top: 1px solid #DDD;"><?=lang('items');?></td>
+                                        <td style="padding: 5px 10px;border-top: 1px solid #DDD;"><?=lang('Total');?></td>
                                         <td class="text-right" style="padding: 5px 10px;font-size: 14px; font-weight:bold;border-top: 1px solid #DDD;">
                                             <span id="titems">0</span>
                                         </td>
-                                        <td style="padding: 5px 10px;border-top: 1px solid #DDD;"><?=lang('total');?></td>
+                                        <td style="padding: 5px 10px;border-top: 1px solid #DDD;"><?=lang('Net Total');?></td>
                                         <td class="text-right" style="padding: 5px 10px;font-size: 14px; font-weight:bold;border-top: 1px solid #DDD;">
                                             <span id="total">0.00</span>
                                         </td>
@@ -1207,7 +1215,7 @@
                  </center>
                 <div class="form-group">
                     <?=lang('order_discount', 'order_discount_input');?>
-                    <?php echo form_input('order_discount_input', '%', 'class="form-control kb-pad" onkeyup="allowDiscountValue()" type="number" id="order_discount_input"'); ?>
+                    <?php echo form_input('order_discount_input', '%', 'class="form-control" onkeyup="allowDiscountValue()" type="number" id="order_discount_input"'); ?>
                 </div>
 
             </div>
@@ -1594,6 +1602,8 @@ var lang = {
         ?>
 
         $('#payment').click(function () {
+            
+            const postotalpayable = localStorage.getItem('postotalpayable') ;
             <?php if ($sid) {
                 ?>
             suspend = $('<span></span>');
@@ -1607,7 +1617,7 @@ var lang = {
                 bootbox.alert('<?=lang('x_total');?>');
                 return false;
             }
-            gtotal = formatDecimal(twt);
+            gtotal = postotalpayable;//formatDecimal(twt);
             var cart = {grand_total: gtotal};
             document.dispatchEvent(
                 new CustomEvent('rfd.pole.display', {
@@ -3095,6 +3105,8 @@ if (isset($print) && !empty($print)) {
 }
 ?>
 <script type="text/javascript" src="<?= base_url('assets/custom/pos.js') ?>"></script>
+<script type="text/javascript" src="<?= base_url('assets/custom/pos.js') ?>"></script>
+<script type="text/javascript" src="<?= $assets ?>js/plugins/decimal/decimal.js"></script>
 <!--<script type="text/javascript" src="<?= base_url('themes/blue/admin/assets/js/transfers.js') ?>"></script>-->
 </body>
 </html>

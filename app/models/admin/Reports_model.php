@@ -3612,7 +3612,8 @@ class Reports_model extends CI_Model
                                 
                                 s.total_discount as total_discount,
                                 s.grand_total AS grand_total,
-                                s.product_tax AS total_tax,
+                                s.total_tax AS total_tax,
+                                s.total_net_sale as total_after_discount,
                                 withT.subtotal AS total_item_with_vat,
                                 withOutT.subtotal AS total_item_without_tax,
                                 ae.number AS ledger_entry_number
@@ -3666,6 +3667,7 @@ class Reports_model extends CI_Model
                                 r.total_discount as total_discount,
                                 r.grand_total AS grand_total,
                                 r.product_tax AS total_tax,
+                                r.total_net_return as total_after_discount,
                                 withT.subtotal AS total_item_with_vat,
                                 withOutT.subtotal AS total_item_without_tax,
                                 ae.number AS ledger_entry_number
@@ -3717,6 +3719,7 @@ class Reports_model extends CI_Model
                                 
                                 
                                 0 as total_discount,
+                                0 as total_after_discount,
                                 m.payment_amount AS grand_total,
                                 m.bank_charges AS total_tax,
                                 0 AS total_item_with_vat,

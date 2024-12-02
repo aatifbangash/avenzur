@@ -194,14 +194,16 @@
                     <tfoot>
                         <tr>
                             <th><?=lang('total');?></th>
-                            <th class="text-right"><?=$this->sma->formatMoney($return_sale ? (($inv->total + $inv->product_tax) + ($return_sale->total + $return_sale->product_tax)) : ($inv->total + $inv->product_tax));?></th>
+                            <th class="text-right"><?=$this->sma->formatMoney($return_sale ? (($inv->total) + ($return_sale->total)) : ($inv->total ));?></th>
                         </tr>
                         <?php
-                        if ($inv->order_tax != 0) {
-                            echo '<tr><th>' . lang('tax') . '</th><th class="text-right">' . $this->sma->formatMoney($return_sale ? ($inv->order_tax + $return_sale->order_tax) : $inv->order_tax) . '</th></tr>';
-                        }
+                        
                         if ($inv->order_discount != 0) {
-                            echo '<tr><th>' . lang('order_discount') . '</th><th class="text-right">' . $this->sma->formatMoney($return_sale ? ($inv->order_discount + $return_sale->order_discount) : $inv->order_discount) . '</th></tr>';
+                            echo '<tr><th>' . lang('order_discount') . '</th><th class="text-right">' . $this->sma->formatMoney($return_sale ? ($inv->total_discount) : $inv->total_discount) . '</th></tr>';
+                        }
+
+                        if ($inv->total_tax != 0) {
+                            echo '<tr><th>' . lang('tax') . '</th><th class="text-right">' . $this->sma->formatMoney($return_sale ? ($inv->total_tax ) : $inv->total_tax) . '</th></tr>';
                         }
 
                         if ($inv->shipping != 0) {
@@ -329,7 +331,7 @@
                 }
                 ?>
 
-                <?= $Settings->invoice_view > 0 ? $this->gst->summary($rows, $return_rows, ($return_sale ? $inv->product_tax + $return_sale->product_tax : $inv->product_tax)) : ''; ?>
+                <?php //$Settings->invoice_view > 0 ? $this->gst->summary($rows, $return_rows, ($return_sale ? $inv->total_tax + $return_sale->total_tax : $inv->total_tax)) : ''; ?>
 
                 <?= $customer->id != 1 && $customer->award_points != 0 && $Settings->each_spent > 0 ? '<p class="text-center">' . lang('this_sale') . ': ' . floor(($inv->grand_total / $Settings->each_spent) * $Settings->ca_point)
                 . '<br>' . lang('total') . ' ' . lang('award_points') . ': ' . $customer->award_points . '</p>' : ''; ?>

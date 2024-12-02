@@ -1228,8 +1228,72 @@ function loadItems() {
         var category = 0,
             print_cate = false;
         // var itn = parseInt(Object.keys(sortedItems).length);
+        
+        /**
+		 * INITILIAZE TOTAL VARIABLES
+		 */
+		let new_total_net_sale = new Decimal(0);
+		let new_total_sale = new Decimal(0);
+		let new_total_vat = new Decimal(0);
+		let new_total_discount = new Decimal(0);
+		let new_grant_total = new Decimal(0);
+		let new_grand_cost_goods_sold = new Decimal(0);
+
         $.each(sortedItems, function () {
             var item = this;
+            if ((posdiscount = localStorage.getItem('posdiscount'))) {
+                var ds = posdiscount;
+                item.posdiscount = ds ;
+                if (ds.indexOf('%') !== -1) {
+                    var pds = ds.split('%'); 
+                    if (!isNaN(pds[0])) {
+                        item.posdiscount = pds[0] ;
+                        //order_discount = formatDecimal(parseFloat(((parseFloat(total) - parseFloat(total_vat)) * parseFloat(pds[0])) / 100), 4);
+                    } else {
+                        //order_discount = parseFloat(ds);
+                    }
+                } else {
+                     // order_discount = parseFloat(ds);
+                   //order_discount = formatDecimal(parseFloat(((parseFloat(total) - parseFloat(total_vat)) * parseFloat(ds)) / 100), 4);
+                }
+                //total_discount += parseFloat(order_discount);
+            }
+            //console.log(item);
+
+            const new_item = {
+                cost : item.row.cost ?? 0,
+                sale_price : item.row.price,
+                qty: item.row.qty,
+                tax_rate: item.row.tax_rate,
+                net_unit_cost: item.row.net_unit_cost,
+                pos_discount: item.posdiscount ?? 0,
+
+        } ;
+        console.log('new item', new_item);
+        const new_calc = calculatePOSInventory(new_item);
+        console.log('new_cal',new_calc);
+        	/**
+			 * NEW TOTAL CALCULATION ASSIGNMENT
+			 */
+			
+			const new_net_sale = new Decimal(new_calc.new_net_sale); 
+			new_total_net_sale = new_total_net_sale.plus(new_net_sale);
+
+			const calc_total_sale = new Decimal(new_calc.new_total_sale); 
+			new_total_sale = new_total_sale.plus(calc_total_sale);
+
+			const calc_total_vat = new Decimal(new_calc.new_vat_value); 
+			new_total_vat = new_total_vat.plus(calc_total_vat);
+
+			const calc_total_discount = new Decimal(new_calc.new_item_discount); 
+			new_total_discount = new_total_discount.plus(calc_total_discount);
+
+			const calc_grant_total = new Decimal(new_calc.new_grant_total); 
+			new_grant_total = new_grant_total.plus(calc_grant_total);
+
+			const calc_cost_goods_sold = new Decimal(new_calc.new_cost_goods_sold);
+			new_grand_cost_goods_sold = new_grand_cost_goods_sold.plus(calc_cost_goods_sold); 
+
             var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
             positems[item_id] = item;
             item.order = item.order ? item.order : new Date().getTime();
@@ -1348,7 +1412,14 @@ function loadItems() {
             }
 
             
+            var gtotal = parseFloat(total + invoice_tax - order_discount + parseFloat(shipping));
             // new changes
+
+            /**
+             * new item assignment
+             */
+            const new_item_total_sale = new_calc.new_total_sale ;
+            const new_item_vat_value    = new_calc.new_vat_value;
 
             tr_html =
                 '<td><input name="product_id[]" type="hidden" class="rid" value="' +
@@ -1433,7 +1504,7 @@ function loadItems() {
                 '<td class="text-right"><span class="text-right vattax" id="vattax_' +
                 row_no +
                 '">' +
-                formatMoney(pr_tax_val) +
+                new_item_vat_value +
                 '</span></td>';
 
             tr_html +=
@@ -1444,7 +1515,7 @@ function loadItems() {
                       '<input type="hidden" name="quantity[]" type="text"  value="' +
                       formatQuantity2(item_qty) +
                       '"></div>'
-                    : '<input class="form-control input-sm kb-pad text-center rquantity" tabindex="' +
+                    : '<input class="form-control input-sm text-center rquantity" tabindex="' +
                       (site.settings.set_focus == 1 ? an : an + 1) +
                       '" name="quantity[]" type="text"  value="' +
                       formatQuantity2(item_qty) +
@@ -1474,13 +1545,25 @@ function loadItems() {
                 item.row.real_unit_cost +
                 '"><input name="avz_item_code[]" type="hidden" value="' +
                 item.row.avz_item_code +
-                '"></td>';
+                '"><input name="totalbeforevat[]" type="hidden" class="totalbeforevat" value="' +
+				new_calc.new_net_sale +
+				'"><input name="main_net[]" type="hidden" class="main_net" value="' +
+				new_calc.new_grant_total +
+				'"><input name="item_total_discount[]" type="hidden" class="main_net" value="' +
+				new_calc.new_item_discount +
+				'"><input name="item_vat_values[]" type="hidden" class="main_net" value="' +
+				new_calc.new_vat_value +
+				'"><input name="item_total_sale[]" type="hidden" class="main_net" value="' +
+				new_calc.new_total_sale +
+				'"><input name="item_unit_sale[]" type="hidden" class="main_net" value="' +
+				new_calc.new_unit_sale +
+				'"></td>';
 
             tr_html +=
                 '<td class="text-right"><span class="text-right ssubtotal" id="subtotal_' +
                 row_no +
                 '">' +
-                formatMoney((parseFloat(item_price) + parseFloat(pr_tax_val)) * parseFloat(item_qty)) +
+                new_item_total_sale
                 '</span></td>';
 
 
@@ -1607,11 +1690,12 @@ function loadItems() {
                     oprTr += comments[i] ? '<br> <b>*</b> <small>' + comments[i] + '</small>' : '';
                 }
                 // oprTr += '</td><td>[ ' + (item_ordered != 0 ? 'xxxx' : formatDecimal(item_qty)) +' ]</td></tr>';
-                oprTr += '</td><td>[ ' + formatDecimal(item_qty) + ' ]</td></tr>';
+                oprTr += '</td><td>[ ' + formatDecimal(item_qty) + ' ]';
+                oprTr += '</td></tr>';
                 $('#order-table').append(oprTr);
                 $('#bill-table').append(bprTr);
             }
-        });
+        });        
         // Order level discount calculations
         if ((posdiscount = localStorage.getItem('posdiscount'))) {
             var ds = posdiscount;
@@ -1648,21 +1732,30 @@ function loadItems() {
         total = formatDecimal(total);
         product_tax = formatDecimal(product_tax);
         total_discount = formatDecimal(order_discount + product_discount);
-        
-        $('#ttax2').text(formatMoney(total_vat));
+
+        $('#grand_total_sale').val(new_total_sale);
+        $('#grand_total_net_sale').val(new_total_net_sale);
+        $('#grand_total_discount').val(new_total_discount);
+        $('#grand_total_vat').val(new_total_vat);
+        $('#grand_total').val(new_grant_total);
+        $('#cost_goods_sold').val(new_grand_cost_goods_sold);
+
+        localStorage.setItem('postotalpayable', new_grant_total);
+        $('#ttax2').text(formatMoney(new_total_vat));
         //localStorage.setItem('postax2', total_vat);
 
         // Totals calculations after item addition
         var gtotal = parseFloat(total + invoice_tax - order_discount + parseFloat(shipping));
-        $('#total').text(formatMoney(total));
-        $('#titems').text(an - 1 + ' (' + formatQty(parseFloat(count) - 1) + ')');
+        $('#total').text(formatMoney(new_total_net_sale));
+        //$('#titems').text(an - 1 + ' (' + formatQty(parseFloat(count) - 1) + ')');
+        $('#titems').text(new_total_sale);
         $('#total_items').val(parseFloat(count) - 1);
-        $('#tds').text('(' + formatMoney(product_discount) + ') ' + formatMoney(order_discount));
+        $('#tds').text( new_total_discount);
         if (site.settings.tax2 != 0) {
             //$('#ttax2').text(formatMoney(invoice_tax));
         }
         $('#tship').text(parseFloat(shipping) > 0 ? formatMoney(shipping) : '');
-        $('#gtotal').text(formatMoney(gtotal));
+        $('#gtotal').text(formatMoney(new_grant_total));
         if (pos_settings.remote_printing != 1) {
             order_data.items = o_items;
             bill_data.items = b_items;
@@ -2384,3 +2477,53 @@ if (site.settings.set_focus != 1) {
         $('#add_item').focus();
     });
 }
+
+function calculatePOSInventory(item) {
+    const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+    // Convert all inputs to Decimal and ensure precision
+    const cost_price = toTwoDecimals(item.cost);
+    const sale_price = toTwoDecimals(item.sale_price);
+    const total_quantity = new Decimal(item.qty);
+    const tax_rate = toTwoDecimals(item.tax_rate);
+    const net_unit_cost = toTwoDecimals(item.net_unit_cost);
+    const pos_discount = toTwoDecimals(item.pos_discount);
+
+    // Calculations
+    const total_purchase = toTwoDecimals(cost_price.times(total_quantity));
+    const total_sale = toTwoDecimals(sale_price.times(total_quantity));
+
+    // pos discount
+    const item_discount = toTwoDecimals(total_sale.times(pos_discount.dividedBy(100)));
+
+    const net_sale = toTwoDecimals(total_sale.minus(item_discount));
+    const net_unit_sale = total_quantity.greaterThan(0)
+        ? toTwoDecimals(net_sale.dividedBy(total_quantity))
+        : new Decimal(0);
+
+    // VAT Calculation (15% if tax_rate is 5)
+    let total_vat = new Decimal(0);
+    if (tax_rate.equals(5)) {
+        total_vat = toTwoDecimals(net_sale.times(new Decimal(15).dividedBy(100)));
+    }
+
+    // Grant Total
+    const grant_total = toTwoDecimals(net_sale.plus(total_vat));
+
+    // cost of goods sold
+    const cost_goods_sold = toTwoDecimals( net_unit_cost.times(total_quantity) );
+
+    // Return calculated values
+    return {
+        new_cost_price: cost_price.toNumber(),
+        new_sale_price: sale_price.toNumber(),
+        new_total_purchase: total_purchase.toNumber(),
+        new_net_sale: net_sale.toNumber(),
+        new_total_sale: total_sale.toNumber(),
+        new_item_discount: item_discount.toNumber(),
+        new_vat_value: total_vat.toNumber(),
+        new_unit_sale: net_unit_sale.toNumber(),
+        new_grant_total: grant_total.toNumber(),
+        new_cost_goods_sold: cost_goods_sold.toNumber(),
+    };
+}
+

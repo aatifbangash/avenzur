@@ -883,6 +883,8 @@ class Pos extends MY_Controller
         $this->form_validation->set_rules('biller', $this->lang->line('biller'), 'required');
 
         if ($this->form_validation->run() == true) {
+            
+           //echo "<pre>";print_r($_POST);exit;
             $date             = date('Y-m-d H:i:s');
             $warehouse_id     = $this->input->post('warehouse');
             $customer_id      = $this->input->post('customer');
@@ -997,6 +999,15 @@ class Pos extends MY_Controller
                     $subtotal = (($item_net_price * $item_unit_quantity) + $pr_item_tax);
                     $unit     = $this->site->getUnitByID($item_unit);
 
+                    /**
+                     * new post values
+                     */
+                    $new_item_discount = $_POST['item_total_discount'][$r];
+                    $new_item_vat_value = $_POST['item_vat_values'][$r];
+                    $new_item_total_sale = $_POST['item_total_sale'][$r];
+                    $new_item_unit_sale = $_POST['item_unit_sale'][$r];
+                    $new_item_main_net  = $_POST['main_net'][$r];
+                    $new_totalbeforevat = $_POST['totalbeforevat'][$r];
                     $product = [
                         'product_id'        => $item_id,
                         'product_code'      => $item_code,
@@ -1005,7 +1016,7 @@ class Pos extends MY_Controller
                         'option_id'         => $item_option,
                         'net_cost'          => $item_unit_cost, // before it was prodcost
                         'net_unit_price'    => $item_net_price,
-                        'unit_price'        => $this->sma->formatDecimal($item_net_price + $item_tax),
+                        'unit_price'        => $new_item_unit_sale, //$this->sma->formatDecimal($item_net_price + $item_tax),
                         'quantity'          => $item_quantity,
                         'product_unit_id'   => $unit ? $unit->id : null,
                         'product_unit_code' => $unit ? $unit->code : null,
@@ -1013,17 +1024,19 @@ class Pos extends MY_Controller
                         'warehouse_id'      => $warehouse_id,
                         'item_tax'          => $pr_item_tax,
                         'tax_rate_id'       => $item_tax_rate,
-                        'tax'               => $tax,
+                        'tax'               => $new_item_vat_value,
                         'discount'          => $item_discount,
-                        'item_discount'     => $pr_item_discount,
-                        'subtotal'          => $this->sma->formatDecimal($subtotal),
+                        'item_discount'     => $new_item_discount,
+                        'subtotal'          => $new_item_total_sale,//$this->sma->formatDecimal($subtotal),
                         'serial_no'         => $item_serial,
                         'expiry'            => $expiry,
                         'batch_no'          => $batch_no,
                         'real_unit_price'   => $real_unit_price,
                         'comment'           => $item_comment,
                         'real_cost'         => $real_cost,
-                        'avz_item_code'     => $avz_item_code
+                        'avz_item_code'     => $avz_item_code,
+                        'main_net'          => $new_item_main_net,
+                        'totalbeforevat	'   => $new_totalbeforevat
                     ];
 
                     $products[] = ($product + $gst_data);
@@ -1049,6 +1062,18 @@ class Pos extends MY_Controller
                 $round_total = $this->sma->roundNumber($grand_total, $this->pos_settings->rounding);
                 $rounding    = $this->sma->formatMoney($round_total - $grand_total);
             }
+
+              /**
+             * post values
+             */
+            
+             $grand_total_net_sale = $this->input->post('grand_total_net_sale');
+             $grand_total_discount = $this->input->post('grand_total_discount');
+             $grand_total_vat = $this->input->post('grand_total_vat');
+             $grand_total_sale = $this->input->post('grand_total_sale');
+             $grand_cost_goods_sold = $this->input->post('cost_goods_sold');
+             $grand_total = $this->input->post('grand_total');
+
             $data = ['date'         => $date,
                 'customer_id'       => $customer_id,
                 'customer'          => $customer,
@@ -1057,15 +1082,16 @@ class Pos extends MY_Controller
                 'warehouse_id'      => $warehouse_id,
                 'note'              => $note,
                 'staff_note'        => $staff_note,
-                'total'             => $total,
+                'total'             => $grand_total_sale,
+                'total_net_sale'    => $grand_total_net_sale,
                 'product_discount'  => $product_discount,
                 'order_discount_id' => $this->input->post('discount'),
                 'order_discount'    => $order_discount,
-                'total_discount'    => $total_discount,
+                'total_discount'    => $grand_total_discount,
                 'product_tax'       => $product_tax,
                 'order_tax_id'      => $this->input->post('order_tax'),
                 'order_tax'         => $order_tax,
-                'total_tax'         => $total_tax,
+                'total_tax'         => $grand_total_vat,
                 'shipping'          => $this->sma->formatDecimal($shipping),
                 'grand_total'       => $grand_total,
                 'total_items'       => $total_items,
@@ -1075,6 +1101,7 @@ class Pos extends MY_Controller
                 'rounding'          => $rounding,
                 'suspend_note'      => $this->input->post('suspend_note'),
                 'pos'               => 1,
+                'cost_goods_sold'   => $grand_cost_goods_sold,
                 'paid'              => $this->input->post('amount-paid') ? $this->input->post('amount-paid') : 0,
                 'created_by'        => $this->session->userdata('user_id'),
                 'hash'              => hash('sha256', microtime() . mt_rand()),
@@ -1244,6 +1271,33 @@ class Pos extends MY_Controller
                             $amount_paid_pos += $payemntsType->pos_paid;
 
                             if($paidBillType =="cash"){
+                                // check if cash has decimal 
+                                 $paidAmount = $payemntsType->pos_paid ;
+                                 //echo 'paid amount:'.$paidAmount;
+                                 //echo 'floor:'. floor($paidAmount);
+                                 
+                                $halalaAmount = 0;
+                                if( floor($payemntsType->pos_paid)  != $payemntsType->pos_paid) {
+                                    $integerPart = floor($payemntsType->pos_paid);
+                                    $decimalPart = $paidAmount - $integerPart;
+                                    //echo 'integer'.$integerPart;
+                                    //echo 'decimal'. $decimalPart;
+                                  
+                                    if ($decimalPart < 0.50) {
+                                        $paidAmount =  $integerPart; 
+                                        $halalaAmount = $decimalPart;
+                                        $difference_type = 'D';
+                                    } elseif($decimalPart > 0.50) {
+                                        $difference_type = 'C';
+                                        $paidAmount = $integerPart + 1; 
+                                        $halalaAmount = 1 - $decimalPart;
+                                    }
+                                    
+                                }
+                                 //echo 'paidamount'.$paidAmount;
+                                 //echo 'halaamount'.$halalaAmount;
+                                 //exit;
+                               
                                 // //cash
                                 $entryitemdata[] = array(
                                 'Entryitem' => array(
@@ -1251,10 +1305,23 @@ class Pos extends MY_Controller
                                 'dc' => 'D',
                                 'ledger_id' => $customer->fund_books_ledger,
                                 //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
-                                'amount' => $payemntsType->pos_paid,
+                                'amount' => $paidAmount,
                                 'narration' => 'cash'
                                 )
                                 );
+                                if( $halalaAmount > 0) {
+                                    $entryitemdata[] = array(
+                                        'Entryitem' => array(
+                                            'entry_id' => $insert_id,
+                                            'dc' => $difference_type,
+                                            'ledger_id' => $customer->price_difference_ledger,
+                                            'amount' => abs($halalaAmount),
+                                            'narration' => 'Halala Difference'
+                                        )
+                                    ); 
+                                }
+                              
+
                             }else{
                                    // //credit card
                                 $entryitemdata[] = array(
@@ -1278,11 +1345,6 @@ class Pos extends MY_Controller
 
                         $price_difference = $pos_amount_balance;
                         
-                        if($price_difference > 0){
-                            $difference_type = 'C';
-                        }else if($price_difference < 0){
-                            $difference_type = 'D';
-                        }
 
                         // cost of goods sold
                         $entryitemdata[] = array(
@@ -1290,7 +1352,7 @@ class Pos extends MY_Controller
                             'entry_id' => $insert_id,
                             'dc' => 'D',
                             'ledger_id' => $customer->cogs_ledger,
-                            'amount' => $totalPurchasePrice,
+                            'amount' => $inv->cost_goods_sold,
                             'narration' => 'cost of goods sold'
                             )
                         );
@@ -1301,7 +1363,7 @@ class Pos extends MY_Controller
                             'entry_id' => $insert_id,
                             'dc' => 'C',
                             'ledger_id' => $customer->inventory_ledger,
-                            'amount' => $totalPurchasePrice,
+                            'amount' => $inv->cost_goods_sold,
                             'narration' => 'inventory'
                             )
                         );
@@ -1312,7 +1374,7 @@ class Pos extends MY_Controller
                                 'entry_id' => $insert_id,
                                 'dc' => 'C',
                                 'ledger_id' => $customer->sales_ledger,
-                                'amount' => $totalSalePrice,
+                                'amount' => $inv->total,
                                 'narration' => 'sale'
                             )
                         );
@@ -1342,15 +1404,15 @@ class Pos extends MY_Controller
 
                         if($price_difference != 0){
                             // //price difference
-                            $entryitemdata[] = array(
-                                'Entryitem' => array(
-                                    'entry_id' => $insert_id,
-                                    'dc' => $difference_type,
-                                    'ledger_id' => $customer->price_difference_ledger,
-                                    'amount' => abs($price_difference),
-                                    'narration' => 'Halala Difference'
-                                )
-                            );
+                            // $entryitemdata[] = array(
+                            //     'Entryitem' => array(
+                            //         'entry_id' => $insert_id,
+                            //         'dc' => $difference_type,
+                            //         'ledger_id' => $customer->price_difference_ledger,
+                            //         'amount' => abs($price_difference),
+                            //         'narration' => 'Halala Difference'
+                            //     )
+                            // );
                         }    
                         
                         $total_invoice_entry = $inv->total_tax + $totalSalePrice + $totalPurchasePrice;
