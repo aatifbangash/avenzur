@@ -991,7 +991,7 @@ class Sales extends MY_Controller
         }
 
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
-        $this->form_validation->set_rules('reference_no', lang('reference_no'), 'required');
+        //$this->form_validation->set_rules('reference_no', lang('reference_no'), 'required');
         $this->form_validation->set_rules('customer', lang('customer'), 'required');
         $this->form_validation->set_rules('biller', lang('biller'), 'required');
         $this->form_validation->set_rules('sale_status', lang('sale_status'), 'required');
