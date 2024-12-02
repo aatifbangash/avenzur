@@ -3666,7 +3666,7 @@ class Reports_model extends CI_Model
                                 
                                 r.total_discount * -1 as total_discount,
                                 r.grand_total * -1 AS grand_total,
-                                r.product_tax * -1 AS total_tax,
+                                r.total_tax * -1 AS total_tax,
                                 r.total_net_return * -1 as total_after_discount,
                                 withT.subtotal * -1 AS total_item_with_vat,
                                 withOutT.subtotal AS total_item_without_tax,
