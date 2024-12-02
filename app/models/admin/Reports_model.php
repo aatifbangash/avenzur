@@ -3665,11 +3665,11 @@ class Reports_model extends CI_Model
                                 c.vat_no AS customer_vat_no,    
                                 
                                 
-                                r.total_discount as total_discount,
-                                r.grand_total AS grand_total,
-                                r.product_tax AS total_tax,
-                                r.total_net_return as total_after_discount,
-                                withT.subtotal AS total_item_with_vat,
+                                r.total_discount * -1 as total_discount,
+                                r.grand_total * -1 AS grand_total,
+                                r.product_tax * -1 AS total_tax,
+                                r.total_net_return * -1 as total_after_discount,
+                                withT.subtotal * -1 AS total_item_with_vat,
                                 withOutT.subtotal AS total_item_without_tax,
                                 ae.number AS ledger_entry_number
                             
