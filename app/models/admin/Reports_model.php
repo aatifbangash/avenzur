@@ -2118,7 +2118,8 @@ class Reports_model extends CI_Model
         // Use the query builder to safely escape and build the query
         $this->db->select('
             SUM(IF(movement_date < "' . $start_date . '", quantity, 0)) AS total_opening_qty,
-            ABS(SUM(IF(movement_date < "' . $start_date . '", net_unit_cost, 0)) / NULLIF(SUM(IF(movement_date < "' . $start_date . '", quantity, 0)), 0)) AS cost_price', FALSE);
+            ABS(SUM(IF(movement_date < "' . $start_date . '", net_unit_cost, 0)) / NULLIF(SUM(IF(movement_date < "' . $start_date . '", quantity, 0)), 0)) AS cost_price, 
+            SUM(IF(movement_date < "' . $start_date . '", net_unit_cost * quantity, 0)) AS total_opening_value', FALSE);
         $this->db->from('sma_inventory_movements');
         $this->db->where('product_id', $productId);
         if($warehouseId){

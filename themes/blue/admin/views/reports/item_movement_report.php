@@ -159,7 +159,7 @@
                                         
                                         <td><?php echo $this->sma->formatQuantity(($itemOpenings['total_opening_qty'] ? $itemOpenings['total_opening_qty'] : 0.00)); ?></td>
                                         <td><?php echo $this->sma->formatQuantity(($itemOpenings['total_opening_qty'] ? $itemOpenings['total_opening_qty'] : 0.00)); ?></td>
-                                        <td><?php echo $this->sma->formatMoney(($itemOpenings['total_opening_qty'] && $itemOpenings['cost_price'] != 0 ? ($itemOpenings['cost_price'] * $itemOpenings['total_opening_qty']) : 0.00), 'none'); ?></td>
+                                        <td><?php echo $this->sma->formatMoney(($itemOpenings['total_opening_value'] ? $itemOpenings['total_opening_value'] : 0.00)); ?></td>
 
                                     </tr>
 
@@ -167,7 +167,7 @@
                                     $count = 1;
                                     $balanceQantity = 0;
                                     $totalValueOfItem  = 0;
-                                    $openingTotal = ($itemOpenings['cost_price'] * $itemOpenings['total_opening_qty']);
+                                    $openingTotal = ($itemOpenings['total_opening_value']);
 
                                     foreach ($reportData as $rp) {
 
