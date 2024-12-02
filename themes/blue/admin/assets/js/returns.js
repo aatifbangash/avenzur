@@ -1019,9 +1019,9 @@ function loadItems() {
                 tax_rate: item.row.tax_rate,
                 dis1: item.row.discount1,
                 dis2: item.row.discount2,
-                net_unit_cost: item.row.real_unit_cost
+                net_unit_cost: item.row.net_unit_cost
 
-        } ;
+         } ;
         
             const new_calc = calculateInventory(new_item, 'sale');
             console.log(new_calc);
@@ -1257,14 +1257,14 @@ function loadItems() {
                     '"><input class="form-control input-sm text-center rprice" type="text" name="net_price[]" id="cost_' +
                     row_no +
                     '" value="' +
-                    formatDecimal(item_sale_price, 2) +
+                    item_sale_price +
                     '">';
 
                 tr_html += 
                     '<input id="rreturn_' +
                     row_no +
                     '" class="form-control rcost text-center" name="net_cost[]" type="hidden" value="' +
-                    formatDecimal(item.row.net_unit_cost, 2) +
+                    item.row.net_unit_cost +
                     '" data-id="' +
                     row_no +
                     '" data-item="' +
@@ -1277,7 +1277,7 @@ function loadItems() {
                     '<input id="rceturn_' +
                     row_no +
                     '" class="form-control rcost text-center" name="real_cost[]" type="hidden" value="' +
-                    formatDecimal(item.row.real_unit_cost, 2) +
+                    item.row.real_unit_cost +
                     '" data-id="' +
                     row_no +
                     '" data-item="' +
