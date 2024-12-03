@@ -1283,6 +1283,22 @@ class Sales extends MY_Controller
                 'updated_by'        => $this->session->userdata('user_id'),
                 'updated_at'        => date('Y-m-d H:i:s'),
             ];
+
+            if($customer_details->balance > 0 && $sale_status == 'completed'){
+                if($customer_details->balance >= $grand_total){
+                    $paid = $grand_total;
+                    $new_balance = $customer_details->balance - $grand_total;
+                    $payment_status = 'paid';
+                }else{
+                    $paid = $grand_total - $customer_details->balance;
+                    $new_balance = 0;
+                    $payment_status = 'partial';
+                }
+
+                $data['paid'] = $paid;
+                $data['payment_status'] = $payment_status;
+            }
+
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;
                 $data['sgst'] = $total_sgst;
@@ -1300,6 +1316,10 @@ class Sales extends MY_Controller
         if ($this->form_validation->run() == true && $this->sales_model->updateSale($id, $data, $products, $attachments)) {
             if($sale_status == 'completed'){
                 $this->convert_sale_invoice($id);
+
+                if($customer_details->balance > 0){
+                    $this->sales_model->update_balance($customer_details->id, $new_balance);
+                }
             }
 
             $this->session->set_userdata('remove_slls', 1);
