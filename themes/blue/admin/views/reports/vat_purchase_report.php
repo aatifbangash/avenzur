@@ -100,15 +100,15 @@
                                 <th>SR</th>
                                 <th><?= lang('Trx Type'); ?></th>
                                 <th><?= lang('Branch'); ?></th>
-                                <th><?= lang('INV. NO'); ?></th>
+                                <!-- <th><?= lang('INV. NO'); ?></th> -->
                                 <th><?= lang('INV DATE.'); ?></th>
 
                                 <th><?= lang('TOTAL INV.')//lang('Total Before Discount.'); ?></th>
                                 <th><?= lang('T.DIS')//lang('Total Discount.'); ?></th>
                                 <th><?= lang('T.AFTER DIS')//lang('Total After Discount.'); ?></th>
-
+<!-- 
                                 <th><?= lang('15% VAT VALUE')//lang('Total Items with VAT.'); ?></th>
-                                <th><?= lang('0% VAT VALUE')//lang('Total Items Zero Vat.'); ?></th>
+                                <th><?= lang('0% VAT VALUE')//lang('Total Items Zero Vat.'); ?></th> -->
 
                                 <!-- <th><?= lang('Total Purchases Value'); ?></th> -->
                                 <th><?= lang('VAT Amount')//lang('VAT on Purchases'); ?></th>
@@ -145,57 +145,46 @@
 
                                     $totalWithTax = 0;
                                     foreach ($vat_purchase as $data){
-
+                                        // echo "<pre>";
+                                        // print_r($data);
                                         $sign = "";
                                         
                                         if($data->trans_type == "returnSupplier"){                                         
                                             $sign = "-";
                                         }
-                                        
-                                        $totalTax += $data->total_tax;
-                                        $totalWithoutTax += ($data->grand_total - $data->total_tax);
+                                               $total_invoice = $data->total_invoice;
+                                               $total_discount  =   $data->total_discount;
+                                               $total_after_discount    =   $data->total_after_discount;
+                                               $total_tax   =   $data->total_tax;
+                                               $net_total = $data->grand_total;
 
-                                        if($data->trans_type == "purchases"){
-                                            $totalWithTax += ($data->grand_total+$data->total_tax);
-                                        }else{
-                                            $totalWithTax += $data->grand_total;
-                                        }
-
-                                        $totalTotalBeforeDiscount += $data->grand_total + $data->total_discount;;
-                                        $totalTotalDiscount += $data->total_discount;
-                                        $totalTotalAfterDiscount += $data->grand_total;
-
-
-                                        $totalItemWithVAT += $data->total_item_with_vat;
-                                        $totalItemWithOutVAT += $data->total_item_without_tax;
+                                               $grand_total_invoice += $total_invoice;
+                                               $grand_total_discount += $total_discount;
+                                               $grand_after_discount += $total_after_discount;
+                                               $grand_total_tax += $total_tax;
+                                               $grand_total += $net_total;
+                                            
+                                               if( $data->trans_type == 'returnSupplier' ) {
+                                                $modal_class = 'oreturn_supplier_link';
+                                               }else{
+                                                $modal_class = 'purchase_link';
+                                               }
+                                               
 
                                         ?>
-                                            <tr id="<?= $data->trans_ID; ?>" class="purchase_link">
+                                            <tr id="<?= $data->trans_ID; ?>" class="<?=$modal_class;?>">
                                                 <td><?= $data->trans_ID; ?></td>
                                                 <td><?=$data->trans_type?></td>
                                                 <td><?= $data->warehouse; ?></td>
-                                                <td><?= $data->reference_no; ?></td>
+                                                <!-- <td><?= $data->reference_no; ?></td> -->
                                                 <td><?= $data->trans_date; ?></td>
                                                 
-                                                <td><?= $this->sma->formatMoney($data->grand_total + $data->total_discount - $data->total_tax,'none'); ?></td>
-                                                <td><?= $this->sma->formatMoney($data->total_discount,'none'); ?></td>
-                                                <td><?= $this->sma->formatMoney($data->grand_total - $data->total_tax,'none'); ?></td>
+                                                <td><?= $total_invoice;//$this->sma->formatMoney($data->grand_total + $data->total_discount - $data->total_tax,'none'); ?></td>
+                                                <td><?= $total_discount;//$this->sma->formatMoney($data->total_discount,'none'); ?></td>
+                                                <td><?= $total_after_discount;//$this->sma->formatMoney($data->grand_total - $data->total_tax,'none'); ?></td>
 
-                                                <td><?= $this->sma->formatMoney($data->total_item_with_vat,'none'); ?></td>
-                                                <td><?= $this->sma->formatMoney($data->total_item_without_tax,'none'); ?></td>
-
-
-                                                <!-- <td><?= $this->sma->formatMoney($data->grand_total - $data->total_tax,'none'); ?></td> -->
-                                                <td><?= $this->sma->formatMoney($data->total_tax,'none'); ?></td>
-                                                <td>
-                                                    <?php
-                                                    if($data->trans_type == "purchases"){
-                                                        echo $this->sma->formatMoney($data->grand_total,'none'); 
-                                                    }else{
-                                                        echo $this->sma->formatMoney($data->grand_total,'none'); 
-                                                    }
-                                                    ?>
-                                                </td>
+                                                <td><?= $total_tax; ?></td>
+                                                <td><?= $net_total; ?></td>
 
 
 
@@ -219,17 +208,12 @@
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
 
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalBeforeDiscount,'none')?></th>
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalDiscount,'none')?></th>
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalAfterDiscount,'none')?></th>
-
-
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalItemWithVAT,'none')?></th>
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalItemWithOutVAT,'none')?></th>
-
-                                    <!-- <th class="text-center"><?= $this->sma->formatMoney($totalWithoutTax,'none'); ?></th> -->
-                                    <th class="text-center"><?= $this->sma->formatMoney($totalTax,'none'); ?></th>
-                                    <th class="text-center"><?= $this->sma->formatMoney($totalWithTax,'none'); ?></th>
+                                    <th class="text-center"><?=$grand_total_invoice;?></th>
+                                    <th class="text-center"><?=$grand_total_discount ?></th>
+                                    <th class="text-center"><?=$grand_after_discount; //$this->sma->formatMoney($totalTotalAfterDiscount,'none')?></th>
+                                   
+                                   <th class="text-center"><?=$grand_total_tax; //$this->sma->formatMoney($totalTax,'none'); ?></th>
+                                    <th class="text-center"><?=$grand_total; //$this->sma->formatMoney($totalWithTax,'none'); ?></th>
 
 
 
