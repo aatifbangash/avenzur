@@ -117,6 +117,10 @@
                                     echo '<th>' . lang('entries_views_views_th_dr_amount') . ' (' . $this->mAccountSettings->currency_symbol . ')' . '</th>';
                                     echo '<th>' . lang('entries_views_views_th_cr_amount') . ' (' . $this->mAccountSettings->currency_symbol . ')' . '</th>';
                                     echo '<th>' . lang('entries_views_views_th_narration') . '</th>';
+                                     echo '<th>' . (lang('Customer', 'customer_id')) . '</th>';
+                                    echo '<th>' . (lang('Supplier', 'supplier_id')) . '</th>';
+                                    echo '<th>' . (lang('Departments', 'department_id')) . '</th>';
+                                    echo '<th>' . (lang('Employees', 'employee_id')) . '</th>';
                                     echo '</tr>';
 
                                     /* Intial rows */
@@ -160,6 +164,34 @@
                                         echo '</td>';
                                         echo '<td>';
                                         echo $entryitem['narration'];
+                                        echo '</td>';
+                                        echo '<td>';
+                                        if($entryitem['customer_id']){
+                                            echo  $entryitem['customer_name'];
+                                        }else{
+                                            echo '';
+                                        }
+                                        echo '</td>';
+                                        echo '<td>';
+                                        if($entryitem['supplier_id']){
+                                            echo  $entryitem['supplier_name'];
+                                        }else{
+                                            echo '';
+                                        }
+                                        echo '</td>';
+                                        echo '<td>';
+                                        if($entryitem['department_id']){
+                                            echo  $entryitem['department_name'];
+                                        }else{
+                                            echo '';
+                                        }
+                                        echo '</td>';
+                                        echo '<td>';
+                                        if($entryitem['employee_id']){
+                                            echo  $entryitem['employee_name'];
+                                        }else{
+                                            echo '';
+                                        }
                                         echo '</td>';
                                         echo '</tr>';
                                     }
