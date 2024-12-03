@@ -128,10 +128,10 @@ class Entries extends MY_Controller
 		$department_id = $this->input->post('department_id');
 		$employee_id = $this->input->post('employee_id');
 	
-		if (empty($product_id) && empty($customer_id) && empty($supplier_id) && empty($department_id) && empty($employee_id)) {
-			$this->form_validation->set_message('at_least_one_selected', 'At least one Dimensions (item, customer, supplier, department or employee) field must be selected.');
-			return false;
-		}
+		// if (empty($product_id) && empty($customer_id) && empty($supplier_id) && empty($department_id) && empty($employee_id)) {
+		// 	$this->form_validation->set_message('at_least_one_selected', 'At least one Dimensions (item, customer, supplier, department or employee) field must be selected.');
+		// 	return false;
+		// }
 	
 		return true;
 	}
@@ -398,7 +398,11 @@ class Entries extends MY_Controller
 								'cr_amount' => isset($entryitem['cr_amount']) ? $entryitem['cr_amount'] : '',
 								'narration' => $entryitem['narration'],
 								'ledger_balance' => $entryitem['ledger_balance'],
-								'ledgername' => $this->ledger_model->getName($entryitem['ledger_id'])
+								'ledgername' => $this->ledger_model->getName($entryitem['ledger_id']),
+								'customer_id' => $entryitem['customer_id'],
+								'supplier_id' => $entryitem['supplier_id'],
+								'department_id' => $entryitem['department_id'],
+								'employee_id'  => $entryitem['employee_id']
 							);
 						}else{
 							$curEntryitems[$row] = array
@@ -409,7 +413,12 @@ class Entries extends MY_Controller
 								'dr_amount' => isset($entryitem['dr_amount']) ? $entryitem['dr_amount'] : '',
 								 // if cr_amount isset save it else save empty string
 								'cr_amount' => isset($entryitem['cr_amount']) ? $entryitem['cr_amount'] : '',
-								'narration' => $entryitem['narration']
+								'narration' => $entryitem['narration'],
+								'customer_id' => $entryitem['customer_id'],
+								'supplier_id' => $entryitem['supplier_id'],
+								'department_id' => $entryitem['department_id'],
+								'employee_id'  => $entryitem['employee_id']
+
 							);
 						}
 					}
@@ -496,7 +505,9 @@ class Entries extends MY_Controller
 
 			// loop for all Entryitems from post data
 			foreach ($this->input->post('Entryitem') as $row => $entryitem)
-			{
+			{	 
+				 
+	 
 				// check if $entryitem['ledger_id'] less then or equal to 0
 				if ($entryitem['ledger_id'] <= 0)
 				{
@@ -513,7 +524,11 @@ class Entries extends MY_Controller
 							'dc' => $entryitem['dc'],
 							'ledger_id' => $entryitem['ledger_id'],
 							'amount' => $entryitem['dr_amount'],
-							'narration' => $entryitem['narration']
+							'narration' => $entryitem['narration'],
+							 'customer_id' => $entryitem['customer_id'],
+						 	'supplier_id' => $entryitem['supplier_id'],
+								'department_id' => $entryitem['department_id'],
+								'employee_id'  => $entryitem['employee_id']
 						)
 					);
 				}else // if entrytype is credit
@@ -524,8 +539,12 @@ class Entries extends MY_Controller
 							'dc' => $entryitem['dc'],
 							'ledger_id' => $entryitem['ledger_id'],
 							'amount' => $entryitem['cr_amount'],
-							'narration' => $entryitem['narration']
-
+							'narration' => $entryitem['narration'],
+							 'customer_id' => $entryitem['customer_id'],
+							'supplier_id' => $entryitem['supplier_id'],
+							'department_id' => $entryitem['department_id'],
+							'employee_id'  => $entryitem['employee_id']
+							 
 						)
 					);
 				}
@@ -875,7 +894,11 @@ class Entries extends MY_Controller
 							'cr_amount' => isset($entryitem['cr_amount']) ? $entryitem['cr_amount'] : '',
 							'narration' => $entryitem['narration'],
 							'ledger_balance' => $entryitem['ledger_balance'],
-							'ledgername' => $this->ledger_model->getName($entryitem['ledger_id'])
+							'ledgername' => $this->ledger_model->getName($entryitem['ledger_id']),
+							'customer_id' => $entryitem['customer_id'],
+						 	'supplier_id' => $entryitem['supplier_id'],
+							'department_id' => $entryitem['department_id'],
+							'employee_id'  => $entryitem['employee_id']
 						);
 					} else {
 						$curEntryitems[$row] = array(
@@ -885,7 +908,11 @@ class Entries extends MY_Controller
 							'dr_amount' => isset($entryitem['dr_amount']) ? $entryitem['dr_amount'] : '',
 							// if cr_amount isset save it else save empty string
 							'cr_amount' => isset($entryitem['cr_amount']) ? $entryitem['cr_amount'] : '',
-							'narration' => $entryitem['narration']
+							'narration' => $entryitem['narration'],
+							'customer_id' => $entryitem['customer_id'],
+						 	'supplier_id' => $entryitem['supplier_id'],
+							'department_id' => $entryitem['department_id'],
+							'employee_id'  => $entryitem['employee_id']
 						);
 					}
 				}
@@ -916,7 +943,12 @@ class Entries extends MY_Controller
 								'cr_amount' => '',
 								'narration' => $data['narration'],
 								'ledgername' => $this->ledger_model->getName($data['ledger_id']),
-								'ledger_balance' => $ledger_balance
+								'ledger_balance' => $ledger_balance,
+								'customer_id' => $data['customer_id'],
+						 	'supplier_id' => $data['supplier_id'],
+								'department_id' => $data['department_id'],
+								'employee_id'  => $data['employee_id']
+
 
 							);
 						} else {// if entry item is credit
@@ -928,7 +960,11 @@ class Entries extends MY_Controller
 								'cr_amount' => $this->sma->formatDecimal($data['amount']),
 								'narration' => $data['narration'],
 								'ledgername' => $this->ledger_model->getName($data['ledger_id']),
-								'ledger_balance' => $ledger_balance
+								'ledger_balance' => $ledger_balance,
+								'customer_id' => $data['customer_id'],
+						 	'supplier_id' => $data['supplier_id'],
+								'department_id' => $data['department_id'],
+								'employee_id'  => $data['employee_id']
 							);
 						}
 					} else {
@@ -943,6 +979,10 @@ class Entries extends MY_Controller
 								'dr_amount' => $this->sma->formatDecimal($data['amount']),
 								'cr_amount' => '',
 								'narration' => $data['narration'],
+								'customer_id' => $data['customer_id'],
+						 		'supplier_id' => $data['supplier_id'],
+								'department_id' => $data['department_id'],
+								'employee_id'  => $data['employee_id']
 							);
 						}else // if entry item is credit
 						{
@@ -953,6 +993,10 @@ class Entries extends MY_Controller
 								'dr_amount' => '',
 								'cr_amount' => $this->sma->formatDecimal($data['amount']),
 								'narration' => $data['narration'],
+								'customer_id' => $data['customer_id'],
+						 		'supplier_id' => $data['supplier_id'],
+								'department_id' => $data['department_id'],
+								'employee_id'  => $data['employee_id']
 							);
 						}
 					}
@@ -1051,7 +1095,11 @@ class Entries extends MY_Controller
 							'dc' => $entryitem['dc'],
 							'ledger_id' => $entryitem['ledger_id'],
 							'amount' => $entryitem['dr_amount'],
-							'narration' => $entryitem['narration']
+							'narration' => $entryitem['narration'],
+							'customer_id' => $entryitem['customer_id'],
+						 	'supplier_id' => $entryitem['supplier_id'],
+							'department_id' => $entryitem['department_id'],
+							'employee_id'  => $entryitem['employee_id']
 
 						)
 					);
@@ -1063,7 +1111,11 @@ class Entries extends MY_Controller
 							'dc' => $entryitem['dc'],
 							'ledger_id' => $entryitem['ledger_id'],
 							'amount' => $entryitem['cr_amount'],
-							'narration' => $entryitem['narration']
+							'narration' => $entryitem['narration'],
+							'customer_id' => $entryitem['customer_id'],
+						 	'supplier_id' => $entryitem['supplier_id'],
+							'department_id' => $entryitem['department_id'],
+							'employee_id'  => $entryitem['employee_id']
 						)
 					);
 				}
@@ -1325,6 +1377,41 @@ class Entries extends MY_Controller
 		// loop to store selected entry items to current entry items array
 		foreach ($curEntryitemsData as $row => $data)
 		{
+			$company_name = "";
+			$supplier_name = "";
+			$department_name = "";
+			$employee_name = "";
+			if($data['customer_id']){
+				 $q = $this->db->get_where('companies', ['id' => $data['customer_id']], 1);
+				 if ($q->num_rows() > 0) {
+					$customer =  $q->row();
+					$company_name = $customer->name;
+				}	
+			 
+			}
+			if($data['department_id']){
+				$q = $this->db->get_where('departments', ['id' => $data['department_id']]);
+				if ($q->num_rows() > 0) {
+					$department =  $q->row();
+					$department_name = $department->name;
+				}				
+			}
+			if($data['supplier_id']){
+				 
+				$q = $this->db->get_where('companies', ['id' => $data['supplier_id']], 1);
+				 if ($q->num_rows() > 0) {
+					$customer =  $q->row();
+					$supplier_name = $customer->name;
+				}				
+			}
+			if($data['employee_id']){
+				$q = $this->db->get_where('employees', ['id' => $data['employee_id']]);
+				if ($q->num_rows() > 0) {
+					$employee =  $q->row();
+					$employee_name = $employee->name;
+				}				
+			}
+
 			// if debit entry
 			if ($data['dc'] == 'D')
 			{
@@ -1335,7 +1422,15 @@ class Entries extends MY_Controller
 					'ledger_name' => $this->ledger_model->getName($data['ledger_id']),
 					'dr_amount' => $data['amount'],
 					'cr_amount' => '',
-					'narration' => $data['narration']
+					'narration' => $data['narration'],
+					'customer_id' => $data['customer_id'],
+					'customer_name' =>  $company_name,
+					'supplier_id' => $data['supplier_id'],
+					'supplier_name' => $supplier_name,
+					'department_id' => $data['department_id'],
+					'department_name' => $department_name,
+					'employee_id'  => $data['employee_id'],
+					'employee_name' => $employee_name
 				);
 				$dr_amount_total =($dr_amount_total)+($data['amount']);
 			}else // if credit entry
@@ -1347,7 +1442,16 @@ class Entries extends MY_Controller
 					'ledger_name' => $this->ledger_model->getName($data['ledger_id']),
 					'dr_amount' => '',
 					'cr_amount' => $data['amount'],
-					'narration' => $data['narration']
+					'narration' => $data['narration'],
+					'customer_id' => $data['customer_id'],
+					'customer_name' =>  $company_name,
+					'supplier_id' => $data['supplier_id'],
+					'supplier_name' => $supplier_name,
+					'department_id' => $data['department_id'],
+					'department_name' => $department_name,
+					'employee_id'  => $data['employee_id'],
+					'employee_name' => $employee_name
+
 
 				);
 			
