@@ -206,7 +206,7 @@
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
-                                    <th>&nbsp;</th>
+                                    
 
                                     <th class="text-center"><?=$grand_total_invoice;?></th>
                                     <th class="text-center"><?=$grand_total_discount ?></th>
@@ -214,7 +214,7 @@
                                    
                                    <th class="text-center"><?=$grand_total_tax; //$this->sma->formatMoney($totalTax,'none'); ?></th>
                                     <th class="text-center"><?=$grand_total; //$this->sma->formatMoney($totalWithTax,'none'); ?></th>
-
+                                    <th>&nbsp;</th>
 
 
                                     <th>&nbsp;</th>

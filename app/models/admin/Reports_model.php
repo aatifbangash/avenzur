@@ -3497,11 +3497,11 @@ class Reports_model extends CI_Model
         p.reference_no,
         p.supplier AS supplier_name,
         c.vat_no AS supplier_vat_no,
-        p.total AS total_invoice,
-        p.total_net_purchase AS total_after_discount,
-        p.total_discount AS total_discount,
-        p.grand_total AS grand_total,
-        p.total_tax AS total_tax,
+        p.total  AS total_invoice,
+        p.total_net_purchase  AS total_after_discount,
+        p.total_discount  AS total_discount,
+        p.grand_total  AS grand_total,
+        p.total_tax  AS total_tax,
         ae.number AS ledger_entry_number
     FROM
         sma_purchases AS p
@@ -3525,11 +3525,11 @@ class Reports_model extends CI_Model
         r.reference_no,
         r.supplier AS supplier_name,
         c.vat_no AS supplier_vat_no,
-        r.total AS total_invoice,
-        r.total_net_purchase AS total_after_discount, 
-        r.total_discount AS total_discount,
-        r.grand_total AS grand_total,
-        r.total_tax AS total_tax,
+        r.total * -1 AS total_invoice,
+        r.total_net_purchase * -1 AS total_after_discount, 
+        r.total_discount * -1 AS total_discount,
+        r.grand_total * -1 AS grand_total,
+        r.total_tax * -1 AS total_tax,
         ae.number AS ledger_entry_number
     FROM
         sma_returns_supplier AS r
