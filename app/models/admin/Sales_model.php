@@ -51,6 +51,17 @@ class Sales_model extends CI_Model
         }
     }
 
+    public function update_balance($id, $new_balance)
+    {
+        $data = array(
+            'balance' => $new_balance
+        );
+
+        $this->db->update('companies', $data, array('id' => $id));
+
+        return true;
+    }
+
     public function update_payment_reference($payment_id, $journal_id){
         $this->db->update('sma_payment_reference', ['journal_id' => $journal_id], ['id' => $payment_id]);
     }
