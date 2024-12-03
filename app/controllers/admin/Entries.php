@@ -144,6 +144,10 @@ class Entries extends MY_Controller
 	*/
 	public function add($entrytypeLabel = null) {
 		
+		ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
 		/* Check for valid entry type */
 		if (!$entrytypeLabel) {
 			// show 404 error page
@@ -556,7 +560,7 @@ class Entries extends MY_Controller
 			$entrydata['Entry']['supplier_id'] = $this->input->post('supplier_id') ? $this->input->post('supplier_id') : 0;
 			$entrydata['Entry']['department_id'] = $this->input->post('department_id') ? $this->input->post('department_id') : 0;
 			$entrydata['Entry']['employee_id'] = $this->input->post('employee_id') ? $this->input->post('employee_id') : 0;
-
+			$entrydata['Entry']['transaction_type'] = 'journal';
 
 			/* insert entry data array to entries table - db */
 			$add  = $this->db->insert('sma_accounts_entries', $entrydata['Entry']);
