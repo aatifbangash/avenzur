@@ -977,7 +977,8 @@
                                 foreach ($customers as $customer) {
                                     $cus[$customer->id] = $customer->company. ' ('. $customer->name.')';
                                 }
-                                echo form_dropdown('Entryitem[' . $row . '][customer_id]', $cus, ($_POST['Entryitem['.$row.'][customer_id]'  ] ?? $_POST['Entryitem['.$row.'][customer_id]']), 'id="customer_id" class="dropdown-class" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" ');
+                                
+                                echo form_dropdown('Entryitem[' . $row . '][customer_id]', $cus, ($_POST ?? $_POST['Entryitem['.$row.'][customer_id]']), 'id="customer_id" class="dropdown-class" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" ');
                                 echo '</div></td>';
                                 /**Add Supplier Here */
                                  echo '<td><div class="form-group-entryitem">';
@@ -986,7 +987,7 @@
                                     foreach($suppliers as $supplier){
                                         $suData[$supplier->id] = $supplier->name;
                                     }
-                                    echo form_dropdown('Entryitem[' . $row . '][supplier_id]', $suData, ($_POST['Entryitem['.$row.'][supplier_id]'] ?? $_POST['Entryitem['.$row.'][supplier_id]']), 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Supplier') . '" "');
+                                    echo form_dropdown('Entryitem[' . $row . '][supplier_id]', $suData, ($_POST ?? $_POST['Entryitem['.$row.'][supplier_id]']), 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Supplier') . '" "');
                                     echo '</div></td>';
                                      /**Add Dept Here */
                                  echo '<td><div class="form-group-entryitem">';
@@ -995,7 +996,7 @@
                                     foreach($departments as $depart){
                                         $depthData[$depart->id] = $depart->name;
                                     }
-                                    echo form_dropdown('Entryitem[' . $row . '][department_id]', $depthData, ($_POST['Entryitem['.$row.'][department_id]'] ?? $_POST['Entryitem['.$row.'][department_id]']) , 'id="department_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Departments') . '" "');
+                                    echo form_dropdown('Entryitem[' . $row . '][department_id]', $depthData, ($_POST ?? $_POST['Entryitem['.$row.'][department_id]']) , 'id="department_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Departments') . '" "');
                                     echo '</div></td>';
                                     /**
                                      * Add Employees here
@@ -1006,7 +1007,7 @@
                                     foreach($employees as $emp){
                                         $empData[$emp->id] = $emp->name;
                                     }
-                                    echo form_dropdown('Entryitem[' . $row . '][employee_id]', $empData, ($_POST['Entryitem['.$row.'][employee_id]'] ?? $_POST['Entryitem['.$row.'][employee_id]']), 'id="employee_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Employee') . '" "');
+                                    echo form_dropdown('Entryitem[' . $row . '][employee_id]', $empData, ($_POST ?? $_POST['Entryitem['.$row.'][employee_id]']), 'id="employee_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Employee') . '" "');
                                 echo '</div></td>';
                                 echo '<td>';                       
                                 echo '<span class="deleterow fa fa-trash" escape="false"></span>';

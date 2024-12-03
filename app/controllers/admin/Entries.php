@@ -144,10 +144,6 @@ class Entries extends MY_Controller
 	*/
 	public function add($entrytypeLabel = null) {
 		
-		ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
-
 		/* Check for valid entry type */
 		if (!$entrytypeLabel) {
 			// show 404 error page
@@ -592,6 +588,7 @@ error_reporting(E_ALL);
 
 				// set entry number as per prefix, suffix and zero padding for that entry type for logging
 				$entryNumber = $this->functionscore->toEntryNumber($entrydata['Entry']['number'], $entrytype['id']);
+
 
 				// insert log if logging is enabled
 				//$this->settings_model->add_log(sprintf(lang('entries_cntrler_add_log'),$entrytype['name'], $entryNumber), 1);
