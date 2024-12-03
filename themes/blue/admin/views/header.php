@@ -490,11 +490,11 @@
                                         </a>
                                     </li>
 
-                                    <li id="reports_vat_purchase_report">
+                                    <!-- <li id="reports_vat_purchase_report">
                                         <a href="<?= admin_url('reports/vat_purchase_ledger') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('vat_purchase_report').' (Ledger)'; ?></span>
                                         </a>
-                                    </li>
+                                    </li> -->
                                   
                                     <li id="reports_supplier_aging_report">
                                         <a href="<?= admin_url('reports/supplier_aging') ?>">
