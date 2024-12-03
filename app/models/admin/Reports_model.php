@@ -833,11 +833,11 @@ class Reports_model extends CI_Model
             ->where('sma_accounts_entries.date <=', $end_date);
 
         if (!empty($employee)) {
-            $this->db->where('sma_accounts_entries.employee_id', $employee);
+            $this->db->where('sma_accounts_entryitems.employee_id', $employee);
         }
 
         if (!empty($department)) {
-            $this->db->where('sma_accounts_entries.department_id', $department);
+            $this->db->where('sma_accounts_entryitems.department_id', $department);
         }
 
         $this->db
