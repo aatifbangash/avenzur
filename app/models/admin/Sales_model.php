@@ -55,6 +55,19 @@ class Sales_model extends CI_Model
         $this->db->update('sma_payment_reference', ['journal_id' => $journal_id], ['id' => $payment_id]);
     }
 
+    public function get_sale_by_avzcode($avz_code)
+    {
+        $this->db->select('sale_items.*')
+            ->join('sales', 'sales.id=sale_items.sale_id', 'left')
+            ->where('sale_items.avz_item_code =', $avz_code)
+            ->where('sales.pos =', 0);
+        $q = $this->db->get('sale_items');
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     /* ----------------- Gift Cards --------------------- */
 
     public function addGiftCard($data = [], $ca_data = [], $sa_data = [])
