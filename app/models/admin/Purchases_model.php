@@ -1123,6 +1123,17 @@ class Purchases_model extends CI_Model
         return true;
     }
 
+    public function update_balance($id, $new_balance)
+    {
+        $data = array(
+            'balance' => $new_balance
+        );
+
+        $this->db->update('companies', $data, array('id' => $id));
+
+        return true;
+    }
+
     public function generateInvoiceNumber()
     {
         $prefix = 'INV'; // Prefix for the invoice number
