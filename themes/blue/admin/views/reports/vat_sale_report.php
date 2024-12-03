@@ -218,7 +218,7 @@
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
-                                    <th>&nbsp;</th>
+                                   
 
                                     <th class="text-center"><?=$this->sma->formatMoney($totalItemWithVAT,'none')?></th>
                                     <th class="text-center"><?=$this->sma->formatMoney($totalTotalDiscount,'none')?></th>
@@ -231,7 +231,7 @@
                                     <th class="text-center"><?= $this->sma->formatMoney($totalTax,'none'); ?></th>
                                     <th class="text-center"><?= $this->sma->formatMoney($grandTotal,'none'); ?></th>
 
-
+                                    <th>&nbsp;</th>
 
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
