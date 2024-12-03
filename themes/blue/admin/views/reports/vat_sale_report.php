@@ -101,7 +101,7 @@
                                 <th>SR</th>
                                 <th><?= lang('Trx Type'); ?></th>
                                 <th><?= lang('Branch'); ?></th>
-                                <th><?= lang('INV. NO'); ?></th>
+                                <!-- <th><?= lang('INV. NO'); ?></th> -->
                                 <th><?= lang('INV DATE.'); ?></th>
 
                                 <th><?= lang('TOTAL INV.')//lang('Total Before Discount.'); ?></th>
@@ -169,7 +169,7 @@
                                         $totalTotalAfterDiscount += $sign.$data->grand_total;
 
 
-                                        $totalItemWithVAT += $data->total_item_with_vat;
+                                        $totalItemWithVAT += $data->total_invoice;
                                         $totalItemWithOutVAT += $data->total_item_without_tax;
 
                                         $grandTotalAfterDiscount += $data->total_after_discount;
@@ -183,10 +183,10 @@
                                                 <td><?= $data->trans_ID; ?></td>
                                                 <td><?=$data->trans_type?></td>
                                                 <td><?= $data->warehouse; ?></td>
-                                                <td><?= $data->reference_no; ?></td>
+                                                <!-- <td><?= $data->reference_no; ?></td> -->
                                                 <td><?= $data->trans_date; ?></td>
                                                 
-                                                <td><?= $sign.$data->total_item_with_vat;//$this->sma->formatMoney($data->grand_total+$data->total_discount,'none'); ?></td>
+                                                <td><?= $sign.$data->total_invoice;//$this->sma->formatMoney($data->grand_total+$data->total_discount,'none'); ?></td>
                                                 <td><?= $sign.$data->total_discount;//$this->sma->formatMoney($data->total_discount,'none'); ?></td>
                                                 <td><?= $sign.$data->total_after_discount;//$this->sma->formatMoney($data->grand_total,'none'); ?></td>
 

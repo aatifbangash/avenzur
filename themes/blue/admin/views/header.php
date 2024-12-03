@@ -545,11 +545,11 @@
                                     <span class="chevron closed"></span>
                                 </a>
                                 <ul>
-                                <li id="reports_inventory_movement_report">
+                                <!-- <li id="reports_inventory_movement_report">
                                         <a href="<?= admin_url('reports/inventory_movement') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('inventory_movement_report'); ?></span>
                                         </a>
-                                    </li>
+                                    </li> -->
                                     <li id="reports_item_movement_report">
                                         <a href="<?= admin_url('reports/item_movement_report') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('item_movement_report'); ?></span>
