@@ -18,6 +18,7 @@
     <link href="<?= base_url('assets/custom/pos.css') ?>" rel="stylesheet"/>
     <script type="text/javascript" src="<?=$assets?>js/jquery-2.0.3.min.js"></script>
     <script type="text/javascript" src="<?=$assets?>js/jquery-migrate-1.2.1.min.js"></script>
+    <script type="text/javascript" src="<?= $assets ?>js/plugins/decimal/decimal.js"></script>
     <!--[if lt IE 9]>
     <script src="<?=$assets?>js/jquery.js"></script>
     <![endif]-->
@@ -1734,12 +1735,13 @@ var lang = {
         });
 
         $(document).on('click', '.addButton', function () {
+            const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
             if (pa <= 5) {
                 var total_added = 0;
                 for (let index = 1; index < 6; index++) {
                     total_added += parseFloat($('#amount_'+index).val() ? $('#amount_'+index).val() : 0);
                 }
-                var bal = parseFloat(parseFloat(grand_total) - parseFloat(total_added));
+                var bal = toTwoDecimals( toTwoDecimals(grand_total) - toTwoDecimals(total_added) ).toNumber(); //parseFloat(parseFloat(grand_total) - parseFloat(total_added));
                 if (bal > 0) {
                     $('#paid_by_1, #pcc_type_1').select2('destroy');
                     var phtml = $('#payments').html(),
