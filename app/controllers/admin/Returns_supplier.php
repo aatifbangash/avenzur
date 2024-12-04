@@ -623,9 +623,24 @@ class Returns_supplier extends MY_Controller
         }
 
         $result = array_values($result);
+        $net_amount = 0;
         foreach($result as $return){
+            $net_amount += $return['amount'];
             $this->purchases_model->update_purchase_paid_amount($return['purchase_id'], $return['amount']);
         }
+
+        $payment = [
+            'date'          => date('Y-m-d h:i:s'),
+            'purchase_id'   => $purchase_id,
+            'reference_no'  => '',
+            'amount'        => $net_amount,
+            'note'          => 'Return to Supplier',
+            'created_by'    => $this->session->userdata('user_id'),
+            'type'          => 'sent',
+            'payment_id'    => NULL
+        ];
+
+        $this->purchases_model->addPayment($payment);
     }
 
     public function add_old()
