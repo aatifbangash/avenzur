@@ -3668,7 +3668,7 @@ class Reports_model extends CI_Model
                                 r.customer AS customer_name,
                                 c.vat_no AS customer_vat_no,    
                                 
-                                r.total as total_invoice,
+                                r.total * -1 as total_invoice,
                                 r.total_discount * -1 as total_discount,
                                 r.grand_total * -1 AS grand_total,
                                 r.total_tax * -1 AS total_tax,
