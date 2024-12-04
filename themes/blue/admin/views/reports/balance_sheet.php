@@ -213,7 +213,7 @@
                                     foreach($balance_sheet['ledger_groups'] as $ledger_group){
                                         if($ledger_group->type2 == 'Equity'){
                                             if( $ledger_group->name == 'Total Earnings' ) {
-                                                echo $total_equity = $total_assets - $total_liabilities ;
+                                                 $total_equity = $total_assets - $total_liabilities ;
                                                 ?>
                                                 <div>
                                                     <span><b><?php echo $ledger_group->name; ?></b></span>
@@ -234,7 +234,7 @@
                                                ?>
                                                   <div style="margin-left: 20px;">
                                                     <span><?php echo $ledger->name; ?></span>
-                                                    <span style="float:right;"><?php echo abs($total_assets - $total_liabilities); ?></span>
+                                                    <span style="float:right;"><?php //echo abs($total_assets - $total_liabilities); ?></span>
                                                 </div>
                                          
                                               
