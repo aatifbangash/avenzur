@@ -167,11 +167,11 @@
                                                 </div>
                                             <?php
                                             foreach($ledger_group->ledgers as $ledger){
-                                                $total_assets = $total_assets + ($ledger->credit_sum - $ledger->debit_sum);
+                                                $total_assets = $total_assets + abs(($ledger->debit_sum - $ledger->credit_sum));
                                                 ?>
                                                 <div style="margin-left: 20px;">
                                                     <span><?php echo $ledger->name; ?></span>
-                                                    <span style="float:right;"><?php echo $ledger->credit_sum - $ledger->debit_sum; ?></span>
+                                                    <span style="float:right;"><?php echo abs($ledger->debit_sum - $ledger->credit_sum); ?></span>
                                                 </div>
                                                 <?php
                                             }
@@ -193,38 +193,54 @@
                                                 </div>
                                             <?php
                                             foreach($ledger_group->ledgers as $ledger){
-                                                $total_liabilities = $total_liabilities + ($ledger->credit_sum - $ledger->debit_sum);
+                                                $total_liabilities = $total_liabilities + abs(($ledger->credit_sum - $ledger->debit_sum));
                                                 ?>
                                                 <div style="margin-left: 20px;">
                                                     <span><?php echo $ledger->name; ?></span>
-                                                    <span style="float:right;"><?php echo $ledger->credit_sum - $ledger->debit_sum; ?></span>
+                                                    <span style="float:right;"><?php echo abs($ledger->credit_sum - $ledger->debit_sum); ?></span>
                                                 </div>
                                                 <?php
                                             }
                                         }
                                     }
                                 ?>
-                                </div>
-                                <div class="table-head"><?= lang('EQUITY'); ?></div>
+                                      </div>
+                                      <div class="table-head" style="width: 100%;"><span style="margin-left:20px;"><?= lang('TOTAL Liabilities'); ?></span><span style="float:right;margin-right:20px;"><?= number_format($total_liabilities, 2, '.', ''); ?></span></div>
+                            
+                                <!-- <div class="table-head" style="clear: both"><?= lang('EQUITY'); ?></div> -->
                                 <div class="table-content">
                                 <?php
                                     foreach($balance_sheet['ledger_groups'] as $ledger_group){
                                         if($ledger_group->type2 == 'Equity'){
-                                            ?>
+                                            if( $ledger_group->name == 'Total Earnings' ) {
+                                                echo $total_equity = $total_assets - $total_liabilities ;
+                                                ?>
                                                 <div>
                                                     <span><b><?php echo $ledger_group->name; ?></b></span>
-                                                    <span style="float:right;"><?php echo '-'; ?></span>
+                                                    <span style="float:right;"><?php  echo abs($total_assets - $total_liabilities);; ?></span>
                                                 </div>
+                                            <?php     
+                                            }
+                                            
+                                            ?>
+                                                <!-- <div>
+                                                    <span><b><?php echo $ledger_group->name; ?></b></span>
+                                                    <span style="float:right;"><?php echo '-'; ?></span>
+                                                </div> -->
                                             <?php
                                             foreach($ledger_group->ledgers as $ledger){
+                                                
                                                 $total_liabilities = $total_liabilities + ($ledger->credit_sum - $ledger->debit_sum);
-                                                ?>
-                                                <div style="margin-left: 20px;">
+                                               ?>
+                                                  <div style="margin-left: 20px;">
                                                     <span><?php echo $ledger->name; ?></span>
-                                                    <span style="float:right;"><?php echo $ledger->credit_sum - $ledger->debit_sum; ?></span>
+                                                    <span style="float:right;"><?php echo abs($total_assets - $total_liabilities); ?></span>
                                                 </div>
+                                         
+                                              
                                                 <?php
                                             }
+                                        
                                         }
                                     }
                                 ?>
@@ -233,8 +249,8 @@
 
                         </div>
                         <div class="bottom-wrap" style="overflow: hidden;">
-                            <div class="table-head" style="width: 50%;float:left;"><span style="float:left;margin-left:20px;"><?= lang('TOTAL ASSETS'); ?></span><span style="float:right;margin-right:20px;"><?= number_format($total_assets, 2, '.', ''); ?></span></div>
-                            <div class="table-head" style="width: 50%;float:left;"><span style="float:left;margin-left:20px;"><?= lang('TOTAL LIABILITIES'); ?></span><span style="float:right;margin-right:20px;"><?= number_format($total_liabilities, 2, '.', ''); ?></span></div>
+                            <div class="table-head" style="width: 50%;float:left;"><span style="float:left;margin-left:20px;"><?= lang('TOTAL'); ?></span><span style="float:right;margin-right:20px;"><?= number_format($total_assets, 2, '.', ''); ?></span></div>
+                            <div class="table-head" style="width: 50%;float:left;"><span style="float:left;margin-left:20px;"><?= lang('TOTAL'); ?></span><span style="float:right;margin-right:20px;"><?= number_format(($total_liabilities + $total_equity), 2, '.', ''); ?></span></div>
                         </div>
 
                         <?php }else{
