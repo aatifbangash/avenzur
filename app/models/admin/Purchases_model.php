@@ -497,6 +497,18 @@ class Purchases_model extends CI_Model
         return false;
     }
 
+    public function get_purchase_by_avzcode($avz_code)
+    {
+        $this->db->select('purchase_items.*')
+            ->where('purchase_items.avz_item_code =', $avz_code)
+            ->where('purchase_items.transfer_id =', NULL);
+        $q = $this->db->get('purchase_items');
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getExpenseCategories()
     {
         $q = $this->db->get('expense_categories');
@@ -1107,6 +1119,17 @@ class Purchases_model extends CI_Model
         );
 
         $this->db->update('purchases', $data, array('id' => $id));
+
+        return true;
+    }
+
+    public function update_balance($id, $new_balance)
+    {
+        $data = array(
+            'balance' => $new_balance
+        );
+
+        $this->db->update('companies', $data, array('id' => $id));
 
         return true;
     }

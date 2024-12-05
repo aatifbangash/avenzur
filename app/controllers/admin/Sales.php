@@ -991,7 +991,7 @@ class Sales extends MY_Controller
         }
 
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
-        $this->form_validation->set_rules('reference_no', lang('reference_no'), 'required');
+        //$this->form_validation->set_rules('reference_no', lang('reference_no'), 'required');
         $this->form_validation->set_rules('customer', lang('customer'), 'required');
         $this->form_validation->set_rules('biller', lang('biller'), 'required');
         $this->form_validation->set_rules('sale_status', lang('sale_status'), 'required');
@@ -1013,7 +1013,7 @@ class Sales extends MY_Controller
         if ($this->form_validation->run() == true) {
             // echo "<pre>";
             // print_r($_POST);exit;
-            $reference = $this->input->post('reference_no');
+            //$reference = $this->input->post('reference_no');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
             } else {
@@ -1034,6 +1034,7 @@ class Sales extends MY_Controller
             $biller           = !empty($biller_details->company) && $biller_details->company != '-' ? $biller_details->company : $biller_details->name;
             $note             = $this->sma->clear_tags($this->input->post('note'));
             $staff_note       = $this->sma->clear_tags($this->input->post('staff_note'));
+            $warning_note     = $this->sma->clear_tags($this->input->post('warning_note'));
             
 
             $total            = 0;
@@ -1079,7 +1080,7 @@ class Sales extends MY_Controller
                 
                 
                 $data2['OperationType'] = 'DRUG SALE';
-                $data2['TransactionNumber']  = $reference;
+                $data2['TransactionNumber']  = '';
                 $data2['FromID'] =  $id;
                 $data2['ToID'] = 0; 
 
@@ -1252,7 +1253,7 @@ class Sales extends MY_Controller
             $cost_goods_sold = $this->input->post('cost_goods_sold');
             
             $data        = ['date'  => $date,
-                'reference_no'      => $reference,
+                //'reference_no'      => $reference,
                 'customer_id'       => $customer_id,
                 'customer'          => $customer,
                 'biller_id'         => $biller_id,
@@ -1260,6 +1261,7 @@ class Sales extends MY_Controller
                 'warehouse_id'      => $warehouse_id,
                 'note'              => $note,
                 'staff_note'        => $staff_note,
+                'warning_note'      => $warning_note,
                 'total'             => $grand_total_sale,
                 'total_net_sale'    => $grand_total_net_sale,
                 'product_discount'  => $total_product_discount,
@@ -1281,6 +1283,22 @@ class Sales extends MY_Controller
                 'updated_by'        => $this->session->userdata('user_id'),
                 'updated_at'        => date('Y-m-d H:i:s'),
             ];
+
+            if($customer_details->balance > 0 && $sale_status == 'completed'){
+                if($customer_details->balance >= $grand_total){
+                    $paid = $grand_total;
+                    $new_balance = $customer_details->balance - $grand_total;
+                    $payment_status = 'paid';
+                }else{
+                    $paid = $grand_total - $customer_details->balance;
+                    $new_balance = 0;
+                    $payment_status = 'partial';
+                }
+
+                $data['paid'] = $paid;
+                $data['payment_status'] = $payment_status;
+            }
+
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;
                 $data['sgst'] = $total_sgst;
@@ -1298,6 +1316,10 @@ class Sales extends MY_Controller
         if ($this->form_validation->run() == true && $this->sales_model->updateSale($id, $data, $products, $attachments)) {
             if($sale_status == 'completed'){
                 $this->convert_sale_invoice($id);
+
+                if($customer_details->balance > 0){
+                    $this->sales_model->update_balance($customer_details->id, $new_balance);
+                }
             }
 
             $this->session->set_userdata('remove_slls', 1);

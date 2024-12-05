@@ -420,6 +420,17 @@ class Returns_supplier extends MY_Controller
                    $total += $this->sma->formatDecimal(($cost_price * ($item_unit_quantity + $item_bonus)), 4);
                    $net_total = $this->sma->formatDecimal(($net_cost * ($item_unit_quantity + $item_bonus)), 4);
                 }
+
+                /* Code for payment to supplier */
+
+                $pur_inv = $this->purchases_model->get_purchase_by_avzcode($avz_code);
+                $return = [
+                    'purchase_id' => $pur_inv->purchase_id,
+                    'amount' => $main_net 
+                ];
+                $returns[] = $return;
+
+                /* Code for payment to supplier END */
             }
             if (empty($products)) {
                 $this->form_validation->set_rules('product', lang('order_items'), 'required');
@@ -501,7 +512,7 @@ class Returns_supplier extends MY_Controller
                 $data['attachment'] = $photo;
             }
 
-            //$this->sma->print_arrays($data, $products);exit;
+            //$this->sma->print_arrays($data, $products, $returns);exit;
 
         }
 
@@ -509,6 +520,7 @@ class Returns_supplier extends MY_Controller
 
             //$this->returns_supplier_model->convert_return_invoice($return_insert_id, $products);
             $this->convert_return_invoice($return_insert_id);
+            $this->payment_receive_from_supplier($returns);
 
             $this->session->set_userdata('remove_rlls', 1);
             $this->session->set_flashdata('message', lang('return_added'));
@@ -592,6 +604,45 @@ class Returns_supplier extends MY_Controller
             }
         }
     }
+
+    public function payment_receive_from_supplier($returns){
+
+        $result = [];
+        foreach ($returns as $item) {
+            $purchase_id = $item['purchase_id'];
+            $amount = $item['amount'];
+
+            if (isset($result[$purchase_id])) {
+                $result[$purchase_id]['amount'] += $amount;
+            } else {
+                $result[$purchase_id] = [
+                    'purchase_id' => $purchase_id,
+                    'amount' => $amount,
+                ];
+            }
+        }
+
+        $result = array_values($result);
+        $net_amount = 0;
+        foreach($result as $return){
+            $net_amount += $return['amount'];
+            $this->purchases_model->update_purchase_paid_amount($return['purchase_id'], $return['amount']);
+        }
+
+        $payment = [
+            'date'          => date('Y-m-d h:i:s'),
+            'purchase_id'   => $purchase_id,
+            'reference_no'  => '',
+            'amount'        => $net_amount,
+            'note'          => 'Return to Supplier',
+            'created_by'    => $this->session->userdata('user_id'),
+            'type'          => 'sent',
+            'payment_id'    => NULL
+        ];
+
+        $this->purchases_model->addPayment($payment);
+    }
+
     public function add_old()
     {
         $this->sma->checkPermissions();

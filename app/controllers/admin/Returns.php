@@ -388,6 +388,18 @@ class Returns extends MY_Controller
                     $products[] = ($product + $gst_data);
                     $total += $this->sma->formatDecimal(($subtotal), 4);
                 }
+
+
+                /* Code for payment to customer */
+
+                $sl_inv = $this->sales_model->get_sale_by_avzcode($avz_item_code);
+                $return = [
+                    'sale_id' => $sl_inv->sale_id,
+                    'amount' => ($totalbeforevat + $new_item_vat_value)
+                ];
+                $returns[] = $return;
+
+                /* Code for payment to customer END */
             }
             if (empty($products)) {
                 $this->form_validation->set_rules('product', lang('order_items'), 'required');
@@ -469,13 +481,14 @@ class Returns extends MY_Controller
                 $data['attachment'] = $photo;
             }
 
-            //$this->sma->print_arrays($data, $products);exit;
+            //$this->sma->print_arrays($data, $products, $returns);exit;
         }
 
         if ($this->form_validation->run() == true && $return_insert_id = $this->returns_model->addReturn($data, $products)) {
 
             //$this->returns_model->convert_return_invoice($return_insert_id, $products);
             $this->convert_return_invoice($return_insert_id);
+            $this->payment_to_customer($returns);
 
             $this->session->set_userdata('remove_rels', 1);
             $this->session->set_flashdata('message', lang('return_added'));
@@ -558,6 +571,44 @@ class Returns extends MY_Controller
                 $this->page_construct('returns/add', $meta, $this->data);
             }
         }
+    }
+
+    public function payment_to_customer($returns){
+
+        $result = [];
+        foreach ($returns as $item) {
+            $sale_id = $item['sale_id'];
+            $amount = $item['amount'];
+
+            if (isset($result[$sale_id])) {
+                $result[$sale_id]['amount'] += $amount;
+            } else {
+                $result[$sale_id] = [
+                    'sale_id' => $sale_id,
+                    'amount' => $amount,
+                ];
+            }
+        }
+
+        $result = array_values($result);
+        $net_amount = 0;
+        foreach($result as $return){
+            $net_amount += $return['amount'];
+            $this->sales_model->update_sale_paid_amount($return['sale_id'], $return['amount']);
+        }
+
+        $payment = [
+            'date'          => date('Y-m-d h:i:s'),
+            'sale_id'   => $sale_id,
+            'reference_no'  => '',
+            'amount'        => $net_amount,
+            'note'          => 'Return By Customer',
+            'created_by'    => $this->session->userdata('user_id'),
+            'type'          => 'sent',
+            'payment_id'    => NULL
+        ];
+
+        $this->sales_model->addPayment($payment);
     }
 
     public function convert_return_invoice($rid){

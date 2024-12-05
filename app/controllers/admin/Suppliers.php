@@ -625,6 +625,8 @@ class Suppliers extends MY_Controller
     {
         $this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
+        $this->form_validation->set_rules('ledger_account', $this->lang->line('ledger_account'), 'required');
+        $this->form_validation->set_rules('bank_charges_account', $this->lang->line('bank_charges_account'), 'required');
 
         $data = [];
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('add payment')]];

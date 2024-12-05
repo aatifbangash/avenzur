@@ -556,7 +556,7 @@ class Entries extends MY_Controller
 			$entrydata['Entry']['supplier_id'] = $this->input->post('supplier_id') ? $this->input->post('supplier_id') : 0;
 			$entrydata['Entry']['department_id'] = $this->input->post('department_id') ? $this->input->post('department_id') : 0;
 			$entrydata['Entry']['employee_id'] = $this->input->post('employee_id') ? $this->input->post('employee_id') : 0;
-
+			$entrydata['Entry']['transaction_type'] = 'journal';
 
 			/* insert entry data array to entries table - db */
 			$add  = $this->db->insert('sma_accounts_entries', $entrydata['Entry']);
@@ -588,6 +588,7 @@ class Entries extends MY_Controller
 
 				// set entry number as per prefix, suffix and zero padding for that entry type for logging
 				$entryNumber = $this->functionscore->toEntryNumber($entrydata['Entry']['number'], $entrytype['id']);
+
 
 				// insert log if logging is enabled
 				//$this->settings_model->add_log(sprintf(lang('entries_cntrler_add_log'),$entrytype['name'], $entryNumber), 1);

@@ -62,6 +62,7 @@
                                 <th><?= lang('hsn_code'); ?></th>
                             <?php
                     } ?>
+                            <th style="text-align:center; vertical-align:middle;"><?= lang('Avz Code'); ?></th>
                             <th style="text-align:center; vertical-align:middle;"><?= lang('batch_no'); ?></th>
                             <th style="text-align:center; vertical-align:middle;"><?= lang('Expiry'); ?></th>
                             <th style="text-align:center; vertical-align:middle;"><?= lang('quantity'); ?></th>
@@ -87,6 +88,7 @@
                             <td style="width: 80px; text-align:center; vertical-align:middle;"><?= $row->hsn_code; ?></td>
                             <?php
                         } ?>
+                            <td style="text-align:center; width:80px; "><?= $row->avz_item_code; ?></td>
                             <td style="text-align:center; width:80px; "><?= $row->batchno; ?></td>
                             <td style="text-align:center; width:80px; "><?= $row->expiry; ?></td>
                             <td style="text-align:center; width:80px; "><?= $this->sma->formatQuantity($row->unit_quantity); ?></td>

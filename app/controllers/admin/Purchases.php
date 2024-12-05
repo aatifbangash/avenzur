@@ -284,6 +284,7 @@ class Purchases extends MY_Controller
             $grand_total_vat = $this->input->post('grand_total_vat');
             $grand_total_sale = $this->input->post('grand_total_sale');
             $grand_total = $this->input->post('grand_total');
+
             $data = [
                 'reference_no' => $reference,
                 'date' => $date,
@@ -310,6 +311,22 @@ class Purchases extends MY_Controller
                 'due_date' => $due_date,
                 'sequence_code' => $this->sequenceCode->generate('PR', 5)
             ];
+
+            if($supplier_details->balance > 0 && $status == 'received'){
+                if($supplier_details->balance >= $grand_total){
+                    $paid = $grand_total;
+                    $new_balance = $supplier_details->balance - $grand_total;
+                    $payment_status = 'paid';
+                }else{
+                    $paid = $grand_total - $supplier_details->balance;
+                    $new_balance = 0;
+                    $payment_status = 'partial';
+                }
+
+                $data['paid'] = $paid;
+                $data['payment_status'] = $payment_status;
+            }
+
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;
                 $data['sgst'] = $total_sgst;
@@ -324,6 +341,10 @@ class Purchases extends MY_Controller
         if ($this->form_validation->run() == true && $purchase_id = $this->purchases_model->addPurchase($data, $products, $attachments)) {
             if ($status == 'received') {
                 $this->convert_purchse_invoice($purchase_id);
+
+                if($supplier_details->balance > 0){
+                    $this->purchases_model->update_balance($supplier_details->id, $new_balance);
+                }
             }
             //   echo "<pre>";
             // print_r($this->input->post());exit;
@@ -1062,6 +1083,22 @@ class Purchases extends MY_Controller
 
 
             ];
+
+            if($supplier_details->balance > 0 && $status == 'received'){
+                if($supplier_details->balance >= $grand_total){
+                    $paid = $grand_total;
+                    $new_balance = $supplier_details->balance - $grand_total;
+                    $payment_status = 'paid';
+                }else{
+                    $paid = $grand_total - $supplier_details->balance;
+                    $new_balance = 0;
+                    $payment_status = 'partial';
+                }
+
+                $data['paid'] = $paid;
+                $data['payment_status'] = $payment_status;
+            }
+
             if ($date) {
                 $data['date'] = $date;
             }
@@ -1086,6 +1123,10 @@ class Purchases extends MY_Controller
         if ($this->form_validation->run() == true && $this->purchases_model->updatePurchase($id, $data, $products, $attachments)) {
             if ($status == 'received') {
                 $this->convert_purchse_invoice($id);
+
+                if($supplier_details->balance > 0){
+                    $this->purchases_model->update_balance($supplier_details->id, $new_balance);
+                }
             }
 
             $this->session->set_userdata('remove_pols', 1);

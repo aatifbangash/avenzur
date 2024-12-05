@@ -101,15 +101,15 @@
                                 <th>SR</th>
                                 <th><?= lang('Trx Type'); ?></th>
                                 <th><?= lang('Branch'); ?></th>
-                                <th><?= lang('INV. NO'); ?></th>
+                                <!-- <th><?= lang('INV. NO'); ?></th> -->
                                 <th><?= lang('INV DATE.'); ?></th>
 
                                 <th><?= lang('TOTAL INV.')//lang('Total Before Discount.'); ?></th>
                                 <th><?= lang('T.DIS')//lang('Total Discount.'); ?></th>
                                 <th><?= lang('T.AFTER DIS')//lang('Total After Discount.'); ?></th>
 
-                                <th><?= lang('15% VAT VALUE')//lang('Total Items with VAT.'); ?></th>
-                                <th><?= lang('0% VAT VALUE')//lang('Total Items Zero Vat.'); ?></th>
+                                <!-- <th><?= lang('15% VAT VALUE')//lang('Total Items with VAT.'); ?></th>
+                                <th><?= lang('0% VAT VALUE')//lang('Total Items Zero Vat.'); ?></th> -->
 
                                 <!-- <th><?= lang('Total Purchases Value'); ?></th> -->
                                 <th><?= lang('VAT Amount')//lang('VAT on Purchases'); ?></th>
@@ -148,7 +148,7 @@
                                     // echo "<pre>";
                                     // print_r($vat_purchase);
                                     foreach ($vat_purchase as $data){
-                                        
+                                            //echo "<pre>";print_r($data);
                                         $rowClass = '';
                                         $sign = "";
                                         
@@ -169,8 +169,12 @@
                                         $totalTotalAfterDiscount += $sign.$data->grand_total;
 
 
-                                        $totalItemWithVAT += $data->total_item_with_vat;
+                                        $totalItemWithVAT += $data->total_invoice;
                                         $totalItemWithOutVAT += $data->total_item_without_tax;
+
+                                        $grandTotalAfterDiscount += $data->total_after_discount;
+                                        $grandTotal += $data->grand_total;
+                                    
 
                                         
 
@@ -179,15 +183,15 @@
                                                 <td><?= $data->trans_ID; ?></td>
                                                 <td><?=$data->trans_type?></td>
                                                 <td><?= $data->warehouse; ?></td>
-                                                <td><?= $data->reference_no; ?></td>
+                                                <!-- <td><?= $data->reference_no; ?></td> -->
                                                 <td><?= $data->trans_date; ?></td>
                                                 
-                                                <td><?= $sign.$this->sma->formatMoney($data->grand_total+$data->total_discount,'none'); ?></td>
-                                                <td><?= $sign.$this->sma->formatMoney($data->total_discount,'none'); ?></td>
-                                                <td><?= $sign.$this->sma->formatMoney($data->grand_total,'none'); ?></td>
+                                                <td><?= $sign.$data->total_invoice;//$this->sma->formatMoney($data->grand_total+$data->total_discount,'none'); ?></td>
+                                                <td><?= $sign.$data->total_discount;//$this->sma->formatMoney($data->total_discount,'none'); ?></td>
+                                                <td><?= $sign.$data->total_after_discount;//$this->sma->formatMoney($data->grand_total,'none'); ?></td>
 
-                                                <td><?= $sign.$this->sma->formatMoney($data->total_item_with_vat,'none'); ?></td>
-                                                <td><?= $sign.$this->sma->formatMoney($data->total_item_without_tax,'none'); ?></td>
+                                                <!-- <td><?= $sign.$data->total_tax//$this->sma->formatMoney($data->total_item_with_vat,'none'); ?></td>
+                                                <td><?= $sign.$this->sma->formatMoney($data->total_item_without_tax,'none'); ?></td> -->
 
 
                                                 <!-- <td><?= $sign.$this->sma->formatMoney($data->grand_total - $data->total_tax,'none'); ?></td> -->
@@ -214,21 +218,20 @@
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
-                                    <th>&nbsp;</th>
-
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalBeforeDiscount,'none')?></th>
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalDiscount,'none')?></th>
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalAfterDiscount,'none')?></th>
-
+                                   
 
                                     <th class="text-center"><?=$this->sma->formatMoney($totalItemWithVAT,'none')?></th>
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalItemWithOutVAT,'none')?></th>
+                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalDiscount,'none')?></th>
+                                    <th class="text-center"><?=$this->sma->formatMoney($grandTotalAfterDiscount,'none')?></th>
+<!-- 
+                                    <th class="text-center"><?=$this->sma->formatMoney($totalItemWithVAT,'none')?></th>
+                                    <th class="text-center"><?=$this->sma->formatMoney($totalItemWithOutVAT,'none')?></th> -->
 
                                     <!-- <th class="text-center"><?= $this->sma->formatMoney($totalWithoutTax,'none'); ?></th> -->
                                     <th class="text-center"><?= $this->sma->formatMoney($totalTax,'none'); ?></th>
-                                    <th class="text-center"><?= $this->sma->formatMoney($totalWithTax,'none'); ?></th>
+                                    <th class="text-center"><?= $this->sma->formatMoney($grandTotal,'none'); ?></th>
 
-
+                                    <th>&nbsp;</th>
 
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>

@@ -159,14 +159,14 @@
                                 $category = $row->category_id;
                                 echo '<tr><td colspan="100%" class="no-border"><strong>' . $row->category_name . '</strong></td></tr>';
                             }
-                            echo '<tr><td colspan="2" class="no-border">#' . $r . ': &nbsp;&nbsp;' . product_name($row->product_name, ($printer ? $printer->char_per_line : null)) . ($row->variant ? ' (' . $row->variant . ')' : '') , ($row->serial_no ? '<br>' . $row->serial_no : '') . '<span class="pull-right">' . ($row->tax_code ? '*' . $row->tax_code : '') . '</span></td></tr>';
+                            echo '<tr><td colspan="2" class="no-border">#' . $r . ': &nbsp;&nbsp;' . product_name($row->product_name, ($printer ? $printer->char_per_line : null)) . '</td></tr>';
                             if (!empty($row->second_name)) {
                                 echo '<tr><td colspan="2" class="no-border">' . $row->second_name . '</td></tr>';
                             }
                             if (!empty($row->comment)) {
                                 echo '<tr><td colspan="2" class="no-border">' . $row->comment . '</td></tr>';
                             }
-                            echo '<tr><td class="no-border border-bottom">' . $this->sma->formatQuantity($row->unit_quantity) . ($row->product_unit_code ? $row->product_unit_code : '') . ' x ' . ($row->item_discount != 0 ? '(' . $this->sma->formatMoney($row->unit_price + ($row->item_discount / $row->unit_quantity)) . ' - ' . $this->sma->formatMoney($row->item_discount / $row->unit_quantity) . ')' : $this->sma->formatMoney($row->unit_price)) . ($row->item_tax != 0 ? ' [' . lang('tax') . ' <small>(' . ($Settings->indian_gst ? $row->tax : $row->tax_code) . ')</small> ' . $this->sma->formatMoney($row->item_tax) . ($row->hsn_code ? ' (' . lang($row->product_type == 'service' ? 'sac_code' : 'hsn_code') . ': ' . $row->hsn_code . ')' : '') . ']' : '') . '</td><td class="no-border border-bottom text-right">' . $this->sma->formatMoney($row->subtotal) . '</td></tr>';
+                            echo '<tr><td class="no-border border-bottom">' . $this->sma->formatQuantity($row->unit_quantity).'</td><td class="no-border border-bottom text-right">' . $this->sma->formatMoney($row->subtotal) . '</td></tr>';
 
                             $r++;
                         }
@@ -194,14 +194,16 @@
                     <tfoot>
                         <tr>
                             <th><?=lang('total');?></th>
-                            <th class="text-right"><?=$this->sma->formatMoney($return_sale ? (($inv->total + $inv->product_tax) + ($return_sale->total + $return_sale->product_tax)) : ($inv->total + $inv->product_tax));?></th>
+                            <th class="text-right"><?=$this->sma->formatMoney($return_sale ? (($inv->total) + ($return_sale->total)) : ($inv->total ));?></th>
                         </tr>
                         <?php
-                        if ($inv->order_tax != 0) {
-                            echo '<tr><th>' . lang('tax') . '</th><th class="text-right">' . $this->sma->formatMoney($return_sale ? ($inv->order_tax + $return_sale->order_tax) : $inv->order_tax) . '</th></tr>';
-                        }
+                        
                         if ($inv->order_discount != 0) {
-                            echo '<tr><th>' . lang('order_discount') . '</th><th class="text-right">' . $this->sma->formatMoney($return_sale ? ($inv->order_discount + $return_sale->order_discount) : $inv->order_discount) . '</th></tr>';
+                            echo '<tr><th>' . lang('order_discount') . '</th><th class="text-right">' . $this->sma->formatMoney($return_sale ? ($inv->total_discount) : $inv->total_discount) . '</th></tr>';
+                        }
+
+                        if ($inv->total_tax != 0) {
+                            echo '<tr><th>' . lang('tax') . '</th><th class="text-right">' . $this->sma->formatMoney($return_sale ? ($inv->total_tax ) : $inv->total_tax) . '</th></tr>';
                         }
 
                         if ($inv->shipping != 0) {
@@ -329,7 +331,7 @@
                 }
                 ?>
 
-                <?= $Settings->invoice_view > 0 ? $this->gst->summary($rows, $return_rows, ($return_sale ? $inv->product_tax + $return_sale->product_tax : $inv->product_tax)) : ''; ?>
+                <?php //$Settings->invoice_view > 0 ? $this->gst->summary($rows, $return_rows, ($return_sale ? $inv->total_tax + $return_sale->total_tax : $inv->total_tax)) : ''; ?>
 
                 <?= $customer->id != 1 && $customer->award_points != 0 && $Settings->each_spent > 0 ? '<p class="text-center">' . lang('this_sale') . ': ' . floor(($inv->grand_total / $Settings->each_spent) * $Settings->ca_point)
                 . '<br>' . lang('total') . ' ' . lang('award_points') . ': ' . $customer->award_points . '</p>' : ''; ?>

@@ -10,7 +10,7 @@
             var rounding = parseFloat(b[1]);
             var paid = parseFloat(b[2]);
             if (number == 'number') {
-                return formatDecimals(total+rounding-paid);
+                return formatDecimal(total+rounding-paid);
             }
             return currencyFormat(total+rounding-paid);
         }
