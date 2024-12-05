@@ -116,11 +116,53 @@
                                     echo '<th>' . lang('entries_views_views_th_ledger') . '</th>';
                                     echo '<th>' . lang('entries_views_views_th_dr_amount') . ' (' . $this->mAccountSettings->currency_symbol . ')' . '</th>';
                                     echo '<th>' . lang('entries_views_views_th_cr_amount') . ' (' . $this->mAccountSettings->currency_symbol . ')' . '</th>';
-                                    echo '<th>' . lang('entries_views_views_th_narration') . '</th>';
-                                     echo '<th>' . (lang('Customer', 'customer_id')) . '</th>';
-                                    echo '<th>' . (lang('Supplier', 'supplier_id')) . '</th>';
-                                    echo '<th>' . (lang('Departments', 'department_id')) . '</th>';
-                                    echo '<th>' . (lang('Employees', 'employee_id')) . '</th>';
+                                    echo '<th>' . lang('entries_views_views_th_narration') . '</th>';    
+                                    $customer_exists = false;
+                                    $supplier_exists = false;
+                                    $department_exists = false;
+                                    $employee_exists = false;
+                                    foreach ($curEntryitems as $row => $entryitem) {
+                                        if($entryitem['customer_id']>0){
+                                            $customer_exists = true;
+                                            break;
+                                        }
+                                    }
+                                    foreach ($curEntryitems as $row => $entryitem) {
+                                        if($entryitem['supplier_id'] > 0){
+                                            $supplier_exists = true;
+                                            break;
+                                        }
+                                    }
+                                    foreach ($curEntryitems as $row => $entryitem) {
+                                        if($entryitem['department_id']  > 0){
+                                            $department_exists = true;
+                                            break;
+                                        }
+                                    }
+                                    foreach ($curEntryitems as $row => $entryitem) {
+                                        if($entryitem['employee_id'] >  0){
+                                            $employee_exists = true;
+                                            break;
+                                        }
+                                    }
+                                    if($customer_exists)   {
+                                        echo '<th>' . (lang('Customer', 'customer_id')) . '</th>';
+
+                                    }         
+                                     if($supplier_exists)   {
+                                       echo '<th>' . (lang('Supplier', 'supplier_id')) . '</th>';
+
+                                    }  
+                                     if($department_exists)   {
+                                       echo '<th>' . (lang('Departments', 'department_id')) . '</th>';
+
+                                    }  
+                                     if($employee_exists)   {
+                                       echo '<th>' . (lang('Employees', 'employee_id')) . '</th>';
+                                    }                        
+                                    
+                                    
+                                    
                                     echo '</tr>';
 
                                     /* Intial rows */
@@ -165,34 +207,43 @@
                                         echo '<td>';
                                         echo $entryitem['narration'];
                                         echo '</td>';
-                                        echo '<td>';
-                                        if($entryitem['customer_id']){
-                                            echo  $entryitem['customer_name'];
-                                        }else{
-                                            echo '';
+                                        if($customer_exists){
+                                            echo '<td>';
+                                            if($entryitem['customer_id']){
+                                                echo  $entryitem['customer_name'];
+                                            }else{
+                                                echo '';
+                                            }
+                                            echo '</td>';
                                         }
-                                        echo '</td>';
-                                        echo '<td>';
-                                        if($entryitem['supplier_id']){
-                                            echo  $entryitem['supplier_name'];
-                                        }else{
-                                            echo '';
+                                        if($supplier_exists){
+                                            echo '<td>';
+                                            if($entryitem['supplier_id']){
+                                                echo  $entryitem['supplier_name'];
+                                            }else{
+                                                echo '';
+                                            }
+                                            echo '</td>';
                                         }
-                                        echo '</td>';
-                                        echo '<td>';
-                                        if($entryitem['department_id']){
-                                            echo  $entryitem['department_name'];
-                                        }else{
-                                            echo '';
+                                        if($department_exists){
+                                            echo '<td>';
+                                            if($entryitem['department_id']){
+                                                echo  $entryitem['department_name'];
+                                            }else{
+                                                echo '';
+                                            }
+                                            echo '</td>';
                                         }
-                                        echo '</td>';
-                                        echo '<td>';
-                                        if($entryitem['employee_id']){
-                                            echo  $entryitem['employee_name'];
-                                        }else{
-                                            echo '';
+                                        if($employee_exists){
+                                            echo '<td>';
+                                            if($entryitem['employee_id']){
+                                                echo  $entryitem['employee_name'];
+                                            }else{
+                                                echo '';
+                                            }
+                                            echo '</td>';
                                         }
-                                        echo '</td>';
+                                        
                                         echo '</tr>';
                                     }
 
