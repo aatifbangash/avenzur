@@ -136,7 +136,7 @@ class Customscript extends MY_Controller
             $products = array();
            echo "<pre>";
            print_r($purchaseData);
-            if (count($purchaseData) > 0 ) {
+            if ($purchaseData ) {
                 foreach ($purchaseData as $key => $row) {
                     $item_code = $row['item_code'];
                     $sql = "SELECT * FROM sma_products WHERE item_code = ?";
