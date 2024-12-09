@@ -138,13 +138,13 @@ class Customscript extends MY_Controller
            //print_r($purchaseData);
             if ($purchaseData ) {
                 foreach ($purchaseData as $key => $row) {
-                    print_r($row);
+                    //print_r($row);
                     $item_code = $row['item_code'];
-                    echo $sql = "SELECT * FROM sma_products WHERE item_code = ?";
+                     $sql = "SELECT * FROM sma_products WHERE item_code = ?";
                     $query = $this->db->query($sql, [$item_code]);
 
                     $product_data = $query->row_array();
-                    echo $product_id = isset($product_data['id']) ? $product_data['id'] : null;
+                     $product_id = isset($product_data['id']) ? $product_data['id'] : null;
                     
 
                     // $postData['product_id'] = $product_id;
