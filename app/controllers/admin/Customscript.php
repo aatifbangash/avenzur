@@ -1,6 +1,6 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-error_reporting(-1);
+error_reporting(E_ERROR | E_PARSE);
 ini_set('display_errors', 1);
 class Customscript extends MY_Controller
 {
@@ -14,7 +14,11 @@ class Customscript extends MY_Controller
     }
     public function index()
     {
-        //echo "yes";exit;
+        $count = $this->input->get('count');
+        if($count == '') {
+            echo "Pass count number" ;exit;
+        }
+        
         $file = FCPATH . 'nehwandupdated9.csv';
         if (($handle = fopen($file, "r")) !== false) {
             $dataToSend = [];
@@ -33,16 +37,21 @@ class Customscript extends MY_Controller
 
             ];
             $rowCount = 1;
+            $addedRowCount = 1;
+            $startCount = ($count * 500);
             $purchaseData = array();
             while (($row = fgetcsv($handle)) !== false) {
                 $rowCount++;
 
+                if ($rowCount <= $startCount) {
+                    continue;
+                }
                 // echo "<pre>";
                 // print_r($row);exit;
 
                 // Stop reading after 101 rows
-                if ($rowCount <= 501) {
-
+                if ($rowCount > $startCount && $addedRowCount <= 500 ) {
+                    $addedRowCount++ ;
 
                     $item_code = $row[0];
                     $item_name = $row[1];
@@ -107,9 +116,7 @@ class Customscript extends MY_Controller
 
                     );
 
-                } else {
-                    break;
-                }
+                } 
                 // $dataToSend[] = array_combine($header, $row); // Map header to each row
             }
             fclose($handle);
@@ -132,7 +139,8 @@ class Customscript extends MY_Controller
             $total_item = 0;
             $total_vat = 0;
             $products = array();
-            if (count($purchaseData) > 0 || empty($purchaseData)) {
+           
+            if (count($purchaseData) > 0 ) {
                 foreach ($purchaseData as $key => $row) {
                     $item_code = $row['item_code'];
                     $sql = "SELECT * FROM sma_products WHERE item_code = ?";
