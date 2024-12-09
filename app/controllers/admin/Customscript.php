@@ -140,12 +140,14 @@ class Customscript extends MY_Controller
                 foreach ($purchaseData as $key => $row) {
                     //print_r($row);
                     $item_code = $row['item_code'];
-                     $sql = "SELECT * FROM sma_products WHERE item_code = ?";
+                    $sql = "SELECT * FROM sma_products WHERE item_code = ?";
                     $query = $this->db->query($sql, [$item_code]);
-
+                     //$this->db->last_query();
                     $product_data = $query->row_array();
                      $product_id = isset($product_data['id']) ? $product_data['id'] : null;
-                    
+                    if($product_id == null) {
+                        echo 'nullproduct'.$item_code;
+                    }
 
                     // $postData['product_id'] = $product_id;
                     // $postData['product'] = $product_id;
@@ -184,6 +186,7 @@ class Customscript extends MY_Controller
                     // $postData['add_pruchase'] = 'submit';
 
                     $expiry_date = date('Y-m-d', strtotime($row['item_expiry_date']));
+                   
                     $products[] = [
                         'product_id' => $product_id,
                         'product_code' => $item_code,
@@ -221,7 +224,7 @@ class Customscript extends MY_Controller
                         'main_net' => $row['item_total_after_vat'],
                         'avz_item_code' => $row['ascon_code']
                     ];
-
+                    
 
                     $grand_total_purchase += floatval($row['item_total_cost']); //floatval($row['item_quantity']) * floatval($row['item_purchase_price']) ;
                     $grand_total_net_purchase += floatval($row['item_total_cost']);
