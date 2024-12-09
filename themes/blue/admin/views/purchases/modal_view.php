@@ -499,7 +499,7 @@
 
                     <tr>
                         <td>Total</td>
-                        <td><?php echo $totalAmount; ?></td>
+                        <td><?php echo $inv->total; ?></td>
                     </tr>
                     <tr>
                         <td>T-DISC</td>

@@ -81,6 +81,9 @@ $route['admin/sales/qty_onhold_requests']     = 'admin/sales/qty_onhold_requests
 $route['admin/product_image/remove_image/(:num)'] = 'admin/product_image/remove_image/$1';
 $route['admin/entries/(:num)']   = 'admin/entries/index/$1';
 
+//custom script
+$route['admin/customscript/(:num)']   = 'admin/customscript/index/$1';
+
 //courier call back urls
 $route['courier/stc/callback'] = 'shop/courier/stc_callback';
 $route['api/update_ngrok_url'] = 'api/v1/ngrok/index';

@@ -368,7 +368,7 @@ class Transfers_model extends CI_Model
 
     public function getProductByCode($code)
     {
-        $q = $this->db->get_where('products', ['code' => $code], 1);
+        $q = $this->db->get_where('products', ['item_code' => $code], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
