@@ -19,7 +19,7 @@ class Customscript extends MY_Controller
             echo "Pass count number" ;exit;
         }
         
-        $file = FCPATH . 'nehwandupdated9.csv';
+        $file = FCPATH . 'files_nehawand/nahwand'.$count.'.csv';
         if (($handle = fopen($file, "r")) !== false) {
             $dataToSend = [];
             $header = fgetcsv($handle); // Read the first row as the header
@@ -38,19 +38,14 @@ class Customscript extends MY_Controller
             ];
             $rowCount = 1;
             $addedRowCount = 1;
-            $startCount = ($count * 500);
+            $batchSize = 501;
+            $startCount = ($count * $batchSize) + ($count > 0 ? 1 : 0);
+            
             $purchaseData = array();
             while (($row = fgetcsv($handle)) !== false) {
                 $rowCount++;
-
-                if ($rowCount <= $startCount) {
-                    continue;
-                }
-                // echo "<pre>";
-                // print_r($row);exit;
-
-                // Stop reading after 101 rows
-                if ($rowCount > $startCount && $addedRowCount <= 500 ) {
+               
+                if ($addedRowCount < $batchSize) {
                     $addedRowCount++ ;
 
                     $item_code = $row[0];
@@ -220,7 +215,8 @@ class Customscript extends MY_Controller
                         'discount2' => '',
                         'second_discount_value' => '',
                         'totalbeforevat' => $row['item_before_vat'],
-                        'main_net' => $row['item_total_after_vat']
+                        'main_net' => $row['item_total_after_vat'],
+                        'avz_item_code' => $row['ascon_code']
                     ];
 
 
