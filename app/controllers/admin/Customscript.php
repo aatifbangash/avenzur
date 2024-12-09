@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-// error_reporting(E_ERROR | E_PARSE);
-// ini_set('display_errors', 1);
+error_reporting(E_ERROR | E_PARSE);
+ini_set('display_errors', 1);
 class Customscript extends MY_Controller
 {
     public function __construct()
@@ -134,7 +134,8 @@ class Customscript extends MY_Controller
             $total_item = 0;
             $total_vat = 0;
             $products = array();
-           
+           echo "<pre>";
+           print_r($purchaseData);
             if (count($purchaseData) > 0 ) {
                 foreach ($purchaseData as $key => $row) {
                     $item_code = $row['item_code'];
@@ -261,7 +262,7 @@ class Customscript extends MY_Controller
 
                 // echo "<pre>";
                 // print_r($data);
-                // print_r($products);
+                 print_r($products);
                 // exit;
 
                 $this->purchases_model->addPurchase($data, $products, $attachments = '');
