@@ -53,17 +53,17 @@ class Customscript extends MY_Controller
                     $item_batch_number = $row[2];
                     $item_ascon_code = $row[3];
                     $item_expiry_date = $row[4];
-                    $item_qty = $row[5];
-                    $item_sale_price = $row[6];
-                    $item_total_sale_price = $row[7];
-                    $item_purchase_price = $row[8];
-                    $item_total_purchase_price = $row[9];
-                    $item_cost_price = $row[10];
-                    $item_total_cost_price = $row[11];
-                    $item_before_vat = $row[11];
-                    $vat_value = $row[12];
-                    $item_total_vat = $row[13];
-                    $item_total_after_vat = $row[14];
+                    $item_qty = floatval($row[5]);
+                    $item_sale_price = floatval($row[6]);
+                    $item_total_sale_price = floatval($row[7]);
+                    $item_purchase_price = floatval($row[8]);
+                    $item_total_purchase_price = floatval($row[9]);
+                    $item_cost_price = floatval($row[10]);
+                    $item_total_cost_price = floatval($row[11]);
+                    $item_before_vat = floatval($row[11]);
+                    $vat_value = floatval($row[12]);
+                    $item_total_vat = floatval($row[13]);
+                    $item_total_after_vat = floatval($row[14]);
 
                     //get category id
                     $first_three_digit = substr($item_code, 0, 3);
@@ -134,8 +134,8 @@ class Customscript extends MY_Controller
             $total_item = 0;
             $total_vat = 0;
             $products = array();
-           echo "<pre>";
-           print_r($purchaseData);
+           //echo "<pre>";
+           //print_r($purchaseData);
             if ($purchaseData ) {
                 foreach ($purchaseData as $key => $row) {
                     print_r($row);
@@ -225,9 +225,9 @@ class Customscript extends MY_Controller
 
                     $grand_total_purchase += floatval($row['item_total_cost']); //floatval($row['item_quantity']) * floatval($row['item_purchase_price']) ;
                     $grand_total_net_purchase += floatval($row['item_total_cost']);
-                    ;//floatval($row['item_quantity']) * floatval($row['item_cost_price']) ;
+                    //floatval($row['item_quantity']) * floatval($row['item_cost_price']) ;
                     $grand_total_sale += floatval($row['item_total_sale_price']);//floatval($row['item_quantity']) * floatval($row['item_sale_price']) ; 
-                    $grand_total += $row['item_total_after_vat'];//floatval($row['item_quantity']) * floatval($row['item_cost_price']) ; 
+                    $grand_total += floatval($row['item_total_after_vat']);//floatval($row['item_quantity']) * floatval($row['item_cost_price']) ; 
                     $total_item += floatval($row['item_quantity']);
                     $total_vat += floatval($row['item_total_vat']);
 
@@ -264,7 +264,7 @@ class Customscript extends MY_Controller
 
                 // echo "<pre>";
                 // print_r($data);
-                 print_r($products);
+                 //print_r($products);
                 // exit;
 
                 $this->purchases_model->addPurchase($data, $products, $attachments = '');
