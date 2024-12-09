@@ -2075,6 +2075,7 @@ class Purchases extends MY_Controller
         $product_tax = 0;
         $gst_data = [];
         $total_cgst = $total_sgst = $total_igst = 0;
+        $grand_total = 0;
 
 
         if ($purchase_detail->return_id > 0) {
@@ -2127,10 +2128,10 @@ class Purchases extends MY_Controller
 
                 $warehouse_quantity = $this->transfers_model->getWarehouseProduct($from_warehouse_details->id, $product_details->id, $item_option, $item_batchno);
 
-                if ($warehouse_quantity->quantity < $item_quantity) {
+                /*if ($warehouse_quantity->quantity < $item_quantity) {
                     $this->session->set_flashdata('error', lang('no_match_found') . ' (' . lang('product_name') . ' <strong>' . $product_details->name . '</strong> ' . lang('product_code') . ' <strong>' . $product_details->code . '</strong>)');
                     admin_redirect('purchases');
-                }
+                }*/
 
                 $pr_item_tax = $item_tax = 0;
                 $tax = '';
@@ -2138,9 +2139,15 @@ class Purchases extends MY_Controller
 
                 if (isset($item_tax_rate) && $item_tax_rate != 0) {
                     $tax_details = $this->site->getTaxRateByID($item_tax_rate);
-                    $ctax = $this->site->calculateTax($product_details, $tax_details, $purchase_inovice[$i]->sale_price);
-                    $item_tax = $ctax['amount'];
-                    $tax = $ctax['tax'];
+                    $tax_rate = $tax_details->rate;
+                    //$ctax = $this->site->calculateTax($product_details, $tax_details, $purchase_inovice[$i]->sale_price);
+                    //$item_tax = $ctax['amount'];
+                    //$tax = $ctax['tax'];
+
+                    //echo '<pre>';print_r($tax_details);exit;
+
+                    $item_tax = (($purchase_inovice[$i]->sale_price) * $tax_rate / 100); 
+                    $tax = $tax_rate;
 
                     if (!empty($product_details) && $product_details->tax_method != 1) {
                         $item_net_cost = $purchase_inovice[$i]->sale_price - $item_tax;
@@ -2187,6 +2194,7 @@ class Purchases extends MY_Controller
 
                 $products[] = ($product + $gst_data);
                 $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
+                $grand_total += $subtotal;
             }
 
         }
@@ -2198,7 +2206,7 @@ class Purchases extends MY_Controller
             krsort($products);
         }
 
-        $grand_total = $this->sma->formatDecimal(($total + $shipping + $product_tax), 4);
+        //$grand_total = $this->sma->formatDecimal(($total), 4);
         $data = [
             'transfer_no' => $transfer_no,
             'date' => $date,

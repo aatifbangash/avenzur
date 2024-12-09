@@ -76,7 +76,9 @@
 
                     <tbody>
                         <?php $r = 1;
+                        $grand_total_by_row = 0;
                         foreach ($rows as $row): ?>
+                        <?php $grand_total_by_row = $grand_total_by_row + $row->subtotal ?>
                         <tr>
                             <td style="text-align:center; width:25px;"><?= $r; ?></td>
                             <td style="text-align:left;">
@@ -109,7 +111,7 @@
 
                        
                         <tr>
-                            <td colspan="<?= $col + 1; ?>"
+                            <td colspan="<?= $col + 2; ?>"
                                 style="text-align:right; font-weight:bold;"><?= lang('total_amount'); ?>
                                 (<?= $default_currency->code; ?>)
                             </td>
