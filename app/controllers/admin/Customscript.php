@@ -134,8 +134,8 @@ class Customscript extends MY_Controller
             $total_item = 0;
             $total_vat = 0;
             $products = array();
-           echo "<pre>";
-           print_r($purchaseData);
+           //echo "<pre>";
+           //print_r($purchaseData);
             if ($purchaseData ) {
                 foreach ($purchaseData as $key => $row) {
                     print_r($row);
@@ -227,7 +227,7 @@ class Customscript extends MY_Controller
                     $grand_total_net_purchase += floatval($row['item_total_cost']);
                     ;//floatval($row['item_quantity']) * floatval($row['item_cost_price']) ;
                     $grand_total_sale += floatval($row['item_total_sale_price']);//floatval($row['item_quantity']) * floatval($row['item_sale_price']) ; 
-                    $grand_total += $row['item_total_after_vat'];//floatval($row['item_quantity']) * floatval($row['item_cost_price']) ; 
+                    $grand_total += floatval($row['item_total_after_vat']);//floatval($row['item_quantity']) * floatval($row['item_cost_price']) ; 
                     $total_item += floatval($row['item_quantity']);
                     $total_vat += floatval($row['item_total_vat']);
 
@@ -264,7 +264,7 @@ class Customscript extends MY_Controller
 
                 // echo "<pre>";
                 // print_r($data);
-                 print_r($products);
+                 //print_r($products);
                 // exit;
 
                 $this->purchases_model->addPurchase($data, $products, $attachments = '');
