@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-error_reporting(E_ERROR | E_PARSE);
-ini_set('display_errors', 1);
+// error_reporting(E_ERROR | E_PARSE);
+// ini_set('display_errors', 1);
 class Customscript extends MY_Controller
 {
     public function __construct()
