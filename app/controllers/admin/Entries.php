@@ -1529,8 +1529,11 @@ class Entries extends MY_Controller
 		// $ledgers->toList($ledgers, -1); // create a list of ledgers array
 		// $data['ledger_options'] = $ledgers->ledgerList; // pass ledger list to view
 		// $this->load->view('entries/addrow', $data); // load view
-
-		$this->load->view($this->theme .'accounts/entries_addrow'); // load view
+		$items['customers'] = $this->site->getAllCompanies('customer');
+		$items['suppliers'] = $this->site->getAllCompanies('supplier');
+		$items['departments'] = $this->site->getAllDepartments();
+		$items['employees'] = $this->site->getAllEmployees();
+		$this->load->view($this->theme .'accounts/entries_addrow', ['items'=> $items]); // load view
 	}
 
 	/**

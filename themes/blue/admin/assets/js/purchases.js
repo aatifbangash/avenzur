@@ -737,6 +737,21 @@ $(document).ready(function () {
 			localStorage.setItem("poitems", JSON.stringify(poitems));
 			loadItems();
 		});
+		
+		$(document)
+		.on("focus", ".ravzcode", function () {
+			old_row_batchno = $(this).val();
+			currTabIndex = $(this).prop("tabindex");
+		})
+		.on("change", ".ravzcode", function () {
+			var row = $(this).closest("tr");
+			var new_batchno = $(this).val(),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.avz_item_code = new_batchno;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+		
 	/* --------------------------
      * Edit Row Discount2 Method rdis2 rbatchno
      -------------------------- */
@@ -1080,6 +1095,7 @@ function loadItems() {
 				item_bqty = item.row.quantity_balance,
 				item_expiry = item.row.expiry,
 				item_batchno = item.row.batchno,
+				avz_item_code = item.row.avz_item_code,
 				item_serialno = item.row.serial_number,
 				item_tax_method = item.row.tax_method,
 				item_ds = item.row.discount,
@@ -1302,6 +1318,17 @@ function loadItems() {
 			//     '">' +
 			//     formatMoney(item_sale_price) +
 			//     '</span></td>';
+
+			tr_html +=
+				'<td><input class="form-control ravzcode text-center" name="avz_item_code[]" type="text" value="' +
+				avz_item_code +
+				'" data-id="' +
+				row_no +
+				'" data-item="' +
+				item_id +
+				'" id="savz_' +
+				row_no +
+				'"></td>';
 
 			tr_html +=
 				'<td><input class="form-control scost text-center" name="sale_price[]" type="text" value="' +
@@ -1528,7 +1555,7 @@ function loadItems() {
 			$(".row_" + trRowClas).css("color", "green");
 		}
 
-		var col = 9;
+		var col = 10;
 		if (site.settings.product_expiry == 1) {
 			col++;
 		}

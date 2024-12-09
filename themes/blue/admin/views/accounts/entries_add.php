@@ -7,11 +7,11 @@
         border-radius: 5px;
         background-color: #f9f9f9;
         color: #333;
-        appearance: none; /* Removes default styling */
+        /* appearance: none; Removes default styling */
         -webkit-appearance: none;
         -moz-appearance: none;
     }
-
+    
     /* Optional: Add custom dropdown arrow */
     .dropdown-class {
         background-image: url('arrow-down.svg');
@@ -973,11 +973,11 @@
                                  echo '<td><div class="form-group-entryitem">';
                                
                                 $cus[] = "Select Customer";
-                                $cus[''] = '';
+                               
                                 foreach ($customers as $customer) {
                                     $cus[$customer->id] = $customer->company. ' ('. $customer->name.')';
                                 }
-                                echo form_dropdown('Entryitem[' . $row . '][customer_id]', $cus, ($_POST['Entryitem['.$row.'][customer_id]'  ] ?? $_POST['Entryitem['.$row.'][customer_id]']), 'id="customer_id" class="dropdown-class" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" ');
+                                echo form_dropdown('Entryitem[' . $row . '][customer_id]', $cus, ($_POST['Entryitem['.$row.'][customer_id]'  ] ?? $_POST['Entryitem['.$row.'][customer_id]']), 'id="customer_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" ');
                                 echo '</div></td>';
                                 /**Add Supplier Here */
                                  echo '<td><div class="form-group-entryitem">';
@@ -1007,7 +1007,7 @@
                                         $empData[$emp->id] = $emp->name;
                                     }
                                     echo form_dropdown('Entryitem[' . $row . '][employee_id]', $empData, ($_POST['Entryitem['.$row.'][employee_id]'] ?? $_POST['Entryitem['.$row.'][employee_id]']), 'id="employee_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('Employee') . '" "');
-                                echo '</div></td>';
+                                    echo '</div></td>';
                                 echo '<td>';                       
                                 echo '<span class="deleterow fa fa-trash" escape="false"></span>';
                                 echo '</td>';

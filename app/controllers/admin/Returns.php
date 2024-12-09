@@ -591,9 +591,24 @@ class Returns extends MY_Controller
         }
 
         $result = array_values($result);
+        $net_amount = 0;
         foreach($result as $return){
+            $net_amount += $return['amount'];
             $this->sales_model->update_sale_paid_amount($return['sale_id'], $return['amount']);
         }
+
+        $payment = [
+            'date'          => date('Y-m-d h:i:s'),
+            'sale_id'   => $sale_id,
+            'reference_no'  => '',
+            'amount'        => $net_amount,
+            'note'          => 'Return By Customer',
+            'created_by'    => $this->session->userdata('user_id'),
+            'type'          => 'sent',
+            'payment_id'    => NULL
+        ];
+
+        $this->sales_model->addPayment($payment);
     }
 
     public function convert_return_invoice($rid){

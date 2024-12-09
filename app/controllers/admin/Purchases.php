@@ -109,6 +109,7 @@ class Purchases extends MY_Controller
             for ($r = 0; $r < $i; $r++) {
                 $product_id = $_POST['product_id'][$r];
                 $item_code = $_POST['product'][$r];
+                $avz_item_code = isset($_POST['avz_item_code'][$r]) && !empty($_POST['avz_item_code'][$r]) ? $_POST['avz_item_code'][$r] : '';
                 $item_net_cost = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $unit_cost = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
                 $item_sale_price = $this->sma->formatDecimal($_POST['sale_price'][$r]);
@@ -245,6 +246,10 @@ class Purchases extends MY_Controller
                         'totalbeforevat' => $_POST['item_net_purchase'][$r],
                         'main_net' => $main_net
                     ];
+
+                    if($avz_item_code){
+                        $product['avz_item_code'] = $avz_item_code;
+                    }
 
                     if ($unit->id != $product_details->unit) {
                         $product['base_unit_cost'] = $this->site->convertToBase($unit, $real_unit_cost);
@@ -852,6 +857,7 @@ class Purchases extends MY_Controller
             for ($r = 0; $r < $i; $r++) {
                 $product_id = $_POST['product_id'][$r];
                 $item_code = $_POST['product'][$r];
+                $avz_item_code = isset($_POST['avz_item_code'][$r]) && !empty($_POST['avz_item_code'][$r]) ? $_POST['avz_item_code'][$r] : '';
                 $item_net_cost = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $unit_cost = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
                 $real_unit_cost = $this->sma->formatDecimal($_POST['real_unit_cost'][$r]);
@@ -1007,6 +1013,10 @@ class Purchases extends MY_Controller
                         'main_net' => $main_net,
                         'warehouse_shelf' => ($warehouse_shelf ? $warehouse_shelf : '')
                     ];
+
+                    if($avz_item_code){
+                        $item['avz_item_code'] = $avz_item_code;
+                    }
 
                     if ($unit->id != $product_details->unit) {
                         $item['base_unit_cost'] = $this->site->convertToBase($unit, $real_unit_cost);
@@ -1177,6 +1187,7 @@ class Purchases extends MY_Controller
                 $row->totalbeforevat = $item->totalbeforevat;
                 $row->main_net = $item->main_net;
                 $row->batchno = $item->batchno;
+                $row->avz_item_code = isset($item->avz_item_code) && !empty($item->avz_item_code) ? $item->avz_item_code : '';
                 $row->serial_number = $item->serial_number;
                 $row->get_supplier_discount = $supplier_purchase_discount;
                 $row->three_month_sale = $this->purchases_model->getThreeMonthSale($item->product_id, $start_date, $end_date);
@@ -3159,6 +3170,7 @@ class Purchases extends MY_Controller
                 $row->dis1 = 0;
                 $row->dis2 = 0;
                 $row->batchno = '';
+                $row->avz_item_code = '';
                 $row->serial_number = '';
                 $row->warehouse_shelf = '';
                 //$row->three_month_sale = $this->purchases_model->getThreeMonthSale($row->id,$start_date,$end_date);

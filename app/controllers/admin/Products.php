@@ -3752,6 +3752,7 @@ class Products extends MY_Controller
                         'slug' => $slug,
                         'hide' => isset($value[41]) ? trim($value[41]) : 1,
                         'draft' => isset($value[42]) ? trim($value[42]) : 1,
+                        'item_code' => isset($value[43]) ? trim($value[43]) : NULL
                     ];
 
                     if ($catd = $this->products_model->getCategoryByCode($item['category_code'])) {

@@ -116,7 +116,7 @@ class Purchases_model extends CI_Model
                 
                 $type = $item['quantity'] < 0 ? 'return_to_supplier' : 'purchase';
 
-                if($data['status'] == 'received' && $type == 'purchase'){
+                if($data['status'] == 'received' && $type == 'purchase' && !$item['avz_item_code']){
                     $uuid = $this->sma->generateUUIDv4();
                     $item['avz_item_code'] = $uuid;
                 }
@@ -924,7 +924,7 @@ class Purchases_model extends CI_Model
                 $item['purchase_id'] = $id;
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 
-                if($data['status'] == 'received'){
+                if($data['status'] == 'received' && !$item['avz_item_code']){
                     $uuid = $this->sma->generateUUIDv4();
                     $item['avz_item_code'] = $uuid;
                 }
