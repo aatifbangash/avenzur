@@ -1,6 +1,6 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-error_reporting(E_ERROR | E_PARSE);
+error_reporting(-1);
 ini_set('display_errors', 1);
 class Customscript extends MY_Controller
 {
@@ -138,12 +138,14 @@ class Customscript extends MY_Controller
            print_r($purchaseData);
             if ($purchaseData ) {
                 foreach ($purchaseData as $key => $row) {
+                    print_r($row);
                     $item_code = $row['item_code'];
-                    $sql = "SELECT * FROM sma_products WHERE item_code = ?";
+                    echo $sql = "SELECT * FROM sma_products WHERE item_code = ?";
                     $query = $this->db->query($sql, [$item_code]);
 
                     $product_data = $query->row_array();
-                    $product_id = isset($product_data['id']) ? $product_data['id'] : null;
+                    echo $product_id = isset($product_data['id']) ? $product_data['id'] : null;
+                    
 
                     // $postData['product_id'] = $product_id;
                     // $postData['product'] = $product_id;
