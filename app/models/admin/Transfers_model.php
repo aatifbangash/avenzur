@@ -144,9 +144,6 @@ class Transfers_model extends CI_Model
 
     public function addTransfer($data = [], $items = [], $attachments = [])
     {
-        ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
         $this->db->trans_start();
         $status = $data['status'];
         if ($this->db->insert('transfers', $data)) {
@@ -371,7 +368,7 @@ error_reporting(E_ALL);
 
     public function getProductByCode($code)
     {
-        $q = $this->db->get_where('products', ['item_code' => $code], 1);
+        $q = $this->db->get_where('products', ['code' => $code], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
