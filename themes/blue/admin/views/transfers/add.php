@@ -100,7 +100,8 @@
                                 dataType: "json",
                                 data: {
                                     term: request.term,
-                                    warehouse_id: $("#from_warehouse").val()
+                                    warehouse_id: $("#from_warehouse").val(),
+                                    type: 'transfer'
                                 },
                                 success: function (data) {
                                     $(this).removeClass('ui-autocomplete-loading');
@@ -205,7 +206,8 @@
             dataType: "json",
             data: {
                 item_id: selectedItem.item_id, // Send the unique item code
-                warehouse_id: $("#from_warehouse").val() // Optionally include warehouse ID if needed
+                warehouse_id: $("#from_warehouse").val(),
+                type: 'transfer'
             },
             success: function (data) {
                 $(this).removeClass('ui-autocomplete-loading');
