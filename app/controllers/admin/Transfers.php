@@ -892,7 +892,7 @@ class Transfers extends MY_Controller
 
         if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             // $this->datatables->where('created_by', $this->session->userdata('user_id'));
-            $this->datatables->where('to_warehouse_id', $this->session->userdata('warehouse_id'));
+            $this->datatables->where('from_warehouse_id', $this->session->userdata('warehouse_id'));
         }
         
         $this->datatables->where('type', 'transfer');
