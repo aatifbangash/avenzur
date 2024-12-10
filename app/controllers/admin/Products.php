@@ -5131,22 +5131,27 @@ class Products extends MY_Controller
             $query = $this->db->get();
 
         } else {
-            /*$this->db->select('pi.avz_item_code, pi.product_code, im.net_unit_sale, im.net_unit_cost, im.real_unit_cost, pr.tax_rate, pr.type, pr.unit, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
-            $this->db->from('sma_purchase_items pi');
-            $this->db->join('sma_purchases p', 'p.id = pi.purchase_id', 'left');
-            $this->db->join('sma_inventory_movements im', 'pi.avz_item_code = im.avz_item_code', 'left');
-            $this->db->join('sma_products pr', 'pr.id = pi.product_id', 'left');
-            $this->db->where('pi.avz_item_code', $term);
+            $this->db->select("im.net_unit_sale, 
+                            im.net_unit_cost, 
+                            im.real_unit_cost,
+                            im.product_id,
+                            pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
+                            p.supplier_id, p.supplier,
+                            SUM(IFNULL(im.quantity, 0)) as total_quantity,
+                            pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code", false);
+            $this->db->from('sma_inventory_movements im');
+            $this->db->join('sma_purchases p', 'p.id = im.reference_id AND im.type = "purchase"', 'left');
+            $this->db->join('sma_products pr', 'pr.id = im.product_id', 'left');
             if ($warehouse_id) {
-                $this->db->where('pi.warehouse_id', $warehouse_id);
                 $this->db->where('im.location_id', $warehouse_id);
             }
-            $this->db->group_by(['pi.warehouse_id', 'pi.avz_item_code', 'pi.expiry']);
-            $this->db->having('total_quantity >', 0);
-            $query = $this->db->get();*/
+            $this->db->where('im.avz_item_code', $term);
 
+            $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
+            $this->db->having('total_quantity !=', 0);
+            $query = $this->db->get();
 
-            $this->db->select('
+            /*$this->db->select('
                 pi.avz_item_code, 
                 pi.product_code, 
                 pur.net_unit_sale, 
@@ -5177,7 +5182,7 @@ class Products extends MY_Controller
 
             $this->db->group_by(['pi.warehouse_id', 'pi.avz_item_code', 'pi.expiry']);
             $this->db->having('total_quantity >', 0);
-            $query = $this->db->get();
+            $query = $this->db->get();*/
 
         }
 
@@ -5278,7 +5283,7 @@ class Products extends MY_Controller
             $query = $this->db->get();
 
         } else {
-            $this->db->select('pi.avz_item_code, pi.product_code, im.net_unit_sale, im.net_unit_cost, im.real_unit_cost, pr.tax_rate, pr.type, pr.unit, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
+            /*$this->db->select('pi.avz_item_code, pi.product_code, im.net_unit_sale, im.net_unit_cost, im.real_unit_cost, pr.tax_rate, pr.type, pr.unit, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
             $this->db->from('sma_purchase_items pi');
             $this->db->join('sma_purchases p', 'p.id = pi.purchase_id', 'inner');
             $this->db->join('sma_inventory_movements im', 'pi.avz_item_code = im.avz_item_code', 'inner');
@@ -5290,62 +5295,28 @@ class Products extends MY_Controller
             }
             $this->db->group_by(['pi.warehouse_id', 'pi.avz_item_code', 'pi.expiry']);
             $this->db->having('total_quantity >', 0);
-            $query = $this->db->get();
+            $query = $this->db->get();*/
 
 
-
-            /*$this->db->select("im.net_unit_sale, 
+            $this->db->select("im.net_unit_sale, 
                             im.net_unit_cost, 
                             im.real_unit_cost,
-                            im.customer_id,
                             im.product_id,
                             pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
-                            pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
-                            pi.avz_item_code, pi.product_code,
-                            pi.product_id, pi.product_name, pi.batchno, pi.expiry,
                             p.supplier_id, p.supplier,
-                            SUM(IFNULL(im.quantity, 0)) as total_quantity
-                            ");
+                            SUM(IFNULL(im.quantity, 0)) as total_quantity,
+                            pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code", false);
             $this->db->from('sma_inventory_movements im');
+            $this->db->join('sma_purchases p', 'p.id = im.reference_id AND im.type = "purchase"', 'left');
             $this->db->join('sma_products pr', 'pr.id = im.product_id', 'left');
-            $this->db->join('sma_purchase_items pi', '(
-                (pi.avz_item_code IS NOT NULL AND pi.avz_item_code = im.avz_item_code)
-                OR (pi.avz_item_code IS NULL AND pi.product_id = im.product_id)
-            )', 'left');
-            $this->db->join('sma_purchases p', 'p.id = pi.purchase_id', 'left');
             if ($warehouse_id) {
                 $this->db->where('im.location_id', $warehouse_id);
             }
             $this->db->where('im.product_id', $item_id);
-            
 
-            $this->db->group_by(['im.location_id', 'im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
-            $this->db->having('total_quantity >', 0);
+            $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
+            $this->db->having('total_quantity !=', 0);
             $query = $this->db->get();
-
-            echo $this->db->last_query();exit;*/
-
-            /*$this->db->select('pi.avz_item_code, pi.product_code, im.net_unit_sale, im.net_unit_cost, im.real_unit_cost, pr.tax_rate, pr.type, pr.unit, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
-            $this->db->from('sma_purchase_items pi');
-            $this->db->join('sma_purchases p', 'p.id = pi.purchase_id', 'left');
-            $this->db->join('sma_inventory_movements im', '(
-                (pi.avz_item_code IS NOT NULL AND pi.avz_item_code = im.avz_item_code)
-                OR (pi.avz_item_code IS NULL AND pi.product_id = im.product_id)
-            )', 'left');
-
-            $this->db->join('sma_products pr', 'pr.id = pi.product_id', 'left');
-            $this->db->where('pi.product_id', $item_id);
-
-            if ($warehouse_id) {
-                $this->db->where('pi.warehouse_id', $warehouse_id);
-                $this->db->where('im.location_id', $warehouse_id);
-            }
-
-            $this->db->group_by(['pi.warehouse_id', 'pi.avz_item_code', 'pi.expiry']);
-            $this->db->having('total_quantity >', 0);
-            $query = $this->db->get();*/
-
-            //echo $this->db->last_query();exit;
 
         }
 
