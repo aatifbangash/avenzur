@@ -954,10 +954,10 @@ class Pos extends MY_Controller
                 //$item_unit_cost = $this->site->getAvgCost($batch_no, $item_id); 
                 //$real_cost = $this->site->getRealAvgCost($batch_no, $item_id);
 
-                if(empty($item_unit_cost)){
+                /*if(empty($item_unit_cost)){
                     $this->session->set_flashdata('error', lang('Avg Cost not found for product: '.$item_code. '-'. $item_name ));
                     admin_redirect('pos');
-                } 
+                }*/ 
                     // $this->db->select('cost')->from('products')->where('id', $item_id);
                     // $productCost =$this->db->get()->result();
                 
