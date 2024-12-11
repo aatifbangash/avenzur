@@ -4220,7 +4220,7 @@ class Products extends MY_Controller
            
             //echo "<pre>" . htmlspecialchars($zplCode) . "</pre>";
             //exit;
-            $url = "https://35da-51-252-146-135.ngrok-free.app/print";
+            $url = "https://mature-workable-werewolf.ngrok-free.app/print";
                        
             $ch = curl_init($url);
 
