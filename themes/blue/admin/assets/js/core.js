@@ -1657,7 +1657,7 @@ function parse_scale_barcode(barcode) {
 }
 
 function calculatePurchaseInventory(item) {
-    const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+    const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(5, Decimal.ROUND_DOWN);
     // Convert all inputs to Decimal and ensure precision
     const cost_price = toTwoDecimals(item.cost);
     const sale_price = toTwoDecimals(item.sale_price);
