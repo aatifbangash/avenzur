@@ -1056,14 +1056,14 @@ function loadItems() {
 
 			}
 			const new_calc = calculateInventory(item.row, 'purchase');
-			//console.log(new_calc);
+			console.log(new_calc);
 
 			/**
 			 * NEW TOTAL CALCULATION ASSIGNMENT
 			 */
 			const new_net_purchase = new Decimal(new_calc.new_net_purchase); 
 			new_total_net_purchase = new_total_net_purchase.plus(new_net_purchase);
-			console.log('totalnetpurchase', new_total_net_purchase);
+			//console.log('totalnetpurchase', new_total_net_purchase);
 
 			const calc_total_purchase = new Decimal(new_calc.new_total_purchase); 
 			new_total_purchase = new_total_purchase.plus(calc_total_purchase);
