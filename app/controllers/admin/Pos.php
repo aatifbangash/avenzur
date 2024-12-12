@@ -1283,7 +1283,7 @@ class Pos extends MY_Controller
                                     //echo 'integer'.$integerPart;
                                     //echo 'decimal'. $decimalPart;
                                   
-                                    if ($decimalPart < 0.50) {
+                                    if ($decimalPart <= 0.50) {
                                         $paidAmount =  $integerPart; 
                                         $halalaAmount = $decimalPart;
                                         $difference_type = 'D';
