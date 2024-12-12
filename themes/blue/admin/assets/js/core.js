@@ -1656,8 +1656,9 @@ function parse_scale_barcode(barcode) {
     return { item_code: item_code, price: price, weight: weight };
 }
 
+const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(5, Decimal.ROUND_DOWN);
+
 function calculatePurchaseInventory(item) {
-    const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(5, Decimal.ROUND_DOWN);
     // Convert all inputs to Decimal and ensure precision
     const cost_price = toTwoDecimals(item.cost);
     const sale_price = toTwoDecimals(item.sale_price);
@@ -1710,7 +1711,7 @@ function calculatePurchaseInventory(item) {
 }
 
 function calculateSaleInventory(item) {
-    const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+    //const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
     // Convert all inputs to Decimal and ensure precision
     const cost_price = toTwoDecimals(item.cost);
     const sale_price = toTwoDecimals(item.sale_price);
@@ -1768,7 +1769,7 @@ function calculateSaleInventory(item) {
 }
 
 function calculateReturnSupplierInventory(item) {
-    const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+   // const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
     // Convert all inputs to Decimal and ensure precision
     const cost_price = toTwoDecimals(item.cost);
     const sale_price = toTwoDecimals(item.sale_price);
@@ -1822,7 +1823,7 @@ function calculateReturnSupplierInventory(item) {
 
 function calculateTransferInventory(item) {
     console.log('pass item', item);
-    const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+    //const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
     // Convert all inputs to Decimal and ensure precision
     const cost_price = toTwoDecimals(item.cost);
     const sale_price = toTwoDecimals(item.sale_price);
