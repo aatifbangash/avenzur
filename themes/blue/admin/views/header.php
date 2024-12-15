@@ -607,6 +607,12 @@
                                             <i class="fa fa-bars"></i><span class="text"> <?= lang('Sales By Category'); ?></span>
                                         </a>
                                     </li>
+
+                                    <li id="reports_sales_by_item">
+                                        <a href="<?= admin_url('reports/sales_by_item') ?>">
+                                            <i class="fa fa-bars"></i><span class="text"> <?= lang('Sales By Items'); ?></span>
+                                        </a>
+                                    </li>
                                    
                                 </ul>
                          </li>
