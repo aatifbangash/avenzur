@@ -206,7 +206,7 @@ class Reports extends MY_Controller
 
         $at_date = $this->input->post('at_date') ? $this->input->post('at_date') : null;
         $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : null;
-        $supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
+        //$supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
         $item_group = $this->input->post('item_group') ? $this->input->post('item_group') : null;
         $item = $this->input->post('item') ? $this->input->post('item') : null;
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
@@ -220,7 +220,7 @@ class Reports extends MY_Controller
         $this->data['at_date'] = $at_date;
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        $this->data['suppliers'] = $this->deals_model->getAllSuppliersList();
+        //$this->data['suppliers'] = $this->deals_model->getAllSuppliersList();
         $this->data['categories'] = $this->site->getAllCategories();
         $bc = [
             ['link' => base_url(), 'page' => lang('home')],
