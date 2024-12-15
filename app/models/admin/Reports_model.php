@@ -3582,7 +3582,7 @@ class Reports_model extends CI_Model
         if ($filterOnType) {
             $query .= " AND a.trans_type= '" . $filterOnType . "'";
         }
-       // echo $query;
+        // echo $query;
 
         $q = $this->db->query($query);
         //echo $this->db->last_query();
@@ -4159,6 +4159,97 @@ class Reports_model extends CI_Model
             return $q->row();
         }
         return false;
+    }
+
+    public function getCollectionsByPharmacy($start_date, $end_date, $warehouse)
+    {
+        // error_reporting(-1);
+        // ini_set('display_errors', 1);
+         $sql = "
+                    SELECT 
+                        e.date AS transaction_date,
+                        SUM(CASE WHEN e.transaction_type = 'pos' AND ei.narration = 'cash' THEN ei.amount ELSE 0 END) AS total_cash,
+                        SUM(CASE WHEN e.transaction_type = 'pos' AND ei.narration = 'Credit Card' THEN ei.amount ELSE 0 END) AS total_credit_card,
+                        SUM(CASE WHEN e.transaction_type = 'pos' AND ei.narration = 'discount' THEN ei.amount ELSE 0 END) AS total_discount,
+                        SUM(CASE WHEN e.transaction_type = 'returncustomerorder' AND ei.narration = 'customer' THEN ei.amount ELSE 0 END) AS total_returns
+                    FROM 
+                    sma_sales s
+                    JOIN 
+                        sma_accounts_entries e ON s.id = e.sid
+                    JOIN 
+                        sma_accounts_entryitems ei ON e.id = ei.entry_id
+                    WHERE 
+                        e.transaction_type IN( 'pos','returncustomerorder')
+                        AND DATE(s.date) >= '".trim($start_date)."' 
+                        AND DATE(s.date) <= '".trim($end_date)."'
+                        AND ei.narration IN('cash', 'Credit Card')
+                        AND s.warehouse_id = ".$warehouse."
+                    GROUP BY 
+                    DATE(e.date)
+                    ORDER BY 
+                    DATE(e.date)
+        ";
+
+        $q = $this->db->query($sql);
+        $data = array();
+        //echo $this->db->last_query();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+
+        return $data;
+    }
+
+    public function getSalesByCategory($start_date, $end_date, $warehouse){
+        $sql = " SELECT 
+                    c.category_code,
+                    c.name as category_name,
+                    ROUND(SUM(si.totalbeforevat),2) AS total_sales,
+                    SUM(si.main_net) AS total_main_net,
+                    ROUND(SUM(si.tax), 2) AS total_vat,
+                    ROUND((SUM(si.totalbeforevat) / t.total_sales) * 100, 2) AS sales_percentage,
+                    ROUND((SUM(si.tax) / t.total_vat) * 100, 2) AS vat_percentage,
+                    ROUND((SUM(si.main_net) / t.total_main_net) * 100, 2) AS main_net_percentage
+                FROM 
+                    sma_sale_items si
+                JOIN 
+                    sma_products p ON si.product_id = p.id
+                JOIN 
+                    sma_categories c ON p.category_id = c.id
+                JOIN 
+                    sma_sales s ON si.sale_id = s.id     
+                CROSS JOIN (
+                    SELECT 
+                        SUM(totalbeforevat) AS total_sales, 
+                        SUM(main_net) AS total_main_net, 
+                        SUM(tax) AS total_vat 
+                    FROM 
+                        sma_sale_items si
+                    INNER JOIN sma_sales s ON si.sale_id = s.id
+                    WHERE 
+                    DATE(s.date) >= '".trim($start_date)."' 
+                    AND DATE(s.date) <= '".trim($end_date)."'   
+                ) t
+            WHERE 
+                DATE(s.date) >= '".trim($start_date)."' 
+                AND DATE(s.date) <= '".trim($end_date)."'
+                AND s.warehouse_id = ".$warehouse."
+                GROUP BY 
+                    c.name
+                ORDER BY 
+                    total_sales DESC ";
+        $q = $this->db->query($sql);
+        $data = array();
+        //echo $this->db->last_query();
+        if ($q->num_rows() > 0) {
+        foreach (($q->result()) as $row) {
+            $data[] = $row;
+        }
+     }
+
+        return $data;
     }
 
 

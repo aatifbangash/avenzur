@@ -5225,4 +5225,82 @@ class Reports extends MY_Controller
         $meta = ['page_title' => lang('reports'), 'bc' => $bc];
         $this->page_construct('reports/warehouse_stock', $meta, $this->data);
     }
+
+    public function collections_by_pharmacy(){
+      
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
+        //print_r($this->input->post());
+    
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $collections_data = $this->reports_model->getCollectionsByPharmacy($start_date, $end_date, $warehouse);
+            //echo "<pre>";
+            //print_r($collections_data);exit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse'] = $warehouse;
+            $this->data['collections_data'] = $collections_data;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('collection_pharmacy')]];
+            $meta = ['page_title' => lang('collection_pharmacy'), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/collection_pharmacy', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/collection_pharmacy', $meta, $this->data);
+
+
+        }
+
+    }
+
+    public function sales_by_category(){
+      
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
+        //print_r($this->input->post());
+    
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $sales_data = $this->reports_model->getSalesByCategory($start_date, $end_date, $warehouse);
+         
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse'] = $warehouse;
+            $this->data['sales_data'] = $sales_data;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('sales_by_category')]];
+            $meta = ['page_title' => lang('sales_by_category'), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/sales_by_category', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/sales_by_category', $meta, $this->data);
+
+
+        }
+
+    }
 }

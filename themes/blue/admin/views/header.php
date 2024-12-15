@@ -595,6 +595,18 @@
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('balance_sheet'); ?></span>
                                         </a>
                                     </li>
+
+                                    <li id="reports_collections_pharmacy">
+                                        <a href="<?= admin_url('reports/collections_by_pharmacy') ?>">
+                                            <i class="fa fa-bars"></i><span class="text"> <?= lang('Collections By Pharmacy & Warehouse'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li id="reports_sales_by_category">
+                                        <a href="<?= admin_url('reports/sales_by_category') ?>">
+                                            <i class="fa fa-bars"></i><span class="text"> <?= lang('Sales By Category'); ?></span>
+                                        </a>
+                                    </li>
                                    
                                 </ul>
                          </li>
