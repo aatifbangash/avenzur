@@ -5282,7 +5282,7 @@ class Reports extends MY_Controller
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
             $sales_data = $this->reports_model->getSalesByCategory($start_date, $end_date, $warehouse);
-         
+           // echo "<pre>"; print_r($sales_data);exit;
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
             $this->data['warehouse'] = $warehouse;
