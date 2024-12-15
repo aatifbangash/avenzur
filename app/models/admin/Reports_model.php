@@ -4200,7 +4200,7 @@ class Reports_model extends CI_Model
     {
         // error_reporting(-1);
         // ini_set('display_errors', 1);
-         $sql = "
+        $sql = "
                     SELECT 
                         e.date AS transaction_date,
                         SUM(CASE WHEN e.transaction_type = 'pos' AND ei.narration = 'cash' THEN ei.amount ELSE 0 END) AS total_cash,
@@ -4215,10 +4215,10 @@ class Reports_model extends CI_Model
                         sma_accounts_entryitems ei ON e.id = ei.entry_id
                     WHERE 
                         e.transaction_type IN( 'pos','returncustomerorder')
-                        AND DATE(s.date) >= '".trim($start_date)."' 
-                        AND DATE(s.date) <= '".trim($end_date)."'
+                        AND DATE(s.date) >= '" . trim($start_date) . "' 
+                        AND DATE(s.date) <= '" . trim($end_date) . "'
                         AND ei.narration IN('cash', 'Credit Card')
-                        AND s.warehouse_id = ".$warehouse."
+                        AND s.warehouse_id = " . $warehouse . "
                     GROUP BY 
                     DATE(e.date)
                     ORDER BY 
@@ -4237,8 +4237,9 @@ class Reports_model extends CI_Model
         return $data;
     }
 
-    public function getSalesByCategory($start_date, $end_date, $warehouse){
-         $sql = " SELECT 
+    public function getSalesByCategory($start_date, $end_date, $warehouse)
+    {
+        $sql = " SELECT 
                     c.category_code,
                     c.name as category_name,
                     ROUND(SUM(si.totalbeforevat),2) AS total_sales,
@@ -4264,13 +4265,13 @@ class Reports_model extends CI_Model
                         sma_sale_items si
                     INNER JOIN sma_sales s ON si.sale_id = s.id
                     WHERE 
-                    DATE(s.date) >= '".trim($start_date)."' 
-                    AND DATE(s.date) <= '".trim($end_date)."'   
+                    DATE(s.date) >= '" . trim($start_date) . "' 
+                    AND DATE(s.date) <= '" . trim($end_date) . "'   
                 ) t
             WHERE 
-                DATE(s.date) >= '".trim($start_date)."' 
-                AND DATE(s.date) <= '".trim($end_date)."'
-                AND s.warehouse_id = ".$warehouse."
+                DATE(s.date) >= '" . trim($start_date) . "' 
+                AND DATE(s.date) <= '" . trim($end_date) . "'
+                AND s.warehouse_id = " . $warehouse . "
                 GROUP BY 
                     c.name
                 ORDER BY 
@@ -4279,16 +4280,16 @@ class Reports_model extends CI_Model
         $sales = array();
         //echo $this->db->last_query();
         if ($q->num_rows() > 0) {
-        foreach (($q->result()) as $row) {
-            $sales[$row->category_code] = $row;
+            foreach (($q->result()) as $row) {
+                $sales[$row->category_code] = $row;
+            }
         }
-     }
 
 
-     /**
-      * get returns
-      */
-       $sql = " SELECT 
+        /**
+         * get returns
+         */
+        $sql = " SELECT 
             c.category_code,
             c.name as category_name,
             ROUND( COALESCE( SUM( si.totalbeforevat ),0 ),2 ) AS total_sales,
@@ -4314,13 +4315,13 @@ class Reports_model extends CI_Model
                 sma_return_items si
             INNER JOIN sma_returns s ON si.return_id = s.id
             WHERE 
-            DATE(s.date) >= '".trim($start_date)."' 
-            AND DATE(s.date) <= '".trim($end_date)."'   
+            DATE(s.date) >= '" . trim($start_date) . "' 
+            AND DATE(s.date) <= '" . trim($end_date) . "'   
         ) t
         WHERE 
-        DATE(s.date) >= '".trim($start_date)."' 
-        AND DATE(s.date) <= '".trim($end_date)."'
-        AND s.warehouse_id = ".$warehouse."
+        DATE(s.date) >= '" . trim($start_date) . "' 
+        AND DATE(s.date) <= '" . trim($end_date) . "'
+        AND s.warehouse_id = " . $warehouse . "
         GROUP BY 
             c.category_code, c.name
         ORDER BY 
@@ -4330,12 +4331,57 @@ class Reports_model extends CI_Model
         //echo $this->db->last_query();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
-            $returns[$row->category_code] = $row;
+                $returns[$row->category_code] = $row;
             }
         }
 
 
         return array('sales' => $sales, 'returns' => $returns);
+    }
+
+    public function getSalesByItems($start_date, $end_date, $warehouse)
+    {
+         $sql = "SELECT
+            p.item_code, 
+            p.name,
+            s.date,
+            s.id,
+            si.avz_item_code,
+            si.product_name,
+            si.quantity,
+            si.net_cost as cost_price,
+            si.net_unit_price as sale_price,
+            si.subtotal as total_sale,
+            si.item_discount,
+            si.second_discount_value,
+            si.totalbeforevat,
+            si.item_tax,
+            si.main_net,
+            s.customer
+     FROM 
+      sma_sale_items si
+      JOIN 
+      sma_sales s ON s.id = si.sale_id
+      JOIN 
+        sma_products p ON si.product_id = p.id
+        WHERE 
+            DATE(s.date) >= '" . trim($start_date) . "' 
+            AND DATE(s.date) <= '" . trim($end_date) . "'
+            AND s.warehouse_id = " . $warehouse . "
+        ORDER BY 
+        DATE(s.date)
+";
+
+        $q = $this->db->query($sql);
+        $data = array();
+        //echo $this->db->last_query();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+
+        return $data;
     }
 
 

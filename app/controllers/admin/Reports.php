@@ -5312,4 +5312,41 @@ class Reports extends MY_Controller
         }
 
     }
+
+    public function sales_by_item(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
+        //print_r($this->input->post());
+    
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $sales_data = $this->reports_model->getSalesByItems($start_date, $end_date, $warehouse);
+            //echo "<pre>"; print_r($sales_data);exit;
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse'] = $warehouse;
+            $this->data['sales_data'] = $sales_data;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('sales_by_category')]];
+            $meta = ['page_title' => lang('sales_by_item'), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/sales_by_item', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/sales_by_item', $meta, $this->data);
+
+
+        }
+
+    }
 }

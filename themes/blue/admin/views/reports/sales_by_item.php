@@ -22,7 +22,7 @@
   <?php  } ?>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('Sales_by_Category'); ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('Sales_by_Items'); ?></h2>
         <?php  if($viewtype!='pdf'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
@@ -41,7 +41,7 @@
         if($viewtype!='pdf')
         {
             $attrib = ['data-toggle' => 'validator', 'role' => 'form','id' => 'searchForm'];
-            echo admin_form_open_multipart('reports/sales_by_category', $attrib)
+            echo admin_form_open_multipart('reports/sales_by_item', $attrib)
         ?> <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" > 
                 <div class="row">
                     <div class="col-lg-12">
@@ -91,16 +91,21 @@
                                 class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf">
                             <thead>
                             <tr>
-                                <th><?= lang('Category No'); ?></th>
-                                <th><?= lang('Category Name'); ?></th>
-                                <th><?= lang('Sales'); ?></th>
-                                <th><?= lang('Sales %'); ?></th>
-                                <th><?= lang('Vat'); ?></th>
-                                <th><?= lang('Returns'); ?></th>
-                                <th><?= lang('Returns %'); ?></th>
+                                <th><?= lang('Item No'); ?></th>
+                                <th><?= lang('Avz Code'); ?></th>
+                                <th><?= lang('Item Name'); ?></th>
+                                <th><?= lang('Date'); ?></th>
+                                <th><?= lang('Inv. No'); ?></th>
+                                <th><?= lang('Qty'); ?></th>
+                                <th><?= lang('Cost'); ?></th>
+                                <th><?= lang('Total Cost'); ?></th>
+                                <th><?= lang('Sale'); ?></th>
+                                <th><?= lang('Total Sale'); ?></th>
+                                <th><?= lang('Total Discount'); ?></th>
+                                <th><?= lang('Sale After Discount'); ?></th>
                                 <th><?= lang('VAT'); ?></th>
-                                <th><?= lang('Net'); ?></th>
-                                <th><?= lang('Net %'); ?></th>
+                                <th><?= lang('Net Sale'); ?></th>
+                                <th><?= lang('Customer Name'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
@@ -109,57 +114,32 @@
                                     $grand_sales = 0;
                                     $grand_returns = 0;
                                     $grand_net_total = 0;
-                                    foreach ($sales_data['sales'] as $key => $data){
-                                       
-                                        $count ++ ; 
-                                        
-                                        $grand_sales += $data->total_sales ;
-                                        $grand_returns += 0;
-                                      
-                                        $total_returns = 0;
-                                        $total_returns_percentage = 0;
-                                        $total_returns_vat = 0;
-                                        $total_return_main_net = 0;
-                                        if(isset($sales_data['returns'][$key])) {
-                                            $return_data = $sales_data['returns'][$key] ;
-                                            $total_returns = $return_data->total_sales;
-                                            $total_returns_percentage = $return_data->sales_percentage;
-                                            $total_return_vat = $return_data->total_vat;
-                                            $total_return_main_net = $return_data->total_main_net;
-                                        }
-                                        $total_main_net = $data->total_main_net - $total_return_main_net;
-                                        $grand_net_total += $total_main_net;
-
+                                    foreach ($sales_data as $data){
                                         ?>
                                             <tr>
                                                 
-                                                <td><?= $data->category_code; ?></td>
-                                                <td><?= $data->category_name; ?></td>
-                                                <td><?= $data->total_sales; ?></td>
-                                                <td><?= $data->sales_percentage; ?></td>
-                                                <td><?= $data->total_vat; ?></td>
-                                                <td><?= $total_returns; ?></td>
-                                                <td><?= $total_returns_percentage;?> </td>
-                                                <td><?= $total_return_vat; ?></td>
-                                                <td><?= $total_main_net ; ?></td>
-                                                <td><?= $data->main_net_percentage; ?></td>
+                                                <td><?= $data->item_code; ?></td>
+                                                <td><?= $data->avz_item_code; ?></td>
+                                                <td><?= $data->name; ?></td>
+                                                <td><?= $data->date; ?></td>
+                                                <td><?= $data->id; ?></td>
+                                                <td><?= $data->quantity; ?></td>
+                                                <td><?= $data->cost_price;?> </td>
+                                                <td><?= $data->cost_price * $data->quantity; ?></td>
+                                                <td><?= $data->sale_price ; ?></td>
+                                                <td><?= $data->total_sale; ?></td>
+                                                <td><?= $data->item_discount; ?></td>
+                                                <td><?= $data->totalbeforevat; ?></td>
+                                                <td><?= $data->item_tax; ?></td>
+                                                <td><?= $data->main_net; ?></td>
+                                                <td><?= $data->customer; ?></td>
                                                 
                                                
                                             </tr>
                                         <?php
                                     }
                                 ?>
-                                <tr>
-                                    <td colspan="2"><strong>Totals: </strong></td>
-                                    <td colspan="1"><strong><?= $this->sma->formatNumber($grand_sales); ?></strong></td>
-                                    <td colspan="1"></td>
-                                    <td colspan="1"></td>
-                                    <td colspan="1"><strong>00</strong></td>
-                                    <td colspan="1"></td>
-                                    <td colspan="1"></td>
-                                    <td colspan="1"><strong><?= $this->sma->formatNumber($grand_net_total); ?></strong></td>
-                                    <td colspan="1"></td>
-                                </tr>
+                              
                             </tbody>
                             <tfoot></tfoot>
                         </table>
