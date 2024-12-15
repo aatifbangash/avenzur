@@ -203,16 +203,25 @@ class Reports extends MY_Controller
     public function stock()
     {
 
-
-        $at_date = $this->input->post('at_date') ? $this->input->post('at_date') : null;
-        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : null;
+        $at_date = $this->input->get('at_date') ? $this->input->get('at_date') : null;
+        $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
         //$supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
-        $item_group = $this->input->post('item_group') ? $this->input->post('item_group') : null;
-        $item = $this->input->post('item') ? $this->input->post('item') : null;
-        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $item_group = $this->input->get('item_group') ? $this->input->get('item_group') : null;
+        $item = $this->input->get('item') ? $this->input->get('item') : null;
+        $viewtype = $this->input->get('viewtype') ? $this->input->get('viewtype') : null;
 
-        if (isset($_POST['submit'])) {
-            $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $supplier, $item_group, $item);
+        if (isset($_GET['submit'])) {
+            $this->load->library('pagination'); 
+            $config['per_page'] = 100; 
+            $page = ($this->uri->segment(4)) ? $this->uri->segment(4) : 0;
+            $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $item, $page, $config['per_page']);
+            $this->data['stock_data_totals'] = $this->reports_model->getStockDataTotals($at_date, $warehouse, $item_group, $item);
+
+            $config['base_url'] = admin_url('reports/stock');
+            $config['total_rows'] = sizeof($this->data['stock_data_totals']);
+            $config['reuse_query_string'] = TRUE;
+            $this->pagination->initialize($config); 
+            $this->data['pagination_links']=  $this->pagination->create_links();
         } else {
             $this->data['stock_data'] = [];
         }
