@@ -25,12 +25,59 @@
 
     });
 </script>
+<style>
+    /* Basic styling for pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.pagination a, .pagination strong {
+    color: #007bff;
+    float: left;
+    padding: 6px 14px;
+    text-decoration: none;
+    transition: background-color .3s;
+    margin: 0 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Active page */
+.pagination strong {
+    background-color: #007bff;
+    color: white;
+    border: 1px solid #007bff;
+}
+
+/* Hover effect */
+.pagination a:hover:not(.active) {
+    background-color: #ddd;
+}
+
+/* Disabled links */
+.pagination .disabled {
+    color: #6c757d;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* Additional styling */
+.pagination a {
+    cursor: pointer;
+}
+
+.pagination strong {
+    cursor: default;
+}
+</style>
 <?php if($viewtype=='pdf'){ ?>
     <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
   <?php  } ?>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('stock_report'); ?></h2>
+        <h2 class="blue"><a href="admin/reports/stock"><i class="fa-fw fa fa-users"></i><?= lang('stock_report'); ?></a></h2>
         <?php  if($viewtype!='pdf'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
@@ -47,7 +94,7 @@
                 <?php
                 if($viewtype!='pdf')
                 {
-                    $attrib = ['data-toggle' => 'validator', 'role' => 'form','id' => 'searchForm', 'name'=>'searchForm'];
+                    $attrib = ['data-toggle' => 'validator', 'role' => 'form','id' => 'searchForm', 'name'=>'searchForm', 'method' => 'get'];
                     echo admin_form_open_multipart('reports/stock', $attrib)
                     ?>
                     <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" >
@@ -72,7 +119,7 @@
                                     }
 
                                     ?>
-                                    <?php echo form_dropdown('warehouse', $optionsWarehouse, set_value('warehouse'), array('class' => 'form-control disable-select'), array('none')); ?>
+                                    <?php echo form_dropdown('warehouse', $optionsWarehouse, ($_GET['warehouse'] ?? ''), array('class' => 'form-control disable-select'), array('none')); ?>
 
                                 </div>
                             </div>
@@ -88,7 +135,7 @@
                                         }
                                     }
                                     ?>
-                                    <?php echo form_dropdown('item_group', $optionsCategories, set_value('item_group'), array('class' => 'form-control disable-select'), array('none')); ?>
+                                    <?php echo form_dropdown('item_group', $optionsCategories, ($_GET['item_group'] ?? ''), array('class' => 'form-control disable-select'), array('none')); ?>
 
                                 </div>
                             </div>
@@ -99,8 +146,8 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?php echo lang('Item', 'item'); ?>
-                                <?php echo form_input('sgproduct', (isset($_POST['sgproduct']) ? $_POST['sgproduct'] : ''), 'class="form-control" id="suggest_product2" data-bv-notempty="true"'); ?>
-                                <input type="hidden" name="item" value="<?= isset($_POST['item']) ? $_POST['item'] : 0 ?>" id="report_product_id2" />
+                                <?php echo form_input('sgproduct', (isset($_GET['sgproduct']) ? $_GET['sgproduct'] : ''), 'class="form-control" id="suggest_product2" data-bv-notempty="true"'); ?>
+                                <input type="hidden" name="item" value="<?= isset($_GET['item']) ? $_GET['item'] : 0 ?>" id="report_product_id2" />
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -147,6 +194,16 @@
                                 $totalCostPrice = 0;
                                 $grandTotalCostPrice = 0;
                                 ?>
+
+                                <?php foreach ($stock_data_totals as $index => $row): ?>
+                                    <?php $totalQuantity += $row->quantity; ?>
+                                    <?php $grandTotalSalePrice += $row->sale_price * $row->quantity; ?>
+                                    <?php $totalPurchasePrice += $row->purchase_price; ?>
+                                    <?php $grandTotalPurchasePrice += $row->purchase_price * $row->quantity; ?>
+                                    <?php $totalCostPrice += $row->cost_price; ?>
+                                    <?php $grandTotalCostPrice += $row->cost_price * $row->quantity; ?>
+                                <?php endforeach; ?>
+
                                 <?php foreach ($stock_data as $index => $row): ?>
                                     <tr>
                                         <td><?= $index + 1 ?></td>
@@ -157,24 +214,21 @@
                                         <td><?= $row->expiry ?></td>
 
                                         <td><?= $row->quantity ?></td>
-                                        <?php $totalQuantity += $row->quantity; ?>
+                                        
 
                                         <td><?= number_format($row->sale_price, 2, '.', ',') ?></td>
                                         <?php $totalSalePrice += $row->sale_price; ?>
 
                                         <td><?= number_format($row->sale_price * $row->quantity, 2, '.', ',') ?></td>
-                                        <?php $grandTotalSalePrice += $row->sale_price * $row->quantity; ?>
-
+                                        
                                         <td><?= number_format($row->purchase_price, 2, '.', ',') ?></td>
-                                        <?php $totalPurchasePrice += $row->purchase_price; ?>
-
+                                        
                                         <td><?= number_format($row->purchase_price * $row->quantity, 2, '.', ',') ?></td>
-                                        <?php $grandTotalPurchasePrice += $row->purchase_price * $row->quantity; ?>
-
+                                        
                                         <td><?= number_format($row->cost_price, 2, '.', ',') ?></td>
-                                        <?php $totalCostPrice += $row->cost_price; ?>
+                                        
                                         <td><?= number_format($row->cost_price * $row->quantity, 2, '.', ',') ?></td>
-                                        <?php $grandTotalCostPrice += $row->cost_price * $row->quantity; ?>
+                                        
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
@@ -191,6 +245,7 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
+                                <th>&nbsp;</th>
                                 <th><?= $totalQuantity ?></th>
                                 <th><?= number_format($totalSalePrice, 2, '.', ',') ?></th>
                                 <th><?= number_format($grandTotalSalePrice, 2, '.', ',') ?></th>
@@ -201,6 +256,7 @@
                             </tr>
                             </tfoot>
                         </table>
+                        <div class="pagination mt-5">   <?php echo $pagination_links; ?> </div>
                     </div>
                 </div>
             </div>
