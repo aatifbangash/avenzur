@@ -4238,7 +4238,7 @@ class Reports_model extends CI_Model
     }
 
     public function getSalesByCategory($start_date, $end_date, $warehouse){
-        $sql = " SELECT 
+         $sql = " SELECT 
                     c.category_code,
                     c.name as category_name,
                     ROUND(SUM(si.totalbeforevat),2) AS total_sales,
@@ -4249,11 +4249,11 @@ class Reports_model extends CI_Model
                     ROUND((SUM(si.main_net) / t.total_main_net) * 100, 2) AS main_net_percentage
                 FROM 
                     sma_sale_items si
-                JOIN 
+                LEFT JOIN 
                     sma_products p ON si.product_id = p.id
-                JOIN 
+                LEFT JOIN 
                     sma_categories c ON p.category_id = c.id
-                JOIN 
+                LEFT JOIN 
                     sma_sales s ON si.sale_id = s.id     
                 CROSS JOIN (
                     SELECT 
@@ -4276,15 +4276,66 @@ class Reports_model extends CI_Model
                 ORDER BY 
                     total_sales DESC ";
         $q = $this->db->query($sql);
-        $data = array();
+        $sales = array();
         //echo $this->db->last_query();
         if ($q->num_rows() > 0) {
         foreach (($q->result()) as $row) {
-            $data[] = $row;
+            $sales[$row->category_code] = $row;
         }
      }
 
-        return $data;
+
+     /**
+      * get returns
+      */
+       $sql = " SELECT 
+            c.category_code,
+            c.name as category_name,
+            ROUND( COALESCE( SUM( si.totalbeforevat ),0 ),2 ) AS total_sales,
+            COALESCE( SUM(si.subtotal), 0) AS total_main_net,
+            ROUND( COALESCE( SUM(si.tax) ,0 ) , 2) AS total_vat,
+            ROUND( COALESCE( (SUM(si.totalbeforevat) / t.total_sales) * 100 , 0), 2) AS sales_percentage,
+            ROUND( COALESCE( (SUM(si.tax) / t.total_vat) * 100, 0), 2) AS vat_percentage,
+            ROUND( COALESCE( (SUM(si.subtotal) / t.total_main_net) * 100, 0), 2) AS main_net_percentage
+        FROM 
+            sma_return_items si
+        LEFT JOIN 
+            sma_products p ON si.product_id = p.id
+        LEFT JOIN 
+            sma_categories c ON p.category_id = c.id
+        LEFT JOIN 
+            sma_returns s ON si.return_id = s.id     
+        CROSS JOIN (
+            SELECT 
+                SUM(totalbeforevat) AS total_sales, 
+                SUM(subtotal) AS total_main_net, 
+                SUM(tax) AS total_vat 
+            FROM 
+                sma_return_items si
+            INNER JOIN sma_returns s ON si.return_id = s.id
+            WHERE 
+            DATE(s.date) >= '".trim($start_date)."' 
+            AND DATE(s.date) <= '".trim($end_date)."'   
+        ) t
+        WHERE 
+        DATE(s.date) >= '".trim($start_date)."' 
+        AND DATE(s.date) <= '".trim($end_date)."'
+        AND s.warehouse_id = ".$warehouse."
+        GROUP BY 
+            c.category_code, c.name
+        ORDER BY 
+            total_sales DESC  ";
+        $q = $this->db->query($sql);
+        $returns = array();
+        //echo $this->db->last_query();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+            $returns[$row->category_code] = $row;
+            }
+        }
+
+
+        return array('sales' => $sales, 'returns' => $returns);
     }
 
 

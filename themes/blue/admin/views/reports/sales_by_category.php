@@ -109,12 +109,26 @@
                                     $grand_sales = 0;
                                     $grand_returns = 0;
                                     $grand_net_total = 0;
-                                    foreach ($sales_data as $data){
-                                        $count ++ ;
+                                    foreach ($sales_data['sales'] as $key => $data){
+                                       
+                                        $count ++ ; 
                                         
                                         $grand_sales += $data->total_sales ;
                                         $grand_returns += 0;
-                                        $grand_net_total += $data->total_main_net;
+                                      
+                                        $total_returns = 0;
+                                        $total_returns_percentage = 0;
+                                        $total_returns_vat = 0;
+                                        $total_return_main_net = 0;
+                                        if(isset($sales_data['returns'][$key])) {
+                                            $return_data = $sales_data['returns'][$key] ;
+                                            $total_returns = $return_data->total_sales;
+                                            $total_returns_percentage = $return_data->sales_percentage;
+                                            $total_return_vat = $return_data->total_vat;
+                                            $total_return_main_net = $return_data->total_main_net;
+                                        }
+                                        $total_main_net = $data->total_main_net - $total_return_main_net;
+                                        $grand_net_total += $total_main_net;
 
                                         ?>
                                             <tr>
@@ -124,10 +138,10 @@
                                                 <td><?= $data->total_sales; ?></td>
                                                 <td><?= $data->sales_percentage; ?></td>
                                                 <td><?= $data->total_vat; ?></td>
-                                                <td><?= 000 ?></td>
-                                                <td>000</td>
-                                                <td><?= 000 ?></td>
-                                                <td><?= $data->total_main_net ; ?></td>
+                                                <td><?= $total_returns; ?></td>
+                                                <td><?= $total_returns_percentage;?> </td>
+                                                <td><?= $total_return_vat; ?></td>
+                                                <td><?= $total_main_net ; ?></td>
                                                 <td><?= $data->main_net_percentage; ?></td>
                                                 
                                                
