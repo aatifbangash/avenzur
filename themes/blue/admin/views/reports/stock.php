@@ -76,39 +76,26 @@
 
                                 </div>
                             </div>
+                            
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <?= lang('Supplier', 'supplier'); ?>
+                                    <?= lang('Item Group', 'item_group'); ?>
                                     <?php
-                                    $optionsSuppliers[0] = 'Select';
-                                    if (!empty($suppliers)) {
-                                        foreach ($suppliers as $sup) {
-                                            $optionsSuppliers[$sup->id] = $sup->name;
+                                    $optionsCategories[0] = 'Select';
+                                    if (!empty($categories)) {
+                                        foreach ($categories as $cat) {
+                                            $optionsCategories[$cat->id] = $cat->name;
                                         }
                                     }
                                     ?>
-                                    <?php echo form_dropdown('supplier', $optionsSuppliers, set_value('supplier'), array('class' => 'form-control disable-select'), array('none')); ?>
+                                    <?php echo form_dropdown('item_group', $optionsCategories, set_value('item_group'), array('class' => 'form-control disable-select'), array('none')); ?>
 
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-4" style="margin-left: 15px; width: 32.6%">
-                            <div class="form-group">
-                                <?= lang('Item Group', 'item_group'); ?>
-                                <?php
-                                $optionsCategories[0] = 'Select';
-                                if (!empty($categories)) {
-                                    foreach ($categories as $cat) {
-                                        $optionsCategories[$cat->id] = $cat->name;
-                                    }
-                                }
-                                ?>
-                                <?php echo form_dropdown('item_group', $optionsCategories, set_value('item_group'), array('class' => 'form-control disable-select'), array('none')); ?>
-
-                            </div>
-                        </div>
+                        <div class="col-lg-12">
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?php echo lang('Item', 'item'); ?>
@@ -116,20 +103,14 @@
                                 <input type="hidden" name="item" value="<?= isset($_POST['item']) ? $_POST['item'] : 0 ?>" id="report_product_id2" />
                             </div>
                         </div>
-                        <!--<div class="col-md-4">
-                            <div class="form-group">
-                                <?php //echo lang('Item', 'item'); ?>
-                                <?php //echo form_input('item', set_value('item'), 'class="form-control input-tip" id="item"'); ?>
-                            </div>
-                        </div>-->
-                    </div>
-                    <div class="row">
                         <div class="col-md-4">
                             <div class="from-group">
                                 <button type="submit" name="submit" style="margin-top: 28px;" class="btn btn-primary"
                                         id="load_report"><?= lang('Load Report') ?></button>
                             </div>
                         </div>
+                    </div>
+                    
                     </div>
                     <hr/>
                     <?php echo form_close(); 
@@ -142,6 +123,7 @@
                             <tr>
                                 <th>#</th>
                                 <th><?= lang('Item Code'); ?></th>
+                                <th><?= lang('Avz Code'); ?></th>
                                 <th><?= lang('Item Name'); ?></th>
                                 <th><?= lang('Batch No'); ?></th>
                                 <th><?= lang('Expiry'); ?></th>
@@ -169,6 +151,7 @@
                                     <tr>
                                         <td><?= $index + 1 ?></td>
                                         <td><?= $row->item_code ?></td>
+                                        <td><?= $row->avz_item_code ?></td>
                                         <td><?= $row->name ?></td>
                                         <td><?= $row->batch_no ?></td>
                                         <td><?= $row->expiry ?></td>

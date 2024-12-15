@@ -1698,7 +1698,7 @@ class Reports_model extends CI_Model
         return $totalPurchases;
     }
 
-    public function getStockData($at_date, $warehouse, $supplier, $item_group, $item)
+    public function getStockData($at_date, $warehouse, $item_group, $item)
     {
         $stockArray = [];
         if ($at_date) {
@@ -1710,18 +1710,16 @@ class Reports_model extends CI_Model
         $stockQuery = " SELECT p.id,
             p.code item_code, 
             p.name as name, 
+            inv.avz_item_code,
             inv.batch_number as batch_no,
-            pi.expiry,
+            inv.expiry_date as expiry,
             SUM(inv.quantity) as quantity,
-            round(avg(pi.sale_price), 2) sale_price,
-            round(avg(pi.net_unit_cost), 2) cost_price,
-            round(sum(pi.net_unit_cost * pi.quantity), 2) total_cost_price,
-            round(avg(pi.unit_cost), 2) purchase_price  
+            round(inv.net_unit_sale, 2) sale_price,
+            round(inv.net_unit_cost, 2) cost_price,
+            round(sum(inv.net_unit_cost * inv.quantity), 2) total_cost_price,
+            round(inv.real_unit_cost, 2) purchase_price  
             FROM `sma_inventory_movements` inv 
-            INNER JOIN sma_products p on p.id=inv.product_id 
-            LEFT JOIN $tbl_purchase_items as pi ON pi.product_id = inv.product_id and pi.batchno=inv.batch_number 
-            LEFT JOIN sma_purchases pc ON pc.id = pi.purchase_id 
-            WHERE   p.id>0   ";
+            INNER JOIN sma_products p on p.id=inv.product_id";
         //    pi.purchase_item_id IS NULL AND pc.status = 'received' 
         // -- AND inv.type='purchase' 
         if ($at_date) {
@@ -1732,9 +1730,7 @@ class Reports_model extends CI_Model
             //  $stockQuery .= " AND pi.warehouse_id = {$warehouse} ";
             $stockQuery .= " AND inv.location_id = {$warehouse} ";
         }
-        if ($supplier) { //TODO: will be checked
-            $stockQuery .= " AND pc.supplier_id = {$supplier} ";
-        }
+        
         if ($item_group) {
             $stockQuery .= " AND p.category_id = '$item_group' ";
         }
@@ -1743,7 +1739,7 @@ class Reports_model extends CI_Model
             $stockQuery .= " AND inv.product_id = '{$item}' ";
         }
         // $stockQuery .= "GROUP BY p.code, p.name, pi.batchno  ORDER BY p.id DESC";
-        $stockQuery .= "GROUP BY inv.product_id, inv.batch_number  ORDER BY p.id DESC";
+        $stockQuery .= "GROUP BY inv.product_id, inv.avz_item_code  ORDER BY p.id DESC";
         $stockResults = $this->db->query($stockQuery);
         // echo $this->db->last_query(); exit; 
         if ($stockResults->num_rows() > 0) {

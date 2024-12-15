@@ -5104,6 +5104,106 @@ class Products extends MY_Controller
         $this->load->view($this->theme . 'products/view_count', $this->data);
     }
 
+    public function get_item_by_gtin_batch_expiry(){
+        $gtin = $this->input->get('gtin');
+        $batch = $this->input->get('batch');
+        $expiry = $this->input->get('expiry');
+        $warehouse_id = $this->input->get('warehouse_id'); // Optionally filter by warehouse if needed
+        $customer_id = $this->input->get('customer_id');
+        $module = $this->input->get('module');
+
+        $this->db->select("im.net_unit_sale, 
+                        im.net_unit_cost, 
+                        im.real_unit_cost,
+                        im.product_id,
+                        pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
+                        p.supplier_id, p.supplier,
+                        SUM(IFNULL(im.quantity, 0)) as total_quantity,
+                        pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code", false);
+        $this->db->from('sma_inventory_movements im');
+        $this->db->join('sma_purchases p', 'p.id = im.reference_id AND im.type = "purchase"', 'left');
+        $this->db->join('sma_products pr', 'pr.id = im.product_id', 'left');
+        if ($warehouse_id) {
+            $this->db->where('im.location_id', $warehouse_id);
+        }
+        if ($batch) {
+            $this->db->where("LOCATE(im.batch_number, '{$batch}') >", 0);
+        }
+        if ($expiry) {
+            // Extract year and month from the provided expiry
+            $expiry_parts = explode(' ', $expiry); // e.g., '08 2025'
+            if (count($expiry_parts) === 2) {
+                $expiry_month = $expiry_parts[0];
+                $expiry_year = $expiry_parts[1];
+    
+                // Use YEAR() and MONTH() functions to compare with the database expiry_date
+                $this->db->where("YEAR(im.expiry_date)", $expiry_year);
+                $this->db->where("MONTH(im.expiry_date)", $expiry_month);
+            }
+        }
+        $this->db->where('pr.code', $gtin);
+
+        $this->db->group_by(['pr.code', 'im.batch_number', 'im.expiry_date']);
+        $this->db->having('total_quantity !=', 0);
+        $query = $this->db->get();
+        //echo $this->db->last_query();exit;
+        if ($query->num_rows() > 0) {
+            $rows = $query->result();
+
+            $r = 0;
+            $count = 0;
+
+            foreach ($rows as $row) {
+                $c = uniqid(mt_rand(), true);
+                $option = false;
+                $row->quantity = $row->total_quantity;
+                $row->base_quantity = 0;
+                $row->qty = $row->total_quantity;
+                $row->discount = '0';
+
+                $row->quantity_balance = 0;
+                $row->ordered_quantity = 0;
+                $row->cost = 0;
+
+                $row->batch_no = $row->batchno;
+                $row->batchQuantity = 0;
+                $row->batchPurchaseCost = 0;
+
+                $row->id = $row->product_id;
+                $row->name = $row->product_name;
+                $row->code = $row->product_code;
+
+                $row->base_unit = $row->unit;
+
+                $units = $this->site->getUnitsByBUID($row->base_unit);
+                $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
+
+                $batches = [];
+                $options = [];
+                $total_quantity = $row->total_quantity;
+                $count++;
+                $row->serial_no = $count;
+                $pr[] = [
+                    'id' => sha1($c . $r),
+                    'item_id' => $row->product_id,
+                    'label' => $row->product_name . ' (' . $row->code . ')',
+                    'row' => $row,
+                    'tax_rate' => $tax_rate,
+                    'units' => $units,
+                    'options' => $options,
+                    'batches' => $batches,
+                    'total_quantity' => $total_quantity
+                ];
+                $r++;
+            }
+            $this->sma->send_json($pr);
+
+        } else {
+            // Return an error if no records found
+            return [];
+        }
+    }
+
     public function get_items_by_avz_code()
     {
         $term = $this->input->get('term');
