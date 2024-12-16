@@ -183,6 +183,11 @@ if (!empty($variants)) {
                     </div>
 
                     <div class="form-group all">
+                        <?= lang('Item Code', 'Item Code'); ?>
+                        <?= form_input('item_code', set_value('item_code', ($product ? $product->item_code : '')), 'class="form-control tip" id="item_code" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group all">
                         <?= lang('slug', 'slug'); ?>
                         <?= form_input('slug', set_value('slug', ($product ? $product->slug : '')), 'class="form-control tip" id="slug" required="required"'); ?>
                     </div>
