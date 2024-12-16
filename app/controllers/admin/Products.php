@@ -2497,6 +2497,7 @@ class Products extends MY_Controller
 
             $data = [
                 'code' => $this->input->post('code'),
+                'item_code' => $this->input->post('item_code'),
                 'barcode_symbology' => $this->input->post('barcode_symbology'),
                 'name' => $this->input->post('name'),
                 'type' => $this->input->post('type'),

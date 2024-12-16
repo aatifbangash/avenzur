@@ -112,7 +112,7 @@ class Purchases extends MY_Controller
                 $avz_item_code = isset($_POST['avz_item_code'][$r]) && !empty($_POST['avz_item_code'][$r]) ? $_POST['avz_item_code'][$r] : '';
                 $item_net_cost = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $unit_cost = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
-                $item_sale_price = $this->sma->formatDecimal($_POST['sale_price'][$r]);
+                $item_sale_price = $_POST['sale_price'][$r];
                 $real_unit_cost = $this->sma->formatDecimal($_POST['real_unit_cost'][$r]);
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_option = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'undefined' ? $_POST['product_option'][$r] : null;
@@ -861,7 +861,7 @@ class Purchases extends MY_Controller
                 $item_net_cost = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $unit_cost = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
                 $real_unit_cost = $this->sma->formatDecimal($_POST['real_unit_cost'][$r]);
-                $item_sale_price = $this->sma->formatDecimal($_POST['sale_price'][$r]);
+                $item_sale_price = $_POST['sale_price'][$r];
 
                 $item_unit_quantity = $_POST['quantity'][$r];
                 //$quantity_received  = $_POST['received_base_quantity'][$r];
