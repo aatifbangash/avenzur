@@ -1731,7 +1731,7 @@ class Reports_model extends CI_Model
             $stockQuery .= " AND inv.product_id = '{$item}' ";
         }
 
-        $stockQuery .= "GROUP BY inv.product_id, inv.avz_item_code";
+        $stockQuery .= "GROUP BY inv.product_id, inv.avz_item_code HAVING quantity > 0";
         $stockResults = $this->db->query($stockQuery);
         // echo $this->db->last_query(); exit; 
         if ($stockResults->num_rows() > 0) {
@@ -1779,7 +1779,7 @@ class Reports_model extends CI_Model
             $stockQuery .= " AND inv.product_id = '{$item}' ";
         }
 
-        $stockQuery .= "GROUP BY inv.product_id, inv.avz_item_code  ORDER BY p.id DESC LIMIT {$per_page} OFFSET {$offset}";
+        $stockQuery .= "GROUP BY inv.product_id, inv.avz_item_code HAVING quantity > 0 ORDER BY p.id DESC LIMIT {$per_page} OFFSET {$offset}";
         $stockResults = $this->db->query($stockQuery);
         // echo $this->db->last_query(); exit; 
         if ($stockResults->num_rows() > 0) {
