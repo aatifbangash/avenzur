@@ -566,6 +566,11 @@
                                         </a>
                                     </li>
                                     <li id="reports_stocks">
+                                        <a href="<?= admin_url('reports/supplier_stock') ?>">
+                                            <i class="fa fa-money"></i><span class="text"> <?= lang('Supplier Stock Report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_stocks">
                                         <a href="<?= admin_url('reports/stock') ?>">
                                             <i class="fa fa-money"></i><span class="text"> <?= lang('Inventory Ageing Report'); ?></span>
                                         </a>
