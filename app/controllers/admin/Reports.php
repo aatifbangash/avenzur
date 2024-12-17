@@ -5421,7 +5421,7 @@ class Reports extends MY_Controller
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
-        $pharmacist = $this->input->post('pharmacy') ? $this->input->post('pharmacist') : null;
+        $pharmacist = $this->input->post('pharmacist') ? $this->input->post('pharmacist') : null;
         //print_r($this->input->post());
     
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -5448,6 +5448,83 @@ class Reports extends MY_Controller
            $meta = ['page_title' => lang('reports'), 'bc' => $bc];
            $this->page_construct('reports/pharmacist_comission', $meta, $this->data);
 
+
+        }
+
+    }
+
+    public function transfer_items_monthly_wise(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $from_pharmacy = $this->input->post('frompharmacy') ? $this->input->post('frompharmacy') : null;
+        $to_pharmacy = $this->input->post('topharmacy') ? $this->input->post('topharmacy') : null;
+        //print_r($this->input->post());
+    
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        if ($from_date && $to_date && $from_pharmacy && $to_pharmacy) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $response_data = $this->reports_model->getTransferItemsMonthlyWise($start_date, $end_date, $from_pharmacy, $to_pharmacy);
+            //echo "<pre>"; print_r($response_data);exit;
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['from_pharmacy'] = $from_pharmacy;
+            $this->data['to_pharmacy'] = $to_pharmacy;
+            $this->data['response_data'] = $response_data;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Tranfer Items Monthly Wise')]];
+            $meta = ['page_title' => lang(''), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/transfer_items_monthly_wise', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/transfer_items_monthly_wise', $meta, $this->data);
+
+
+        }
+
+    }
+
+    public function get_item_deatils(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->get('viewtype') ? $this->input->get('viewtype') : null;
+        $year = $this->input->get('year') ? $this->input->get('year') : null;
+        $month = $this->input->get('month') ? $this->input->get('month') : null;
+        $from_date = $this->input->get('from_date') ? $this->input->get('from_date') : null;
+        $to_date = $this->input->get('to_date') ? $this->input->get('to_date') : null;
+        $from_pharmacy = $this->input->get('from_pharmacy') ? $this->input->get('from_pharmacy') : null;
+        $to_pharmacy = $this->input->get('to_pharmacy') ? $this->input->get('to_pharmacy') : null;
+        //print_r( $this->input->get());
+        if ($from_date && $to_date && $from_pharmacy && $to_pharmacy) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $response_data = $this->reports_model->getTransferItemsDetailsMonthlyWise($year, $month, $start_date, $end_date, $from_pharmacy, $to_pharmacy);
+            //echo "<pre>response"; print_r($response_data);exit;
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['from_pharmacy'] = $from_pharmacy;
+            $this->data['to_pharmacy'] = $to_pharmacy;
+            $this->data['response_data'] = $response_data;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Tranfer Items Monthly Wise')]];
+            $meta = ['page_title' => lang(''), 'bc' => $bc];
+
+          
+            $this->load->view($this->theme . 'reports/items_transfer_details', $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->load->view($this->theme . 'reports/items_transfer_details', $this->data);
 
         }
 

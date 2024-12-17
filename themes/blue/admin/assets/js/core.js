@@ -1412,6 +1412,31 @@ $(document).ready(function () {
         });
         $('#myModal').modal('show');
     });
+
+    $('body').on('click', '.report_transfer_link td:not(:first-child, :nth-last-child(3), :nth-last-child(2), :last-child)', function () {
+        $parent = $(this).parent('.report_transfer_link');
+        const year = $parent.attr('year') ;
+        const month = $parent.attr('month') ;
+        const from_date = $parent.attr('from_date') ;
+        const to_date = $parent.attr('to_date') ;
+        const from_pharmacy = $parent.attr('from_pharmacy') ;
+        const to_pharmacy = $parent.attr('to_pharmacy') ;
+        $('#myModal').modal({
+            remote: site.base_url + 'reports/get_item_deatils/?year=' + year+'&month='+month+'&from_date='+from_date+'&to_date='+to_date+
+            '&from_pharmacy='+from_pharmacy+'&to_pharmacy='+to_pharmacy,
+            //remote: site.base_url + 'transfers/view/2',
+        });
+        $('#myModal').modal('show');
+    });
+
+    $('#myModal').on('click', '.report_transfer_link td:not(:first-child, :nth-last-child(3), :nth-last-child(2), :last-child)', function () {
+        alert('test');
+        $('#myModal2').modal({
+            remote: site.base_url + 'transfers/view/' + $(this).parent('.transfer_link').attr('id'),
+        });
+        $('#myModal2').modal('show');
+    });
+
     $('body').on('click', '.transfer_link2', function () {
         $('#myModal').modal({ remote: site.base_url + 'transfers/view/' + $(this).attr('id') });
         $('#myModal').modal('show');
@@ -1897,4 +1922,15 @@ console.log(module);
         return calculateTransferInventory(item);
     }
 }
+
+window.onload = function() {
+    // Select all input elements with class 'date'
+    var dateInputs = document.querySelectorAll('input.date');
+    
+    // Loop through each input and set the autocomplete attribute to "off"
+    dateInputs.forEach(function(input) {
+        input.setAttribute('autocomplete', 'off');
+    });
+}
+
 

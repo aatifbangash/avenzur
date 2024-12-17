@@ -641,6 +641,13 @@
                                             <i class="fa fa-bars"></i><span class="text"> <?= lang('Pharmacist Commission'); ?></span>
                                         </a>
                                     </li> 
+
+                                    <li id="reports_items_monthly_transfer">
+                                        <a href="<?= admin_url('reports/transfer_items_monthly_wise') ?>">
+                                            <i class="fa fa-bars"></i><span class="text"> <?= lang('Transfer Items Report'); ?></span>
+                                        </a>
+                                    </li> 
+                                   
                                    
                                 </ul>
                          </li>
