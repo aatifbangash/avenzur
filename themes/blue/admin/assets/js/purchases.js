@@ -1089,7 +1089,7 @@ function loadItems() {
 				item_type = item.row.type,
 				combo_items = item.combo_items,
 				item_cost = formatDecimal( item.row.cost ),
-				item_sale_price = formatDecimal( item.row.sale_price ),
+				item_sale_price = new_calc.new_sale_price,
 				item_oqty = item.row.oqty,
 				item_qty = item.row.qty,
 				item_bqty = item.row.quantity_balance,
@@ -1332,7 +1332,7 @@ function loadItems() {
 
 			tr_html +=
 				'<td><input class="form-control scost text-center" name="sale_price[]" type="text" value="' +
-				formatDecimal(item_sale_price, 2) +
+				item_sale_price +
 				'" data-id="' +
 				row_no +
 				'" data-item="' +
