@@ -4422,5 +4422,79 @@ class Reports_model extends CI_Model
         return $data;
     }
     
+    public function getTransferItemsMonthlyWise($start_date, $end_date, $from_warehouse, $to_warehouse)
+    {
+          $sql = "SELECT 
+                YEAR(date) AS year,
+                MONTH(date) AS month,
+                MONTHNAME(date) AS month_name,
+                SUM(total_cost) AS total_cost,
+                SUM(grand_total) AS total_sales,
+                SUM(grand_total - total_cost)  AS total_profit,
+                 CASE 
+                    WHEN SUM(total_cost) > 0 THEN 
+                        ROUND((SUM(grand_total - total_cost) / SUM(total_cost)) * 100, 2)
+                    ELSE 
+                        0
+                END AS profit_percentage
+            FROM 
+                sma_transfers a
+                WHERE 
+                    DATE(a.date) >= '" . trim($start_date) . "' 
+                    AND DATE(a.date) <= '" . trim($end_date) . "'
+                    AND a.from_warehouse_id = " . $from_warehouse . "
+                    AND a.to_warehouse_id = " . $to_warehouse . "
+                 GROUP BY 
+                YEAR(date),
+                MONTH(date)
+            ORDER BY
+                year DESC,
+                month DESC
+            ";
+
+        $q = $this->db->query($sql);
+        $data = array();
+        //echo $this->db->last_query();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+
+        return $data;
+    }
+
+    public function getTransferItemsDetailsMonthlyWise($year, $month, $start_date, $end_date, $from_warehouse, $to_warehouse)
+    {
+           $sql = "SELECT 
+                id,
+                a.date as transfer_date,
+                grand_total AS total_sales
+               
+            FROM 
+                sma_transfers a
+                WHERE 
+                    YEAR(a.date) = '".trim($year)."' 
+                    AND MONTH(a.date) = '".trim($month)."' 
+                    AND DATE(a.date) >= '" . trim($start_date) . "' 
+                    AND DATE(a.date) <= '" . trim($end_date) . "'
+                    AND a.from_warehouse_id = " . $from_warehouse . "
+                    AND a.to_warehouse_id = " . $to_warehouse . "
+            ORDER BY
+               a.date
+            ";
+
+        $q = $this->db->query($sql);
+        $data = array();
+        //echo $this->db->last_query();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+
+        return $data;
+    }
+    
 
 }
