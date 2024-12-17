@@ -4384,5 +4384,43 @@ class Reports_model extends CI_Model
         return $data;
     }
 
+    public function getPharmacistsCommission($start_date, $end_date, $warehouse, $pharmacist)
+    {
+         $sql = "SELECT
+            si.product_code,
+            si.product_name,
+            si.quantity,
+            si.main_net,
+            ic.commission_value,
+            s.created_by AS PharmacistID,
+            s.id as invoice_number,
+            ROUND(SUM(si.main_net * ic.commission_value / 100),2) AS TotalCommission
+        FROM
+            sma_sale_items si
+        JOIN
+            sma_sales s ON si.sale_id = s.id
+        JOIN
+            sma_items_commission ic ON si.product_code = ic.item_code
+
+                WHERE 
+                    DATE(s.date) >= '" . trim($start_date) . "' 
+                    AND DATE(s.date) <= '" . trim($end_date) . "'
+                    AND s.warehouse_id = " . $warehouse . "
+                    AND s.created_by = " . $pharmacist . "
+                GROUP BY si.id
+            ";
+
+        $q = $this->db->query($sql);
+        $data = array();
+        //echo $this->db->last_query();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+
+        return $data;
+    }
+    
 
 }

@@ -5349,4 +5349,45 @@ class Reports extends MY_Controller
         }
 
     }
+
+    public function pharmacist_comission(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
+        $pharmacist = $this->input->post('pharmacy') ? $this->input->post('pharmacist') : null;
+        //print_r($this->input->post());
+    
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['pharmacists'] = $this->site->getAllPharmacists();
+        if ($from_date && $to_date && $warehouse && $pharmacist) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $commission_data = $this->reports_model->getPharmacistsCommission($start_date, $end_date, $warehouse, $pharmacist);
+           // echo "<pre>"; print_r($commission_data);exit;
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse'] = $warehouse;
+            $this->data['pharmacist'] = $pharmacist;
+            $this->data['commission_data'] = $commission_data;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('pharmacist_commission')]];
+            $meta = ['page_title' => lang(''), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/pharmacist_comission', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/pharmacist_comission', $meta, $this->data);
+
+
+        }
+
+    }
+
 }
