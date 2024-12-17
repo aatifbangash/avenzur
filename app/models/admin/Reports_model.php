@@ -1652,6 +1652,89 @@ class Reports_model extends CI_Model
         return $data;
     }
 
+    public function get_total_income($supplier, $from_date, $to_date){
+        return [];
+    }
+
+    public function getSupplierStockData($supplier_id, $warehouse_id, $from_date, $to_date){
+        $this->db->select("
+            pr.price, 
+            im.product_id,
+            pr.name as product_name,
+            ps.supplier_id as supplier_id, 
+            ps.supplier as supplier,
+            SUM(IFNULL(im.quantity, 0)) as total_quantity,
+            pr.tax_rate, pr.type, pr.unit, pr.code as product_code", false);
+
+        $this->db->from('sma_inventory_movements im');
+        $this->db->join('sma_purchase_items pi', 'pi.avz_item_code = im.avz_item_code AND `pi`.`purchase_id` IS NOT NULL', 'left');
+        $this->db->join('sma_purchases ps', 'ps.id = pi.purchase_id', 'left'); // To get supplier from original purchase
+
+        $this->db->join('sma_products pr', 'pr.id = im.product_id', 'left');
+
+        if ($warehouse_id) {
+            $this->db->where('im.location_id', $warehouse_id);
+        }
+
+        if ($supplier_id) {
+            // Use the supplier_id filter on both conditions
+            $this->db->where('(ps.supplier_id = ' . $supplier_id . ')');
+        }
+
+        if ($from_date) {
+            // Convert from 'd/m/Y' to 'Y-m-d'
+            $from_date_formatted = DateTime::createFromFormat('d/m/Y', $from_date);
+            if ($from_date_formatted) {
+                $from_date = $from_date_formatted->format('Y-m-d');
+                $start_date = date('Y-m-d', strtotime($from_date));
+            } else {
+                echo "Invalid date format for to_date.";
+                exit;
+            }
+        }
+
+        if ($to_date) {
+            // Convert from 'd/m/Y' to 'Y-m-d'
+            $to_date_formatted = DateTime::createFromFormat('d/m/Y', $to_date);
+            if ($to_date_formatted) {
+                $to_date = $to_date_formatted->format('Y-m-d');
+                $end_date = date('Y-m-d', strtotime($to_date . ' +1 day'));
+            } else {
+                echo "Invalid date format for to_date.";
+                exit;
+            }
+        }
+        
+        if ($from_date && !$to_date) {
+            $this->db->where("im.movement_date >=", date('Y-m-d', strtotime($start_date)));
+        }
+        
+        if ($to_date && !$from_date) {
+            $this->db->where("im.movement_date <=", date('Y-m-d', strtotime($end_date)));
+        }
+        
+        if ($to_date && $from_date) {
+            $this->db->where("im.movement_date BETWEEN '$start_date' AND '$end_date'");
+        }
+
+        $this->db->group_by(['im.product_id']);
+        $this->db->having('total_quantity !=', 0);
+
+        $query = $this->db->get();
+        //echo $this->db->last_query();exit;
+
+        $pr = [];
+        if ($query->num_rows() > 0) {
+            $rows = $query->result();
+            
+            foreach ($rows as $row) {
+                $pr[] = $row;
+            }
+        }
+
+        return $pr;
+    }
+
     public function getPharmacyStockData($item = null)
     {
         $totalPurchases = [];

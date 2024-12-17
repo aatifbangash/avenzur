@@ -133,6 +133,67 @@ class Reports extends MY_Controller
         $this->page_construct('reports/customer_report', $meta, $this->data);
     }
 
+    public function total_income(){
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        if ($from_date || $to_date || $supplier) {
+            $this->reports_model->get_total_income($supplier, $from_date, $to_date);
+        }
+
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('total_income_report')]];
+        $meta = ['page_title' => lang('total_income_report'), 'bc' => $bc];
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('total_income_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/total_income_report', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        } else {
+            $this->page_construct('reports/total_income_report', $meta, $this->data);
+        }
+    }
+
+    public function supplier_stock(){
+        $response_arr = array();
+        $supplier = $this->input->post('supplier') ? $this->input->post('supplier') : '';
+        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : '';
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : '';
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : '';
+
+        if (isset($_POST['submit'])) {
+            $response_arr = $this->reports_model->getSupplierStockData($supplier, $warehouse, $from_date, $to_date);
+            //echo '<pre>';print_r($response_arr);exit;
+        }
+
+        $this->data['warehouse_id'] = $warehouse;
+        $this->data['supplier_id'] = $supplier;
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['stock_data'] = $response_arr;
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => lang('supplier_stock_report')]
+        ];
+
+        $meta = [
+            'page_title' => lang('supplier_stock_report'),
+            'bc' => $bc
+        ];
+        $this->page_construct('reports/supplier_stock', $meta, $this->data);
+    }
+
     public function pharmacy_stock()
     {
         $item = $this->input->post('item') ? $this->input->post('item') : null;
