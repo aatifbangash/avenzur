@@ -1652,8 +1652,79 @@ class Reports_model extends CI_Model
         return $data;
     }
 
-    public function get_total_income($supplier, $from_date, $to_date){
-        return [];
+    public function get_total_income($supplier_id, $from_date, $to_date){
+        if ($from_date) {
+            // Convert from 'd/m/Y' to 'Y-m-d'
+            $from_date_formatted = DateTime::createFromFormat('d/m/Y', $from_date);
+            if ($from_date_formatted) {
+                $from_date = $from_date_formatted->format('Y-m-d');
+                $start_date = date('Y-m-d', strtotime($from_date));
+            } else {
+                echo "Invalid date format for to_date.";
+                exit;
+            }
+        }
+
+        if ($to_date) {
+            // Convert from 'd/m/Y' to 'Y-m-d'
+            $to_date_formatted = DateTime::createFromFormat('d/m/Y', $to_date);
+            if ($to_date_formatted) {
+                $to_date = $to_date_formatted->format('Y-m-d');
+                $end_date = date('Y-m-d', strtotime($to_date . ' +1 day'));
+            } else {
+                echo "Invalid date format for to_date.";
+                exit;
+            }
+        }
+
+
+        $this->db->select("
+            p.id, p.date as inv_date, 
+            p.supplier, 
+            p.total as total_purchase,
+            p.total_discount,
+            p.total_net_purchase,
+            p.total_sale,
+            SUM(pi.bonus) as total_bonus,   
+            'purchase' as type, 
+            s.sequence_code as supplier_code,
+            ", false);
+
+        $this->db->from('sma_purchases p');
+        $this->db->join('sma_purchase_items pi', 'pi.purchase_id = p.id', 'left');
+        $this->db->join('sma_companies s', 's.id = p.supplier_id', 'left');
+
+        if ($supplier_id) {
+            $this->db->where('p.supplier_id', $supplier_id);
+        }
+
+        if ($from_date && !$to_date) {
+            $this->db->where("p.date >=", date('Y-m-d', strtotime($start_date)));
+        }
+        
+        if ($to_date && !$from_date) {
+            $this->db->where("p.date <=", date('Y-m-d', strtotime($end_date)));
+        }
+        
+        if ($to_date && $from_date) {
+            $this->db->where("p.date BETWEEN '$start_date' AND '$end_date'");
+        }
+
+        $this->db->group_by(['p.id']);
+
+        $query = $this->db->get();
+        //echo $this->db->last_query();exit;
+
+        $pr = [];
+        if ($query->num_rows() > 0) {
+            $rows = $query->result();
+            
+            foreach ($rows as $row) {
+                $pr[] = $row;
+            }
+        }
+
+        return $pr;
     }
 
     public function getSupplierStockData($supplier_id, $warehouse_id, $from_date, $to_date){

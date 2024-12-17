@@ -143,12 +143,14 @@ class Reports extends MY_Controller
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
         if ($from_date || $to_date || $supplier) {
-            $this->reports_model->get_total_income($supplier, $from_date, $to_date);
+            $response_arr = $this->reports_model->get_total_income($supplier, $from_date, $to_date);
         }
 
         $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
         $this->data['start_date'] = $from_date;
         $this->data['end_date'] = $to_date;
+        $this->data['supplier_id'] = $supplier;
+        $this->data['income_data'] = $response_arr;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('total_income_report')]];
         $meta = ['page_title' => lang('total_income_report'), 'bc' => $bc];
         if ($viewtype == 'pdf') {

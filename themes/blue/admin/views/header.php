@@ -462,6 +462,23 @@
                                 </li>-->
                             </ul>
                         </li>
+
+                        <li class="mm_products">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-barcode"></i>
+                                    <span class="text"> <?= lang('WMS Reports'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                
+                                   
+                                    <li id="reports_total_income_report">
+                                        <a href="<?= admin_url('reports/total_income') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('Total Income Report'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                        </li>
                         
                         <li class="mm_products">
                                 <a class="dropmenu" href="#">
