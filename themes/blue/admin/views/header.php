@@ -613,6 +613,12 @@
                                             <i class="fa fa-bars"></i><span class="text"> <?= lang('Sales By Items'); ?></span>
                                         </a>
                                     </li>
+
+                                    <li id="reports_pharmacist_commission">
+                                        <a href="<?= admin_url('reports/pharmacist_comission') ?>">
+                                            <i class="fa fa-bars"></i><span class="text"> <?= lang('Pharmacist Commission'); ?></span>
+                                        </a>
+                                    </li> 
                                    
                                 </ul>
                          </li>
