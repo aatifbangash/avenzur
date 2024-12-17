@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-error_reporting(-1);
-ini_set('display_errors', 1);
+// error_reporting(-1);
+// ini_set('display_errors', 1);
 class Customscript extends MY_Controller
 {
     public function __construct()
@@ -14,6 +14,7 @@ class Customscript extends MY_Controller
     }
     public function index()
     {
+        echo "Please contact administrator for running this script!";exit;
         $count = $this->input->get('count');
         if($count == '') {
             echo "Pass count number" ;exit;
@@ -269,11 +270,54 @@ class Customscript extends MY_Controller
                 // print_r($data);
                  //print_r($products);
                 // exit;
-
-                $this->purchases_model->addPurchase($data, $products, $attachments = '');
+                /** 
+                 * PLEASE CHECK THE VALID CSV FILES BEFORE
+                 * ENABLE THIS FUNCTION
+                 */
+                //$this->purchases_model->addPurchase($data, $products, $attachments = '');
             } else {
                 echo "no data found";
             }
+
+        } else {
+            echo "Unable to open the CSV file.";
+        }
+
+    }
+
+    public function items_commission()
+    {
+        //echo "To add commission, Please contact administrator!";exit;
+        $file = FCPATH . 'files_nehawand/items_commission.csv';
+        if (($handle = fopen($file, "r")) !== false) {
+            $dataToSend = [];
+            $header = fgetcsv($handle); // Read the first row as the header
+
+            // Read each row in the CSV file
+            $rowCount = 1;
+            while (($row = fgetcsv($handle)) !== false) {
+                $rowCount++;
+                $item_code = trim($row[0]);
+                $item_name = trim($row[1]);
+                $commission_value = $row[2];
+                $from_date = date('Y-m-d', strtotime($row[6]));
+                $to_date = date('Y-m-d', strtotime($row[7]));
+                $supplier_id = 686;
+                $child_supplier_id = 686;
+                $created_by = 1;
+                $date_created = date('Y-m-d h:m:i');
+              
+                   
+                $sql = "INSERT INTO sma_items_commission 
+                                (item_code , item_name, commission_value, from_date , to_date , supplier_id , child_supplier_id, date_created, created_by)
+                                 VALUES (?, ?, ?, ?, ?, ?,?, ?, ?)";
+                
+                $this->db->query($sql, [$item_code, $item_name, $commission_value, $from_date, $to_date, $supplier_id, $child_supplier_id, $date_created, $created_by]);
+                
+                
+            }
+            fclose($handle);
+           
 
         } else {
             echo "Unable to open the CSV file.";
