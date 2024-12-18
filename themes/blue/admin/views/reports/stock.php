@@ -206,7 +206,7 @@
 
                                 <?php foreach ($stock_data as $index => $row): ?>
                                     <tr>
-                                        <td><?= $index + 1 ?></td>
+                                        <td><?= $offset+ $index + 1 ?></td>
                                         <td><?= $row->item_code ?></td>
                                         <td><?= $row->avz_item_code ?></td>
                                         <td><?= $row->name ?></td>

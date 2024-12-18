@@ -309,6 +309,7 @@ class Reports extends MY_Controller
             $page = ($this->uri->segment(4)) ? $this->uri->segment(4) : 0;
             $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $item, $page, $config['per_page']);
             $this->data['stock_data_totals'] = $this->reports_model->getStockDataTotals($at_date, $warehouse, $item_group, $item);
+            $this->data['offset'] = $page;
 
             $config['base_url'] = admin_url('reports/stock');
             $config['total_rows'] = sizeof($this->data['stock_data_totals']);
