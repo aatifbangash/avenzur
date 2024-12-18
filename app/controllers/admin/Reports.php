@@ -5348,9 +5348,12 @@ class Reports extends MY_Controller
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
         //print_r($this->input->post());
-    
+        if( strtolower($warehouse) == 'all' || $warehouse  == '' )
+        {
+            $warehouse = '';
+        }
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        if ($from_date) {
+        if ($from_date && $to_date ) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
             $sales_data = $this->reports_model->getSalesByCategory($start_date, $end_date, $warehouse);
@@ -5385,17 +5388,20 @@ class Reports extends MY_Controller
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
         //print_r($this->input->post());
-    
+        if( strtolower($warehouse) == 'all' || $warehouse  == '' )
+        {
+            $warehouse = '';
+        }
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $sales_data = $this->reports_model->getSalesByItems($start_date, $end_date, $warehouse);
+            $response_data = $this->reports_model->getSalesByItems($start_date, $end_date, $warehouse);
             //echo "<pre>"; print_r($sales_data);exit;
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
             $this->data['warehouse'] = $warehouse;
-            $this->data['sales_data'] = $sales_data;
+            $this->data['response_data'] = $response_data;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('sales_by_category')]];
             $meta = ['page_title' => lang('sales_by_item'), 'bc' => $bc];
 

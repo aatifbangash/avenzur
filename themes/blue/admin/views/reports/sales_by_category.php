@@ -27,9 +27,9 @@
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown">
-                    <a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'collection.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a>
+                    <a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'sales_by_categories.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a>
                 </li>
-                <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i class="icon fa fa-file-pdf-o"></i></a></li>
+                <!-- <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i class="icon fa fa-file-pdf-o"></i></a></li> -->
             </ul>
         </div>
         <?php } ?>
@@ -65,7 +65,7 @@
                             <?= lang('Pharmacy', 'popharmacy'); ?>
                             <?php
                             $selected_warehouse_id[] = isset($warehouse) ? $warehouse : '';
-                            $dp[''] = '';
+                            $dp['all'] = 'All';
                             foreach ($warehouses as $warehouse) {
                                 $dp[$warehouse->id] = $warehouse->name;
                             }
