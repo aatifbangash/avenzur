@@ -4592,7 +4592,7 @@ class Reports_model extends CI_Model
             si.item_discount,
             si.second_discount_value,
             si.totalbeforevat,
-            si.item_tax,
+            si.tax,
             si.main_net,
             s.customer
      FROM 
@@ -4625,7 +4625,7 @@ class Reports_model extends CI_Model
                 ROUND( SUM(si.subtotal),2) as grand_sale,
                 ROUND( SUM(COALESCE(si.item_discount, 0) + COALESCE(si.second_discount_value, 0)) , 2) AS grand_discount,
                 ROUND( SUM( si.totalbeforevat), 2) as grand_beforvate,
-                ROUND( SUM( si.item_tax),2) as grand_vat,
+                ROUND( SUM( si.tax),2) as grand_vat,
                 ROUND( SUM( si.main_net), 2) as grand_main_net
             FROM 
             sma_sale_items si
