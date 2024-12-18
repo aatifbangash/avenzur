@@ -471,7 +471,11 @@
                                 </a>
                                 <ul>
                                 
-                                   
+                                    <li id="reports_daily_purchase_report">
+                                        <a href="<?= admin_url('reports/daily_purchase_report') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('Daily Purchase Report'); ?></span>
+                                        </a>
+                                    </li>
                                     <li id="reports_total_income_report">
                                         <a href="<?= admin_url('reports/total_income') ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('Total Income Report'); ?></span>

@@ -133,6 +133,36 @@ class Reports extends MY_Controller
         $this->page_construct('reports/customer_report', $meta, $this->data);
     }
 
+    public function daily_purchase_report(){
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        if ($from_date || $to_date || $supplier) {
+            $response_arr = $this->reports_model->get_daily_purchase($supplier, $from_date, $to_date);
+        }
+
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['supplier_id'] = $supplier;
+        $this->data['daily_purchase_data'] = $response_arr;
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('daily_purchase_report')]];
+        $meta = ['page_title' => lang('daily_purchase_report'), 'bc' => $bc];
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('daily_purchase_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/daily_purchase_report', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        } else {
+            $this->page_construct('reports/daily_purchase_report', $meta, $this->data);
+        }
+    }
+
     public function total_income(){
         $this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');

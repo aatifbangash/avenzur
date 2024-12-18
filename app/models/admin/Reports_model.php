@@ -1652,6 +1652,81 @@ class Reports_model extends CI_Model
         return $data;
     }
 
+    public function get_daily_purchase($supplier_id, $from_date, $to_date){
+        if ($from_date) {
+            // Convert from 'd/m/Y' to 'Y-m-d'
+            $from_date_formatted = DateTime::createFromFormat('d/m/Y', $from_date);
+            if ($from_date_formatted) {
+                $from_date = $from_date_formatted->format('Y-m-d');
+                $start_date = date('Y-m-d', strtotime($from_date));
+            } else {
+                echo "Invalid date format for to_date.";
+                exit;
+            }
+        }
+
+        if ($to_date) {
+            // Convert from 'd/m/Y' to 'Y-m-d'
+            $to_date_formatted = DateTime::createFromFormat('d/m/Y', $to_date);
+            if ($to_date_formatted) {
+                $to_date = $to_date_formatted->format('Y-m-d');
+                $end_date = date('Y-m-d', strtotime($to_date . ' +1 day'));
+            } else {
+                echo "Invalid date format for to_date.";
+                exit;
+            }
+        }
+
+        $this->db->select("
+                    pr.item_code, pi.product_name, pi.avz_item_code, pi.bonus, pi.net_unit_cost, pi.quantity,
+                    pi.unit_cost as purchase_price, pi.sale_price, pi.batchno, pi.item_discount, pi.item_tax,
+                    p.id, p.date as inv_date, 
+                    p.supplier, 
+                    p.total as total_purchase,
+                    p.total_discount,
+                    p.total_net_purchase,
+                    p.total_sale, 
+                    'purchase' as type, 
+                    s.sequence_code as supplier_code,
+                    ", false);
+
+        $this->db->from('sma_purchase_items pi');
+        $this->db->join('sma_products pr', 'pr.id = pi.product_id', 'left');
+        $this->db->join('sma_purchases p', 'p.id = pi.purchase_id', 'left');
+        $this->db->join('sma_companies s', 's.id = p.supplier_id', 'left');
+
+        if ($supplier_id) {
+            $this->db->where('p.supplier_id', $supplier_id);
+        }
+
+        if ($from_date && !$to_date) {
+            $this->db->where("p.date >=", date('Y-m-d', strtotime($start_date)));
+        }
+        
+        if ($to_date && !$from_date) {
+            $this->db->where("p.date <=", date('Y-m-d', strtotime($end_date)));
+        }
+        
+        if ($to_date && $from_date) {
+            $this->db->where("p.date BETWEEN '$start_date' AND '$end_date'");
+        }
+        $this->db->order_by('p.id desc');
+
+        $query = $this->db->get();
+        //echo $this->db->last_query();exit;
+
+        $pr = [];
+        if ($query->num_rows() > 0) {
+            $rows = $query->result();
+            
+            foreach ($rows as $row) {
+                $pr[] = $row;
+            }
+        }
+        
+        return $pr;
+    }
+
     public function get_total_income($supplier_id, $from_date, $to_date){
         if ($from_date) {
             // Convert from 'd/m/Y' to 'Y-m-d'
