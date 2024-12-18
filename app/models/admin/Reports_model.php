@@ -4393,6 +4393,10 @@ class Reports_model extends CI_Model
 
     public function getSalesByCategory($start_date, $end_date, $warehouse)
     {
+        $where = '' ;
+        if( $warehouse != '' ){
+            $where = " AND s.warehouse_id = " . $warehouse ;
+        }
         $sql = " SELECT 
                     c.category_code,
                     c.name as category_name,
@@ -4425,7 +4429,7 @@ class Reports_model extends CI_Model
             WHERE 
                 DATE(s.date) >= '" . trim($start_date) . "' 
                 AND DATE(s.date) <= '" . trim($end_date) . "'
-                AND s.warehouse_id = " . $warehouse . "
+                ".$where."
                 GROUP BY 
                     c.name
                 ORDER BY 
@@ -4475,7 +4479,7 @@ class Reports_model extends CI_Model
         WHERE 
         DATE(s.date) >= '" . trim($start_date) . "' 
         AND DATE(s.date) <= '" . trim($end_date) . "'
-        AND s.warehouse_id = " . $warehouse . "
+       ".$where."
         GROUP BY 
             c.category_code, c.name
         ORDER BY 
@@ -4495,6 +4499,10 @@ class Reports_model extends CI_Model
 
     public function getSalesByItems($start_date, $end_date, $warehouse)
     {
+        $where = '' ;
+        if( $warehouse != '' ){
+            $where = " AND s.warehouse_id = " . $warehouse ;
+        }
          $sql = "SELECT
             p.item_code, 
             p.name,
@@ -4521,21 +4529,49 @@ class Reports_model extends CI_Model
         WHERE 
             DATE(s.date) >= '" . trim($start_date) . "' 
             AND DATE(s.date) <= '" . trim($end_date) . "'
-            AND s.warehouse_id = " . $warehouse . "
+            ".$where."
         ORDER BY 
         DATE(s.date)
 ";
 
         $q = $this->db->query($sql);
-        $data = array();
+        $sales = array();
         //echo $this->db->last_query();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
-                $data[] = $row;
+                $sales[] = $row;
             }
         }
 
-        return $data;
+
+        /**get grand total */
+        $sql = "SELECT
+                ROUND( SUM(COALESCE(si.net_cost, 0) * COALESCE(si.quantity, 0)) , 2) AS grand_cost,
+                ROUND( SUM(si.subtotal),2) as grand_sale,
+                ROUND( SUM(COALESCE(si.item_discount, 0) + COALESCE(si.second_discount_value, 0)) , 2) AS grand_discount,
+                ROUND( SUM( si.totalbeforevat), 2) as grand_beforvate,
+                ROUND( SUM( si.item_tax),2) as grand_vat,
+                ROUND( SUM( si.main_net), 2) as grand_main_net
+            FROM 
+            sma_sale_items si
+            JOIN 
+            sma_sales s ON s.id = si.sale_id
+            JOIN 
+                sma_products p ON si.product_id = p.id
+            WHERE 
+                DATE(s.date) >= '" . trim($start_date) . "' 
+                AND DATE(s.date) <= '" . trim($end_date) . "'
+                ".$where."
+            ";
+
+                $q = $this->db->query($sql);
+                $grand = array();
+                //echo $this->db->last_query();
+                if ($q->num_rows() > 0) {
+                    $grand = $q->result();
+                }
+
+        return array('sales'=> $sales, 'grand' => $grand[0]);
     }
 
     public function getPharmacistsCommission($start_date, $end_date, $warehouse, $pharmacist)

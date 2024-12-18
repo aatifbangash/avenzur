@@ -620,7 +620,7 @@
 
                                     <li id="reports_collections_pharmacy">
                                         <a href="<?= admin_url('reports/collections_by_pharmacy') ?>">
-                                            <i class="fa fa-bars"></i><span class="text"> <?= lang('Collections By Pharmacy & Warehouse'); ?></span>
+                                            <i class="fa fa-bars"></i><span class="text"> <?= lang('Close Register Report'); ?></span>
                                         </a>
                                     </li>
 
