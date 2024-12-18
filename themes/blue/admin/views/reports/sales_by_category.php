@@ -109,6 +109,7 @@
                                     $grand_sales = 0;
                                     $grand_returns = 0;
                                     $grand_net_total = 0;
+                                    $grand_vat = 0;
                                     foreach ($sales_data['sales'] as $key => $data){
                                        
                                         $count ++ ; 
@@ -129,6 +130,7 @@
                                         }
                                         $total_main_net = $data->total_main_net - $total_return_main_net;
                                         $grand_net_total += $total_main_net;
+                                        $grand_vat += $data->total_vat;
 
                                         ?>
                                             <tr>
@@ -153,8 +155,8 @@
                                     <td colspan="2"><strong>Totals: </strong></td>
                                     <td colspan="1"><strong><?= $this->sma->formatNumber($grand_sales); ?></strong></td>
                                     <td colspan="1"></td>
-                                    <td colspan="1"></td>
-                                    <td colspan="1"><strong>00</strong></td>
+                                    <td colspan="1"><strong><?= $grand_vat;?></strong></td>
+                                    <td colspan="1"><strong></strong></td>
                                     <td colspan="1"></td>
                                     <td colspan="1"></td>
                                     <td colspan="1"><strong><?= $this->sma->formatNumber($grand_net_total); ?></strong></td>
