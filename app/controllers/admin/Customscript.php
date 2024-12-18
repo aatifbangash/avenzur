@@ -14,13 +14,13 @@ class Customscript extends MY_Controller
     }
     public function index()
     {
-        echo "Please contact administrator for running this script!";exit;
+        //echo "Please contact administrator for running this script!";exit;
         $count = $this->input->get('count');
         if($count == '') {
             echo "Pass count number" ;exit;
         }
         
-        $file = FCPATH . 'files_nehawand/nahwand'.$count.'.csv';
+        $file = FCPATH . 'files_nehawand/newnahawand'.$count.'.csv';
         if (($handle = fopen($file, "r")) !== false) {
             $dataToSend = [];
             $header = fgetcsv($handle); // Read the first row as the header
@@ -39,7 +39,7 @@ class Customscript extends MY_Controller
             ];
             $rowCount = 1;
             $addedRowCount = 1;
-            $batchSize = 501;
+            $batchSize = 520;
             $startCount = ($count * $batchSize) + ($count > 0 ? 1 : 0);
             
             $purchaseData = array();
@@ -150,41 +150,6 @@ class Customscript extends MY_Controller
                         echo 'nullproduct'.$item_code;
                     }
 
-                    // $postData['product_id'] = $product_id;
-                    // $postData['product'] = $product_id;
-                    // $postData['product_name'] = $row['item_name'];
-                    // $postData['product_option'] =false;
-                    // $postData['part_no'] ='';
-                    // $postData['totalbeforevat'][] = $row['item_total_cost'];
-                    // $postData['main_net'][] = $row['item_total_cost'];
-                    // $postData['item_first_discount'][] = 0;
-                    // $postData['item_second_discount'][] = 0;
-                    // $postData['item_vat_values'][] = 0;
-                    // $postData['item_net_purchase'][] =  $row['item_total_purchase_price'];
-                    // $postData['item_total_purchase'][] =  $row['item_total_purchase_price'];
-                    // $postData['item_total_sale'][] =  $row['item_total_sale_price'];
-                    // $postData['item_unit_cost'][] =  $row['item_cost_price'];
-                    // $postData['warehouse_shelf'][] =  '';
-                    // $postData['sale_price'][] = $row['item_sale_price'];
-                    // $postData['unit_cost'][] = $row['item_cost_price'];
-                    // $postData['real_unit_cost'][] = $row['item_purchase_price'];
-                    // $postData['net_cost'][] = $row['item_cost_price'];
-                    // $postData['batchno'][] = $row['item_batch_number'];
-                    // $postData['expiry'][] = $row['item_expiry_date'];
-                    // $postData['quantity_balance'][] = $row['item_quantity'];
-                    // $postData['quantity'][] = $row['item_quantity'];
-                    // $postData['product_unit'][] = null;
-                    // $postData['product_base_quantity'][] =  $row['item_quantity'];
-                    // $postData['bonus'][] =  0;
-                    // $postData['dis1'][] =  0;
-                    // $postData['dis2'][] =  0;
-                    // $postData['product_tax'][] =  0;
-
-                    // $postData['discount'] = '';
-                    // $postData['shipping'] = '';
-                    // $postData['payment_term'] = '';
-                    // $postData['note'] = '';
-                    // $postData['add_pruchase'] = 'submit';
 
                     $expiry_date = date('Y-m-d', strtotime($row['item_expiry_date']));
                    
@@ -274,7 +239,7 @@ class Customscript extends MY_Controller
                  * PLEASE CHECK THE VALID CSV FILES BEFORE
                  * ENABLE THIS FUNCTION
                  */
-                //$this->purchases_model->addPurchase($data, $products, $attachments = '');
+                $this->purchases_model->addPurchase($data, $products, $attachments = '');
             } else {
                 echo "no data found";
             }
