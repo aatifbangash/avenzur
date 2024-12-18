@@ -141,7 +141,7 @@ class Customscript extends MY_Controller
                 foreach ($purchaseData as $key => $row) {
                     //print_r($row);
                     $item_code = $row['item_code'];
-                    $sql = "SELECT * FROM sma_products WHERE item_code = ?";
+                    $sql = "SELECT * FROM sma_products WHERE item_code = ? ";
                     $query = $this->db->query($sql, [$item_code]);
                      //$this->db->last_query();
                     $product_data = $query->row_array();
@@ -151,8 +151,9 @@ class Customscript extends MY_Controller
                     }
 
 
+
                     $expiry_date = date('Y-m-d', strtotime($row['item_expiry_date']));
-                   
+                   if( $item_code != '' ) {
                     $products[] = [
                         'product_id' => $product_id,
                         'product_code' => $item_code,
@@ -199,7 +200,7 @@ class Customscript extends MY_Controller
                     $grand_total += floatval($row['item_total_after_vat']);//floatval($row['item_quantity']) * floatval($row['item_cost_price']) ; 
                     $total_item += floatval($row['item_quantity']);
                     $total_vat += floatval($row['item_total_vat']);
-
+                }
                     $i = $i + 1;
 
                 }
