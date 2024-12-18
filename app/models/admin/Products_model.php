@@ -33,8 +33,8 @@ class Products_model extends CI_Model
                         $category_code = $row_cat->category_code;
                         $formatted_id = str_pad($product_id, 6, '0', STR_PAD_LEFT);
                         // Concatenate the category code and formatted ID
-                        $item_code = $category_code . $formatted_id;
-                        $this->db->update('sma_products', ['item_code' => $item_code], ['id' => $product_id]);
+                        //$item_code = $category_code . $formatted_id;
+                        //$this->db->update('sma_products', ['item_code' => $item_code], ['id' => $product_id]);
                     }
                     foreach ($warehouses as $warehouse) {
                         $this->db->insert('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse->id, 'quantity' => 0]);
