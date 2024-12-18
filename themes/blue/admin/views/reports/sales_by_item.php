@@ -130,7 +130,7 @@
                                                 <td><?= $data->total_sale; ?></td>
                                                 <td><?= $data->item_discount; ?></td>
                                                 <td><?= $data->totalbeforevat; ?></td>
-                                                <td><?= $data->item_tax; ?></td>
+                                                <td><?= $data->tax; ?></td>
                                                 <td><?= $data->main_net; ?></td>
                                                 <td><?= $data->customer; ?></td>
                                                 
