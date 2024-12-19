@@ -247,9 +247,9 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th><?= $totalQuantity ?></th>
-                                <th><?= number_format($totalSalePrice, 2, '.', ',') ?></th>
+                                <th><?= '-' ?></th>
                                 <th><?= number_format($grandTotalSalePrice, 2, '.', ',') ?></th>
-                                <th><?= number_format($totalPurchasePrice, 2, '.', ',') ?></th>
+                                <th><?= '-' ?></th>
                                 <th><?= number_format($grandTotalPurchasePrice, 2, '.', ',') ?></th>
                                 <th><?= number_format($totalCostPrice, 2, '.', ',') ?></th>
                                 <th><?= number_format($grandTotalCostPrice, 2, '.', ',') ?></th>
