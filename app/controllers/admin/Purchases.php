@@ -2076,7 +2076,7 @@ class Purchases extends MY_Controller
         $gst_data = [];
         $total_cgst = $total_sgst = $total_igst = 0;
         $grand_total = 0;
-
+        $grand_total_cost_price      = 0;
 
         if ($purchase_detail->return_id > 0) {
             // get purchase return products
@@ -2117,7 +2117,7 @@ class Purchases extends MY_Controller
 
             $unit_cost = $item_net_cost;
 
-            $product_details = $this->transfers_model->getProductByCode($item_code);
+            $product_details = $this->transfers_model->getProductById($purchase_inovice[$i]->product_id);
 
             $net_cost = $item_net_cost;
             $real_cost = $real_unit_cost;
@@ -2193,8 +2193,9 @@ class Purchases extends MY_Controller
                 ];
 
                 $products[] = ($product + $gst_data);
-                $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
+                $total += ($purchase_inovice[$i]->sale_price * $item_unit_quantity);
                 $grand_total += $subtotal;
+                $grand_total_cost_price +=  ($net_cost* $item_unit_quantity);   
             }
 
         }
@@ -2219,6 +2220,7 @@ class Purchases extends MY_Controller
             'note' => $note,
             'total_tax' => $product_tax,
             'total' => $total,
+            'total_cost' => $grand_total_cost_price,
             'grand_total' => $grand_total,
             'created_by' => $this->session->userdata('user_id'),
             'status' => $status,
