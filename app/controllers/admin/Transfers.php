@@ -632,8 +632,8 @@ class Transfers extends MY_Controller
                     ];
 
                     $products[] = ($product + $gst_data);
-                    $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
-                    $grand_total_cost_price +=  $this->sma->formatDecimal(($net_cost* $item_unit_quantity), 4);  
+                    $total += ($item_net_cost * $item_unit_quantity);
+                    $grand_total_cost_price +=  ($net_cost* $item_unit_quantity);  
                 }
             }
 
@@ -656,6 +656,7 @@ class Transfers extends MY_Controller
                 'note'                    => $note,
                 'total_tax'               => $product_tax,
                 'total'                   => $total,
+                'total_cost'              => $grand_total_cost_price,
                 'grand_total'             => $grand_total, 
                 'created_by'              => $this->session->userdata('user_id'),
                 'status'                  => $status,

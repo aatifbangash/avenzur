@@ -68,7 +68,6 @@
         $("#add_item").autocomplete({
             //source: '<?= admin_url('transfers/suggestions'); ?>',
             source: function (request, response) {
-                console.log('Autocomplete triggered');
                 if (!$('#from_warehouse').val()) {
                     $('#add_item').val('').removeClass('ui-autocomplete-loading');
                     bootbox.alert('<?= lang('select_above'); ?>');
@@ -101,7 +100,8 @@
                                 data: {
                                     term: request.term,
                                     warehouse_id: $("#from_warehouse").val(),
-                                    type: 'transfer'
+                                    type: 'transfer',
+                                    module: 'transfer'
                                 },
                                 success: function (data) {
                                     $(this).removeClass('ui-autocomplete-loading');
