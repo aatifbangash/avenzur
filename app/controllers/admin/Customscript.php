@@ -20,7 +20,7 @@ class Customscript extends MY_Controller
             echo "Pass count number" ;exit;
         }
         
-        $file = FCPATH . 'files_nehawand/newnahawand'.$count.'.csv';
+        $file = FCPATH . 'files_nehawand/nehawantlat'.$count.'.csv';
         if (($handle = fopen($file, "r")) !== false) {
             $dataToSend = [];
             $header = fgetcsv($handle); // Read the first row as the header
