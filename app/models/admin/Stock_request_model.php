@@ -370,7 +370,7 @@ class Stock_request_model extends CI_Model
                           WHERE sma_sale_items.product_id = sma_products.id
                           AND sma_sale_items.warehouse_id = '.$warehouse_id.'
                           AND sma_sales.date >= DATE_SUB(NOW(), INTERVAL 3 MONTH)) AS avg_last_3_months_sales', false)
-                ->from('sma_warehouses_products')
+                ->from('sma_inventory_movements')
                 ->join('sma_products', 'sma_products.id = sma_warehouses_products.product_id', 'left')
                 ->where('sma_warehouses_products.warehouse_id', $warehouse_id)
                 ->group_by('sma_warehouses_products.product_id');
@@ -383,11 +383,11 @@ class Stock_request_model extends CI_Model
                           WHERE sma_sale_items.product_id = sma_products.id
                           AND sma_sale_items.warehouse_id = '.$warehouse_id.'
                           AND sma_sales.date >= DATE_SUB(NOW(), INTERVAL 3 MONTH)) AS avg_last_3_months_sales', false)
-                ->from('sma_warehouses_products')
-                ->join('sma_products', 'sma_products.id = sma_warehouses_products.product_id', 'left')
-                ->where('sma_warehouses_products.warehouse_id', $warehouse_id)
-                ->where_in('sma_warehouses_products.product_id', $product_ids)
-                ->group_by('sma_warehouses_products.product_id');
+                ->from('sma_inventory_movements')
+                ->join('sma_products', 'sma_products.id = sma_inventory_movements.product_id', 'left')
+                ->where('sma_inventory_movements.location_id', $warehouse_id)
+                ->where_in('sma_inventory_movements.product_id', $product_ids)
+                ->group_by('sma_inventory_movements.product_id');
         }
 
         $q = $this->db->get();
