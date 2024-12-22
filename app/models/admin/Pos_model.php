@@ -21,6 +21,42 @@ class Pos_model extends CI_Model
         return false;
     }
 
+    public function addSerialsBatch($data) {
+        // Validate and check if $data is a non-empty array
+        if (!empty($data) && is_array($data)) {
+            // Extract serial numbers from the input data
+            $serial_numbers = array_column($data, 'serial_number');
+    
+            // Check which serial numbers already exist in the database
+            $this->db->select('serial_number');
+            $this->db->from('sma_serial_numbers');
+            $this->db->where_in('serial_number', $serial_numbers);
+            $query = $this->db->get();
+            $existing_serials = array_column($query->result_array(), 'serial_number');
+    
+            // Filter out records with existing serial numbers
+            $filtered_data = array_filter($data, function ($item) use ($existing_serials) {
+                return !in_array($item['serial_number'], $existing_serials);
+            });
+    
+            // Check if there is any data left to insert
+            if (!empty($filtered_data)) {
+                // Insert the filtered batch of records
+                if ($this->db->insert_batch('sma_serial_numbers', $filtered_data)) {
+                    return true; // Return success
+                } else {
+                    // Debugging: Get the database error if insertion fails
+                    $error = $this->db->error();
+                    print_r($error);
+                    return false;
+                }
+            }
+        }
+    
+        // If $data is not valid or no new serials to insert, return an error
+        return false;
+    }    
+
     public function addPayment($payment = [], $customer_id = null)
     {
         if (isset($payment['sale_id']) && isset($payment['paid_by']) && isset($payment['amount'])) {
