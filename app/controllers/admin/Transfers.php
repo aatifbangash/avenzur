@@ -116,6 +116,7 @@ class Transfers extends MY_Controller
             $total_cgst  = $total_sgst  = $total_igst  = 0;
             $i           = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
             for ($r = 0; $r < $i; $r++) {
+                $pr_id              = $_POST['product_id'][$r]; 
                 $item_code          = $_POST['product_code'][$r];
                 $avz_code           = $_POST['avz_code'][$r];
                 $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
@@ -137,7 +138,8 @@ class Transfers extends MY_Controller
                 //$net_cost_obj = $this->transfers_model->getAverageCost($item_batchno, $item_code);
                 //$net_cost = $net_cost_obj[0]->cost_price;
 
-                $product_details = $this->transfers_model->getProductByCode($item_code);
+                //$product_details = $this->transfers_model->getProductByCode($item_code);
+                $product_details = $this->transfers_model->getProductById($pr_id);
 
                 $net_cost = $net_unit_cost;
                 $real_cost = $real_unit_cost;
@@ -210,7 +212,7 @@ class Transfers extends MY_Controller
 
                     $products[] = ($product + $gst_data);
                     $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
-                    $grand_total_cost_price +=  $this->sma->formatDecimal(($net_cost* $item_unit_quantity), 4);   
+                    $grand_total_cost_price +=  ($net_cost* $item_unit_quantity);   
 
 
                 }
@@ -233,6 +235,7 @@ class Transfers extends MY_Controller
                 'note'                    => $note,
                 'total_tax'               => $product_tax,
                 'total'                   => $total,
+                'total_cost'              => $grand_total_cost_price,
                 'grand_total'             => $grand_total,   
                 'created_by'              => $this->session->userdata('user_id'),
                 'status'                  => $status,
@@ -547,6 +550,7 @@ class Transfers extends MY_Controller
             $total_cgst  = $total_sgst  = $total_igst  = 0;
             $i           = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
             for ($r = 0; $r < $i; $r++) {
+                $pr_id              = $_POST['product_id'][$r];
                 $item_code          = $_POST['product_code'][$r];
                 $avz_code           = $_POST['avz_code'][$r];
                 $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
@@ -568,7 +572,8 @@ class Transfers extends MY_Controller
                 //$net_cost_obj = $this->transfers_model->getAverageCost($item_batchno, $item_code);
                 //$net_cost = $net_cost_obj[0]->cost_price;
 
-                $product_details = $this->transfers_model->getProductByCode($item_code);
+                //$product_details = $this->transfers_model->getProductByCode($item_code);
+                $product_details = $this->transfers_model->getProductById($pr_id);
 
                 $net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
                 $real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
@@ -627,8 +632,8 @@ class Transfers extends MY_Controller
                     ];
 
                     $products[] = ($product + $gst_data);
-                    $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
-                    $grand_total_cost_price +=  $this->sma->formatDecimal(($net_cost* $item_unit_quantity), 4);  
+                    $total += ($item_net_cost * $item_unit_quantity);
+                    $grand_total_cost_price +=  ($net_cost* $item_unit_quantity);  
                 }
             }
 
@@ -651,6 +656,7 @@ class Transfers extends MY_Controller
                 'note'                    => $note,
                 'total_tax'               => $product_tax,
                 'total'                   => $total,
+                'total_cost'              => $grand_total_cost_price,
                 'grand_total'             => $grand_total, 
                 'created_by'              => $this->session->userdata('user_id'),
                 'status'                  => $status,
