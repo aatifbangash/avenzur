@@ -1806,6 +1806,46 @@ var lang = {
             ?>
         }
 
+        function parseMedicineQRCode(qrCode) {
+            const result = {
+                GTIN: null,
+                SerialNumber: null,
+                BatchNumber: null,
+                ExpiryDate: null
+            };
+
+            // Extract GTIN (starts with 01 and is 14 digits long)
+            const gtinMatch = qrCode.match(/01(\d{14})/);
+            if (gtinMatch) {
+                result.GTIN = gtinMatch[1];
+                // Remove GTIN and everything before it from the string
+                qrCode = qrCode.substring(gtinMatch.index + gtinMatch[0].length);
+            }
+
+            // Extract Batch Number (starts with 10 after the GTIN)
+            const batchNumberMatch = qrCode.match(/10([a-zA-Z0-9]+?)(?=17|21|$)/);
+            if (batchNumberMatch) {
+                result.BatchNumber = batchNumberMatch[1];
+            }
+
+            // Extract Expiry Date (starts with 17 and followed by 6 digits)
+            const expiryDateMatch = qrCode.match(/17(\d{6})/);
+            if (expiryDateMatch) {
+                const expiryRaw = expiryDateMatch[1];
+                const year = `20${expiryRaw.substring(0, 2)}`; // Prefix '20' for YY
+                const month = expiryRaw.substring(2, 4); // Extract MM
+                result.ExpiryDate = `${month} ${year}`; // Format as "MM YYYY"
+            }
+
+            // Extract Serial Number (starts with 21 and followed by alphanumeric characters)
+            const serialNumberMatch = qrCode.match(/21([a-zA-Z0-9]+)/);
+            if (serialNumberMatch) {
+                result.SerialNumber = serialNumberMatch[1];
+            }
+
+            return result;
+        }
+
         $("#add_item").autocomplete({
             source: function (request, response) {
                 if (!$('#poscustomer').val()) {
@@ -1816,17 +1856,129 @@ var lang = {
                     return false;
                 }
 
+                const parsed = parseMedicineQRCode(request.term);
+
                 $.ajax({
                     type: 'get',
-                    url: '<?=admin_url('sales/suggestions/1');?>',
+                    url: '<?=admin_url('products/get_item_by_gtin_batch_expiry');?>',
                     dataType: "json",
                     data: {
-                        term: request.term,
+                        gtin: parsed.GTIN,
+                        batch: parsed.BatchNumber,
+                        expiry: parsed.ExpiryDate,
                         warehouse_id: $("#poswarehouse").val(),
-                        customer_id: $("#poscustomer").val()
+                        customer_id: $("#poscustomer").val(),
+                        module: 'pos'
                     },
                     success: function (data) {
-                        if(data[0].id != 0){
+                        $(this).removeClass('ui-autocomplete-loading');
+                        if(data){
+                            var avzItemCode = data[0].row.avz_item_code;
+                            var found = false;
+                            var foundKey = '';
+
+                            data[0].row.serial_number = parsed.SerialNumber;
+
+                            Object.keys(positems).forEach(function (key) {
+                                if (positems[key].row && positems[key].row.avz_item_code === avzItemCode) {
+                                    found = true;
+                                    foundKey = key;
+                                }
+                            });
+
+                            if(found == true){
+
+                                var available_qty = parseInt(positems[foundKey].row.quantity);
+                                var new_qty = parseInt(positems[foundKey].row.qty) + 1;
+                                //console.log(available_qty+' -- '+new_qty);
+                                if(parseInt(new_qty) <= parseInt(available_qty)){
+                                    positems[foundKey].row.qty = new_qty;
+
+                                    if(positems[foundKey].row.serial_numbers){
+                                        positems[foundKey].row.serial_numbers.push(parsed.SerialNumber);
+                                    }else{
+                                        positems[foundKey].row.serial_numbers = [parsed.SerialNumber];
+                                    }
+
+                                    localStorage.setItem('positems', JSON.stringify(positems));
+                                    loadItems();
+                                }else{
+                                    bootbox.alert('No more quantity available.');
+                                }
+                                
+                            }else{
+                                
+                                add_invoice_item(data[0]);
+                            }
+                        }else{
+                            $.ajax({
+                                type: 'get',
+                                url: '<?=admin_url('sales/suggestions/1');?>',
+                                dataType: "json",
+                                data: {
+                                    term: request.term,
+                                    warehouse_id: $("#poswarehouse").val(),
+                                    customer_id: $("#poscustomer").val()
+                                },
+                                success: function (data) {
+                                    if(data[0].id != 0){
+                                        $(this).removeClass('ui-autocomplete-loading');
+                                        response(data);
+                                    }else{
+                                        $.ajax({
+                                            type: 'get',
+                                            url: '<?=admin_url('products/get_items_by_avz_code');?>',
+                                            dataType: "json",
+                                            data: {
+                                                term: request.term,
+                                                warehouse_id: $("#poswarehouse").val(),
+                                                customer_id: $("#poscustomer").val(),
+                                                module: 'pos'
+                                            },
+                                            success: function (data) {
+                                                $(this).removeClass('ui-autocomplete-loading');
+                                                if(data){
+                                                    var avzItemCode = data[0].row.avz_item_code;
+                                                    var found = false;
+                                                    var foundKey = '';
+
+                                                    Object.keys(positems).forEach(function (key) {
+                                                        if (positems[key].row && positems[key].row.avz_item_code === avzItemCode) {
+                                                            found = true;
+                                                            foundKey = key;
+                                                        }
+                                                    });
+
+                                                    if(found == true){
+
+                                                        var available_qty = parseInt(positems[foundKey].row.quantity);
+                                                        var new_qty = parseInt(positems[foundKey].row.qty) + 1;
+                                                        //console.log(available_qty+' -- '+new_qty);
+                                                        if(parseInt(new_qty) <= parseInt(available_qty)){
+                                                            positems[foundKey].row.qty = new_qty;
+                                                            localStorage.setItem('positems', JSON.stringify(positems));
+                                                            loadItems();
+                                                        }else{
+                                                            bootbox.alert('No more quantity available.');
+                                                        }
+                                                        
+                                                    }else{
+                                                        add_invoice_item(data[0]);
+                                                    }
+                                                }else{
+                                                    
+                                                    bootbox.alert('No records found for this item code.');
+                                                }
+                                                
+                                            }
+                                        });
+                                    }
+                                    
+                                }
+                            });
+                        }
+
+                        /*if(data[0].id != 0){
                             $(this).removeClass('ui-autocomplete-loading');
                             response(data);
                         }else{
@@ -1877,7 +2029,7 @@ var lang = {
                                     
                                 }
                             });
-                        }
+                        }*/
                         
                     }
                 });
