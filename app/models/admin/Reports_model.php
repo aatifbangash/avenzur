@@ -1974,7 +1974,7 @@ class Reports_model extends CI_Model
         return $stockArray;
     }
 
-    public function getStockData($at_date, $warehouse, $item_group, $item, $type, $page, $per_page)
+    public function getStockData($at_date, $warehouse, $item_group, $type, $item, $page, $per_page)
     {
         
         $stockArray = [];
