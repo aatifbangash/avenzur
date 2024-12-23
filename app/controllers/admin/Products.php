@@ -4103,10 +4103,8 @@ class Products extends MY_Controller
     public function print_barcodes($product_id = null)
     {
         $this->sma->checkPermissions('barcode', true);
-
-        $this->form_validation->set_rules('style', lang('style'), 'required');
-
-        if ($this->form_validation->run() == true) {
+        $s = isset($_POST['product']) ? sizeof($_POST['product']) : 0;
+        if ($s > 0) {
             $purchase_id =  $this->input->post('purchase_id') ;
             // print barcodes
             $s = isset($_POST['product']) ? sizeof($_POST['product']) : 0;
@@ -4327,15 +4325,23 @@ class Products extends MY_Controller
             $meta = ['page_title' => lang('print_barcodes'), 'bc' => $bc];
             $this->page_construct('products/print_barcodes', $meta, $this->data);
         } else {
-            if ($this->input->get('purchase') || $this->input->get('transfer')) {
-                if ($this->input->get('purchase')) {
-                    $purchase_id = $this->input->get('purchase', true);
-                    $item_code = $this->input->get('item_code', true);
-                    $items = $this->products_model->getPurchaseItems($purchase_id, $item_code);
-                } elseif ($this->input->get('transfer')) {
-                    $transfer_id = $this->input->get('transfer', true);
-                    $items = $this->products_model->getTransferItems($transfer_id);
-                }
+
+            // if ($this->input->get('purchase') || $this->input->get('transfer')) {
+            //     if ($this->input->get('purchase')) {
+            //         $purchase_id = $this->input->get('purchase', true);
+            //         $item_code = $this->input->get('item_code', true);
+            //         $items = $this->products_model->getPurchaseItems($purchase_id, $item_code);
+            //     } elseif ($this->input->get('transfer')) {
+            //         $transfer_id = $this->input->get('transfer', true);
+            //         $items = $this->products_model->getTransferItems($transfer_id);
+            //     }
+
+            if ( $this->input->get('item_code') || $this->input->get('purchase') ) {
+                $purchase_id = $this->input->get('purchase', true);
+                $item_code = $this->input->get('item_code', true);
+                $warehouse_id = $this->input->get('pharmacy', true);
+                
+                $items = $this->products_model->getProductsBarcodeItems($purchase_id, $item_code, $warehouse_id);
                 if ($items) {
                     foreach ($items as $item) {
                         if ($row = $this->products_model->getProductByID($item->product_id)) {
@@ -4345,63 +4351,25 @@ class Products extends MY_Controller
                                     $selected_variants[$variant->id] = isset($pr[$row->id]['selected_variants'][$variant->id]) && !empty($pr[$row->id]['selected_variants'][$variant->id]) ? 1 : ($variant->id == $item->option_id ? 1 : 0);
                                 }
                             }
-                            $pr[] = ['id' => $item->id, 'label' => $row->name . ' (' . $row->code . ')', 'code' => $row->code, 'name' => $row->name, 'price' => $row->price, 'qty' => $item->quantity, 'variants' => $variants, 'selected_variants' => $selected_variants];
+                            $pr[] = ['id' => $item->id, 'label' => $row->name . ' (' . $row->code . ')',
+                                     'code' => $row->code, 
+                                     'name' => $row->name, 
+                                     'price' => $row->price, 
+                                     'qty' => $item->quantity, 
+                                     'avz_item_code' => $item->avz_item_code,
+                                     'batchno' => $item->batchno,
+                                    'expiry' => $item->expiry];
                         }
                     }
                     $this->data['message'] = lang('products_added_to_list');
                 }
             }
 
-            if ($product_id) {
-                if ($row = $this->site->getProductByID($product_id)) {
-                    $selected_variants = false;
-                    if ($variants = $this->products_model->getProductOptions($row->id)) {
-                        foreach ($variants as $variant) {
-                            $selected_variants[$variant->id] = $variant->quantity > 0 ? 1 : 0;
-                        }
-                    }
-                    $pr[$row->id] = ['id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')', 'code' => $row->code, 'name' => $row->name, 'price' => $row->price, 'qty' => $row->quantity, 'variants' => $variants, 'selected_variants' => $selected_variants];
 
-                    $this->data['message'] = lang('product_added_to_list');
-                }
-            }
-
-            if ($this->input->get('category')) {
-                if ($products = $this->products_model->getCategoryProducts($this->input->get('category'))) {
-                    foreach ($products as $row) {
-                        $selected_variants = false;
-                        if ($variants = $this->products_model->getProductOptions($row->id)) {
-                            foreach ($variants as $variant) {
-                                $selected_variants[$variant->id] = $variant->quantity > 0 ? 1 : 0;
-                            }
-                        }
-                        $pr[] = ['id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')', 'code' => $row->code, 'name' => $row->name, 'price' => $row->price, 'qty' => $row->quantity, 'variants' => $variants, 'selected_variants' => $selected_variants];
-                    }
-                    $this->data['message'] = lang('products_added_to_list');
-                } else {
-                    $pr = [];
-                    $this->session->set_flashdata('error', lang('no_product_found'));
-                }
-            }
-
-            if ($this->input->get('subcategory')) {
-                if ($products = $this->products_model->getSubCategoryProducts($this->input->get('subcategory'))) {
-                    foreach ($products as $row) {
-                        $selected_variants = false;
-                        if ($variants = $this->products_model->getProductOptions($row->id)) {
-                            foreach ($variants as $variant) {
-                                $selected_variants[$variant->id] = $variant->quantity > 0 ? 1 : 0;
-                            }
-                        }
-                        $pr[] = ['id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')', 'code' => $row->code, 'name' => $row->name, 'price' => $row->price, 'qty' => $row->quantity, 'variants' => $variants, 'selected_variants' => $selected_variants];
-                    }
-                    $this->data['message'] = lang('products_added_to_list');
-                } else {
-                    $pr = [];
-                    $this->session->set_flashdata('error', lang('no_product_found'));
-                }
-            }
-
+            $this->data['purchase_id'] = $this->input->get('purchase', true) ;
+            $this->data['item_code'] = $this->input->get('item_code', true) ;
+            $this->data['pharmacy'] = $this->input->get('pharmacy', true) ;
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->data['items'] = isset($pr) ? json_encode($pr) : false;
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('products'), 'page' => lang('products')], ['link' => '#', 'page' => lang('print_barcodes')]];

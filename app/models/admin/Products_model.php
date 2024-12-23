@@ -1434,4 +1434,39 @@ class Products_model extends CI_Model
         }
         return false;
     }
+
+    public function getProductsBarcodeItems($purchase_id='', $item_code = '', $warehouse_id = '')
+    {
+        //$q = $this->db->get_where('purchase_items', ['purchase_id' => $purchase_id]);
+        // $this->db->where('purchase_id', $purchase_id);
+
+        // if (!empty($item_code)) {
+        //     $this->db->where('product_code', $item_code);
+        // }
+    
+        // $q = $this->db->get('purchase_items');
+
+        $this->db->select('purchase_items.*'); 
+        $this->db->from('purchase_items');
+        
+        // Adding where clause for purchase_id
+        if( !empty($purchase_id) ) {
+            $this->db->where('purchase_items.purchase_id', $purchase_id);
+        }
+        // Add a condition for item_code if it is not empty and check on the products table
+        if (!empty($item_code)) {
+            $this->db->where('product_code', $item_code);
+        }
+        if (!empty($warehouse_id)) {
+            $this->db->where('warehouse_id', $warehouse_id);
+        }
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    } 
 }

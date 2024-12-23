@@ -1443,7 +1443,7 @@ class Transfers extends MY_Controller
                         ];
 
                         $products[] = ($product + $gst_data);
-                        $total += $this->sma->formatDecimal(($item_net_cost * $item_quantity), 4);
+                        $total += $item_net_cost * $item_quantity;
                     }
                     $rw++;
                 }
