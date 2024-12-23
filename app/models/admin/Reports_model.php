@@ -1927,7 +1927,7 @@ class Reports_model extends CI_Model
         return $totalPurchases;
     }
 
-    public function getStockDataTotals($at_date, $warehouse, $item_group, $item){
+    public function getStockDataTotals($at_date, $warehouse, $item_group, $type, $item){
         $stockArray = [];
         if ($at_date) {
             $at_date = $this->sma->fld($at_date);
@@ -1959,10 +1959,13 @@ class Reports_model extends CI_Model
         if ($item) {
             $stockQuery .= " AND inv.product_id = '{$item}' ";
         }
+        if ($type) {
+            $stockQuery .= " AND inv.type = '{$type}' ";
+        }
 
         $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code HAVING quantity > 0";
         $stockResults = $this->db->query($stockQuery);
-        // echo $this->db->last_query(); exit; 
+        //echo $this->db->last_query(); exit; 
         if ($stockResults->num_rows() > 0) {
             foreach ($stockResults->result() as $row) {
                 $stockArray[] = $row;
@@ -1971,7 +1974,7 @@ class Reports_model extends CI_Model
         return $stockArray;
     }
 
-    public function getStockData($at_date, $warehouse, $item_group, $item, $page, $per_page)
+    public function getStockData($at_date, $warehouse, $item_group, $item, $type, $page, $per_page)
     {
         
         $stockArray = [];
@@ -2006,6 +2009,9 @@ class Reports_model extends CI_Model
         }
         if ($item) {
             $stockQuery .= " AND inv.product_id = '{$item}' ";
+        }
+        if ($type) {
+            $stockQuery .= " AND inv.type = '{$type}' ";
         }
 
         $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code HAVING quantity > 0 ORDER BY p.id DESC LIMIT {$per_page} OFFSET {$offset}";
