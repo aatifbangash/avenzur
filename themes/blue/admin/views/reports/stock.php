@@ -123,8 +123,21 @@
 
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-4">
+                                <div class="form-group">
+                                    <?= lang('Type', 'Type'); ?>
+                                    <?php echo form_dropdown('filterOnType', $filterOnTypeArr, set_value('filterOnType', $_GET['filterOnType']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'filterOnType'),  array('none')); ?>
+
+                                </div>
+                            </div>
+                            
+                            
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12">
+                        <div class="col-md-4">
                                 <div class="form-group">
                                     <?= lang('Item Group', 'item_group'); ?>
                                     <?php
@@ -139,10 +152,6 @@
 
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-12">
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?php echo lang('Item', 'item'); ?>
