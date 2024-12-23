@@ -238,7 +238,7 @@ class Sales_model extends CI_Model
 
                 if ($data['sale_status'] == 'completed'){ //handle inventory movement 
                     //$this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id'], $item['real_unit_price']);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id'], $item['real_unit_price'], $data['date']);
                 } 
                 if ($data['sale_status'] == 'completed' && empty($si_return)) { 
                       
@@ -1189,7 +1189,7 @@ class Sales_model extends CI_Model
                 // Code for serials end here
                 if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
                        //handle inventory movement
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $id,  $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id'], $item['real_unit_price']); 
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $id,  $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id'], $item['real_unit_price'], $data['date']); 
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
