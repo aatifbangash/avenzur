@@ -18,8 +18,26 @@
         <div class="row">
             <div class="col-lg-12">
                 <div class="row" style="padding:10px;">
-                    <div class="col-md-3">Purchase Inv No:<input type="text" id="purchase_id" name="purchase_id" class="form-control input-tip"></div>
-                    <div class="col-md-3">Item Code:<input type="text" id="item_code" name="item_code" class="form-control input-tip"></div>
+                <div class="col-md-3">
+                            
+                            Pharmacy: <select class="form-control" name="pharmacy" id="pharmacy">
+                                <option value="">All</option>
+                            <?php
+                            $selected_warehouse_id[] = isset($warehouse) ? $warehouse : '';
+                            $dp['all'] = 'All';
+                            foreach ($warehouses as $warehouse) {
+                                ?>
+                               
+                                    <option value="<?=$warehouse->id;?>" <?php if($pharmacy == $warehouse->id) {?> selected <?php }?> ><?=$warehouse->name;?></option>
+                             <?php   
+                                
+                            }
+                            ?>
+                            </select>
+                          
+                        </div>
+                    <div class="col-md-3">Purchase Inv No:<input type="text" id="purchase_id" name="purchase_id" class="form-control input-tip" value="<?=$purchase_id;?>"></div>
+                    <div class="col-md-3">Item Code*:<input type="text" id="item_code" name="item_code" class="form-control input-tip" value="<?=$item_code;?>"></div>
                     <div class="col-md-3" style="margin-top:19px;"> <input type="button" id="searchByNumber" class="btn btn-primary" value="Search"></div>
              </div>
                 <!-- <p class="introtext no-print"><?php echo sprintf(
@@ -44,76 +62,17 @@
                                class="table items table-striped table-bordered table-condensed table-hover">
                             <thead>
                             <tr>
+                                <th class="col-xs-1"> &nbsp;</th>
                                 <th class="col-xs-4"><?= lang('product_name') . ' (' . $this->lang->line('product_code') . ')'; ?></th>
                                 <th class="col-xs-1"><?= lang('quantity'); ?></th>
-                                <th class="col-xs-7"><?= lang('variants'); ?></th>
-                                <th class="text-center" style="width:30px;">
-                                    <i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i>
-                                </th>
                             </tr>
                             </thead>
                             <tbody></tbody>
                         </table>
-                    </div>
-
-                        <div class="form-group">
-                            <?= lang('style', 'style'); ?>
-                            <?php $opts = ['' => lang('select') . ' ' . lang('style'), 40 => lang('40_per_sheet'), 30 => lang('30_per_sheet'), 24 => lang('24_per_sheet'), 20 => lang('20_per_sheet'), 18 => lang('18_per_sheet'), 14 => lang('14_per_sheet'), 12 => lang('12_per_sheet'), 10 => lang('10_per_sheet'), 50 => lang('continuous_feed')]; ?>
-                            <?= form_dropdown('style', $opts, set_value('style', 24), 'class="form-control tip" id="style" required="required"'); ?>
-                            
-
-                            <div class="row cf-con" style="margin-top: 10px; display: none;">
-                                <div class="col-xs-4">
-                                    <div class="form-group">
-                                        <div class="input-group">
-                                            <?= form_input('cf_width', '', 'class="form-control" id="cf_width" placeholder="' . lang('width') . '"'); ?>
-                                            <span class="input-group-addon" style="padding-left:10px;padding-right:10px;"><?= lang('inches'); ?></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-xs-4">
-                                    <div class="form-group">
-                                        <div class="input-group">
-                                            <?= form_input('cf_height', '', 'class="form-control" id="cf_height" placeholder="' . lang('height') . '"'); ?>
-                                            <span class="input-group-addon" style="padding-left:10px;padding-right:10px;"><?= lang('inches'); ?></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-xs-4">
-                                    <div class="form-group">
-                                    <?php $oopts = [0 => lang('portrait'), 1 => lang('landscape')]; ?>
-                                        <?= form_dropdown('cf_orientation', $oopts, '', 'class="form-control" id="cf_orientation" placeholder="' . lang('orientation') . '"'); ?>
-                                    </div>
-                                </div>
-                            </div>
-                            <span class="help-block"><?= lang('barcode_tip'); ?></span>
-                            <div class="clearfix"></div>
-                        </div>
-                        <div class="form-group">
-                            <span style="font-weight: bold; margin-right: 15px;"><?= lang('print'); ?>:</span>
-                            <input name="site_name" type="checkbox" id="site_name" value="1" checked="checked" style="display:inline-block;" />
-                            <label for="site_name" class="padding05"><?= lang('site_name'); ?></label>
-                            <input name="product_name" type="checkbox" id="product_name" value="1" checked="checked" style="display:inline-block;" />
-                            <label for="product_name" class="padding05"><?= lang('product_name'); ?></label>
-                            <input name="price" type="checkbox" id="price" value="1" checked="checked" style="display:inline-block;" />
-                            <label for="price" class="padding05"><?= lang('price'); ?></label>
-                            <input name="currencies" type="checkbox" id="currencies" value="1" style="display:inline-block;" />
-                            <label for="currencies" class="padding05"><?= lang('currencies'); ?></label>
-                            <input name="unit" type="checkbox" id="unit" value="1" style="display:inline-block;" />
-                            <label for="unit" class="padding05"><?= lang('unit'); ?></label>
-                            <input name="category" type="checkbox" id="category" value="1" style="display:inline-block;" />
-                            <label for="category" class="padding05"><?= lang('category'); ?></label>
-                            <input name="variants" type="checkbox" id="variants" value="1" style="display:inline-block;" />
-                            <label for="variants" class="padding05"><?= lang('variants'); ?></label>
-                            <input name="product_image" type="checkbox" id="product_image" value="1" style="display:inline-block;" />
-                            <label for="product_image" class="padding05"><?= lang('product_image'); ?></label>
-                            <input name="check_promo" type="checkbox" id="check_promo" value="1" checked="checked" style="display:inline-block;" />
-                            <label for="check_promo" class="padding05"><?= lang('check_promo'); ?></label>
-                        </div>
+                    </div>                       
 
                     <div class="form-group">
-                        <?php echo form_submit('print', lang('update'), 'class="btn btn-primary"'); ?>
-                        <button type="button" id="reset" class="btn btn-danger"><?= lang('reset'); ?></button>
+                        <?php echo form_submit('print', lang('Print'), 'class="btn btn-primary"'); ?>
                     </div>
                     <?= form_close(); ?>
                     <div class="clearfix"></div>
@@ -550,8 +509,7 @@
             item_id = row.attr('data-item-id');
             bcitems[item_id].qty = new_qty;
             localStorage.setItem('bcitems', JSON.stringify(bcitems));
-        });
-
+        })
     });
 
     function add_product_item(item) {
@@ -577,30 +535,24 @@
     }
 
     function loadItems () {
-
+        var checked= '<?php echo $item_code == '' ? "checked" : "" ; ?>';
         if (localStorage.getItem('bcitems')) {
             $("#bcTable tbody").empty();
             bcitems = JSON.parse(localStorage.getItem('bcitems'));
-
             $.each(bcitems, function () {
 
                 var item = this;
                 var row_no = item.id;
                 var vd = '';
                 var newTr = $('<tr id="row_' + row_no + '" class="row_' + item.id + '" data-item-id="' + item.id + '"></tr>');
-                tr_html = '<td><input name="product[]" type="hidden" value="' + item.id + '"><span id="name_' + row_no + '">' + item.name + ' (' + item.code + ')'+' - '+item.sequence_code+'</span></td>';
+                tr_html = '<td><input name="product[]" type="checkbox" '+checked+' value="' + item.id + '"></td>';
+                tr_html += '<td><input name="product_new[]" type="hidden" value="' + item.id + '"><span id="name_' + row_no + '">' + item.name + ' (' + item.code + ')'+' - '+item.avz_item_code+'</span></td>';
                 tr_html += '<td><input class="form-control quantity text-center" name="quantity[]" type="text" value="' + formatDecimal(item.qty) + '" data-id="' + row_no + '" data-item="' + item.id + '" id="quantity_' + row_no + '" onClick="this.select();"></td>';
-                if(item.variants) {
-                    $.each(item.variants, function () {
-                        vd += '<input name="vt_'+ item.id +'_'+ this.id +'" type="checkbox" class="checkbox" id="'+this.id+'" data-item-id="'+item.id+'" value="'+this.id+'" '+( item.selected_variants[this.id] == 1 ? 'checked="checked"' : '')+' style="display:inline-block;" /><label for="'+this.id+'" class="padding05">'+this.name+'</label>';
-                    });
-                }
-                tr_html += '<td>'+vd+'</td>';
-                tr_html += '<td class="text-center"><i class="fa fa-times tip del" id="' + row_no + '" title="Remove" style="cursor:pointer;"></i></td>';
+              
                 newTr.html(tr_html);
                 newTr.appendTo("#bcTable");
             });
-            $('input[type="checkbox"],[type="radio"]').not('.skip').iCheck({
+            $('input[type="radio"]').not('.skip').iCheck({
                 checkboxClass: 'icheckbox_square-blue',
                 radioClass: 'iradio_square-blue',
                 increaseArea: '20%'
@@ -611,14 +563,14 @@
 
     document.getElementById('searchByNumber').addEventListener('click', function() {
     var pidValue = document.getElementById('purchase_id').value; 
-    var itemCodeValue = document.getElementById('item_code').value; 
-    if (pidValue) { 
-       
+    var itemCodeValue = document.getElementById('item_code').value;
+    var pharmacyValue = document.getElementById('pharmacy').value; 
+    if (itemCodeValue) { 
         var baseUrl = window.location.href.split('?')[0]; 
-        var newUrl = baseUrl + "?purchase=" + encodeURIComponent(pidValue) + "&item_code=" + encodeURIComponent(itemCodeValue);
+        var newUrl = baseUrl + "?pharmacy=" + encodeURIComponent(pharmacyValue) + "&purchase=" + encodeURIComponent(pidValue) + "&item_code=" + encodeURIComponent(itemCodeValue);
         window.location.href = newUrl; 
     } else {
-        alert("Please enter a purchase number."); 
+        alert("Please enter a item number."); 
     }
 });
 
