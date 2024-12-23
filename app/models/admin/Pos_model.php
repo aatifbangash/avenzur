@@ -227,7 +227,7 @@ class Pos_model extends CI_Model
                 if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
 
                      //handle inventory movement
-                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'pos', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['net_unit_price']);
+                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'pos', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['net_unit_price'], $data['date']);
 
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
