@@ -62,10 +62,10 @@ class RASDCore extends Integrations {
                 )
             )
 
-        )
-        $this->set_headers()
+        );
+        $this->set_headers();
         $this->set_body($body);
-        return $this->post('api/web')
+        return $this->post('api/web');
     }
  
 }
