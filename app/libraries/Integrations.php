@@ -6,6 +6,7 @@ class Integrations {
     protected $base_url;
     protected $headers;
     protected $body;
+    protected $auth_token;
 
     public function __construct() {
         $this->CI =& get_instance();
@@ -16,6 +17,11 @@ class Integrations {
             'Accept: application/json'
         );
         $this->body = array();
+        $this->auth_token = null;
+    }
+    public function set_auth_token($token) {
+        $this->auth_token = $token;
+        return $this;
     }
 
     public function set_base_url($url) {
@@ -38,8 +44,12 @@ class Integrations {
 
         $this->CI->curl->create($url);
         $this->CI->curl->option(CURLOPT_RETURNTRANSFER, TRUE);
+     
+         $headers = $this->headers;
+        if ($this->auth_token) {
+           $headers[] = 'Token: ' . $this->auth_token;
+        }
         $this->CI->curl->option(CURLOPT_HTTPHEADER, $this->headers);
-
         // Initialize an array to store response headers
         $response_headers = array();
 
