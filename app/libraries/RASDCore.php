@@ -4,6 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 require_once(APPPATH.'libraries/Integrations.php');
 
 class RASDCore extends Integrations {
+    $token =  null;
     public function __construct() {
         parent::__construct();
     }
@@ -26,8 +27,11 @@ class RASDCore extends Integrations {
             'KML' => ''
         );
         $this->set_headers($headers);
-        return $this->post('/api/web');
-
+        $this->post('/api/web');
+        if (isset($response['headers']['Token'])) {
+            $this->set_auth_token($response['headers']['Token']);
+        } 
+        return array( "token" => $response['headers']['Token']);
     }
 
     /***
@@ -35,10 +39,11 @@ class RASDCore extends Integrations {
      * @param string $gtin
      * @param string $batch_number
      * @param string $serial_number
+     * @param string $auth_token
      * API to register pharmacy sale product.
      */
 
-    public patient_pharmacy_sale_product_160($gln, $gtin ,$batch_number, $serial_number){
+    public patient_pharmacy_sale_product_160($gln, $gtin ,$batch_number, $serial_number, $auth_token){
         $body = array(
             'DicOfDic' =>  array(
                 "202"  =>  array(
@@ -63,7 +68,7 @@ class RASDCore extends Integrations {
             )
 
         );
-        $this->set_headers();
+        $this->set_auth_token($auth_token);
         $this->set_body($body);
         return $this->post('api/web');
     }
