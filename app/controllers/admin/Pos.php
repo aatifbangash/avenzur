@@ -959,7 +959,7 @@ class Pos extends MY_Controller
 
                 if(sizeof($serials_array) > 0){
                     foreach($serials_array as $serial){
-                        $serials_info[] = array('serial_number' => $serial, 'batchno' => $batch_no, 'gtin' => $item_code, 'avz_item_code' => $avz_item_code, 'is_pushed' => 0, 'sale_id' => 0, 'expiry' => $expiry, 'date_created' => date('Y-m-d'));
+                        $serials_info[] = array('serial_number' => $serial, 'batchno' => $batch_no, 'gtin' => $item_code, 'avz_item_code' => $avz_item_code, 'is_pushed' => 0, 'expiry' => $expiry, 'date_created' => date('Y-m-d'));
                     }
                     $serials_info = array_values(array_unique($serials_info, SORT_REGULAR));
                 }else{
