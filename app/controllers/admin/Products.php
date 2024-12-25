@@ -5346,7 +5346,6 @@ class Products extends MY_Controller
             $this->db->where('im.location_id', $warehouse_id);
             $this->db->where('im.product_id', $item_id);
             $this->db->where('im.customer_id', $customer_id);
-
             $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
             $this->db->having('total_quantity !=', 0);
             $query = $this->db->get();
