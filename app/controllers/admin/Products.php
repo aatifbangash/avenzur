@@ -5372,7 +5372,7 @@ class Products extends MY_Controller
                             im.product_id,
                             pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
                             pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
-                            (SUM(CASE WHEN im.type = 'customer_return' THEN -1*im.quantity ELSE 0 END) - SUM(CASE WHEN im.type = 'sale' THEN im.quantity ELSE 0 END) ) AS total_quantity", false);
+                            (SUM(CASE WHEN im.type = 'customer_return' AND im.customer_id = ".$customer_id." THEN -1*im.quantity ELSE 0 END) - SUM(CASE WHEN im.type IN ('sale','pos') AND im.customer_id = ".$customer_id." THEN im.quantity ELSE 0 END) ) AS total_quantity", false);
             $this->db->from('sma_inventory_movements im');
             $this->db->join('sma_products pr', 'pr.id = im.product_id', 'inner');
             $this->db->where('im.location_id', $warehouse_id);
@@ -5382,7 +5382,6 @@ class Products extends MY_Controller
             $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
             $this->db->having('total_quantity !=', 0);
             $query = $this->db->get();
-
         } else {
             /*$this->db->select('pi.avz_item_code, pi.product_code, im.net_unit_sale, im.net_unit_cost, im.real_unit_cost, pr.tax_rate, pr.type, pr.unit, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
             $this->db->from('sma_purchase_items pi');
