@@ -2011,7 +2011,7 @@
                                 </a>
                                 <ul>
                                     <?php 
-                                        if($GP['stock_request_view']){
+                                        if($GP['stock_pharmacist']){
                                     ?>
                                     <li id="stock_requests_index">
                                         <a class="submenu" href="<?= admin_url('stock_request/stock_order'); ?>">
