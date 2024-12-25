@@ -363,7 +363,7 @@ class Stock_request_model extends CI_Model
 
         if(!$product_ids){
             $this->db
-                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_warehouses_products.quantity) As available_stock')
+                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_inventory_movements.quantity) As available_stock')
                 ->select('(SELECT SUM(sma_sale_items.quantity) 
                           FROM sma_sale_items
                           INNER JOIN sma_sales ON sma_sale_items.sale_id = sma_sales.id
@@ -371,12 +371,12 @@ class Stock_request_model extends CI_Model
                           AND sma_sale_items.warehouse_id = '.$warehouse_id.'
                           AND sma_sales.date >= DATE_SUB(NOW(), INTERVAL 3 MONTH)) AS avg_last_3_months_sales', false)
                 ->from('sma_inventory_movements')
-                ->join('sma_products', 'sma_products.id = sma_warehouses_products.product_id', 'left')
-                ->where('sma_warehouses_products.warehouse_id', $warehouse_id)
-                ->group_by('sma_warehouses_products.product_id');
+                ->join('sma_products', 'sma_products.id = sma_inventory_movements.product_id', 'left')
+                ->where('sma_inventory_movements.location_id', $warehouse_id)
+                ->group_by('sma_inventory_movements.product_id');
         }else{
             $this->db
-                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_warehouses_products.quantity) As available_stock')
+                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_inventory_movements.quantity) As available_stock')
                 ->select('(SELECT SUM(sma_sale_items.quantity) 
                           FROM sma_sale_items
                           INNER JOIN sma_sales ON sma_sale_items.sale_id = sma_sales.id
