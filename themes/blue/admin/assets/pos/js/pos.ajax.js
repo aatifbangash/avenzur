@@ -175,7 +175,7 @@ $(document).ready(function () {
         });
     });
     $(document).on('click', '#updateOrderDiscount', function () {
-        var ds = $('#order_discount_input').val() ? $('#order_discount_input').val()+'%' : '0';
+        var ds = $('#order_discount_input').val() ? $('#order_discount_input').val() : '0';
         if (is_valid_discount(ds)) {
 
             $('#posdiscount').val(ds);
@@ -1243,8 +1243,9 @@ function loadItems() {
             var item = this;
             if ((posdiscount = localStorage.getItem('posdiscount'))) {
                 var ds = posdiscount;
-                item.posdiscount = ds ;
+                
                 if (ds.indexOf('%') !== -1) {
+                    item.posdiscount = ds;
                     var pds = ds.split('%'); 
                     if (!isNaN(pds[0])) {
                         item.posdiscount = pds[0] ;
@@ -1253,6 +1254,7 @@ function loadItems() {
                         //order_discount = parseFloat(ds);
                     }
                 } else {
+                    item.posdiscount = 0;
                      // order_discount = parseFloat(ds);
                    //order_discount = formatDecimal(parseFloat(((parseFloat(total) - parseFloat(total_vat)) * parseFloat(ds)) / 100), 4);
                 }
@@ -1702,15 +1704,17 @@ function loadItems() {
         if ((posdiscount = localStorage.getItem('posdiscount'))) {
             var ds = posdiscount;
             if (ds.indexOf('%') !== -1) {
-                var pds = ds.split('%'); 
+                /*var pds = ds.split('%'); 
                 if (!isNaN(pds[0])) {
                     order_discount = formatDecimal(parseFloat(((parseFloat(total) - parseFloat(total_vat)) * parseFloat(pds[0])) / 100), 4);
                 } else {
                     order_discount = parseFloat(ds);
-                }
+                }*/
+
+                order_discount = 0;
             } else {
-               // order_discount = parseFloat(ds);
-               order_discount = formatDecimal(parseFloat(((parseFloat(total) - parseFloat(total_vat)) * parseFloat(ds)) / 100), 4);
+               order_discount = new Decimal(ds).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+               //order_discount = formatDecimal(parseFloat(((parseFloat(total) - parseFloat(total_vat)) * parseFloat(ds)) / 100), 4);
             }
             //total_discount += parseFloat(order_discount);
         }
@@ -1734,6 +1738,9 @@ function loadItems() {
         total = formatDecimal(total);
         product_tax = formatDecimal(product_tax);
         total_discount = formatDecimal(order_discount + product_discount);
+
+        new_total_discount = new Decimal(new_total_discount.plus(order_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+        new_grant_total = new Decimal(new_grant_total.minus(order_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
 
         $('#grand_total_sale').val(new_total_sale);
         $('#grand_total_net_sale').val(new_total_net_sale);
