@@ -992,8 +992,8 @@ class Pos extends MY_Controller
                 $item_name          = $_POST['product_name'][$r];
                 $item_comment       = $_POST['product_comment'][$r];
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' ? $_POST['product_option'][$r] : null;
-                $real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
-                $unit_price         = $this->sma->formatDecimal($_POST['unit_price'][$r]);
+                $real_unit_price    = $_POST['real_unit_price'][$r];
+                $unit_price         = $_POST['unit_price'][$r];
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_serial        = $_POST['serial'][$r]           ?? '';
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
@@ -1121,7 +1121,7 @@ class Pos extends MY_Controller
                     ];
 
                     $products[] = ($product + $gst_data);
-                    $total += $this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                    $total += ($item_net_price * $item_unit_quantity);
                 }
             }
 
@@ -1133,15 +1133,15 @@ class Pos extends MY_Controller
             }
 
             $order_discount = $this->site->calculateDiscount($this->input->post('discount'), ($total), true);
-            $total_discount = $this->sma->formatDecimal(($order_discount + $product_discount), 4);
+            $total_discount = ($order_discount + $product_discount);
             $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total - $order_discount));
-            $total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
+            $total_tax      = ($product_tax + $order_tax);
             // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
-            $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            $grand_total = ($total + $total_tax + $shipping - $order_discount);
             $rounding    = 0;
             if ($this->pos_settings->rounding) {
                 $round_total = $this->sma->roundNumber($grand_total, $this->pos_settings->rounding);
-                $rounding    = $this->sma->formatMoney($round_total - $grand_total);
+                $rounding    = $round_total - $grand_total;
             }
 
               /**
@@ -1211,7 +1211,7 @@ class Pos extends MY_Controller
                 $paid = 0;
                 for ($r = 0; $r < $p; $r++) {
                     if (isset($_POST['amount'][$r]) && !empty($_POST['amount'][$r]) && isset($_POST['paid_by'][$r]) && !empty($_POST['paid_by'][$r])) {
-                        $amount = $this->sma->formatDecimal($_POST['balance_amount'][$r] > 0 ? $_POST['amount'][$r] - $_POST['balance_amount'][$r] : $_POST['amount'][$r]);
+                        $amount = $_POST['balance_amount'][$r] > 0 ? $_POST['amount'][$r] - $_POST['balance_amount'][$r] : $_POST['amount'][$r];
                         if ($_POST['paid_by'][$r] == 'deposit') {
                             if (!$this->site->check_customer_deposit($customer_id, $amount)) {
                                 $this->session->set_flashdata('error', lang('amount_greater_than_deposit'));
