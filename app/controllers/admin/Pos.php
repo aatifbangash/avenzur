@@ -25,7 +25,7 @@ class Pos extends MY_Controller
         $this->session->set_userdata('last_activity', now());
         $this->lang->admin_load('pos', $this->Settings->user_language);
         $this->load->library('form_validation');
-        $this->load->library('rasdcore');
+        $this->load->library('RASDCore');
        
     }
 
@@ -888,21 +888,21 @@ class Pos extends MY_Controller
     }
 
     public function publish_sale($grouped_results){
-        $res = $this->rasdcore->authenticate('A.3bdellateef@gmail.com', 'A123456789');
+        $res = $this->RASDCore->authenticate('A.3bdellateef@gmail.com', 'A123456789');
         if(isset($res['token']) && $res['token']){
             $auth_token = $res['token'];
-            $this->rasdcore->set_headers([]);
-            $this->rasdcore->set_auth_token($auth_token);
+            $this->RASDCore->set_headers([]);
+            $this->RASDCore->set_auth_token($auth_token);
             $headers = array(
             'FunctionName:APIReq',
             'Token: '.$auth_token,
             'Accept :*/*',
             "Accept-Encoding : gzip, deflate, br"
             );
-            $this->rasdcore->set_headers($headers);
+            $this->RASDCore->set_headers($headers);
             foreach ($grouped_results as $gln => $items) {
                 $payload = $this->create_payload_for_gln($gln, $items);
-                $response = $this->rasdcore->patient_pharmacy_sale_product_160($payload);
+                $response = $this->RASDCore->patient_pharmacy_sale_product_160($payload);
                 $response_body = $response['body'];
                 $this->process_api_response($response_body, $items);                
             }  
