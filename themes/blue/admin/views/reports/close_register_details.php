@@ -97,7 +97,7 @@
                 <tr>
                     <td style="border-bottom: 1px solid #EEE;"><h4><?= lang('cash_sale'); ?>:</h4></td>
                     <td style="text-align:right; border-bottom: 1px solid #EEE;"><h4>
-                            <span><?= $cashsales->total ? $cashsales->total : '0.00' ; ?></span>
+                            <span><?= $this->sma->formatMoney($cashsales->total ? $cashsales->total : '0.00') ; ?></span>
                         </h4></td>
                 </tr>
                 <!-- <tr>
@@ -139,33 +139,15 @@
                             <span><?=  $totalsales->total - ($cashsales->total + $ccsales->total); ?></span>
                         </h4></td>
                 </tr>
-                <!-- <tr>
-                    <td style="border-top: 1px solid #DDD;"><h4><?= lang('refunds'); ?>:</h4></td>
-                    <td style="text-align:right;border-top: 1px solid #DDD;"><h4>
-                            <span><?= $this->sma->formatMoney($refunds->returned ? $refunds->returned : '0.00') . ' (' . $this->sma->formatMoney($refunds->total ? $refunds->total : '0.00') . ')'; ?></span>
-                        </h4></td>
-                </tr> -->
+
                 <tr>
-                    <td style="border-top: 1px solid #DDD;"><h4><?= lang('returns'); ?>:</h4></td>
-                    <td style="text-align:right;border-top: 1px solid #DDD;"><h4>
-                            <span><?= $this->sma->formatMoney($returns->total ? '-' . $returns->total : '0.00'); ?></span>
+                    <td width="300px;" style="font-weight:bold;"><h4><?= lang('Total Invoice Qty'); ?>:</h4></td>
+                    <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
+                            <span><?php echo $totalsales->total_sales; ?></span>
                         </h4></td>
                 </tr>
-                <!-- <tr>
-                    <td style="border-bottom: 1px solid #DDD;"><h4><?= lang('expenses'); ?>:</h4></td>
-                    <td style="text-align:right;border-bottom: 1px solid #DDD;"><h4>
-                            <span><?php $expense = $expenses ? $expenses->total : 0;
-                            echo $this->sma->formatMoney($expense) . ' (' . $this->sma->formatMoney($expense) . ')'; ?></span>
-                        </h4></td>
-                </tr> -->
-                <tr>
-                    <td width="300px;" style="font-weight:bold;"><h4><strong><?= lang('total_cash'); ?></strong>:</h4>
-                    </td>
-                    <td style="text-align:right;"><h4>
-                    <?php $total_cash_amount = $cashsales->paid ? (($cashsales->paid + ($this->session->userdata('cash_in_hand'))) + ($refunds->returned ? $refunds->returned : 0) - ($returns->total ? $returns->total : 0) - $expense) : ($this->session->userdata('cash_in_hand') - $expense - ($returns->total ? $returns->total : 0)); ?>
-                            <span><strong><?= $this->sma->formatMoney($total_cash_amount); ?></strong></span>
-                        </h4></td>
-                </tr>
+               
+               
             </table>
                     </div> 
             </div> 

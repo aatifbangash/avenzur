@@ -1168,11 +1168,14 @@ class Pos_model extends CI_Model
 
         $sql = "SELECT 
     SUM(sp.total) AS total, 
-    SUM(sp.paid) AS paid
+    SUM(sp.paid) AS paid,
+    COUNT(sp.id) AS total_sales
 FROM (
     SELECT 
         COALESCE(sales.grand_total, 0) AS total, 
-        SUM(COALESCE(payments.amount, 0)) AS paid
+        SUM(COALESCE(payments.amount, 0)) AS paid,
+        sales.id
+
     FROM 
         sma_payments payments
     LEFT JOIN 
