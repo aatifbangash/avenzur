@@ -110,6 +110,25 @@ class Sales_model extends CI_Model
         $this->db->insert('payment_reference', $data);
         return $this->db->insert_id();
     }
+    public function get_unreported_sales($serial_numbers){
+        $this->db->select('sma_serial_numbers.serial_number, sma_serial_numbers.batchno, sma_serial_numbers.gtin, sma_serial_numbers.sale_id as sale_id, sma_warehouses.gln');
+        $this->db->from('sma_serial_numbers');
+        $this->db->join('sma_sales', 'sma_serial_numbers.sale_id = sma_sales.id');
+        $this->db->join('sma_warehouses', 'sma_sales.warehouse_id = sma_warehouses.id');
+        $this->db->whereIn('sma_serial_numbers.id',$serial_numbers);
+        $query = $this->db->get();
+        
+        $results = [];
+        foreach ($query->result() as $row) {
+            $results[$row->gln][] = $row;
+        }
+        
+        return $results;
+    }
+    public function mark_sales_as_reported($sale_ids){
+       $this->db->where_in('sale_id', $sale_ids);
+       $this->db->update('sma_serial_numbers', ['is_pushed' => 1]);
+    }
 
     public function getPaymentReferenceByID($id){
         $this->db->select('payment_reference.*, companies.name, lb.name as transfer_from')

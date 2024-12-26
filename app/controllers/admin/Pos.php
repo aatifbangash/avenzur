@@ -7,7 +7,7 @@ class Pos extends MY_Controller
     public function __construct()
     {
         parent::__construct();
-
+        
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
             $this->sma->md('login');
@@ -25,6 +25,8 @@ class Pos extends MY_Controller
         $this->session->set_userdata('last_activity', now());
         $this->lang->admin_load('pos', $this->Settings->user_language);
         $this->load->library('form_validation');
+        $this->load->library('rasdcore');
+       
     }
 
     public function active()
@@ -853,7 +855,68 @@ class Pos extends MY_Controller
     }
 
     /* ---------------------------------------------------------------------------------------------------- */
+    private function create_payload_for_gln($gln, $items) {
+        $payload = [
+            'DicOfDic' => [
+                '202' => [
+                    "167" => "",
+                    "166"=> "",
+                    "168"=> "",
+                    "169"=> ""	 
+                ],
+                'MH' => [
+                    'MN' => '160',
+                    '222' => (string) $gln
+                ]
+            ],
+            'DicOfDT' => [
+                '202' => []
+            ]
+        ];
 
+        foreach ($items as $item) {
+            $payload['DicOfDT']['202'][] = [
+                '223' => $item->gtin,
+                '219' => $item->batchno,
+                '214' => $item->serial_number
+            ];
+        }
+
+        return $payload;
+    }
+
+    public function publish_sale($grouped_results){
+        $res = $this->rasdcore->authenticate('A.3bdellateef@gmail.com', 'A123456789');
+        if(isset($res['token']) && $res['token']){
+            $auth_token = $res['token'];
+            $this->rasdcore->set_headers([]);
+            $this->rasdcore->set_auth_token($auth_token);
+            $headers = array(
+            'FunctionName:APIReq',
+            'Token: '.$auth_token,
+            'Accept :*/*',
+            "Accept-Encoding : gzip, deflate, br"
+            );
+            $this->rasdcore->set_headers($headers);
+            foreach ($grouped_results as $gln => $items) {
+                $payload = $this->create_payload_for_gln($gln, $items);
+                $response = $this->rasdcore->patient_pharmacy_sale_product_160($payload);
+                $response_body = $response['body'];
+                $this->process_api_response($response_body, $items);                
+            }  
+        }
+    }
+    private function process_api_response($response, $items) {
+        // Check if the API call was successful
+        if (isset($response['DicOfDic']['MR']['TRID'])&&$response['DicOfDic']['MR']['TRID'] ) {
+            // Update the is_pushed status for these items
+            $sale_ids = array_unique(array_column($items, 'sale_id'));
+            $this->sales_model->mark_sales_as_reported($sale_ids);
+        } else {
+            // Log the error
+            echo "Error Calling API";
+        }
+    }
     public function index($sid = null)
     {
         $this->sma->checkPermissions();
@@ -918,8 +981,8 @@ class Pos extends MY_Controller
             $gst_data         = [];
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             $i                = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
-            $serials_info       = array();
-
+            $serials_info     = array();
+            $serial_ids       = array();
             for ($r = 0; $r < $i; $r++) {
                 $item_id            = $_POST['product_id'][$r];
                 $item_type          = $_POST['product_type'][$r];
@@ -959,7 +1022,8 @@ class Pos extends MY_Controller
 
                 if(sizeof($serials_array) > 0){
                     foreach($serials_array as $serial){
-                        $serials_info[] = array('serial_number' => $serial, 'batchno' => $batch_no, 'gtin' => $item_code, 'avz_item_code' => $avz_item_code, 'is_pushed' => 0, 'expiry' => $expiry, 'date_created' => date('Y-m-d'));
+                        $serial_ids []= $serial;
+                        $serials_info[] = array('serial_number' => $serial, 'batchno' => $batch_no, 'gtin' => $item_code, 'avz_item_code' => $avz_item_code, 'is_pushed' => 0, 'sale_id' => 0, 'expiry' => $expiry, 'date_created' => date('Y-m-d'));
                     }
                     $serials_info = array_values(array_unique($serials_info, SORT_REGULAR));
                 }else{
@@ -1220,6 +1284,11 @@ class Pos extends MY_Controller
                         }
                         unset($serialArr); // Unset reference after loop to prevent accidental modifications
                         $this->pos_model->addSerialsBatch($serials_info);
+                        $sales_to_report_grouped = $this->sales_model->get_unreported_sales($serial_ids);
+                        if(!empty($sales_to_report_grouped)){
+                           $this->publish_sale($sales_to_report_grouped);
+                        }
+
                     }
 
                     $this->session->set_userdata('remove_posls', 1);
