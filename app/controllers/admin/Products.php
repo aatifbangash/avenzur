@@ -4238,88 +4238,10 @@ class Products extends MY_Controller
 
           
             if ($http_status == 200) {
-                echo "Print request successful: " . $response;
+                //echo "Print request successful: " . $response;
             } else {
-                echo "Print request failed with status $http_status: " . $response;
+                //echo "Print request failed with status $http_status: " . $response;
             }
-            echo "success";
-
-            exit;
-            //end barcodes
-
-
-            $style = $this->input->post('style');
-            $bci_size = ($style == 10 || $style == 12 ? 50 : ($style == 14 || $style == 18 ? 30 : 20));
-            $currencies = $this->site->getAllCurrencies();
-            $s = isset($_POST['product']) ? sizeof($_POST['product']) : 0;
-            if ($s < 1) {
-                $this->session->set_flashdata('error', lang('no_product_selected'));
-                admin_redirect('products/print_barcodes');
-            }
-            for ($m = 0; $m < $s; $m++) {
-                $pid = $_POST['product'][$m];
-                $quantity = $_POST['quantity'][$m];
-                $product = $this->products_model->getProductWithCategory($pid);
-                $product->price = $this->input->post('check_promo') ? ($product->promotion ? $product->promo_price : $product->price) : $product->price;
-                $pr_item_tax = 0;
-
-                $item_tax_rate = $product->tax_rate;
-                if (isset($item_tax_rate) && $item_tax_rate != 0) {
-                    $tax_details = $this->site->getTaxRateByID($item_tax_rate);
-                    $ctax = $this->site->calculateTax($product, $tax_details, $product->price);
-                    $item_tax = $this->sma->formatDecimal($ctax['amount']);
-                    $tax = $ctax['tax'];
-
-                    $pr_item_tax = $this->sma->formatDecimal(($product->price * ($tax_details->rate / 100)), 4);
-                }
-
-                $product->price = $product->price + $pr_item_tax;
-
-                if ($variants = $this->products_model->getProductOptions($pid)) {
-                    foreach ($variants as $option) {
-                        if ($this->input->post('vt_' . $product->id . '_' . $option->id)) {
-                            $barcodes[] = [
-                                'site' => $this->input->post('site_name') ? $this->Settings->site_name : false,
-                                'name' => $this->input->post('product_name') ? $product->name . ' - ' . $option->name : false,
-                                'image' => $this->input->post('product_image') ? $product->image : false,
-                                'barcode' => $product->code . $this->Settings->barcode_separator . $option->id,
-                                'bcs' => 'code128',
-                                'bcis' => $bci_size,
-                                // 'barcode' => $this->product_barcode($product->code . $this->Settings->barcode_separator . $option->id, 'code128', $bci_size),
-                                'price' => $this->input->post('price') ? $this->sma->formatMoney($option->price != 0 ? ($product->price + $option->price) : $product->price, 'none') : false,
-                                'rprice' => $this->input->post('price') ? ($option->price != 0 ? ($product->price + $option->price) : $product->price) : false,
-                                'unit' => $this->input->post('unit') ? $product->unit : false,
-                                'category' => $this->input->post('category') ? $product->category : false,
-                                'currencies' => $this->input->post('currencies'),
-                                'variants' => $this->input->post('variants') ? $variants : false,
-                                'vat_number' => '300212567900003',
-                                'quantity' => $quantity,
-                            ];
-                        }
-                    }
-                } else {
-                    $barcodes[] = [
-                        'site' => $this->input->post('site_name') ? $this->Settings->site_name : false,
-                        'name' => $this->input->post('product_name') ? $product->name : false,
-                        'image' => $this->input->post('product_image') ? $product->image : false,
-                        // 'barcode' => $this->product_barcode($product->code, $product->barcode_symbology, $bci_size),
-                        'barcode' => $product->code,
-                        'bcs' => $product->barcode_symbology,
-                        'bcis' => $bci_size,
-                        'price' => $this->input->post('price') ? $this->sma->formatMoney($product->price, 'none') : false,
-                        'rprice' => $this->input->post('price') ? $product->price : false,
-                        'unit' => $this->input->post('unit') ? $product->unit : false,
-                        'category' => $this->input->post('category') ? $product->category : false,
-                        'currencies' => $this->input->post('currencies'),
-                        'variants' => false,
-                        'vat_number' => '300212567900003',
-                        'quantity' => $quantity,
-                    ];
-                }
-            }
-            $this->data['barcodes'] = $barcodes;
-            $this->data['currencies'] = $currencies;
-            $this->data['style'] = $style;
             $this->data['items'] = false;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('products'), 'page' => lang('products')], ['link' => '#', 'page' => lang('print_barcodes')]];
             $meta = ['page_title' => lang('print_barcodes'), 'bc' => $bc];

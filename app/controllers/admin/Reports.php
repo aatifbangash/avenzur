@@ -29,6 +29,7 @@ class Reports extends MY_Controller
         ];
 
         $this->load->admin_model('deals_model');
+        $this->load->admin_model('pos_model');
     }
     public function adjustments($warehouse_id = null)
     {
@@ -5581,4 +5582,68 @@ class Reports extends MY_Controller
 
     }
 
+    public function close_register_details(){
+        // error_reporting(-1);
+		// ini_set('display_errors', 1);
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
+        //print_r($this->input->post());
+         //for testing purpose
+         $user_id =6655;
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        if ($from_date && $to_date && $warehouse) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+
+            if ($this->Owner || $this->Admin) {
+                $user_register                    = $user_id ? $this->pos_model->registerData($user_id) : null;
+                $register_open_time               = $user_register ? $user_register->date : null;
+                $this->data['cash_in_hand']       = $user_register ? $user_register->cash_in_hand : null;
+                $this->data['register_open_time'] = $user_register ? $register_open_time : null;
+            } else {
+                $register_open_time               = $this->session->userdata('register_open_time');
+                $this->data['cash_in_hand']       = null;
+                $this->data['register_open_time'] = null;
+            }
+            $register_open_time = $start_date;
+
+            //$response_data = $this->reports_model->getCloseRegisterDetails($start_date, $end_date, $warehouse);
+            $this->data['ccsales']         = $this->pos_model->getRegisterCCSales($register_open_time, $user_id);
+            $this->data['cashsales']       = $this->pos_model->getRegisterCashSales($register_open_time, $user_id);
+            $this->data['chsales']         = $this->pos_model->getRegisterChSales($register_open_time, $user_id);
+            $this->data['gcsales']         = $this->pos_model->getRegisterGCSales($register_open_time);
+            $this->data['pppsales']        = $this->pos_model->getRegisterPPPSales($register_open_time, $user_id);
+            $this->data['stripesales']     = $this->pos_model->getRegisterStripeSales($register_open_time, $user_id);
+            $this->data['othersales']      = $this->pos_model->getRegisterOtherSales($register_open_time);
+            $this->data['authorizesales']  = $this->pos_model->getRegisterAuthorizeSales($register_open_time, $user_id);
+            $this->data['totalsales']      = $this->pos_model->getRegisterSales($register_open_time, $user_id);
+            $this->data['refunds']         = $this->pos_model->getRegisterRefunds($register_open_time, $user_id);
+            $this->data['returns']         = $this->pos_model->getRegisterReturns($register_open_time, $user_id);
+            $this->data['cashrefunds']     = $this->pos_model->getRegisterCashRefunds($register_open_time, $user_id);
+            $this->data['expenses']        = $this->pos_model->getRegisterExpenses($register_open_time, $user_id);
+            $this->data['users']           = $this->pos_model->getUsers($user_id);
+            $this->data['suspended_bills'] = $this->pos_model->getSuspendedsales($user_id);
+            $this->data['user_id']         = $user_id;
+            //echo "<pre>"; print_r($response_data);exit;
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse'] = $warehouse;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Close Register Details')]];
+            $meta = ['page_title' => lang(''), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/close_register_details', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/close_register_details', $meta, $this->data);
+        }
+    }
 }

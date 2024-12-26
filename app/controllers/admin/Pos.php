@@ -323,6 +323,8 @@ class Pos extends MY_Controller
                 $rid     = $this->session->userdata('register_id');
                 $user_id = $this->session->userdata('user_id');
             }
+        //for testing purpose
+        $user_id =6655;
             $data = [
                 'closed_at'                => date('Y-m-d H:i:s'),
                 'total_cash'               => $this->input->post('total_cash'),
@@ -1845,21 +1847,23 @@ class Pos extends MY_Controller
 
     public function register_details()
     {
+        //for testing purpose - remove after testing
+        $user_id =6655;
         $this->sma->checkPermissions('index');
         $register_open_time           = $this->session->userdata('register_open_time');
         $this->data['error']          = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
-        $this->data['ccsales']        = $this->pos_model->getRegisterCCSales($register_open_time);
-        $this->data['cashsales']      = $this->pos_model->getRegisterCashSales($register_open_time);
-        $this->data['chsales']        = $this->pos_model->getRegisterChSales($register_open_time);
+        $this->data['ccsales']        = $this->pos_model->getRegisterCCSales($register_open_time, $user_id);
+        $this->data['cashsales']      = $this->pos_model->getRegisterCashSales($register_open_time, $user_id);
+        $this->data['chsales']        = $this->pos_model->getRegisterChSales($register_open_time, $user_id);
         $this->data['gcsales']        = $this->pos_model->getRegisterGCSales($register_open_time);
         $this->data['pppsales']       = $this->pos_model->getRegisterPPPSales($register_open_time);
         $this->data['stripesales']    = $this->pos_model->getRegisterStripeSales($register_open_time);
         $this->data['othersales']     = $this->pos_model->getRegisterOtherSales($register_open_time);
         $this->data['authorizesales'] = $this->pos_model->getRegisterAuthorizeSales($register_open_time);
-        $this->data['totalsales']     = $this->pos_model->getRegisterSales($register_open_time);
-        $this->data['refunds']        = $this->pos_model->getRegisterRefunds($register_open_time);
-        $this->data['returns']        = $this->pos_model->getRegisterReturns($register_open_time);
-        $this->data['expenses']       = $this->pos_model->getRegisterExpenses($register_open_time);
+        $this->data['totalsales']     = $this->pos_model->getRegisterSales($register_open_time, $user_id);
+        $this->data['refunds']        = $this->pos_model->getRegisterRefunds($register_open_time, $user_id);
+        $this->data['returns']        = $this->pos_model->getRegisterReturns($register_open_time, $user_id);
+        $this->data['expenses']       = $this->pos_model->getRegisterExpenses($register_open_time, $user_id);
         $this->load->view($this->theme . 'pos/register_details', $this->data);
     }
 

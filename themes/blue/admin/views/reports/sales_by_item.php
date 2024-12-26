@@ -91,6 +91,7 @@
                                 class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf">
                             <thead>
                             <tr>
+                                <th><?= lang('S.NO'); ?></th>
                                 <th><?= lang('Item No'); ?></th>
                                 <th><?= lang('Avz Code'); ?></th>
                                 <th><?= lang('Item Name'); ?></th>
@@ -115,9 +116,10 @@
                                     $grand_returns = 0;
                                     $grand_net_total = 0;
                                     foreach ($response_data['sales'] as $data){
+                                        $count++;
                                         ?>
                                             <tr>
-                                                
+                                                <td><?= $count; ?></td>
                                                 <td><?= $data->item_code; ?></td>
                                                 <td><?= $data->avz_item_code; ?></td>
                                                 <td><?= $data->name; ?></td>
@@ -143,7 +145,9 @@
                             </tbody>
                             <tfoot>
                             <tr>
-                                    <td colspan="7"><strong>Totals: </strong></td>
+                                    <td colspan="6"><strong>Totals: </strong></td>
+                                    <td colspan="1"><?=$response_data['grand']->grand_quantity;?></td>
+                                    <td colspan="1"></td>
                                     <td colspan="1"><strong><?php echo $response_data['grand']->grand_cost; ?></strong></td>
                                     <td colspan="1"></td>
                                     <td colspan="1"><?=$response_data['grand']->grand_sale;?></td>
