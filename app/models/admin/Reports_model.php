@@ -4435,29 +4435,45 @@ class Reports_model extends CI_Model
     {
         // error_reporting(-1);
         // ini_set('display_errors', 1);
+   /*     SELECT 
+        e.date AS transaction_date,
+        SUM(CASE WHEN e.transaction_type = 'pos' AND ei.narration = 'cash' THEN ei.amount ELSE 0 END) AS total_cash,
+        SUM(CASE WHEN e.transaction_type = 'pos' AND ei.narration = 'Credit Card' THEN ei.amount ELSE 0 END) AS total_credit_card,
+        SUM(CASE WHEN e.transaction_type = 'pos' AND ei.narration = 'discount' THEN ei.amount ELSE 0 END) AS total_discount,
+        SUM(CASE WHEN e.transaction_type = 'returncustomerorder' AND ei.narration = 'customer' THEN ei.amount ELSE 0 END) AS total_returns
+    FROM 
+    sma_sales s
+    JOIN 
+        sma_accounts_entries e ON s.id = e.sid
+    JOIN 
+        sma_accounts_entryitems ei ON e.id = ei.entry_id
+    WHERE 
+        e.transaction_type IN( 'pos','returncustomerorder')
+        AND DATE(s.date) >= '" . trim($start_date) . "' 
+        AND DATE(s.date) <= '" . trim($end_date) . "'
+        AND ei.narration IN('cash', 'Credit Card')
+        AND s.warehouse_id = " . $warehouse . "
+    GROUP BY 
+    DATE(e.date)
+    ORDER BY 
+    DATE(e.date) */
         $sql = "
-                    SELECT 
-                        e.date AS transaction_date,
-                        SUM(CASE WHEN e.transaction_type = 'pos' AND ei.narration = 'cash' THEN ei.amount ELSE 0 END) AS total_cash,
-                        SUM(CASE WHEN e.transaction_type = 'pos' AND ei.narration = 'Credit Card' THEN ei.amount ELSE 0 END) AS total_credit_card,
-                        SUM(CASE WHEN e.transaction_type = 'pos' AND ei.narration = 'discount' THEN ei.amount ELSE 0 END) AS total_discount,
-                        SUM(CASE WHEN e.transaction_type = 'returncustomerorder' AND ei.narration = 'customer' THEN ei.amount ELSE 0 END) AS total_returns
-                    FROM 
-                    sma_sales s
-                    JOIN 
-                        sma_accounts_entries e ON s.id = e.sid
-                    JOIN 
-                        sma_accounts_entryitems ei ON e.id = ei.entry_id
-                    WHERE 
-                        e.transaction_type IN( 'pos','returncustomerorder')
-                        AND DATE(s.date) >= '" . trim($start_date) . "' 
-                        AND DATE(s.date) <= '" . trim($end_date) . "'
-                        AND ei.narration IN('cash', 'Credit Card')
-                        AND s.warehouse_id = " . $warehouse . "
-                    GROUP BY 
-                    DATE(e.date)
+                   
+              SELECT DATE(date) as transaction_date,
+               sum(amount) , 
+                sum( if(paid_by = 'cash' , amount, 0) ) as total_cash,
+                sum( if(paid_by = 'CC' , amount, 0) ) as total_credit_card,
+                0 AS total_discount,
+                0 AS total_returns
+                FROM `sma_payments`
+                WHERE 
+                 DATE(date) >= '" . trim($start_date) . "' 
+                  AND DATE(date) <= '" . trim($end_date) . "'  
+                 GROUP BY 
+                    DATE(date)
                     ORDER BY 
-                    DATE(e.date)
+                    DATE(date)
+
         ";
 
         $q = $this->db->query($sql);
