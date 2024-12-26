@@ -488,7 +488,7 @@ class Returns extends MY_Controller
 
             //$this->returns_model->convert_return_invoice($return_insert_id, $products);
             $this->convert_return_invoice($return_insert_id);
-            $this->payment_to_customer($returns);
+            $this->payment_to_customer($returns, $return_insert_id);
 
             $this->session->set_userdata('remove_rels', 1);
             $this->session->set_flashdata('message', lang('return_added'));
@@ -573,33 +573,44 @@ class Returns extends MY_Controller
         }
     }
 
-    public function payment_to_customer($returns){
+    public function payment_to_customer($returns, $return_insert_id){
 
         $result = [];
         foreach ($returns as $item) {
             $sale_id = $item['sale_id'];
             $amount = $item['amount'];
 
-            if (isset($result[$sale_id])) {
-                $result[$sale_id]['amount'] += $amount;
-            } else {
-                $result[$sale_id] = [
-                    'sale_id' => $sale_id,
-                    'amount' => $amount,
-                ];
+            if($sale_id){
+                if (isset($result[$sale_id])) {
+                    $result[$sale_id]['amount'] += $amount;
+                } else {
+                    $result[$sale_id] = [
+                        'sale_id' => $sale_id,
+                        'amount' => $amount,
+                    ];
+                }
             }
         }
 
-        $result = array_values($result);
+
         $net_amount = 0;
-        foreach($result as $return){
-            $net_amount += $return['amount'];
-            $this->sales_model->update_sale_paid_amount($return['sale_id'], $return['amount']);
+        if($sale_id){
+            $result = array_values($result);
+            foreach($result as $return){
+                $net_amount += $return['amount'];
+                $this->sales_model->update_sale_paid_amount($return['sale_id'], $return['amount']);
+            }
+        }else if($return_insert_id){
+            foreach ($returns as $retitem) {
+                $net_amount += $retitem['amount'];
+            }
         }
+        
 
         $payment = [
             'date'          => date('Y-m-d h:i:s'),
-            'sale_id'   => $sale_id,
+            'sale_id'       => $sale_id,
+            'return_id'     => $return_insert_id,
             'reference_no'  => '',
             'amount'        => $net_amount,
             'note'          => 'Return By Customer',
