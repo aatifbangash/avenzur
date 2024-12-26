@@ -160,7 +160,7 @@ class Customscript extends MY_Controller
                         'product_name' => $row['item_name'],
                         'option_id' => '',
                         'net_unit_cost' => $row['item_cost_price'], //item_net_cost,
-                        'unit_cost' => $row['item_cost_price'], //+ $item_tax),
+                        'unit_cost' => $row['item_purchase_price'], //+ $item_tax),
                         'quantity' => $row['item_quantity'],
                         'product_unit_id' => '',
                         'product_unit_code' => '',

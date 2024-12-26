@@ -4621,6 +4621,7 @@ class Reports_model extends CI_Model
 
         /**get grand total */
         $sql = "SELECT
+                ROUND( SUM(si.quantity),2) as grand_quantity,
                 ROUND( SUM(COALESCE(si.net_cost, 0) * COALESCE(si.quantity, 0)) , 2) AS grand_cost,
                 ROUND( SUM(si.subtotal),2) as grand_sale,
                 ROUND( SUM(COALESCE(si.item_discount, 0) + COALESCE(si.second_discount_value, 0)) , 2) AS grand_discount,
