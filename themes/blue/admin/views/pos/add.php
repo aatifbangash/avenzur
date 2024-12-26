@@ -1216,7 +1216,7 @@
                  </center>
                 <div class="form-group">
                     <?=lang('order_discount', 'order_discount_input');?>
-                    <?php echo form_input('order_discount_input', '%', 'class="form-control" onkeyup="allowDiscountValue()" type="number" id="order_discount_input"'); ?>
+                    <?php echo form_input('order_discount_input', '%', 'class="form-control" onblur="allowDiscountValue()" type="number" id="order_discount_input"'); ?>
                 </div>
 
             </div>
@@ -3249,9 +3249,17 @@ var wh_count = 1, wh_an = 1, wh_total = 0, toitems = {};
 function allowDiscountValue(){
     $("#notAllowError").html("");
     var  discount           = $('#order_discount_input').val();
-    discount     = discount.replace(/\%/g,'')
-    discount     = Number(discount)
-    var  allowDiscount     = $('#allow_discount_value').val(); 
+    var  total_sale_val           = $('#titems').text();
+
+    if (discount.includes('%')) {
+        discount     = discount.replace(/\%/g,'');
+        discount     = Number(discount);
+        var allowDiscount     = $('#allow_discount_value').val(); 
+        
+    }else{
+        discount     = parseFloat(discount);
+        var  allowDiscount     = (5 * total_sale_val) / 100;
+    }
 
     if(discount <= allowDiscount){
        console.log("allow");
