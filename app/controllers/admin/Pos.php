@@ -1278,11 +1278,11 @@ class Pos extends MY_Controller
             } else {
                 $rsdItems = '';
                 if ($sale = $this->pos_model->addSale($data, $products, $payment,$rsdItems, $did)) {
-                    if($serials_info){
-                        foreach($serials_info as $serialArr){
+                    if ($serials_info) {
+                        foreach ($serials_info as &$serialArr) { // Use & to pass by reference
                             $serialArr['sale_id'] = $sale['sale_id'];
                         }
-                        
+                        unset($serialArr); // Unset reference after loop to prevent accidental modifications
                         $this->pos_model->addSerialsBatch($serials_info);
                         $sales_to_report_grouped = $this->sales_model->get_unreported_sales($serial_ids);
                         if(!empty($sales_to_report_grouped)){
