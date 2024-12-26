@@ -302,14 +302,28 @@ class Reports extends MY_Controller
         //$supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
         $item_group = $this->input->get('item_group') ? $this->input->get('item_group') : null;
         $item = $this->input->get('item') ? $this->input->get('item') : null;
+        $filterOnType = $this->input->get('filterOnType') ? $this->input->get('filterOnType') : null;
         $viewtype = $this->input->get('viewtype') ? $this->input->get('viewtype') : null;
+
+        $filterOnTypeArr = [
+            "" => "-- ALL --",
+            "purchase" => "Purchases",
+            "sale" => "Sales",
+            "pos" => "Pos",
+            "customer_return" => "Return Customer",
+            "return_to_supplier" => "Return Supplier",
+            "transfer_in" => "Transfer In",
+            "transfer_out" => "Transfer Out"
+        ];
+        $this->data['filterOnTypeArr'] = $filterOnTypeArr;
+        $this->data['filterOnType'] = $filterOnType;
 
         if (isset($_GET['submit'])) {
             $this->load->library('pagination'); 
             $config['per_page'] = 100; 
             $page = ($this->uri->segment(4)) ? $this->uri->segment(4) : 0;
-            $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $item, $page, $config['per_page']);
-            $this->data['stock_data_totals'] = $this->reports_model->getStockDataTotals($at_date, $warehouse, $item_group, $item);
+            $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $filterOnType, $item, $page, $config['per_page']);
+            $this->data['stock_data_totals'] = $this->reports_model->getStockDataTotals($at_date, $warehouse, $item_group, $filterOnType, $item);
             $this->data['offset'] = $page;
 
             $config['base_url'] = admin_url('reports/stock');

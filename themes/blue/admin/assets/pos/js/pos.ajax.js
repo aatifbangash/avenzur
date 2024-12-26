@@ -1428,6 +1428,8 @@ function loadItems() {
                 item_type +
                 '"><input name="product_code[]" type="hidden" class="rcode" value="' +
                 item_code +
+                '"><input name="serial_numbers[]" type="hidden" class="rserials" value="' +
+                item.row.serial_numbers +
                 '"><input name="product_name[]" type="hidden" class="rname" value="' +
                 item_name +
                 '"><input name="product_option[]" type="hidden" class="roption" value="' +
@@ -1899,9 +1901,18 @@ function add_invoice_item(item) {
             });
         }
         positems[item_id].row.qty = new_qty;
+        if (!positems[item_id].row.serial_numbers.includes(item.row.serial_number)) {
+            if(item.row.serial_number != 0){
+                positems[item_id].row.serial_numbers.push(item.row.serial_number);
+            }
+        }
     } else {
         positems[item_id] = item;
         positems[item_id].row.qty = 1;
+        positems[item_id].row.serial_numbers = [];
+        if(item.row.serial_number != 0){
+            positems[item_id].row.serial_numbers.push(item.row.serial_number);
+        }
     }
     display_item_id = item_id;
     positems[item_id].row.base_quantity = positems[item_id].row.qty;

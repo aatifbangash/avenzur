@@ -2014,6 +2014,9 @@
                                     <span class="chevron closed"></span>
                                 </a>
                                 <ul>
+                                    <?php 
+                                        if($GP['stock_pharmacist']){
+                                    ?>
                                     <li id="stock_requests_index">
                                         <a class="submenu" href="<?= admin_url('stock_request/stock_order'); ?>">
                                             <i class="fa fa-star-o"></i><span class="text"> <?= lang('New Stock Request'); ?></span>
@@ -2024,6 +2027,7 @@
                                             <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Stock Requests'); ?></span>
                                         </a>
                                     </li>
+                                    <?php } ?>
                                     <?php 
                                         if($GP['stock_request_view']){
                                     ?>
