@@ -115,7 +115,7 @@ class Sales_model extends CI_Model
         $this->db->from('sma_serial_numbers');
         $this->db->join('sma_sales', 'sma_serial_numbers.sale_id = sma_sales.id');
         $this->db->join('sma_warehouses', 'sma_sales.warehouse_id = sma_warehouses.id');
-        $this->db->whereIn('sma_serial_numbers.id',$serial_numbers);
+        $this->db->where_in('sma_serial_numbers.id',$serial_numbers);
         $query = $this->db->get();
         
         $results = [];
