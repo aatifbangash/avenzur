@@ -162,6 +162,19 @@
                                     <td colspan="1"><strong><?= $this->sma->formatNumber($grand_net_total); ?></strong></td>
                                     <td colspan="1"></td>
                                 </tr>
+                                 
+                                <tr>
+                                    <td colspan="8"><strong>Discount on Overall Sales By Value: </strong></td>
+                                    <td colspan="1"><?=$grand_sale_discount = ($response_data['grand_sales_discount']->grand_sales_discount - $response_data['grand']->grand_discount);?></td>
+                                    <td colspan="1"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="8"><strong>Total Net Sale: </strong></td>
+                                    <td colspan="1"><?=$grand_net_total - $grand_sale_discount;?></td>
+                                    <td colspan="1"></td>
+                                </tr>
+    
+
                             </tbody>
                             <tfoot></tfoot>
                         </table>

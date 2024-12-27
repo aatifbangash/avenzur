@@ -136,7 +136,7 @@
                 <tr>
                     <td width="300px;" style="font-weight:bold;"><h4><?= lang('Variance'); ?>:</h4></td>
                     <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
-                            <span><?=  $totalsales->total - ($cashsales->total + $ccsales->total); ?></span>
+                            <span><?=  round($totalsales->total - ($cashsales->total + $ccsales->total),2); ?></span>
                         </h4></td>
                 </tr>
 
