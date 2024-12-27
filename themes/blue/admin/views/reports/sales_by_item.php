@@ -157,6 +157,18 @@
                                     <td colspan="1"><?=$response_data['grand']->grand_main_net;?></td>
                                     
                                 </tr>
+                                <tr>
+                                    <td colspan="14"><strong>Discount on Overall Sales By Value: </strong></td>
+                                    <td colspan="1"><?=$grand_sale_discount = ($response_data['grand_sales_discount']->grand_sales_discount - $response_data['grand']->grand_discount);?></td>
+                                    <td colspan="1"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="14"><strong>Total Net Sale: </strong></td>
+                                    <td colspan="1"><?=$response_data['grand']->grand_main_net - $grand_sale_discount;?></td>
+                                    <td colspan="1"></td>
+                                </tr>
+    
+                                
                             </tfoot>
                         </table>
                     </div> 

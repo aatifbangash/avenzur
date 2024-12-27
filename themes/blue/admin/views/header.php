@@ -368,6 +368,12 @@
                             </a>
                         </li>
 
+                        <li id="close_register">
+                                        <a href="<?= admin_url('reports/close_register_details') ?>">
+                                            <i class="fa fa-bars"></i><span class="text"> <?= lang('Close Register Date Wise'); ?></span>
+                                        </a>
+                         </li> 
+
                         <li class="mm_truck">
                             <a class="dropmenu" href="#">
                                 <i class="fa fa-money"></i>
@@ -625,7 +631,7 @@
 
                                     <li id="reports_collections_pharmacy">
                                         <a href="<?= admin_url('reports/collections_by_pharmacy') ?>">
-                                            <i class="fa fa-bars"></i><span class="text"> <?= lang('Close Register Report'); ?></span>
+                                            <i class="fa fa-bars"></i><span class="text"> <?= lang('Pharmacy Collections'); ?></span>
                                         </a>
                                     </li>
 

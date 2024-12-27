@@ -4590,8 +4590,28 @@ class Reports_model extends CI_Model
             }
         }
 
+                     /**get grand discount */
+                     $sql = " SELECT
+                     ROUND( SUM( s.total_discount), 2) as grand_sales_discount
+                       FROM  
+                     sma_sales s 
+                                         
+                     WHERE 
+                         DATE(s.date) >= '" . trim($start_date) . "' 
+                         AND DATE(s.date) <= '" . trim($end_date) . "'
+                         ".$where."
+                     ";
+     
+             $q = $this->db->query($sql);
+             $grand_sales_discount = array();
+             //echo $this->db->last_query();
+             if ($q->num_rows() > 0) {
+                 $grand_sales_discount = $q->result();
+             }
+     
 
-        return array('sales' => $sales, 'returns' => $returns);
+
+        return array('sales' => $sales, 'returns' => $returns, 'grand_sales_discount' => $grand_sales_discount[0]);
     }
 
     public function getSalesByItems($start_date, $end_date, $warehouse)
@@ -4669,7 +4689,28 @@ class Reports_model extends CI_Model
                     $grand = $q->result();
                 }
 
-        return array('sales'=> $sales, 'grand' => $grand[0]);
+
+                 /**get grand discount */
+        $sql = " SELECT
+                ROUND( SUM( s.total_discount), 2) as grand_sales_discount
+                  FROM  
+                sma_sales s 
+                                    
+                WHERE 
+                    DATE(s.date) >= '" . trim($start_date) . "' 
+                    AND DATE(s.date) <= '" . trim($end_date) . "'
+                    ".$where."
+                ";
+
+        $q = $this->db->query($sql);
+        $grand_sales_discount = array();
+        //echo $this->db->last_query();
+        if ($q->num_rows() > 0) {
+            $grand_sales_discount = $q->result();
+        }
+
+
+        return array('sales'=> $sales, 'grand' => $grand[0], 'grand_sales_discount' => $grand_sales_discount[0]);
     }
 
     public function getPharmacistsCommission($start_date, $end_date, $warehouse, $pharmacist)
