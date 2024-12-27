@@ -7,7 +7,6 @@ class Pos extends MY_Controller
     public function __construct()
     {
         parent::__construct();
-        
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
             $this->sma->md('login');
@@ -26,6 +25,21 @@ class Pos extends MY_Controller
         $this->lang->admin_load('pos', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->library('RASDCore');
+        $this->load->admin_model("Zetca_model");
+        $this->zatca_enabled = false;
+        $d = $this->Zetca_model->get_zetca_settings();
+
+        if($d['zatca_enabled']){
+            $this->zatca_enabled = true;
+            $params = array(
+            'base_url' => "https://dev-middleware.accqrate-erp.com/api/zatca-transmissions/send",
+            "api_key" => $d['zatca_appkey'],
+            "api_secret" => $d['zatca_secretKey']
+            );
+           $this->load->library('ZatcaServices', $params, 'zatca');                       
+        }
+       
+       
        
     }
 
@@ -1280,17 +1294,35 @@ class Pos extends MY_Controller
             } else {
                 $rsdItems = '';
                 if ($sale = $this->pos_model->addSale($data, $products, $payment,$rsdItems, $did)) {
+                        /**Added the Zatca Integration */
+                        if($this->zatca_enabled){
+                            $zatca_payload =  $this->Zetca_model->get_zatca_data($sale['sale_id']);                            
+                            $zatca_response = $this->zatca->post('',  $zatca_payload);
+                            if($zatca_response['status']>=400){
+                                $reason = "";
+                                if(isset($zatca_response['body']['errors'])){
+                                    if(!empty($zatca_response['body']['errors'])){
+                                             $reason = $zatca_response['body']['errors'][0];
+                                    }
+                                   
+                                }
+                                $this->Zetca_model->report_failure($sale['sale_id'], $reason, "",$zatca_payload);
+                            } 
+                           
+                        }
+                        /**End of Integration */
+                      
+
                     if ($serials_info) {
                         foreach ($serials_info as &$serialArr) { // Use & to pass by reference
                             $serialArr['sale_id'] = $sale['sale_id'];
                         }
                         unset($serialArr); // Unset reference after loop to prevent accidental modifications
-                        $this->pos_model->addSerialsBatch($serials_info);
+                        $this->pos_model->addSerialsBatch($serials_info);                       
                         $sales_to_report_grouped = $this->sales_model->get_unreported_sales($serial_ids);
                         if(!empty($sales_to_report_grouped)){
                            $this->publish_sale($sales_to_report_grouped);
                         }
-
                     }
 
                     $this->session->set_userdata('remove_posls', 1);
