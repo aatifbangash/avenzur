@@ -1238,6 +1238,16 @@ function loadItems() {
 		let new_total_discount = new Decimal(0);
 		let new_grant_total = new Decimal(0);
 		let new_grand_cost_goods_sold = new Decimal(0);
+        let net_sale_calculated = new Decimal(0);
+
+        $.each(sortedItems, function () {
+            var item = this;
+            const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+            let sale_price = toTwoDecimals(item.row.price);
+            let total_quantity = new Decimal(item.row.qty);
+            // Update net_sale_calculated with the result of plus()
+            net_sale_calculated = net_sale_calculated.plus(toTwoDecimals(sale_price.times(total_quantity)));
+        });
 
         $.each(sortedItems, function () {
             var item = this;
@@ -1254,7 +1264,8 @@ function loadItems() {
                         //order_discount = parseFloat(ds);
                     }
                 } else {
-                    item.posdiscount = 0;
+                    let net_sale_percentage = (ds) / net_sale_calculated;
+                    item.net_sale_percentage = net_sale_percentage;
                      // order_discount = parseFloat(ds);
                    //order_discount = formatDecimal(parseFloat(((parseFloat(total) - parseFloat(total_vat)) * parseFloat(ds)) / 100), 4);
                 }
@@ -1269,8 +1280,8 @@ function loadItems() {
                 tax_rate: item.row.tax_rate,
                 net_unit_cost: item.row.net_unit_cost,
                 pos_discount: item.posdiscount ?? 0,
-
-        } ;
+                net_sale_percentage: item.net_sale_percentage ?? 0,
+            };
         console.log('new item', new_item);
         const new_calc = calculatePOSInventory(new_item);
         console.log('new_cal',new_calc);
@@ -1713,7 +1724,7 @@ function loadItems() {
 
                 order_discount = 0;
             } else {
-               order_discount = new Decimal(ds).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+               //order_discount = new Decimal(ds).toDecimalPlaces(2, Decimal.ROUND_DOWN);
                //order_discount = formatDecimal(parseFloat(((parseFloat(total) - parseFloat(total_vat)) * parseFloat(ds)) / 100), 4);
             }
             //total_discount += parseFloat(order_discount);
@@ -1739,7 +1750,8 @@ function loadItems() {
         product_tax = formatDecimal(product_tax);
         total_discount = formatDecimal(order_discount + product_discount);
 
-        new_total_discount = new Decimal(new_total_discount.plus(order_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+        //new_total_discount = new Decimal(new_total_discount.plus(order_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+        new_total_discount = new Decimal(new_total_discount).toDecimalPlaces(5, Decimal.ROUND_DOWN)
         new_grant_total = new Decimal(new_grant_total.minus(order_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
 
         $('#grand_total_sale').val(new_total_sale);
@@ -2497,7 +2509,7 @@ if (site.settings.set_focus != 1) {
 }
 
 function calculatePOSInventory(item) {
-    const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+    const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(5, Decimal.ROUND_DOWN);
     // Convert all inputs to Decimal and ensure precision
     const cost_price = toTwoDecimals(item.cost);
     const sale_price = toTwoDecimals(item.sale_price);
@@ -2505,13 +2517,19 @@ function calculatePOSInventory(item) {
     const tax_rate = toTwoDecimals(item.tax_rate);
     const net_unit_cost = toTwoDecimals(item.net_unit_cost);
     const pos_discount = toTwoDecimals(item.pos_discount);
-
+    const net_sale_percentage = item.net_sale_percentage;
     // Calculations
     const total_purchase = toTwoDecimals(cost_price.times(total_quantity));
     const total_sale = toTwoDecimals(sale_price.times(total_quantity));
+    let item_discount = 0;
 
     // pos discount
-    const item_discount = toTwoDecimals(total_sale.times(pos_discount.dividedBy(100)));
+    if(net_sale_percentage){
+        item_discount = net_sale_percentage * sale_price.times(total_quantity);
+        //item_discount = toTwoDecimals(total_sale.times(net_sale_percentage));
+    }else{
+        item_discount = total_sale.times(pos_discount.dividedBy(100));
+    }
 
     const net_sale = toTwoDecimals(total_sale.minus(item_discount));
     const net_unit_sale = total_quantity.greaterThan(0)
@@ -2537,7 +2555,8 @@ function calculatePOSInventory(item) {
         new_total_purchase: total_purchase.toNumber(),
         new_net_sale: net_sale.toNumber(),
         new_total_sale: total_sale.toNumber(),
-        new_item_discount: item_discount.toNumber(),
+        //new_item_discount: item_discount.toNumber(),
+        new_item_discount: item_discount,
         new_vat_value: total_vat.toNumber(),
         new_unit_sale: net_unit_sale.toNumber(),
         new_grant_total: grant_total.toNumber(),
