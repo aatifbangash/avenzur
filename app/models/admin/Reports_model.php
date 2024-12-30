@@ -1927,7 +1927,7 @@ class Reports_model extends CI_Model
         return $totalPurchases;
     }
 
-    public function getStockDataTotals($at_date, $warehouse, $item_group, $type, $item){
+    /*public function getStockDataTotals($at_date, $warehouse, $item_group, $type, $item){
         $stockArray = [];
         if ($at_date) {
             $at_date = $this->sma->fld($at_date);
@@ -1966,6 +1966,46 @@ class Reports_model extends CI_Model
         //$stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code";
         $stockResults = $this->db->query($stockQuery);
         //echo $this->db->last_query(); exit; 
+        if ($stockResults->num_rows() > 0) {
+            foreach ($stockResults->result() as $row) {
+                $stockArray[] = $row;
+            }
+        }
+        return $stockArray;
+    }*/
+
+    public function getStockDataGrandTotals($at_date, $warehouse, $item_group, $type, $item){
+        $stockArray = [];
+        if ($at_date) {
+            $at_date = $this->sma->fld($at_date);
+        }
+
+        $stockQuery = " SELECT p.id,
+            
+            SUM(inv.quantity) as quantity,
+            SUM(inv.net_unit_sale * inv.quantity) as total_sale_price,
+            sum(inv.net_unit_cost * inv.quantity) as total_cost_price,
+            SUM(inv.real_unit_cost * inv.quantity) as purchase_price  
+            FROM sma_inventory_movements inv 
+            INNER JOIN sma_products p on p.id=inv.product_id";
+        if ($at_date) {
+            $stockQuery .= " AND date(inv.movement_date)<= '{$at_date}' ";
+        }
+        if ($warehouse) {
+            $stockQuery .= " AND inv.location_id = {$warehouse} ";
+        }
+        
+        if ($item_group) {
+            $stockQuery .= " AND p.category_id = '$item_group' ";
+        }
+        if ($item) {
+            $stockQuery .= " AND inv.product_id = '{$item}' ";
+        }
+        if ($type) {
+            $stockQuery .= " AND inv.type = '{$type}' ";
+        }
+          $stockResults = $this->db->query($stockQuery);
+       // echo $this->db->last_query(); exit; 
         if ($stockResults->num_rows() > 0) {
             foreach ($stockResults->result() as $row) {
                 $stockArray[] = $row;
