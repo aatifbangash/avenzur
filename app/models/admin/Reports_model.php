@@ -4465,7 +4465,7 @@ class Reports_model extends CI_Model
                 sum( if(paid_by = 'cash' , amount, 0) ) as total_cash_old,
                 sum( if(paid_by = 'CC' , amount, 0) ) as total_credit_card,
                 0 AS total_discount,
-                0 AS total_returns
+                sum( if(return_id IS NOT NULL , amount, 0) ) AS total_returns
                 FROM `sma_payments`
                 WHERE 
                  DATE(date) >= '" . trim($start_date) . "' 

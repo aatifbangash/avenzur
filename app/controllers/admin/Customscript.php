@@ -20,7 +20,7 @@ class Customscript extends MY_Controller
             echo "Pass count number" ;exit;
         }
         
-        $file = FCPATH . 'files_nehawand/nehawantlat'.$count.'.csv';
+         $file = FCPATH . 'new_files_nehawand/nhawand30_'.$count.'.csv';
         if (($handle = fopen($file, "r")) !== false) {
             $dataToSend = [];
             $header = fgetcsv($handle); // Read the first row as the header
@@ -137,6 +137,7 @@ class Customscript extends MY_Controller
             $products = array();
            //echo "<pre>";
            //print_r($purchaseData);
+           echo "nullproduct<br>";
             if ($purchaseData ) {
                 foreach ($purchaseData as $key => $row) {
                     //print_r($row);
@@ -147,7 +148,7 @@ class Customscript extends MY_Controller
                     $product_data = $query->row_array();
                      $product_id = isset($product_data['id']) ? $product_data['id'] : null;
                     if($product_id == null) {
-                        echo 'nullproduct'.$item_code;
+                        echo '<br>'.$item_code;
                     }
 
 
@@ -249,6 +250,7 @@ class Customscript extends MY_Controller
             echo "Unable to open the CSV file.";
         }
 
+        //admin_redirect('reports/customers');
     }
 
     public function items_commission()
