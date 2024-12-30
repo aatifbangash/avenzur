@@ -98,7 +98,7 @@
                                 <th><?= lang('Card'); ?></th>
                                 <th><?= lang('Visa'); ?></th>
                                 <th><?= lang('Master Card'); ?></th>
-                                <th><?= lang('Discounts'); ?></th>
+                             
                                 <th><?= lang('Total'); ?></th>
                                 <th><?= lang('Net Total'); ?></th>
                             </tr>
@@ -137,7 +137,7 @@
                                                 <td><?= $data->total_credit_card; ?></td>
                                                 <td>000</td>
                                                 <td>000</td>
-                                                <td><?= $data->total_discount; ?></td>
+                                              
                                                 <td><?= $total ; ?></td>
                                                 <td><?= $net_total; ?></td>
                                                 
@@ -154,7 +154,6 @@
                                     <td colspan="1"><strong><?= $this->sma->formatNumber($grand_total_credit_card); ?></strong></td>
                                     <td colspan="1"><strong>00</strong></td>
                                     <td colspan="1"><strong>00</strong></td>
-                                    <td colspan="1"><strong><?= $this->sma->formatNumber($grand_discount); ?></strong></td>
                                     <td colspan="1"><strong><?= $this->sma->formatNumber($grand_total); ?></strong></td>
                                     <td colspan="1"><strong><?= $this->sma->formatNumber($grand_net_total); ?></strong></td>
                                 </tr>

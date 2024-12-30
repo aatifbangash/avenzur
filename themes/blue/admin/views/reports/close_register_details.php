@@ -129,16 +129,16 @@
                 <tr>
                     <td width="300px;" style="font-weight:bold;"><h4><?= lang('total_sales'); ?>:</h4></td>
                     <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
-                            <span><?=  $totalsales->total ? $totalsales->total : '0.00'; ?></span>
+                            <span><?=  $cashsales->total + $ccsales->total; ?></span>
                         </h4></td>
                 </tr>
 
-                <tr>
+                <!-- <tr>
                     <td width="300px;" style="font-weight:bold;"><h4><?= lang('Variance'); ?>:</h4></td>
                     <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
                             <span><?=  round($totalsales->total - ($cashsales->total + $ccsales->total),2); ?></span>
                         </h4></td>
-                </tr>
+                </tr> -->
 
                 <tr>
                     <td width="300px;" style="font-weight:bold;"><h4><?= lang('Total Invoice Qty'); ?>:</h4></td>
