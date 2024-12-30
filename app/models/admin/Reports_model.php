@@ -1963,7 +1963,7 @@ class Reports_model extends CI_Model
             $stockQuery .= " AND inv.type = '{$type}' ";
         }
 
-        $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code";
+        //$stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code";
         $stockResults = $this->db->query($stockQuery);
         //echo $this->db->last_query(); exit; 
         if ($stockResults->num_rows() > 0) {
