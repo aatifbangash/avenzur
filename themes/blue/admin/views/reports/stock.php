@@ -15,15 +15,32 @@
        //document.getElementById("searchForm").submit(); 
        $('.viewtype').val('');  
     }
-    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+    /*function exportTableToExcel(tableId, filename = 'table.xlsx') {
         const table = document.getElementById(tableId);
         const wb = XLSX.utils.table_to_book(table, {sheet: 'Sheet 1'});
         XLSX.writeFile(wb, filename);
+    }*/
+
+    function exportTableToExcel() {
+        // Get input values
+        const at_date = document.getElementById('at_date').value;
+        const warehouse = document.getElementById('warehouse').value;
+        const item_group = document.getElementById('item_group').value;
+        const item = document.getElementById('report_product_id2').value;
+        const filterOnType = document.getElementById('filterOnType').value;
+
+        const queryParams = new URLSearchParams({
+            at_date: at_date,
+            warehouse: warehouse,
+            item_group: item_group,
+            item: item,
+            filterOnType: filterOnType
+        }).toString();
+
+        //console.log(`<?php echo base_url('reports/stock_export_excel'); ?>?${queryParams}`);
+        window.location.href = `<?php echo base_url('admin/reports/stock_export_excel'); ?>?${queryParams}`;
     }
     
-    $(document).ready(function () {
-
-    });
 </script>
 <style>
     /* Basic styling for pagination */
@@ -119,7 +136,7 @@
                                     }
 
                                     ?>
-                                    <?php echo form_dropdown('warehouse', $optionsWarehouse, ($_GET['warehouse'] ?? ''), array('class' => 'form-control disable-select'), array('none')); ?>
+                                    <?php echo form_dropdown('warehouse', $optionsWarehouse, ($_GET['warehouse'] ?? ''), array('class' => 'form-control disable-select', 'id' => 'warehouse'), array('none')); ?>
 
                                 </div>
                             </div>
@@ -148,7 +165,7 @@
                                         }
                                     }
                                     ?>
-                                    <?php echo form_dropdown('item_group', $optionsCategories, ($_GET['item_group'] ?? ''), array('class' => 'form-control disable-select'), array('none')); ?>
+                                    <?php echo form_dropdown('item_group', $optionsCategories, ($_GET['item_group'] ?? ''), array('class' => 'form-control disable-select', 'id' => 'item_group'), array('none')); ?>
 
                                 </div>
                             </div>

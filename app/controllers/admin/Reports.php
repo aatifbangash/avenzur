@@ -294,6 +294,149 @@ class Reports extends MY_Controller
         $this->page_construct('reports/pharmacy_stock', $meta, $this->data);
     }
 
+    public function stock_export_excel(){
+        $data = array();
+        $at_date = $this->input->get('at_date') ? $this->input->get('at_date') : null;
+        $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
+        $item_group = $this->input->get('item_group') ? $this->input->get('item_group') : null;
+        $item = $this->input->get('item') ? $this->input->get('item') : null;
+        $filterOnType = $this->input->get('filterOnType') ? $this->input->get('filterOnType') : null;
+
+        $data = $this->reports_model->getStockDataExcel($at_date, $warehouse, $item_group, $filterOnType, $item);
+
+        if (!empty($data)) {
+            $this->load->library('excel');
+            $this->excel->setActiveSheetIndex(0);
+            $this->excel->getActiveSheet()->setTitle(lang('stock_report'));
+            $this->excel->getActiveSheet()->SetCellValue('A1', lang('Item Code'));
+            $this->excel->getActiveSheet()->SetCellValue('B1', lang('Avz Code'));
+            $this->excel->getActiveSheet()->SetCellValue('C1', lang('Item Name'));
+            $this->excel->getActiveSheet()->SetCellValue('D1', lang('Batch'));
+            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Expiry'));
+            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Quantity'));
+            $this->excel->getActiveSheet()->SetCellValue('G1', lang('Sale Price'));
+            $this->excel->getActiveSheet()->SetCellValue('H1', lang('Total Sale'));
+            $this->excel->getActiveSheet()->SetCellValue('I1', lang('Purchase Price'));
+            $this->excel->getActiveSheet()->SetCellValue('J1', lang('Total Purchase'));
+            $this->excel->getActiveSheet()->SetCellValue('K1', lang('Cost Price'));
+            $this->excel->getActiveSheet()->SetCellValue('L1', lang('Total Cost'));
+
+            $row = 2;
+            $total_quantity = $total_sale = $total_purchase = $total_cost = 0;
+            foreach ($data as $data_row) {
+                $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->item_code);
+                $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->avz_item_code);
+                $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->name);
+                $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->batch_no);
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->expiry);
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->quantity);
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, ($data_row->sale_price));
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, ($data_row->sale_price * $data_row->quantity));
+                $this->excel->getActiveSheet()->SetCellValue('I' . $row, ($data_row->purchase_price));
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, ($data_row->purchase_price * $data_row->quantity));
+                $this->excel->getActiveSheet()->SetCellValue('K' . $row, ($data_row->cost_price));
+                $this->excel->getActiveSheet()->SetCellValue('L' . $row, ($data_row->cost_price * $data_row->quantity));
+                
+                $total_quantity += $data_row->quantity;
+                $row++;
+            }
+            $this->excel->getActiveSheet()->getStyle('E' . $row . ':J' . $row)->getBorders()
+                ->getTop()->setBorderStyle('medium');
+            //$this->excel->getActiveSheet()->SetCellValue('E' . $row, $this->sma->formatDecimal($igst));
+            //$this->excel->getActiveSheet()->SetCellValue('F' . $row, $this->sma->formatDecimal($cgst));
+            //$this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatDecimal($sgst));
+            //$this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->sma->formatDecimal($product_tax));
+            //$this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->sma->formatDecimal($order_tax));
+            //$this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatDecimal($total));
+
+            //$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+            //$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+            //$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
+            //$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
+            //$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
+            //$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
+            //$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(15);
+            //$this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(15);
+            //$this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(20);
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
+            $filename = 'stock_report';
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+        }
+    }
+
+    /*public function stock_export_excel() {
+        $data = array();
+    
+        $at_date = $this->input->get('at_date') ? $this->input->get('at_date') : null;
+        $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
+        $item_group = $this->input->get('item_group') ? $this->input->get('item_group') : null;
+        $item = $this->input->get('item') ? $this->input->get('item') : null;
+        $filterOnType = $this->input->get('filterOnType') ? $this->input->get('filterOnType') : null;
+        $csrf_token = $this->input->get($this->security->get_csrf_token_name());
+
+        // Validate the CSRF token
+        if ($csrf_token !== $this->security->get_csrf_hash()) {
+            show_error('CSRF token mismatch', 403);
+        }
+    
+        $data = $this->reports_model->getStockDataExcel($at_date, $warehouse, $item_group, $filterOnType, $item);
+    
+        if (!empty($data)) {
+            $this->load->library('excel');
+            $this->excel->setActiveSheetIndex(0);
+            $this->excel->getActiveSheet()->setTitle(lang('stock_report'));
+            // (Set cell values here, as in your original code)
+    
+            $this->excel->getActiveSheet()->SetCellValue('A1', lang('Item Code'));
+            $this->excel->getActiveSheet()->SetCellValue('B1', lang('Avz Code'));
+            $this->excel->getActiveSheet()->SetCellValue('C1', lang('Item Name'));
+            $this->excel->getActiveSheet()->SetCellValue('D1', lang('Batch'));
+            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Expiry'));
+            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Quantity'));
+            $this->excel->getActiveSheet()->SetCellValue('G1', lang('Sale Price'));
+            $this->excel->getActiveSheet()->SetCellValue('H1', lang('Total Sale'));
+            $this->excel->getActiveSheet()->SetCellValue('I1', lang('Purchase Price'));
+            $this->excel->getActiveSheet()->SetCellValue('J1', lang('Total Purchase'));
+            $this->excel->getActiveSheet()->SetCellValue('K1', lang('Cost Price'));
+            $this->excel->getActiveSheet()->SetCellValue('L1', lang('Total Cost'));
+
+            $row = 2;
+            $total_quantity = $total_sale = $total_purchase = $total_cost = 0;
+            foreach ($data as $data_row) {
+                $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->item_code);
+                $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->avz_item_code);
+                $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->name);
+                $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->batch_no);
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->expiry);
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->quantity);
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, ($data_row->sale_price));
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, ($data_row->sale_price * $data_row->quantity));
+                $this->excel->getActiveSheet()->SetCellValue('I' . ($data_row->purchase_price));
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, ($data_row->purchase_price * $data_row->quantity));
+                $this->excel->getActiveSheet()->SetCellValue('K' . $row, ($data_row->cost_price));
+                $this->excel->getActiveSheet()->SetCellValue('L' . $row, ($data_row->cost_price * $data_row->quantity));
+                
+                $total_quantity += $data_row->quantity;
+                $row++;
+            }
+
+            // Generate the Excel file
+            $filename = "stock_export_" . date('Ymd') . ".xlsx";
+            $this->load->helper('download');
+            $file_content = $this->generate_excel_file($at_date, $warehouse, $item_group, $item, $filterOnType); // Custom function to generate content
+
+            // Send the file as a response
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            echo $file_content;
+            exit;
+        } else {
+            show_error('No data available to export.');
+        }
+    }*/
+
     public function stock()
     {
 
