@@ -239,6 +239,7 @@ class Returns extends MY_Controller
 
             $date             = ($this->Owner || $this->Admin) ? $this->sma->fld(trim($this->input->post('date'))) : date('Y-m-d H:i:s');
             $reference        = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('re');
+            //$reference        = $this->input->post('sale_id') ? $this->input->post('sale_id') : '0';
             $warehouse_id     = $this->input->post('warehouse');
             $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
@@ -520,7 +521,9 @@ class Returns extends MY_Controller
                     $row->unit = $item->product_unit_id;
                     //$row->qty = $item->unit_quantity - $row->bonus;
                     //$row->oqty = $item->unit_quantity - $row->bonus;
-                    $row->qty = $row->base_quantity - $row->bonus;
+
+                    //$row->qty = $row->base_quantity - $row->bonus;
+                    $row->qty = $item->quantity;
                     $row->oqty = $row->base_quantity - $row->bonus;
                     
                     $row->sale_item_id = $item->id;
@@ -550,7 +553,7 @@ class Returns extends MY_Controller
                 }
                 $this->data['inv_items'] = json_encode($pr);
                 $this->data['id'] = $_GET['sale'];
-                $this->data['reference'] = '';
+                $this->data['reference'] = $_GET['sale'];
                 $this->data['billers']    = $this->site->getAllCompanies('biller');
                 $this->data['warehouses'] = $this->site->getMainWarehouse();
                 $this->data['tax_rates'] = $this->site->getAllTaxRates();

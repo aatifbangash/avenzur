@@ -314,7 +314,7 @@
                             </div>
                         <?php
                 } ?>
-                      <input type="hidden" name="reference_no" value="">
+                      <input type="hidden" name="reference_no" value="<?= $reference; ?>">
 
                         <!-- <div class="col-md-4">
                             <div class="form-group">

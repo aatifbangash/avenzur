@@ -1564,6 +1564,8 @@ function loadItems() {
 				new_calc.new_net_sale +
 				'"><input name="main_net[]" type="hidden" class="main_net" value="' +
 				new_calc.new_grant_total +
+				'"><input name="item_discount1[]" type="hidden" class="main_net" value="' +
+				new_calc.new_discount1 +
 				'"><input name="item_total_discount[]" type="hidden" class="main_net" value="' +
 				new_calc.new_item_discount +
 				'"><input name="item_vat_values[]" type="hidden" class="main_net" value="' +
@@ -2542,6 +2544,9 @@ function calculatePOSInventory(item) {
         total_vat = toTwoDecimals(net_sale.times(new Decimal(15).dividedBy(100)));
     }
 
+    // discount percentage calculcation
+    const new_discount1 = toTwoDecimals(toTwoDecimals((item_discount *100)).dividedBy(total_sale));
+
     // Grant Total
     const grant_total = toTwoDecimals(net_sale.plus(total_vat));
 
@@ -2557,6 +2562,7 @@ function calculatePOSInventory(item) {
         new_total_sale: total_sale.toNumber(),
         //new_item_discount: item_discount.toNumber(),
         new_item_discount: item_discount,
+        new_discount1: new_discount1.toNumber(),
         new_vat_value: total_vat.toNumber(),
         new_unit_sale: net_unit_sale.toNumber(),
         new_grant_total: grant_total.toNumber(),
