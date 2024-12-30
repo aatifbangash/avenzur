@@ -274,11 +274,11 @@
                                 <th>&nbsp;</th>
                                 <th><?= $totalQuantity ?></th>
                                 <th><?= '-' ?></th>
-                                <th><?= number_format($grandTotalSalePrice, 2, '.', ',') ?></th>
+                                <th><?= number_format($new_grand_total->total_sale_price, 2, '.', ',') ?></th>
                                 <th><?= '-' ?></th>
-                                <th><?= number_format($grandTotalPurchasePrice, 2, '.', ',') ?></th>
+                                <th><?= number_format($new_grand_total->purchase_price, 2, '.', ',') ?></th>
                                 <th><?= '-' ?></th>
-                                <th><?= number_format($grandTotalCostPrice, 2, '.', ',') ?></th>
+                                <th><?= number_format($new_grand_total->total_cost_price, 2, '.', ',') ?></th>
                             </tr>
                             </tfoot>
                         </table>
