@@ -439,7 +439,6 @@ class Reports extends MY_Controller
 
     public function stock()
     {
-
         $at_date = $this->input->get('at_date') ? $this->input->get('at_date') : null;
         $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
         //$supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;

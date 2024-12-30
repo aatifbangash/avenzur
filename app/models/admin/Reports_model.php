@@ -1927,7 +1927,7 @@ class Reports_model extends CI_Model
         return $totalPurchases;
     }
 
-    /*public function getStockDataTotals($at_date, $warehouse, $item_group, $type, $item){
+    public function getStockDataTotals($at_date, $warehouse, $item_group, $type, $item){
         $stockArray = [];
         if ($at_date) {
             $at_date = $this->sma->fld($at_date);
@@ -1972,7 +1972,7 @@ class Reports_model extends CI_Model
             }
         }
         return $stockArray;
-    }*/
+    }
 
     public function getStockDataGrandTotals($at_date, $warehouse, $item_group, $type, $item){
         $stockArray = [];
