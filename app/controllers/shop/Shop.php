@@ -392,7 +392,7 @@ class Shop extends MY_Shop_Controller
                                 if ($product_details->tax_method != 1) {
                                     $item_net_price = $unit_price - $item_tax;
                                 }
-                                $pr_item_tax = $this->sma->formatDecimal(($item_tax * $item_unit_quantity), 4);
+                                $pr_item_tax = $this->sma->formatDecimalFunc(($item_tax * $item_unit_quantity), 4);
                                 if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($biller->state == $customer->state), $tax_details)) {
                                     $total_cgst += $gst_data['cgst'];
                                     $total_sgst += $gst_data['sgst'];
@@ -412,7 +412,7 @@ class Shop extends MY_Shop_Controller
                                 'product_type' => $product_details->type,
                                 'option_id' => $item_option,
                                 'net_unit_price' => $item_net_price,
-                                'unit_price' => $this->sma->formatDecimal($item_net_price + $item_tax),
+                                'unit_price' => $this->sma->formatDecimalFunc($item_net_price + $item_tax),
                                 'quantity' => $item_quantity,
                                 'product_unit_id' => $unit ? $unit->id : null,
                                 'product_unit_code' => $unit ? $unit->code : null,
@@ -423,7 +423,7 @@ class Shop extends MY_Shop_Controller
                                 'tax' => $tax,
                                 'discount' => null,
                                 'item_discount' => 0,
-                                'subtotal' => $this->sma->formatDecimal($subtotal),
+                                'subtotal' => $this->sma->formatDecimalFunc($subtotal),
                                 'serial_no' => null,
                                 'real_unit_price' => $price,
                             ];
@@ -431,7 +431,7 @@ class Shop extends MY_Shop_Controller
                             $ww2 = array('product_weight' => $ww->weight);
                             $pro_weight[] = $ww2;
                             $products[] = ($product + $gst_data);
-                            $total += $this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                            $total += $this->sma->formatDecimalFunc(($item_net_price * $item_unit_quantity), 4);
                         }else{
                             $out_stock_item_found = true;
                             $this->session->set_flashdata('error', lang('out of stock item') . ' (' . $item['name'] . ')');
@@ -449,7 +449,7 @@ class Shop extends MY_Shop_Controller
                     : $this->shop_settings->shipping;
 
                 $order_tax = $this->site->calculateOrderTax($this->Settings->default_tax_rate2, ($total + $product_tax));
-                $total_tax = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
+                $total_tax = $this->sma->formatDecimalFunc(($product_tax + $order_tax), 4);
                 //$grand_total = $this->sma->formatDecimal(($total + $total_tax + $shipping), 4);
 
                 $total = !empty($this->cart->total())
@@ -464,7 +464,7 @@ class Shop extends MY_Shop_Controller
                     ? $this->cart->get_total_discount()
                     : 0;
 
-                $grand_total = $this->sma->formatDecimal(($total + $shipping), 4);
+                $grand_total = $this->sma->formatDecimalFunc(($total + $shipping), 4);
 
                 $coupon_details = $this->session->userdata('coupon_details');
                 if(isset($coupon_details['code'])){

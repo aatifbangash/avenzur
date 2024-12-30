@@ -640,9 +640,9 @@ class Cart_ajax extends MY_Shop_Controller
             }
             $tax_rate   = $this->site->getTaxRateByID($product->tax_rate);
             $ctax       = $this->site->calculateTax($product, $tax_rate, $price);
-            $tax        = $this->sma->formatDecimal($ctax['amount']);
-            $price      = $this->sma->formatDecimal($price);
-            $unit_price = $this->sma->formatDecimal($product->tax_method ? $price + $tax : $price);
+            $tax        = $this->sma->formatDecimalFunc($ctax['amount']);
+            $price      = $this->sma->formatDecimalFunc($price);
+            $unit_price = $this->sma->formatDecimalFunc($product->tax_method ? $price + $tax : $price);
             $id         = $this->Settings->item_addition ? md5($product->id) : md5(microtime());
 
             $sulfad_count = 0;
@@ -989,9 +989,9 @@ class Cart_ajax extends MY_Shop_Controller
 
                 $tax_rate   = $this->site->getTaxRateByID($product->tax_rate);
                 $ctax       = $this->site->calculateTax($product, $tax_rate, $price);
-                $tax        = $this->sma->formatDecimal($ctax['amount']);
-                $price      = $this->sma->formatDecimal($price);
-                $unit_price = $this->sma->formatDecimal($product->tax_method ? $price + $tax : $price);
+                $tax        = $this->sma->formatDecimalFunc($ctax['amount']);
+                $price      = $this->sma->formatDecimalFunc($price);
+                $unit_price = $this->sma->formatDecimalFunc($product->tax_method ? $price + $tax : $price);
 
                 /* Sulfad Code For Update Starts */
                 $sulfad_code = '06285193000301';

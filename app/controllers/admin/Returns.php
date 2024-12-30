@@ -527,7 +527,7 @@ class Returns extends MY_Controller
                     $row->received = $item->quantity_received ? $item->quantity_received : $item->quantity;
                     $row->received = $row->received - $row->bonus;
                     $row->quantity_balance = $item->quantity_balance + ($item->quantity - $row->received);
-                    $row->discount = $item->discount ? $item->discount : '0';
+                    $row->discount = $item->item_discount ? $item->item_discount : '0';
                     //$options = $this->purchases_model->getProductOptions($row->id);
                     //$row->option = !empty($item->option_id) ? $item->option_id : '';
                     $row->real_unit_cost = $item->real_cost;
