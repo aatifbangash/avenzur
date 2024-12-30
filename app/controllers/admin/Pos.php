@@ -1098,6 +1098,7 @@ class Pos extends MY_Controller
                      * new post values
                      */
                     $new_item_discount = $_POST['item_total_discount'][$r];
+                    $new_discount1 = $_POST['item_discount1'][$r];
                     $new_item_vat_value = $_POST['item_vat_values'][$r];
                     $new_item_total_sale = $_POST['item_total_sale'][$r];
                     $new_item_unit_sale = $_POST['item_unit_sale'][$r];
@@ -1120,6 +1121,7 @@ class Pos extends MY_Controller
                         'item_tax'          => $pr_item_tax,
                         'tax_rate_id'       => $item_tax_rate,
                         'tax'               => $new_item_vat_value,
+                        'discount1'         => $new_discount1,
                         'discount'          => $item_discount,
                         'item_discount'     => $new_item_discount,
                         'subtotal'          => $new_item_total_sale,//$this->sma->formatDecimal($subtotal),
