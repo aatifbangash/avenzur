@@ -1435,38 +1435,44 @@ class Products_model extends CI_Model
         return false;
     }
 
-    public function getProductsBarcodeItems($purchase_id='', $item_code = '', $warehouse_id = '')
+    public function getProductsBarcodeItems($purchase_id='', $item_code = '', $warehouse_id = '', $inventory_id='')
     {
-        //$q = $this->db->get_where('purchase_items', ['purchase_id' => $purchase_id]);
-        // $this->db->where('purchase_id', $purchase_id);
-
-        // if (!empty($item_code)) {
-        //     $this->db->where('product_code', $item_code);
-        // }
-    
-        // $q = $this->db->get('purchase_items');
-
-        $this->db->select('purchase_items.*'); 
-        $this->db->from('purchase_items');
-        
-        // Adding where clause for purchase_id
+        $where = '';
         if( !empty($purchase_id) ) {
-            $this->db->where('purchase_items.purchase_id', $purchase_id);
+            $where = " AND a.type='purchase' AND a.reference_id = ".$purchase_id;
         }
-        // Add a condition for item_code if it is not empty and check on the products table
+                // Add a condition for item_code if it is not empty and check on the products table
         if (!empty($item_code)) {
-            $this->db->where('product_code', $item_code);
+            $where .= " AND b.item_code = ".$item_code;
         }
         if (!empty($warehouse_id)) {
-            $this->db->where('warehouse_id', $warehouse_id);
+            $where .= " AND a.location_id = ".$warehouse_id;
         }
-        $q = $this->db->get();
-        if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $data[] = $row;
-            }
-            return $data;
+        if(!empty($inventory_id)){
+            $where .= " AND a.id = ".$inventory_id;
         }
-        return false;
+
+        $sql = "SELECT a.id,
+        b.id as product_id,
+        b.item_code as code,
+        a.avz_item_code,
+        b.name,
+        sum(a.quantity) as quantity,
+        a.net_unit_sale as price,
+        a.batch_number as batchno,
+        a.expiry_date as expiry
+        FROM `sma_inventory_movements` a
+        JOIN sma_products b ON a.product_id = b.id
+        WHERE 1=1 ".$where."
+        group by a.avz_item_code , a.location_id" ;
+
+    $q = $this->db->query($sql);
+    if ($q->num_rows() > 0) {
+        foreach (($q->result()) as $row) {
+            $data[] = $row;
+        }
+        return $data;
+    }
+    return false;
     } 
 }

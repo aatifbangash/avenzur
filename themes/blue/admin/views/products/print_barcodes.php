@@ -547,7 +547,7 @@
                 var newTr = $('<tr id="row_' + row_no + '" class="row_' + item.id + '" data-item-id="' + item.id + '"></tr>');
                 tr_html = '<td><input name="product[]" type="checkbox" '+checked+' value="' + item.id + '"></td>';
                 tr_html += '<td><input name="product_new[]" type="hidden" value="' + item.id + '"><span id="name_' + row_no + '">' + item.name + ' (' + item.code + ')'+' - '+item.avz_item_code+'</span></td>';
-                tr_html += '<td><input class="form-control quantity text-center" name="quantity[]" type="text" value="' + formatDecimal(item.qty) + '" data-id="' + row_no + '" data-item="' + item.id + '" id="quantity_' + row_no + '" onClick="this.select();"></td>';
+                tr_html += '<td><input class="form-control quantity text-center" name="quantity['+item.id+']" type="text" value="' + formatDecimal(item.qty) + '" data-id="' + row_no + '" data-item="' + item.id + '" id="quantity_' + row_no + '" onClick="this.select();"></td>';
               
                 newTr.html(tr_html);
                 newTr.appendTo("#bcTable");
