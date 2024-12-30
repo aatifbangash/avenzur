@@ -4457,11 +4457,12 @@ class Reports_model extends CI_Model
     DATE(e.date)
     ORDER BY 
     DATE(e.date) */
-        $sql = "
+         $sql = "
                    
               SELECT DATE(date) as transaction_date,
                sum(amount) , 
-                sum( if(paid_by = 'cash' , amount, 0) ) as total_cash,
+                ROUND( SUM(COALESCE(if(paid_by = 'cash' , amount, 0), 0)) ) as total_cash,
+                sum( if(paid_by = 'cash' , amount, 0) ) as total_cash_old,
                 sum( if(paid_by = 'CC' , amount, 0) ) as total_credit_card,
                 0 AS total_discount,
                 0 AS total_returns
