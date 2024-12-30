@@ -157,8 +157,29 @@ class Sma
         return '0000-00-00 00:00:00';
     }
 
+    public function formatDecimalFunc($number, $decimals = 2)
+    {
+        if (!is_numeric($number)) {
+            return null;
+        }
+        $decimals = $this->Settings->decimals;
+        // if (!$decimals && $decimals !== 0) {
+        //     $decimals = $this->Settings->decimals;
+        // }
+        $truncated = intval($number * 100) / 100;
+
+    // Now format the number to two decimal places
+    // number_format($truncated, 2, '.', '');
+    //     echo '<br>'.$number;
+    //     echo '<br>'.number_format($number, $decimals, '.', '');
+    //    echo '<br>'. number_format($truncated, 2, '.', '');
+       return number_format($truncated, 2, '.', '');
+       // return number_format($number, $decimals, '.', '');
+    }
+
     public function formatDecimal($number, $decimals = 2)
     {
+        return $number;
         if (!is_numeric($number)) {
             return null;
         }
