@@ -2040,10 +2040,10 @@ class Reports_model extends CI_Model
             inv.batch_number as batch_no,
             inv.expiry_date as expiry,
             SUM(inv.quantity) as quantity,
-            round(inv.net_unit_sale, 2) sale_price,
-            round(inv.net_unit_cost, 2) cost_price,
-            round(sum(inv.net_unit_cost * inv.quantity), 2) total_cost_price,
-            round(inv.real_unit_cost, 2) purchase_price  
+            inv.net_unit_sale as sale_price,
+            inv.net_unit_cost as cost_price,
+            sum(inv.net_unit_cost * inv.quantity) as total_cost_price,
+            inv.real_unit_cost as purchase_price  
             FROM `sma_inventory_movements` inv 
             INNER JOIN sma_products p on p.id=inv.product_id";
         if ($at_date) {
