@@ -2094,7 +2094,8 @@ class Purchases extends MY_Controller
             $item_code = $purchase_inovice[$i]->product_code;
             $item_net_cost = $this->sma->formatDecimal($purchase_inovice[$i]->net_unit_cost);
             $unit_cost = $this->sma->formatDecimal($purchase_inovice[$i]->unit_cost);
-            $real_unit_cost = $this->sma->formatDecimal($purchase_inovice[$i]->real_unit_cost);
+            //$real_unit_cost = $this->sma->formatDecimal($purchase_inovice[$i]->real_unit_cost);
+            $real_unit_cost = $unit_cost;
             $item_unit_quantity = $purchase_inovice[$i]->quantity;
             $item_tax_rate = $purchase_inovice[$i]->tax_rate_id;
             $item_batchno = $purchase_inovice[$i]->batchno;
