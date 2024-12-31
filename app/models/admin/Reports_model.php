@@ -4548,21 +4548,23 @@ class Reports_model extends CI_Model
     DATE(e.date) */
          $sql = "
                    
-              SELECT DATE(date) as transaction_date,
-               sum(amount) , 
-                ROUND( SUM(COALESCE(if(paid_by = 'cash' , amount, 0), 0)) ) as total_cash,
-                sum( if(paid_by = 'cash' , amount, 0) ) as total_cash_old,
-                sum( if(paid_by = 'CC' , amount, 0) ) as total_credit_card,
+              SELECT DATE(p.date) as transaction_date,
+               sum(p.amount) , 
+                ROUND( SUM(COALESCE(if(p.paid_by = 'cash' , p.amount, 0), 0)) ) as total_cash,
+                sum( if(p.paid_by = 'cash' , p.amount, 0) ) as total_cash_old,
+                sum( if(p.paid_by = 'CC' , p.amount, 0) ) as total_credit_card,
                 0 AS total_discount,
-                sum( if(return_id IS NOT NULL , amount, 0) ) AS total_returns
-                FROM `sma_payments`
+                sum( if(p.return_id IS NOT NULL , p.amount, 0) ) AS total_returns
+                FROM `sma_payments` as p
+                INNER JOIN sma_sales as s ON s.id = p.sale_id 
                 WHERE 
-                 DATE(date) >= '" . trim($start_date) . "' 
-                  AND DATE(date) <= '" . trim($end_date) . "'  
+                 DATE(p.date) >= '" . trim($start_date) . "' 
+                  AND DATE(p.date) <= '" . trim($end_date) . "'  
+                AND s.warehouse_id = " . $warehouse . "
                  GROUP BY 
-                    DATE(date)
+                    DATE(p.date)
                     ORDER BY 
-                    DATE(date)
+                    DATE(p.date)
 
         ";
 
