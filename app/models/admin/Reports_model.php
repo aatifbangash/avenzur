@@ -2014,7 +2014,7 @@ class Reports_model extends CI_Model
         return $stockArray;
     }
 
-    public function getStockDataExcel($at_date, $warehouse, $item_group, $type, $item)
+    public function getStockData($at_date, $warehouse, $item_group, $type, $item, $page = '', $per_page = '')
     {
         
         $stockArray = [];
@@ -2022,56 +2022,9 @@ class Reports_model extends CI_Model
             $at_date = $this->sma->fld($at_date);
         }
 
-        $stockQuery = " SELECT p.id,
-            p.code item_code, 
-            p.name as name, 
-            inv.avz_item_code,
-            inv.batch_number as batch_no,
-            inv.expiry_date as expiry,
-            SUM(inv.quantity) as quantity,
-            round(inv.net_unit_sale, 2) sale_price,
-            round(inv.net_unit_cost, 2) cost_price,
-            round(sum(inv.net_unit_cost * inv.quantity), 2) total_cost_price,
-            round(inv.real_unit_cost, 2) purchase_price  
-            FROM `sma_inventory_movements` inv 
-            INNER JOIN sma_products p on p.id=inv.product_id";
-        if ($at_date) {
-            $stockQuery .= " AND date(inv.movement_date)<= '{$at_date}' ";
+        if($page != ''){
+            $offset = $page;
         }
-        if ($warehouse) {
-            $stockQuery .= " AND inv.location_id = {$warehouse} ";
-        }
-        
-        if ($item_group) {
-            $stockQuery .= " AND p.category_id = '$item_group' ";
-        }
-        if ($item) {
-            $stockQuery .= " AND inv.product_id = '{$item}' ";
-        }
-        if ($type) {
-            $stockQuery .= " AND inv.type = '{$type}' ";
-        }
-
-        $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code ORDER BY p.id DESC";
-        $stockResults = $this->db->query($stockQuery);
-        // echo $this->db->last_query(); exit; 
-        if ($stockResults->num_rows() > 0) {
-            foreach ($stockResults->result() as $row) {
-                $stockArray[] = $row;
-            }
-        }
-        return $stockArray;
-    }
-
-    public function getStockData($at_date, $warehouse, $item_group, $type, $item, $page, $per_page)
-    {
-        
-        $stockArray = [];
-        if ($at_date) {
-            $at_date = $this->sma->fld($at_date);
-        }
-
-        $offset = $page;
 
         $stockQuery = " SELECT p.id,
             p.code item_code, 
@@ -2103,7 +2056,11 @@ class Reports_model extends CI_Model
             $stockQuery .= " AND inv.type = '{$type}' ";
         }
 
-        $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code ORDER BY p.id DESC LIMIT {$per_page} OFFSET {$offset}";
+        $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code ORDER BY p.id DESC";
+        
+        if($page != ''){
+            $stockQuery .= " LIMIT {$per_page} OFFSET {$offset}";
+        }
         $stockResults = $this->db->query($stockQuery);
         // echo $this->db->last_query(); exit; 
         if ($stockResults->num_rows() > 0) {
