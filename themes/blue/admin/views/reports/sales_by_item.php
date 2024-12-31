@@ -130,7 +130,7 @@
                                                 <td><?= $data->cost_price * $data->quantity; ?></td>
                                                 <td><?= $data->sale_price ; ?></td>
                                                 <td><?= $data->total_sale; ?></td>
-                                                <td><?= $data->item_discount; ?></td>
+                                                <td><?= round($data->item_discount, 5); ?></td>
                                                 <td><?= $data->totalbeforevat; ?></td>
                                                 <td><?= $data->tax; ?></td>
                                                 <td><?= $data->main_net; ?></td>
@@ -157,17 +157,7 @@
                                     <td colspan="1"><?=$response_data['grand']->grand_main_net;?></td>
                                     
                                 </tr>
-                                <tr>
-                                    <td colspan="14"><strong>Discount on Overall Sales By Value: </strong></td>
-                                    <td colspan="1"><?=$grand_sale_discount = ($response_data['grand_sales_discount']->grand_sales_discount - $response_data['grand']->grand_discount);?></td>
-                                    <td colspan="1"></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="14"><strong>Total Net Sale: </strong></td>
-                                    <td colspan="1"><?=$response_data['grand']->grand_main_net - $grand_sale_discount;?></td>
-                                    <td colspan="1"></td>
-                                </tr>
-    
+                               
                                 
                             </tfoot>
                         </table>
