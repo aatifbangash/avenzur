@@ -3258,7 +3258,7 @@ function allowDiscountValue(){
         
     }else{
         discount     = parseFloat(discount);
-        var  allowDiscount     = (5 * total_sale_val) / 100;
+        var  allowDiscount     = (50 * total_sale_val) / 100;
     }
 
     if(discount <= allowDiscount){
