@@ -134,9 +134,23 @@
                 </tr>
 
                 <tr>
+                    <td width="300px;" style="font-weight:bold;"><h4><?= lang('total_returns'); ?>:</h4></td>
+                    <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
+                            <span><?=  $totalreturns->total ? $totalreturns->total : '0.00'; ?></span>
+                        </h4></td>
+                </tr>
+
+                <tr>
+                    <td width="300px;" style="font-weight:bold;"><h4><?= lang('Net Sale'); ?>:</h4></td>
+                    <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
+                            <span><?=  $totalsales->total ? $totalsales->total - $totalreturns->total : '0.00'; ?></span>
+                        </h4></td>
+                </tr>
+
+                <tr>
                     <td width="300px;" style="font-weight:bold;"><h4><?= lang('Variance'); ?>:</h4></td>
                     <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
-                            <span><?=  round($totalsales->total - $totalreturns->total - ($cashsales->total + $ccsales->total),2); ?></span>
+                    <span><?=  round($totalsales->total - ($cashsales->total + $ccsales->total),2); ?></span>
                         </h4></td>
                 </tr>
 
