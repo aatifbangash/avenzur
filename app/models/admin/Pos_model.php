@@ -1151,6 +1151,41 @@ class Pos_model extends CI_Model
         return false;
     }
 
+    public function getRegisterReturnsNew($date, $user_id = null){
+        if (!$date) {
+            $date = $this->session->userdata('register_open_time');
+        }
+        if (!$user_id) {
+            $user_id = $this->session->userdata('user_id');
+        }
+
+        $sql = "SELECT 
+            SUM(sp.total) AS total, 
+            SUM(sp.paid) AS paid
+        FROM (
+            SELECT 
+                COALESCE(returns.grand_total, 0) AS total, 
+                SUM(COALESCE(payments.amount, 0)) AS paid
+            FROM 
+                sma_payments payments
+            LEFT JOIN 
+                sma_returns returns ON returns.id = payments.return_id
+            WHERE 
+                payments.type = 'sent' 
+                AND DATE(payments.date) = '".trim($date)."'  
+                AND payments.created_by = ".$user_id."
+            GROUP BY 
+                payments.sale_id
+        ) AS sp;
+        ";
+
+        $q = $this->db->query($sql);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getRegisterSales($date, $user_id = null)
     {
         if (!$date) {
@@ -1168,14 +1203,11 @@ class Pos_model extends CI_Model
 
         $sql = "SELECT 
     SUM(sp.total) AS total, 
-    SUM(sp.paid) AS paid,
-    COUNT(sp.id) AS total_sales
+    SUM(sp.paid) AS paid
 FROM (
     SELECT 
         COALESCE(sales.grand_total, 0) AS total, 
-        SUM(COALESCE(payments.amount, 0)) AS paid,
-        sales.id
-
+        SUM(COALESCE(payments.amount, 0)) AS paid
     FROM 
         sma_payments payments
     LEFT JOIN 
