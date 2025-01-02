@@ -1161,11 +1161,13 @@ class Pos_model extends CI_Model
 
         $sql = "SELECT 
             SUM(sp.total) AS total, 
-            SUM(sp.paid) AS paid
+            SUM(sp.paid) AS paid,
+            COUNT(sp.id) AS total_returns
         FROM (
             SELECT 
                 COALESCE(returns.grand_total, 0) AS total, 
-                SUM(COALESCE(payments.amount, 0)) AS paid
+                SUM(COALESCE(payments.amount, 0)) AS paid,
+                returns.id
             FROM 
                 sma_payments payments
             LEFT JOIN 
@@ -1175,7 +1177,7 @@ class Pos_model extends CI_Model
                 AND DATE(payments.date) = '".trim($date)."'  
                 AND payments.created_by = ".$user_id."
             GROUP BY 
-                payments.sale_id
+                payments.return_id
         ) AS sp;
         ";
 
@@ -1203,11 +1205,13 @@ class Pos_model extends CI_Model
 
         $sql = "SELECT 
     SUM(sp.total) AS total, 
-    SUM(sp.paid) AS paid
+    SUM(sp.paid) AS paid,
+    COUNT(sp.id) AS total_sales
 FROM (
     SELECT 
         COALESCE(sales.grand_total, 0) AS total, 
-        SUM(COALESCE(payments.amount, 0)) AS paid
+        SUM(COALESCE(payments.amount, 0)) AS paid,
+        sales.id
     FROM 
         sma_payments payments
     LEFT JOIN 

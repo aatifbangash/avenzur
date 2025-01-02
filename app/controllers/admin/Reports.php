@@ -5702,7 +5702,7 @@ class Reports extends MY_Controller
             $this->data['othersales']      = $this->pos_model->getRegisterOtherSales($register_open_time);
             $this->data['authorizesales']  = $this->pos_model->getRegisterAuthorizeSales($register_open_time, $user_id);
             $this->data['totalsales']      = $this->pos_model->getRegisterSales($register_open_time, $user_id);
-            $this->data['totalreturns']      = $this->pos_model->getRegisterReturnsNew($register_open_time, $user_id);
+            $this->data['totalreturns']    = $this->pos_model->getRegisterReturnsNew($register_open_time, $user_id);
             $this->data['refunds']         = $this->pos_model->getRegisterRefunds($register_open_time, $user_id);
             $this->data['returns']         = $this->pos_model->getRegisterReturns($register_open_time, $user_id);
             $this->data['cashrefunds']     = $this->pos_model->getRegisterCashRefunds($register_open_time, $user_id);
