@@ -4511,19 +4511,21 @@ class Reports_model extends CI_Model
                 sum( if(p.paid_by = 'cash' , p.amount, 0) ) as total_cash_old,
                 sum( if(p.paid_by = 'CC' , p.amount, 0) ) as total_credit_card,
                 0 AS total_discount,
-                sum( if(return_id IS NOT NULL , amount, 0) ) AS total_returns
+                sum( if(p.return_id IS NOT NULL , amount, 0) ) AS total_returns
                 FROM `sma_payments` as p
-                INNER JOIN sma_sales as s ON s.id = p.sale_id 
+                LEFT JOIN sma_sales as s ON s.id = p.sale_id 
+                LEFT JOIN sma_returns AS r ON r.id = p.return_id
                 WHERE 
                  DATE(p.date) >= '" . trim($start_date) . "' 
                   AND DATE(p.date) <= '" . trim($end_date) . "'  
-                AND s.warehouse_id = " . $warehouse . "
+                AND (s.warehouse_id = " . $warehouse . "  OR r.warehouse_id = " . $warehouse . ")
                  GROUP BY 
                     DATE(p.date)
                     ORDER BY 
                     DATE(p.date)
 
         ";
+
 
         $q = $this->db->query($sql);
         $data = array();
