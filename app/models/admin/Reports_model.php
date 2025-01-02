@@ -4511,7 +4511,7 @@ class Reports_model extends CI_Model
                 sum( if(p.paid_by = 'cash' , p.amount, 0) ) as total_cash_old,
                 sum( if(p.paid_by = 'CC' , p.amount, 0) ) as total_credit_card,
                 0 AS total_discount,
-                sum( if(p.return_id IS NOT NULL , p.amount, 0) ) AS total_returns
+                sum( if(return_id IS NOT NULL , amount, 0) ) AS total_returns
                 FROM `sma_payments` as p
                 INNER JOIN sma_sales as s ON s.id = p.sale_id 
                 WHERE 

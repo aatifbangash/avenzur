@@ -98,7 +98,7 @@
                                 <th><?= lang('Card'); ?></th>
                                 <th><?= lang('Visa'); ?></th>
                                 <th><?= lang('Master Card'); ?></th>
-                             
+                                <th><?= lang('Discounts'); ?></th>
                                 <th><?= lang('Total'); ?></th>
                                 <th><?= lang('Net Total'); ?></th>
                             </tr>
@@ -119,6 +119,7 @@
                                         $total = $data->total_cash + $data->total_credit_card ;
                                         $net_total = $net_cash + $data->total_credit_card;
 
+                                        
                                         $grand_cash += $data->total_cash;
                                         $grand_returns += $data->total_returns;
                                         $grand_net_cash += $net_cash;
@@ -137,7 +138,7 @@
                                                 <td><?= $data->total_credit_card; ?></td>
                                                 <td>000</td>
                                                 <td>000</td>
-                                              
+                                                <td><?= $data->total_discount; ?></td>
                                                 <td><?= $total ; ?></td>
                                                 <td><?= $net_total; ?></td>
                                                 
@@ -154,6 +155,7 @@
                                     <td colspan="1"><strong><?= $this->sma->formatNumber($grand_total_credit_card); ?></strong></td>
                                     <td colspan="1"><strong>00</strong></td>
                                     <td colspan="1"><strong>00</strong></td>
+                                    <td colspan="1"><strong><?= $this->sma->formatNumber($grand_discount); ?></strong></td>
                                     <td colspan="1"><strong><?= $this->sma->formatNumber($grand_total); ?></strong></td>
                                     <td colspan="1"><strong><?= $this->sma->formatNumber($grand_net_total); ?></strong></td>
                                 </tr>
