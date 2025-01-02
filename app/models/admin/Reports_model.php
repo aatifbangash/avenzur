@@ -4670,6 +4670,7 @@ class Reports_model extends CI_Model
         $where = '' ;
         if( $warehouse != '' ){
             $where = " AND s.warehouse_id = " . $warehouse ;
+            $where_return = " AND r.warehouse_id = " . $warehouse ;
         }
          $sql = "SELECT
             p.item_code, 
@@ -4714,6 +4715,16 @@ class Reports_model extends CI_Model
 
         /**get grand total */
         $sql = "SELECT
+                ROUND(SUM(grand_quantity), 2) AS grand_quantity,
+                ROUND(SUM(grand_cost), 2) AS grand_cost,
+                ROUND(SUM(grand_sale), 2) AS grand_sale,
+                ROUND(SUM(grand_discount), 2) AS grand_discount,
+                ROUND(SUM(grand_beforvate), 2) AS grand_beforvate,
+                ROUND(SUM(grand_vat), 2) AS grand_vat,
+                ROUND(SUM(grand_main_net), 2) AS grand_main_net
+            FROM (
+        
+                SELECT
                 ROUND( SUM(si.quantity),2) as grand_quantity,
                 ROUND( SUM(COALESCE(si.net_cost, 0) * COALESCE(si.quantity, 0)) , 2) AS grand_cost,
                 ROUND( SUM(si.subtotal),2) as grand_sale,
@@ -4721,21 +4732,41 @@ class Reports_model extends CI_Model
                 ROUND( SUM( si.totalbeforevat), 2) as grand_beforvate,
                 ROUND( SUM( si.tax),2) as grand_vat,
                 ROUND( SUM( si.main_net), 2) as grand_main_net
-            FROM 
-            sma_sale_items si
-            JOIN 
-            sma_sales s ON s.id = si.sale_id
-            JOIN 
-                sma_products p ON si.product_id = p.id
-            WHERE 
+                FROM 
+                sma_sale_items si
+                JOIN 
+                sma_sales s ON s.id = si.sale_id
+                JOIN 
+                    sma_products p ON si.product_id = p.id
+                WHERE 
                 DATE(s.date) >= '" . trim($start_date) . "' 
                 AND DATE(s.date) <= '" . trim($end_date) . "'
                 ".$where."
+
+                UNION ALL
+
+                SELECT
+                    -SUM(ri.quantity) AS grand_quantity,
+                    0 AS grand_cost,
+                    -SUM(ri.net_unit_price * ri.quantity) AS grand_sale,
+                    0 AS grand_discount,
+                    -SUM(ri.totalbeforevat) AS grand_beforvate,
+                    -SUM(ri.tax) AS grand_vat,
+                    -SUM(ri.net_unit_price * ri.quantity) AS grand_main_net
+                FROM 
+                    sma_return_items ri
+                JOIN 
+                    sma_returns r ON r.id = ri.return_id
+                WHERE 
+                    DATE(r.date) >= '" . trim($start_date) . "' 
+                    AND DATE(r.date) <= '" . trim($end_date) . "'
+                ".$where_return."
+                ) AS combined
             ";
 
                 $q = $this->db->query($sql);
                 $grand = array();
-                //echo $this->db->last_query();
+                //echo $this->db->last_query();exit;
                 if ($q->num_rows() > 0) {
                     $grand = $q->result();
                 }
