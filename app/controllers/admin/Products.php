@@ -4125,9 +4125,11 @@ class Products extends MY_Controller
             for ($m = 0; $m < $s; $m++) {
                 $item_id = $_POST['product'][$m];
                 //get item details from purchase
-                $itemDetail = $this->purchases_model->getItemByID($item_id);
+                //$itemDetail = $this->purchases_model->getItemByID($item_id);
+                $itemDetail = $this->products_model->getProductsBarcodeItems('','','',$item_id);
+                $itemDetail = $itemDetail[0];
                 $pid = $itemDetail->product_id;
-                $quantity = $_POST['quantity'][$m];
+                $quantity = $_POST['quantity'][$item_id];
                 $product = $this->products_model->getProductWithCategory($pid);
                 $product->price = $this->input->post('check_promo') ? ($product->promotion ? $product->promo_price : $product->price) : $product->price;
                 $pr_item_tax = 0;
@@ -4153,7 +4155,7 @@ class Products extends MY_Controller
                 // Generate the ZPL code
 
               
-                for ($i = 1; $i <= $quantity; $i++) {
+                for ($i = 1; $i <= ceil($quantity); $i++) {
                     $zplCode .= "^XA\n"; 
                     $filePath = FCPATH . 'assets' . DIRECTORY_SEPARATOR . 'new_label.zpl';
                     $zplCode .= "^FO20,20^A0N,15,15^FD{$line1}^FS\n";
@@ -4217,8 +4219,8 @@ class Products extends MY_Controller
 
             }
            
-            //echo "<pre>" . htmlspecialchars($zplCode) . "</pre>";
-            //exit;
+            // echo "<pre>" . htmlspecialchars($zplCode) . "</pre>";
+            // exit;
             $url = "https://mature-workable-werewolf.ngrok-free.app/print";
                        
             $ch = curl_init($url);

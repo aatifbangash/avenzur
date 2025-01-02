@@ -5667,7 +5667,14 @@ class Reports extends MY_Controller
         $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
         //print_r($this->input->post());
          //for testing purpose
-         $user_id =6655;
+         $user_id ='';
+         if($warehouse == 34) {
+            $user_id = 6653 ;
+         } else if($warehouse == 37) {
+            $user_id = 6655 ;
+         }
+            
+        
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         if ($from_date && $to_date && $warehouse) {
             $start_date = $this->sma->fld($from_date);
