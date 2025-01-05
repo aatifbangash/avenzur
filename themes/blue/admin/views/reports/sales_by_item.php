@@ -123,7 +123,7 @@
                                                 <td><?= $data->item_code; ?></td>
                                                 <td><?= $data->avz_item_code; ?></td>
                                                 <td><?= $data->name; ?></td>
-                                                <td><?= $data->date; ?></td>
+                                                <td><?= $data->transaction_date; ?></td>
                                                 <td><?= $data->id; ?></td>
                                                 <td><?= $data->quantity; ?></td>
                                                 <td><?= $data->cost_price;?> </td>
