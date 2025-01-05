@@ -4801,11 +4801,11 @@ class Reports_model extends CI_Model
                 SELECT
                     -SUM(ri.quantity) AS grand_quantity,
                     0 AS grand_cost,
-                    -SUM(ri.net_unit_price * ri.quantity) AS grand_sale,
+                    -SUM(ri.real_unit_price * ri.quantity) AS grand_sale,
                     0 AS grand_discount,
                     -SUM(ri.totalbeforevat) AS grand_beforvate,
                     -SUM(ri.tax) AS grand_vat,
-                    -SUM(ri.net_unit_price * ri.quantity) AS grand_main_net
+                    -SUM(ri.main_net) AS grand_main_net
                 FROM 
                     sma_return_items ri
                 JOIN 
