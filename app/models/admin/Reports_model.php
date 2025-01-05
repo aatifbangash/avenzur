@@ -4672,36 +4672,89 @@ class Reports_model extends CI_Model
             $where = " AND s.warehouse_id = " . $warehouse ;
             $where_return = " AND r.warehouse_id = " . $warehouse ;
         }
-         $sql = "SELECT
-            p.item_code, 
-            p.name,
-            s.date,
-            s.id,
-            si.avz_item_code,
-            si.product_name,
-            si.quantity,
-            si.net_cost as cost_price,
-            si.net_unit_price as sale_price,
-            si.subtotal as total_sale,
-            si.item_discount,
-            si.second_discount_value,
-            si.totalbeforevat,
-            si.tax,
-            si.main_net,
-            s.customer
-     FROM 
-      sma_sale_items si
-      JOIN 
-      sma_sales s ON s.id = si.sale_id
-      JOIN 
-        sma_products p ON si.product_id = p.id
-        WHERE 
-            DATE(s.date) >= '" . trim($start_date) . "' 
-            AND DATE(s.date) <= '" . trim($end_date) . "'
-            ".$where."
-        ORDER BY 
-        DATE(s.date)
-";
+        
+        $sql = "
+            SELECT 
+                item_code,
+                name,
+                transaction_date,
+                id,
+                avz_item_code,
+                product_name,
+                quantity,
+                cost_price,
+                sale_price,
+                total_sale,
+                item_discount,
+                second_discount_value,
+                totalbeforevat,
+                tax,
+                main_net,
+                customer
+            FROM (
+                -- Sales Records
+                SELECT
+                    p.item_code, 
+                    p.name,
+                    s.date AS transaction_date,
+                    s.id AS id,
+                    si.avz_item_code,
+                    si.product_name,
+                    si.quantity,
+                    si.net_cost AS cost_price,
+                    si.net_unit_price AS sale_price,
+                    si.subtotal AS total_sale,
+                    si.item_discount,
+                    si.second_discount_value,
+                    si.totalbeforevat,
+                    si.tax,
+                    si.main_net,
+                    s.customer
+                FROM 
+                    sma_sale_items si
+                JOIN 
+                    sma_sales s ON s.id = si.sale_id
+                JOIN 
+                    sma_products p ON si.product_id = p.id
+                WHERE 
+                    DATE(s.date) >= '" . trim($start_date) . "' 
+                    AND DATE(s.date) <= '" . trim($end_date) . "'
+                    " . $where . "
+
+                UNION ALL
+
+                -- Returns Records
+                SELECT
+                    p.item_code, 
+                    p.name,
+                    r.date AS transaction_date,
+                    r.id AS id,
+                    ri.avz_item_code,
+                    ri.product_name,
+                    -ri.quantity AS quantity, -- Negative for returns
+                    ri.net_cost AS cost_price, -- No cost price for returns
+                    ri.net_unit_price AS sale_price,
+                    -ri.net_unit_price * ri.quantity AS total_sale, -- Negative for returns
+                    0 AS item_discount, -- No item discount for returns
+                    0 AS second_discount_value,
+                    -ri.totalbeforevat AS totalbeforevat, -- Negative for returns
+                    -ri.tax AS tax, -- Negative for returns
+                    -ri.net_unit_price * ri.quantity AS main_net, -- Negative for returns
+                    r.customer
+                FROM 
+                    sma_return_items ri
+                JOIN 
+                    sma_returns r ON r.id = ri.return_id
+                JOIN 
+                    sma_products p ON ri.product_id = p.id
+                WHERE 
+                    DATE(r.date) >= '" . trim($start_date) . "' 
+                    AND DATE(r.date) <= '" . trim($end_date) . "'
+                    " . $where_return . "
+            ) AS combined
+            ORDER BY 
+                transaction_date
+        ";
 
         $q = $this->db->query($sql);
         $sales = array();
