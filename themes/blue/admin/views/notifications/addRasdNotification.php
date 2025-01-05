@@ -17,14 +17,6 @@
                 </div>
             </div>
 
-            <!-- <div class="form-group">
-                <?php echo lang('Invoice No.', 'invoice_no'); ?>
-                <div class="controls">
-                    <?php echo form_input('invoice_no', '', 'class="form-control" id="invoice_no" required="required"'); ?>
-                </div>
-            </div> -->
-            
-            <!-- <input id="csv_file_upload" type="file"  name="csv_file_upload" accept="*" /> -->
               <div class="form-group">
                 <div class="col-md-12">
                             <div class="panel panel-warning">
@@ -118,38 +110,36 @@
     $(document).ready(function () {
         var $submit = $("#submitAcceptDispatch");
         $submit.click(function(e){
-            const parentSupplier = $("#supplier_id").val();
+            const parentSupplier = $("#posupplier").val();
             const childSupplier = $("#childsupplier").val();
             const warehouseId = $("#powarehouse").val();
-            const notificationId = $("#invoice_no").val();
-            console.log("Inside Submit");
+            const notificationId = $("#notification_id").val();
+            console.log('Supplier id:'+parentSupplier);
             if(!parentSupplier  && !childSupplier){
                 return;
             }
 
             $.ajax({
-                    url: "<?= admin_url("Notifications/acceptDispatch/"); ?>",
-                    dataType: 'json',
-                    type: "post",
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            notificationId: notificationId,
-                            supplierId: parentSupplier,
-                            warehouseId: warehouseId,
-                            childSupplierId: childSupplier,
-
-                            "<?= $this->security->get_csrf_token_name() ?>": "<?= $this->security->get_csrf_hash() ?>"
-                        };
-                    },
-                    processResults: function(response) {
-                        console.log(response);
-                        return {
-                            results: response
-                        };
-                    },
-                    cache: true
-                })
+                url: "<?= admin_url('Notifications/acceptDispatch/'); ?>",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    notificationId: notificationId,
+                    supplierId: parentSupplier,
+                    warehouseId: warehouseId,
+                    childSupplierId: childSupplier,
+                    "<?= $this->security->get_csrf_token_name() ?>": "<?= $this->security->get_csrf_hash() ?>"
+                },
+                success: function (response) {
+                    console.log("Response received:", response);
+                    // Handle the successful response here
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error occurred:", error);
+                    // Handle errors here
+                },
+                cache: true
+            });
             
         }) 
         

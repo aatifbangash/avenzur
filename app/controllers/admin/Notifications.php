@@ -297,11 +297,11 @@ class Notifications extends MY_Controller
                     "172" => [
                         "215" =>  $gln,
                         "232" =>  "",
-                        "162" => $dispatch_id	  
+                        "162" => $dispatchId	  
                     ],
                     "MH" => [
                         "MN" => "125",
-                        "222" => "6286038000012"
+                        "222" => $warehouse_gln
                     ]
                 ],
                 "DicOfDT" =>  [
@@ -314,7 +314,7 @@ class Notifications extends MY_Controller
         if ($result) {
             $response = array(
                 'status' => 'success',
-                'message' => json_encode($payload,true)
+                'message' => $payload
             );
         } else {
             $response = array(
