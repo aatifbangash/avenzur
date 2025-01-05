@@ -83,7 +83,9 @@
                     </div>
                 </div>
                 <?php echo form_close(); 
-                } ?>
+                }
+                $total_sale = $cashsales->total + $ccsales->total;
+                ?>
                 <hr />
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
@@ -129,7 +131,7 @@
                 <tr>
                     <td width="300px;" style="font-weight:bold;"><h4><?= lang('total_sales'); ?>:</h4></td>
                     <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
-                            <span><?=  $cashsales->total + $ccsales->total; ?></span>
+                            <span><?=  $total_sale; ?></span>
                         </h4></td>
                 </tr>
 
@@ -143,16 +145,16 @@
                 <tr>
                     <td width="300px;" style="font-weight:bold;"><h4><?= lang('Net Sale'); ?>:</h4></td>
                     <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
-                            <span><?=  $totalsales->total ? $totalsales->total - $totalreturns->total : '0.00'; ?></span>
+                            <span><?=  $total_sale ? $total_sale - $totalreturns->total : '0.00'; ?></span>
                         </h4></td>
                 </tr>
 
-                <tr>
+                <!-- <tr>
                     <td width="300px;" style="font-weight:bold;"><h4><?= lang('Variance'); ?>:</h4></td>
                     <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
                     <span><?=  round($totalsales->total - ($cashsales->total + $ccsales->total),2); ?></span>
                         </h4></td>
-                </tr> -->
+                </tr>  -->
 
                 <tr>
                     <td width="300px;" style="font-weight:bold;"><h4><?= lang('Total Invoice Qty'); ?>:</h4></td>
