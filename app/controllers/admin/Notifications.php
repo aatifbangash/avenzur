@@ -6,6 +6,9 @@ class Notifications extends MY_Controller
 {
     public function __construct()
     {
+//                 ini_set('display_errors', '1');
+// ini_set('display_startup_errors', '1');
+// error_reporting(E_ALL);
         parent::__construct();
 
         if (!$this->loggedIn) {
@@ -23,6 +26,7 @@ class Notifications extends MY_Controller
     }
 
     public function addRasdNotification(){
+
         $this->form_validation->set_rules('dispatch_id', lang('Dispatch Id'), 'required|min_length[3]');
 
         if ($this->form_validation->run() == true) {
@@ -83,7 +87,8 @@ class Notifications extends MY_Controller
             $this->session->set_flashdata('message', lang('notification_added'));
             admin_redirect('notifications/rasd');
         } else {
-            
+            $warehouses = $this->site->getAllWarehouses();
+            $this->data['warehouses'] = $warehouses;
             $this->data['error']    = validation_errors();
             $this->data['modal_js'] = $this->site->modal_js();
             $this->load->view($this->theme . 'notifications/addRasdNotification', $this->data);
@@ -244,12 +249,86 @@ class Notifications extends MY_Controller
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
-
+      
         $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
         $bc                  = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Rasd Notifications')]];
         $meta                = ['page_title' => lang('Rasd Notifications'), 'bc' => $bc];
         $this->page_construct('notifications/rasd', $meta, $this->data);
     }
+
+
+    public function acceptDispatch(){
+         if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+ 
+        // Get the parameters from the POST data
+        $dispatchId = $this->input->post('notificationId');
+        $supplierId = $this->input->post('supplierId');
+        $warehouseId = $this->input->post('warehouseId');
+        $child_id = $this->input->post("childSupplierId");
+        $this->load->database();
+        $this->db->select('gln');
+        $this->db->from('sma_companies');
+        $this->db->where('id', $supplierId);
+        $query = $this->db->get();
+
+        $gln = "";
+        if ($query->num_rows() > 0) {
+            $gln = $query->row()->gln; // Return the GLN field value
+        }
+        $this->db->select('gln, rasd_user,rasd_pass',false);
+        $this->db->from('sma_warehouses');
+        $this->db->where('id', $warehouseId);
+        $query = $this->db->get();
+        $warehouse_gln = "";
+        $user = "";
+        $password = "";
+        if ($query->num_rows() > 0) {
+            $warehouse_gln = $query->row()->gln; // Return the GLN field value
+            $user = $query->row()->rasd_user;
+            $password = $query->row()->rasd_pass;
+        }
+        
+        $result = true;
+        $payload = [
+             "DicOfDic" => 
+                [
+                    "172" => [
+                        "215" =>  $gln,
+                        "232" =>  "",
+                        "162" => $dispatch_id	  
+                    ],
+                    "MH" => [
+                        "MN" => "125",
+                        "222" => "6286038000012"
+                    ]
+                ],
+                "DicOfDT" =>  [
+                    "172" => [
+                        
+                    ]
+                ]
+            ];
+            
+        if ($result) {
+            $response = array(
+                'status' => 'success',
+                'message' => json_encode($payload,true)
+            );
+        } else {
+            $response = array(
+                'status' => 'error',
+                'message' => 'Failed to accept dispatch'
+            );
+        }
+
+        // Send the JSON response
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode($response));
+    }
+     
 
     public function add_rasd_serials_from_csv(){
         
