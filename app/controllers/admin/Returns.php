@@ -350,6 +350,7 @@ class Returns extends MY_Controller
                     $new_item_vat_value = $_POST['item_vat_values'][$r];
                     $new_item_total_sale = $_POST['item_total_sale'][$r];
                     $totalbeforevat = $_POST['totalbeforevat'][$r];
+                    $new_item_main_net = $_POST['main_net'][$r];
 
                     $product = [
                         'product_id'        => $item_id,
@@ -382,6 +383,7 @@ class Returns extends MY_Controller
                         'discount2'         => $item_dis2,
                         'second_discount_value' => $new_item_second_discount,
                         'totalbeforevat'    => $totalbeforevat,
+                        'main_net'          => $new_item_main_net,
                         'real_cost'         => $real_cost,
                         'avz_item_code'     => $avz_item_code
                     ];

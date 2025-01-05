@@ -4733,13 +4733,13 @@ class Reports_model extends CI_Model
                     ri.product_name,
                     -ri.quantity AS quantity, -- Negative for returns
                     ri.net_cost AS cost_price, -- No cost price for returns
-                    ri.net_unit_price AS sale_price,
-                    -ri.net_unit_price * ri.quantity AS total_sale, -- Negative for returns
-                    0 AS item_discount, -- No item discount for returns
+                    ri.real_unit_price AS sale_price,
+                    -ri.real_unit_price * ri.quantity AS total_sale, -- Negative for returns
+                    -ri.item_discount AS item_discount, -- No item discount for returns
                     0 AS second_discount_value,
                     -ri.totalbeforevat AS totalbeforevat, -- Negative for returns
                     -ri.tax AS tax, -- Negative for returns
-                    -ri.net_unit_price * ri.quantity AS main_net, -- Negative for returns
+                    -ri.main_net AS main_net, -- Negative for returns
                     r.customer
                 FROM 
                     sma_return_items ri
