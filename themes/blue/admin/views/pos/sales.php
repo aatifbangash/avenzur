@@ -19,7 +19,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?= admin_url('pos/getSales' . ($warehouse_id ? '/' . $warehouse_id : '')) ?>',
+            'sAjaxSource': '<?= admin_url('pos/getSales'. ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid.'&v=1') ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -168,7 +168,12 @@
     <div class="box-content">
         <div class="row">
             <div class="col-lg-12">
-                <p class="introtext"><?= lang('list_results'); ?></p>
+                <!--<p class="introtext"><?= lang('list_results'); ?></p>-->
+
+                <div class="col-md-3"><input type="text" id="sid" name="sid" class="form-control input-tip"></div>
+                <div class="col-md-3">
+                    <input type="button" id="searchByNumber" class="btn btn-primary" value="Search By Serial Number">
+                </div>
 
                 <div class="table-responsive" id="pdfcontent">
                     <table id="POSData" class="table table-bordered table-hover table-striped">
@@ -229,3 +234,19 @@
     <?= form_close() ?>
     <?php
 } ?>
+
+<script>
+    document.getElementById('searchByNumber').addEventListener('click', function() {
+    var pidValue = document.getElementById('sid').value; 
+    if (pidValue) { 
+       
+        var baseUrl = window.location.href.split('?')[0];
+        //console.log(baseUrl); 
+        var newUrl = baseUrl + "?sid=" + encodeURIComponent(pidValue);
+        window.location.href = newUrl; 
+    } else {
+        alert("Please enter a purchase number."); 
+    }
+});
+
+</script>
