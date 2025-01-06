@@ -6,7 +6,7 @@
             </button>
             <h4 class="modal-title" id="myModalLabel"><?php echo lang('Accept Dispatch'); ?></h4>
         </div>
-        <?php $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
+        <?php $attrib = ['role' => 'form'];
         echo admin_form_open_multipart('notifications/addRasdNotification', $attrib); ?>
         <div class="modal-body">
             <p><?= lang('enter_info'); ?></p>
