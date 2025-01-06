@@ -2059,6 +2059,7 @@ class Purchases extends MY_Controller
 
         $date = date('Y-m-d H:i:s');
         $transfer_no = $purchase_detail->reference_no;
+        $purchase_notification = $purchase_detail->notification_id;
 
         $to_warehouse = $warehouse;
         $from_warehouse = $purchase_detail->warehouse_id;
@@ -2266,7 +2267,7 @@ class Purchases extends MY_Controller
                         $accept_dispatch_body = [
                             'supplier_gln' => $response_model['source_gln'],
                             'warehouse_gln' => $response_model['destination_gln'],
-                            'notification_id' => $transfer_no
+                            'notification_id' => $purchase_notification
                         ];
 
                         $accept_dispatch_result = $this->rasd->accept_dispatch_125($accept_dispatch_body, $auth_token);
