@@ -40,7 +40,8 @@ class Cmt_model extends CI_Model
         if($function == "dispatch_product"){
             $source_gln = $payload_used['source_gln'];
             $destination_gln = $payload_used['destination_gln'];
-            
+            $warehouse_id = $payload_used['warehouse_id'];
+            $serial_number = $payload_used['notification_id'];
         }
 
 
