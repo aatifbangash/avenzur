@@ -618,7 +618,7 @@ function loadItems() {
 				'<td class="text-right"><input class="form-control input-sm text-left rcost" name="net_cost[]" type="text" id="cost_' +
 				row_no +
 				'" value="' +
-				formatDecimal(item_cost) +
+				item_cost +
 				'"><input class="rucost" name="unit_cost[]" type="hidden" value="' +
 				unit_cost +
 				'"><input class="realucost" name="real_unit_cost[]" type="hidden" value="' +
