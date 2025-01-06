@@ -6,6 +6,7 @@ class Notifications extends MY_Controller
 {
     public function __construct()
     {
+
         parent::__construct();
 
         if (!$this->loggedIn) {
@@ -16,13 +17,17 @@ class Notifications extends MY_Controller
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
+        $this->load->library('RASDCore',$params=null, 'rasd');
+
         $this->lang->admin_load('notifications', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('cmt_model');
         $this->upload_path = 'assets/uploads/';
+         
     }
 
     public function addRasdNotification(){
+
         $this->form_validation->set_rules('dispatch_id', lang('Dispatch Id'), 'required|min_length[3]');
 
         if ($this->form_validation->run() == true) {
@@ -83,7 +88,8 @@ class Notifications extends MY_Controller
             $this->session->set_flashdata('message', lang('notification_added'));
             admin_redirect('notifications/rasd');
         } else {
-            
+            $warehouses = $this->site->getAllWarehouses();
+            $this->data['warehouses'] = $warehouses;
             $this->data['error']    = validation_errors();
             $this->data['modal_js'] = $this->site->modal_js();
             $this->load->view($this->theme . 'notifications/addRasdNotification', $this->data);
@@ -244,12 +250,104 @@ class Notifications extends MY_Controller
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
-
+      
         $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
         $bc                  = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Rasd Notifications')]];
         $meta                = ['page_title' => lang('Rasd Notifications'), 'bc' => $bc];
         $this->page_construct('notifications/rasd', $meta, $this->data);
     }
+
+
+    public function acceptDispatch(){
+         if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+        
+        // Get the parameters from the POST data
+        $dispatchId = $this->input->post('notificationId');
+        $supplierId = $this->input->post('supplierId');
+        $warehouseId = $this->input->post('warehouseId');
+        $child_id = $this->input->post("childSupplierId");
+        if($child_id){
+            $supplierId = $child_id;
+        }
+        $this->load->database();
+        $this->db->select('gln');
+        $this->db->from('sma_companies');
+        $this->db->where('id', $supplierId);
+        $query = $this->db->get();
+
+        $gln = "";
+        if ($query->num_rows() > 0) {
+            $gln = $query->row()->gln; // Return the GLN field value
+        }
+        $this->db->select('gln, rasd_user,rasd_pass',false);
+        $this->db->from('sma_warehouses');
+        $this->db->where('id', $warehouseId);
+        $query = $this->db->get();
+        $warehouse_gln = "";
+        $user = "";
+        $password = "";
+        if ($query->num_rows() > 0) {
+            $warehouse_gln = $query->row()->gln; // Return the GLN field value
+            $user = $query->row()->rasd_user;
+            $password = $query->row()->rasd_pass;
+        }
+        
+        $result = false;
+        $params = [
+            "supplier_gln" => $gln,
+            "notification_id" => $dispatchId,
+            "warehouse_gln" => $warehouse_gln
+        ];
+ 
+        
+         
+        /**
+         * Authenticate with RASD
+         */
+
+        try{
+            $this->rasd->set_base_url("https://qdttsbe.qtzit.com:10101/api/web");
+            $response = $this->rasd->authenticate($user, $password);
+            if($response['token']){
+                $token = $response['token'];
+                log_message("info", "Authentication successful");
+                /**
+                 * Call the RASD function to Accept Dispatch.
+                 */
+                $payload_used = [
+                    'supplier_gln' => $params['supplier_gln'],
+                    'warehouse_gln' => $params['warehouse_gln'],
+                    'warehouse_id' => $warehouseId
+                ];
+                $zadca_dispatch_response = $this->rasd->accept_dispatch_125($params,$token);
+                if(isset($zadca_dispatch_response['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                    log_message("info", "Regiter Dispatch successful");
+                    $result = true;
+                    
+                }else{
+                    $result = false;
+                    log_message("error", "Regiter Dispatch Failed");
+                    log_message("error", json_encode($zadca_dispatch_response,true));
+                }
+                $this->cmt_model->add_rasd_transactions($payload_used,'accept_dispatch',$result, $zadca_dispatch_response);
+       
+            }else{
+                $result = false;
+                    log_message("error", "auth Failed");
+
+                  $this->session->set_flashdata('error', 'Failed to Authenticate with RASD with ' . $user . ' '. $password);
+                    admin_redirect('notifications/rasd');
+            }
+        }catch(\Exception $e){
+                
+        }
+
+
+ 
+    }
+     
 
     public function add_rasd_serials_from_csv(){
         

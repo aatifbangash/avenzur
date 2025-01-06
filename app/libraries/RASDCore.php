@@ -7,7 +7,7 @@ class RASDCore {
     protected $headers;
     protected $body;
     protected $auth_token;
-    public function __construct() {
+    public function __construct($params = array()) {
         
         $this->CI =& get_instance();
         $this->CI->load->library('curl');
@@ -148,6 +148,55 @@ class RASDCore {
         return array( "token" => null);
 
         } 
+    }
+
+    public function dispatch_product_133($body, $auth_token){
+         $headers = array(
+            'FunctionName:APIReq',
+            'Token: '.$auth_token,
+            'Accept :*/*',
+            "Accept-Encoding : gzip, deflate, br"
+            );
+        $this->set_headers([]);
+        $this->set_headers($headers);
+        $this->set_body($body);
+        return $this->post('');
+    }
+
+    public function accept_dispatch_125($params, $auth_token){
+        $gln = $params['supplier_gln'];
+        $dispatchId = $params['notification_id'];
+        $warehouse_gln = $params['warehouse_gln'];
+         $headers = array(
+            'FunctionName:APIReq',
+            'Token: '.$auth_token,
+            'Accept :*/*',
+            "Accept-Encoding : gzip, deflate, br"
+            );
+        $this->set_headers([]);
+        $this->set_headers($headers);
+
+        $body = [
+             "DicOfDic" => 
+                [
+                    "172" => [
+                        "215" =>  $gln,
+                        "232" =>  "",
+                        "162" => $dispatchId	  
+                    ],
+                    "MH" => [
+                        "MN" => "125",
+                        "222" => $warehouse_gln
+                    ]
+                ],
+                "DicOfDT" =>  [
+                    "172" => [
+                        
+                    ]
+                ]
+            ];
+        $this->set_body($body);
+        return $this->post('');
     }
 
     /***

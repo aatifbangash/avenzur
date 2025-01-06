@@ -10,6 +10,81 @@ class Transfers_model extends CI_Model
         $this->load->admin_model('Inventory_model');
     }
 
+
+    public function get_rasd_required_fields($data ){
+
+            $transfer_id = $data['transfer_id'];
+            $this->db->select('status');
+            $this->db->from('sma_transfers');
+            $this->db->where("id", $transfer_id);
+            $query = $this->db->get();
+            $status = "completed";
+            if($query->num_rows() > 0){
+                $status = $query -> row()->status;
+            }
+            if($status != "completed"){
+                return ['payload' => [], 'user' => "", 'pass' => "", 'status' => $status];
+            }
+
+            $source_warehouse_id = $data['source_warehouse_id'];
+            $desitnation_warehouse_id = $data['destination_warehouse_id'];
+            $products = $data['products'];
+
+            /**Get GLNs */
+            $this->db->select("gln,rasd_user, rasd_pass");
+            $this->db->from("sma_warehouses");
+            $this->db->where('id', $source_warehouse_id);
+            $query = $this->db->get();
+            $source_gln = "";
+            $destination_gln = "";
+            $rasd_user = "";
+            $rasd_pass = "";
+            if($query->num_rows() > 0){
+                $source_gln = $query -> row()->gln;
+                $rasd_user = $query ->row()->rasd_user;
+                $rasd_pass = $query ->row()->rasd_pass;
+            }
+
+             /**Get GLNs */
+            $this->db->select("gln");
+            $this->db->from("sma_warehouses");
+            $this->db->where('id', $desitnation_warehouse_id);
+            $query = $this->db->get();
+ 
+            if($query->num_rows() > 0){
+                $destination_gln = $query -> row()->gln;
+            }
+
+            $payload = [
+                "DicOfDic" => [
+                    "180" => [
+                        "215" =>  $source_gln,
+                        "227" =>  ""
+                    ],
+                    "MH" => [
+                        "MN" => "133",
+                        "222" => $destination_gln
+                    ]
+                ],
+                "DicOfDT" =>  [
+                    "180" => []
+                ]
+            ];
+
+            $c_180 = [];
+
+            foreach($products as $product){
+                $c_180 [] = 
+                [
+                        "213" =>   $product['product_code'],
+                        "219" => $product['batchno'],
+                        "214" => ""
+                ];
+            }
+            $payload['DicOfDT']['180'] = $c_180;
+            return ['payload' => $payload, 'user' => $rasd_user, 'pass' => $rasd_pass, 'status' => $status, 'source_gln'  =>$source_gln, 'destination_gln' => $destination_gln];
+    }
+
     public function get_cost_price_grand_total($transfer_id){
 
         $this->db->select('SUM(quantity * net_unit_cost) as total_cost_price');

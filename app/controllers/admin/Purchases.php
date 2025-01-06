@@ -15,6 +15,7 @@ class Purchases extends MY_Controller
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
+        $this->load->library('RASDCore',$params=null, 'rasd');
         $this->lang->admin_load('purchases', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('purchases_model');
@@ -2236,7 +2237,62 @@ class Purchases extends MY_Controller
         //$this->sma->print_arrays($data, $products);exit;
 
         //if ($this->transfers_model->transferPurchaseInvoice($data, $products, $attachments)) {
-        if ($this->transfers_model->addTransfer($data, $products, $attachments)) {
+        if ($transfer_id = $this->transfers_model->addTransfer($data, $products, $attachments)) {
+            /**RASD Integration Code */
+            $data_for_rasd = [
+                "products" => $products,
+                "source_warehouse_id" => $data['from_warehouse_id'],
+                "destination_warehouse_id" => $data['to_warehouse_id'],
+                "transfer_id" => $transfer_id
+            ];
+            $response_model = $this->transfers_model->get_rasd_required_fields($data_for_rasd);
+            $body_for_rasd_dispatch = $response_model['payload'];
+            $rasd_user = $response_model['user'];
+            $rasd_pass = $response_model['pass'];
+            $transfer_status = $response_model['status'];
+            $rasd_success = false;
+            log_message("info", json_encode($body_for_rasd_dispatch));
+            if($transfer_status == 'completed'){
+                log_message("info", "RASD AUTH START");
+                $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
+                $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
+                if(isset($auth_response['token'])){
+                    $auth_token = $auth_response['token'];
+                    log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
+                    $zadca_dispatch_response = $this->rasd->dispatch_product_133($body_for_rasd_dispatch, $auth_token);
+                    if(isset($zadca_dispatch_response['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                        log_message("info", "Dispatch successful");
+                        $rasd_success = true;
+                        $accept_dispatch_body = [
+                            'supplier_gln' => $response_model['source_gln'],
+                            'warehouse_gln' => $response_model['destination_gln'],
+                            'notification_id' => $transfer_no
+                        ];
+
+                        $accept_dispatch_result = $this->rasd->accept_dispatch_125($accept_dispatch_body, $auth_token);
+                         if(isset($accept_dispatch_result['DicOfDic']['MR']['TRID']) && $accept_dispatch_result['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){
+                            log_message("info", "Accept Dispatch successful");
+                            $rasd_success = true;
+                         }else{
+                            log_message("error", "Accept Dispatch Failed");
+                            $rasd_success = false;
+                         }
+                    }else{
+                        $rasd_success = false;
+                        log_message("error", "Dispatch Failed");
+                        log_message("error", json_encode($zadca_dispatch_response,true));
+                    }
+                }else{
+                    log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
+                }
+            }else{
+                log_message("warning", 'The Status is not Complete' . $transfer_status);
+            }
+           
+            
+            /**RASD Integration End */
+
+
             $this->session->set_flashdata('message', lang('transfer_added'));
             admin_redirect('transfers');
         } else {
