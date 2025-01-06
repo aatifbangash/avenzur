@@ -18,7 +18,7 @@ class Cmt_model extends CI_Model
         }
     }
 
-      public function add_rasd_transactions($payload_used,$function,$is_success, $response){
+      public function add_rasd_transactions($payload_used,$function,$is_success, $response, $request){
      
         $source_gln = "";
         $source_gln = "";
@@ -42,6 +42,7 @@ class Cmt_model extends CI_Model
             $destination_gln = $payload_used['destination_gln'];
             $warehouse_id = $payload_used['warehouse_id'];
             $serial_number = $payload_used['notification_id'];
+            $warehouse_type = 'pharmacy';
         }
 
 
@@ -56,7 +57,7 @@ class Cmt_model extends CI_Model
             "warehouse_type" => $warehouse_type,
             "response" => $response,
             "is_success" => $is_success,
-            "request" => json_encode($payload_used,true),
+            "request" => json_encode($request,true),
             "response" => json_encode($response, true),
             "serial_number" => $serial_number
 

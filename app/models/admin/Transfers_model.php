@@ -39,6 +39,8 @@ class Transfers_model extends CI_Model
             $destination_gln = "";
             $rasd_user = "";
             $rasd_pass = "";
+            $rasd_pharmacy_user = "";
+            $rasd_pharmacy_password = "";
             if($query->num_rows() > 0){
                 $source_gln = $query -> row()->gln;
                 $rasd_user = $query ->row()->rasd_user;
@@ -46,24 +48,27 @@ class Transfers_model extends CI_Model
             }
 
              /**Get GLNs */
-            $this->db->select("gln");
+            $this->db->select("gln,rasd_user,rasd_pass");
             $this->db->from("sma_warehouses");
             $this->db->where('id', $desitnation_warehouse_id);
             $query = $this->db->get();
  
             if($query->num_rows() > 0){
                 $destination_gln = $query -> row()->gln;
+                $rasd_pharmacy_user = $query ->row()->rasd_user;
+                $rasd_pharmacy_password = $query ->row()->rasd_pass;
+
             }
 
             $payload = [
                 "DicOfDic" => [
                     "180" => [
-                        "215" =>  $source_gln,
+                        "215" =>  $destination_gln,
                         "227" =>  ""
                     ],
                     "MH" => [
                         "MN" => "133",
-                        "222" => $destination_gln
+                        "222" => $source_gln
                     ]
                 ],
                 "DicOfDT" =>  [
@@ -82,7 +87,15 @@ class Transfers_model extends CI_Model
                 ];
             }
             $payload['DicOfDT']['180'] = $c_180;
-            return ['payload' => $payload, 'user' => $rasd_user, 'pass' => $rasd_pass, 'status' => $status, 'source_gln'  =>$source_gln, 'destination_gln' => $destination_gln];
+            return ['payload' => $payload, 
+            'user' => $rasd_user,
+             'pass' => $rasd_pass, 
+             'status' => $status, 
+             'source_gln'  =>$source_gln, 
+             'destination_gln' => $destination_gln,
+             'pharmacy_user' => $rasd_pharmacy_user,
+             'pharmacy_pass' => $rasd_pharmacy_password
+            ];
     }
 
     public function get_cost_price_grand_total($transfer_id){

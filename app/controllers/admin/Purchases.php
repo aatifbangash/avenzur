@@ -2252,11 +2252,13 @@ class Purchases extends MY_Controller
             $rasd_user = $response_model['user'];
             $rasd_pass = $response_model['pass'];
             $transfer_status = $response_model['status'];
+            $ph_user = $response_model['pharmacy_user'];
+            $ph_pass = $response_model['pharmacy_pass'];
             $rasd_success = false;
             log_message("info", json_encode($body_for_rasd_dispatch));
             $payload_used =  [
-                    'source_gln' => $response_model['source_gln'],
-                    'destination_gln' => $response_model['destination_gln'],
+                    'source_gln' => $response_model['destination_gln'],
+                    'destination_gln' => $response_model['source_gln'],
                     'warehouse_id' => $data['to_warehouse_id'],
                     'notification_id' => $purchase_notification
                 ];  
@@ -2282,31 +2284,42 @@ class Purchases extends MY_Controller
                             'supplier_gln' => $response_model['source_gln'],
                             'warehouse_gln' => $response_model['destination_gln'],
                             'notification_id' => $purchase_notification
-                        ];                        
-                        $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',true, $accept_dispatch_result);
-                        $accept_dispatch_result = $this->rasd->accept_dispatch_125($accept_dispatch_body, $auth_token);
-                         if(isset($accept_dispatch_result['DicOfDic']['MR']['TRID']) && $accept_dispatch_result['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){
-                            log_message("info", "Accept Dispatch successful");
-                            $rasd_success = true;
-                            $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result);
-                            
-                         }else{
-                            log_message("error", "Accept Dispatch Failed");
-                            $rasd_success = false;
-                            $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result);
-                         }
+                        ];                
+
+                        $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',true, $zadca_dispatch_response,$body_for_rasd_dispatch);
+                        /**Accept Dispatch By Pharmacy */
+                        $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10100/api/web');
+                        $auth_response = $this->rasd->authenticate($ph_user, $ph_pass);
+                        if(isset($auth_response['token'])){
+                            $auth_token = $auth_response['token'];
+                                log_message("info", "Accept Dispatch Pharmacy Auth successful");
+                            $accept_dispatch_result = $this->rasd->accept_dispatch_125($accept_dispatch_body, $auth_token);
+                            if(isset($accept_dispatch_result['DicOfDic']['MR']['TRID']) && $accept_dispatch_result['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){
+                                log_message("info", "Accept Dispatch successful");
+                                $rasd_success = true;
+                                $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $accept_dispatch_body);
+                                
+                            }else{
+                                log_message("error", "Accept Dispatch Failed");
+                                $rasd_success = false;
+                                $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $accept_dispatch_body);
+                            }
+                        }else{
+                                log_message("info", "Accept Dispatch Pharmacy Auth Failed");
+                        }
+                        
                       
                     }else{
                         $rasd_success = false;
                         log_message("error", "Dispatch Failed");
                         log_message("error", json_encode($zadca_dispatch_response,true));
-                        $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $accept_dispatch_result);
+                        $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $zadca_dispatch_response,$body_for_rasd_dispatch);
                     }
                    
                     
                 }else{
                     log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
-                    $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $accept_dispatch_result);
+                    $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $accept_dispatch_result,$body_for_rasd_dispatch);
                 }
             }else{
                 log_message("warning", 'The Status is not Complete' . $transfer_status);
