@@ -37,6 +37,11 @@ class Cmt_model extends CI_Model
             $warehouse_id = $payload_used['warehouse_id'];
             $warehouse_type = 'warehouse';
         }
+        if($function == "dispatch_product"){
+            $source_gln = $payload_used['source_gln'];
+            $destination_gln = $payload_used['destination_gln'];
+            
+        }
 
 
         $transaction = [

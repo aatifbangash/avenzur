@@ -340,8 +340,8 @@ class Notifications extends MY_Controller
                   $this->session->set_flashdata('error', 'Failed to Authenticate with RASD with ' . $user . ' '. $password);
                     admin_redirect('notifications/rasd');
             }
-        }catch(ex){
-                log_message("error", ex);
+        }catch(\Exception $e){
+                
         }
 
 

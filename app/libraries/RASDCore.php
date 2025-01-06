@@ -149,8 +149,19 @@ class RASDCore {
 
         } 
     }
-  
 
+    public function dispatch_product_133($body, $auth_token){
+         $headers = array(
+            'FunctionName:APIReq',
+            'Token: '.$auth_token,
+            'Accept :*/*',
+            "Accept-Encoding : gzip, deflate, br"
+            );
+        $this->set_headers([]);
+        $this->set_headers($headers);
+        $this->set_body($body);
+        return $this->post('');
+    }
 
     public function accept_dispatch_125($params, $auth_token){
         $gln = $params['supplier_gln'];
