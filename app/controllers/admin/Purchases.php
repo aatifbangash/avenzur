@@ -15,6 +15,7 @@ class Purchases extends MY_Controller
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
+        $this->load->admin_model('cmt_model');
         $this->load->library('RASDCore',$params=null, 'rasd');
         $this->lang->admin_load('purchases', $this->Settings->user_language);
         $this->load->library('form_validation');
@@ -2253,6 +2254,17 @@ class Purchases extends MY_Controller
             $transfer_status = $response_model['status'];
             $rasd_success = false;
             log_message("info", json_encode($body_for_rasd_dispatch));
+            $payload_used =  [
+                    'source_gln' => $response_model['source_gln'],
+                    'destination_gln' => $response_model['destination_gln'],
+                    'warehouse_id' => $data['to_warehouse_id'],
+                    'notification_id' => $purchase_notification
+                ];  
+                $accept_dispatch_notification = [
+                    'warehouse_gln' =>$response_model['destination_gln'],
+                    'warehouse_id' => $data['to_warehouse_id'],
+                    'supplier_gln' =>  $response_model['source_gln']
+                ];
             if($transfer_status == 'completed'){
                 log_message("info", "RASD AUTH START");
                 $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
@@ -2261,6 +2273,8 @@ class Purchases extends MY_Controller
                     $auth_token = $auth_response['token'];
                     log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
                     $zadca_dispatch_response = $this->rasd->dispatch_product_133($body_for_rasd_dispatch, $auth_token);
+                    
+                    
                     if(isset($zadca_dispatch_response['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
                         log_message("info", "Dispatch successful");
                         $rasd_success = true;
@@ -2268,23 +2282,31 @@ class Purchases extends MY_Controller
                             'supplier_gln' => $response_model['source_gln'],
                             'warehouse_gln' => $response_model['destination_gln'],
                             'notification_id' => $purchase_notification
-                        ];
-
+                        ];                        
+                        $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',true, $accept_dispatch_result);
                         $accept_dispatch_result = $this->rasd->accept_dispatch_125($accept_dispatch_body, $auth_token);
                          if(isset($accept_dispatch_result['DicOfDic']['MR']['TRID']) && $accept_dispatch_result['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){
                             log_message("info", "Accept Dispatch successful");
                             $rasd_success = true;
+                            $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result);
+                            
                          }else{
                             log_message("error", "Accept Dispatch Failed");
                             $rasd_success = false;
+                            $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result);
                          }
+                      
                     }else{
                         $rasd_success = false;
                         log_message("error", "Dispatch Failed");
                         log_message("error", json_encode($zadca_dispatch_response,true));
+                        $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $accept_dispatch_result);
                     }
+                   
+                    
                 }else{
                     log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
+                    $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $accept_dispatch_result);
                 }
             }else{
                 log_message("warning", 'The Status is not Complete' . $transfer_status);
