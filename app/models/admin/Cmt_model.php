@@ -18,6 +18,47 @@ class Cmt_model extends CI_Model
         }
     }
 
+      public function add_rasd_transactions($payload_used,$function,$is_success, $response){
+     
+        $source_gln = "";
+        $source_gln = "";
+        $destination_gln = "";
+        $gin = "";
+        $batch = "";
+        $warehouse_id = "";
+        $warehouse_type = 'warehouse';
+        $serial_number = "";
+    
+        if($function == "accept_dispatch"){
+            $source_gln = $payload_used['supplier_gln'];
+            $destination_gln = $payload_used['warehouse_gln'];
+            $gin = "";
+            $batch = "";
+            $warehouse_id = $payload_used['warehouse_id'];
+            $warehouse_type = 'warehouse';
+        }
+
+
+        $transaction = [
+            "date" => date("Y-m-d"),
+            "function" => $function,
+            "source_gln" => $source_gln,
+            "destination_gln" => $destination_gln,
+            "gtin" => $gtin,
+            "batch" => $batch,
+            "warehouse_id" => $warehouse_id,
+            "warehouse_type" => $warehouse_type,
+            "response" => $response,
+            "is_success" => $is_success,
+            "request" => json_encode($payload_used,true),
+            "response" => json_encode($response, true),
+            "serial_number" => $serial_number
+
+        ];
+
+
+        return $this->db->insert('sma_rasd_transactions',$transaction);
+    }
     public function getRasdNotifications(){
         $this->db->where('status', 'pending');
         $notifications = $this->db->get('sma_rasd_notifications');

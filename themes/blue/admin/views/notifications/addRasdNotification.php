@@ -2,7 +2,7 @@
 <div class="modal-dialog">
     <div class="modal-content">
         <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-2x">&times;</i>
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id="close_button"><i class="fa fa-2x">&times;</i>
             </button>
             <h4 class="modal-title" id="myModalLabel"><?php echo lang('Accept Dispatch'); ?></h4>
         </div>
@@ -102,10 +102,10 @@
     <?php echo form_close(); ?>
 </div>
 <?= $modal_js ?>
-<!-- <script type="text/javascript" src="<?= $assets ?>js/custom.js"></script>
+<script type="text/javascript" src="<?= $assets ?>js/custom.js"></script>
 <script type="text/javascript" charset="UTF-8">
     $.fn.datetimepicker.dates['sma'] = <?=$dp_lang?>;
-</script> -->
+</script>
 <script>
     $(document).ready(function () {
         var $submit = $("#submitAcceptDispatch");
@@ -140,7 +140,7 @@
                 },
                 cache: true
             });
-            
+            $("#close_button").click();
         }) 
         
         var $supplier = $("#posupplier"),
