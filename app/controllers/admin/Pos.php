@@ -2208,4 +2208,102 @@ class Pos extends MY_Controller
         @chmod($output_path, 0644);
         return false;
     }
+
+    public function sales_date_wise_old()
+    {
+        $this->sma->checkPermissions('index');
+        $at_date = '';
+        if ($this->input->post('at_date') == true) {
+            echo $at_date = $this->input->post('at_date');
+            $this->sma->fld($at_date);
+            if ($at_date == '') {
+                $this->session->set_flashdata('error', lang('please_select_date'));
+                admin_redirect('pos/sales_date_wise');
+            }
+            $at_date =  $this->sma->fld($at_date);
+           
+             $this->data['sale_ids'] = $this->pos_model->getSalesByDateRange($at_date);
+           
+        }
+
+        $sale_id = $this->input->get('sale_id');
+        if($sale_id){
+            $inv                 = $this->sales_model->getInvoiceByID($sale_id);
+            $this->data['inv']         = $inv;
+            $this->data['address']     = $this->site->getAddressByID($inv->address_id);
+            $this->data['rows']        = $this->sales_model->getAllInvoiceItems($sale_id);
+            $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
+            $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
+            $this->data['sale_id'] = $sale_id;
+        }
+      
+        // $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['at_date'] = $at_date;
+
+
+
+        
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('pos'), 'page' => lang('pos')], ['link' => '#', 'page' => lang('sales_date_wise')]];
+        $meta = ['page_title' => lang('sales_date_wise'), 'bc' => $bc];
+        $this->page_construct('pos/sales_date_wise', $meta, $this->data);
+    }
+
+public function sales_date_wise()
+{
+    // echo "<pre>User Session";
+    // error_reporting(-1);
+    // ini_set('display_errors', 1);
+    $this->sma->checkPermissions('index');
+    $at_date = '';
+    $sale_ids = [];
+    if ($this->input->post('at_date') == true) {
+        $at_date_original = $this->input->post('at_date');
+        $sale_id = $this->input->post('sale_id');
+        if ($at_date_original == '') {
+            $this->session->set_flashdata('error', lang('please_select_date'));
+            admin_redirect('pos/sales_date_wise');
+        }
+        $at_date =  $this->sma->fld($at_date_original);
+        
+        // Get sale_ids and store in session
+        $sale_ids = $this->pos_model->getSalesByDateRange($at_date,$sale_id);
+        $this->session->set_userdata('sale_ids', $sale_ids);
+        //print_r($sale_ids[0]);
+        admin_redirect('pos/sales_date_wise?at_date='.$at_date_original.'&sale_id='.$sale_ids[0]);
+        //pos/sales_date_wise?sale_id=83
+    }
+
+    $sale_ids = $this->session->userdata('sale_ids');
+
+    if (!$sale_ids) {
+        $sale_ids = []; 
+    }
+    $current_index = array_search($this->input->get('sale_id'), $sale_ids);
+
+    $sale_id = $this->input->get('sale_id');
+    if ($sale_id) {
+        $inv = $this->sales_model->getInvoiceByID($sale_id);
+        $this->data['inv'] = $inv;
+        $this->data['address'] = $this->site->getAddressByID($inv->address_id);
+        $this->data['rows'] = $this->sales_model->getAllInvoiceItems($sale_id);
+        $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
+        $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
+        $this->data['sale_id'] = $sale_id;
+    }
+    $this->data['at_date'] = $this->input->get('at_date');
+   
+
+    // Calculate previous and next sale IDs for navigation
+    $prev_sale_id = isset($sale_ids[$current_index - 1]) ? $sale_ids[$current_index - 1] : null;
+    $next_sale_id = isset($sale_ids[$current_index + 1]) ? $sale_ids[$current_index + 1] : null;
+    
+    $this->data['prev_sale_id'] = $prev_sale_id;
+    $this->data['next_sale_id'] = $next_sale_id;
+    $this->data['total_sales'] = count($sale_ids);
+
+    $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('pos'), 'page' => lang('pos')], ['link' => '#', 'page' => lang('sales_date_wise')]];
+    $meta = ['page_title' => lang('sales_date_wise'), 'bc' => $bc];
+    $this->page_construct('pos/sales_date_wise', $meta, $this->data);
+}
+
 }
