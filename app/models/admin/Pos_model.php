@@ -1742,7 +1742,41 @@ $q = $this->db->query($sql);
     //     return false;
     // }
 
+    public function getSalesByDateRange($selected_date, $sale_id='')
+    {
+        /**get grand discount */
+        $where = '';
+        if($this->session->userdata('warehouse_id') != 32) {
+            $where .= ' AND s.warehouse_id = ' . $this->session->userdata('warehouse_id');
+        }
+        if($sale_id != '') {
+            $where .= ' AND s.id = ' . $sale_id;
+        }
+       echo $sql = " SELECT
+        id
+          FROM  
+        sma_sales s 
+                            
+        WHERE 
+            DATE(s.date) = '" . trim($selected_date) . "' ".$where ;
+        $q = $this->db->query($sql);
+        //echo $this->db->last_query();
+        $sales_id = array();
+        //echo $q->num_rows();
+        if ($q->num_rows() > 0) {
+            foreach($q->result_array() as $row){
+                $sales_id[] = $row['id'];
+            }
+          return $sales_id;  
+        }
+        
+        
+        return false;
 
+
+
+
+    }
 
 
 }
