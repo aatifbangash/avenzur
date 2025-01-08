@@ -169,7 +169,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
-        $supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
+        $supplier = $this->input->post('supplier') != 'All'? $this->input->post('supplier') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
