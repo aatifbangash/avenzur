@@ -4692,7 +4692,7 @@ class Reports_model extends CI_Model
                 main_net,
                 customer
             FROM (
-                -- Sales Records
+               
                 SELECT
                     p.item_code, 
                     p.name,
@@ -4723,7 +4723,6 @@ class Reports_model extends CI_Model
 
                 UNION ALL
 
-                -- Returns Records
                 SELECT
                     p.item_code, 
                     p.name,
@@ -4731,15 +4730,15 @@ class Reports_model extends CI_Model
                     r.id AS id,
                     ri.avz_item_code,
                     ri.product_name,
-                    -ri.quantity AS quantity, -- Negative for returns
-                    ri.net_cost AS cost_price, -- No cost price for returns
+                    -ri.quantity AS quantity, 
+                    ri.net_cost AS cost_price,
                     ri.real_unit_price AS sale_price,
-                    -ri.real_unit_price * ri.quantity AS total_sale, -- Negative for returns
-                    -ri.item_discount AS item_discount, -- No item discount for returns
+                    -ri.real_unit_price * ri.quantity AS total_sale, 
+                    -ri.item_discount AS item_discount,
                     0 AS second_discount_value,
-                    -ri.totalbeforevat AS totalbeforevat, -- Negative for returns
-                    -ri.tax AS tax, -- Negative for returns
-                    -ri.main_net AS main_net, -- Negative for returns
+                    -ri.totalbeforevat AS totalbeforevat, 
+                    -ri.tax AS tax,
+                    -ri.main_net AS main_net, 
                     r.customer
                 FROM 
                     sma_return_items ri
@@ -4768,23 +4767,23 @@ class Reports_model extends CI_Model
 
         /**get grand total */
         $sql = "SELECT
-                ROUND(SUM(grand_quantity), 2) AS grand_quantity,
-                ROUND(SUM(grand_cost), 2) AS grand_cost,
-                ROUND(SUM(grand_sale), 2) AS grand_sale,
-                ROUND(SUM(grand_discount), 2) AS grand_discount,
-                ROUND(SUM(grand_beforvate), 2) AS grand_beforvate,
-                ROUND(SUM(grand_vat), 2) AS grand_vat,
-                ROUND(SUM(grand_main_net), 2) AS grand_main_net
+                ROUND(SUM(grand_quantity), 5) AS grand_quantity,
+                ROUND(SUM(grand_cost), 5) AS grand_cost,
+                ROUND(SUM(grand_sale), 5) AS grand_sale,
+                ROUND(SUM(grand_discount), 5) AS grand_discount,
+                ROUND(SUM(grand_beforvate), 5) AS grand_beforvate,
+                ROUND(SUM(grand_vat), 5) AS grand_vat,
+                ROUND(SUM(grand_main_net), 5) AS grand_main_net
             FROM (
         
                 SELECT
-                ROUND( SUM(si.quantity),2) as grand_quantity,
-                ROUND( SUM(COALESCE(si.net_cost, 0) * COALESCE(si.quantity, 0)) , 2) AS grand_cost,
-                ROUND( SUM(si.subtotal),2) as grand_sale,
-                ROUND( SUM(COALESCE(si.item_discount, 0) + COALESCE(si.second_discount_value, 0)) , 2) AS grand_discount,
-                ROUND( SUM( si.totalbeforevat), 2) as grand_beforvate,
-                ROUND( SUM( si.tax),2) as grand_vat,
-                ROUND( SUM( si.main_net), 2) as grand_main_net
+                ROUND( SUM(si.quantity),5) as grand_quantity,
+                ROUND( SUM(COALESCE(si.net_cost, 0) * COALESCE(si.quantity, 0)) , 5) AS grand_cost,
+                ROUND( SUM(si.subtotal),5) as grand_sale,
+                ROUND( SUM(COALESCE(si.item_discount, 0) + COALESCE(si.second_discount_value, 0)) , 5) AS grand_discount,
+                ROUND( SUM( si.totalbeforevat), 5) as grand_beforvate,
+                ROUND( SUM( si.tax),5) as grand_vat,
+                ROUND( SUM( si.main_net), 5) as grand_main_net
                 FROM 
                 sma_sale_items si
                 JOIN 
@@ -4827,7 +4826,7 @@ class Reports_model extends CI_Model
 
                  /**get grand discount */
         $sql = " SELECT
-                ROUND( SUM( s.total_discount), 2) as grand_sales_discount
+                ROUND( SUM( s.total_discount), 5) as grand_sales_discount
                   FROM  
                 sma_sales s 
                                     
