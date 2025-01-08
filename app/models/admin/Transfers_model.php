@@ -78,12 +78,13 @@ class Transfers_model extends CI_Model
             $c_2762 = [];
 
             foreach($products as $product){
+                $qty = (int) $product['quantity'];
                 $c_2762 [] = 
                 [
                         "223" =>   $product['product_code'],
                         "2766" => $product['batchno'],
                         "220" => $product['expiry'],
-                        "224" => $product['quantity']
+                        "224" =>  (string) $qty
                 ];
             }
             $payload['DicOfDT']['2762'] = $c_2762;
