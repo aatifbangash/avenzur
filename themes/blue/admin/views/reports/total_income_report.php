@@ -50,7 +50,7 @@
                             <?= lang('supplier', 'posupplier'); ?>
                             <?php
                             $selected_supplier_id[] = isset($supplier_id) ? $supplier_id : '';
-                            $sp[''] = '';
+                            $sp['All'] = 'All Suppliers';
                             foreach ($suppliers as $supplier) {
                                 $sp[$supplier->id] = $supplier->company. ' ('. $supplier->name.')'.' - '.$supplier->sequence_code;
                             }
