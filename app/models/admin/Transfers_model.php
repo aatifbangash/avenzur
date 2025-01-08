@@ -63,11 +63,11 @@ class Transfers_model extends CI_Model
             $payload = [
                 "DicOfDic" => [
                     "2762" => [
-                        "215" =>  $destination_gln
+                        "215" =>  $source_gln
                     ],
                     "MH" => [
                         "MN" => "133",
-                        "222" => $source_gln
+                        "222" =>  $destination_gln
                     ]
                 ],
                 "DicOfDT" =>  [
