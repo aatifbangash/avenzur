@@ -2257,9 +2257,9 @@ class Purchases extends MY_Controller
             $rasd_success = false;
             log_message("info", json_encode($body_for_rasd_dispatch));
             $payload_used =  [
-                    'source_gln' => $response_model['destination_gln'],
-                    'destination_gln' => $response_model['source_gln'],
-                    'warehouse_id' => $data['to_warehouse_id'],
+                    'source_gln' => $response_model['source_gln'],
+                    'destination_gln' => $response_model['destination_gln'],
+                    'warehouse_id' => $data['source_warehouse_id'],
                     'notification_id' => $purchase_notification
                 ];  
                 $accept_dispatch_notification = [
