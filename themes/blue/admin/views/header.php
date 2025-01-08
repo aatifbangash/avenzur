@@ -749,6 +749,11 @@
                                             <span class="text"> <?= lang('pos_sales'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="pos_sales_wise">
+                                        <a class="submenu" href="<?= admin_url('pos/sales_date_wise'); ?>">
+                                            <i class="fa fa-heart"></i><span class="text"> <?= lang('POS_Sales_Date_Wise'); ?></span>
+                                        </a>
+                                    </li>
                                         <?php
                                     } ?>
                                     <li id="sales_add">
@@ -1597,6 +1602,11 @@
                                     <li id="pos_sales">
                                         <a class="submenu" href="<?= admin_url('pos/sales'); ?>">
                                             <i class="fa fa-heart"></i><span class="text"> <?= lang('pos_sales'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="pos_sales_wise">
+                                        <a class="submenu" href="<?= admin_url('pos/sales_date_wise'); ?>">
+                                            <i class="fa fa-heart"></i><span class="text"> <?= lang('POS_Sales_Date_Wise'); ?></span>
                                         </a>
                                     </li>
                                         <?php

@@ -263,6 +263,7 @@ $(document).ready(function () {
 			var new_cost = parseFloat($(this).val()),
 				item_id = row.attr("data-item-id");
 			toitems[item_id].row.price = new_cost;
+			toitems[item_id].row.net_unit_sale = new_cost;
 			localStorage.setItem("toitems", JSON.stringify(toitems));
 			loadItems();
 		});
