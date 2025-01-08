@@ -934,9 +934,9 @@ class Pos_model extends CI_Model
         //     return $q->row();
         // }
 
-      $sql = "
+       $sql = "
         SELECT 
-            ROUND( SUM(COALESCE(payments.amount, 0)) ) AS total
+            SUM( ROUND(COALESCE(payments.amount, 0)) ) AS total
         FROM 
             sma_payments payments
         LEFT JOIN 
