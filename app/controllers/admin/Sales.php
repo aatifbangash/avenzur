@@ -33,6 +33,19 @@ class Sales extends MY_Controller
             'types'    => $this->digital_file_types,
             'max_size' => $this->allowed_file_size,
         ]);
+        $this->load->admin_model("Zetca_model");
+        $this->zatca_enabled = false;
+        $d = $this->Zetca_model->get_zetca_settings();
+
+        if($d['zatca_enabled']){
+            $this->zatca_enabled = true;
+            $params = array(
+            'base_url' => "https://dev-middleware.accqrate-erp.com/api/zatca-transmissions/send",
+            "api_key" => $d['zatca_appkey'],
+            "api_secret" => $d['zatca_secretKey']
+            );
+           $this->load->library('ZatcaServices', $params, 'zatca');                       
+        }
         //$this->pdfService = PdfServiceFactory::create('html2pdf'); 
     }
 
@@ -385,6 +398,42 @@ class Sales extends MY_Controller
             if ($quote_id) {
                 $this->db->update('quotes', ['status' => 'completed'], ['id' => $quote_id]);
             }
+            /**
+             * Zatca Integration B2B Start
+             */
+            if($sale_status  == 'completed'){
+                 if($this->zatca_enabled){
+                    $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($sale_id); 
+                    $zatca_response = $this->zatca->post('',  $zatca_payload);
+                    $is_success = true;
+                    $remarks = "";
+                    if($zatca_response['status'] >= 400){
+                        $is_success = false;
+                        if(isset($zatca_response['body']['errors'])){
+                            if(!empty($zatca_response['body']['errors'])){
+                                $remarks = $zatca_response['body']['errors'][0];
+                            }
+                        }
+                    }
+                    $date = date('Y-m-d H:i:s');
+                    $request = json_encode($zatca_payload, true);
+                    $response = json_encode($zatca_response, true);
+                    $reporting_data = [
+                        "sale_id" => $sale_id,
+                        "date" => $date,
+                        "is_success" => $is_success,
+                        "request" => $request,
+                        "response" => $response,
+                        "remarks" => $remarks
+                    ];
+
+                    $this->Zetca_model->report_zatca_status($reporting_data);
+                 }
+            }
+
+            /**
+             * Zatca Integration B2B End
+             */
             $this->session->set_flashdata('message', lang('sale_added'));
             admin_redirect('sales?lastInsertedId='.$sale_id);
         } else {
@@ -1316,7 +1365,36 @@ class Sales extends MY_Controller
         if ($this->form_validation->run() == true && $this->sales_model->updateSale($id, $data, $products, $attachments)) {
             if($sale_status == 'completed'){
                 $this->convert_sale_invoice($id);
+                           /**
+                             * Zatca Integration B2B Start
+                             */
+                            if($this->zatca_enabled){
+                                $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($id); 
+                                $zatca_response = $this->zatca->post('',  $zatca_payload);
+                                $is_success = true;
+                                $remarks = "";
+                                if($zatca_response['status'] >= 400){
+                                    $is_success = false;
+                                    if(isset($zatca_response['body']['errors'])){
+                                        if(!empty($zatca_response['body']['errors'])){
+                                            $remarks = $zatca_response['body']['errors'][0];
+                                        }
+                                    }
+                                }
+                                $date = date('Y-m-d H:i:s');
+                                $request = json_encode($zatca_payload, true);
+                                $response = json_encode($zatca_response, true);
+                                $reporting_data = [
+                                    "sale_id" => $id,
+                                    "date" => $date,
+                                    "is_success" => $is_success,
+                                    "request" => $request,
+                                    "response" => $response,
+                                    "remarks" => $remarks
+                                ];
 
+                                $this->Zetca_model->report_zatca_status($reporting_data);
+                            }
                 if($customer_details->balance > 0){
                     $this->sales_model->update_balance($customer_details->id, $new_balance);
                 }

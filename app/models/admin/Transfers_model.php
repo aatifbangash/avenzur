@@ -62,9 +62,8 @@ class Transfers_model extends CI_Model
 
             $payload = [
                 "DicOfDic" => [
-                    "180" => [
-                        "215" =>  $destination_gln,
-                        "227" =>  ""
+                    "2762" => [
+                        "215" =>  $destination_gln
                     ],
                     "MH" => [
                         "MN" => "133",
@@ -72,21 +71,22 @@ class Transfers_model extends CI_Model
                     ]
                 ],
                 "DicOfDT" =>  [
-                    "180" => []
+                    "2762" => []
                 ]
             ];
 
-            $c_180 = [];
+            $c_2762 = [];
 
             foreach($products as $product){
-                $c_180 [] = 
+                $c_2762 [] = 
                 [
-                        "213" =>   $product['product_code'],
-                        "219" => $product['batchno'],
-                        "214" => ""
+                        "223" =>   $product['product_code'],
+                        "2766" => $product['batchno'],
+                        "220" => $product['expiry'],
+                        "224" => $product['quantity']
                 ];
             }
-            $payload['DicOfDT']['180'] = $c_180;
+            $payload['DicOfDT']['2762'] = $c_2762;
             return ['payload' => $payload, 
             'user' => $rasd_user,
              'pass' => $rasd_pass, 

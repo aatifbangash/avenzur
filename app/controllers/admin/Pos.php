@@ -1305,16 +1305,28 @@ class Pos extends MY_Controller
                         if($this->zatca_enabled){
                             $zatca_payload =  $this->Zetca_model->get_zatca_data($sale['sale_id']);                            
                             $zatca_response = $this->zatca->post('',  $zatca_payload);
-                            if($zatca_response['status']>=400){
-                                $reason = "";
+                             $is_success = true;
+                            $remarks = "";
+                            if($zatca_response['status'] >= 400){
+                                $is_success = false;
                                 if(isset($zatca_response['body']['errors'])){
                                     if(!empty($zatca_response['body']['errors'])){
-                                             $reason = $zatca_response['body']['errors'][0];
+                                        $remarks = $zatca_response['body']['errors'][0];
                                     }
-                                   
                                 }
-                                $this->Zetca_model->report_failure($sale['sale_id'], $reason, "",$zatca_payload);
-                            } 
+                            }
+                            $date = date('Y-m-d H:i:s');
+                            $request = json_encode($zatca_payload, true);
+                            $response = json_decode($zatca_response, true);
+                            $reporting_data = [
+                                "sale_id" => $sale['sale_id'],
+                                "date" => $date,
+                                "is_success" => $is_success,
+                                "request" => $request,
+                                "response" => $response,
+                                "remarks" => $remarks
+                            ];
+                            $this->Zetca_model->report_zatca_status($reporting_data);
                            
                         }
                         /**End of Integration */
