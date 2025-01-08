@@ -1753,8 +1753,17 @@ function loadItems() {
         total_discount = formatDecimal(order_discount + product_discount);
 
         //new_total_discount = new Decimal(new_total_discount.plus(order_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
-        new_total_discount = new Decimal(new_total_discount).toDecimalPlaces(5, Decimal.ROUND_DOWN)
         new_grant_total = new Decimal(new_grant_total.minus(order_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+        if (posdiscount != null && posdiscount.indexOf('%') !== -1) {
+            new_total_discount = new Decimal(new_total_discount.plus(order_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+        }else if(posdiscount != null){
+            console.log('POS discount: '+posdiscount);
+            new_total_discount = posdiscount;
+        }else{
+            new_total_discount = 0;
+        }
+        new_total_discount = new Decimal(new_total_discount).toDecimalPlaces(5, Decimal.ROUND_DOWN)
+        
 
         $('#grand_total_sale').val(new_total_sale);
         $('#grand_total_net_sale').val(new_total_net_sale);
