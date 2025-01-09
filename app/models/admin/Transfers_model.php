@@ -66,7 +66,7 @@ class Transfers_model extends CI_Model
                         "215" =>  $destination_gln
                     ],
                     "MH" => [
-                        "MN" => "133",
+                        "MN" => "2756",
                         "222" =>  $source_gln
                     ]
                 ],
