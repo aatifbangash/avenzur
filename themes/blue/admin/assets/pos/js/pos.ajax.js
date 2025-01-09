@@ -1753,7 +1753,7 @@ function loadItems() {
         total_discount = formatDecimal(order_discount + product_discount);
 
         //new_total_discount = new Decimal(new_total_discount.plus(order_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
-        new_grant_total = new Decimal(new_grant_total.minus(order_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+        
         if (posdiscount != null && posdiscount.indexOf('%') !== -1) {
             new_total_discount = new Decimal(new_total_discount.plus(order_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
         }else if(posdiscount != null){
@@ -1763,10 +1763,13 @@ function loadItems() {
             new_total_discount = 0;
         }
         new_total_discount = new Decimal(new_total_discount).toDecimalPlaces(5, Decimal.ROUND_DOWN)
+
+        new_grant_total = new Decimal(new_grant_total.minus(new_total_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
         
+        grand_total_net_sale = new Decimal(new_total_sale.minus(new_total_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
 
         $('#grand_total_sale').val(new_total_sale);
-        $('#grand_total_net_sale').val(new_total_net_sale);
+        $('#grand_total_net_sale').val(grand_total_net_sale);
         $('#grand_total_discount').val(new_total_discount);
         $('#grand_total_vat').val(new_total_vat);
         $('#grand_total').val(new_grant_total);
@@ -2542,7 +2545,9 @@ function calculatePOSInventory(item) {
         item_discount = total_sale.times(pos_discount.dividedBy(100));
     }
 
-    const net_sale = toTwoDecimals(total_sale.minus(item_discount));
+    //const net_sale = toTwoDecimals(total_sale.minus(item_discount));
+    const net_sale_for_vat = toTwoDecimals(total_sale.minus(item_discount));
+    const net_sale = toTwoDecimals(total_sale);
     const net_unit_sale = total_quantity.greaterThan(0)
         ? toTwoDecimals(net_sale.dividedBy(total_quantity))
         : new Decimal(0);
@@ -2550,7 +2555,7 @@ function calculatePOSInventory(item) {
     // VAT Calculation (15% if tax_rate is 5)
     let total_vat = new Decimal(0);
     if (tax_rate.equals(5)) {
-        total_vat = toTwoDecimals(net_sale.times(new Decimal(15).dividedBy(100)));
+        total_vat = toTwoDecimals(net_sale_for_vat.times(new Decimal(15).dividedBy(100)));
     }
 
     // discount percentage calculcation
