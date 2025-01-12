@@ -1292,6 +1292,8 @@ function loadItems() {
 			const new_net_sale = new Decimal(new_calc.new_net_sale); 
 			new_total_net_sale = new_total_net_sale.plus(new_net_sale);
 
+            const new_net_sale_after_discount = new Decimal(new_calc.new_net_sale_after_discount);
+
 			const calc_total_sale = new Decimal(new_calc.new_total_sale); 
 			new_total_sale = new_total_sale.plus(calc_total_sale);
 
@@ -1561,9 +1563,9 @@ function loadItems() {
                 '"><input name="avz_item_code[]" type="hidden" value="' +
                 item.row.avz_item_code +
                 '"><input name="totalbeforevat[]" type="hidden" class="totalbeforevat" value="' +
-				new_calc.new_net_sale +
+				new_calc.new_net_sale_after_discount +
 				'"><input name="main_net[]" type="hidden" class="main_net" value="' +
-				new_calc.new_grant_total +
+				new_calc.new_grant_total_after_discount +
 				'"><input name="item_discount1[]" type="hidden" class="main_net" value="' +
 				new_calc.new_discount1 +
 				'"><input name="item_total_discount[]" type="hidden" class="main_net" value="' +
@@ -2546,6 +2548,7 @@ function calculatePOSInventory(item) {
     }
 
     //const net_sale = toTwoDecimals(total_sale.minus(item_discount));
+    const net_sale_after_discount = toTwoDecimals(total_sale.minus(item_discount));
     const net_sale_for_vat = toTwoDecimals(total_sale.minus(item_discount));
     const net_sale = toTwoDecimals(total_sale);
     const net_unit_sale = total_quantity.greaterThan(0)
@@ -2564,6 +2567,8 @@ function calculatePOSInventory(item) {
     // Grant Total
     const grant_total = toTwoDecimals(net_sale.plus(total_vat));
 
+    const grant_total_after_discount = toTwoDecimals(net_sale_after_discount.plus(total_vat));
+
     // cost of goods sold
     const cost_goods_sold = toTwoDecimals( net_unit_cost.times(total_quantity) );
 
@@ -2573,6 +2578,7 @@ function calculatePOSInventory(item) {
         new_sale_price: sale_price.toNumber(),
         new_total_purchase: total_purchase.toNumber(),
         new_net_sale: net_sale.toNumber(),
+        new_net_sale_after_discount: net_sale_after_discount.toNumber(),
         new_total_sale: total_sale.toNumber(),
         //new_item_discount: item_discount.toNumber(),
         new_item_discount: item_discount,
@@ -2580,6 +2586,7 @@ function calculatePOSInventory(item) {
         new_vat_value: total_vat.toNumber(),
         new_unit_sale: net_unit_sale.toNumber(),
         new_grant_total: grant_total.toNumber(),
+        new_grant_total_after_discount: grant_total_after_discount.toNumber(),
         new_cost_goods_sold: cost_goods_sold.toNumber(),
     };
 }
