@@ -1764,9 +1764,9 @@ function loadItems() {
         }
         new_total_discount = new Decimal(new_total_discount).toDecimalPlaces(5, Decimal.ROUND_DOWN)
 
-        new_grant_total = new Decimal(new_grant_total.minus(new_total_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+        new_grant_total = new Decimal(new_grant_total.minus(new_total_discount)).toDecimalPlaces(5, Decimal.ROUND_DOWN);
         
-        grand_total_net_sale = new Decimal(new_total_sale.minus(new_total_discount)).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+        grand_total_net_sale = new Decimal(new_total_sale.minus(new_total_discount)).toDecimalPlaces(5, Decimal.ROUND_DOWN);
 
         $('#grand_total_sale').val(new_total_sale);
         $('#grand_total_net_sale').val(grand_total_net_sale);
