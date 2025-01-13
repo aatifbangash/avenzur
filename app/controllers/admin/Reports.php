@@ -3930,9 +3930,9 @@ class Reports extends MY_Controller
                     $obj->total_trs_credit = 0;
                     $obj->total_trs_debit = 0;
                     if ($supplier_data->dc == 'D') {
-                        $obj->trs_debit = $this->sma->formatDecimal($supplier_data->total_amount);
+                        $obj->ob_debit = $this->sma->formatDecimal($supplier_data->total_amount);
                     } else if ($supplier_data->dc == 'C') {
-                        $obj->trs_credit = $this->sma->formatDecimal($supplier_data->total_amount);
+                        $obj->ob_credit = $this->sma->formatDecimal($supplier_data->total_amount);
                     }
                     array_push($response_arr, $obj);
                 }
