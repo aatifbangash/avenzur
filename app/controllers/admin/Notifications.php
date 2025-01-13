@@ -96,6 +96,82 @@ class Notifications extends MY_Controller
         }
     }
 
+    public function showUploadNotification(){
+ 
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->load->view($this->theme . 'notifications/uploadRasdNotificationMap', $this->data);
+        
+    }
+    public function mapNotifications()
+    {
+        log_message("info", "REached MapNotification");
+        $this->load->library('form_validation');
+    $this->form_validation->set_rules('notification_id', 'Notification ID', 'required');
+
+    if ($this->form_validation->run() == false) {
+        echo json_encode(['status' => 'error', 'message' => validation_errors()]);
+        return;
+    }
+
+    $notificationId = $this->input->post('notification_id');
+
+    // File upload configuration
+    $config['upload_path'] = './files/';
+    $config['allowed_types'] = 'csv';
+    $config['max_size'] = 4098; // 2MB
+    $this->load->library('upload', $config);
+
+    if (!$this->upload->do_upload('attachment')) {
+        $error = $this->upload->display_errors();
+        echo json_encode(['status' => 'error', 'message' => $error]);
+        return;
+    }
+
+    $fileData = $this->upload->data();
+    $filePath = $fileData['full_path'];
+
+    // Load the Excel file
+    try {
+        if (($handle = fopen($filePath, 'r')) !== false) {
+             $header = fgetcsv($handle);
+             if (!$header || count($header) < 2) {
+                    echo json_encode(['status' => 'error', 'message' => 'Invalid CSV format.']);
+                    return;
+            }
+            
+
+            // Assuming the first row contains headers, start from the second row
+             while (($row = fgetcsv($handle)) !== false) {
+                
+                // Map fields to variables (modify as per your file structure)
+                $field1 = $row[0] ?? null; // First column
+                $field2 = $row[1] ?? null; // Second column
+                $field3 = $row[2] ?? null; // Third column
+                $field4 = $row[3] ?? null; // Third column
+                // Add more fields as necessary
+               
+                // Process each row (e.g., save to the database)
+                $data = [
+                    'notification_id' => $notificationId,
+                    'gtin' => $field1,
+                    'qty_remaining' => $field2,
+                    'batch' => $field3,
+                    'expiry_date' => $field4
+                ];
+                 log_message("info", json_encode($data));
+                $this->db->insert('sma_rasd_notifcations_map', $data);
+            }
+            $this->session->set_flashdata('message', lang('notification_added'));
+                admin_redirect('notifications/rasd');
+            }
+          
+      
+        // echo json_encode(['status' => 'success', 'message' => 'File processed successfully.']);
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => 'Error parsing file: ' . $e->getMessage()]);
+        }
+    }
+
     public function add()
     {
         $this->form_validation->set_rules('comment', lang('comment'), 'required|min_length[3]');
