@@ -2251,6 +2251,7 @@ class Purchases extends MY_Controller
             $response_model = $this->transfers_model->get_rasd_required_fields($data_for_rasd);
             $body_for_rasd_dispatch = $response_model['payload'];
             $payload_for_accept_dispatch = $response_model['payload_for_accept_dispatch'];
+             log_message("info", json_encode($payload_for_accept_dispatch, true));
             $rasd_user = $response_model['user'];
             $rasd_pass = $response_model['pass'];
             $transfer_status = $response_model['status'];
@@ -2280,7 +2281,7 @@ class Purchases extends MY_Controller
                     $zadca_dispatch_response = $this->rasd->dispatch_product_133($body_for_rasd_dispatch, $auth_token);
                     
                     
-                    if(isset($zadca_dispatch_response['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                    if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
                         log_message("info", "Dispatch successful");
                         $rasd_success = true;
                         $this->transfers_model->update_notification_map($map_update);
@@ -2298,7 +2299,7 @@ class Purchases extends MY_Controller
                             'body' => $payload_for_accept_dispatch
                         ]; 
                         $accept_dispatch_result = $this->rasd->accept_dispatch_by_lot($accept_params);                        
-                        if(isset($accept_dispatch_result['DicOfDic']['MR']['TRID']) && $accept_dispatch_result['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){
+                        if(isset($accept_dispatch_result['body']['DicOfDic']['MR']['TRID']) && $accept_dispatch_result['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){
                             log_message("info", "Accept Dispatch successful");
                             $rasd_success = true;
                             $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $accept_dispatch_body);
