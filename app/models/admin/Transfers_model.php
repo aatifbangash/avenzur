@@ -92,6 +92,8 @@ class Transfers_model extends CI_Model
                     if((int) $qty_remaining < $qty){
                         continue;
                     }
+                }else{
+                    continue;
                 }
 
                 $c_2762 [] = 
