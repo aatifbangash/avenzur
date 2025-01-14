@@ -163,6 +163,29 @@ class RASDCore {
         return $this->post('');
     }
 
+
+
+    public function accept_dispatch_by_lot($params){
+        $ph_user = $params['user'];
+        $ph_pass = $params['pass'];
+        $body = $params['body'];
+        $this->set_base_url('https://qdttsbe.qtzit.com:10100/api/web');
+        $auth_response = $this->authenticate($ph_user, $ph_pass);
+        if(isset($auth_response['token'])){
+            $auth_token = $auth_response['token'];
+            $headers = array(
+            'FunctionName:APIReq',
+            'Token: '.$auth_token,
+            'Accept :*/*',
+            "Accept-Encoding : gzip, deflate, br"
+            );
+            $this->set_headers([]);
+            $this->set_headers($headers);
+            $this->set_body($body);
+            return $this->post('');
+        }
+    }
+
     public function accept_dispatch_125($params, $auth_token){
         $gln = $params['supplier_gln'];
         $dispatchId = $params['notification_id'];
