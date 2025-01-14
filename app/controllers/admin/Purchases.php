@@ -2256,6 +2256,7 @@ class Purchases extends MY_Controller
             $transfer_status = $response_model['status'];
             $ph_user = $response_model['pharmacy_user'];
             $ph_pass = $response_model['pharmacy_pass'];
+            $map_update = $response_model['update_map_table'];
             $rasd_success = false;
             log_message("info", json_encode($body_for_rasd_dispatch));
             $payload_used =  [
@@ -2282,6 +2283,7 @@ class Purchases extends MY_Controller
                     if(isset($zadca_dispatch_response['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
                         log_message("info", "Dispatch successful");
                         $rasd_success = true;
+                        $this->transfers_model->update_notification_map($map_update);
                         $accept_dispatch_body = [
                             'supplier_gln' => $response_model['source_gln'],
                             'warehouse_gln' => $response_model['destination_gln'],
