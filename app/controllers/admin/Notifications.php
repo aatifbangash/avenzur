@@ -307,7 +307,7 @@ class Notifications extends MY_Controller
          * Authenticate with RASD
          */
 
-        try{
+        
             $this->rasd->set_base_url("https://qdttsbe.qtzit.com:10101/api/web");
             $response = $this->rasd->authenticate($user, $password);
             if($response['token']){
@@ -340,9 +340,6 @@ class Notifications extends MY_Controller
                   $this->session->set_flashdata('error', 'Failed to Authenticate with RASD with ' . $user . ' '. $password);
                     admin_redirect('notifications/rasd');
             }
-        }catch(\Exception $e){
-                
-        }
 
 
  
