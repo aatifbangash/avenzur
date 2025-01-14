@@ -407,7 +407,7 @@ class Notifications extends MY_Controller
                     log_message("error", "Regiter Dispatch Failed");
                     log_message("error", json_encode($zadca_dispatch_response,true));
                 }
-                $this->cmt_model->add_rasd_transactions($payload_used,'accept_dispatch',$result, $zadca_dispatch_response);
+                $this->cmt_model->add_rasd_transactions($payload_used,'accept_dispatch',$result, $zadca_dispatch_response, $params);
        
             }else{
                 $result = false;
