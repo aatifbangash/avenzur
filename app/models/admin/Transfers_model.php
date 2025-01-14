@@ -12,7 +12,7 @@ class Transfers_model extends CI_Model
 
 
     public function get_rasd_required_fields($data ){
-
+            $notification_id = $data['notification_id'];
             $transfer_id = $data['transfer_id'];
             $this->db->select('status');
             $this->db->from('sma_transfers');
@@ -76,9 +76,24 @@ class Transfers_model extends CI_Model
             ];
 
             $c_2762 = [];
-
+            $c_2760  = [];
             foreach($products as $product){
                 $qty = (int) $product['quantity'];
+                $expiry = $product['expiry'] . " 00:00:00";
+                $this->db->select("id, qty_remaining");
+                $this->db->from("sma_rasd_notifcations_map");
+                $this->db->where('notification_id', $notification_id);
+                $this->db->where('gtin', $product['product_code']);
+                $this->db->where('batch',$product['batchno']);
+                $this->db->where('expiry_date',$expiry);
+                $query = $this->db->get();
+                if($query->num_rows() > 0){
+                    $qty_remaining = $query -> row()->qty_remaining;
+                    if((int) $qty_remaining < $qty){
+                        continue;
+                    }
+                }
+
                 $c_2762 [] = 
                 [
                         "223" =>   $product['product_code'],
@@ -86,8 +101,15 @@ class Transfers_model extends CI_Model
                         "220" => $product['expiry'],
                         "224" =>  (string) $qty
                 ];
+                $c_2760 [] =  [
+                    "223"  => $product['product_code'],
+                    "219"   =>  $product['batchno'], 
+                    "220" => $product['expiry'], 
+                    "224"   => (string) $qty 
+                ];
             }
             $payload['DicOfDT']['2762'] = $c_2762;
+            $payload_for_accept_dispatch = $this -> get_accept_dispatch_lot_params($destination_gln, $source_gln, $c_2760);
             return ['payload' => $payload, 
             'user' => $rasd_user,
              'pass' => $rasd_pass, 
@@ -95,10 +117,29 @@ class Transfers_model extends CI_Model
              'source_gln'  =>$source_gln, 
              'destination_gln' => $destination_gln,
              'pharmacy_user' => $rasd_pharmacy_user,
-             'pharmacy_pass' => $rasd_pharmacy_password
+             'pharmacy_pass' => $rasd_pharmacy_password,
+             'payload_for_accept_dispatch' =>$payload_for_accept_dispatch
             ];
     }
-
+    public function get_accept_dispatch_lot_params($pharmacy_gln, $warehouse_gln, $params){
+        
+       $payload =  
+       [ 
+            "DicOfDic"=> [ 
+                "2760" => [ 
+                    "215" => $pharmacy_gln
+                ], 
+                "MH" => [ 
+                "MN" => "2754", 
+                "222" =>  $warehouse_gln 
+                ] 
+            ], 
+            "DicOfDT"  => [ 
+                "2760"  =>  $params
+            ] 
+        ];
+        return $payload;
+    }
     public function get_cost_price_grand_total($transfer_id){
 
         $this->db->select('SUM(quantity * net_unit_cost) as total_cost_price');
