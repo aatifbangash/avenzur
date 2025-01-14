@@ -83,14 +83,13 @@ class Transfers_model extends CI_Model
                 $expiry = $product['expiry'] . " 00:00:00";
                 $this->db->select("id, qty_remaining");
                 $this->db->from("sma_rasd_notifcations_map");
-                $this->db->where('notification_id', $notification_id);
                 $this->db->where('gtin', $product['product_code']);
                 $this->db->where('batch',$product['batchno']);
                 $this->db->where('expiry_date',$expiry);
                 $query = $this->db->get();
+ 
                 if($query->num_rows() > 0){
                     $qty_remaining = $query -> row()->qty_remaining;
-                     
                     if((int) $qty_remaining < $qty){
                         continue;
                     }
@@ -99,6 +98,7 @@ class Transfers_model extends CI_Model
                             "qty" => (int)$qty_remaining   -   $qty
                      ];
                 }else{
+                    log_message("info", "NO DATA");
                     continue;
                 }
               
