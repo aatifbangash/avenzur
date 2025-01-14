@@ -77,25 +77,31 @@ class Transfers_model extends CI_Model
 
             $c_2762 = [];
             $c_2760  = [];
+            $to_update = [];
             foreach($products as $product){
                 $qty = (int) $product['quantity'];
                 $expiry = $product['expiry'] . " 00:00:00";
                 $this->db->select("id, qty_remaining");
                 $this->db->from("sma_rasd_notifcations_map");
-                $this->db->where('notification_id', $notification_id);
                 $this->db->where('gtin', $product['product_code']);
                 $this->db->where('batch',$product['batchno']);
                 $this->db->where('expiry_date',$expiry);
                 $query = $this->db->get();
+ 
                 if($query->num_rows() > 0){
                     $qty_remaining = $query -> row()->qty_remaining;
                     if((int) $qty_remaining < $qty){
                         continue;
                     }
+                    $to_update  []  = [
+                            "id" => $query -> row()->id,
+                            "qty" => (int)$qty_remaining   -   $qty
+                     ];
                 }else{
+                    log_message("info", "NO DATA");
                     continue;
                 }
-
+              
                 $c_2762 [] = 
                 [
                         "223" =>   $product['product_code'],
@@ -120,9 +126,17 @@ class Transfers_model extends CI_Model
              'destination_gln' => $destination_gln,
              'pharmacy_user' => $rasd_pharmacy_user,
              'pharmacy_pass' => $rasd_pharmacy_password,
-             'payload_for_accept_dispatch' =>$payload_for_accept_dispatch
+             'payload_for_accept_dispatch' =>$payload_for_accept_dispatch,
+             'update_map_table' =>   $to_update 
             ];
     }
+    public function update_notification_map($data){
+        foreach($data as $row){
+            $d = [ "qty_remaining" => $row['qty']  ];
+            $this->db->update('sma_rasd_notifcations_map', $d, ['id' => $row['id']]);
+        }
+    }
+
     public function get_accept_dispatch_lot_params($pharmacy_gln, $warehouse_gln, $params){
         
        $payload =  
