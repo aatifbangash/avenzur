@@ -320,7 +320,7 @@
                             </div>
                         <?php
                 } ?>
-                        <input type="hidden" name="reference_no" id="rseref" />
+                        <input type="hidden" name="reference_no" id="rseref" value="<?= $reference; ?>" />
                         <?php /*if ($Owner || $Admin || !$this->session->userdata('biller_id')) {
                     */?><!--
                             <div class="col-md-4">

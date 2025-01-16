@@ -588,7 +588,7 @@ class Returns_supplier extends MY_Controller
                 }
                 $this->data['inv_items'] = json_encode($pr);
                 $this->data['id'] = $_GET['purchase'];
-                $this->data['reference'] = '';
+                $this->data['reference'] = $_GET['purchase'];
                 $this->data['tax_rates'] = $this->site->getAllTaxRates();
                 $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('returns_supplier'), 'page' => lang('returns')], ['link' => '#', 'page' => lang('add_supplier_return')]];
                 $meta = ['page_title' => lang('add_supplier_return'), 'bc' => $bc];

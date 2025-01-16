@@ -2103,6 +2103,12 @@ class Purchases extends MY_Controller
             //$real_unit_cost = $this->sma->formatDecimal($purchase_inovice[$i]->real_unit_cost);
             $real_unit_cost = $unit_cost;
             $item_unit_quantity = $purchase_inovice[$i]->quantity;
+            $item_returned_quantity = $purchase_inovice[$i]->returned_quantity;
+
+            if($item_unit_quantity - $item_returned_quantity <= 0){
+                continue;
+            }
+
             $item_tax_rate = $purchase_inovice[$i]->tax_rate_id;
             $item_batchno = $purchase_inovice[$i]->batchno;
             $item_serial_no = $purchase_inovice[$i]->serial_number;
@@ -2179,11 +2185,11 @@ class Purchases extends MY_Controller
                     'option_id' => $item_option,
                     'net_unit_cost' => $net_cost,
                     'unit_cost' => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),
-                    'quantity' => $item_quantity,
+                    'quantity' => ($item_quantity - $item_returned_quantity),
                     'product_unit_id' => $item_unit,
                     'product_unit_code' => $unit->code,
-                    'unit_quantity' => $item_unit_quantity,
-                    'quantity_balance' => $item_quantity,
+                    'unit_quantity' => ($item_unit_quantity - $item_returned_quantity),
+                    'quantity_balance' => ($item_quantity - $item_returned_quantity),
                     'warehouse_id' => $to_warehouse,
                     'item_tax' => $pr_item_tax,
                     'tax_rate_id' => $item_tax_rate,
