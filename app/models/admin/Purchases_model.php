@@ -372,6 +372,33 @@ class Purchases_model extends CI_Model
         return false;
     }
 
+    public function getPurchaseItemsWithExclude($purchase_id, $avz_item_codes){
+        $this->db->select('purchase_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate,
+            products.unit, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, 
+            products.second_name as second_name, products.item_code')
+            ->join('products', 'products.id=purchase_items.product_id', 'left')
+            ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
+            ->join('tax_rates', 'tax_rates.id=purchase_items.tax_rate_id', 'left')
+            ->group_by('purchase_items.id')
+            ->order_by('id', 'asc')
+            ->where('purchase_items.purchase_id', $purchase_id);
+    
+        // Exclude items whose item_code exists in $avz_item_codes
+        if (!empty($avz_item_codes)) {
+            $this->db->where_not_in('purchase_items.avz_item_code', $avz_item_codes);
+        }
+    
+        $q = $this->db->get('purchase_items');
+        if ($q->num_rows() > 0) {
+            $data = [];
+            foreach ($q->result() as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getAllPurchaseItems($purchase_id)
     {
         $this->db->select('purchase_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate,
