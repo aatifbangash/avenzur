@@ -71,6 +71,15 @@ class Returns_supplier_model extends CI_Model
                         $this->site->syncQuantity(null, null, null, $combo_item->id);
                     }
                 }
+
+                // update original purchase with returned quantity
+                if ($data['reference_no'] && $item['avz_item_code']) {
+                    $this->db->update(
+                        'sma_purchase_items', 
+                        ['returned_quantity' => $item['quantity']], 
+                        ['purchase_id' => $data['reference_no'], 'avz_item_code' => $item['avz_item_code']]
+                    );
+                }
             }
             $this->sma->update_award_points($data['grand_total'], $data['customer_id'], $data['created_by'], true);
         }
