@@ -2045,6 +2045,7 @@ class Purchases extends MY_Controller
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['payments'] = $this->purchases_model->getPurchasePayments($id);
+        $this->data['purchase_items'] = $this->purchases_model->getAllPurchaseItems($id);
         $this->load->view($this->theme . 'purchases/transfer', $this->data);
 
     }
@@ -2055,7 +2056,9 @@ class Purchases extends MY_Controller
 
         $purchase_id = $this->input->post('purchase_id');
         $warehouse = $this->input->post('warehouse');
-        $purchase_inovice = $this->purchases_model->getAllPurchaseItems($purchase_id);
+        $product_ids = $this->input->post('product_ids');
+        
+        $purchase_inovice = $this->purchases_model->getPurchaseItemsWithExclude($purchase_id, $product_ids);
         $purchase_detail = $this->purchases_model->getPurchaseByID($purchase_id);
 
         $date = date('Y-m-d H:i:s');
