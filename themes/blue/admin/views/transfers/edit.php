@@ -232,7 +232,7 @@
 
                         var tickOrCross = found ? '✔' : '✖';
                         var row = `
-                            <tr class="modal-item" tabindex="0" data-item-id="${item.row.avz_item_code}">
+                            <tr style="cursor:pointer;" class="modal-item" tabindex="0" data-item-id="${item.row.avz_item_code}">
                                 <td>${count}</td>
                                 <td data-avzcode="${item.row.avz_item_code}">${item.row.avz_item_code}</td>
                                 <td data-product="${item.row.name}">${item.row.name}</td>
@@ -252,6 +252,7 @@
                     $('#itemTableBody').on('click', 'tr', function () {
                         
                         var clickedItemCode = $(this).data('item-id');
+                        var clickedItemExpiry = $(this).find('td[data-expiry]').data('expiry') || $(this).attr('data-expiry');
                         var selectedItem = data.find(function (item) {
                             return String(item.row.avz_item_code).trim() === String(clickedItemCode).trim();
                         });
