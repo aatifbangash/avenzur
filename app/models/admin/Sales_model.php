@@ -125,6 +125,23 @@ class Sales_model extends CI_Model
         
         return $results;
     }
+    public function get_rasd_credential($warehouse_id){
+        $this->db->select("rasd_user, rasd_pass");
+        $this->db->from("sma_warehouses");
+        $this->db->where("sma_warehouses.id", $warehouse_id);
+        $query = $this->db->get();
+        $rasd_pharmacy_user = "";
+        $rasd_pharmacy_password = "";
+        if($query->num_rows() > 0){
+            $rasd_pharmacy_user = $query ->row()->rasd_user;
+            $rasd_pharmacy_password = $query ->row()->rasd_pass;
+        }
+        $res = [
+            "user" => $rasd_pharmacy_user,
+            "pass" => $rasd_pharmacy_password
+        ];
+        return $res;
+    }
     public function mark_sales_as_reported($sale_ids){
        $this->db->where_in('sale_id', $sale_ids);
        $this->db->update('sma_serial_numbers', ['is_pushed' => 1]);
