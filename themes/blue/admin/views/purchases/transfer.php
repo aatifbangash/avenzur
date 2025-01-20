@@ -28,6 +28,24 @@
                     </div>
                 </div>
             </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <?= lang('Exclude Products', 'Exclude Products') ?>
+                        <select class="form-control" id="cf1" name="product_ids[]" multiple="multiple" >
+                            <option value="0">All</option>
+                                <?php
+                                    foreach($purchase_items as $pr)
+                                    {
+                                        echo '<option value="'.$pr->avz_item_code.'">'.' ('.$pr->avz_item_code.') '.$pr->product_name.'</option>';
+                                    }
+                                ?>                  
+                        </select><br /><br />
+                        
+                    </div>
+                </div>
+            </div>
         </div>
         <input type="hidden" type="purchase_id" name="purchase_id" value="<?= $purchase_id; ?>" />
         <div class="modal-footer">

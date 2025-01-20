@@ -555,7 +555,10 @@ class Returns_supplier extends MY_Controller
                     $row->unit = $item->product_unit_id;
                     //$row->qty = $item->unit_quantity - $row->bonus;
                     //$row->oqty = $item->unit_quantity - $row->bonus;
-                    $row->qty = $item->total_quantity - $row->bonus;
+                    //$row->qty = $item->total_quantity - $row->bonus;
+
+                    $row->qty = $item->quantity - $row->bonus;
+
                     $row->oqty = $item->total_quantity - $row->bonus;
                     $row->total_quantity = $item->total_quantity;
                     
@@ -585,7 +588,7 @@ class Returns_supplier extends MY_Controller
                 }
                 $this->data['inv_items'] = json_encode($pr);
                 $this->data['id'] = $_GET['purchase'];
-                $this->data['reference'] = '';
+                $this->data['reference'] = $_GET['purchase'];
                 $this->data['tax_rates'] = $this->site->getAllTaxRates();
                 $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('returns_supplier'), 'page' => lang('returns')], ['link' => '#', 'page' => lang('add_supplier_return')]];
                 $meta = ['page_title' => lang('add_supplier_return'), 'bc' => $bc];
