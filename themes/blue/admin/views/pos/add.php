@@ -1735,15 +1735,16 @@ var lang = {
         });
 
         $(document).on('click', '.addButton', function () {
-            const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+            const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(5, Decimal.ROUND_DOWN);
             if (pa <= 5) {
                 var total_added = 0;
                 for (let index = 1; index < 6; index++) {
                     total_added += parseFloat($('#amount_'+index).val() ? $('#amount_'+index).val() : 0);
                 }
                 
-                var bal =toTwoDecimals(grand_total).minus(toTwoDecimals(total_added)) ;
+                var bal = toTwoDecimals(grand_total).minus(toTwoDecimals(total_added)) ;
                 bal = bal.toNumber();
+                
                 //var bal = toTwoDecimals( toTwoDecimals(grand_total) - toTwoDecimals(total_added) ).toNumber(); //parseFloat(parseFloat(grand_total) - parseFloat(total_added));
                 if (bal > 0) {
                     $('#paid_by_1, #pcc_type_1').select2('destroy');
