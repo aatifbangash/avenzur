@@ -906,9 +906,13 @@ class Pos extends MY_Controller
         return $payload;
     }
 
-    public function publish_sale($grouped_results){
-        $res = $this->RASDCore->authenticate('A.3bdellateef@gmail.com', 'A123456789');
+    public function publish_sale($grouped_results, $warehouse_id){
+        $cred = $this->sales_model->get_rasd_credential($warehouse_id);
+        $this->RASDCore->set_base_url('https://qdttsbe.qtzit.com:10100/api/web');
+        $res = $this->RASDCore->authenticate($cred['user'],$cred['pass']);
+      
         if(isset($res['token']) && $res['token']){
+              
             $auth_token = $res['token'];
             $this->RASDCore->set_headers([]);
             $this->RASDCore->set_auth_token($auth_token);
@@ -1317,7 +1321,7 @@ class Pos extends MY_Controller
                             }
                             $date = date('Y-m-d H:i:s');
                             $request = json_encode($zatca_payload, true);
-                            $response = json_decode($zatca_response, true);
+                            $response = json_encode($zatca_response, true);
                             $reporting_data = [
                                 "sale_id" => $sale['sale_id'],
                                 "date" => $date,
@@ -1340,7 +1344,7 @@ class Pos extends MY_Controller
                         $this->pos_model->addSerialsBatch($serials_info);                       
                         $sales_to_report_grouped = $this->sales_model->get_unreported_sales($serial_ids);
                         if(!empty($sales_to_report_grouped)){
-                           $this->publish_sale($sales_to_report_grouped);
+                           $this->publish_sale($sales_to_report_grouped, $warehouse_id);
                         }
                     }
 
