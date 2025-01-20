@@ -921,20 +921,21 @@ class Returns_supplier extends MY_Controller
 
         $inv_items = $this->returns_supplier_model->getReturnItems($rid);
 
-        foreach ($inv_items as $item) {
+        //foreach ($inv_items as $item) {
             $proid = $item->product_id;
             $product = $this->site->getProductByID($proid);
 
-        //supplier
-         $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'D',
-                'ledger_id' => $supplier->ledger_account,
-                'amount' => ($inv->grand_total),
-                'narration' => 'Accounts payable'
-            )
-         );
+            //supplier
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $supplier->ledger_account,
+                    'amount' => ($inv->grand_total),
+                    'narration' => 'Accounts payable'
+                )
+            );
+            
             //products
             $entryitemdata[] = array(
                 'Entryitem' => array(
@@ -946,7 +947,7 @@ class Returns_supplier extends MY_Controller
                     'narration' => 'Inventory'
                 )
             );
-        }
+        //}
 
         //vat on purchase
         $entryitemdata[] = array(
