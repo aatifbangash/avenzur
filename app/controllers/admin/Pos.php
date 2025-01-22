@@ -945,6 +945,7 @@ class Pos extends MY_Controller
     public function index($sid = null)
     {
         $this->sma->checkPermissions();
+        //echo $this->input->post();exit;
 
         if (!$this->pos_settings->default_biller || !$this->pos_settings->default_customer || !$this->pos_settings->default_category) {
             $this->session->set_flashdata('warning', lang('please_update_settings'));
@@ -1420,12 +1421,12 @@ class Pos extends MY_Controller
 
                             if($paidBillType =="cash"){
                                 // check if cash has decimal 
-                                 $paidAmount = $payemntsType->pos_paid ;
+                                 $paidAmount = $payemntsType->amount ;
                                  //echo 'paid amount:'.$paidAmount;
                                  //echo 'floor:'. floor($paidAmount);
                                  
                                 $halalaAmount = 0;
-                                if( floor($payemntsType->pos_paid)  != $payemntsType->pos_paid) {
+                                if( floor($paidAmount)  != $paidAmount) {
                                     $integerPart = floor($payemntsType->pos_paid);
                                     $decimalPart = $paidAmount - $integerPart;
                                     //echo 'integer'.$integerPart;
