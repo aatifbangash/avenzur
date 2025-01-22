@@ -3285,24 +3285,6 @@ if (isset($print) && !empty($print)) {
     include 'remote_printing.php';
 }
 ?>
-<script>
-
-document.getElementById('pos-sale-form').addEventListener('submit', function(event) {
-    event.preventDefault(); 
-console.log("Here");
-    var balance  = document.getElementById('balance').textContent;
-    if( balance < 0){
-        bootbox.alert('<?= lang('paid_l_t_payable'); ?>');
-        
-        return false;
-    }
-
-
-   return false;
-   // this.submit(); 
-});
-
-</script>
 
 <script type="text/javascript" src="<?= base_url('assets/custom/pos.js') ?>"></script>
 <script type="text/javascript" src="<?= base_url('assets/custom/pos.js') ?>"></script>
