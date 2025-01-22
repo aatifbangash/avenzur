@@ -2504,14 +2504,15 @@ var lang = {
 
         $(document).on('click', '#submit-sale', function () {
             if (total_paid == 0 || total_paid < grand_total) {
-                bootbox.confirm("<?=lang('paid_l_t_payable');?>", function (res) {
+                /*bootbox.confirm("<?=lang('paid_l_t_payable');?>", function (res) {
                     if (res == true) {
                         $('#pos_note').val(localStorage.getItem('posnote'));
                         $('#staff_note').val(localStorage.getItem('staffnote'));
                         $('#submit-sale').text('<?=lang('loading');?>').attr('disabled', true);
                         $('#pos-sale-form').submit();
                     }
-                });
+                });*/
+                bootbox.alert("<?=lang('Paid amount is less than the payable amount. Please press OK to fix the sale.');?>");
                 return false;
             } else {
                 $('#pos_note').val(localStorage.getItem('posnote'));
@@ -3284,6 +3285,25 @@ if (isset($print) && !empty($print)) {
     include 'remote_printing.php';
 }
 ?>
+<script>
+
+document.getElementById('pos-sale-form').addEventListener('submit', function(event) {
+    event.preventDefault(); 
+console.log("Here");
+    var balance  = document.getElementById('balance').textContent;
+    if( balance < 0){
+        bootbox.alert('<?= lang('paid_l_t_payable'); ?>');
+        
+        return false;
+    }
+
+
+   return false;
+   // this.submit(); 
+});
+
+</script>
+
 <script type="text/javascript" src="<?= base_url('assets/custom/pos.js') ?>"></script>
 <script type="text/javascript" src="<?= base_url('assets/custom/pos.js') ?>"></script>
 <script type="text/javascript" src="<?= $assets ?>js/plugins/decimal/decimal.js"></script>
