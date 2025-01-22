@@ -24,7 +24,7 @@ class Pos extends MY_Controller
         $this->session->set_userdata('last_activity', now());
         $this->lang->admin_load('pos', $this->Settings->user_language);
         $this->load->library('form_validation');
-        $this->load->library('RASDCore');
+        $this->load->library('RASDCore',$params=null, 'rasd');
         $this->load->admin_model("Zetca_model");
         $this->zatca_enabled = false;
         $d = $this->Zetca_model->get_zetca_settings();
@@ -908,24 +908,24 @@ class Pos extends MY_Controller
 
     public function publish_sale($grouped_results, $warehouse_id){
         $cred = $this->sales_model->get_rasd_credential($warehouse_id);
-        $this->RASDCore->set_base_url('https://qdttsbe.qtzit.com:10100/api/web');
-        $res = $this->RASDCore->authenticate($cred['user'],$cred['pass']);
+        $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10100/api/web');
+        $res = $this->rasd->authenticate($cred['user'],$cred['pass']);
       
         if(isset($res['token']) && $res['token']){
               
             $auth_token = $res['token'];
-            $this->RASDCore->set_headers([]);
-            $this->RASDCore->set_auth_token($auth_token);
+            $this->rasd->set_headers([]);
+            $this->rasd->set_auth_token($auth_token);
             $headers = array(
             'FunctionName:APIReq',
             'Token: '.$auth_token,
             'Accept :*/*',
             "Accept-Encoding : gzip, deflate, br"
             );
-            $this->RASDCore->set_headers($headers);
+            $this->rasd->set_headers($headers);
             foreach ($grouped_results as $gln => $items) {
                 $payload = $this->create_payload_for_gln($gln, $items);
-                $response = $this->RASDCore->patient_pharmacy_sale_product_160($payload);
+                $response = $this->rasd->patient_pharmacy_sale_product_160($payload);
                 $response_body = $response['body'];
                 $this->process_api_response($response_body, $items);                
             }  
@@ -942,6 +942,49 @@ class Pos extends MY_Controller
             echo "Error Calling API";
         }
     }
+
+    public function process_rasd_pharmacy_sales(){
+        $serials_data = $this->pos_model->getUnprocessedSerials();
+
+        if ($serials_data->num_rows() > 0) {
+            foreach (($serials_data->result()) as $row) {
+                $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10100/api/web');
+                $res = $this->rasd->authenticate($row->rasd_user,$row->rasd_pass);
+            
+                if(isset($res['token']) && $res['token']){
+                    $auth_token = $res['token'];
+                    $this->rasd->set_headers([]);
+                    $this->rasd->set_auth_token($auth_token);
+                    $headers = array(
+                    'FunctionName:APIReq',
+                    'Token: '.$auth_token,
+                    'Accept :*/*',
+                    "Accept-Encoding : gzip, deflate, br"
+                    );
+                    $this->rasd->set_headers($headers);
+
+                    $item = array();
+
+                    $item[] = (object)[
+                        'batchno' => $row->batchno,
+                        'serial_number' => $row->serial_number,
+                        'gtin' => $row->gtin,
+                    ];
+                    $payload = $this->create_payload_for_gln($row->pharmacy_gln, $item);
+                    $response = $this->rasd->patient_pharmacy_sale_product_160($payload);
+                    $response_body = $response['body'];
+                    
+                    if (isset($response_body['DicOfDic']['MR']['TRID'])&&$response_body['DicOfDic']['MR']['TRID'] ) {
+                        $this->sales_model->mark_sales_as_reported([$row->sale_id]);
+                    } else {
+                        // Log the error
+                        echo "Error Calling API";
+                    }
+                }
+            }
+        }
+    }
+
     public function index($sid = null)
     {
         $this->sma->checkPermissions();
@@ -1343,10 +1386,10 @@ class Pos extends MY_Controller
                         }
                         unset($serialArr); // Unset reference after loop to prevent accidental modifications
                         $this->pos_model->addSerialsBatch($serials_info);                       
-                        $sales_to_report_grouped = $this->sales_model->get_unreported_sales($serial_ids);
-                        if(!empty($sales_to_report_grouped)){
+                        //$sales_to_report_grouped = $this->sales_model->get_unreported_sales($serial_ids);
+                        /*if(!empty($sales_to_report_grouped)){
                            $this->publish_sale($sales_to_report_grouped, $warehouse_id);
-                        }
+                        }*/
                     }
 
                     $this->session->set_userdata('remove_posls', 1);

@@ -165,6 +165,18 @@ class Pos_model extends CI_Model
         return false;
     }
 
+    public function getUnprocessedSerials(){
+        $this->db->select('sma_serial_numbers.*, sma_sales.warehouse_id, sma_warehouses.gln as pharmacy_gln, sma_warehouses.rasd_user, sma_warehouses.rasd_pass');
+        $this->db->from('sma_serial_numbers');
+        $this->db->join('sma_sales', 'sma_serial_numbers.sale_id = sma_sales.id');
+        $this->db->join('sma_warehouses', 'sma_warehouses.id = sma_sales.warehouse_id');
+        $this->db->where('sma_serial_numbers.date_created >=', date('Y-m-d H:i:s', strtotime('-2 days')));
+
+        $notification_serials = $this->db->get();
+        return $notification_serials;
+        
+    }
+
     public function addSale($data = [], $items = [], $payments = [], $sid = null)
     {
         // Sequence-Code
