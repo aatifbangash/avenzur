@@ -143,11 +143,11 @@ class Transfers_model extends CI_Model
        [ 
             "DicOfDic"=> [ 
                 "2760" => [ 
-                    "215" =>  $pharmacy_gln
+                    "215" =>  $warehouse_gln
                 ], 
                 "MH" => [ 
                 "MN" => "2754", 
-                "222" => $warehouse_gln 
+                "222" => $pharmacy_gln
                 ] 
             ], 
             "DicOfDT"  => [ 
