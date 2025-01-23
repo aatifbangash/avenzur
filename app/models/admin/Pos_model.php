@@ -170,7 +170,8 @@ class Pos_model extends CI_Model
         $this->db->from('sma_serial_numbers');
         $this->db->join('sma_sales', 'sma_serial_numbers.sale_id = sma_sales.id');
         $this->db->join('sma_warehouses', 'sma_warehouses.id = sma_sales.warehouse_id');
-        $this->db->where('sma_serial_numbers.date_created >=', date('Y-m-d H:i:s', strtotime('-2 days')));
+        $this->db->where('sma_serial_numbers.date_created >=', date('Y-m-d H:i:s', strtotime('-3 days')));
+        $this->db->where('sma_serial_numbers.is_pushed', 0);
 
         $notification_serials = $this->db->get();
         return $notification_serials;
