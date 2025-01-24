@@ -34,7 +34,6 @@
                     <div class="form-group">
                         <?= lang('Exclude Products', 'Exclude Products') ?>
                         <select class="form-control" id="cf1" name="product_ids[]" multiple="multiple" >
-                            <option value="0">All</option>
                                 <?php
                                     foreach($purchase_items as $pr)
                                     {
@@ -49,7 +48,12 @@
         </div>
         <input type="hidden" type="purchase_id" name="purchase_id" value="<?= $purchase_id; ?>" />
         <div class="modal-footer">
-            <?php echo form_submit('add_stock', lang('Transfer Stock'), 'class="btn btn-primary"'); ?>
+            <?php 
+            $data = array(
+                'name' => 'add_stock',
+                'onclick' => "if(confirm('Are you sure to proceed?')) { this.style.pointerEvents = 'none'; this.value = 'Processing...'; return true; } else { return false; }"
+            );
+            echo form_submit($data, lang('Transfer Stock'), 'class="btn btn-primary" id="transfer_stock"'); ?>
         </div>
         <?php echo form_close(); ?>
     </div>
@@ -62,6 +66,7 @@
     if(invoiced == ''){
         window.location.href = 'https://avenzur.com/admin/purchases';
     }
+
 </script>
 
 <?php } ?>
