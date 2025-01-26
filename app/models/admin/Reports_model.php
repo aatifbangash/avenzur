@@ -4507,7 +4507,16 @@ class Reports_model extends CI_Model
                    
               SELECT DATE(p.date) as transaction_date,
                sum(p.amount) , 
-                SUM( ROUND(COALESCE(if(p.paid_by = 'cash' , p.amount, 0), 0)) ) as total_cash,
+                 SUM(
+                    CASE
+                    WHEN p.paid_by = 'cash' THEN
+                        CASE
+                        WHEN MOD(p.amount, 1) > 0.50 THEN FLOOR(p.amount) + 1
+                        ELSE FLOOR(p.amount)
+                        END
+                    ELSE 0
+                    END
+                ) AS total_cash,
                 sum( if(p.paid_by = 'cash' , p.amount, 0) ) as total_cash_old,
                 sum( if(p.paid_by = 'CC' , p.amount, 0) ) as total_credit_card,
                 0 AS total_discount,
