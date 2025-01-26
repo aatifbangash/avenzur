@@ -949,7 +949,11 @@ class Pos_model extends CI_Model
 
        $sql = "
         SELECT 
-            SUM( ROUND(COALESCE(payments.amount, 0)) ) AS total
+            SUM( CASE
+                WHEN MOD(amount, 1) > 0.50 THEN FLOOR(amount) + 1
+                ELSE FLOOR(amount)
+                END 
+            ) AS total
         FROM 
             sma_payments payments
         LEFT JOIN 
