@@ -133,7 +133,8 @@ class Notifications extends MY_Controller
     // Load the Excel file
     try {
         if (($handle = fopen($filePath, 'r')) !== false) {
-             $header = fgetcsv($handle);
+             //$header = fgetcsv($handle);
+             $header = fgetcsv($handle, 1000, ';');
              if (!$header || count($header) < 2) {
                     echo json_encode(['status' => 'error', 'message' => 'Invalid CSV format.']);
                     return;
@@ -141,7 +142,7 @@ class Notifications extends MY_Controller
             
 
             // Assuming the first row contains headers, start from the second row
-             while (($row = fgetcsv($handle)) !== false) {
+             while (($row = fgetcsv($handle, 1000, ';')) !== false) {
                 
                 // Map fields to variables (modify as per your file structure)
                 $field1 = $row[0] ?? null; // First column
@@ -149,6 +150,12 @@ class Notifications extends MY_Controller
                 $field3 = $row[2] ?? null; // Third column
                 $field4 = $row[3] ?? null; // Third column
                 // Add more fields as necessary
+
+                // Convert date format from DD-MM-YYYY to YYYY-MM-DD
+                if (!empty($field4)) {
+                    $date = DateTime::createFromFormat('d-m-Y', $field4);
+                    $field4 = $date ? $date->format('Y-m-d') : null;
+                }
                
                 // Process each row (e.g., save to the database)
                 $data = [
