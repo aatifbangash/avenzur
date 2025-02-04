@@ -133,16 +133,22 @@ class Notifications extends MY_Controller
     // Load the Excel file
     try {
         if (($handle = fopen($filePath, 'r')) !== false) {
+             $delimeter = ';';
              //$header = fgetcsv($handle);
-             $header = fgetcsv($handle, 1000, ';');
+             $header = fgetcsv($handle, 1000, $delimeter);
              if (!$header || count($header) < 2) {
+                $delimeter = ',';
+                $header = fgetcsv($handle, 1000, $delimeter);
+
+                if (!$header || count($header) < 2) {
                     echo json_encode(['status' => 'error', 'message' => 'Invalid CSV format.']);
                     return;
+                }
             }
             
 
             // Assuming the first row contains headers, start from the second row
-             while (($row = fgetcsv($handle, 1000, ';')) !== false) {
+             while (($row = fgetcsv($handle, 1000, $delimeter)) !== false) {
                 
                 // Map fields to variables (modify as per your file structure)
                 $field1 = $row[0] ?? null; // First column
