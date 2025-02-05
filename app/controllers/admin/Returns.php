@@ -669,6 +669,20 @@ class Returns extends MY_Controller
 
         $amount_to_pay = $totalSalePrice + $inv->total_tax - $inv->total_discount;
 
+        //echo '<pre>';print_r($warehouse_ledgers);exit;
+
+        if($warehouse_ledgers->warehouse_type == 'pharmacy'){
+            // cost of goods sold
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $warehouse_ledgers->cogs_ledger,
+                'amount' =>  $inv->cost_goods_sold,
+                'narration' => 'cost of goods sold'
+                )
+            );
+        }else{
             // cost of goods sold
             $entryitemdata[] = array(
                 'Entryitem' => array(
@@ -679,6 +693,8 @@ class Returns extends MY_Controller
                 'narration' => 'cost of goods sold'
                 )
             );
+        }
+            
 
               // inventory
         $entryitemdata[] = array(
@@ -691,6 +707,19 @@ class Returns extends MY_Controller
             )
         );
 
+
+        if($warehouse_ledgers->warehouse_type == 'pharmacy'){
+            // //discount
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $warehouse_ledgers->discount_ledger,
+                    'amount' => $inv->total_discount,
+                    'narration' => 'discount'
+                )
+            );
+        }else{
             // //discount
             $entryitemdata[] = array(
                 'Entryitem' => array(
@@ -701,47 +730,83 @@ class Returns extends MY_Controller
                     'narration' => 'discount'
                 )
             );
-            
+        }
+        
 
-
-        // //cash
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-            'entry_id' => $insert_id,
-            'dc' => 'C',
-            'ledger_id' => $customer->ledger_account,
-            //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
-            'amount' => $inv->grand_total,
-            'narration' => 'customer'
-            )
-        );
-
-    
-
-      
-        // // sale account
-        $entryitemdata[] = array(
-            'Entryitem' => array(
+        if($warehouse_ledgers->warehouse_type == 'pharmacy'){
+            // //cash
+            $entryitemdata[] = array(
+                'Entryitem' => array(
                 'entry_id' => $insert_id,
-                'dc' => 'D',
-                'ledger_id' => $customer->sales_ledger,
-                'amount' => $inv->total,
-                'narration' => 'sale account'
-            )
-        );
-            
+                'dc' => 'C',
+                'ledger_id' => $warehouse_ledgers->fund_books_ledger,
+                //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
+                'amount' => $inv->grand_total,
+                'narration' => 'customer'
+                )
+            );
+        }else{
+            // //cash
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $customer->ledger_account,
+                //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
+                'amount' => $inv->grand_total,
+                'narration' => 'customer'
+                )
+            );
+        }
 
     
-        // //vat on sale
-        $entryitemdata[] = array(
-                    'Entryitem' => array(
-                        'entry_id' => $insert_id,
-                        'dc' => 'D',
-                        'ledger_id' => $this->vat_on_sale,
-                        'amount' => $inv->total_tax,
-                        'narration' => 'vat on sale'
-                    )
-                );      
+        if($warehouse_ledgers->warehouse_type == 'pharmacy'){
+            // // sale account
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $warehouse_ledgers->sales_ledger,
+                    'amount' => $inv->total,
+                    'narration' => 'sale account'
+                )
+            );
+        }else{
+            // // sale account
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $customer->sales_ledger,
+                    'amount' => $inv->total,
+                    'narration' => 'sale account'
+                )
+            );
+        }
+      
+        if($warehouse_ledgers->warehouse_type == 'pharmacy'){
+            // //vat on sale
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $warehouse_ledgers->vat_on_sales_ledger,
+                    'amount' => $inv->total_tax,
+                    'narration' => 'vat on sale'
+                )
+            );
+        }else{
+            // //vat on sale
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $this->vat_on_sale,
+                    'amount' => $inv->total_tax,
+                    'narration' => 'vat on sale'
+                )
+            );
+        }      
         
         $total_invoice_entry = $inv->total_tax + $totalSalePrice + $totalPurchasePrice;
         
