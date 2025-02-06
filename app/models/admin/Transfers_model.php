@@ -60,65 +60,104 @@ class Transfers_model extends CI_Model
 
             }
 
-            $payload = [
-                "DicOfDic" => [
-                    "2762" => [
-                        "215" =>  $destination_gln
-                    ],
-                    "MH" => [
-                        "MN" => "2756",
-                        "222" =>  $source_gln
-                    ]
-                ],
-                "DicOfDT" =>  [
-                    "2762" => []
-                ]
-            ];
+            // $payload = [
+            //     "DicOfDic" => [
+            //         "2762" => [
+            //             "215" =>  $destination_gln
+            //         ],
+            //         "MH" => [
+            //             "MN" => "2756",
+            //             "222" =>  $source_gln
+            //         ]
+            //     ],
+            //     "DicOfDT" =>  [
+            //         "2762" => []
+            //     ]
+            // ];
 
             $c_2762 = [];
             $c_2760  = [];
             $to_update = [];
+            $count = 0;
+          
+            $batch_size = 20; // Max size per payload batch
+            $payload_index = 0;
+            $payloads = [];
+            $payloads_accept_dispatch = [];
             foreach($products as $product){
                 $qty = (int) $product['quantity'];
                 $expiry = $product['expiry'] . " 00:00:00";
+
                 $this->db->select("id, qty_remaining");
                 $this->db->from("sma_rasd_notifcations_map");
                 $this->db->where('gtin', $product['product_code']);
-                $this->db->where('batch',$product['batchno']);
-                $this->db->where('expiry_date',$expiry);
+                $this->db->where('batch', $product['batchno']);
+                $this->db->where('expiry_date', $expiry);
                 $query = $this->db->get();
- 
-                if($query->num_rows() > 0){
-                    $qty_remaining = $query -> row()->qty_remaining;
-                    if((int) $qty_remaining < $qty){
+
+                if ($query->num_rows() > 0) {
+                    $qty_remaining = $query->row()->qty_remaining;
+                    if ((int) $qty_remaining < $qty) {
                         continue;
                     }
-                    $to_update  []  = [
-                            "id" => $query -> row()->id,
-                            "qty" => (int)$qty_remaining   -   $qty
-                     ];
-                }else{
+                    $to_update[] = [
+                        "id" => $query->row()->id,
+                        "qty" => (int) $qty_remaining - $qty
+                    ];
+                } else {
                     log_message("info", "NO DATA");
                     continue;
                 }
-              
-                $c_2762 [] = 
-                [
-                        "223" =>   $product['product_code'],
-                        "2766" => $product['batchno'],
-                        "220" => $product['expiry'],
-                        "224" =>  (string) $qty
+
+                $c_2762[] = [
+                    "223" => $product['product_code'],
+                    "2766" => $product['batchno'],
+                    "220" => $product['expiry'],
+                    "224" => (string) $qty
                 ];
-                $c_2760 [] =  [
-                    "223"  => $product['product_code'],
-                    "219"   =>  $product['batchno'], 
-                    "220" => $product['expiry'], 
-                    "224"   => (string) $qty 
+
+                $c_2760[] = [
+                    "223" => $product['product_code'],
+                    "219" => $product['batchno'],
+                    "220" => $product['expiry'],
+                    "224" => (string) $qty
                 ];
+
+                // If c_2762 reaches the batch size, create a payload
+                if (count($c_2762) == $batch_size) {
+                    $payloads[$payload_index] = [
+                        "DicOfDic" => [
+                            "2762" => ["215" => $destination_gln],
+                            "MH" => ["MN" => "2756", "222" => $source_gln]
+                        ],
+                        "DicOfDT" => ["2762" => $c_2762]
+                    ];
+                    $payloads_accept_dispatch[$payload_index] =  $this -> get_accept_dispatch_lot_params($destination_gln, $source_gln, $c_2760);
+
+                    $c_2762 = []; // Reset for next batch
+                    $c_2760 = [];
+                    $payload_index++;
+
+                }
+                 
             }
-            $payload['DicOfDT']['2762'] = $c_2762;
-            $payload_for_accept_dispatch = $this -> get_accept_dispatch_lot_params($destination_gln, $source_gln, $c_2760);
-            return ['payload' => $payload, 
+            //Add Remaining.
+            if (!empty($c_2762)) {
+                $payloads[$payload_index] = [
+                    "DicOfDic" => [
+                        "2762" => ["215" => $destination_gln],
+                        "MH" => ["MN" => "2756", "222" => $source_gln]
+                    ],
+                    "DicOfDT" => ["2762" => $c_2762]
+                ];
+             
+                 $payloads_accept_dispatch[$payload_index] = $this -> get_accept_dispatch_lot_params($destination_gln, $source_gln, $c_2760);
+            }
+
+
+
+
+            return ['payload' => $payloads, 
             'user' => $rasd_user,
              'pass' => $rasd_pass, 
              'status' => $status, 
@@ -126,7 +165,7 @@ class Transfers_model extends CI_Model
              'destination_gln' => $destination_gln,
              'pharmacy_user' => $rasd_pharmacy_user,
              'pharmacy_pass' => $rasd_pharmacy_password,
-             'payload_for_accept_dispatch' =>$payload_for_accept_dispatch,
+             'payload_for_accept_dispatch' =>$payloads_accept_dispatch,
              'update_map_table' =>   $to_update 
             ];
     }
