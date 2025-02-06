@@ -88,9 +88,14 @@ class Transfers_model extends CI_Model
                 $qty = (int) $product['quantity'];
                 $expiry = $product['expiry'] . " 00:00:00";
 
+                $gtin = $product['product_code'];
+                if (strlen($gtin) < 13) {  
+                    $gtin = str_pad($gtin, 13, "0", STR_PAD_LEFT); // Prepend zero if needed
+                }
+
                 $this->db->select("id, qty_remaining");
                 $this->db->from("sma_rasd_notifcations_map");
-                $this->db->where('gtin', $product['product_code']);
+                $this->db->where('gtin', $gtin);
                 $this->db->where('batch', $product['batchno']);
                 $this->db->where("qty_remaining >=", $qty);
                 $this->db->where('expiry_date', $expiry);
@@ -111,14 +116,14 @@ class Transfers_model extends CI_Model
                 }
 
                 $c_2762[] = [
-                    "223" => $product['product_code'],
+                    "223" => $gtin,
                     "2766" => $product['batchno'],
                     "220" => $product['expiry'],
                     "224" => (string) $qty
                 ];
 
                 $c_2760[] = [
-                    "223" => $product['product_code'],
+                    "223" => $gtin,
                     "219" => $product['batchno'],
                     "220" => $product['expiry'],
                     "224" => (string) $qty
