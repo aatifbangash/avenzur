@@ -92,14 +92,15 @@ class Transfers_model extends CI_Model
                 $this->db->from("sma_rasd_notifcations_map");
                 $this->db->where('gtin', $product['product_code']);
                 $this->db->where('batch', $product['batchno']);
+                $this->db->where("qty_remaining >=", $qty);
                 $this->db->where('expiry_date', $expiry);
                 $query = $this->db->get();
 
                 if ($query->num_rows() > 0) {
                     $qty_remaining = $query->row()->qty_remaining;
-                    if ((int) $qty_remaining < $qty) {
+                    /*if ((int) $qty_remaining < $qty) {
                         continue;
-                    }
+                    }*/
                     $to_update[] = [
                         "id" => $query->row()->id,
                         "qty" => (int) $qty_remaining - $qty
