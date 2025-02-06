@@ -2281,7 +2281,7 @@ class Purchases extends MY_Controller
                     'supplier_gln' =>  $response_model['source_gln']
                 ];
             if($transfer_status == 'completed'){
-                for($body_for_rasd_dispatch as $index => $payload_dispatch){
+                foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
                     log_message("info", "RASD AUTH START");
                     $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
                     $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
@@ -2301,7 +2301,7 @@ class Purchases extends MY_Controller
                                 'notification_id' => $purchase_notification
                             ];                
 
-                            $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',true, $zadca_dispatch_response,$body_for_rasd_dispatch);
+                            $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
                             /**Accept Dispatch By Pharmacy */
                             $accept_params  = [
                                 'user' =>  $ph_user,
@@ -2312,12 +2312,12 @@ class Purchases extends MY_Controller
                             if(isset($accept_dispatch_result['body']['DicOfDic']['MR']['TRID']) && $accept_dispatch_result['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){
                                 log_message("info", "Accept Dispatch successful");
                                 $rasd_success = true;
-                                $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $accept_dispatch_body);
+                                $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $payload_for_accept_dispatch[$index]);
                                 
                             }else{
                                 log_message("error", "Accept Dispatch Failed");
                                 $rasd_success = false;
-                                $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $accept_dispatch_body);
+                                $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $payload_for_accept_dispatch[$index]);
                             }
                             
                         
@@ -2325,7 +2325,7 @@ class Purchases extends MY_Controller
                             $rasd_success = false;
                             log_message("error", "Dispatch Failed");
                             log_message("error", json_encode($zadca_dispatch_response,true));
-                            $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $zadca_dispatch_response,$body_for_rasd_dispatch);
+                            $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
                         }
                     
                         

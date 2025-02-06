@@ -123,6 +123,7 @@ class Transfers_model extends CI_Model
                     "224" => (string) $qty
                 ];
 
+                
                 // If c_2762 reaches the batch size, create a payload
                 if (count($c_2762) == $batch_size) {
                     $payloads[$payload_index] = [
@@ -141,8 +142,10 @@ class Transfers_model extends CI_Model
                 }
                  
             }
+            
             //Add Remaining.
             if (!empty($c_2762)) {
+                
                 $payloads[$payload_index] = [
                     "DicOfDic" => [
                         "2762" => ["215" => $destination_gln],
@@ -153,9 +156,6 @@ class Transfers_model extends CI_Model
              
                  $payloads_accept_dispatch[$payload_index] = $this -> get_accept_dispatch_lot_params($destination_gln, $source_gln, $c_2760);
             }
-
-
-
 
             return ['payload' => $payloads, 
             'user' => $rasd_user,
