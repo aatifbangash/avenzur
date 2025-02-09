@@ -61,16 +61,31 @@
                         </div>
 
                         <div class="col-md-4">
-                            <div class="form-group">
-                            <?= lang('Pharmacy', 'popharmacy'); ?>
-                            <?php
-                            $selected_warehouse_id[] = isset($warehouse) ? $warehouse : '';
-                            $dp['all'] = 'All';
-                            foreach ($warehouses as $warehouse) {
-                                $dp[$warehouse->id] = $warehouse->name;
-                            }
-                            echo form_dropdown('pharmacy', $dp, $selected_warehouse_id, 'id="warehouse_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('pharmacy') . '" required="required" style="width:100%;" ', null); ?>
-                            </div>
+                            
+                            
+                            <?php if ($Owner || $Admin || !$this->session->userdata('warehouse_id')) {
+                                ?>
+                                <?= lang('Pharmacy', 'popharmacy'); ?>
+                                <div class="form-group">
+                                    <?php
+                                    $selected_warehouse_id[] = isset($warehouse) ? $warehouse : '';
+                                    $dp['all'] = 'All';
+                                    foreach ($warehouses as $warehouse) {
+                                        $dp[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
+                                    }
+                                    echo form_dropdown('pharmacy', $dp, $selected_warehouse_id, 'id="warehouse_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('pharmacy') . '" required="required" style="width:100%;" ', null); ?>
+                                </div>
+                                <?php
+                            } else {
+                                $warehouse_input = [
+                                    'type'  => 'hidden',
+                                    'name'  => 'pharmacy',
+                                    'id'    => 'warehouse_id',
+                                    'value' => $this->session->userdata('warehouse_id'),
+                                ];
+
+                                echo form_input($warehouse_input);
+                            }?>
                         </div>
 
 
