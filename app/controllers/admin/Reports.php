@@ -5667,13 +5667,22 @@ class Reports extends MY_Controller
         $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
         //print_r($this->input->post());
          //for testing purpose
-         $user_id ='';
+         /*$user_id ='';
          if($warehouse == 34) {
             $user_id = 6653 ;
          } else if($warehouse == 37) {
             $user_id = 6655 ;
-         }
-            
+         }*/
+
+        if ($this->Owner || $this->Admin) {
+            if($warehouse != null){
+                $user_data = $this->site->getUserByWarehouseID($warehouse);
+                $user_id = $user_data->id;
+            }
+        }else{
+            $warehouse = $this->session->userdata('warehouse_id');
+            $user_id = $this->session->userdata('user_id');
+        }   
         
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         if ($from_date && $to_date && $warehouse) {
