@@ -1522,7 +1522,7 @@ class Pos extends MY_Controller
                                     'dc' => 'D',
                                     'ledger_id' => $customer->credit_card_ledger,
                                     //'amount' =>(($totalSalePrice + $inv->order_tax) - $inv->total_discount),
-                                    'amount' => $payemntsType->pos_paid,
+                                    'amount' => $payemntsType->amount,
                                     'narration' => 'Credit Card'
                                     )
                                 );  
