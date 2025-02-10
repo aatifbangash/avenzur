@@ -1470,7 +1470,7 @@ class Pos extends MY_Controller
                                  
                                 $halalaAmount = 0;
                                 if( floor($paidAmount)  != $paidAmount) {
-                                    $integerPart = floor($payemntsType->pos_paid);
+                                    $integerPart = floor($payemntsType->amount);
                                     $decimalPart = $paidAmount - $integerPart;
                                     //echo 'integer'.$integerPart;
                                     //echo 'decimal'. $decimalPart;
@@ -1501,6 +1501,7 @@ class Pos extends MY_Controller
                                 'narration' => 'cash'
                                 )
                                 );
+                                
                                 if( $halalaAmount > 0) {
                                     $entryitemdata[] = array(
                                         'Entryitem' => array(
