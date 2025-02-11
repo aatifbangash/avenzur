@@ -4135,7 +4135,7 @@ class Products extends MY_Controller
                 $pr_item_tax = 0;
 
                 $item_tax_rate = $product->tax_rate;
-                if (isset($item_tax_rate) && $item_tax_rate != 0) {
+                if (isset($item_tax_rate) && $item_tax_rate > 1) {
                     $tax_details = $this->site->getTaxRateByID($item_tax_rate);
                     $ctax = $this->site->calculateTax($product, $tax_details, $product->price);
                     $item_tax = $this->sma->formatDecimal($ctax['amount']);
