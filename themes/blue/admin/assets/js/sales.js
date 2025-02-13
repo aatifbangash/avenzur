@@ -2094,7 +2094,8 @@ function loadItems() {
 			grand_total_purchases += formatDecimal(total_purchases, 4);
 			grand_total_sales += formatDecimal(total_sales, 4);
 			//formatDecimal((parseFloat(item_price) + parseFloat(pr_tax_val)) * parseFloat(item_qty), 4);
-			count += parseFloat(item_qty);
+			//count += parseFloat(item_qty);
+			count++;
 			an++;
 
 			//base_quantity += item_bonus;
