@@ -1925,14 +1925,14 @@ function loadItems() {
 				'"><input class="form-control input-sm text-center rcost" type="text" name="net_price[]" id="cost_' +
 				row_no +
 				'" value="' +
-				formatDecimal(item_sale_price, 2) +
+				item_sale_price +
 				'">';
 
 			tr_html +=
 				'<input id="ssale_' +
 				row_no +
 				'" name="net_cost[]" type="hidden" value="' +
-				formatDecimal(item.row.net_unit_cost, 2) +
+				item.row.net_unit_cost +
 				'" data-id="' +
 				row_no +
 				'" data-item="' +
@@ -1942,7 +1942,7 @@ function loadItems() {
 				'"><input id="ssale_' +
 				row_no +
 				'" name="real_cost[]" type="hidden" value="' +
-				formatDecimal(item.row.real_unit_cost, 2) +
+				item.row.real_unit_cost +
 				'" data-id="' +
 				row_no +
 				'" data-item="' +
