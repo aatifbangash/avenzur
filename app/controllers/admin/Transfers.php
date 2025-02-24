@@ -676,7 +676,7 @@ class Transfers extends MY_Controller
             // $this->sma->print_arrays($data, $products);exit;
         }
 
-        if ($this->form_validation->run() == true && $this->transfers_model->updateTransfer($id, $data, $products, $attachments)) {
+        if ($this->form_validation->run() == true && $transfer_id = $this->transfers_model->updateTransfer($id, $data, $products, $attachments)) {
             
             if($status == 'completed'){
                 /**RASD Integration Code */
@@ -684,8 +684,7 @@ class Transfers extends MY_Controller
                     "products" => $products,
                     "source_warehouse_id" => $data['from_warehouse_id'],
                     "destination_warehouse_id" => $data['to_warehouse_id'],
-                    "transfer_id" => $transfer_id,
-                    "notification_id" => $purchase_notification
+                    "transfer_id" => $transfer_id
                 ];
                 $response_model = $this->transfers_model->get_rasd_required_fields($data_for_rasd);
                 $body_for_rasd_dispatch = $response_model['payload'];

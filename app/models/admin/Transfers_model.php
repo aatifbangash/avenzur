@@ -12,7 +12,7 @@ class Transfers_model extends CI_Model
 
 
     public function get_rasd_required_fields($data ){
-            $notification_id = $data['notification_id'];
+            //$notification_id = $data['notification_id'];
             $transfer_id = $data['transfer_id'];
             $this->db->select('status');
             $this->db->from('sma_transfers');
@@ -1020,7 +1020,7 @@ class Transfers_model extends CI_Model
         if ($this->db->trans_status() === false) {
             log_message('error', 'An errors has been occurred while adding the sale (Update:Transfers_model.php)');
         } else {
-            return true;
+            return $id;
         }
 
         return false;
