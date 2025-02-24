@@ -2050,6 +2050,33 @@ public function logVisitor() {
         return false;
     }
 
+    public function deleteAccountingEntry($id, $type){
+
+        if($type == 'purchase'){ 
+            $q = $this->db->get_where('sma_accounts_entries', ['pid' => $id], 1);
+        }else if($type == 'sale'){
+            $q = $this->db->get_where('sma_accounts_entries', ['sid' => $id], 1);
+        }else if($type == 'transfer'){
+            $q = $this->db->get_where('sma_accounts_entries', ['tid' => $id], 1);
+        }else if($type == 'return_supplier'){
+            $q = $this->db->get_where('sma_accounts_entries', ['rsid' => $id], 1);
+        }else if($type == 'return_customer'){
+            $q = $this->db->get_where('sma_accounts_entries', ['rid' => $id], 1);
+        }
+
+        if ($q->num_rows() > 0) {
+            $result = $q->row();
+
+            if ($this->db->delete('sma_accounts_entries', ['id' => $result->id])) {
+                $this->db->delete('sma_accounts_entryitems', ['entry_id' => $result->id]);
+                return true;
+            }
+        }else{
+            return false;
+        }
+        
+    }
+
     public function getJournalEntryByTypeId($type='', $type_id)
     {
         if($type == '' || $type_id == '') {

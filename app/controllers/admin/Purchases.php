@@ -797,10 +797,21 @@ class Purchases extends MY_Controller
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
         }
-        $inv = $this->purchases_model->getPurchaseByID($id);
 
-        if ($inv->status == 'received') {
-             $this->session->set_flashdata('error', 'Cannot edit received orders');
+        $purchase_transferred = 0;
+
+        $inv = $this->purchases_model->getPurchaseByID($id);
+        $pur_inv_items = $this->purchases_model->getAllPurchaseItems($id);
+        foreach ($pur_inv_items as $pur_item) {
+            //$transferreditem = $this->Inventory_model->get_transferred_item($inv->warehouse_id,'transfer_out',$pur_item->product_id,$pur_item->avz_item_code,$pur_item->batchno);
+            $transferreditem = $this->Inventory_model->get_transferred_item('null','transfer_in',$pur_item->product_id,$pur_item->avz_item_code,$pur_item->batchno);
+            if($transferreditem){
+                $purchase_transferred = 1;
+            }
+        }
+
+        if ($inv->status == 'received' && $purchase_transferred == 1) {
+             $this->session->set_flashdata('error', 'This invoice has items already transferred');
 
              admin_redirect('purchases');
         }
@@ -1603,6 +1614,8 @@ class Purchases extends MY_Controller
     public function convert_purchse_invoice($pid)
     {
         if ($this->purchases_model->puchaseToInvoice($pid)) {
+            // Delete exiting entry if available first
+            $this->site->deleteAccountingEntry($pid, 'purchase');
 
             $inv = $this->purchases_model->getPurchaseByID($pid);
             $this->load->admin_model('companies_model');
@@ -2069,7 +2082,9 @@ class Purchases extends MY_Controller
         $from_warehouse = $purchase_detail->warehouse_id;
         $note = $this->sma->clear_tags($purchase_detail->note);
         $shipping = $purchase_detail->shipping;
-        $status = 'completed';
+        //$status = 'completed';
+
+        $status = $this->input->post('status');
         $from_warehouse_details = $this->site->getWarehouseByID($from_warehouse);
         $from_warehouse_code = $from_warehouse_details->code;
         $from_warehouse_name = $from_warehouse_details->name;
@@ -2249,99 +2264,6 @@ class Purchases extends MY_Controller
 
         //if ($this->transfers_model->transferPurchaseInvoice($data, $products, $attachments)) {
         if ($transfer_id = $this->transfers_model->addTransfer($data, $products, $attachments)) {
-            /**RASD Integration Code */
-            $data_for_rasd = [
-                "products" => $products,
-                "source_warehouse_id" => $data['from_warehouse_id'],
-                "destination_warehouse_id" => $data['to_warehouse_id'],
-                "transfer_id" => $transfer_id,
-                "notification_id" => $purchase_notification
-            ];
-            $response_model = $this->transfers_model->get_rasd_required_fields($data_for_rasd);
-            $body_for_rasd_dispatch = $response_model['payload'];
-            $payload_for_accept_dispatch = $response_model['payload_for_accept_dispatch'];
-             log_message("info", json_encode($payload_for_accept_dispatch, true));
-            $rasd_user = $response_model['user'];
-            $rasd_pass = $response_model['pass'];
-            $transfer_status = $response_model['status'];
-            $ph_user = $response_model['pharmacy_user'];
-            $ph_pass = $response_model['pharmacy_pass'];
-            $map_update = $response_model['update_map_table'];
-            $rasd_success = false;
-            log_message("info", json_encode($body_for_rasd_dispatch));
-            $payload_used =  [
-                    'source_gln' => $response_model['source_gln'],
-                    'destination_gln' => $response_model['destination_gln'],
-                    'warehouse_id' => $data['source_warehouse_id'],
-                    'notification_id' => $purchase_notification
-                ];  
-                $accept_dispatch_notification = [
-                    'warehouse_gln' =>$response_model['destination_gln'],
-                    'warehouse_id' => $data['to_warehouse_id'],
-                    'supplier_gln' =>  $response_model['source_gln']
-                ];
-            if($transfer_status == 'completed'){
-                foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
-                    log_message("info", "RASD AUTH START");
-                    $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
-                    $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
-                    if(isset($auth_response['token'])){
-                        $auth_token = $auth_response['token'];
-                        log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
-                        $zadca_dispatch_response = $this->rasd->dispatch_product_133($payload_dispatch, $auth_token);
-                        
-                        
-                        if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
-                            log_message("info", "Dispatch successful");
-                            $rasd_success = true;
-                            $this->transfers_model->update_notification_map($map_update);
-                            $accept_dispatch_body = [
-                                'supplier_gln' => $response_model['source_gln'],
-                                'warehouse_gln' => $response_model['destination_gln'],
-                                'notification_id' => $purchase_notification
-                            ];                
-
-                            $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
-                            /**Accept Dispatch By Pharmacy */
-                            $accept_params  = [
-                                'user' =>  $ph_user,
-                                'pass' => $ph_pass,
-                                'body' => $payload_for_accept_dispatch[$index]
-                            ]; 
-                            $accept_dispatch_result = $this->rasd->accept_dispatch_by_lot($accept_params);                        
-                            if(isset($accept_dispatch_result['body']['DicOfDic']['MR']['TRID']) && $accept_dispatch_result['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){
-                                log_message("info", "Accept Dispatch successful");
-                                $rasd_success = true;
-                                $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $payload_for_accept_dispatch[$index]);
-                                
-                            }else{
-                                log_message("error", "Accept Dispatch Failed");
-                                $rasd_success = false;
-                                $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $payload_for_accept_dispatch[$index]);
-                            }
-                            
-                        
-                        }else{
-                            $rasd_success = false;
-                            log_message("error", "Dispatch Failed");
-                            log_message("error", json_encode($zadca_dispatch_response,true));
-                            $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
-                        }
-                    
-                        
-                    }else{
-                        log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
-                        $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $accept_dispatch_result,$body_for_rasd_dispatch);
-                    }
-                }
-                
-            }else{
-                log_message("warning", 'The Status is not Complete' . $transfer_status);
-            }
-           
-            
-            /**RASD Integration End */
-
 
             $this->session->set_flashdata('message', lang('transfer_added'));
             admin_redirect('transfers');

@@ -396,12 +396,19 @@
                         </div>
                         <?php } ?>
 
-                    <?php if (!$GP['transfer_pharmacist'] && !$GP['transfer_warehouse_supervisor']) { ?>
+                    <?php if (!$GP['transfer_pharmacist'] && !$GP['transfer_warehouse_supervisor']) { 
+                        if($transfer->status == 'save'){
+                            $post = ['save' => lang('save'), 'sent' => lang('sent'), 'completed' => lang('completed')];
+                        }else if($transfer->status == 'sent'){
+                            $post = ['sent' => lang('sent'), 'completed' => lang('completed')];
+                        }
+
+                        ?>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('status', 'tostatus'); ?>
                                 <?php
-                                 $post = ['save' => lang('save'), 'completed' => lang('completed')];
+                                 //$post = ['save' => lang('save'), 'completed' => lang('completed')];
                                  echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="tostatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
                                 ?>
                             </div>
