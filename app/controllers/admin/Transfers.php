@@ -676,7 +676,7 @@ class Transfers extends MY_Controller
             // $this->sma->print_arrays($data, $products);exit;
         }
 
-        if ($this->form_validation->run() == true && $this->transfers_model->updateTransfer($id, $data, $products, $attachments)) {
+        if ($this->form_validation->run() == true && $transfer_id = $this->transfers_model->updateTransfer($id, $data, $products, $attachments)) {
             
             if($status == 'completed'){
                 /**RASD Integration Code */
@@ -684,8 +684,7 @@ class Transfers extends MY_Controller
                     "products" => $products,
                     "source_warehouse_id" => $data['from_warehouse_id'],
                     "destination_warehouse_id" => $data['to_warehouse_id'],
-                    "transfer_id" => $transfer_id,
-                    "notification_id" => $purchase_notification
+                    "transfer_id" => $transfer_id
                 ];
                 $response_model = $this->transfers_model->get_rasd_required_fields($data_for_rasd);
                 $body_for_rasd_dispatch = $response_model['payload'];
@@ -702,8 +701,7 @@ class Transfers extends MY_Controller
                 $payload_used =  [
                         'source_gln' => $response_model['source_gln'],
                         'destination_gln' => $response_model['destination_gln'],
-                        'warehouse_id' => $data['source_warehouse_id'],
-                        'notification_id' => $purchase_notification
+                        'warehouse_id' => $data['source_warehouse_id']
                     ];  
                     $accept_dispatch_notification = [
                         'warehouse_gln' =>$response_model['destination_gln'],
@@ -727,8 +725,7 @@ class Transfers extends MY_Controller
                                 $this->transfers_model->update_notification_map($map_update);
                                 $accept_dispatch_body = [
                                     'supplier_gln' => $response_model['source_gln'],
-                                    'warehouse_gln' => $response_model['destination_gln'],
-                                    'notification_id' => $purchase_notification
+                                    'warehouse_gln' => $response_model['destination_gln']
                                 ];                
 
                                 $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);

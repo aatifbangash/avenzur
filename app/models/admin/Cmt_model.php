@@ -27,7 +27,6 @@ class Cmt_model extends CI_Model
         $batch = "";
         $warehouse_id = "";
         $warehouse_type = 'warehouse';
-        $serial_number = "";
     
         if($function == "accept_dispatch"){
             $source_gln = $payload_used['supplier_gln'];
@@ -41,7 +40,6 @@ class Cmt_model extends CI_Model
             $source_gln = $payload_used['source_gln'];
             $destination_gln = $payload_used['destination_gln'];
             $warehouse_id = $payload_used['warehouse_id'];
-            $serial_number = $payload_used['notification_id'];
             $warehouse_type = 'pharmacy';
         }
 
@@ -58,8 +56,7 @@ class Cmt_model extends CI_Model
             "response" => $response,
             "is_success" => $is_success,
             "request" => json_encode($request,true),
-            "response" => json_encode($response, true),
-            "serial_number" => $serial_number
+            "response" => json_encode($response, true)
 
         ];
 
