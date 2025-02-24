@@ -701,8 +701,7 @@ class Transfers extends MY_Controller
                 $payload_used =  [
                         'source_gln' => $response_model['source_gln'],
                         'destination_gln' => $response_model['destination_gln'],
-                        'warehouse_id' => $data['source_warehouse_id'],
-                        'notification_id' => $purchase_notification
+                        'warehouse_id' => $data['source_warehouse_id']
                     ];  
                     $accept_dispatch_notification = [
                         'warehouse_gln' =>$response_model['destination_gln'],
@@ -726,8 +725,7 @@ class Transfers extends MY_Controller
                                 $this->transfers_model->update_notification_map($map_update);
                                 $accept_dispatch_body = [
                                     'supplier_gln' => $response_model['source_gln'],
-                                    'warehouse_gln' => $response_model['destination_gln'],
-                                    'notification_id' => $purchase_notification
+                                    'warehouse_gln' => $response_model['destination_gln']
                                 ];                
 
                                 $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
