@@ -15,6 +15,8 @@ class Transfers extends MY_Controller
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
+        $this->load->admin_model('cmt_model');
+        $this->load->library('RASDCore',$params=null, 'rasd');
         $this->lang->admin_load('transfers', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('transfers_model');
@@ -675,6 +677,102 @@ class Transfers extends MY_Controller
         }
 
         if ($this->form_validation->run() == true && $this->transfers_model->updateTransfer($id, $data, $products, $attachments)) {
+            
+            if($status == 'completed'){
+                /**RASD Integration Code */
+                $data_for_rasd = [
+                    "products" => $products,
+                    "source_warehouse_id" => $data['from_warehouse_id'],
+                    "destination_warehouse_id" => $data['to_warehouse_id'],
+                    "transfer_id" => $transfer_id,
+                    "notification_id" => $purchase_notification
+                ];
+                $response_model = $this->transfers_model->get_rasd_required_fields($data_for_rasd);
+                $body_for_rasd_dispatch = $response_model['payload'];
+                $payload_for_accept_dispatch = $response_model['payload_for_accept_dispatch'];
+                log_message("info", json_encode($payload_for_accept_dispatch, true));
+                $rasd_user = $response_model['user'];
+                $rasd_pass = $response_model['pass'];
+                $transfer_status = $response_model['status'];
+                $ph_user = $response_model['pharmacy_user'];
+                $ph_pass = $response_model['pharmacy_pass'];
+                $map_update = $response_model['update_map_table'];
+                $rasd_success = false;
+                log_message("info", json_encode($body_for_rasd_dispatch));
+                $payload_used =  [
+                        'source_gln' => $response_model['source_gln'],
+                        'destination_gln' => $response_model['destination_gln'],
+                        'warehouse_id' => $data['source_warehouse_id'],
+                        'notification_id' => $purchase_notification
+                    ];  
+                    $accept_dispatch_notification = [
+                        'warehouse_gln' =>$response_model['destination_gln'],
+                        'warehouse_id' => $data['to_warehouse_id'],
+                        'supplier_gln' =>  $response_model['source_gln']
+                    ];
+                if($transfer_status == 'completed'){
+                    foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
+                        log_message("info", "RASD AUTH START");
+                        $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
+                        $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
+                        if(isset($auth_response['token'])){
+                            $auth_token = $auth_response['token'];
+                            log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
+                            $zadca_dispatch_response = $this->rasd->dispatch_product_133($payload_dispatch, $auth_token);
+                            
+                            
+                            if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                                log_message("info", "Dispatch successful");
+                                $rasd_success = true;
+                                $this->transfers_model->update_notification_map($map_update);
+                                $accept_dispatch_body = [
+                                    'supplier_gln' => $response_model['source_gln'],
+                                    'warehouse_gln' => $response_model['destination_gln'],
+                                    'notification_id' => $purchase_notification
+                                ];                
+
+                                $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
+                                /**Accept Dispatch By Pharmacy */
+                                $accept_params  = [
+                                    'user' =>  $ph_user,
+                                    'pass' => $ph_pass,
+                                    'body' => $payload_for_accept_dispatch[$index]
+                                ]; 
+                                $accept_dispatch_result = $this->rasd->accept_dispatch_by_lot($accept_params);                        
+                                if(isset($accept_dispatch_result['body']['DicOfDic']['MR']['TRID']) && $accept_dispatch_result['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){
+                                    log_message("info", "Accept Dispatch successful");
+                                    $rasd_success = true;
+                                    $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $payload_for_accept_dispatch[$index]);
+                                    
+                                }else{
+                                    log_message("error", "Accept Dispatch Failed");
+                                    $rasd_success = false;
+                                    $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $payload_for_accept_dispatch[$index]);
+                                }
+                                
+                            
+                            }else{
+                                $rasd_success = false;
+                                log_message("error", "Dispatch Failed");
+                                log_message("error", json_encode($zadca_dispatch_response,true));
+                                $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
+                            }
+                        
+                            
+                        }else{
+                            log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
+                            $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $accept_dispatch_result,$body_for_rasd_dispatch);
+                        }
+                    }
+                    
+                }else{
+                    log_message("warning", 'The Status is not Complete' . $transfer_status);
+                }
+            
+                
+                /**RASD Integration End */
+            }
+
             $this->session->set_userdata('remove_tols', 1);
             $this->session->set_flashdata('message', lang('transfer_updated'));
             admin_redirect('transfers');
@@ -687,7 +785,7 @@ class Transfers extends MY_Controller
                 krsort($transfer_items);
             }
             $c = rand(100000, 9999999);
-            
+            //echo '<pre>';print_r($transfer_items);exit;
             foreach ($transfer_items as $item) {
                 $row = $this->site->getProductByID($item->product_id);
                 if (!$row) {
@@ -714,6 +812,11 @@ class Transfers extends MY_Controller
                     $row->unit_cost      = $item->net_unit_cost + ($item->item_tax / $item->quantity);
                 }else{
                     $row->unit_cost      = $item->net_unit_cost;
+                }
+
+                if($this->data['transfer']->status == 'sent'){
+                    //echo 'here in sent';exit;
+                    $row->base_quantity = $row->base_quantity + $row->quantity;
                 }
                 
                 $row->real_unit_cost = $item->real_unit_cost;

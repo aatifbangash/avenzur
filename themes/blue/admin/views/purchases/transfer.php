@@ -32,6 +32,18 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
+                        <?= lang('status', 'tostatus'); ?>
+                        <?php
+                        $post = ['save' => lang('save'), 'sent' => lang('sent')];
+                        echo form_dropdown('status', $post, '', 'id="tostatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
+                        ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
                         <?= lang('Exclude Products', 'Exclude Products') ?>
                         <select class="form-control" id="cf1" name="product_ids[]" multiple="multiple" >
                                 <?php
