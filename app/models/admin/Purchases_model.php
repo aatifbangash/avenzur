@@ -380,7 +380,7 @@ class Purchases_model extends CI_Model
             ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
             ->join('tax_rates', 'tax_rates.id=purchase_items.tax_rate_id', 'left')
             ->group_by('purchase_items.id')
-            ->order_by('id', 'asc')
+            ->order_by('id', 'desc')
             ->where('purchase_items.purchase_id', $purchase_id);
     
         // Exclude items whose item_code exists in $avz_item_codes

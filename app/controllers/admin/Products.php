@@ -4106,6 +4106,7 @@ class Products extends MY_Controller
         $s = isset($_POST['product']) ? sizeof($_POST['product']) : 0;
         if ($s > 0) {
             $purchase_id =  $this->input->post('purchase_id') ;
+            $transfer_id =  $this->input->post('transfer_id') ;
             // print barcodes
             $s = isset($_POST['product']) ? sizeof($_POST['product']) : 0;
             if ($s < 1) {
@@ -4129,7 +4130,7 @@ class Products extends MY_Controller
                 $itemDetail = $this->products_model->getProductsBarcodeItems('','','',$item_id);
                 $itemDetail = $itemDetail[0];
                 $pid = $itemDetail->product_id;
-                $quantity = $_POST['quantity'][$item_id];
+                $quantity = abs($_POST['quantity'][$item_id]);
                 $product = $this->products_model->getProductWithCategory($pid);
                 $product->price = $this->input->post('check_promo') ? ($product->promotion ? $product->promo_price : $product->price) : $product->price;
                 $pr_item_tax = 0;
@@ -4260,12 +4261,17 @@ class Products extends MY_Controller
             //         $items = $this->products_model->getTransferItems($transfer_id);
             //     }
 
-            if ( $this->input->get('item_code') || $this->input->get('purchase') ) {
+            if ( $this->input->get('item_code') || $this->input->get('purchase') || $this->input->get('transfer') ) {
                 $purchase_id = $this->input->get('purchase', true);
+                $transfer_id = $this->input->get('transfer', true);
                 $item_code = $this->input->get('item_code', true);
                 $warehouse_id = $this->input->get('pharmacy', true);
+                if($purchase_id){
+                    $items = $this->products_model->getProductsBarcodeItems($purchase_id, $item_code, $warehouse_id);
+                }else if($transfer_id){
+                    $items = $this->products_model->getProductsBarcodeItemsForTransfer($transfer_id, $item_code, $warehouse_id);
+                }
                 
-                $items = $this->products_model->getProductsBarcodeItems($purchase_id, $item_code, $warehouse_id);
                 if ($items) {
                     foreach ($items as $item) {
                         if ($row = $this->products_model->getProductByID($item->product_id)) {
@@ -4291,6 +4297,7 @@ class Products extends MY_Controller
 
 
             $this->data['purchase_id'] = $this->input->get('purchase', true) ;
+            $this->data['transfer_id'] = $this->input->get('transfer', true) ;
             $this->data['item_code'] = $this->input->get('item_code', true) ;
             $this->data['pharmacy'] = $this->input->get('pharmacy', true) ;
             $this->data['warehouses'] = $this->site->getAllWarehouses();

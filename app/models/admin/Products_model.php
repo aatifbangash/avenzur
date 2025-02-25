@@ -1435,6 +1435,47 @@ class Products_model extends CI_Model
         return false;
     }
 
+    public function getProductsBarcodeItemsForTransfer($transfer_id='', $item_code = '', $warehouse_id = '', $inventory_id='')
+    {
+        $where = '';
+        if( !empty($transfer_id) ) {
+            $where = " AND a.type='transfer_out' AND a.reference_id = ".$transfer_id;
+        }
+                // Add a condition for item_code if it is not empty and check on the products table
+        if (!empty($item_code)) {
+            $where .= " AND b.item_code = ".$item_code;
+        }
+        if (!empty($warehouse_id)) {
+            $where .= " AND a.location_id = ".$warehouse_id;
+        }
+        if(!empty($inventory_id)){
+            $where .= " AND a.id = ".$inventory_id;
+        }
+
+        $sql = "SELECT a.id,
+        b.id as product_id,
+        b.item_code as code,
+        a.avz_item_code,
+        b.name,
+        abs(sum(a.quantity)) as quantity,
+        a.net_unit_sale as price,
+        a.batch_number as batchno,
+        a.expiry_date as expiry
+        FROM `sma_inventory_movements` a
+        JOIN sma_products b ON a.product_id = b.id
+        WHERE 1=1 ".$where."
+        group by a.avz_item_code , a.location_id" ;
+
+    $q = $this->db->query($sql);
+    if ($q->num_rows() > 0) {
+        foreach (($q->result()) as $row) {
+            $data[] = $row;
+        }
+        return $data;
+    }
+    return false;
+    }
+
     public function getProductsBarcodeItems($purchase_id='', $item_code = '', $warehouse_id = '', $inventory_id='')
     {
         $where = '';
