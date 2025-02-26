@@ -627,7 +627,7 @@
     ?>
     <script>
         $(document).ready(function () {
-            $("#to_warehouse option[value='<?= $this->session->userdata('warehouse_id'); ?>']").attr('disabled', 'disabled');
+            //$("#to_warehouse option[value='<?= $this->session->userdata('warehouse_id'); ?>']").attr('disabled', 'disabled');
         });
     </script>
     <?php
