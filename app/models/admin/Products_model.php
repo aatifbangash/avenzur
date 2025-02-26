@@ -859,6 +859,25 @@ class Products_model extends CI_Model
         return false;
     }
 
+    public function getProductWithPrice($id, $type, $pid){
+        $this->db->select(
+            $this->db->dbprefix('products') . '.*, ' . 
+            $this->db->dbprefix('categories') . '.name as category, ' .
+            $this->db->dbprefix('inventory_movements') . '.net_unit_sale as price'
+        )
+        ->join('categories', 'categories.id = products.category_id', 'left')
+        ->join('inventory_movements', 'sma_inventory_movements.product_id = products.id', 'left')
+        ->where('inventory_movements.reference_id', $id)
+        ->where('inventory_movements.type', $type);
+        
+        $q = $this->db->get_where('products', ['products.id' => $pid], 1);
+        
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getProductWithCategory($id)
     {
         $this->db->select($this->db->dbprefix('products') . '.*, ' . $this->db->dbprefix('categories') . '.name as category')
