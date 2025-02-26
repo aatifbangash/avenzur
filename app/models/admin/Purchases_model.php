@@ -950,9 +950,20 @@ class Purchases_model extends CI_Model
                 if ($data['status'] == 'received' || $data['status'] == 'partial') {
                     $this->updateAVCO(['product_id' => $item['product_id'], 'batch' => $item['batchno'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'cost' => $item['real_unit_cost']]);
                 }
+
+                $item_exists_in_inventory = false;
+                $q = $this->db->get_where('inventory_movements', ['product_id' => $item['product_id'], 'type' => 'purchase', 'batch_number' => $item['batchno'], 'avz_item_code' => $item['avz_item_code']], 1);
+                if ($q->num_rows() > 0) {
+                    $item_exists_in_inventory = true;
+                }
                 
                 if($opurchase->status == 'received' && $item['status']=='received'){
-                    $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $item['avz_item_code'], $item['bonus'], NULL, $item['sale_price'], $data['date']);
+                    if($item_exists_in_inventory){
+                        $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $item['avz_item_code'], $item['bonus'], NULL, $item['sale_price'], $data['date']);
+                    }else{
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $item['avz_item_code'], $item['bonus'], NULL, $item['sale_price'], $data['date']);
+                    }
+                    
                 }else if($item['status']=='received'){
                     $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $item['avz_item_code'], $item['bonus'], NULL, $item['sale_price'], $data['date']);
                 }
