@@ -4131,7 +4131,14 @@ class Products extends MY_Controller
                 $itemDetail = $itemDetail[0];
                 $pid = $itemDetail->product_id;
                 $quantity = abs($_POST['quantity'][$item_id]);
-                $product = $this->products_model->getProductWithCategory($pid);
+
+                //$product = $this->products_model->getProductWithCategory($pid);
+                
+                if($_POST['purchase_id']){
+                    $product = $this->products_model->getProductWithPrice($purchase_id, 'purchase', $pid);
+                }else if($_POST['transfer_id']){
+                    $product = $this->products_model->getProductWithPrice($transfer_id, 'transfer_out', $pid);
+                }
                 $product->price = $this->input->post('check_promo') ? ($product->promotion ? $product->promo_price : $product->price) : $product->price;
                 $pr_item_tax = 0;
 
