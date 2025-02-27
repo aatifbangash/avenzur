@@ -555,10 +555,10 @@ class Products extends MY_Controller
                     'code' => $retajCode
                 ];
 
-                $this->db->where('id', $product->id);
-                $this->db->update('sma_products', $dataToUpdate);
+                //$this->db->where('id', $product->id);
+                //$this->db->update('sma_products', $dataToUpdate);
 
-                echo "Product with code $avenzurCode has updated name now i.e $avenzurCode<br>";
+                echo "Product with code $avenzurCode has updated name now i.e $retajCode<br>";
             } else {
                 echo "Product with code $avenzurCode was not found in database<br>";
             }
