@@ -460,6 +460,35 @@ class Transfers_model extends CI_Model
         return false;
     }
 
+    public function getAllTransferItemsForModule($transfer_id, $status)
+    {
+        if ($status == 'completed') {
+            $this->db->select('purchase_items.*, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
+                ->from('purchase_items')
+                ->join('products', 'products.id=purchase_items.product_id', 'left')
+                ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
+                ->group_by('purchase_items.id')
+                ->where('transfer_id', $transfer_id)
+                ->order_by('transfer_items.id', 'DESC');
+        } else {
+                $this->db->select('transfer_items.*, SUM(IFNULL(im.quantity, 0)) as base_quantity, im.avz_item_code, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
+                ->from('transfer_items')
+                ->join('products', 'products.id=transfer_items.product_id', 'left')
+                ->join('product_variants', 'product_variants.id=transfer_items.option_id', 'left')
+                ->join('inventory_movements im', 'transfer_items.avz_item_code = im.avz_item_code', 'left')
+                ->group_by(['transfer_items.id', 'im.avz_item_code'])
+                ->where('transfer_id', $transfer_id)
+                ->order_by('transfer_items.id', 'DESC');
+        }
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+    }
+
     public function getAllTransferItems($transfer_id, $status)
     {
         if ($status == 'completed') {

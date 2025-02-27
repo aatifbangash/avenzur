@@ -776,7 +776,7 @@ class Transfers extends MY_Controller
         } else {
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['transfer'] = $this->transfers_model->getTransferByID($id);
-            $transfer_items         = $this->transfers_model->getAllTransferItems($id, $this->data['transfer']->status);
+            $transfer_items         = $this->transfers_model->getAllTransferItemsForModule($id, $this->data['transfer']->status);
             
             if(!empty($transfer_items)) {
                 krsort($transfer_items);
