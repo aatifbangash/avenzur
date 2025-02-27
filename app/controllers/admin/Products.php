@@ -520,9 +520,9 @@ class Products extends MY_Controller
         }
     }
 
-    public function update_product_prices()
+    public function update_product_codes()
     {
-        $csvFile = $this->upload_path . 'csv/names_and_brands_file.csv';
+        $csvFile = $this->upload_path . 'csv/avenzur-code-and-retaj-code.csv';
 
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
@@ -539,42 +539,28 @@ class Products extends MY_Controller
         $count = 0;
 
         while (($rowData = fgetcsv($handle)) !== false) {
-            $productCode = $rowData[2];
-            $new_code = $rowData[3];
-            $ascon_code = $rowData[4];
-            $old_brand = $rowData[5];
-            $new_brand = $rowData[6];
-
-            $old_name = $rowData[0];
-            $new_name = $rowData[1];
+            $avenzurCode = $rowData[1];
+            $retajCode = $rowData[5];
 
             $this->db->select('*');
             $this->db->from('sma_products');
-            $this->db->where('code', $productCode);
+            $this->db->where('code', $avenzurCode);
             $query = $this->db->get();
             $product = $query->row();
-
-            $this->db->select('*');
-            $this->db->from('sma_brands');
-            $this->db->where('name', $new_brand);
-            $query = $this->db->get();
-            $brand = $query->row();
 
             if ($product) {
 
                 $dataToUpdate = [
-                    'name' => $new_name,
-                    'brand' => $brand->id,
-                    'ascon_code' => $ascon_code,
-                    'new_code' => $new_code
+                    'avenzur_code' => $avenzurCode,
+                    'code' => $retajCode
                 ];
 
-                $this->db->where('id', $product->id);
-                $this->db->update('sma_products', $dataToUpdate);
+                //$this->db->where('id', $product->id);
+                //$this->db->update('sma_products', $dataToUpdate);
 
-                echo "Product with code $productCode has updated name now i.e $new_name from $old_name<br>";
+                echo "Product with code $avenzurCode has updated name now i.e $avenzurCode<br>";
             } else {
-                echo "Product with code $productCode was not found in database<br>";
+                echo "Product with code $avenzurCode was not found in database<br>";
             }
 
             $count++;
