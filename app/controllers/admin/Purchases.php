@@ -42,7 +42,267 @@ class Purchases extends MY_Controller
     }
 
     /* -------------------------------------------------------------------------------------------------------------------------------- */
+    
+    // show Upload Purchases
+    public function showUploadPurchases() {
+        $this->sma->checkPermissions();
 
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+
+        echo "<script>console.log(" . json_encode($this->data['suppliers']) . ");</script>";
+        echo "<script>console.log(" . json_encode($this->data['warehouses']) . ");</script>";
+
+        $this->load->view($this->theme . 'purchases/uploadCsvPurchases', $this->data);
+    }
+
+    public function mapPurchases(){
+        $this->sma->checkPermissions('csv');
+        $this->load->helper('security');
+        $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
+        $this->form_validation->set_rules('warehouse', $this->lang->line('warehouse'), 'required|is_natural_no_zero');
+        $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
+        $this->form_validation->set_rules('userfile', $this->lang->line('upload_file'), 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+            $quantity = 'quantity';
+            $product = 'product';
+            $unit_cost = 'unit_cost';
+            $tax_rate = 'tax_rate';
+            $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('po');
+            if ($this->Owner || $this->Admin) {
+                $date = $this->sma->fld(trim($this->input->post('date')));
+            } else {
+                $date = null;
+            }
+            $warehouse_id = $this->input->post('warehouse');
+            $supplier_id = $this->input->post('supplier');
+            $status = 'pending';
+            $shipping = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
+            $supplier_details = $this->site->getCompanyByID($supplier_id);
+            $supplier = $supplier_details->company && $supplier_details->company != '-' ? $supplier_details->company : $supplier_details->name;
+            $note = $this->sma->clear_tags($this->input->post('note'));
+
+            $total_sale_price = 0;
+            $total = 0;
+            $product_tax = 0;
+            $product_discount = 0;
+            $gst_data = [];
+            $total_cgst = $total_sgst = $total_igst = 0;
+
+            if (isset($_FILES['userfile'])) {
+                $this->load->library('upload');
+
+                $config['upload_path'] = $this->digital_upload_path;
+                $config['allowed_types'] = 'csv';
+                $config['max_size'] = $this->allowed_file_size;
+                $config['overwrite'] = true;
+
+                $this->upload->initialize($config);
+
+                if (!$this->upload->do_upload()) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('purchases/uploadCsvPurchases');
+                }
+                
+                $csv = $this->upload->file_name;
+
+                $arrResult = [];
+                $handle = fopen($this->digital_upload_path . $csv, 'r');
+                if ($handle) {
+                    while (($row = fgetcsv($handle, 5000, ',')) !== false) {
+                        $arrResult[] = $row;
+                    }
+                    fclose($handle);
+                }
+                
+                $arr_length = count($arrResult);
+                if ($arr_length > 5000000) {
+                    $this->session->set_flashdata('error', lang('too_many_products'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                    exit();
+                }
+                $titles = array_shift($arrResult);
+                $keys = ['code', 'net_unit_cost', 'quantity', 'variant', 'item_tax_rate', 'expiry', 'sale_price', 'batchno', 'serial_number', 'discount1', 'discount2'];
+                $final = [];
+                foreach ($arrResult as $key => $value) {
+                    $final[] = array_combine($keys, $value);
+                }
+                $rw = 2;
+                foreach ($final as $csv_pr) {
+                    if (isset($csv_pr['code']) && isset($csv_pr['net_unit_cost']) && isset($csv_pr['quantity'])) {
+                        if ($product_details = $this->purchases_model->getProductByCode($csv_pr['code'])) {
+                            if ($csv_pr['variant']) {
+                                $item_option = $this->purchases_model->getProductVariantByName($csv_pr['variant'], $product_details->id);
+                                if (!$item_option) {
+                                    $this->session->set_flashdata('error', lang('pr_not_found') . ' ( ' . $product_details->name . ' - ' . $csv_pr['variant'] . ' ). ' . lang('line_no') . ' ' . $rw);
+                                    redirect($_SERVER['HTTP_REFERER']);
+                                }
+                            } else {
+                                $item_option = json_decode('{}');
+                                $item_option->id = null;
+                            }
+
+                            $item_code = $csv_pr['code'];
+                            $item_net_cost = $this->sma->formatDecimal($csv_pr['net_unit_cost']);
+                            $item_quantity = $csv_pr['quantity'];
+                            $quantity_balance = $csv_pr['quantity'];
+                            $item_tax_rate = $csv_pr['item_tax_rate'];
+                            $item_discount = $csv_pr['discount'];
+                            $item_expiry = isset($csv_pr['expiry']) ? $this->sma->fsd($csv_pr['expiry']) : null;
+
+                            $item_sale_price = $csv_pr['sale_price'];
+                            $item_batchno = $csv_pr['batchno'];
+                            $item_serial_number = $csv_pr['serial_number'];
+                            $item_discount1 = $csv_pr['discount1'];
+                            $item_discount2 = $csv_pr['discount2'];
+
+                            $pr_discount = 0;
+                            // $pr_discount      = $this->site->calculateDiscount($item_discount, $item_net_cost);
+                            // $pr_item_discount = $this->sma->formatDecimal(($pr_discount * $item_quantity), 4);
+                            // $product_discount += $pr_item_discount;
+
+                            $total_purchases = $item_net_cost * $item_quantity;
+                            $total_after_dicount_1 = $total_purchases * ($item_discount1 / 100);
+                            $total_after_dicount_2 = ($total_purchases - $total_after_dicount_1) * ($item_discount2 / 100);
+                            $main_net = $total_purchases - ($total_after_dicount_1 + $total_after_dicount_2);
+
+
+                            $tax = '';
+                            $pr_item_tax = 0;
+                            $item_net_cost = $item_net_cost - $pr_discount;
+                            $unit_cost = $item_net_cost;
+                            $gst_data = [];
+                            $tax_details = ((isset($item_tax_rate) && !empty($item_tax_rate)) ? $this->purchases_model->getTaxRateByName($item_tax_rate) : $this->site->getTaxRateByID($product_details->tax_rate));
+                            if ($tax_details) {
+                                $ctax = $this->site->calculateTax($product_details, $tax_details, $unit_cost);
+                                $item_tax = $this->sma->formatDecimal($ctax['amount']);
+                                $tax = $ctax['tax'];
+                                if ($product_details->tax_method != 1) {
+                                    $item_net_cost = $unit_cost - $item_tax;
+                                }
+                                $pr_item_tax = $this->sma->formatDecimal($item_tax * $item_quantity, 4);
+                                if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($this->Settings->state == $supplier_details->state), $tax_details)) {
+                                    $total_cgst += $gst_data['cgst'];
+                                    $total_sgst += $gst_data['sgst'];
+                                    $total_igst += $gst_data['igst'];
+                                }
+                            }
+
+                            $product_tax += $pr_item_tax;
+                            // $subtotal       = (($item_net_cost * $item_quantity) + $pr_item_tax);
+                            $subtotal = $main_net;
+                            $subtotal2 = (($item_net_cost * $item_quantity));// + $pr_item_tax);
+
+
+                            $unit = $this->site->getUnitByID($product_details->unit);
+                            $real_unit_cost = $this->sma->formatDecimal(($unit_cost + $pr_discount), 4);
+                            $product = [
+                                'product_id' => $product_details->id,
+                                'product_code' => $item_code,
+                                'product_name' => $product_details->name,
+                                'option_id' => $item_option->id,
+                                'net_unit_cost' => $item_net_cost,
+                                'quantity' => $item_quantity,
+                                'product_unit_id' => $product_details->unit,
+                                'product_unit_code' => $unit->code,
+                                'unit_quantity' => $item_quantity,
+                                'quantity_balance' => $quantity_balance,
+                                'warehouse_id' => $warehouse_id,
+                                'item_tax' => $pr_item_tax,
+                                'tax_rate_id' => $tax_details ? $tax_details->id : null,
+                                'tax' => $tax,
+                                'discount' => $item_discount,
+                                'item_discount' => $pr_item_discount,
+                                'expiry' => $item_expiry,
+                                'sale_price' => $item_sale_price,
+                                'batchno' => $item_batchno,
+                                'serial_number' => $item_serial_number,
+                                'discount1' => $item_discount1,
+                                'discount2' => $item_discount2,
+                                'totalbeforevat' => $total_after_dicount_2,
+                                'main_net' => $main_net,
+                                'subtotal' => $this->sma->formatDecimal($subtotal),
+                                'subtotal2' => $this->sma->formatDecimal($subtotal2),
+                                'date' => date('Y-m-d', strtotime($date)),
+                                'status' => $status,
+                                'unit_cost' => $unit_cost, // $this->sma->formatDecimal(($item_net_cost + $item_tax), 4),
+                                'real_unit_cost' => $real_unit_cost,
+                                'base_unit_cost' => $real_unit_cost,
+                            ];
+
+                            $products[] = ($product + $gst_data);
+                            // $total += $this->sma->formatDecimal(($item_net_cost * $item_quantity), 4);
+                            $total += $this->sma->formatDecimal($main_net, 4);
+                            $total_sale_price += $this->sma->formatDecimal($item_sale_price, 4);
+
+                        } else {
+                            $this->session->set_flashdata('error', $this->lang->line('pr_not_found') . ' ( ' . $csv_pr['code'] . ' ). ' . $this->lang->line('line_no') . ' ' . $rw);
+                            redirect($_SERVER['HTTP_REFERER']);
+                        }
+                        $rw++;
+                    }
+                }
+            }
+
+            // $order_discount = $this->site->calculateDiscount($this->input->post('discount') ? $this->input->post('order_discount') : null, ($total + $product_tax), true);
+            $order_discount = $this->site->calculateDiscount($this->input->post('discount'), $total, true);//$this->site->calculateDiscount($this->input->post('discount'), ($total + $product_tax), true);
+            $total_discount = $this->sma->formatDecimal(($order_discount + $product_discount), 4);
+            $order_tax = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
+            $total_tax = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
+
+            // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            $data = [
+                'reference_no' => $reference,
+                'date' => $date,
+                'supplier_id' => $supplier_id,
+                'supplier' => $supplier,
+                'warehouse_id' => $warehouse_id,
+                'note' => $note,
+                'total' => $total,
+                'total_sale' => $total_sale_price,
+                'product_discount' => $product_discount,
+                'order_discount_id' => $this->input->post('discount'),
+                'order_discount' => $order_discount,
+                'total_discount' => $total_discount,
+                'product_tax' => $product_tax,
+                'order_tax_id' => $this->input->post('order_tax'),
+                'order_tax' => $order_tax,
+                'total_tax' => $total_tax,
+                'shipping' => $this->sma->formatDecimal($shipping),
+                'grand_total' => $grand_total,
+                'status' => $status,
+                'sequence_code' => $this->sequenceCode->generate('PR', 5),
+                'created_by' => $this->session->userdata('username'),
+            ];
+            if ($this->Settings->indian_gst) {
+                $data['cgst'] = $total_cgst;
+                $data['sgst'] = $total_sgst;
+                $data['igst'] = $total_igst;
+            }
+
+            $attachments = $this->attachments->upload();
+            $data['attachment'] = !empty($attachments);
+            // $this->sma->print_arrays($data, $products);
+        }
+        if ($this->form_validation->run() == true && $this->purchases_model->addPurchase($data, $products, $attachments)) {
+            $this->session->set_flashdata('message', $this->lang->line('purchase_added'));
+            admin_redirect('purchases');
+        } else {
+            $data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['tax_rates'] = $this->site->getAllTaxRates();
+            $this->data['ponumber'] = ''; // $this->site->getReference('po');
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('purchases'), 'page' => lang('purchases')], ['link' => '#', 'page' => lang('add_purchase_by_csv')]];
+            $meta = ['page_title' => lang('add_purchase_by_csv'), 'bc' => $bc];
+            $this->page_construct('purchases/purchase_by_csv', $meta, $this->data);
+        }
+    }
+    
     public function add($quote_id = null)
     {
         $this->sma->checkPermissions();

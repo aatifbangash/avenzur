@@ -50,7 +50,316 @@ class Sales extends MY_Controller
     }
 
     /* ------------------------------------------------------------------ */
+   
+    // MARK: CSV 
+    
+    // Show "Upload CSV Sales" view
+    public function showUploadSales() {
+        $this->sma->checkPermissions();
 
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['billers'] = $this->site->getAllCompanies('biller');
+
+        echo "<script>console.log(" . json_encode($this->data['customers']) . ");</script>";
+        echo "<script>console.log(" . json_encode($this->data['billers']) . ");</script>";
+
+        $this->load->view($this->theme . 'sales/uploadCsvSales', $this->data);
+    }
+
+    public function mapSales()
+    {
+        $this->sma->checkPermissions('csv');
+        $this->load->helper('security');
+        $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
+        $this->form_validation->set_rules('customer', lang('customer'), 'required');
+        $this->form_validation->set_rules('biller', lang('biller'), 'required');
+        $this->form_validation->set_rules('sale_status', lang('sale_status'), 'required');
+        $this->form_validation->set_rules('payment_status', lang('payment_status'), 'required');
+        $this->form_validation->set_rules('userfile', lang('upload_file'), 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+            $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('so');
+            if ($this->Owner || $this->Admin) {
+                $date = $this->sma->fld(trim($this->input->post('date')));
+            } else {
+                $date = date('Y-m-d H:i:s');
+            }
+            $warehouse_id     = $this->input->post('warehouse');
+            $customer_id      = $this->input->post('customer');
+            $biller_id        = $this->input->post('biller');
+            $total_items      = $this->input->post('total_items');
+            $sale_status      = $this->input->post('sale_status');
+            $payment_status   = $this->input->post('payment_status');
+            $payment_term     = $this->input->post('payment_term');
+            $due_date         = $payment_term ? date('Y-m-d', strtotime('+' . $payment_term . ' days')) : null;
+            $shipping         = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
+            $customer_details = $this->site->getCompanyByID($customer_id);
+            $customer         = $customer_details->company && $customer_details->company != '-' ? $customer_details->company : $customer_details->name;
+            $biller_details   = $this->site->getCompanyByID($biller_id);
+            $biller           = $biller_details->company && $biller_details->company != '-' ? $biller_details->company : $biller_details->name;
+            $note             = $this->sma->clear_tags($this->input->post('note'));
+            $staff_note       = $this->sma->clear_tags($this->input->post('staff_note'));
+
+            $total            = 0;
+            $product_tax      = 0;
+            $product_discount = 0;
+            $gst_data         = [];
+            $total_cgst       = $total_sgst       = $total_igst       = 0;
+            
+            if (isset($_FILES['userfile'])) {
+                $this->load->library('upload');
+                $config['upload_path']   = $this->digital_upload_path;
+                $config['allowed_types'] = 'csv';
+                $config['max_size']      = $this->allowed_file_size;
+                $config['overwrite']     = true;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload()) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('sales/mapSales');
+                }
+                $csv = $this->upload->file_name;
+
+                $arrResult = [];
+                $handle    = fopen($this->digital_upload_path . $csv, 'r');
+                if ($handle) {
+                    while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                        $arrResult[] = $row;
+                    }
+                    fclose($handle);
+                }
+                $arr_length = count($arrResult);
+                if ($arr_length > 499) {
+                    $this->session->set_flashdata('error', lang('too_many_products'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                    exit();
+                }
+                $titles = array_shift($arrResult);
+                $keys = [
+                    'code',
+                    'avz_code',
+                    'net_unit_price',
+                    'quantity',
+                    'batch_no',
+                    'variant',
+                    'unit_price',
+                    'net_cost',
+                    'real_cost',
+                    'serial',
+                    'expiry',
+                    'batchno',
+                    'serial_no',
+                    'lotno',
+                    'product_tax',
+                    'product_discount',
+                    'product_unit',
+                    'bonus',
+                    'dis1',
+                    'dis2',
+                    'totalbeforevat',
+                    'main_net',
+                    'item_first_discount',
+                    'item_second_discount',
+                    'item_vat_values',
+                    'item_total_sale'
+                ];   
+                $final  = [];
+                foreach ($arrResult as $key => $value) {
+                    $final[] = array_combine($keys, $value);
+                }
+                $rw = 2;
+                foreach ($final as $csv_pr) {
+                    if (isset($csv_pr['code']) && isset($csv_pr['net_unit_price']) && isset($csv_pr['quantity']) && isset($csv_pr['batch_no'])) {    
+                        if ($product_details = $this->sales_model->getProductByCode($csv_pr['code'])) {
+                            if ($csv_pr['variant']) {
+                                $item_option = $this->sales_model->getProductVariantByName($csv_pr['variant'], $product_details->id);
+                                if (!$item_option) {
+                                    $this->session->set_flashdata('error', lang('pr_not_found') . ' ( ' . $product_details->name . ' - ' . $csv_pr['variant'] . ' ). ' . lang('line_no') . ' ' . $rw);
+                                    redirect($_SERVER['HTTP_REFERER']);
+                                }
+                            } else {
+                                $item_option     = json_decode('{}');
+                                $item_option->id = null;
+                            }
+
+                            $item_id        = $product_details->id;
+                            $item_type      = $product_details->type;
+                            $item_code      = $product_details->code;
+                            $item_name      = $product_details->name;
+
+                            $item_net_price = $this->sma->formatDecimal($csv_pr['net_unit_price']);
+                            $item_quantity  = $csv_pr['quantity'];
+                            $item_tax_rate  = $csv_pr['item_tax_rate'];
+                            $item_discount  = $csv_pr['discount'];
+                            $item_dis1      = $csv_pr['dis1'];
+                            $item_dis2      = $csv_pr['dis2'];
+                            $item_serial    = $csv_pr['serial'];
+                            $item_batchno   = $csv_pr['batch_no'];  
+                            $avz_code       = $csv_pr['avz_code'];
+                            $item_second_discount       = $csv_pr['item_second_discount'];
+                            $item_expiry    = isset($csv_pr['expiry']) ? $this->sma->fsd($csv_pr['expiry']) : null;
+
+                            if (isset($item_code) && isset($item_net_price) && isset($item_quantity)) {
+                                $product_details  = $this->sales_model->getProductByCode($item_code);
+                                $pr_discount      = $this->site->calculateDiscount($item_dis1.'%', $item_net_price);
+                                $amount_after_dis1 = $item_net_price - $pr_discount;
+                                $pr_discount2      = $this->site->calculateDiscount($item_dis2.'%', $amount_after_dis1);
+            
+                               
+                                $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_quantity);
+                                $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $item_quantity);
+                                $prroduct_item_discount = ($pr_item_discount + $pr_item_discount2);
+                                $product_discount += $prroduct_item_discount;
+                                
+                                $tax         = '';
+                                $pr_item_tax = 0;
+                                $unit_price  = $item_net_price;
+                                $tax_details = ((isset($item_tax_rate) && !empty($item_tax_rate)) ? $this->sales_model->getTaxRateByName($item_tax_rate) : $this->site->getTaxRateByID($product_details->tax_rate));
+                                if ($tax_details) {
+                                    $ctax     = $this->site->calculateTax($product_details, $tax_details, $unit_price);
+                                    $item_tax = $this->sma->formatDecimal($ctax['amount']);
+                                    $tax      = $ctax['tax'];
+                                    $unit_price = $unit_price + $item_tax;
+                                    $pr_item_tax = $this->sma->formatDecimal($item_tax * $item_quantity, 4);
+                                    if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($biller_details->state == $customer_details->state), $tax_details)) {
+                                        $total_cgst += $gst_data['cgst'];
+                                        $total_sgst += $gst_data['sgst'];
+                                        $total_igst += $gst_data['igst'];
+                                    }
+                                }
+
+                                $product_tax += $pr_item_tax;
+                                $subtotal = $this->sma->formatDecimal(($unit_price * $item_quantity), 4);
+                                $unit     = $this->site->getUnitByID($product_details->unit);
+
+                                $product = [
+                                    'product_id'        => $product_details->id,
+                                    'product_code'      => $item_code,
+                                    'product_name'      => $item_name,
+                                    'product_type'      => $item_type,
+                                    'option_id'         => $item_option->id,
+                                    'net_unit_price'    => $item_net_price,
+                                    'quantity'          => $item_quantity,
+                                    'product_unit_id'   => $product_details->unit,
+                                    'product_unit_code' => $unit->code,
+                                    'unit_quantity'     => $item_quantity,
+                                    'warehouse_id'      => $warehouse_id,
+                                    'item_tax'          => $pr_item_tax,
+                                    'tax_rate_id'       => $tax_details ? $tax_details->id : null,
+                                    'tax'               => $tax,
+                                    'discount'          => $item_discount,
+                                    'item_discount'     => $pr_item_discount,
+                                    'expiry'            => $item_expiry,
+                                    'discount1'         => $item_dis1,
+                                    'discount2'         => $item_dis2,
+                                    'subtotal'          => $subtotal,
+                                    'serial_no'         => $item_serial,
+                                    'batch_no'          => $item_batchno,
+                                    'unit_price'        => $this->sma->formatDecimal($unit_price, 4),
+                                    'real_unit_price'   => $this->sma->formatDecimal(($unit_price), 4),
+                                    'avz_item_code'     => $avz_code ,
+                                    'second_discount_value' => $item_second_discount
+                                    // 'second_discount_value' => $pr_discount2 * $item_quantity
+                                ];
+
+                                $products[] = ($product + $gst_data);
+                                $total += $this->sma->formatDecimal(($item_net_price * $item_quantity), 4);
+                            }
+                        } else {
+                            $this->session->set_flashdata('error', lang('pr_not_found') . ' ( ' . $csv_pr['code'] . ' ). ' . lang('line_no') . ' ' . $rw);
+                            redirect($_SERVER['HTTP_REFERER']);
+                        }
+                        $rw++;
+                    }
+                }
+            }
+
+            $order_discount = $this->site->calculateDiscount($this->input->post('order_discount'), ($total + $product_tax), true);
+            $total_discount = $this->sma->formatDecimal(($order_discount + $product_discount), 4);
+            $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
+            $total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
+            $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            $data        = ['date'  => $date,
+                'reference_no'      => $reference,
+                'customer_id'       => $customer_id,
+                'customer'          => $customer,
+                'biller_id'         => $biller_id,
+                'biller'            => $biller,
+                'warehouse_id'      => $warehouse_id,
+                'note'              => $note,
+                'staff_note'        => $staff_note,
+                'total'             => $total,
+                'product_discount'  => $product_discount,
+                'order_discount_id' => $this->input->post('order_discount'),
+                'order_discount'    => $order_discount,
+                'total_discount'    => $total_discount,
+                'product_tax'       => $product_tax,
+                'order_tax_id'      => $this->input->post('order_tax'),
+                'order_tax'         => $order_tax,
+                'total_tax'         => $total_tax,
+                'shipping'          => $this->sma->formatDecimal($shipping),
+                'grand_total'       => $grand_total,
+                'total_items'       => $total_items,
+                'sale_status'       => $sale_status,
+                'payment_status'    => $payment_status,
+                'payment_term'      => $payment_term,
+                'due_date'          => $due_date,
+                'paid'              => 0,
+                'created_by'        => $this->session->userdata('user_id'),
+            ];
+            if ($this->Settings->indian_gst) {
+                $data['cgst'] = $total_cgst;
+                $data['sgst'] = $total_sgst;
+                $data['igst'] = $total_igst;
+            }
+
+            if ($payment_status == 'paid') {
+                $payment = [
+                    'date'         => $date,
+                    'reference_no' => $this->site->getReference('pay'),
+                    'amount'       => $grand_total,
+                    'paid_by'      => 'cash',
+                    'cheque_no'    => '',
+                    'cc_no'        => '',
+                    'cc_holder'    => '',
+                    'cc_month'     => '',
+                    'cc_year'      => '',
+                    'cc_type'      => '',
+                    'created_by'   => $this->session->userdata('user_id'),
+                    'note'         => lang('auto_added_for_sale_by_csv') . ' (' . lang('sale_reference_no') . ' ' . $reference . ')',
+                    'type'         => 'received',
+                ];
+            } else {
+                $payment = [];
+            }
+
+            $attachments        = $this->attachments->upload();
+            $data['attachment'] = !empty($attachments);
+        }
+
+        if ($this->form_validation->run() == true && $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
+            $this->session->set_userdata('remove_slls', 1);
+            $this->session->set_flashdata('message', lang('sale_added'));
+            admin_redirect('sales');
+        } else {
+            $data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['tax_rates']  = $this->site->getAllTaxRates();
+            $this->data['billers']    = $this->site->getAllCompanies('biller');
+            $this->data['slnumber']   = $this->site->getReference('so');
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('sales'), 'page' => lang('sales')], ['link' => '#', 'page' => lang('add_sale_by_csv')]];
+            $meta = ['page_title' => lang('add_sale_by_csv'), 'bc' => $bc];
+            $this->page_construct('sales/sale_by_csv', $meta, $this->data);
+        }
+    }
+
+    
+    
+
+    // MARK: Add 
     public function add($quote_id = null)
     {
         $this->sma->checkPermissions();
@@ -124,11 +433,11 @@ class Sales extends MY_Controller
             $total            = 0;
             $product_tax      = 0;
             $product_discount = 0;
-            $digital          = false;
+            $digital          = false; // Q: Why?
             $gst_data         = [];
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             $i                = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
-            //echo '<pre>';print_r($_POST);exit;
+            // echo '<pre>';print_r($_POST);exit;
             for ($r = 0; $r < $i; $r++) {
                 $item_id            = $_POST['product_id'][$r];
                 $item_type          = $_POST['product_type'][$r];
@@ -850,7 +1159,7 @@ class Sales extends MY_Controller
     }
 
     /* ------------------------------- */
-
+    // MARK: Delete 
     public function delete($id = null)
     {
         $this->sma->checkPermissions(null, true);
@@ -942,7 +1251,7 @@ class Sales extends MY_Controller
     }
 
     /* ------------------------------- */
-
+    // MARK: Delivery 
     public function deliveries()
     {
         $this->sma->checkPermissions();
@@ -1015,7 +1324,7 @@ class Sales extends MY_Controller
     }
 
     /* ------------------------------------------------------------------------ */
-
+    // MARK: Edit 
     public function edit($id = null)
     {
         $this->sma->checkPermissions();
@@ -1898,13 +2207,13 @@ class Sales extends MY_Controller
         $action = '<div class="text-center"><div class="btn-group text-left">'
         . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
         . lang('actions') . ' <span class="caret"></span></button>
-    <ul class="dropdown-menu pull-right" role="menu">
-        <li>' . $detail_link . '</li>
-        <li>' . $edit_link . '</li>
-        <li>' . $pdf_link . '</li>
-        <li>' . $delete_link . '</li>
-    </ul>
-</div></div>';
+        <ul class="dropdown-menu pull-right" role="menu">
+            <li>' . $detail_link . '</li>
+            <li>' . $edit_link . '</li>
+            <li>' . $pdf_link . '</li>
+            <li>' . $delete_link . '</li>
+        </ul>
+        </div></div>';
 
         $this->load->library('datatables');
         //GROUP_CONCAT(CONCAT('Name: ', sale_items.product_name, ' Qty: ', sale_items.quantity ) SEPARATOR '<br>')
@@ -2486,28 +2795,28 @@ class Sales extends MY_Controller
                 // Execute the request
        $response = curl_exec($ch);
       
-    //    if (curl_errno($ch)) {
-    //         $error_msg = curl_error($ch);
-    //         echo "cURL Error: $error_msg";
-    //     } else {
-    //         // Get HTTP status code
-    //         $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        
-    //         if ($http_status == 200) {
-    //             // Success response
-    //             echo "Request was successful.\n";
-    //             echo "Response: " . $response;
-    //         } else {
-    //             // Error response
-    //             echo "Request failed with status code: $http_status.\n";
-    //             echo "Response: " . $response;
-    //         }
-    //     }
+        //    if (curl_errno($ch)) {
+        //         $error_msg = curl_error($ch);
+        //         echo "cURL Error: $error_msg";
+        //     } else {
+        //         // Get HTTP status code
+        //         $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            
+        //         if ($http_status == 200) {
+        //             // Success response
+        //             echo "Request was successful.\n";
+        //             echo "Response: " . $response;
+        //         } else {
+        //             // Error response
+        //             echo "Request failed with status code: $http_status.\n";
+        //             echo "Response: " . $response;
+        //         }
+        //     }
         
 
         // Close cURL session
         curl_close($ch);
-//print_r($response);exit;
+        //print_r($response);exit;
         return  $response;
 
     }
@@ -2910,30 +3219,30 @@ class Sales extends MY_Controller
             <li>' . $email_link . '</li>
             <li>' . $return_link . '</li>
             <li>' . $delete_link . '</li>
-        </ul>
-    </div></div>';
-    }else{
+            </ul>
+            </div></div>';
+        }else{
 
-        $action = '<div class="text-center"><div class="btn-group text-left">'
-        . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-        . lang('actions') . ' <span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" role="menu">
-        <li>' . $convert_sale_invoice . '</li>
-            <li>' . $detail_link . '</li>
-            <li>' . $duplicate_link . '</li>
-            <li>' . $payments_link . '</li>
-            <li>' . $add_payment_link . '</li>
-            <li>' . $packagink_link . '</li>
-            <li>' . $add_delivery_link . '</li>
-            <li>' . $edit_link . '</li>
-            <li>' . $pdf_link . '</li>
-            <li>' . $email_link . '</li>
-            <li>' . $return_link . '</li>
-            <li>' .$courier_link. '</li>
-            <li>' . $delete_link . '</li>
-        </ul>
-    </div></div>';
-    }
+            $action = '<div class="text-center"><div class="btn-group text-left">'
+            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+            . lang('actions') . ' <span class="caret"></span></button>
+            <ul class="dropdown-menu pull-right" role="menu">
+            <li>' . $convert_sale_invoice . '</li>
+                <li>' . $detail_link . '</li>
+                <li>' . $duplicate_link . '</li>
+                <li>' . $payments_link . '</li>
+                <li>' . $add_payment_link . '</li>
+                <li>' . $packagink_link . '</li>
+                <li>' . $add_delivery_link . '</li>
+                <li>' . $edit_link . '</li>
+                <li>' . $pdf_link . '</li>
+                <li>' . $email_link . '</li>
+                <li>' . $return_link . '</li>
+                <li>' .$courier_link. '</li>
+                <li>' . $delete_link . '</li>
+            </ul>
+        </div></div>';
+        }
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
         $this->load->library('datatables');
@@ -3074,8 +3383,8 @@ class Sales extends MY_Controller
             <li>' . $delete_link . '</li>
             <li>' . $journal_entry_link . '</li>
         </ul>
-    </div></div>';
-    }else{
+        </div></div>';
+        }else{
 
         $action = '<div class="text-center"><div class="btn-group text-left">'
         . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
@@ -3095,8 +3404,8 @@ class Sales extends MY_Controller
             <li>' . $delete_link . '</li>
             <li>' . $journal_entry_link . '</li>
         </ul>
-    </div></div>';
-    }
+        </div></div>';
+        }
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
         $this->load->library('datatables');
@@ -3195,7 +3504,7 @@ class Sales extends MY_Controller
     }
 
     /* ------------------------------------ Gift Cards ---------------------------------- */
-
+    // MARK: Gift Cards 
     public function gift_cards()
     {
         $this->sma->checkPermissions();

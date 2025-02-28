@@ -241,6 +241,16 @@ table#poTable td input.form-control {
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-plus"></i><?= lang('add_purchase'); ?></h2>
+
+        <!-- CSV upload icon -->
+        <div class="box-icon">
+            <ul class="btn-tasks">
+                <li class="dropdown">
+                    <a href="<?= admin_url('purchases/showUploadPurchases'); ?>" data-toggle="modal"
+                                        data-target="#myModal"><i class="icon fa fa-upload"></i></a></li>
+            </ul>
+        </div>
+
     </div>
     <div class="box-content">
         <div class="row">
@@ -272,41 +282,42 @@ table#poTable td input.form-control {
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $ponumber), 'class="form-control input-tip" id="poref"'); ?>
                             </div>
                         </div>
-                        <?php if ($Owner || $Admin || !$this->session->userdata('warehouse_id')) {
-                    ?>
+
+                        <!-- Warehouse -->
+                        <?php if ($Owner || $Admin || !$this->session->userdata('warehouse_id')) { ?>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <?= lang('warehouse', 'powarehouse'); ?>
                                     <?php
                                     $wh[''] = '';
-                    foreach ($warehouses as $warehouse) {
-                        $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
-                    }
-                    echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $Settings->default_warehouse), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
+                                    foreach ($warehouses as $warehouse) {
+                                        $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
+                                    }
+                                    echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $Settings->default_warehouse), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
                                 </div>
                             </div>
                         <?php
-                } else {
-                    $warehouse_input = [
-                        'type'  => 'hidden',
-                        'name'  => 'warehouse',
-                        'id'    => 'slwarehouse',
-                        'value' => $this->session->userdata('warehouse_id'),
-                    ];
+                        } else {
+                            $warehouse_input = [
+                                'type'  => 'hidden',
+                                'name'  => 'warehouse',
+                                'id'    => 'slwarehouse',
+                                'value' => $this->session->userdata('warehouse_id'),
+                            ];
 
-                    echo form_input($warehouse_input);
-                } 
+                            echo form_input($warehouse_input);
+                        } 
 
-                $warehouse_status = [
-                        'type'  => 'hidden',
-                        'name'  => 'status',
-                        'id'    => 'postatus',
-                        'value' => 'pending',
-                    ];
+                        $warehouse_status = [
+                                'type'  => 'hidden',
+                                'name'  => 'status',
+                                'id'    => 'postatus',
+                                'value' => 'pending',
+                            ];
 
-                    echo form_input($warehouse_status);
+                            echo form_input($warehouse_status);
 
-                ?>
+                        ?>
                         <!-- <div class="col-md-4">
                             <div class="form-group">
                                 <?php //echo lang('status', 'postatus'); ?>
