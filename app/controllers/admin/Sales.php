@@ -148,9 +148,9 @@ class Sales extends MY_Controller
                     'real_cost',
                     'serial',
                     'expiry',
-                    'batchno',
-                    'serial_no',
-                    'lotno',
+                    // 'batchno',
+                    // 'serial_no',
+                    // 'lotno',
                     'product_tax',
                     'product_discount',
                     'product_unit',
@@ -159,10 +159,10 @@ class Sales extends MY_Controller
                     'dis2',
                     'totalbeforevat',
                     'main_net',
-                    'item_first_discount',
+                    // 'item_first_discount',
                     'item_second_discount',
-                    'item_vat_values',
-                    'item_total_sale'
+                    // 'item_vat_values',
+                    // 'item_total_sale'
                 ];   
                 $final  = [];
                 foreach ($arrResult as $key => $value) {
@@ -197,6 +197,8 @@ class Sales extends MY_Controller
                             $item_serial    = $csv_pr['serial'];
                             $item_batchno   = $csv_pr['batch_no'];  
                             $avz_code       = $csv_pr['avz_code'];
+                            $totalbeforevat = $csv_pr['totalbeforevat'];
+                            $main_net       = $csv_pr['main_net'];
                             $item_second_discount       = $csv_pr['item_second_discount'];
                             $item_expiry    = isset($csv_pr['expiry']) ? $this->sma->fsd($csv_pr['expiry']) : null;
 
@@ -259,6 +261,8 @@ class Sales extends MY_Controller
                                     'unit_price'        => $this->sma->formatDecimal($unit_price, 4),
                                     'real_unit_price'   => $this->sma->formatDecimal(($unit_price), 4),
                                     'avz_item_code'     => $avz_code ,
+                                    'totalbeforevat'    => $totalbeforevat,
+                                    'main_net'          => $main_net,
                                     'second_discount_value' => $item_second_discount
                                     // 'second_discount_value' => $pr_discount2 * $item_quantity
                                 ];
