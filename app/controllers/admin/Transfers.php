@@ -688,8 +688,10 @@ class Transfers extends MY_Controller
                 ];
                 $response_model = $this->transfers_model->get_rasd_required_fields($data_for_rasd);
                 $body_for_rasd_dispatch = $response_model['payload'];
+
                 $payload_for_accept_dispatch = $response_model['payload_for_accept_dispatch'];
                 log_message("info", json_encode($payload_for_accept_dispatch, true));
+
                 $rasd_user = $response_model['user'];
                 $rasd_pass = $response_model['pass'];
                 $transfer_status = $response_model['status'];
@@ -722,7 +724,7 @@ class Transfers extends MY_Controller
                             if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
                                 log_message("info", "Dispatch successful");
                                 $rasd_success = true;
-                                $this->transfers_model->update_notification_map($map_update);
+                                //$this->transfers_model->update_notification_map($map_update);
                                 $accept_dispatch_body = [
                                     'supplier_gln' => $response_model['source_gln'],
                                     'warehouse_gln' => $response_model['destination_gln']
@@ -730,7 +732,7 @@ class Transfers extends MY_Controller
 
                                 $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
                                 /**Accept Dispatch By Pharmacy */
-                                $accept_params  = [
+                                /*$accept_params  = [
                                     'user' =>  $ph_user,
                                     'pass' => $ph_pass,
                                     'body' => $payload_for_accept_dispatch[$index]
@@ -745,9 +747,51 @@ class Transfers extends MY_Controller
                                     log_message("error", "Accept Dispatch Failed");
                                     $rasd_success = false;
                                     $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $payload_for_accept_dispatch[$index]);
+                                }*/
+
+                                /**Accept Dispatch By NotificationId */
+                                $this->rasd->set_base_url("https://qdttsbe.qtzit.com:10100/api/web");
+                                $response = $this->rasd->authenticate($ph_user, $ph_pass);
+                                if($response['token']){
+                                    $auth_token = $response['token'];
+                                    log_message("info", "Authentication successful");
+                                    /**
+                                     * Call the RASD function to Accept Dispatch.
+                                     */
+
+                                    $accept_notification_id = $zadca_dispatch_response['body']['DicOfDic']['MR']['AUKey'];
+                                    $accept_params  = [
+                                        "supplier_gln" => $response_model['source_gln'],
+                                        "notification_id" => $accept_notification_id,
+                                        "warehouse_gln" => $response_model['destination_gln']
+                                    ]; 
+
+                                    $accept_payload_used = [
+                                        "supplier_gln" => $response_model['source_gln'],
+                                        "notification_id" => $accept_notification_id,
+                                        "warehouse_gln" => $response_model['destination_gln']
+                                    ];
+
+                                    $rasd_accept_dispatch_response = $this->rasd->accept_dispatch_125($accept_params,$auth_token);
+                                    if(isset($rasd_accept_dispatch_response['DicOfDic']['MR']['TRID']) && $rasd_accept_dispatch_response['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                                        log_message("info", "Regiter Dispatch successful");
+                                        $result = true;
+                                        
+                                    }else{
+                                        $result = false;
+                                        log_message("error", "Regiter Dispatch Failed");
+                                        log_message("error", json_encode($rasd_accept_dispatch_response,true));
+                                    }
+                                    $this->cmt_model->add_rasd_transactions($accept_payload_used,'accept_dispatch',$result, $rasd_accept_dispatch_response, $accept_params);
+
+                                }else{
+                                    $result = false;
+                                    log_message("error", "auth Failed");
+
+                                    $this->session->set_flashdata('error', 'Failed to Authenticate with RASD with ' . $ph_user . ' '. $ph_pass);
+                                    admin_redirect('notifications/rasd');
                                 }
                                 
-                            
                             }else{
                                 $rasd_success = false;
                                 log_message("error", "Dispatch Failed");

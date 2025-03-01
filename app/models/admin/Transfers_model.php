@@ -93,7 +93,7 @@ class Transfers_model extends CI_Model
                     $gtin = str_pad($gtin, 13, "0", STR_PAD_LEFT); // Prepend zero if needed
                 }
 
-                $this->db->select("id, qty_remaining");
+                /*$this->db->select("id, qty_remaining");
                 $this->db->from("sma_rasd_notifcations_map");
                 $this->db->where('gtin', $gtin);
                 $this->db->where('batch', $product['batchno']);
@@ -103,9 +103,6 @@ class Transfers_model extends CI_Model
 
                 if ($query->num_rows() > 0) {
                     $qty_remaining = $query->row()->qty_remaining;
-                    /*if ((int) $qty_remaining < $qty) {
-                        continue;
-                    }*/
                     $to_update[] = [
                         "id" => $query->row()->id,
                         "qty" => (int) $qty_remaining - $qty
@@ -113,7 +110,7 @@ class Transfers_model extends CI_Model
                 } else {
                     log_message("info", "NO DATA");
                     continue;
-                }
+                }*/
 
                 $c_2762[] = [
                     "223" => $gtin,
@@ -134,7 +131,7 @@ class Transfers_model extends CI_Model
                 if (count($c_2762) == $batch_size) {
                     $payloads[$payload_index] = [
                         "DicOfDic" => [
-                            "2762" => ["215" => $destination_gln],
+                            "2762" => ["215" => $destination_gln, "3008" => "3010"],
                             "MH" => ["MN" => "2756", "222" => $source_gln]
                         ],
                         "DicOfDT" => ["2762" => $c_2762]
@@ -154,7 +151,7 @@ class Transfers_model extends CI_Model
                 
                 $payloads[$payload_index] = [
                     "DicOfDic" => [
-                        "2762" => ["215" => $destination_gln],
+                        "2762" => ["215" => $destination_gln, "3008" => "3010"],
                         "MH" => ["MN" => "2756", "222" => $source_gln]
                     ],
                     "DicOfDT" => ["2762" => $c_2762]

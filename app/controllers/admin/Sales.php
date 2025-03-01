@@ -17,6 +17,8 @@ class Sales extends MY_Controller
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
+        $this->load->admin_model('cmt_model');
+        $this->load->library('RASDCore',$params=null, 'rasd');
         $this->lang->admin_load('sales', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('sales_model');
@@ -1365,38 +1367,97 @@ class Sales extends MY_Controller
         if ($this->form_validation->run() == true && $this->sales_model->updateSale($id, $data, $products, $attachments)) {
             if($sale_status == 'completed'){
                 $this->convert_sale_invoice($id);
-                           /**
-                             * Zatca Integration B2B Start
-                             */
-                            if($this->zatca_enabled){
-                                $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($id); 
-                                $zatca_response = $this->zatca->post('',  $zatca_payload);
-                                $is_success = true;
-                                $remarks = "";
-                                if($zatca_response['status'] >= 400){
-                                    $is_success = false;
-                                    if(isset($zatca_response['body']['errors'])){
-                                        if(!empty($zatca_response['body']['errors'])){
-                                            $remarks = $zatca_response['body']['errors'][0];
-                                        }
-                                    }
-                                }
-                                $date = date('Y-m-d H:i:s');
-                                $request = json_encode($zatca_payload, true);
-                                $response = json_encode($zatca_response, true);
-                                $reporting_data = [
-                                    "sale_id" => $id,
-                                    "date" => $date,
-                                    "is_success" => $is_success,
-                                    "request" => $request,
-                                    "response" => $response,
-                                    "remarks" => $remarks
-                                ];
-
-                                $this->Zetca_model->report_zatca_status($reporting_data);
+                /**
+                 * Zatca Integration B2B Start
+                 */
+                if($this->zatca_enabled){
+                    $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($id); 
+                    $zatca_response = $this->zatca->post('',  $zatca_payload);
+                    $is_success = true;
+                    $remarks = "";
+                    if($zatca_response['status'] >= 400){
+                        $is_success = false;
+                        if(isset($zatca_response['body']['errors'])){
+                            if(!empty($zatca_response['body']['errors'])){
+                                $remarks = $zatca_response['body']['errors'][0];
                             }
+                        }
+                    }
+                    $date = date('Y-m-d H:i:s');
+                    $request = json_encode($zatca_payload, true);
+                    $response = json_encode($zatca_response, true);
+                    $reporting_data = [
+                        "sale_id" => $id,
+                        "date" => $date,
+                        "is_success" => $is_success,
+                        "request" => $request,
+                        "response" => $response,
+                        "remarks" => $remarks
+                    ];
+
+                    $this->Zetca_model->report_zatca_status($reporting_data);
+                }
+
                 if($customer_details->balance > 0){
                     $this->sales_model->update_balance($customer_details->id, $new_balance);
+                }
+
+                /**RASD Integration Code */
+                $data_for_rasd = [
+                    "products" => $products,
+                    "source_warehouse_id" => $data['warehouse_id'],
+                    "destination_customer_id" => $data['customer_id'],
+                    "sale_id" => $id
+                ];
+                $response_model = $this->sales_model->get_rasd_required_fields($data_for_rasd);
+                $body_for_rasd_dispatch = $response_model['payload'];
+
+                //$payload_for_accept_dispatch = $response_model['payload_for_accept_dispatch'];
+                //log_message("info", json_encode($payload_for_accept_dispatch, true));
+
+                $rasd_user = $response_model['user'];
+                $rasd_pass = $response_model['pass'];
+                $resp_sale_status = $response_model['status'];
+                //$ph_user = $response_model['pharmacy_user'];
+                //$ph_pass = $response_model['pharmacy_pass'];
+                //$map_update = $response_model['update_map_table'];
+                $rasd_success = false;
+                log_message("info", json_encode($body_for_rasd_dispatch));
+                $payload_used =  [
+                        'source_gln' => $response_model['source_gln'],
+                        'destination_gln' => $response_model['destination_gln'],
+                        'warehouse_id' => $data['warehouse_id']
+                    ];  
+                    
+                if($resp_sale_status == 'completed'){
+                    foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
+                        log_message("info", "RASD AUTH START");
+                        $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
+                        $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
+                        if(isset($auth_response['token'])){
+                            $auth_token = $auth_response['token'];
+                            log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
+                            $zadca_dispatch_response = $this->rasd->dispatch_product_133($payload_dispatch, $auth_token);
+                            
+                            
+                            if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                                log_message("info", "Dispatch successful");
+                                $rasd_success = true;                
+
+                                $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
+                            
+                            }else{
+                                $rasd_success = false;
+                                log_message("error", "Dispatch Failed");
+                                log_message("error", json_encode($zadca_dispatch_response,true));
+                                $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
+                            }
+                            
+                        }else{
+                            log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
+                            $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $accept_dispatch_result,$body_for_rasd_dispatch);
+                        }
+                    }
                 }
             }
 
