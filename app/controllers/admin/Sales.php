@@ -148,9 +148,6 @@ class Sales extends MY_Controller
                     'real_cost',
                     'serial',
                     'expiry',
-                    'batchno',
-                    'serial_no',
-                    'lotno',
                     'product_tax',
                     'product_discount',
                     'product_unit',
@@ -169,6 +166,7 @@ class Sales extends MY_Controller
                     $final[] = array_combine($keys, $value);
                 }
                 $rw = 2;
+                
                 foreach ($final as $csv_pr) {
                     if (isset($csv_pr['code']) && isset($csv_pr['net_unit_price']) && isset($csv_pr['quantity']) && isset($csv_pr['batch_no'])) {    
                         if ($product_details = $this->sales_model->getProductByCode($csv_pr['code'])) {
@@ -197,6 +195,8 @@ class Sales extends MY_Controller
                             $item_serial    = $csv_pr['serial'];
                             $item_batchno   = $csv_pr['batch_no'];  
                             $avz_code       = $csv_pr['avz_code'];
+                            $totalbeforevat = $csv_pr['totalbeforevat'];
+                            $main_net       = $csv_pr['main_net'];
                             $item_second_discount       = $csv_pr['item_second_discount'];
                             $item_expiry    = isset($csv_pr['expiry']) ? $this->sma->fsd($csv_pr['expiry']) : null;
 
