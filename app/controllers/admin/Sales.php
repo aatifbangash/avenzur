@@ -159,10 +159,10 @@ class Sales extends MY_Controller
                     'dis2',
                     'totalbeforevat',
                     'main_net',
-                    'item_first_discount',
+                    //'item_first_discount',
                     'item_second_discount',
-                    'item_vat_values',
-                    'item_total_sale'
+                    //'item_vat_values',
+                    //'item_total_sale'
                 ];   
                 $final  = [];
                 foreach ($arrResult as $key => $value) {
@@ -259,6 +259,8 @@ class Sales extends MY_Controller
                                     'unit_price'        => $this->sma->formatDecimal($unit_price, 4),
                                     'real_unit_price'   => $this->sma->formatDecimal(($unit_price), 4),
                                     'avz_item_code'     => $avz_code ,
+                                    'totalbeforevat'    => $totalbeforevat,
+                                    'main_net'          => $main_net,
                                     'second_discount_value' => $item_second_discount
                                     // 'second_discount_value' => $pr_discount2 * $item_quantity
                                 ];
