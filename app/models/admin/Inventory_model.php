@@ -59,7 +59,7 @@ class Inventory_model extends CI_Model {
             'customer_id' => $customer_id
         );
 
-        $this->db->update('inventory_movements',$data, ['product_id' => $product_id, 'batch_number' => $batch_no, 'type' => $type, 'location_id' => $location_id, 'avz_item_code' => $avz_item_code]);
+        $this->db->update('inventory_movements',$data, ['product_id' => $product_id, 'reference_id' => $reference_id, 'batch_number' => $batch_no, 'type' => $type, 'location_id' => $location_id, 'avz_item_code' => $avz_item_code]);
     }
 
     // Function to calculate current onhold stock for a specific product at a given location
