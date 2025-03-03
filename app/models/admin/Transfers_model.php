@@ -12,7 +12,7 @@ class Transfers_model extends CI_Model
 
 
     public function get_rasd_required_fields($data ){
-            $notification_id = $data['notification_id'];
+            //$notification_id = $data['notification_id'];
             $transfer_id = $data['transfer_id'];
             $this->db->select('status');
             $this->db->from('sma_transfers');
@@ -93,7 +93,7 @@ class Transfers_model extends CI_Model
                     $gtin = str_pad($gtin, 13, "0", STR_PAD_LEFT); // Prepend zero if needed
                 }
 
-                $this->db->select("id, qty_remaining");
+                /*$this->db->select("id, qty_remaining");
                 $this->db->from("sma_rasd_notifcations_map");
                 $this->db->where('gtin', $gtin);
                 $this->db->where('batch', $product['batchno']);
@@ -103,9 +103,6 @@ class Transfers_model extends CI_Model
 
                 if ($query->num_rows() > 0) {
                     $qty_remaining = $query->row()->qty_remaining;
-                    /*if ((int) $qty_remaining < $qty) {
-                        continue;
-                    }*/
                     $to_update[] = [
                         "id" => $query->row()->id,
                         "qty" => (int) $qty_remaining - $qty
@@ -113,7 +110,7 @@ class Transfers_model extends CI_Model
                 } else {
                     log_message("info", "NO DATA");
                     continue;
-                }
+                }*/
 
                 $c_2762[] = [
                     "223" => $gtin,
@@ -134,7 +131,7 @@ class Transfers_model extends CI_Model
                 if (count($c_2762) == $batch_size) {
                     $payloads[$payload_index] = [
                         "DicOfDic" => [
-                            "2762" => ["215" => $destination_gln],
+                            "2762" => ["215" => $destination_gln, "3008" => "3010"],
                             "MH" => ["MN" => "2756", "222" => $source_gln]
                         ],
                         "DicOfDT" => ["2762" => $c_2762]
@@ -154,7 +151,7 @@ class Transfers_model extends CI_Model
                 
                 $payloads[$payload_index] = [
                     "DicOfDic" => [
-                        "2762" => ["215" => $destination_gln],
+                        "2762" => ["215" => $destination_gln, "3008" => "3010"],
                         "MH" => ["MN" => "2756", "222" => $source_gln]
                     ],
                     "DicOfDT" => ["2762" => $c_2762]
@@ -356,31 +353,6 @@ class Transfers_model extends CI_Model
                     $this->db->insert('transfer_items', $item);
                 }
 
-                // Code for serials here
-                $serials_quantity = $item['quantity'];
-                $serials_gtin = $item['product_code'];
-                $serials_batch_no = $item['batchno'];
-                
-                $this->db->select('sma_invoice_serials.*');
-                $this->db->from('sma_invoice_serials');
-                $this->db->join('sma_purchases', 'sma_invoice_serials.pid = sma_purchases.id');
-                $this->db->where('sma_invoice_serials.gtin', $serials_gtin);
-                $this->db->where('sma_invoice_serials.batch_no', $serials_batch_no);
-                $this->db->where('sma_invoice_serials.sid', 0);
-                $this->db->where('sma_invoice_serials.rsid', 0);
-                $this->db->where('sma_invoice_serials.tid', 0);
-                $this->db->where('sma_invoice_serials.pid !=', 0);
-                $this->db->where('sma_purchases.status', 'received');
-                $this->db->limit($serials_quantity);
-
-                $notification_serials = $this->db->get();
-                if ($notification_serials->num_rows() > 0) {
-                    foreach (($notification_serials->result()) as $row) {
-                        $this->db->update('sma_invoice_serials', ['tid' => $transfer_id], ['serial_number' => $row->serial_number, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
-                    }
-                }
-                // Code for serials end here
-
                 if (!empty($attachments)) {
                     foreach ($attachments as $attachment) {
                         $attachment['subject_id']   = $transfer_id;
@@ -390,13 +362,20 @@ class Transfers_model extends CI_Model
                 }
 
                 if ($status == 'sent' || $status == 'completed') {
+                    if($status == 'sent') {
+                        ////Inventory Movement - Transfer Out
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
+                    }
+
                     if($status == 'completed') { 
                         //Inventory Movement - Transfer IN
                         $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
                         ////Inventory Movement - Transfer Out
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
+                        //$this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
                     }
-                    $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'add');
+
+                    // This is commented on 2025-02-18 for no valid use case
+                    //$this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'add');
                 }
             }
 
@@ -478,6 +457,35 @@ class Transfers_model extends CI_Model
         return false;
     }
 
+    public function getAllTransferItemsForModule($transfer_id, $status)
+    {
+        if ($status == 'completed') {
+            $this->db->select('purchase_items.*, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
+                ->from('purchase_items')
+                ->join('products', 'products.id=purchase_items.product_id', 'left')
+                ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
+                ->group_by('purchase_items.id')
+                ->where('transfer_id', $transfer_id)
+                ->order_by('transfer_items.id', 'DESC');
+        } else {
+                $this->db->select('transfer_items.*, SUM(IFNULL(im.quantity, 0)) as base_quantity, im.avz_item_code, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
+                ->from('transfer_items')
+                ->join('products', 'products.id=transfer_items.product_id', 'left')
+                ->join('product_variants', 'product_variants.id=transfer_items.option_id', 'left')
+                ->join('inventory_movements im', 'transfer_items.avz_item_code = im.avz_item_code', 'left')
+                ->group_by(['transfer_items.id', 'im.avz_item_code'])
+                ->where('transfer_id', $transfer_id)
+                ->order_by('transfer_items.id', 'DESC');
+        }
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+    }
+
     public function getAllTransferItems($transfer_id, $status)
     {
         if ($status == 'completed') {
@@ -487,27 +495,6 @@ class Transfers_model extends CI_Model
                 ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
                 ->group_by('purchase_items.id')
                 ->where('transfer_id', $transfer_id);
-
-            /*$this->db->select('
-                pi.*,
-                pv.name as variant,
-                p.unit,
-                p.hsn_code as hsn_code,
-                p.second_name as second_name,
-                SUM(CASE 
-                    WHEN im.type = "purchase" THEN im.quantity 
-                    WHEN im.type IN ("sale", "transfer") THEN -im.quantity 
-                    ELSE 0 
-                END) as available_quantity
-            ')
-            ->from('purchase_items pi')
-            ->join('products p', 'p.id = pi.product_id', 'left')
-            ->join('product_variants pv', 'pv.id = pi.option_id', 'left')
-            ->join('inventory_movements im', 'im.avz_item_code = pi.avz_item_code', 'left')  // Join inventory movements based on avz_item_code
-            ->where('pi.transfer_id', $transfer_id)  // Optional: filter based on a specific transfer_id
-            ->where('im.location_id', $warehouse_id) // Ensure we are filtering by warehouse (location_id)
-            ->group_by('pi.id')  // Group by the purchase item
-            ->having('available_quantity > 0');*/
         } else {
                 $this->db->select('transfer_items.*, SUM(IFNULL(im.quantity, 0)) as base_quantity, im.avz_item_code, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
                 ->from('transfer_items')
@@ -516,27 +503,6 @@ class Transfers_model extends CI_Model
                 ->join('inventory_movements im', 'transfer_items.avz_item_code = im.avz_item_code', 'left')
                 ->group_by(['transfer_items.id', 'im.avz_item_code'])
                 ->where('transfer_id', $transfer_id);
-
-                /*$this->db->select('
-                    pi.*,
-                    pv.name as variant,
-                    p.unit,
-                    p.hsn_code as hsn_code,
-                    p.second_name as second_name,
-                    SUM(CASE 
-                        WHEN im.type = "purchase" THEN im.quantity 
-                        WHEN im.type IN ("sale", "transfer") THEN -im.quantity 
-                        ELSE 0 
-                    END) as available_quantity
-                ')
-                ->from('transfer_items pi')
-                ->join('products p', 'p.id = pi.product_id', 'left')
-                ->join('product_variants pv', 'pv.id = pi.option_id', 'left')
-                ->join('inventory_movements im', 'im.avz_item_code = pi.avz_item_code', 'left')  // Join inventory movements based on avz_item_code
-                ->where('pi.transfer_id', $transfer_id)  // Optional: filter based on a specific transfer_id
-                ->where('im.location_id', $warehouse_id) // Ensure we are filtering by warehouse (location_id)
-                ->group_by('pi.id')  // Group by the purchase item
-                ->having('available_quantity > 0');*/
         }
         $q = $this->db->get();
         if ($q->num_rows() > 0) {
@@ -1030,10 +996,6 @@ class Transfers_model extends CI_Model
             $tbl = $ostatus == 'completed' ? 'purchase_items' : 'transfer_items';
             $this->db->delete($tbl, ['transfer_id' => $id]);
 
-            // Code for serials starts here
-            $this->db->update('sma_invoice_serials', ['tid' => 0], ['tid' => $id]);
-            // Code for serials ends here
-
             foreach ($items as $item) {
                 $item['transfer_id'] = $id;
                 $real_cost = $item['real_cost'];
@@ -1048,41 +1010,22 @@ class Transfers_model extends CI_Model
                     $this->db->insert('transfer_items', $item);
                 }
 
-                // Code for serials here
-                $serials_quantity = $item['quantity'];
-                $serials_gtin = $item['product_code'];
-                $serials_batch_no = $item['batchno'];
-                
-                $this->db->select('sma_invoice_serials.*');
-                $this->db->from('sma_invoice_serials');
-                $this->db->join('sma_purchases', 'sma_invoice_serials.pid = sma_purchases.id');
-                $this->db->where('sma_invoice_serials.gtin', $serials_gtin);
-                $this->db->where('sma_invoice_serials.batch_no', $serials_batch_no);
-                $this->db->where('sma_invoice_serials.sid', 0);
-                $this->db->where('sma_invoice_serials.rsid', 0);
-                $this->db->where('sma_invoice_serials.tid', 0);
-                $this->db->where('sma_invoice_serials.pid !=', 0);
-                $this->db->where('sma_purchases.status', 'received');
-                $this->db->limit($serials_quantity);
-
-                $notification_serials = $this->db->get();
-                if ($notification_serials->num_rows() > 0) {
-                    foreach (($notification_serials->result()) as $row) {
-                        $this->db->update('sma_invoice_serials', ['tid' => $id], ['serial_number' => $row->serial_number, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
-                    }
-                }
-                // Code for serials end here
-
                 if($ostatus == 'save' && $data['status'] == 'sent'){
-                    $this->syncTransderdSavedItems($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'edit');
-                }else if($data['status'] == 'sent' || $data['status'] == 'completed'){
-                    $this->syncTransderdItem($item['product_id'], $data['from_warehouse_id'], $item['batchno'], $item['quantity'], $item['option_id'], $status, 'edit');
-                    if($data['status'] == 'completed'){
-                        //Inventory Movement - Transfer IN
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
-                        //Inventory Movement - Transfer Out
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
-                        }
+                    //Inventory Movement - Transfer Out
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
+                }else if($ostatus == 'save' && $data['status'] == 'completed'){
+                    //Inventory Movement - Transfer IN
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
+                    //Inventory Movement - Transfer Out
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
+                }else if($ostatus == 'sent' && $data['status'] == 'completed'){
+                    //Inventory Movement - Transfer OUT
+                    $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
+                    //Inventory Movement - Transfer IN
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
+                }else if($ostatus == 'sent' && $data['status'] == 'sent'){
+                    //Inventory Movement - Transfer OUT
+                    $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
                 }
             }
 
@@ -1103,7 +1046,7 @@ class Transfers_model extends CI_Model
         if ($this->db->trans_status() === false) {
             log_message('error', 'An errors has been occurred while adding the sale (Update:Transfers_model.php)');
         } else {
-            return true;
+            return $id;
         }
 
         return false;
