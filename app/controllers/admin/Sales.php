@@ -74,8 +74,8 @@ class Sales extends MY_Controller
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
         $this->form_validation->set_rules('customer', lang('customer'), 'required');
         $this->form_validation->set_rules('biller', lang('biller'), 'required');
-        $this->form_validation->set_rules('sale_status', lang('sale_status'), 'required');
-        $this->form_validation->set_rules('payment_status', lang('payment_status'), 'required');
+        //$this->form_validation->set_rules('sale_status', lang('sale_status'), 'required');
+        //$this->form_validation->set_rules('payment_status', lang('payment_status'), 'required');
         $this->form_validation->set_rules('userfile', lang('upload_file'), 'xss_clean');
 
         if ($this->form_validation->run() == true) {
@@ -89,8 +89,8 @@ class Sales extends MY_Controller
             $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
-            $sale_status      = $this->input->post('sale_status');
-            $payment_status   = $this->input->post('payment_status');
+            $sale_status      = 'pending';
+            $payment_status   = 'pending';
             $payment_term     = $this->input->post('payment_term');
             $due_date         = $payment_term ? date('Y-m-d', strtotime('+' . $payment_term . ' days')) : null;
             $shipping         = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
@@ -102,6 +102,7 @@ class Sales extends MY_Controller
             $staff_note       = $this->sma->clear_tags($this->input->post('staff_note'));
 
             $total            = 0;
+            $total_net_sale   = 0;
             $product_tax      = 0;
             $product_discount = 0;
             $gst_data         = [];
@@ -139,98 +140,78 @@ class Sales extends MY_Controller
                 $keys = [
                     'code',
                     'avz_code',
-                    'net_unit_price',
+                    'cost_price',
+                    'purchase_price',
+                    'sale_price',
                     'quantity',
                     'batch_no',
-                    'variant',
-                    'unit_price',
-                    'net_cost',
-                    'real_cost',
-                    'serial',
                     'expiry',
-                    'product_tax',
-                    'product_discount',
-                    'product_unit',
                     'bonus',
                     'dis1',
+                    'dis1_val',
                     'dis2',
-                    'totalbeforevat',
-                    'main_net',
-                    //'item_first_discount',
-                    'item_second_discount',
-                    //'item_vat_values',
-                    //'item_total_sale'
+                    'dis2_val',
+                    'vat',
+                    'vat_val',
+                    'total_sale',
+                    'net_sale',
+                    'unit_sale_price'
                 ];   
                 $final  = [];
+                
                 foreach ($arrResult as $key => $value) {
                     $final[] = array_combine($keys, $value);
                 }
                 $rw = 2;
-                
+               
                 foreach ($final as $csv_pr) {
-                    if (isset($csv_pr['code']) && isset($csv_pr['net_unit_price']) && isset($csv_pr['quantity']) && isset($csv_pr['batch_no'])) {    
+                    if (isset($csv_pr['code']) && isset($csv_pr['unit_sale_price']) && isset($csv_pr['quantity']) && isset($csv_pr['batch_no'])) {    
                         if ($product_details = $this->sales_model->getProductByCode($csv_pr['code'])) {
-                            if ($csv_pr['variant']) {
-                                $item_option = $this->sales_model->getProductVariantByName($csv_pr['variant'], $product_details->id);
-                                if (!$item_option) {
-                                    $this->session->set_flashdata('error', lang('pr_not_found') . ' ( ' . $product_details->name . ' - ' . $csv_pr['variant'] . ' ). ' . lang('line_no') . ' ' . $rw);
-                                    redirect($_SERVER['HTTP_REFERER']);
-                                }
-                            } else {
-                                $item_option     = json_decode('{}');
-                                $item_option->id = null;
-                            }
-
+                            
                             $item_id        = $product_details->id;
                             $item_type      = $product_details->type;
                             $item_code      = $product_details->code;
                             $item_name      = $product_details->name;
 
-                            $item_net_price = $this->sma->formatDecimal($csv_pr['net_unit_price']);
+                            $total_sale     = $csv_pr['total_sale'];
+                            $cost_price     = $csv_pr['cost_price'];
+                            $purchase_price = $csv_pr['purchase_price'];
+                            $sale_price     = $csv_pr['sale_price'];
+                            $item_net_price = $csv_pr['unit_sale_price'];
                             $item_quantity  = $csv_pr['quantity'];
-                            $item_tax_rate  = $csv_pr['item_tax_rate'];
+                            $item_bonus     = $csv_pr['bonus'];
+                            $item_tax_rate  = $csv_pr['vat'];
+                            $vat_val        = $csv_pr['vat_val'];
                             $item_discount  = $csv_pr['discount'];
                             $item_dis1      = $csv_pr['dis1'];
+                            $item_dis1_val  = $csv_pr['dis1_val'];
                             $item_dis2      = $csv_pr['dis2'];
-                            $item_serial    = $csv_pr['serial'];
+                            $item_dis2_val  = $csv_pr['dis2_val'];
+                            
                             $item_batchno   = $csv_pr['batch_no'];  
                             $avz_code       = $csv_pr['avz_code'];
-                            $totalbeforevat = $csv_pr['totalbeforevat'];
-                            $main_net       = $csv_pr['main_net'];
-                            $item_second_discount       = $csv_pr['item_second_discount'];
+                            $totalbeforevat = $csv_pr['net_sale'];
+                            $main_net       = ($csv_pr['net_sale'] + $vat_val);
+                           
                             $item_expiry    = isset($csv_pr['expiry']) ? $this->sma->fsd($csv_pr['expiry']) : null;
 
                             if (isset($item_code) && isset($item_net_price) && isset($item_quantity)) {
                                 $product_details  = $this->sales_model->getProductByCode($item_code);
-                                $pr_discount      = $this->site->calculateDiscount($item_dis1.'%', $item_net_price);
-                                $amount_after_dis1 = $item_net_price - $pr_discount;
-                                $pr_discount2      = $this->site->calculateDiscount($item_dis2.'%', $amount_after_dis1);
-
-
-                                $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_quantity);
-                                $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $item_quantity);
-                                $prroduct_item_discount = ($pr_item_discount + $pr_item_discount2);
+                                
+                                $prroduct_item_discount = ($item_dis1_val + $item_dis2_val);
                                 $product_discount += $prroduct_item_discount;
 
                                 $tax         = '';
-                                $pr_item_tax = 0;
-                                $unit_price  = $item_net_price;
+                                
+                                $unit_price  = $sale_price;
                                 $tax_details = ((isset($item_tax_rate) && !empty($item_tax_rate)) ? $this->sales_model->getTaxRateByName($item_tax_rate) : $this->site->getTaxRateByID($product_details->tax_rate));
                                 if ($tax_details) {
                                     $ctax     = $this->site->calculateTax($product_details, $tax_details, $unit_price);
-                                    $item_tax = $this->sma->formatDecimal($ctax['amount']);
                                     $tax      = $ctax['tax'];
-                                    $unit_price = $unit_price + $item_tax;
-                                    $pr_item_tax = $this->sma->formatDecimal($item_tax * $item_quantity, 4);
-                                    if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($biller_details->state == $customer_details->state), $tax_details)) {
-                                        $total_cgst += $gst_data['cgst'];
-                                        $total_sgst += $gst_data['sgst'];
-                                        $total_igst += $gst_data['igst'];
-                                    }
                                 }
 
-                                $product_tax += $pr_item_tax;
-                                $subtotal = $this->sma->formatDecimal(($unit_price * $item_quantity), 4);
+                                $product_tax += $vat_val;
+                                $subtotal = $csv_pr['total_sale'];
                                 $unit     = $this->site->getUnitByID($product_details->unit);
 
                                 $product = [
@@ -238,35 +219,37 @@ class Sales extends MY_Controller
                                     'product_code'      => $item_code,
                                     'product_name'      => $item_name,
                                     'product_type'      => $item_type,
-                                    'option_id'         => $item_option->id,
+                                    'net_cost'          => $cost_price,
                                     'net_unit_price'    => $item_net_price,
-                                    'quantity'          => $item_quantity,
+                                    'quantity'          => $item_quantity + $item_bonus,
                                     'product_unit_id'   => $product_details->unit,
                                     'product_unit_code' => $unit->code,
                                     'unit_quantity'     => $item_quantity,
                                     'warehouse_id'      => $warehouse_id,
-                                    'item_tax'          => $pr_item_tax,
+                                    'item_tax'          => $vat_val,
                                     'tax_rate_id'       => $tax_details ? $tax_details->id : null,
                                     'tax'               => $tax,
-                                    'discount'          => $item_discount,
-                                    'item_discount'     => $pr_item_discount,
+                                    'item_discount'     => $item_dis1_val,
                                     'expiry'            => $item_expiry,
                                     'discount1'         => $item_dis1,
                                     'discount2'         => $item_dis2,
                                     'subtotal'          => $subtotal,
-                                    'serial_no'         => $item_serial,
                                     'batch_no'          => $item_batchno,
-                                    'unit_price'        => $this->sma->formatDecimal($unit_price, 4),
-                                    'real_unit_price'   => $this->sma->formatDecimal(($unit_price), 4),
+                                    'unit_price'        => $unit_price,
+                                    'real_unit_price'   => $unit_price,
+                                    'subtotal2'         => $main_net,
+                                    'bonus'             => $item_bonus,
                                     'avz_item_code'     => $avz_code ,
                                     'totalbeforevat'    => $totalbeforevat,
                                     'main_net'          => $main_net,
-                                    'second_discount_value' => $item_second_discount
+                                    'real_cost'         => $purchase_price,
+                                    'second_discount_value' => $item_dis2_val
                                     // 'second_discount_value' => $pr_discount2 * $item_quantity
                                 ];
 
-                                $products[] = ($product + $gst_data);
-                                $total += $this->sma->formatDecimal(($item_net_price * $item_quantity), 4);
+                                $products[] = ($product);
+                                $total += $total_sale;
+                                $total_net_sale += $totalbeforevat;
                             }
                         } else {
                             $this->session->set_flashdata('error', lang('pr_not_found') . ' ( ' . $csv_pr['code'] . ' ). ' . lang('line_no') . ' ' . $rw);
@@ -278,10 +261,10 @@ class Sales extends MY_Controller
             }
 
             $order_discount = $this->site->calculateDiscount($this->input->post('order_discount'), ($total + $product_tax), true);
-            $total_discount = $this->sma->formatDecimal(($order_discount + $product_discount), 4);
-            $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
-            $total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
-            $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            $total_discount = $product_discount;
+            $order_tax      = $this->input->post('order_tax');
+            $total_tax      = $product_tax + $order_tax;
+            $grand_total = $total_net_sale + $total_tax + $shipping;
             $data        = ['date'  => $date,
                 'reference_no'      => $reference,
                 'customer_id'       => $customer_id,
@@ -292,6 +275,7 @@ class Sales extends MY_Controller
                 'note'              => $note,
                 'staff_note'        => $staff_note,
                 'total'             => $total,
+                'total_net_sale'    => $total_net_sale,
                 'product_discount'  => $product_discount,
                 'order_discount_id' => $this->input->post('order_discount'),
                 'order_discount'    => $order_discount,
